@@ -1,0 +1,34 @@
+package com.nexusarchive;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+/**
+ * NexusArchive 电子会计档案管理系统
+ * 
+ * 技术栈:
+ * - Spring Boot 3.2
+ * - MyBatis-Plus 3.5
+ * - PostgreSQL / 达梦 / 人大金仓
+ * 
+ * 合规标准:
+ * - DA/T 94-2022 电子会计档案管理规范
+ * - GB/T 39784-2021 电子档案管理系统通用功能要求
+ * 
+ * @author NexusArchive Team
+ * @version 2.0.0
+ */
+@SpringBootApplication
+@MapperScan("com.nexusarchive.mapper")
+public class NexusArchiveApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(NexusArchiveApplication.class, args);
+        System.out.println("\n========================================");
+        System.out.println("NexusArchive 启动成功!");
+        System.out.println("API文档: http://localhost:8080/api/doc.html");
+        System.out.println("========================================\n");
+    }
+
+}

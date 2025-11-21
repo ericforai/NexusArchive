@@ -1,0 +1,107 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: nexusarchive
+  
+  profiles:
+    active: dev
+  
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+  
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# JWT配置
+jwt:
+  secret: your-256-bit-secret-key-change-this-in-production-environment
+  expiration: 86400000 # 24小时 (毫秒)
+  header: Authorization
+  prefix: Bearer 
+
+# MyBatis-Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.nexusarchive: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+
+---
+# 开发环境 - PostgreSQL
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/nexusarchive?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: postgres
+    password: postgres
+    
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+---
+# 生产环境 - 达梦数据库
+spring:
+  config:
+    activate:
+      on-profile: prod-dameng
+  
+  datasource:
+    driver-class-name: dm.jdbc.driver.DmDriver
+    url: jdbc:dm://localhost:5236/NEXUSARCHIVE?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=utf-8
+    username: SYSDBA
+    password: SYSDBA
+    
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50
+      connection-timeout: 30000
+
+---
+# 生产环境 - 人大金仓
+spring:
+  config:
+    activate:
+      on-profile: prod-kingbase
+  
+  datasource:
+    driver-class-name: com.kingbase8.Driver
+    url: jdbc:kingbase8://localhost:54321/nexusarchive?useUnicode=true&characterEncoding=utf-8
+    username: system
+    password: system
+    
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50
+      connection-timeout: 30000

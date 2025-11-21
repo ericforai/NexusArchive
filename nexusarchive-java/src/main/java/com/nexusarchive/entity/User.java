@@ -1,0 +1,108 @@
+package com.nexusarchive.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * 系统用户表
+ * 
+ * 对应表: sys_user
+ */
+@Data
+@TableName("sys_user")
+public class User implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
+    /**
+     * 主键ID
+     */
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
+    
+    /**
+     * 用户名
+     */
+    private String username;
+    
+    /**
+     * 密码哈希
+     */
+    private String passwordHash;
+    
+    /**
+     * M84 机构人员名称 (DA/T 94)
+     */
+    private String fullName;
+    
+    /**
+     * M85 组织机构代码 (DA/T 94)
+     */
+    private String orgCode;
+    
+    /**
+     * 邮箱
+     */
+    private String email;
+    
+    /**
+     * 手机号
+     */
+    private String phone;
+    
+    /**
+     * 头像
+     */
+    private String avatar;
+    
+    /**
+     * 主部门ID
+     */
+    private String departmentId;
+    
+    /**
+     * 状态 (active/disabled/locked)
+     */
+    private String status;
+    
+    /**
+     * 最后登录时间
+     */
+    private LocalDateTime lastLoginAt;
+    
+    /**
+     * 工号
+     */
+    private String employeeId;
+    
+    /**
+     * 职位
+     */
+    private String jobTitle;
+    
+    /**
+     * 入职日期
+     */
+    private String joinDate;
+    
+    /**
+     * 创建时间
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    /**
+     * 更新时间
+     */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+    
+    /**
+     * 逻辑删除
+     */
+    @TableLogic
+    private Integer deleted;
+}
