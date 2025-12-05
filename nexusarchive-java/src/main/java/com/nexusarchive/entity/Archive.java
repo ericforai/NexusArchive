@@ -72,9 +72,9 @@ public class Archive {
     private String standardMetadata;
 
     /**
-     * 客户自定义元数据 (JSON)
+     * 客户自定义元数据 (JSON) - PostgreSQL JSONB
      */
-    @TableField("custom_metadata")
+    @TableField(value = "custom_metadata", typeHandler = com.nexusarchive.config.PostgresJsonTypeHandler.class)
     private String customMetadata;
 
     /**
@@ -97,11 +97,41 @@ public class Archive {
      */
     private String createdBy;
 
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    /**
+     * 文件哈希值 (用于完整性校验)
+     */
+    private String fixityValue;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    /**
+     * 哈希算法: SM3, SHA256
+     */
+    private String fixityAlgo;
+
+    /**
+     * 唯一单据号 (关键！用于关联ERP/OA)
+     */
+    private String uniqueBizId;
+
+    /**
+     * 金额
+     */
+    private java.math.BigDecimal amount;
+
+    /**
+     * 业务日期
+     */
+    private java.time.LocalDate docDate;
+
+    /**
+     * 所属案卷ID
+     */
+    private String volumeId;
+
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdTime;
+
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime lastModifiedTime;
 
     @TableLogic
     private Integer deleted;
