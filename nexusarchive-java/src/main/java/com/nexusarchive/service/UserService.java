@@ -48,14 +48,14 @@ public class UserService {
         // 密码哈希
         PasswordPolicyValidator.validate(request.getPassword());
         String passwordHash = passwordUtil.hashPassword(request.getPassword());
-        // 构建实体
+        // 构建实体 - 应用 XSS 过滤
         User user = new User();
         user.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
-        user.setUsername(request.getUsername());
+        user.setUsername(request.getUsername()); // 用户名保持原样
         user.setPasswordHash(passwordHash);
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
+        user.setFullName(com.nexusarchive.util.XssFilter.clean(request.getFullName())); // XSS 过滤
+        user.setEmail(com.nexusarchive.util.XssFilter.clean(request.getEmail())); // XSS 过滤
+        user.setPhone(com.nexusarchive.util.XssFilter.clean(request.getPhone())); // XSS 过滤
         user.setAvatar(request.getAvatar());
         user.setDepartmentId(request.getDepartmentId());
         user.setStatus("active");
@@ -109,6 +109,17 @@ public class UserService {
         user.setDeleted(1);
         user.setLastModifiedTime(LocalDateTime.now());
         userMapper.updateById(user);
+    }
+
+    /**
+     * 根据 ID 查询用户
+     */
+    public UserResponse getUserById(String userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException("用户不存在");
+        }
+        return toResponse(user);
     }
 
     /**

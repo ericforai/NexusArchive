@@ -45,6 +45,8 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/refresh",
                                 "/auth/logout",
+                                "/health",
+                                "/health/**",
                                 "/actuator/health",
                                 "/integration/yonsuite/webhook",
                                 "/error"

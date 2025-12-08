@@ -46,6 +46,11 @@ public class AdminUserController {
         return Result.success("删除成功", null);
     }
 
+    @GetMapping("/{id}")
+    public Result<UserResponse> getUser(@PathVariable String id) {
+        return Result.success(userService.getUserById(id));
+    }
+
     @GetMapping
     public Result<Page<UserResponse>> listPaged(
             @RequestParam(defaultValue = "1") int page,
