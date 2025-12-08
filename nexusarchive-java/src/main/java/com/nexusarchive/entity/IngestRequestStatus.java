@@ -1,0 +1,39 @@
+package com.nexusarchive.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+import java.time.LocalDateTime;
+
+/**
+ * SIP 接收请求状态追踪实体
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@TableName("sys_ingest_request_status")
+public class IngestRequestStatus {
+
+    @TableId(type = IdType.INPUT)
+    private String requestId;
+
+    /**
+     * 状态: RECEIVED, CHECKING, CHECK_PASSED, PROCESSING, COMPLETED, FAILED
+     */
+    private String status;
+
+    /**
+     * 详细消息或错误信息
+     */
+    private String message;
+
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
+    private LocalDateTime createdTime;
+
+    @TableField(value = "updated_time", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedTime;
+}

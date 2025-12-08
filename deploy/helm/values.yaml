@@ -1,0 +1,44 @@
+image:
+  backend: nexusarchive/backend:latest
+  frontend: nexusarchive/frontend:latest
+
+ingress:
+  enabled: false
+
+backend:
+  replicaCount: 1
+  env:
+    SPRING_PROFILES_ACTIVE: prod
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: nexusarchive
+    DB_USER: nexus
+    DB_PASSWORD: nexus
+    JWT_SECRET: change-me-please
+    LICENSE_PATH: /data/license.lic
+  service:
+    port: 8080
+  resources: {}
+  volumeMounts:
+    - name: license
+      mountPath: /data/license.lic
+      subPath: license.lic
+
+frontend:
+  replicaCount: 1
+  env:
+    VITE_API_BASE_URL: http://backend:8080/api
+  service:
+    port: 80
+  resources: {}
+
+postgres:
+  enabled: true
+  image: postgres:14
+  env:
+    POSTGRES_DB: nexusarchive
+    POSTGRES_USER: nexus
+    POSTGRES_PASSWORD: nexus
+  persistence:
+    enabled: true
+    size: 10Gi

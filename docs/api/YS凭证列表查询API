@@ -1,0 +1,279 @@
+1. 请求说明
+请求域名	开放API: 动态域名，获取方式详见 获取租户所在数据中心域名
+集成API: 详细域名信息，请见 连接配置
+请求地址	https://dbox.yonyoucloud.com/iuap-api-gateway/yonbip/fi/ficloud/openapi/voucher/queryVouchers
+请求方式	POST
+ContentType	application/json
+应用场景	开放API/集成API
+API类别	列表查询
+事务和幂等性	无
+2. 请求参数
+只看必填项
+名称	类型	参数位置	必填	描述
+access_token	string	query	是	调用方应用token
+企业自建获取token
+Body参数
+名称	类型	数组	必填	描述
+pager	object	否	否	分页对象信息
+pageIndex	int	否	否	当前页    示例: 1
+pageSize	int	否	否	每页数量（最大1000）    示例: 20
+accbookCode	string	否	是	账簿code    示例: dxbook001
+accsubjectCodeList	string	是	否	科目code集合（自动包含子级科目）    示例: ["1001","2001","1121","1405","1002"]
+periodStart	string	否	否	起始期间（默认当前系统年月 ）格式为yyyy-MM    示例: 2021-08
+periodEnd	string	否	否	截止期间（默认当前系统年月）格式为yyyy-MM    示例: 2021-08
+makeTimeStart	string	否	否	起始制单日期 格式为yyyy-MM-dd    示例: 2021-08-01
+makeTimeEnd	string	否	否	截止制单日期 格式为yyyy-MM-dd    示例: 2021-08-01
+voucherStatusList	string	是	否	凭证状态（00暂存，01保存，02错误，03已审核，04已记账，05作废，空值查全部）    示例: ["01","02"]
+voucherTypeCodeList	string	是	否	凭证类型code    示例: ["1","2","3","4"]
+description	string	否	否	摘要    示例: 摘要内容
+makerNameList	string	是	否	制单人用户名    示例: ["张三","李四"]
+auditorNameList	string	是	否	审核人用户名    示例: ["张三","李四"]
+tallymanNameList	string	是	否	记账人用户名    示例: ["张三","李四"]
+billcodeMin	int	否	否	凭证号区间左端点    示例: 10
+billcodeMax	int	否	否	凭证号区间右端点    示例: 10
+moneyRangeMin	BigDecimal	否	否	分录金额区间左端点    示例: 1
+moneyRangeMax	BigDecimal	否	否	分录金额区间右端点    示例: 10
+tsStart	string	否	否	最后操作日期区间左端点 格式为yyyy-MM-dd HH:mm:ss    示例: 2021-08-01 00:00:00
+tsEnd	string	否	否	最后操作日期区间右端点 格式为yyyy-MM-dd HH:mm:ss    示例: 2021-08-02 23:59:59
+3. 请求示例
+Url: /yonbip/fi/ficloud/openapi/voucher/queryVouchers?access_token=访问令牌
+Body: {
+	"pager": {
+		"pageIndex": 1,
+		"pageSize": 20
+	},
+	"accbookCode": "dxbook001",
+	"accsubjectCodeList": [
+		"1001",
+		"2001",
+		"1121",
+		"1405",
+		"1002"
+	],
+	"periodStart": "2021-08",
+	"periodEnd": "2021-08",
+	"makeTimeStart": "2021-08-01",
+	"makeTimeEnd": "2021-08-01",
+	"voucherStatusList": [
+		"01",
+		"02"
+	],
+	"voucherTypeCodeList": [
+		"1",
+		"2",
+		"3",
+		"4"
+	],
+	"description": "摘要内容",
+	"makerNameList": [
+		"张三",
+		"李四"
+	],
+	"auditorNameList": [
+		"张三",
+		"李四"
+	],
+	"tallymanNameList": [
+		"张三",
+		"李四"
+	],
+	"billcodeMin": 10,
+	"billcodeMax": 10,
+	"moneyRangeMin": 1,
+	"moneyRangeMax": 10,
+	"tsStart": "2021-08-01 00:00:00",
+	"tsEnd": "2021-08-02 23:59:59"
+}
+4. 返回值参数
+名称	类型	数组	描述
+code	string	否	响应码(200成功，404失败)
+message	string	否	响应信息
+data	object	否	响应数据（分页信息、凭证列表数据）
+pageIndex	int	否	当前页
+pageSize	int	否	每页数量
+recordCount	int	否	总记录数
+recordList	object	是	结果集
+5. 正确返回示例
+{
+	"code": "200",
+	"message": "OK",
+	"data": {
+		"pageIndex": 1,
+		"pageSize": 20,
+		"recordCount": 100,
+		"recordList": [
+			{
+				"header": {
+					"id": "42718613-1E21-4512-98C8-CC52FBD700FB",
+					"billcode": 32,
+					"displaybillcode": "32",
+					"description": "支付工资",
+					"period": "2021-08",
+					"displayname": "记-32",
+					"srcsystem": "总账管理",
+					"voucherstatus": "01",
+					"totaldebit_org": 13.1,
+					"totalcredit_org": 13.1,
+					"organizeDebitTotalAmount": 0,
+					"organizeCreditTotalAmount": 0,
+					"totaldebit_group": 0,
+					"totalcredit_group": 0,
+					"totaldebit_global": 0,
+					"totalcredit_global": 0,
+					"maketime": "2021-08-26",
+					"ts": "2021-09-02 11:00:43",
+					"maker": {
+						"id": "48e6944e-fcc7-4954-8cd1-4230aa0d41d2",
+						"code": "YHT-739-6811619598777781",
+						"name": "刘亚中"
+					},
+					"auditor": {
+						"id": "48e6944e-fcc7-4954-8cd1-4230aa0d41d2",
+						"code": "YHT-739-6811619598777781",
+						"name": "刘亚中"
+					},
+					"tallyman": {
+						"id": "48e6944e-fcc7-4954-8cd1-4230aa0d41d2",
+						"code": "YHT-739-6811619598777781",
+						"name": "刘亚中"
+					},
+					"srcsystemid": {
+						"id": "0b69194a-56fc-11eb-92ca-0646ec0005a6",
+						"code": "figl",
+						"name": "总账管理"
+					},
+					"accbook": {
+						"id": "F87D4834-27D4-4A30-A931-2497105F475B",
+						"code": "dxbook003",
+						"name": "稻香账簿003",
+						"pk_org": {
+							"id": "2253301584499200",
+							"code": "daox",
+							"name": "daox文化有限公司"
+						}
+					},
+					"vouchertype": {
+						"id": "9A738945-F950-4F00-8C8C-EBB3364B41F4",
+						"code": "1",
+						"name": "记账凭证",
+						"voucherstr": "记",
+						"voucherstr2": "Post",
+						"voucherstr3": "記"
+					}
+				},
+				"body": [
+					{
+						"id": "F5696C1B-22D5-4AD3-8863-DAC240F1BD06",
+						"voucherid": "42718613-1E21-4512-98C8-CC52FBD700FB",
+						"recordnumber": 1,
+						"description": "凭证摘要",
+						"debit_original": 13.1,
+						"credit_original": 0,
+						"debit_org": 13.1,
+						"credit_org": 0,
+						"organize_debit_amount": 0,
+						"organize_credit_amount": 0,
+						"debit_group": 0,
+						"credit_group": 0,
+						"debit_global": 0,
+						"credit_global": 0,
+						"quantity": 1,
+						"debit_quantity": 1,
+						"credit_quantity": 1,
+						"price": 0,
+						"rate_org": 1,
+						"organize_rate": 0,
+						"rate_group": 0,
+						"rate_global": 0,
+						"billTime": "2021-08-23 00:00:00",
+						"billNo": "10001",
+						"bankVerifyCode": "20001",
+						"checkflag": false,
+						"auxiliary": "A0FBA6F1-BEAD-4956-83F9-3AFE6A930F19",
+						"auxiliaryShow": "【供应-企1】【我的客户2】",
+						"cashFlowProjectDisplayName": "xjxm0501 现金流量项目0501,xjxm03 现金流量项目03",
+						"accsubject": {
+							"id": "A0E9E9B9-29F3-41A6-ACEB-FDC6833B2480",
+							"code": "100217",
+							"name": "银行存款_中国邮政储蓄银行",
+							"cashCategory": "Bank",
+							"numcheck": true,
+							"measuredoc": {
+								"id": "2093048561111296",
+								"code": "001",
+								"name": "个",
+								"precision": 3,
+								"truncationType": 1
+							}
+						},
+						"currency": {
+							"id": "2088838729405952",
+							"code": "CNY",
+							"name": "人民币",
+							"moneydigit": 6,
+							"moneyrount": 4,
+							"pricedigit": 6,
+							"pricerount": 4
+						},
+						"ratetype": {
+							"id": "c04cstr1",
+							"code": "01",
+							"name": "基准汇率",
+							"digit": 8
+						},
+						"settlementMode": {
+							"id": "2087452316209948",
+							"code": "system_0001",
+							"name": "银行转账"
+						},
+						"secondorg": {
+							"id": "2253301584499200",
+							"code": "daox",
+							"name": "daox文化有限公司"
+						},
+						"clientauxiliary": [
+							{
+								"field": "vr24",
+								"doctype": "cashflowitem",
+								"code": "cf001",
+								"name": "现金流量项目-测试",
+								"datatype": "doc",
+								"value": "215DCDAD-024D-4F4B-86E8-8BD39A72EDFB",
+								"data": {
+									"id": "215DCDAD-024D-4F4B-86E8-8BD39A72EDFB",
+									"code": "xjxm01",
+									"name": "现金流量项目01"
+								}
+							}
+						],
+						"cashFlowProjectList": [
+							{
+								"voucherrecord": "F5696C1B-22D5-4AD3-8863-DAC240F1BD06",
+								"cashflowitem": "02CDCCE3-9831-4A18-B001-DC4EF78691EB",
+								"cashFlowProjectName": "xjxm0501 现金流量项目0501",
+								"negative": false,
+								"amountoriginal": 13.1,
+								"amountorg": 13.1,
+								"code": "xjxm0501",
+								"name": "现金流量项目0501",
+								"currency": "2088838729405952",
+								"innerorg": "",
+								"currencyMap": {
+									"id": "2088838729405952",
+									"code": "CNY",
+									"name": "人民币"
+								},
+								"innerOrgMap": {
+									"id": "",
+									"code": "",
+									"name": ""
+								}
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
+6. 业务异常码

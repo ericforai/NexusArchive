@@ -3,6 +3,7 @@ package com.nexusarchive;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * NexusArchive 电子会计档案管理系统
@@ -19,8 +20,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author NexusArchive Team
  * @version 2.0.0
  */
-@SpringBootApplication
-@MapperScan("com.nexusarchive.mapper")
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration.class
+})
+@EnableAsync
 public class NexusArchiveApplication {
 
     public static void main(String[] args) {

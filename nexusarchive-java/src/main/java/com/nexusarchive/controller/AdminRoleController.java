@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.service.RoleService;
+import com.nexusarchive.annotation.ArchivalAudit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/roles")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('manage_roles') or hasRole('SYSTEM_ADMIN') or hasAuthority('nav:all')")
 public class AdminRoleController {
     
     private final RoleService roleService;
@@ -57,35 +60,38 @@ public class AdminRoleController {
         Role role = roleService.getRoleById(id);
         return Result.success(role);
     }
-    
+
     /**
      * 创建角色
      * 
      * POST /admin/roles
      */
     @PostMapping
+    @ArchivalAudit(operationType = "CREATE", resourceType = "ROLE", description = "创建角色")
     public Result<Role> createRole(@RequestBody Role role) {
         Role created = roleService.createRole(role);
         return Result.success("角色创建成功", created);
     }
-    
+
     /**
      * 更新角色
      * 
      * PUT /admin/roles/{id}
      */
     @PutMapping("/{id}")
+    @ArchivalAudit(operationType = "UPDATE", resourceType = "ROLE", description = "更新角色")
     public Result<Void> updateRole(@PathVariable String id, @RequestBody Role role) {
         roleService.updateRole(id, role);
         return Result.success("角色更新成功", null);
     }
-    
+
     /**
      * 删除角色
      * 
      * DELETE /admin/roles/{id}
      */
     @DeleteMapping("/{id}")
+    @ArchivalAudit(operationType = "DELETE", resourceType = "ROLE", description = "删除角色")
     public Result<Void> deleteRole(@PathVariable String id) {
         roleService.deleteRole(id);
         return Result.success("角色删除成功", null);

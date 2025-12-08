@@ -91,14 +91,14 @@ public class User implements Serializable {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdTime;
     
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime lastModifiedTime;
     
     /**
      * 逻辑删除

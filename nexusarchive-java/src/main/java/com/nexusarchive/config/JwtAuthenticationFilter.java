@@ -1,5 +1,7 @@
 package com.nexusarchive.config;
 
+import com.nexusarchive.service.CustomUserDetailsService;
+import com.nexusarchive.service.TokenBlacklistService;
 import com.nexusarchive.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -9,14 +11,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * JWT认证过滤器
@@ -26,6 +26,8 @@ import java.util.ArrayList;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -43,19 +45,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         try {
+            if (tokenBlacklistService.isBlacklisted(jwt)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             Claims claims = jwtUtil.extractAllClaims(jwt);
             username = claims.getSubject();
             userId = claims.get("userId", String.class);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // 在实际生产中，这里可能需要从数据库加载用户详情以获取最新的权限信息
-                // 但为了性能，也可以直接从Token中获取基本信息，或者使用缓存
-                // 这里我们构建一个简单的UserDetails对象
-                UserDetails userDetails = User.builder()
-                        .username(username)
-                        .password("") // 密码不重要，因为已经通过JWT验证
-                        .authorities(new ArrayList<>()) // TODO: 从Token或数据库加载权限
-                        .build();
+                UserDetails userDetails = userDetailsService.loadUserById(userId);
 
                 if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

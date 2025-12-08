@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    image: nexusarchive/backend:latest
+    container_name: nexusarchive-backend
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=nexusarchive
+      - DB_USER=nexus
+      - DB_PASSWORD=nexus
+      - JWT_SECRET=change-me-please
+      - LICENSE_PATH=/data/license.lic
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - backend-data:/data
+      - ./license/license.lic:/data/license.lic
+
+  frontend:
+    image: nexusarchive/frontend:latest
+    container_name: nexusarchive-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=http://backend:8080/api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:14
+    container_name: nexusarchive-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=nexusarchive
+      - POSTGRES_USER=nexus
+      - POSTGRES_PASSWORD=nexus
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+  backend-data:

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
 
@@ -8,7 +8,14 @@ spring:
     name: nexusarchive
   
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    repair-on-migrate: true
+    ignore-missing-migrations: true
+    locations: classpath:db/migration
   
   jackson:
     time-zone: Asia/Shanghai
@@ -20,13 +27,27 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
 
-# JWT配置
+# JWT配置 (安全加固: 生产环境必须设置 JWT_SECRET 环境变量)
 jwt:
-  secret: your-256-bit-secret-key-change-this-in-production-environment
+  secret: ${JWT_SECRET:NexusArchiveDev2024SecretKey!!MustBeAtLeast256BitsLongForHS256Algorithm}
   expiration: 86400000 # 24小时 (毫秒)
   header: Authorization
-  prefix: Bearer 
+  prefix: "Bearer "
 
 # MyBatis-Plus配置
 mybatis-plus:
@@ -50,6 +71,27 @@ logging:
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
 
+# 归档配置
+archive:
+  root:
+    path: ${ARCHIVE_ROOT_PATH:./data/archives}
+
+# YonSuite (用友) 集成配置 (安全加固: 敏感信息必须通过环境变量设置)
+yonsuite:
+  base-url: ${YONSUITE_BASE_URL:https://dbox.yonyoucloud.com/iuap-api-gateway}
+  app-key: ${YONSUITE_APP_KEY:}
+  app-secret: ${YONSUITE_APP_SECRET:}
+
+# Elasticsearch 全文检索配置 (可选, 默认禁用)
+elasticsearch:
+  enabled: ${ES_ENABLED:false}
+  hosts: ${ES_HOSTS:localhost:9200}
+  username: ${ES_USERNAME:}
+  password: ${ES_PASSWORD:}
+  connect-timeout: 5000
+  socket-timeout: 30000
+
+
 ---
 # 开发环境 - PostgreSQL
 spring:
@@ -59,9 +101,9 @@ spring:
   
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/nexusarchive?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
     
     hikari:
       minimum-idle: 5
@@ -79,14 +121,19 @@ spring:
   
   datasource:
     driver-class-name: dm.jdbc.driver.DmDriver
-    url: jdbc:dm://localhost:5236/NEXUSARCHIVE?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=utf-8
-    username: SYSDBA
-    password: SYSDBA
+    url: jdbc:dm://${DB_HOST:localhost}:${DB_PORT:5236}/${DB_NAME:NEXUSARCHIVE}?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=utf-8
+    username: ${DB_USER:SYSDBA}
+    password: ${DB_PASSWORD:SYSDBA}
     
     hikari:
       minimum-idle: 10
       maximum-pool-size: 50
       connection-timeout: 30000
+  
+  # 生产环境存储路径
+  archive:
+    root:
+      path: /opt/nexusarchive/data/archives
 
 ---
 # 生产环境 - 人大金仓
@@ -97,11 +144,44 @@ spring:
   
   datasource:
     driver-class-name: com.kingbase8.Driver
-    url: jdbc:kingbase8://localhost:54321/nexusarchive?useUnicode=true&characterEncoding=utf-8
-    username: system
-    password: system
+    url: jdbc:kingbase8://${DB_HOST:localhost}:${DB_PORT:54321}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf-8
+    username: ${DB_USER:system}
+    password: ${DB_PASSWORD:system}
     
     hikari:
       minimum-idle: 10
       maximum-pool-size: 50
       connection-timeout: 30000
+
+  # 生产环境存储路径
+  archive:
+    root:
+      path: /opt/nexusarchive/data/archives
+
+---
+# 生产环境 - PostgreSQL
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:nexus}
+    password: ${DB_PASSWORD}
+    
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+# 归档临时文件路径
+archive:
+  temp:
+    path: ${ARCHIVE_TEMP_PATH:/tmp/nexusarchive}
+  root:
+    path: /opt/nexusarchive/data/archives
+

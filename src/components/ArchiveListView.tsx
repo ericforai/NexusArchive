@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { OfdViewer } from './common/OfdViewer';
 import {
   Search, Filter, Download, Eye, MoreHorizontal, FileText,
   ChevronLeft, ChevronRight, ArrowUpDown, Loader2, X,
@@ -8,18 +9,56 @@ import {
   Plus, AlertTriangle, Clock, XCircle, Link as LinkIcon, Trash2,
   Settings2, Play, Zap, BarChart2, Lock, ArrowRight, Package
 } from 'lucide-react';
-import { ModuleConfig, TableColumn, GenericRow } from '../types';
+import { ModuleConfig, TableColumn, GenericRow, ViewState } from '../types';
 import { poolApi } from '../api/pool';
 import { archivesApi } from '../api/archives';
-import { ARCHIVE_BOX_CONFIG } from '../constants';
 import { RelationshipVisualizer } from './RelationshipVisualizer';
 import { client } from '../api/client';
 import { adminApi } from '../api/admin';
+import { isDemoMode } from '../utils/env';
+import { safeStorage } from '../utils/storage';
+import { triggerAuditRefresh } from '../utils/audit';
+import { DemoBadge } from './common/DemoBadge';
+import {
+  PRE_ARCHIVE_POOL_CONFIG,
+  PRE_ARCHIVE_LINK_CONFIG,
+  COLLECTION_ONLINE_CONFIG,
+  COLLECTION_SCAN_CONFIG,
+  COLLECTION_CONFIG,
+  ARCHIVE_VIEW_CONFIG,
+  ARCHIVE_BOX_CONFIG,
+  ACCOUNTING_VOUCHER_CONFIG,
+  ACCOUNTING_LEDGER_CONFIG,
+  FINANCIAL_REPORT_CONFIG,
+  OTHER_ACCOUNTING_MATERIALS_CONFIG,
+  QUERY_CONFIG,
+  GENERIC_CONFIG,
+} from '../constants';
+
+// 路由配置标识符到配置对象的映射
+const ROUTE_CONFIG_MAP: Record<string, { config: ModuleConfig; title: string; subTitle: string }> = {
+  'pool': { config: PRE_ARCHIVE_POOL_CONFIG, title: '预归档库', subTitle: '电子凭证池' },
+  'link': { config: PRE_ARCHIVE_LINK_CONFIG, title: '预归档库', subTitle: '凭证关联' },
+  'collection': { config: COLLECTION_CONFIG, title: '资料收集', subTitle: '概览' },
+  'online': { config: COLLECTION_ONLINE_CONFIG, title: '资料收集', subTitle: '在线接收' },
+  'scan': { config: COLLECTION_SCAN_CONFIG, title: '资料收集', subTitle: '扫描集成' },
+  'view': { config: ARCHIVE_VIEW_CONFIG, title: '档案管理', subTitle: '归档查看' },
+  'voucher': { config: ACCOUNTING_VOUCHER_CONFIG, title: '档案管理', subTitle: '会计凭证' },
+  'ledger': { config: ACCOUNTING_LEDGER_CONFIG, title: '档案管理', subTitle: '会计账簿' },
+  'report': { config: FINANCIAL_REPORT_CONFIG, title: '档案管理', subTitle: '财务报告' },
+  'other': { config: OTHER_ACCOUNTING_MATERIALS_CONFIG, title: '档案管理', subTitle: '其他会计资料' },
+  'box': { config: ARCHIVE_BOX_CONFIG, title: '档案管理', subTitle: '档案装盒' },
+  'query': { config: QUERY_CONFIG, title: '档案查询', subTitle: '全文检索' },
+};
 
 interface ArchiveListViewProps {
-  title: string;
+  // 传统模式（向后兼容）
+  title?: string;
   subTitle?: string;
-  config: ModuleConfig;
+  config?: ModuleConfig;
+  onNavigate?: (view: ViewState, subItem?: string, resourceId?: string) => void;
+  // 路由模式
+  routeConfig?: string;
 }
 
 // Mock candidates for linking with dynamic scores
@@ -45,72 +84,127 @@ const DEFAULT_RULES: MatchRule[] = [
   { id: 'code', label: '票据号关联', description: '摘要中包含发票号或合同号', enabled: true, weight: 20 },
 ];
 
-export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitle, config }) => {
+const CATEGORY_LABELS: Record<string, string> = {
+  AC01: '会计凭证',
+  AC02: '会计账簿',
+  AC03: '财务报告',
+  AC04: '其他会计资料'
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: '草稿',
+  pending: '待归档',
+  archived: '已归档'
+};
+
+const resolveCategoryLabel = (code?: string) => {
+  if (!code) return '档案';
+  return CATEGORY_LABELS[code] || code;
+};
+
+const formatStatus = (status?: string) => {
+  if (!status) return '-';
+  return STATUS_LABELS[status] || status;
+};
+
+const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
+  const categoryLabel = resolveCategoryLabel(archive?.categoryCode);
+  const baseDate = archive?.docDate || archive?.createdAt || archive?.createdTime || '';
+  const date = baseDate ? String(baseDate).split('T')[0] : '';
+  const statusText = formatStatus(archive?.status);
+
+  if (subTitle === '会计凭证' || subTitle === '凭证关联') {
+    const amountValue = archive?.amount;
+    const amount = typeof amountValue === 'number'
+      ? `¥ ${amountValue.toFixed(2)}`
+      : amountValue || '-';
+
+    return {
+      id: archive?.id,
+      code: archive?.archiveCode,
+      voucherNo: archive?.archiveCode,
+      archivalCode: archive?.archiveCode,
+      entity: archive?.orgName,
+      period: archive?.fiscalPeriod || archive?.fiscalYear || '',
+      subject: archive?.title,
+      type: categoryLabel,
+      amount,
+      date,
+      status: statusText
+    };
+  }
+
+  if (subTitle === '会计账簿') {
+    return {
+      id: archive?.id,
+      code: archive?.archiveCode,
+      ledgerNo: archive?.archiveCode,
+      archivalCode: archive?.archiveCode,
+      type: categoryLabel,
+      entity: archive?.orgName,
+      year: archive?.fiscalYear,
+      period: archive?.fiscalPeriod || '全年',
+      subject: archive?.title,
+      pageCount: archive?.pageCount || archive?.customMetadata?.pageCount || '-',
+      status: statusText
+    };
+  }
+
+  if (subTitle === '财务报告') {
+    return {
+      id: archive?.id,
+      code: archive?.archiveCode,
+      reportNo: archive?.archiveCode,
+      archivalCode: archive?.archiveCode,
+      type: categoryLabel,
+      year: archive?.fiscalYear,
+      unit: archive?.orgName,
+      title: archive?.title,
+      period: archive?.fiscalPeriod || '',
+      date,
+      status: statusText
+    };
+  }
+
+  return {
+    id: archive?.id,
+    code: archive?.archiveCode,
+    archiveNo: archive?.fondsNo,
+    archivalCode: archive?.archiveCode,
+    category: categoryLabel,
+    year: archive?.fiscalYear,
+    period: archive?.retentionPeriod || archive?.fiscalPeriod,
+    title: archive?.title,
+    security: archive?.securityLevel || '-',
+    status: statusText,
+    orgName: archive?.orgName,
+    date
+  };
+};
+
+export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
+  title: propTitle,
+  subTitle: propSubTitle,
+  config: propConfig,
+  onNavigate,
+  routeConfig
+}) => {
+  // 解析配置：优先使用 routeConfig，否则使用传入的 props
+  const resolvedConfig = routeConfig
+    ? ROUTE_CONFIG_MAP[routeConfig]
+    : { config: propConfig, title: propTitle, subTitle: propSubTitle };
+
+  const title = resolvedConfig?.title || propTitle || '档案列表';
+  const subTitle = resolvedConfig?.subTitle || propSubTitle || '';
+  const config = resolvedConfig?.config || propConfig || GENERIC_CONFIG;
+
   // State for Real CRUD
-  const [localData, setLocalData] = useState<GenericRow[]>(config.data);
-  const [isLoadingPool, setIsLoadingPool] = useState(false);
+  const [demoMode, setDemoMode] = useState<boolean>(isDemoMode());
+  const [localData, setLocalData] = useState<GenericRow[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [orgOptions, setOrgOptions] = useState<{ label: string; value: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Load pool data from backend
-  const loadPoolData = async () => {
-    setIsLoadingPool(true);
-    try {
-      const poolItems = await poolApi.getList();
-      setLocalData(poolItems as GenericRow[]);
-    } catch (error) {
-      console.error('Failed to load pool data:', error);
-      showToast('加载数据失败', 'error');
-    } finally {
-      setIsLoadingPool(false);
-    }
-  };
-
-  // Update local data when config changes (view switch)
-  useEffect(() => {
-    setSelectedRows([]); // Clear selection when view changes
-    if (subTitle === '电子凭证池') {
-      // Load from backend for pool view
-      loadPoolData();
-    } else if (subTitle === '会计凭证') {
-      // Load from backend for Accounting Vouchers
-      const loadArchives = async () => {
-        setIsLoadingPool(true);
-        try {
-          const result = await archivesApi.getArchives({ categoryCode: 'AC01' }); // Filter by Accounting Vouchers
-
-          // result is ApiResponse<PageResult<Archive>>
-          // We need to access result.data.records
-          const pageResult = result.data;
-          const items = (pageResult as any).records || [];
-
-          const mappedItems = Array.isArray(items) ? items.map((item: any) => ({
-            id: item.id,
-            voucherNo: item.archiveCode, // Use archiveCode as voucherNo for now
-            archivalCode: item.archiveCode,
-            entity: item.orgName,
-            period: `${item.fiscalYear}-${item.fiscalPeriod || ''}`,
-            subject: item.title,
-            type: item.categoryCode === 'AC01' ? '会计凭证' : item.categoryCode,
-            amount: '-', // Amount is not in the main Archive table, would need metadata
-            date: item.createdAt ? item.createdAt.split('T')[0] : '',
-            status: item.status === 'archived' ? '已归档' : item.status
-          })) : [];
-
-          setLocalData(mappedItems);
-        } catch (error) {
-          console.error('Failed to load archives:', error);
-          showToast('加载档案数据失败', 'error');
-        } finally {
-          setIsLoadingPool(false);
-        }
-      };
-      loadArchives();
-    } else {
-      // Use config data for other views
-      setLocalData(config.data);
-    }
-  }, [config.data, subTitle]);
 
   // Load organizations for filtering (basic example)
   useEffect(() => {
@@ -133,8 +227,112 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
   }, []);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterQuery, setFilterQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [orgFilter, setOrgFilter] = useState<string>('');
+  const [pageInfo, setPageInfo] = useState({ total: 0, page: 1, pageSize: 10 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const toggleDemo = (flag: boolean) => {
+    safeStorage.setItem('demoMode', flag ? 'true' : 'false');
+    setDemoMode(flag);
+  };
+
+  const resolveCategoryCode = useCallback(() => {
+    switch (subTitle) {
+      case '会计凭证':
+      case '凭证关联':
+        return 'AC01';
+      case '会计账簿':
+        return 'AC02';
+      case '财务报告':
+        return 'AC03';
+      case '其他会计资料':
+        return 'AC04';
+      default:
+        return undefined;
+    }
+  }, [subTitle]);
+
+  const resolveDefaultStatus = useCallback(() => {
+    if (subTitle === '凭证关联') return 'draft';
+    return undefined;
+  }, [subTitle]);
+
+  const isPoolView = subTitle === '电子凭证池';
+
+  const loadPoolData = useCallback(async (page = currentPage) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setSelectedRows([]);
+    try {
+      const poolItems = await poolApi.getList();
+      const filtered = poolItems.filter((item) => {
+        if (!searchTerm) return true;
+        return Object.values(item).some((val) =>
+          String(val || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      });
+      const total = filtered.length;
+      const start = (page - 1) * pageInfo.pageSize;
+      const paged = filtered.slice(start, start + pageInfo.pageSize);
+      setLocalData(paged as GenericRow[]);
+      setPageInfo((prev) => ({ ...prev, total, page }));
+    } catch (error) {
+      console.error('Failed to load pool data:', error);
+      setErrorMessage('加载数据失败');
+      showToast('加载数据失败', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, pageInfo.pageSize, searchTerm]);
+
+  const loadArchiveList = useCallback(async (page = currentPage) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setSelectedRows([]);
+    try {
+      const result = await archivesApi.getArchives({
+        page,
+        limit: pageInfo.pageSize,
+        search: searchTerm || undefined,
+        status: statusFilter || resolveDefaultStatus(),
+        categoryCode: resolveCategoryCode(),
+        orgId: orgFilter || undefined
+      });
+
+      if (result.code !== 200 || !result.data) {
+        throw new Error(result.message || '加载档案数据失败');
+      }
+
+      const pageResult: any = result.data;
+      const { records = [], total = 0, size = pageInfo.pageSize, current = page } = pageResult;
+      const mappedItems = (records as any[]).map((item) => mapArchiveToRow(item, subTitle || title));
+      setLocalData(mappedItems);
+      setPageInfo({ total, page: current || page, pageSize: size || pageInfo.pageSize });
+      setCurrentPage(current || page);
+    } catch (error) {
+      console.error('Failed to load archives:', error);
+      setErrorMessage(error instanceof Error ? error.message : '加载档案数据失败');
+      showToast('加载档案数据失败', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, pageInfo.pageSize, searchTerm, statusFilter, resolveDefaultStatus, resolveCategoryCode, orgFilter, subTitle, title]);
+
+  const loadCurrentView = useCallback((page = currentPage) => {
+    if (isPoolView) {
+      return loadPoolData(page);
+    }
+    return loadArchiveList(page);
+  }, [isPoolView, loadPoolData, loadArchiveList, currentPage]);
+
+  // Initial and reactive loading
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [subTitle, searchTerm, statusFilter, orgFilter, resolveCategoryCode, resolveDefaultStatus]);
+
+  useEffect(() => {
+    loadCurrentView(currentPage);
+  }, [loadCurrentView, currentPage]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newRowData, setNewRowData] = useState<Partial<GenericRow>>({});
@@ -210,9 +408,10 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
     try {
       await archivesApi.exportAipPackage(archivalCode);
       showToast(`AIP 包导出成功: ${archivalCode}`);
+      triggerAuditRefresh();
     } catch (error) {
       console.error('导出失败:', error);
-      showToast('导出失败，请检查档案包是否存在', 'error');
+      showToast('导出失败: ' + (error instanceof Error ? error.message : '请检查档案包是否存在'), 'error');
     } finally {
       setIsExporting(null);
     }
@@ -246,42 +445,85 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('确定要删除这条记录吗？')) {
-      setLocalData(prev => prev.filter(row => row.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!id) return;
+    if (isPoolView) {
+      showToast('请通过凭证池接口处理删除或归档', 'error');
+      return;
+    }
+    if (!confirm('确定要删除这条记录吗？')) return;
+
+    try {
+      const res = await archivesApi.deleteArchive(id);
+      if (res.code !== 200) {
+        throw new Error(res.message || '删除失败');
+      }
       showToast('记录已删除');
+      loadCurrentView(currentPage);
+    } catch (error) {
+      console.error('删除失败', error);
+      showToast('删除失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
     }
   };
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (selectedRows.length === 0) {
       alert('请先选择要删除的记录');
       return;
     }
-    if (confirm(`确定要删除选中的 ${selectedRows.length} 条记录吗？`)) {
-      const count = selectedRows.length;
-      setLocalData(prev => prev.filter(row => !selectedRows.includes(row.id)));
+    if (isPoolView) {
+      showToast('凭证池删除请通过后端接口处理', 'error');
+      return;
+    }
+    if (!confirm(`确定要删除选中的 ${selectedRows.length} 条记录吗？`)) return;
+
+    try {
+      await Promise.all(selectedRows.map(async (id) => {
+        const res = await archivesApi.deleteArchive(id);
+        if (res.code !== 200) {
+          throw new Error(res.message || '删除失败');
+        }
+      }));
+      showToast(`已成功删除 ${selectedRows.length} 条记录`);
       setSelectedRows([]);
-      showToast(`已成功删除 ${count} 条记录`);
+      loadCurrentView(currentPage);
+    } catch (error) {
+      console.error('批量删除失败', error);
+      showToast('批量删除失败', 'error');
     }
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = Math.random().toString(36).substr(2, 9);
-    const timestamp = new Date().toISOString().split('T')[0];
-    const rowToAdd: GenericRow = { ...newRowData, id: newId };
-    config.columns.forEach(col => {
-      if (!rowToAdd[col.key]) {
-        if (col.type === 'date') rowToAdd[col.key] = timestamp;
-        if (col.type === 'status') rowToAdd[col.key] = '待处理';
-        if (col.type === 'progress') rowToAdd[col.key] = 0;
+    const now = new Date();
+    const categoryCode = resolveCategoryCode() || 'AC01';
+    const archiveCode = (newRowData as any).archivalCode || (newRowData as any).archiveCode || (newRowData as any).voucherNo || (newRowData as any).code || `ARC-${now.getTime()}`;
+    const payload = {
+      fondsNo: (newRowData as any).fondsNo || 'COMP001',
+      archiveCode,
+      categoryCode,
+      title: (newRowData as any).title || (newRowData as any).subject || '新建档案',
+      fiscalYear: (newRowData as any).fiscalYear || String(now.getFullYear()),
+      fiscalPeriod: (newRowData as any).period || (newRowData as any).fiscalPeriod || '',
+      retentionPeriod: (newRowData as any).retentionPeriod || '10Y',
+      orgName: (newRowData as any).entity || (newRowData as any).orgName || '默认组织',
+      status: resolveDefaultStatus() || 'draft'
+    };
+
+    try {
+      const res = await archivesApi.createArchive(payload);
+      if (res.code !== 200 || !res.data) {
+        throw new Error(res.message || '新增失败');
       }
-    });
-    setLocalData([rowToAdd, ...localData]);
-    setIsAddModalOpen(false);
-    setNewRowData({});
-    showToast('新增记录成功');
+      showToast('新增记录成功');
+      setIsAddModalOpen(false);
+      setNewRowData({});
+      setCurrentPage(1);
+      loadCurrentView(1);
+    } catch (error) {
+      console.error('新增失败', error);
+      showToast('新增失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
+    }
   };
 
   const toggleRowSelection = (id: string) => {
@@ -302,6 +544,10 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
 
   // --- Linking Logic ---
   const openLinkModal = (row: GenericRow) => {
+    if (!demoMode) {
+      showToast('当前为生产模式，手工关联演示已关闭。接入真实关联接口后启用。', 'error');
+      return;
+    }
     setLinkingRow(row);
     setSelectedCandidates([]);
     setIsLinkModalOpen(true);
@@ -431,28 +677,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
   };
 
   // --- Render Helpers ---
-
-  const filteredData = localData.filter(row => {
-    const matchesText = !filterQuery || Object.values(row).some(val =>
-      String(val).toLowerCase().includes(filterQuery.toLowerCase())
-    );
-    const matchesOrg = !orgFilter || row.departmentId === orgFilter || row.orgId === orgFilter;
-    return matchesText && matchesOrg;
-  });
-
-  // Pagination Logic
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Reset to first page when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterQuery, subTitle]);
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const itemsPerPage = pageInfo.pageSize;
+  const totalPages = Math.ceil(pageInfo.total / itemsPerPage) || 1;
 
   const renderCell = (row: GenericRow, column: TableColumn) => {
     const value = row[column.key];
@@ -469,7 +695,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
       if (['已完成', '已归档', '已通过', '已归还', '正常', '机密', '已关联', '已审核', '已记账', '匹配成功', '打开', '通风中'].some(s => statusLower.includes(s))) {
         colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
         Icon = CheckCircle2;
-      } else if (['处理中', '待处理', '待审批', '查看', '激活', '闭合'].some(s => statusLower.includes(s))) {
+      } else if (['处理中', '待处理', '待审批', '查看', '激活', '闭合', '草稿', '待归档'].some(s => statusLower.includes(s))) {
         colorClass = 'bg-blue-50 text-blue-700 border-blue-100';
         Icon = Clock;
       } else if (['错误', '审计失败', '已拒绝', '警告', '异常', '离线', '锁定'].some(s => statusLower.includes(s))) {
@@ -524,20 +750,35 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
     }
 
     if (column.type === 'action') {
+      const exportCode = !isPoolView ? (row.archivalCode || row.code) : null;
       return (
         <div className="flex gap-1">
           {subTitle === '凭证关联' && (
             <button onClick={(e) => { e.stopPropagation(); openLinkModal(row); }} className="text-slate-400 hover:text-primary-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="关联单据"><LinkIcon size={16} /></button>
           )}
           <button onClick={(e) => { e.stopPropagation(); setViewRow(row); setIsViewModalOpen(true); }} className="text-slate-400 hover:text-primary-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="查看"><Eye size={16} /></button>
-          {(row.archivalCode || row.code) && (
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onNavigate && row.id) {
+                onNavigate(ViewState.COMPLIANCE_REPORT, subTitle, row.id);
+              }
+            }}
+            className="text-slate-400 hover:text-indigo-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100"
+            title="合规性检查"
+          >
+            <ShieldCheck size={16} />
+          </button>
+
+          {exportCode && (
             <button
               onClick={(e) => { e.stopPropagation(); handleAipExport(row); }}
               className="text-slate-400 hover:text-emerald-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
               title="导出 AIP 包"
-              disabled={isExporting === (row.archivalCode || row.code)}
+              disabled={isExporting === exportCode}
             >
-              {isExporting === (row.archivalCode || row.code) ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
+              {isExporting === exportCode ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
             </button>
           )}
           <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id) }} className="text-slate-400 hover:text-rose-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="删除"><Trash2 size={16} /></button>
@@ -596,11 +837,29 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
 
           <div className={`flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-300 ${isFilterOpen ? 'w-64 opacity-100 shadow-sm' : 'w-0 opacity-0 border-none'}`}>
             <div className="pl-3 text-slate-400"><Search size={14} /></div>
-            <input type="text" placeholder="搜索..." className="w-full px-3 py-2 text-sm outline-none bg-transparent" value={filterQuery} onChange={(e) => setFilterQuery(e.target.value)} />
+            <input
+              type="text"
+              placeholder="搜索..."
+              className="w-full px-3 py-2 text-sm outline-none bg-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center shadow-sm transition-all active:scale-95 ${isFilterOpen ? 'bg-slate-100 text-primary-600 border-primary-200' : ''}`}>
             <Filter size={16} className="mr-2" /> 筛选
           </button>
+          {isFilterOpen && (
+            <select
+              className="border border-slate-200 rounded px-2 py-2 text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">全部状态</option>
+              <option value="draft">草稿</option>
+              <option value="pending">待归档</option>
+              <option value="archived">已归档</option>
+            </select>
+          )}
           {isFilterOpen && orgOptions.length > 0 && (
             <select
               className="border border-slate-200 rounded px-2 py-2 text-sm"
@@ -686,9 +945,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
             <button
               onClick={() => {
                 showToast(`已将 ${selectedRows.length} 条记录移交归档`, 'success');
-                // Remove selected rows from list (simulate transfer)
-                setLocalData(prev => prev.filter(row => !selectedRows.includes(row.id)));
                 setSelectedRows([]);
+                loadCurrentView(currentPage);
               }}
               className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center shadow-lg shadow-green-500/30 transition-all active:scale-95"
             >
@@ -749,11 +1007,36 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
           <span className="text-sm text-slate-500">已选择 <strong className="text-slate-800">{selectedRows.length}</strong> 项</span>
           <div className="h-4 w-px bg-slate-300"></div>
           <button onClick={handleBatchDelete} className="text-sm text-slate-600 hover:text-rose-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled={selectedRows.length === 0}>批量删除</button>
-          <button onClick={() => { setFilterQuery(''); setSelectedRows([]); setLocalData(config.data) }} className="text-sm text-slate-600 hover:text-primary-600 font-medium">重置视图</button>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setStatusFilter('');
+              setOrgFilter('');
+              setSelectedRows([]);
+              setCurrentPage(1);
+              setErrorMessage(null);
+            }}
+            className="text-sm text-slate-600 hover:text-primary-600 font-medium"
+          >
+            重置视图
+          </button>
         </div>
 
         {/* Dynamic Table */}
         <div className="overflow-auto flex-1 relative">
+          {errorMessage && !isLoading && (
+            <div className="absolute top-4 left-4 right-4 z-0">
+              <div className="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 shadow-sm">
+                {errorMessage}
+              </div>
+            </div>
+          )}
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-10 flex items-center justify-center flex-col">
+              <Loader2 size={32} className="text-primary-500 animate-spin mb-2" />
+              <p className="text-slate-500 text-sm">正在加载数据...</p>
+            </div>
+          )}
           {isMatching && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex items-center justify-center flex-col">
               <Loader2 size={48} className="text-primary-500 animate-spin mb-4" />
@@ -771,7 +1054,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
-              {paginatedData.map((row, idx) => (
+              {localData.map((row, idx) => (
                 <tr key={`${row.id}-${idx}`} className={`hover:bg-slate-50 transition-colors group ${selectedRows.includes(row.id) ? 'bg-primary-50/30' : ''}`}>
                   <td className="p-4"><input type="checkbox" checked={selectedRows.includes(row.id)} onChange={() => toggleRowSelection(row.id)} className="rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" /></td>
                   {config.columns.map((col) => (
@@ -782,8 +1065,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                   </td>
                 </tr>
               ))}
-              {filteredData.length === 0 && (
-                <tr><td colSpan={config.columns.length + 2} className="p-12 text-center text-slate-400">暂无数据</td></tr>
+              {!isLoading && localData.length === 0 && (
+                <tr><td colSpan={config.columns.length + 2} className="p-12 text-center text-slate-400">{errorMessage || '暂无数据'}</td></tr>
               )}
             </tbody>
           </table>
@@ -792,7 +1075,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
         {/* Pagination */}
         <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
           <span className="text-xs text-slate-500">
-            显示 {filteredData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} 到 {Math.min(currentPage * itemsPerPage, filteredData.length)} 条，共 {filteredData.length} 条
+            显示 {pageInfo.total > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} 到 {Math.min(currentPage * itemsPerPage, pageInfo.total)} 条，共 {pageInfo.total} 条
           </span>
           <div className="flex gap-1">
             <button
@@ -803,7 +1086,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
               上一页
             </button>
 
-            {Array.from({ length: Math.ceil(filteredData.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
@@ -817,8 +1100,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
             ))}
 
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredData.length / itemsPerPage)))}
-              disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage >= totalPages}
               className="px-3 py-1 border border-slate-200 rounded bg-white text-xs text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
             >
               下一页
@@ -1019,6 +1302,16 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {(viewRow.archivalCode || viewRow.code) && (
+                    <button
+                      onClick={() => handleAipExport(viewRow)}
+                      disabled={isExporting === (viewRow.archivalCode || viewRow.code)}
+                      className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:text-emerald-700 hover:border-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {isExporting === (viewRow.archivalCode || viewRow.code) ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
+                      导出AIP
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsViewModalOpen(false)}
                     className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
@@ -1121,15 +1414,20 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                       <div className="absolute inset-0 flex items-center justify-center text-slate-400 pointer-events-none">
                         <Loader2 size={32} className="animate-spin" />
                       </div>
-                      <iframe
-                        src={(viewRow.linkedFileId || viewRow.id) ? (() => {
-                          // Enhanced Preview Logic with Multi-Type Support
-                          let content = '';
+                      {(viewRow.fileName?.toLowerCase().endsWith('.ofd') || viewRow.fileType?.toLowerCase() === 'ofd') ? (
+                        <div className="w-full h-full bg-white relative z-10 overflow-hidden">
+                          <OfdViewer fileUrl={`/api/archive/${viewRow.id}/content`} className="w-full h-full" />
+                        </div>
+                      ) : (
+                        <iframe
+                          src={(viewRow.linkedFileId || viewRow.id) ? (() => {
+                            // Enhanced Preview Logic with Multi-Type Support
+                            let content = '';
 
-                          // 1. Accounting Books (Ledger) Template
-                          if (subTitle === '会计账簿') {
-                            const title = viewRow.name || '总分类账';
-                            content = `
+                            // 1. Accounting Books (Ledger) Template
+                            if (subTitle === '会计账簿') {
+                              const title = viewRow.name || '总分类账';
+                              content = `
                               <!DOCTYPE html>
                               <html>
                                 <head>
@@ -1176,15 +1474,15 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                                   </div>
                                 </body>
                               </html>`;
-                          }
-                          // 2. Financial Reports Template
-                          else if (subTitle === '财务报告') {
-                            const title = viewRow.title || viewRow.name || '资产负债表';
-                            const isIncomeStatement = title.includes('利润') || title.includes('损益');
+                            }
+                            // 2. Financial Reports Template
+                            else if (subTitle === '财务报告') {
+                              const title = viewRow.title || viewRow.name || '资产负债表';
+                              const isIncomeStatement = title.includes('利润') || title.includes('损益');
 
-                            if (isIncomeStatement) {
-                              // Income Statement Template
-                              content = `
+                              if (isIncomeStatement) {
+                                // Income Statement Template
+                                content = `
                                 <!DOCTYPE html>
                                 <html>
                                   <head>
@@ -1239,9 +1537,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                                     </div>
                                   </body>
                                 </html>`;
-                            } else {
-                              // Balance Sheet Template (Default)
-                              content = `
+                              } else {
+                                // Balance Sheet Template (Default)
+                                content = `
                                 <!DOCTYPE html>
                                 <html>
                                   <head>
@@ -1291,15 +1589,15 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                                     </div>
                                   </body>
                                 </html>`;
+                              }
                             }
-                          }
-                          // 3. Default: Vouchers / Invoices
-                          else {
-                            const isInvoice = viewRow.type === 'invoice' || (viewRow.name && viewRow.name.includes('发票'));
-                            const title = isInvoice ? '电子发票（增值税普通发票）' : '记账凭证';
-                            const color = isInvoice ? '#3b82f6' : '#ef4444';
+                            // 3. Default: Vouchers / Invoices
+                            else {
+                              const isInvoice = viewRow.type === 'invoice' || (viewRow.name && viewRow.name.includes('发票'));
+                              const title = isInvoice ? '电子发票（增值税普通发票）' : '记账凭证';
+                              const color = isInvoice ? '#3b82f6' : '#ef4444';
 
-                            content = `
+                              content = `
                               <!DOCTYPE html>
                               <html>
                                 <head>
@@ -1403,13 +1701,14 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                                   </div>
                                 </body>
                               </html>`;
-                          }
+                            }
 
-                          return URL.createObjectURL(new Blob([content], { type: 'text/html' }));
-                        })() : ''}
-                        className="w-full h-full relative z-10 bg-white"
-                        title="File Preview"
-                      />
+                            return URL.createObjectURL(new Blob([content], { type: 'text/html' }));
+                          })() : ''}
+                          className="w-full h-full relative z-10 bg-white"
+                          title="File Preview"
+                        />
+                      )}
                     </>
                   )}
                 </div>
@@ -1448,22 +1747,28 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ title, subTitl
                 <button onClick={() => setIsLinkModalOpen(false)}><X size={20} className="text-slate-400" /></button>
               </div>
               <div className="p-6 overflow-y-auto flex-1 space-y-2">
-                <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 text-xs text-amber-800">注意：手动关联将覆盖自动结果。</div>
-                {MOCK_CANDIDATES.map(c => (
-                  <div key={c.id} onClick={() => toggleCandidateSelection(c.id)} className={`flex justify-between p-3 rounded-xl border cursor-pointer ${selectedCandidates.includes(c.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
-                    <div><p className="font-bold">{c.name}</p><p className="text-xs text-slate-500">{c.code}</p></div>
-                    <div className="text-right"><span className={`font-bold ${c.score > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{c.score}%</span></div>
-                  </div>
-                ))}
+                <DemoBadge text="关联候选为演示数据，接入真实关联接口后可关闭演示模式。" />
+                {demoMode ? (
+                  MOCK_CANDIDATES.map(c => (
+                    <div key={c.id} onClick={() => toggleCandidateSelection(c.id)} className={`flex justify-between p-3 rounded-xl border cursor-pointer ${selectedCandidates.includes(c.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
+                      <div><p className="font-bold">{c.name}</p><p className="text-xs text-slate-500">{c.code}</p></div>
+                      <div className="text-right"><span className={`font-bold ${c.score > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{c.score}%</span></div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-slate-500">当前为生产模式，未接入关联候选接口。</div>
+                )}
               </div>
               <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-2">
                 <button onClick={() => setIsLinkModalOpen(false)} className="px-4 py-2 text-slate-600">取消</button>
-                <button onClick={handleLinkConfirm} disabled={selectedCandidates.length === 0} className="px-6 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50">确认关联</button>
+                <button onClick={handleLinkConfirm} disabled={!demoMode || selectedCandidates.length === 0} className="px-6 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50">确认关联</button>
               </div>
             </div>
           </div>
         )
       }
-    </div >
-  );
-};
+    </div>
+  )
+}
+
+export default ArchiveListView;

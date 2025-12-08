@@ -1,19 +1,24 @@
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.dto.request.CreateUserRequest;
 import com.nexusarchive.dto.request.UpdateUserRequest;
 import com.nexusarchive.dto.response.UserResponse;
 import com.nexusarchive.entity.User;
-import com.nexusarchive.mapper.UserMapper;
 import com.nexusarchive.mapper.RoleMapper;
-import com.nexusarchive.util.PasswordUtil;
+import com.nexusarchive.mapper.UserMapper;
 import com.nexusarchive.service.RoleValidationService;
+import com.nexusarchive.util.PasswordPolicyValidator;
+import com.nexusarchive.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,6 +46,7 @@ public class UserService {
         // 三员互斥校验
         roleValidationService.validateThreeRoleExclusion(null, request.getRoleIds());
         // 密码哈希
+        PasswordPolicyValidator.validate(request.getPassword());
         String passwordHash = passwordUtil.hashPassword(request.getPassword());
         // 构建实体
         User user = new User();
@@ -53,8 +59,8 @@ public class UserService {
         user.setAvatar(request.getAvatar());
         user.setDepartmentId(request.getDepartmentId());
         user.setStatus("active");
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setCreatedTime(LocalDateTime.now());
+        user.setLastModifiedTime(LocalDateTime.now());
         // 保存用户
         userMapper.insert(user);
         // 关联角色
@@ -81,7 +87,7 @@ public class UserService {
         existing.setPhone(request.getPhone());
         existing.setAvatar(request.getAvatar());
         existing.setDepartmentId(request.getDepartmentId());
-        existing.setUpdatedAt(LocalDateTime.now());
+        existing.setLastModifiedTime(LocalDateTime.now());
         userMapper.updateById(existing);
         // 更新角色关联
         userMapper.deleteUserRoles(existing.getId());
@@ -101,16 +107,31 @@ public class UserService {
             throw new BusinessException("用户不存在");
         }
         user.setDeleted(1);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setLastModifiedTime(LocalDateTime.now());
         userMapper.updateById(user);
     }
 
     /**
      * 分页查询用户（简化实现）
      */
-    public List<UserResponse> listAll() {
-        List<User> users = userMapper.selectAll();
-        return users.stream().map(this::toResponse).collect(Collectors.toList());
+    public Page<UserResponse> listPaged(int page, int limit, String search, String status) {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.eq("deleted", 0);
+        if (StringUtils.hasText(search)) {
+            wrapper.and(w -> w.like("username", search).or().like("full_name", search));
+        }
+        if (StringUtils.hasText(status)) {
+            wrapper.eq("status", status);
+        }
+        wrapper.orderByDesc("created_at");
+
+        Page<User> pageObj = new Page<>(page, limit);
+        Page<User> userPage = userMapper.selectPage(pageObj, wrapper);
+
+        Page<UserResponse> respPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        respPage.setRecords(userPage.getRecords().stream().map(this::toResponse).collect(Collectors.toList()));
+        respPage.setPages(userPage.getPages());
+        return respPage;
     }
 
     private UserResponse toResponse(User user) {
@@ -127,5 +148,38 @@ public class UserService {
         List<String> roleIds = userMapper.selectRoleIdsByUserId(user.getId());
         resp.setRoleIds(roleIds);
         return resp;
+    }
+
+    /**
+     * 重置密码
+     */
+    @Transactional
+    public void resetPassword(String userId, String newPassword) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        PasswordPolicyValidator.validate(newPassword);
+        String hash = passwordUtil.hashPassword(newPassword);
+        user.setPasswordHash(hash);
+        user.setLastModifiedTime(LocalDateTime.now());
+        userMapper.updateById(user);
+    }
+
+    /**
+     * 更新用户状态
+     */
+    @Transactional
+    public void updateStatus(String userId, String status) {
+        if (!Arrays.asList("active", "disabled", "locked").contains(status)) {
+            throw new BusinessException("非法状态值");
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setStatus(status);
+        user.setLastModifiedTime(LocalDateTime.now());
+        userMapper.updateById(user);
     }
 }

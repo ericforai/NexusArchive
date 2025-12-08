@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    (function () {
+      console.log('[StoragePolyfill] Initializing aggressive patch...');
+
+      function createMemoryStorage() {
+        let store = {};
+        return {
+          getItem: function (key) { return store[key] || null; },
+          setItem: function (key, value) { store[key] = String(value); },
+          removeItem: function (key) { delete store[key]; },
+          clear: function () { store = {}; },
+          key: function (index) { return Object.keys(store)[index] || null; },
+          get length() { return Object.keys(store).length; }
+        };
+      }
+
+      function patchStorage(type) {
+        try {
+          const storage = window[type];
+          const x = '__storage_test__';
+          storage.setItem(x, x);
+          storage.removeItem(x);
+          return; // Supported
+        } catch (e) {
+          console.warn(`[StoragePolyfill] ${type} is blocked. Patching...`);
+        }
+
+        try {
+          // Try to delete the property first (in case it's a getter that throws)
+          try { delete window[type]; } catch (e) { }
+
+          Object.defineProperty(window, type, {
+            value: createMemoryStorage(),
+            configurable: true,
+            enumerable: true,
+            writable: true
+          });
+        } catch (e) {
+          console.error(`[StoragePolyfill] Failed to patch ${type}:`, e);
+        }
+      }
+
+      patchStorage('localStorage');
+      patchStorage('sessionStorage');
+
+      // Patch IndexedDB (often blocked together with storage)
+      try {
+        if (!window.indexedDB) {
+          console.warn('[StoragePolyfill] IndexedDB is missing. Patching with null...');
+          // Minimal mock to prevent crash on property access, though functionality will break
+          Object.defineProperty(window, 'indexedDB', {
+            value: {
+              open: () => ({ result: null, error: new Error('IndexedDB blocked'), onsuccess: null, onerror: null }),
+            },
+            configurable: true, enumerable: true, writable: true
+          });
+        }
+      } catch (e) {
+        console.warn('[StoragePolyfill] Failed to patch IndexedDB:', e);
+      }
+
+      console.log('[StoragePolyfill] Initialization complete.');
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Meta Tags -->
+  <title>DigiVoucher数凭 - 企业级电子会计档案管理系统 | 符合DA/T 94-2022标准 | 单套制归档</title>
+  <meta name="keywords" content="电子会计档案, 会计档案电子化, 单套制, DA/T 94-2022, 电子凭证, 档案管理系统, 信创适配, 财务数字化, 无纸化归档, 电子发票归档">
+  <meta name="description"
+    content="DigiVoucher数凭是一款专为大型企业设计的电子会计档案管理系统，严格遵循DA/T 94-2022国家标准，支持电子凭证、账簿、报表的单套制归档。提供四性检测、OFD版式转换、国密安全加密等核心功能，助力企业实现财务档案全链路无纸化管理。">
+  <meta name="author" content="DigiVoucher Team">
+  <link rel="canonical" href="https://www.digivoucher.cn/" />
+
+  <!-- Open Graph / Facebook / WeChat -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.digivoucher.cn/">
+  <meta property="og:title" content="DigiVoucher数凭 - 企业级电子会计档案管理系统">
+  <meta property="og:description" content="遵循DA/T 94-2022标准，提供四性检测、OFD版式转换、国密安全加密，助力企业实现财务档案全链路无纸化管理。">
+  <meta property="og:image" content="https://www.digivoucher.cn/og-image.jpg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://www.digivoucher.cn/">
+  <meta property="twitter:title" content="DigiVoucher数凭 - 企业级电子会计档案管理系统">
+  <meta property="twitter:description" content="遵循DA/T 94-2022标准，提供四性检测、OFD版式转换、国密安全加密，助力企业实现财务档案全链路无纸化管理。">
+  <meta property="twitter:image" content="https://www.digivoucher.cn/og-image.jpg">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            slate: {
+              850: '#151e2e',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+
+  <script type="importmap">
+{
+  "imports": {
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-BPi8qpxJ.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DeMRz56U.css">
+</head>
+
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-primary-100 selection:text-primary-900">
+  <div id="root"></div>
+</body>
+
+</html>

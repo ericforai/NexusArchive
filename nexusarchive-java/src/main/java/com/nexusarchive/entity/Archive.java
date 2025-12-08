@@ -16,7 +16,14 @@ public class Archive {
     private String id;
 
     /**
-     * 全宗号 (M9)
+     * 所属全宗ID (Ref: BasFonds)
+     * Note: This column does not exist in DB yet.
+     */
+    @TableField(exist = false)
+    private String fondsId;
+
+    /**
+     * 全宗号 (M9) - 冗余存储，便于查询
      */
     private String fondsNo;
 
@@ -31,8 +38,9 @@ public class Archive {
     private String categoryCode;
 
     /**
-     * 题名 (M22)
+     * 题名 (M22) - Encrypted with SM4
      */
+    @TableField(typeHandler = com.nexusarchive.config.mybatis.EncryptTypeHandler.class)
     private String title;
 
     /**
@@ -56,9 +64,20 @@ public class Archive {
     private String orgName;
 
     /**
-     * 责任者/制单人 (M32)
+     * 责任者/制单人 (M32) - SM4 加密存储
+     * 
+     * 合规要求：个人信息加密保护
      */
+    @TableField(typeHandler = com.nexusarchive.config.mybatis.EncryptTypeHandler.class)
     private String creator;
+
+    /**
+     * 摘要/说明 - SM4 加密存储
+     * 
+     * 合规要求：档案内容摘要可能包含敏感信息
+     */
+    @TableField(typeHandler = com.nexusarchive.config.mybatis.EncryptTypeHandler.class)
+    private String summary;
 
     /**
      * 状态: draft, pending, archived
@@ -132,6 +151,21 @@ public class Archive {
 
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime lastModifiedTime;
+
+    /**
+     * 纸质档案关联号 (物理存放位置)
+     */
+    private String paperRefLink;
+
+    /**
+     * 销毁留置 (冻结状态)
+     */
+    private Boolean destructionHold;
+
+    /**
+     * 留置/冻结原因
+     */
+    private String holdReason;
 
     @TableLogic
     private Integer deleted;

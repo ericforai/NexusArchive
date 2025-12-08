@@ -7,6 +7,7 @@ import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -22,20 +23,31 @@ public class ArchiveController {
     private final AuditLogService auditLogService;
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Page<Archive>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String status) {
-        return Result.success(archiveService.getArchives(page, limit, search, status));
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String categoryCode,
+            @RequestParam(required = false) String orgId) {
+        return Result.success(archiveService.getArchives(page, limit, search, status, categoryCode, orgId));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Archive> get(@PathVariable String id) {
         return Result.success(archiveService.getArchiveById(id));
     }
 
+    @GetMapping("/recent")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    public Result<java.util.List<Archive>> recent(@RequestParam(defaultValue = "5") int limit) {
+        return Result.success(archiveService.getRecentArchives(limit));
+    }
+
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Archive> create(@RequestBody Archive archive, HttpServletRequest request) {
         String userId = (String) request.getAttribute("userId");
         Archive created = archiveService.createArchive(archive, userId);
@@ -48,6 +60,7 @@ public class ArchiveController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> update(@PathVariable String id, @RequestBody Archive archive, HttpServletRequest request) {
         archiveService.updateArchive(id, archive);
         
@@ -60,6 +73,7 @@ public class ArchiveController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> delete(@PathVariable String id, HttpServletRequest request) {
         archiveService.deleteArchive(id);
         

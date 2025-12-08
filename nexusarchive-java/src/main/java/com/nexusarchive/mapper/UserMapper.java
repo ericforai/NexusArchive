@@ -41,6 +41,12 @@ public interface UserMapper extends BaseMapper<User> {
      */
     @Select("SELECT * FROM sys_user WHERE deleted = 0")
     List<User> selectAll();
+
+    /**
+     * 查询有效用户数量
+     */
+    @Select("SELECT COUNT(*) FROM sys_user WHERE deleted = 0 AND status = 'active'")
+    int countActiveUsers();
     
     /**
      * 根据用户ID查询其角色ID列表

@@ -146,12 +146,18 @@ CREATE TABLE acc_archive (
     org_name VARCHAR(100) NOT NULL,
     creator VARCHAR(50),
     status VARCHAR(20) DEFAULT 'draft',
+    amount DECIMAL(18, 2),
+    doc_date DATE,
+    unique_biz_id VARCHAR(64),
     standard_metadata JSONB,
     custom_metadata JSONB,
     security_level VARCHAR(20) DEFAULT 'internal',
     location VARCHAR(200),
     department_id VARCHAR(32),
     created_by VARCHAR(32),
+    fixity_value VARCHAR(128),
+    fixity_algo VARCHAR(20),
+    volume_id VARCHAR(64),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted INTEGER DEFAULT 0,
@@ -169,8 +175,15 @@ COMMENT ON COLUMN acc_archive.fiscal_period IS 'M41 会计月份/期间';
 COMMENT ON COLUMN acc_archive.retention_period IS 'M12 保管期限';
 COMMENT ON COLUMN acc_archive.org_name IS 'M6 立档单位名称';
 COMMENT ON COLUMN acc_archive.creator IS 'M32 责任者/制单人';
+COMMENT ON COLUMN acc_archive.amount IS '金额';
+COMMENT ON COLUMN acc_archive.doc_date IS '业务日期';
+COMMENT ON COLUMN acc_archive.unique_biz_id IS '唯一业务ID';
 COMMENT ON COLUMN acc_archive.standard_metadata IS 'DA/T 94标准元数据(JSON)';
 COMMENT ON COLUMN acc_archive.custom_metadata IS '客户自定义元数据(JSON)';
+COMMENT ON COLUMN acc_archive.fixity_value IS '文件哈希值(SM3/SHA256)';
+COMMENT ON COLUMN acc_archive.fixity_algo IS '哈希算法: SM3, SHA256';
+COMMENT ON COLUMN acc_archive.volume_id IS '所属案卷ID';
+
 
 CREATE INDEX idx_archive_fonds_year ON acc_archive(fonds_no, fiscal_year);
 CREATE INDEX idx_archive_code ON acc_archive(archive_code);
@@ -255,16 +268,24 @@ CREATE TABLE sys_audit_log (
     data_before TEXT,
     data_after TEXT,
     session_id VARCHAR(100),
-    ip_address VARCHAR(50),
+    ip_address VARCHAR(50) NOT NULL,
+    mac_address VARCHAR(50) NOT NULL DEFAULT 'UNKNOWN',
+    object_digest VARCHAR(128),
     user_agent VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE sys_audit_log IS '安全审计日志表';
 COMMENT ON COLUMN sys_audit_log.role_type IS '操作人角色类型';
-COMMENT ON COLUMN sys_audit_log.action IS '操作类型: login/create/update/delete/view/export/config';
+COMMENT ON COLUMN sys_audit_log.action IS '操作类型: CAPTURE, ARCHIVE, MODIFY_META, DESTROY, PRINT, DOWNLOAD';
 COMMENT ON COLUMN sys_audit_log.operation_result IS '操作结果: success/fail/denied';
 COMMENT ON COLUMN sys_audit_log.risk_level IS '风险等级: low/medium/high/critical';
+COMMENT ON COLUMN sys_audit_log.data_before IS '操作前数据快照';
+COMMENT ON COLUMN sys_audit_log.data_after IS '操作后数据快照';
+COMMENT ON COLUMN sys_audit_log.ip_address IS '客户端IP地址(必填)';
+COMMENT ON COLUMN sys_audit_log.mac_address IS 'MAC地址(必填,无法获取时为UNKNOWN)';
+COMMENT ON COLUMN sys_audit_log.object_digest IS '被操作对象的哈希值';
+
 
 CREATE INDEX idx_audit_time ON sys_audit_log(created_at);
 CREATE INDEX idx_audit_user ON sys_audit_log(username);

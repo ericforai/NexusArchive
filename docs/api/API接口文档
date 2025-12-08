@@ -1,0 +1,584 @@
+
+---
+
+## 一、概念对齐：模式 ↔ 你现在的技术栈
+
+* **Canonical Model（统一凭证模型）**
+  → Java 的 Domain 实体 + 数据库表（PostgreSQL / 达梦 / 金仓），通过 MyBatis-Plus 管理。
+
+* **YonSuite Adapter（外部适配层）**
+  → 一组 Spring `@Service` / `@Component`：负责
+  `YonAuthService`（token） + `YonSuiteClient`（HTTP 调用） + `YonVoucherMapper`（映射）。
+
+* **Integration REST 接口**
+  → Spring MVC `@RestController`，提供：
+
+  * `/api/integration/yonsuite/vouchers/sync-by-id`
+  * `/api/integration/yonsuite/sso/get-login-code`
+
+* **安全体系**
+  → 走你现有的 Spring Security + JWT，在上述 REST 控制器上加权限控制即可；跟 Yon 的 access_token 是两套逻辑，互不冲突。
+
+---
+
+## 二、后端推荐包结构（按你的项目）
+
+在 `nexusarchive-java/` 下建议：
+
+```text
+com.yourcompany.nexusarchive
+ ├─ integration
+ │   └─ yonsuite
+ │       ├─ config
+ │       │   ├─ YonSuiteTenantConfig.java
+ │       │   ├─ YonSuiteTenantConfigMapper.java   // MyBatis-Plus
+ │       │   └─ YonSuiteConfigService.java
+ │       ├─ auth
+ │       │   └─ YonAuthService.java
+ │       ├─ client
+ │       │   └─ YonSuiteClient.java
+ │       ├─ mapper
+ │       │   └─ YonVoucherMapper.java
+ │       ├─ service
+ │       │   ├─ YonVoucherSyncService.java
+ │       │   └─ YonSsoService.java
+ │       └─ web
+ │           └─ YonSuiteIntegrationController.java
+ ├─ domain
+ │   └─ voucher
+ │       ├─ CanonicalVoucher.java
+ │       ├─ CanonicalVoucherLine.java
+ │       └─ CanonicalVoucherMapper.java   // MyBatis-Plus
+```
+
+---
+
+## 三、关键实体与配置（MyBatis-Plus 版）
+
+### 1. YonSuite 租户配置实体
+
+```java
+@Data
+@TableName("yon_suite_tenant_config")
+public class YonSuiteTenantConfig {
+
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+
+    private String tenantId;          // 我方租户ID
+    private String baseUrl;           // https://dbox.yonyoucloud.com/iuap-api-gateway
+    private String appKey;
+    private String appSecret;
+    private String thirdUcId;         // 集成认证中心 thirdUcId
+
+    private String accessToken;
+    private LocalDateTime accessTokenExpiresAt;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+```java
+public interface YonSuiteTenantConfigMapper extends BaseMapper<YonSuiteTenantConfig> {
+}
+```
+
+```java
+@Service
+@RequiredArgsConstructor
+public class YonSuiteConfigService {
+
+    private final YonSuiteTenantConfigMapper mapper;
+
+    public YonSuiteTenantConfig getByTenantId(String tenantId) {
+        return mapper.selectOne(
+                Wrappers.<YonSuiteTenantConfig>lambdaQuery()
+                        .eq(YonSuiteTenantConfig::getTenantId, tenantId)
+                        .last("limit 1")
+        );
+    }
+
+    public void saveOrUpdate(YonSuiteTenantConfig config) {
+        if (config.getId() == null) {
+            mapper.insert(config);
+        } else {
+            config.setUpdatedAt(LocalDateTime.now());
+            mapper.updateById(config);
+        }
+    }
+}
+```
+
+---
+
+## 四、YonAuthService（Java 版 token 管理）
+
+```java
+@Service
+@RequiredArgsConstructor
+public class YonAuthService {
+
+    private final YonSuiteConfigService configService;
+
+    // 简单本地缓存，避免每次查库（可选）
+    private final ConcurrentHashMap<String, YonSuiteTenantConfig> cache = new ConcurrentHashMap<>();
+
+    public String getAccessToken(String tenantId) {
+        YonSuiteTenantConfig cfg = getConfig(tenantId);
+
+        if (cfg.getAccessToken() != null && cfg.getAccessTokenExpiresAt() != null) {
+            if (cfg.getAccessTokenExpiresAt().isAfter(LocalDateTime.now().plusSeconds(60))) {
+                return cfg.getAccessToken();
+            }
+        }
+
+        // TODO: 按“企业自建获取token”文档实现真正的获取逻辑
+        TokenResponse tokenResp = callYonGetTokenApi(cfg);
+
+        cfg.setAccessToken(tokenResp.getAccessToken());
+        cfg.setAccessTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResp.getExpiresIn() - 60));
+
+        configService.saveOrUpdate(cfg);
+        cache.put(tenantId, cfg);
+
+        return cfg.getAccessToken();
+    }
+
+    private YonSuiteTenantConfig getConfig(String tenantId) {
+        YonSuiteTenantConfig cached = cache.get(tenantId);
+        if (cached != null) {
+            return cached;
+        }
+        YonSuiteTenantConfig cfg = configService.getByTenantId(tenantId);
+        if (cfg == null) {
+            throw new IllegalStateException("YonSuite config not found for tenant: " + tenantId);
+        }
+        cache.put(tenantId, cfg);
+        return cfg;
+    }
+
+    private TokenResponse callYonGetTokenApi(YonSuiteTenantConfig cfg) {
+        // TODO: 根据用友“企业自建获取token”官方文档实现
+        // 使用 Hutool HttpRequest 或 Spring WebClient 均可
+        throw new UnsupportedOperationException("callYonGetTokenApi not implemented");
+    }
+
+    @Data
+    public static class TokenResponse {
+        private String accessToken;
+        private long expiresIn;
+    }
+}
+```
+
+---
+
+## 五、YonSuiteClient（Java 版 HTTP 调用）
+
+使用 Hutool（你项目里已有）：
+
+```java
+@Service
+@RequiredArgsConstructor
+public class YonSuiteClient {
+
+    private final YonAuthService authService;
+    private final YonSuiteConfigService configService;
+
+    private String buildBaseUrl(String tenantId) {
+        YonSuiteTenantConfig cfg = configService.getByTenantId(tenantId);
+        if (cfg == null) {
+            throw new IllegalStateException("YonSuite config not found for tenant: " + tenantId);
+        }
+        return StrUtil.removeSuffix(cfg.getBaseUrl(), "/");
+    }
+
+    public JSONObject queryVoucherById(String tenantId, String voucherId) {
+        String token = authService.getAccessToken(tenantId);
+        String baseUrl = buildBaseUrl(tenantId);
+
+        String url = baseUrl + "/yonbip/EFI/openapi/voucher/queryVoucherById"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        JSONObject body = new JSONObject();
+        body.putOnce("voucherId", voucherId);
+
+        String respStr = HttpRequest.post(url)
+                .header("Content-Type", "application/json")
+                .body(body.toString())
+                .timeout(10_000)
+                .execute()
+                .body();
+
+        JSONObject resp = JSONUtil.parseObj(respStr);
+        if (!"200".equals(resp.getStr("code"))) {
+            throw new IllegalStateException("YonSuite queryVoucherById error: "
+                    + resp.getStr("code") + " - " + resp.getStr("message"));
+        }
+
+        return resp.getJSONObject("data");
+    }
+
+    public ThirdLoginCodeResp getThirdLoginCode(
+            String tenantId,
+            ThirdLoginCodeReq req
+    ) {
+        String token = authService.getAccessToken(tenantId);
+        String baseUrl = buildBaseUrl(tenantId);
+
+        String url = baseUrl + "/yonbip/yht/getThirdLoginCode"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        JSONObject body = new JSONObject();
+        body.putOpt("thirdUcId", req.getThirdUcId());
+        body.putOpt("userId", req.getUserId());
+        body.putOpt("mobile", req.getMobile());
+        body.putOpt("email", req.getEmail());
+        body.putOpt("userName", req.getUserName());
+        body.putOpt("userCode", req.getUserCode());
+
+        String respStr = HttpRequest.post(url)
+                .header("Content-Type", "application/json")
+                .body(body.toString())
+                .timeout(10_000)
+                .execute()
+                .body();
+
+        JSONObject resp = JSONUtil.parseObj(respStr);
+        if (!"200".equals(resp.getStr("code"))) {
+            throw new IllegalStateException("YonSuite getThirdLoginCode error: "
+                    + resp.getStr("code") + " - " + resp.getStr("message"));
+        }
+
+        JSONObject data = resp.getJSONObject("data");
+        ThirdLoginCodeResp result = new ThirdLoginCodeResp();
+        result.setStatus(data.getStr("status"));
+        result.setCurYhtEnvironment(data.getStr("curYhtEnvironment"));
+        result.setCode(data.getStr("code"));
+        result.setBindYhtUser("true".equalsIgnoreCase(data.getStr("isBindYhtUser")));
+        return result;
+    }
+
+    @Data
+    public static class ThirdLoginCodeReq {
+        private String thirdUcId;
+        private String userId;
+        private String mobile;
+        private String email;
+        private String userName;
+        private String userCode;
+    }
+
+    @Data
+    public static class ThirdLoginCodeResp {
+        private String status;
+        private String curYhtEnvironment;
+        private String code;
+        private boolean bindYhtUser;
+    }
+}
+```
+
+---
+
+## 六、SSO 与凭证同步的 Service + Controller
+
+### 1. 凭证同步 Service
+
+```java
+@Service
+@RequiredArgsConstructor
+public class YonVoucherSyncService {
+
+    private final YonSuiteClient yonSuiteClient;
+    private final YonVoucherMapper yonVoucherMapper;        // Yon JSON -> CanonicalVoucher
+    private final CanonicalVoucherMapper canonicalMapper;   // MyBatis-Plus 持久化
+
+    @Transactional
+    public String syncByVoucherId(String tenantId, String voucherId) {
+        JSONObject raw = yonSuiteClient.queryVoucherById(tenantId, voucherId);
+        CanonicalVoucher voucher = yonVoucherMapper.fromYon(raw, tenantId);
+        // upsert：根据 source_system + source_voucher_id
+        canonicalMapper.upsertBySource(voucher);
+        return voucher.getId();
+    }
+}
+```
+
+### 2. SSO Service
+
+```java
+@Service
+@RequiredArgsConstructor
+public class YonSsoService {
+
+    private final YonSuiteClient yonSuiteClient;
+    private final YonSuiteConfigService configService;
+
+    public YonSsoDto getLoginCode(String tenantId, String userId,
+                                  String mobile, String email,
+                                  String userName, String userCode) {
+
+        YonSuiteTenantConfig cfg = configService.getByTenantId(tenantId);
+        if (cfg == null) {
+            throw new IllegalStateException("YonSuite config not found for tenant: " + tenantId);
+        }
+
+        YonSuiteClient.ThirdLoginCodeReq req = new YonSuiteClient.ThirdLoginCodeReq();
+        req.setThirdUcId(cfg.getThirdUcId());
+        req.setUserId(userId);
+        req.setMobile(mobile);
+        req.setEmail(email);
+        req.setUserName(userName);
+        req.setUserCode(userCode);
+
+        YonSuiteClient.ThirdLoginCodeResp resp =
+                yonSuiteClient.getThirdLoginCode(tenantId, req);
+
+        YonSsoDto dto = new YonSsoDto();
+        dto.setCurYhtEnvironment(resp.getCurYhtEnvironment());
+        dto.setLoginCode(resp.getCode());
+        dto.setBound(resp.isBindYhtUser());
+        return dto;
+    }
+
+    @Data
+    public static class YonSsoDto {
+        private String curYhtEnvironment;
+        private String loginCode;
+        private boolean bound;
+    }
+}
+```
+
+### 3. REST Controller（走 Spring Security + JWT）
+
+```java
+@RestController
+@RequestMapping("/api/integration/yonsuite")
+@RequiredArgsConstructor
+public class YonSuiteIntegrationController {
+
+    private final YonVoucherSyncService voucherSyncService;
+    private final YonSsoService yonSsoService;
+
+    @PostMapping("/vouchers/sync-by-id")
+    @PreAuthorize("hasAuthority('yon:sync_voucher')")
+    public ResponseEntity<?> syncVoucherById(@RequestBody SyncVoucherReq req) {
+        String internalId = voucherSyncService.syncByVoucherId(req.getTenantId(), req.getVoucherId());
+        return ResponseEntity.ok(Map.of(
+                "voucher_id", internalId,
+                "source_voucher_id", req.getVoucherId()
+        ));
+    }
+
+    @PostMapping("/sso/get-login-code")
+    @PreAuthorize("hasAuthority('yon:sso')")
+    public ResponseEntity<?> getLoginCode(@RequestBody YonSsoReq req) {
+        YonSsoService.YonSsoDto dto = yonSsoService.getLoginCode(
+                req.getTenantId(),
+                req.getUserId(),
+                req.getMobile(),
+                req.getEmail(),
+                req.getUserName(),
+                req.getUserCode()
+        );
+        return ResponseEntity.ok(dto);
+    }
+
+    @Data
+    public static class SyncVoucherReq {
+        private String tenantId;
+        private String voucherId;
+    }
+
+    @Data
+    public static class YonSsoReq {
+        private String tenantId;
+        private String userId;
+        private String mobile;
+        private String email;
+        private String userName;
+        private String userCode;
+    }
+}
+```
+
+---
+
+## 七、给 Cursor 的 Java 后端 Prompt（简版）
+
+```text
+You are a senior Java backend engineer.
+
+Tech:
+- Spring Boot 3.1.x
+- Java 17
+- MyBatis-Plus
+- Hutool for HTTP
+- PostgreSQL (and later Dameng/Kingbase, but keep SQL portable)
+
+Task:
+Based on this architecture:
+
+1) Implement a YonSuite integration module with:
+   - YonSuiteTenantConfig entity + MyBatis-Plus mapper
+   - YonSuiteConfigService
+   - YonAuthService (manages access_token with DB + in-memory cache; token API left as TODO)
+   - YonSuiteClient with:
+     - queryVoucherById(tenantId, voucherId)
+     - getThirdLoginCode(tenantId, req)
+   - YonVoucherSyncService (calls YonSuiteClient + maps to CanonicalVoucher + upsert to DB)
+   - YonSsoService (wraps getThirdLoginCode)
+   - YonSuiteIntegrationController exposing:
+     - POST /api/integration/yonsuite/vouchers/sync-by-id
+     - POST /api/integration/yonsuite/sso/get-login-code
+
+2) Code style:
+   - Use Lombok (@Data, @RequiredArgsConstructor).
+   - Use Hutool HttpRequest/JSONUtil.
+   - Do NOT implement the actual Yon token API, just leave TODO with clear comments.
+
+Use the following mapping rules and request/response structures for:
+- voucher/queryVoucherById
+- yht/getThirdLoginCode
+
+[PASTE THE TWO YON DOCUMENTS AND THE CANONICAL VOUCHER MAPPING HERE]
+
+Output:
+- Package structure under com.yourcompany.nexusarchive.integration.yonsuite
+- All key Java classes (entities, mappers, services, client, controller) in compilable form.
+```
+
+---
+
+总结：
+现有 Spring Boot + React 架构完全可以直接承载「Canonical Model + YonSuite Adapter」模式，不冲突；上面给的是一套完全对齐你当前栈的落地实现骨架。你下一步如果把“企业自建获取 token”那段文档给出，我可以把 `callYonGetTokenApi` 也补完整。
+
+---
+
+## 八、ERP 推送接口 (DA/T 104 合规版)
+
+为了满足 **DA/T 104-2024** 标准及实时归档需求，系统提供标准化的 "Push" 接口，允许 ERP 系统主动推送会计资料 SIP 包。
+
+### 1. 接收归档信息包 (Receive SIP)
+
+*   **URL**: `/api/integration/erp/receive-sip`
+*   **Method**: `POST`
+*   **Content-Type**: `application/json` (推荐) 或 `application/xml`
+*   **Auth**: Bearer Token (需申请专用集成 Token)
+
+#### 请求参数 (JSON 示例)
+
+```json
+{
+  "source_system": "Yonyou_U8C", // 来源系统标识
+  "batch_id": "BATCH_20231027_001", // 批次号 (可选)
+  "vouchers": [
+    {
+      "voucher_id": "V-202310-001", // 来源系统唯一ID
+      "voucher_date": "2023-10-27",
+      "voucher_type": "记账凭证",
+      "summary": "报销差旅费",
+      "total_amount": 1250.00, // 必须为数字，两位小数
+      "entries": [
+        {
+          "summary": "张三差旅费",
+          "account_code": "6602",
+          "account_name": "管理费用",
+          "debit_amount": 1250.00,
+          "credit_amount": 0.00
+        },
+        {
+          "summary": "银行付款",
+          "account_code": "1002",
+          "account_name": "银行存款",
+          "debit_amount": 0.00,
+          "credit_amount": 1250.00
+        }
+      ],
+      "attachments": [
+        {
+          "file_name": "invoice_123.pdf",
+          "file_url": "http://erp-internal/files/invoice_123.pdf", // 或 Base64
+          "file_hash": "sm3:abc123...", // 来源端计算的哈希 (用于真实性校验)
+          "file_type": "原始凭证"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### 响应参数 (Feedback Object)
+
+符合 DA/T 104 反馈机制要求。
+
+```json
+{
+  "status": "SUCCESS", // 或 "FAIL", "PARTIAL_SUCCESS"
+  "timestamp": "2023-10-27T10:00:00+08:00",
+  "results": [
+    {
+      "source_voucher_id": "V-202310-001",
+      "archival_code": "001-2023-10Y-FIN-AC01-0001", // 成功生成的档号
+      "status": "ARCHIVED",
+      "message": "归档成功"
+    }
+  ],
+  "global_error": null // 如果是系统级错误，在此显示
+}
+```
+
+### 2. 幂等性逻辑 (Idempotency)
+
+系统严格执行以下幂等性规则：
+
+1.  **DRAFT (草稿) 状态**: 如果凭证已存在但状态为 `DRAFT`，允许覆盖更新 (Update)。
+2.  **ARCHIVED (已归档) 状态**: 如果凭证已存在且状态为 `ARCHIVED`，拒绝修改，返回 `409 Conflict`。
+    *   **错误信息**: `Voucher [ID] is already archived and cannot be modified.`
+3.  **New (新凭证)**: 如果凭证不存在，则创建 (Create)。
+
+---
+
+## 九、YonSuite 凭证同步接口
+
+系统支持从用友 YonSuite (YS) 财务系统拉取凭证数据。
+
+### 1. 配置 (application.yml)
+
+```yaml
+yonsuite:
+  base-url: https://dbox.yonyoucloud.com
+  app-key: 您的appKey
+  app-secret: 您的appSecret
+```
+
+### 2. 按期间同步凭证
+
+*   **URL**: `/api/integration/yonsuite/vouchers/sync`
+*   **Method**: `POST`
+
+```json
+{
+  "accbookCode": "ZZCS",
+  "periodStart": "2024-11",
+  "periodEnd": "2024-11"
+}
+```
+
+### 3. 按凭证ID同步
+
+*   **URL**: `/api/integration/yonsuite/vouchers/sync-by-id`
+*   **Method**: `POST`
+
+```json
+{
+  "voucherId": "1674770115738468360"
+}
+```
+
+### 4. Token 自动管理
+
+系统自动处理 Token 获取与刷新，使用 HmacSHA256 签名算法，无需手动传递 access_token。

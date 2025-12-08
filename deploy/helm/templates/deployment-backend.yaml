@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nexusarchive.fullname" . }}-backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "nexusarchive.fullname" . }}-backend
+  template:
+    metadata:
+      labels:
+        app: {{ include "nexusarchive.fullname" . }}-backend
+    spec:
+      containers:
+        - name: backend
+          image: {{ .Values.image.backend }}
+          ports:
+            - containerPort: {{ .Values.backend.service.port }}
+          env:
+            {{- range $key, $val := .Values.backend.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.backend.volumeMounts }}
+            {{- toYaml .Values.backend.volumeMounts | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: license
+          secret:
+            secretName: {{ include "nexusarchive.fullname" . }}-license

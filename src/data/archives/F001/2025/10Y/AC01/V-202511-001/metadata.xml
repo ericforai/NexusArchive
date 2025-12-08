@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive_package xmlns="http://www.nexusarchive.com/schema/aip" version="1.0">
+    <header>
+        <package_id>AIP-202511-001</package_id>
+        <created_time>2025-11-22T18:30:00</created_time>
+        <creator>NexusArchive System</creator>
+    </header>
+    <metadata>
+        <fonds_code>F001</fonds_code>
+        <year>2025</year>
+        <retention_period>10Y</retention_period>
+        <category_code>AC01</category_code>
+        <archival_code>F001-2025-10Y-AC01-V-202511-001</archival_code>
+        <title>2025年11月记账凭证-001</title>
+        <security_level>INTERNAL</security_level>
+    </metadata>
+    <content>
+        <file>
+            <name>dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf</name>
+            <size>153600</size>
+            <format>PDF</format>
+            <hash_algo>SM3</hash_algo>
+            <hash_value>a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7</hash_value>
+            <path>content/dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf</path>
+        </file>
+    </content>
+    <audit>
+        <four_nature_check>
+            <authenticity>PASS</authenticity>
+            <integrity>PASS</integrity>
+            <usability>PASS</usability>
+            <safety>PASS</safety>
+        </four_nature_check>
+    </audit>
+</archive_package>

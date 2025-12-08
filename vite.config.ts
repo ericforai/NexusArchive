@@ -6,9 +6,16 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     server: {
-      port: 5174,
+      port: 5173,
       host: '0.0.0.0',
       strictPort: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+        }
+      }
     },
     plugins: [react()],
     define: {
@@ -17,8 +24,18 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       }
-    }
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/__tests__/setup.ts'],
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      coverage: {
+        reporter: ['text', 'json', 'html'],
+        exclude: ['node_modules/', 'src/__tests__/setup.ts'],
+      },
+    },
   };
 });

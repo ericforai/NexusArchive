@@ -1,0 +1,48 @@
+package com.nexusarchive.controller;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.common.result.Result;
+import com.nexusarchive.entity.BasFonds;
+import com.nexusarchive.service.BasFondsService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/bas/fonds")
+@RequiredArgsConstructor
+public class BasFondsController {
+
+    private final BasFondsService basFondsService;
+
+    @GetMapping("/page")
+    public Result<Page<BasFonds>> getPage(@RequestParam(defaultValue = "1") int page,
+                                          @RequestParam(defaultValue = "10") int limit) {
+        Page<BasFonds> pageParam = new Page<>(page, limit);
+        return Result.success(basFondsService.page(pageParam));
+    }
+
+    @GetMapping("/list")
+    public Result<List<BasFonds>> list() {
+        return Result.success(basFondsService.list());
+    }
+
+    @PostMapping
+    public Result<Boolean> save(@RequestBody BasFonds fonds) {
+        if (fonds.getFondsCode() == null || fonds.getFondsName() == null) {
+            return Result.error("Fonds Code and Name are required");
+        }
+        return Result.success(basFondsService.save(fonds));
+    }
+
+    @PutMapping
+    public Result<Boolean> update(@RequestBody BasFonds fonds) {
+        return Result.success(basFondsService.updateById(fonds));
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Boolean> remove(@PathVariable String id) {
+        return Result.success(basFondsService.removeById(id));
+    }
+}

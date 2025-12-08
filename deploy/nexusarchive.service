@@ -1,0 +1,21 @@
+[Unit]
+Description=NexusArchive Backend Service
+After=syslog.target network.target postgresql.service
+
+[Service]
+User=root
+# Ideally create a dedicated user: User=nexus
+WorkingDirectory=/opt/nexusarchive
+ExecStart=/usr/bin/java -Djava.net.useSystemProxies=false -Dhttp.proxyHost= -Dhttps.proxyHost= -jar /opt/nexusarchive/app.jar
+SuccessExitStatus=143
+
+# Environment Variables
+# Load from .env file
+EnvironmentFile=/opt/nexusarchive/.env
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.dto.request.CreateUserRequest;
 import com.nexusarchive.dto.request.LoginRequest;
 import com.nexusarchive.dto.request.UpdateUserRequest;
+import com.nexusarchive.entity.Role;
+import com.nexusarchive.mapper.RoleMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,16 +34,36 @@ public class AdminUserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private RoleMapper roleMapper;
+
     private String token;
+    private String adminRoleId;
 
     @BeforeEach
     public void loginAndGetToken() throws Exception {
+        // Ensure admin role exists for the test user
+        Role existingRole = roleMapper.findByCode("role_system_admin");
+        if (existingRole == null) {
+            Role adminRole = new Role();
+            adminRole.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+            adminRole.setName("系统管理员");
+            adminRole.setCode("role_system_admin");
+            adminRole.setRoleCategory("SYSTEM");
+            adminRole.setIsExclusive(false);
+            adminRole.setCreatedTime(java.time.LocalDateTime.now());
+            roleMapper.insert(adminRole);
+            this.adminRoleId = adminRole.getId();
+        } else {
+            this.adminRoleId = existingRole.getId();
+        }
+
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("admin");
         loginRequest.setPassword("admin123");
         MvcResult result = mockMvc.perform(post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andReturn();
         String response = result.getResponse().getContentAsString();
@@ -56,43 +78,39 @@ public class AdminUserControllerTest {
         createRequest.setUsername(username);
         createRequest.setPassword("Password123!");
         createRequest.setFullName("Test User");
-        createRequest.setRoleIds(Collections.singletonList("role_system_admin")); // Assuming this role exists
+        createRequest.setRoleIds(Collections.singletonList(adminRoleId)); // role created in @BeforeEach
 
         MvcResult createResult = mockMvc.perform(post("/admin/users")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isOk())
                 .andReturn();
 
         String createResponse = createResult.getResponse().getContentAsString();
-        // Note: AdminUserController returns ResponseEntity<UserResponse> directly, not wrapped in Result
-        // But wait, AdminRoleController returns Result<T>. AdminUserController returns ResponseEntity<UserResponse>.
-        // Let's check AdminUserController again. It returns ResponseEntity<UserResponse>.
-        // So the JSON is the UserResponse object directly.
         String userId = objectMapper.readTree(createResponse).path("id").asText();
         assertThat(userId).isNotBlank();
 
         // 2. List Users
         mockMvc.perform(get("/admin/users")
-                        .header("Authorization", "Bearer " + token))
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
 
         // 3. Update User
         UpdateUserRequest updateRequest = new UpdateUserRequest();
         updateRequest.setId(userId);
         updateRequest.setFullName("Updated Name");
-        updateRequest.setRoleIds(Collections.singletonList("role_system_admin"));
+        updateRequest.setRoleIds(Collections.singletonList(adminRoleId));
 
         mockMvc.perform(put("/admin/users/" + userId)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk());
 
         // 4. Delete User
         mockMvc.perform(delete("/admin/users/" + userId)
-                        .header("Authorization", "Bearer " + token))
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent()); // 204 No Content
     }
 }

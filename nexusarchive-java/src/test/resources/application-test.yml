@@ -1,0 +1,19 @@
+# Test Profile Configuration
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nexusarchive
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+# 禁用 YonSuite 在测试中
+yonsuite:
+  enabled: false
+
+# 日志简化
+logging:
+  level:
+    com.nexusarchive: INFO
+    org.springframework: WARN
