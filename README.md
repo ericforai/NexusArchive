@@ -47,10 +47,11 @@ npm install && npm run dev
 | 功能 | 说明 |
 |------|------|
 | **四性检测** | 真实性、完整性、可用性、安全性自动检测 |
-| **符合性检查** | 《会计档案管理办法》自动合规校验 |
+| **审计防篡改** | SM3 哈希链保证日志不可篡改 |
 | **AIP 导出** | 符合 GB/T 39674 标准的归档信息包 |
-| **信创适配** | 支持达梦、人大金仓 + SM3/SM4 国密 |
+| **信创适配** | 支持达梦、人大金仓 + SM2/SM3/SM4 国密 |
 | **用友集成** | YonSuite 凭证自动同步 |
+| **安全加固** | XSS防护/登录限流/密码策略/路径安全 |
 
 👉 完整功能请参阅 [功能模块说明](/docs/guides/功能模块.md)
 
@@ -76,6 +77,7 @@ npm install && npm run dev
 | **入门** | [启动指南](/docs/deployment/启动指南.md) · [用户手册](/docs/guides/用户使用手册.md) |
 | **部署** | [部署指南](/docs/deployment/部署指南.md) · [故障排除](/docs/deployment/故障排除指南.md) |
 | **功能** | [功能模块](/docs/guides/功能模块.md) · [权限管理](/docs/guides/权限管理.md) |
+| **安全** | [安全指南](/docs/guides/安全指南.md) · [审计日志](/docs/guides/安全指南.md#审计日志防篡改) |
 | **集成** | [用友集成](/docs/guides/用友集成.md) · [API 速查](/docs/api/接口速查.md) |
 | **数据库** | [数据库设计](/docs/database/数据库设计.md) · [DDL 脚本](/docs/database/) |
 | **规划** | [优化计划](/docs/planning/优化计划.md) · [更新日志](/CHANGELOG.md) |
@@ -87,6 +89,7 @@ npm install && npm run dev
 ## 🔗 快速链接
 
 - 📄 [更新日志](/CHANGELOG.md)
+- 🔒 [安全指南](/docs/guides/安全指南.md)
 - 🐛 [故障排除](/docs/deployment/故障排除指南.md)
 - 📖 [API 文档](/docs/api/)
 - 📋 [合规标准](/docs/references/)
