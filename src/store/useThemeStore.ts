@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { safeStorage } from '../utils/storage';
 
 /**
  * 主题类型
@@ -85,41 +86,23 @@ export const useThemeStore = create<ThemeState>()(
                     state.resolvedTheme = resolvedTheme;
                 }
             },
-            // 使用自定义 storage 适配器，避免 "Access to storage is not allowed" 错误
-            storage: {
-                getItem: (name) => {
-                    try {
-                        if (typeof window !== 'undefined' && window.localStorage) {
-                            const value = window.localStorage.getItem(name);
-                            return value ? JSON.parse(value) : null;
-                        }
-                    } catch (e) {
-                        console.warn('[ThemeStore] Storage getItem failed:', e);
-                    }
-                    return null;
-                },
-                setItem: (name, value) => {
-                    try {
-                        if (typeof window !== 'undefined' && window.localStorage) {
-                            window.localStorage.setItem(name, JSON.stringify(value));
-                        }
-                    } catch (e) {
-                        console.warn('[ThemeStore] Storage setItem failed:', e);
-                    }
-                },
-                removeItem: (name) => {
-                    try {
-                        if (typeof window !== 'undefined' && window.localStorage) {
-                            window.localStorage.removeItem(name);
-                        }
-                    } catch (e) {
-                        console.warn('[ThemeStore] Storage removeItem failed:', e);
-                    }
-                },
-            },
+            // 使用 safeStorage 统一管理存储访问
+            storage: createJSONStorage(() => safeStorage),
         }
     )
 );
+
+// 监听系统主题变化
+if (typeof window !== 'undefined') {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        const state = useThemeStore.getState();
+        if (state.theme === 'system') {
+            const resolvedTheme = e.matches ? 'dark' : 'light';
+            applyTheme(resolvedTheme);
+            useThemeStore.setState({ resolvedTheme });
+        }
+    });
+}
 
 // 监听系统主题变化
 if (typeof window !== 'undefined') {

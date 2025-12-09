@@ -28,6 +28,11 @@ public class ArchiveApproval {
     private String archiveCode;
 
     /**
+     * 立档单位
+     */
+    private String orgName;
+
+    /**
      * 档案题名（冗余字段）
      */
     private String archiveTitle;

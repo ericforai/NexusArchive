@@ -218,6 +218,11 @@ public class IngestServiceImpl implements IngestService {
                     .hashAlgorithm(hashAlgorithm)
                     .storagePath(targetPath.toString())
                     .createdTime(java.time.LocalDateTime.now())
+                    // 关键：设置预归档初始状态为"待检测"
+                    .preArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_CHECK.getCode())
+                    .sourceSystem("Web上传")
+                    // 注意：不再设置默认元数据，让用户通过"待补录"流程正确填写
+                    // fiscalYear, voucherType, creator 由智能解析或用户手动补录
                     .build();
             
             arcFileContentMapper.insert(fileContent);

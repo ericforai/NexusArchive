@@ -139,3 +139,24 @@ Create an aspect `@ArchivalAudit`. Apply to ALL `save`, `update`, `delete`, `dow
   * **DO NOT** hardcode file separators. Use `File.separator`.
 
 -----
+-----
+
+## 2.3 Entity-Migration 同步规范 (Schema Synchronization)
+
+> **强制规则**：修改 Entity 类字段时，**必须同时创建 Flyway 迁移脚本**。
+
+**检查清单 (Checklist)**：
+- [ ] Entity 添加/修改字段
+- [ ] 创建 `V{n}__描述.sql` 迁移脚本
+- [ ] 使用 `IF NOT EXISTS` / `IF EXISTS` 确保幂等性
+- [ ] 本地启动验证迁移成功
+- [ ] 测试相关 API 正常
+
+**迁移脚本模板**：
+```sql
+-- 添加列 (幂等)
+ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {type};
+COMMENT ON COLUMN {table_name}.{column_name} IS '描述';
+```
+
+**历史教训**：2025-12-09 `certificate` 列缺失事件 - Entity 有字段但迁移脚本遗漏导致查询失败。

@@ -151,8 +151,8 @@ export const ArchiveApprovalView: React.FC = () => {
                             key={status}
                             onClick={() => setStatusFilter(status)}
                             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${statusFilter === status
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                                ? 'bg-indigo-600 text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
                                 }`}
                         >
                             {status === 'PENDING' && '待审批'}
@@ -192,7 +192,11 @@ export const ArchiveApprovalView: React.FC = () => {
                                     {approvals.map(approval => (
                                         <tr key={approval.id} className="hover:bg-slate-50">
                                             <td className="p-4 font-mono text-slate-600">{approval.archiveCode || '-'}</td>
-                                            <td className="p-4 font-medium text-slate-800">{approval.archiveTitle || '-'}</td>
+                                            <td className="p-4 font-medium text-slate-800" title={approval.archiveTitle}>
+                                                {approval.archiveTitle && approval.archiveTitle.length > 50
+                                                    ? approval.archiveTitle.substring(0, 50) + '...'
+                                                    : (approval.archiveTitle || '-')}
+                                            </td>
                                             <td className="p-4 text-slate-600">{approval.applicantName || '-'}</td>
                                             <td className="p-4 text-slate-500 font-mono text-xs">
                                                 {approval.createdTime ? new Date(approval.createdTime).toLocaleString('zh-CN') : '-'}
@@ -240,7 +244,11 @@ export const ArchiveApprovalView: React.FC = () => {
 
                             <div>
                                 <label className="text-xs text-slate-500 font-medium">档案题名</label>
-                                <p className="text-slate-800 mt-1">{selectedApproval.archiveTitle || '-'}</p>
+                                <p className="text-slate-800 mt-1 break-all">
+                                    {selectedApproval.archiveTitle && selectedApproval.archiveTitle.length > 100
+                                        ? selectedApproval.archiveTitle.substring(0, 100) + '...'
+                                        : (selectedApproval.archiveTitle || '-')}
+                                </p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

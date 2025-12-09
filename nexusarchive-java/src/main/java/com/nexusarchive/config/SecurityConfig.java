@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 "/health/**",
                                 "/actuator/health",
                                 "/integration/yonsuite/webhook",
+                                "/pool/preview/**",
                                 "/error"
                         ).permitAll()
                         // 允许所有 OPTIONS 请求 (CORS 预检)

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { OfdViewer } from './common/OfdViewer';
+import { MetadataEditModal } from './common/MetadataEditModal';
 import {
   Search, Filter, Download, Eye, MoreHorizontal, FileText,
   ChevronLeft, ChevronRight, ArrowUpDown, Loader2, X,
   Receipt, ShieldCheck, CheckCircle2, AlertCircle, Layers,
   Upload, FileCheck, Archive, Book,
-  Plus, AlertTriangle, Clock, XCircle, Link as LinkIcon, Trash2,
+  Plus, AlertTriangle, Clock, XCircle, Link as LinkIcon, Trash2, Edit,
   Settings2, Play, Zap, BarChart2, Lock, ArrowRight, Package
 } from 'lucide-react';
 import { ModuleConfig, TableColumn, GenericRow, ViewState } from '../types';
@@ -95,6 +96,16 @@ const STATUS_LABELS: Record<string, string> = {
   draft: '草稿',
   pending: '待归档',
   archived: '已归档'
+};
+
+// 预归档状态标签（根据法规要求）
+const PRE_ARCHIVE_STATUS_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  PENDING_CHECK: { label: '待检测', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: <Clock size={14} /> },
+  CHECK_FAILED: { label: '检测失败', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: <XCircle size={14} /> },
+  PENDING_METADATA: { label: '待补录', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: <FileText size={14} /> },
+  PENDING_ARCHIVE: { label: '待归档', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: <Package size={14} /> },
+  PENDING_APPROVAL: { label: '归档审批中', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', icon: <Clock size={14} /> },
+  ARCHIVED: { label: '已归档', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: <CheckCircle2 size={14} /> },
 };
 
 const resolveCategoryLabel = (code?: string) => {
@@ -259,13 +270,51 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
   const isPoolView = subTitle === '电子凭证池';
 
+  // Pool Status Filter State
+  const [poolStatusFilter, setPoolStatusFilter] = useState<'all' | 'PENDING_CHECK' | 'CHECK_FAILED' | 'PENDING_METADATA' | 'PENDING_ARCHIVE' | 'PENDING_APPROVAL' | 'ARCHIVED' | null>(null);
+  const [poolStatusStats, setPoolStatusStats] = useState<Record<string, number>>({});
+
+  // Metadata Edit Modal State
+  const [isMetadataEditOpen, setIsMetadataEditOpen] = useState(false);
+  const [editingFile, setEditingFile] = useState<{ id: string; fileName: string } | null>(null);
+
+  const openMetadataEdit = (row: GenericRow) => {
+    setEditingFile({ id: row.id, fileName: row.fileName || row.code || '' });
+    setIsMetadataEditOpen(true);
+  };
+
+  // Load pool status statistics
+  const loadPoolStatusStats = useCallback(async () => {
+    try {
+      const response = await client.get('/pool/stats/status');
+      if (response.data.code === 200) {
+        setPoolStatusStats(response.data.data || {});
+      }
+    } catch (error) {
+      console.error('Failed to load pool status stats:', error);
+    }
+  }, []);
+
+  // Load stats when pool view is active
+  useEffect(() => {
+    if (isPoolView) {
+      loadPoolStatusStats();
+    }
+  }, [isPoolView, loadPoolStatusStats]);
+
   const loadPoolData = useCallback(async (page = currentPage) => {
     setIsLoading(true);
     setErrorMessage(null);
     setSelectedRows([]);
     try {
       const poolItems = await poolApi.getList();
-      const filtered = poolItems.filter((item) => {
+      let filtered = poolItems.filter((item) => {
+        // Filter by status if selected
+        if (poolStatusFilter) {
+          const itemStatus = (item as any).status || 'PENDING_CHECK';
+          if (itemStatus !== poolStatusFilter) return false;
+        }
+        // Filter by search term
         if (!searchTerm) return true;
         return Object.values(item).some((val) =>
           String(val || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -276,6 +325,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
       const paged = filtered.slice(start, start + pageInfo.pageSize);
       setLocalData(paged as GenericRow[]);
       setPageInfo((prev) => ({ ...prev, total, page }));
+      // Refresh stats after data load
+      loadPoolStatusStats();
     } catch (error) {
       console.error('Failed to load pool data:', error);
       setErrorMessage('加载数据失败');
@@ -283,7 +334,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageInfo.pageSize, searchTerm]);
+  }, [currentPage, pageInfo.pageSize, searchTerm, poolStatusFilter, loadPoolStatusStats]);
 
   const loadArchiveList = useCallback(async (page = currentPage) => {
     setIsLoading(true);
@@ -751,12 +802,24 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
     if (column.type === 'action') {
       const exportCode = !isPoolView ? (row.archivalCode || row.code) : null;
+      const fileStatus = (row as any).status || '';
       return (
         <div className="flex gap-1">
           {subTitle === '凭证关联' && (
             <button onClick={(e) => { e.stopPropagation(); openLinkModal(row); }} className="text-slate-400 hover:text-primary-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="关联单据"><LinkIcon size={16} /></button>
           )}
           <button onClick={(e) => { e.stopPropagation(); setViewRow(row); setIsViewModalOpen(true); }} className="text-slate-400 hover:text-primary-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="查看"><Eye size={16} /></button>
+
+          {/* 元数据补录按钮 - 仅对待补录状态显示 */}
+          {isPoolView && fileStatus === 'PENDING_METADATA' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); openMetadataEdit(row); }}
+              className="text-slate-400 hover:text-blue-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100"
+              title="补录元数据"
+            >
+              <Edit size={16} />
+            </button>
+          )}
 
           <button
             onClick={(e) => {
@@ -953,6 +1016,112 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               <CheckCircle2 size={16} className="mr-2" /> 移交归档 ({selectedRows.length})
             </button>
           )}
+          {/* Pool View: Check and Submit Buttons */}
+          {isPoolView && (
+            <>
+              <button
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    const response = await client.get('/pool/check/all-pending');
+                    if (response.data.code === 200) {
+                      const reports = response.data.data || [];
+                      const passCount = reports.filter((r: any) => r.status === 'PASS').length;
+                      const failCount = reports.filter((r: any) => r.status === 'FAIL').length;
+                      const warnCount = reports.filter((r: any) => r.status === 'WARNING').length;
+                      showToast(`检测完成: 通过 ${passCount}, 失败 ${failCount}, 警告 ${warnCount}`, passCount > 0 ? 'success' : 'error');
+                      loadCurrentView(currentPage);
+                      loadPoolStatusStats();
+                    }
+                  } catch (error: any) {
+                    showToast('检测失败: ' + (error.message || '未知错误'), 'error');
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 flex items-center shadow-lg shadow-amber-500/30 transition-all active:scale-95"
+              >
+                <ShieldCheck size={16} className="mr-2" /> 全部检测
+              </button>
+              {selectedRows.length > 0 && (
+                <>
+                  <button
+                    onClick={async () => {
+                      setIsLoading(true);
+                      try {
+                        const response = await client.post('/pool/check/batch', selectedRows);
+                        if (response.data.code === 200) {
+                          const reports = response.data.data || [];
+                          const passCount = reports.filter((r: any) => r.status === 'PASS').length;
+                          showToast(`已检测 ${reports.length} 个文件, 通过 ${passCount} 个`, 'success');
+                          loadCurrentView(currentPage);
+                          loadPoolStatusStats();
+                          setSelectedRows([]);
+                        }
+                      } catch (error: any) {
+                        showToast('批量检测失败', 'error');
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+                  >
+                    <FileCheck size={16} className="mr-2" /> 检测 ({selectedRows.length})
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setIsLoading(true);
+                      try {
+                        const userId = safeStorage.getItem('userId') || 'admin';
+                        const userName = safeStorage.getItem('fullName') || '管理员';
+                        const response = await client.post('/pool/submit/batch', {
+                          fileIds: selectedRows,
+                          applicantId: userId,
+                          applicantName: userName,
+                          reason: '批量归档申请'
+                        });
+                        if (response.data.code === 200) {
+                          const result = response.data.data;
+                          // Handle simple list (backward compatibility if backend not updated) or new BatchOperationResult
+                          const successCount = result.successItems ? result.successItems.length : (Array.isArray(result) ? result.length : 0);
+                          const failureCount = result.failures ? Object.keys(result.failures).length : 0;
+
+                          if (failureCount === 0 && successCount > 0) {
+                            showToast(`已提交 ${successCount} 个归档申请`, 'success');
+                          } else if (successCount > 0 && failureCount > 0) {
+                            // Partial success
+                            // Combine error messages
+                            const errorDetails = Object.values(result.failures).join('; ');
+                            showToast(`提交部分成功: 成功 ${successCount} 个, 失败 ${failureCount} 个. 详情: ${errorDetails}`, 'warning');
+                          } else if (successCount === 0 && failureCount > 0) {
+                            // All failed
+                            const errorDetails = Object.values(result.failures).join('\n');
+                            showToast(`提交失败 (${failureCount}个): \n${errorDetails}`, 'error');
+                          } else {
+                            // No items?
+                            showToast('未提交任何申请', 'warning');
+                          }
+
+                          if (successCount > 0) {
+                            loadCurrentView(currentPage);
+                            loadPoolStatusStats();
+                            setSelectedRows([]);
+                          }
+                        }
+                      } catch (error: any) {
+                        showToast('提交归档失败: ' + (error.response?.data?.message || error.message), 'error');
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center shadow-lg shadow-green-500/30 transition-all active:scale-95"
+                  >
+                    <Archive size={16} className="mr-2" /> 提交归档 ({selectedRows.length})
+                  </button>
+                </>
+              )}
+            </>
+          )}
           {selectedRows.length > 0 && subTitle === '会计凭证' && (
             <button
               onClick={() => {
@@ -1021,6 +1190,40 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
             重置视图
           </button>
         </div>
+
+        {/* Pre-Archive Status Tabs (Pool View Only) */}
+        {isPoolView && (
+          <div className="flex items-center gap-2 mb-4 px-1 overflow-x-auto pb-1">
+            <button
+              onClick={() => setPoolStatusFilter(null)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${poolStatusFilter === null
+                ? 'bg-slate-800 text-white shadow-lg'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+            >
+              全部
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${poolStatusFilter === null ? 'bg-white/20' : 'bg-slate-300'}`}>
+                {Object.values(poolStatusStats).reduce((a: number, b: number) => a + b, 0) + (poolStatusStats.NO_STATUS || 0)}
+              </span>
+            </button>
+            {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label, color, icon }]) => (
+              <button
+                key={key}
+                onClick={() => setPoolStatusFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${poolStatusFilter === key
+                  ? 'bg-slate-800 text-white shadow-lg'
+                  : `${color} hover:opacity-80`
+                  }`}
+              >
+                {icon}
+                {label}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${poolStatusFilter === key ? 'bg-white/20' : 'bg-black/10'}`}>
+                  {poolStatusStats[key] || 0}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Dynamic Table */}
         <div className="overflow-auto flex-1 relative">
@@ -1414,9 +1617,15 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                       <div className="absolute inset-0 flex items-center justify-center text-slate-400 pointer-events-none">
                         <Loader2 size={32} className="animate-spin" />
                       </div>
-                      {(viewRow.fileName?.toLowerCase().endsWith('.ofd') || viewRow.fileType?.toLowerCase() === 'ofd') ? (
+                      {(viewRow.fileName?.toLowerCase().endsWith('.ofd') || viewRow.fileType?.toLowerCase() === 'ofd' || viewRow.type?.toLowerCase() === 'ofd' ||
+                        viewRow.fileName?.toLowerCase().endsWith('.pdf') || viewRow.fileType?.toLowerCase() === 'pdf' || viewRow.type?.toLowerCase() === 'pdf') ? (
                         <div className="w-full h-full bg-white relative z-10 overflow-hidden">
-                          <OfdViewer fileUrl={`/api/archive/${viewRow.id}/content`} className="w-full h-full" />
+                          <OfdViewer
+                            fileUrl={`/api/pool/preview/${viewRow.id}`}
+                            fileType={viewRow.type?.toLowerCase() || viewRow.fileType?.toLowerCase()}
+                            fileName={viewRow.fileName}
+                            className="w-full h-full"
+                          />
                         </div>
                       ) : (
                         <iframe
@@ -1767,6 +1976,20 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
           </div>
         )
       }
+      {/* Metadata Edit Modal */}
+      {editingFile && (
+        <MetadataEditModal
+          isOpen={isMetadataEditOpen}
+          onClose={() => { setIsMetadataEditOpen(false); setEditingFile(null); }}
+          fileId={editingFile.id}
+          fileName={editingFile.fileName}
+          onSuccess={() => {
+            loadPoolData();
+            loadPoolStatusStats();
+            showToast('元数据更新成功', 'success');
+          }}
+        />
+      )}
     </div>
   )
 }

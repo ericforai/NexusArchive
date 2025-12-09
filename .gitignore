@@ -23,6 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Development PID files
+.backend.pid
+.frontend.pid
+
 # Environment variables
 .env
 .env.local
@@ -58,3 +62,7 @@ restart-services.sh
 
 # Test walkthrough artifacts at project root
 walkthrough.md
+
+# Validated Storage Paths
+nexusarchive-java/data/
+pending_list.json

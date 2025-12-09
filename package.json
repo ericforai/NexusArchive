@@ -17,7 +17,6 @@
     "@xyflow/react": "^12.9.3",
     "axios": "^1.13.2",
     "lucide-react": "^0.554.0",
-    "ofd.js": "^1.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6",

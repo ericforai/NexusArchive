@@ -66,6 +66,55 @@ public class ArcFileContent {
      */
     private String certificate;
 
+    // ===== 预归档状态管理 (第一阶段新增) =====
+    
+    /**
+     * 预归档状态: PENDING_CHECK/CHECK_FAILED/PENDING_METADATA/PENDING_ARCHIVE/ARCHIVED
+     */
+    private String preArchiveStatus;
+
+    /**
+     * 四性检测结果 (JSON格式)
+     */
+    private String checkResult;
+
+    /**
+     * 检测时间
+     */
+    private LocalDateTime checkedTime;
+
+    /**
+     * 归档时间
+     */
+    private LocalDateTime archivedTime;
+
+    // ===== DA/T 94-2022 必填元数据 =====
+    
+    /**
+     * 会计年度
+     */
+    private String fiscalYear;
+
+    /**
+     * 凭证类型
+     */
+    private String voucherType;
+
+    /**
+     * 责任者/创建人
+     */
+    private String creator;
+
+    /**
+     * 全宗号
+     */
+    private String fondsCode;
+
+    /**
+     * 来源系统
+     */
+    private String sourceSystem;
+
     private LocalDateTime createdTime;
 
     public ArcFileContent() {}
@@ -132,6 +181,34 @@ public class ArcFileContent {
     public String getCertificate() { return certificate; }
     public void setCertificate(String certificate) { this.certificate = certificate; }
 
+    // New field getters/setters
+    public String getPreArchiveStatus() { return preArchiveStatus; }
+    public void setPreArchiveStatus(String preArchiveStatus) { this.preArchiveStatus = preArchiveStatus; }
+
+    public String getCheckResult() { return checkResult; }
+    public void setCheckResult(String checkResult) { this.checkResult = checkResult; }
+
+    public LocalDateTime getCheckedTime() { return checkedTime; }
+    public void setCheckedTime(LocalDateTime checkedTime) { this.checkedTime = checkedTime; }
+
+    public LocalDateTime getArchivedTime() { return archivedTime; }
+    public void setArchivedTime(LocalDateTime archivedTime) { this.archivedTime = archivedTime; }
+
+    public String getFiscalYear() { return fiscalYear; }
+    public void setFiscalYear(String fiscalYear) { this.fiscalYear = fiscalYear; }
+
+    public String getVoucherType() { return voucherType; }
+    public void setVoucherType(String voucherType) { this.voucherType = voucherType; }
+
+    public String getCreator() { return creator; }
+    public void setCreator(String creator) { this.creator = creator; }
+
+    public String getFondsCode() { return fondsCode; }
+    public void setFondsCode(String fondsCode) { this.fondsCode = fondsCode; }
+
+    public String getSourceSystem() { return sourceSystem; }
+    public void setSourceSystem(String sourceSystem) { this.sourceSystem = sourceSystem; }
+
     public static ArcFileContentBuilder builder() {
         return new ArcFileContentBuilder();
     }
@@ -154,6 +231,15 @@ public class ArcFileContent {
         public ArcFileContentBuilder timestampToken(byte[] timestampToken) { entity.setTimestampToken(timestampToken); return this; }
         public ArcFileContentBuilder signValue(byte[] signValue) { entity.setSignValue(signValue); return this; }
         public ArcFileContentBuilder certificate(String certificate) { entity.setCertificate(certificate); return this; }
+        public ArcFileContentBuilder preArchiveStatus(String preArchiveStatus) { entity.setPreArchiveStatus(preArchiveStatus); return this; }
+        public ArcFileContentBuilder checkResult(String checkResult) { entity.setCheckResult(checkResult); return this; }
+        public ArcFileContentBuilder checkedTime(LocalDateTime checkedTime) { entity.setCheckedTime(checkedTime); return this; }
+        public ArcFileContentBuilder archivedTime(LocalDateTime archivedTime) { entity.setArchivedTime(archivedTime); return this; }
+        public ArcFileContentBuilder fiscalYear(String fiscalYear) { entity.setFiscalYear(fiscalYear); return this; }
+        public ArcFileContentBuilder voucherType(String voucherType) { entity.setVoucherType(voucherType); return this; }
+        public ArcFileContentBuilder creator(String creator) { entity.setCreator(creator); return this; }
+        public ArcFileContentBuilder fondsCode(String fondsCode) { entity.setFondsCode(fondsCode); return this; }
+        public ArcFileContentBuilder sourceSystem(String sourceSystem) { entity.setSourceSystem(sourceSystem); return this; }
 
         public ArcFileContent build() { return entity; }
     }

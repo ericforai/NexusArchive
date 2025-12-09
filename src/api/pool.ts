@@ -1,4 +1,5 @@
 import { client } from './client';
+import { useAuthStore } from '../store';
 
 /**
  * 电子凭证池列表项
@@ -45,13 +46,21 @@ export const poolApi = {
   },
 
   /**
-   * 正式归档
-   * 将凭证池中的记录转换为正式的 AIP 档案包
+   * 正式归档 (批量提交归档申请)
+   * 将凭证池中的记录提交归档审批
    */
-  archiveItems: async (poolItemIds: string[]): Promise<void> => {
-    const response = await client.post<ApiResponse<void>>('/v1/archive/sip/archive', {
-      poolItemIds
+  archiveItems: async (fileIds: string[]): Promise<void> => {
+    const { user } = useAuthStore.getState();
+    const applicantId = user?.id || 'admin';
+    const applicantName = user?.username || 'Admin';
+
+    const response = await client.post<ApiResponse<any>>('/pool/submit/batch', {
+      fileIds,
+      applicantId,
+      applicantName,
+      reason: '批量归档申请'
     });
+
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '归档失败');
     }

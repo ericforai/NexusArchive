@@ -1,5 +1,8 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { safeStorage } from '../utils/storage';
+
+// ... (keep interfaces)
 
 /**
  * 用户信息接口
@@ -153,38 +156,8 @@ export const useAuthStore = create<AuthState>()(
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
             }),
-            // 使用自定义 storage 适配器，避免 "Access to storage is not allowed" 错误
-            storage: {
-                getItem: (name) => {
-                    try {
-                        if (typeof window !== 'undefined' && window.localStorage) {
-                            const value = window.localStorage.getItem(name);
-                            return value ? JSON.parse(value) : null;
-                        }
-                    } catch (e) {
-                        console.warn('[AuthStore] Storage getItem failed:', e);
-                    }
-                    return null;
-                },
-                setItem: (name, value) => {
-                    try {
-                        if (typeof window !== 'undefined' && window.localStorage) {
-                            window.localStorage.setItem(name, JSON.stringify(value));
-                        }
-                    } catch (e) {
-                        console.warn('[AuthStore] Storage setItem failed:', e);
-                    }
-                },
-                removeItem: (name) => {
-                    try {
-                        if (typeof window !== 'undefined' && window.localStorage) {
-                            window.localStorage.removeItem(name);
-                        }
-                    } catch (e) {
-                        console.warn('[AuthStore] Storage removeItem failed:', e);
-                    }
-                },
-            },
+            // 使用 createJSONStorage 包装 safeStorage，处理序列化和类型
+            storage: createJSONStorage(() => safeStorage),
         }
     )
 );

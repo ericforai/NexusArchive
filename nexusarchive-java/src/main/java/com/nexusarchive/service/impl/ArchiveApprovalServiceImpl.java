@@ -22,6 +22,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
     private final ArchiveApprovalMapper approvalMapper;
     private final ArchiveMapper archiveMapper;
+    private final com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
 
     @Override
     @Transactional
@@ -53,19 +54,32 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             throw new RuntimeException("Only pending approvals can be processed");
         }
 
-        // 更新审批记录
+        // Update approval record
         approval.setStatus("APPROVED");
         approval.setApproverId(approverId);
         approval.setApproverName(approverName);
         approval.setApprovalComment(comment);
         approval.setApprovalTime(LocalDateTime.now());
+        approval.setLastModifiedTime(LocalDateTime.now()); // Manual update
         approvalMapper.updateById(approval);
 
-        // 更新档案状态为已归档
+        // Update archive status
         Archive archive = archiveMapper.selectById(approval.getArchiveId());
         if (archive != null) {
             archive.setStatus("ARCHIVED");
-            archiveMapper.updateById(archive);
+            archive.setLastModifiedTime(LocalDateTime.now()); // Manual update
+            archiveMapper.updateById(archive); // Ensure updated_at is set
+            
+            // Sync status to ArcFileContent
+            QueryWrapper<com.nexusarchive.entity.ArcFileContent> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("archival_code", archive.getArchiveCode());
+            java.util.List<com.nexusarchive.entity.ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
+            
+            for (com.nexusarchive.entity.ArcFileContent file : files) {
+                file.setPreArchiveStatus("ARCHIVED");
+                file.setArchivedTime(LocalDateTime.now());
+                arcFileContentMapper.updateById(file);
+            }
         }
     }
 
@@ -81,19 +95,37 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             throw new RuntimeException("Only pending approvals can be processed");
         }
 
-        // 更新审批记录
+        // Update approval record
         approval.setStatus("REJECTED");
         approval.setApproverId(approverId);
         approval.setApproverName(approverName);
         approval.setApprovalComment(comment);
         approval.setApprovalTime(LocalDateTime.now());
+        approval.setLastModifiedTime(LocalDateTime.now());
         approvalMapper.updateById(approval);
 
-        // 更新档案状态为已拒绝
+        // Update archive status
         Archive archive = archiveMapper.selectById(approval.getArchiveId());
         if (archive != null) {
             archive.setStatus("REJECTED");
+            archive.setLastModifiedTime(LocalDateTime.now());
             archiveMapper.updateById(archive);
+            
+            // Sync status to ArcFileContent (Back to PENDING_METADATA or PENDING_ARCHIVE?)
+            // If rejected, user needs to fix issue. Let's send back to PENDING_ARCHIVE so they can re-submit if it was just a mistake,
+            // or they can edit metadata then re-submit. PENDING_ARCHIVE is safest.
+            QueryWrapper<com.nexusarchive.entity.ArcFileContent> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("archival_code", archive.getArchiveCode());
+            java.util.List<com.nexusarchive.entity.ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
+            
+            for (com.nexusarchive.entity.ArcFileContent file : files) {
+                file.setPreArchiveStatus("PENDING_ARCHIVE"); 
+                // Don't clear archival_code yet, as it might be reused or they might verify again.
+                // Actually, if rejected, the Archive record is marked rejected. 
+                // The user might create a NEW application.
+                // Keeping it linked for history is okay.
+                arcFileContentMapper.updateById(file);
+            }
         }
     }
 

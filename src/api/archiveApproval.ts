@@ -31,34 +31,34 @@ export const archiveApprovalApi = {
     getApprovalList: async (page: number = 1, limit: number = 10, status?: string) => {
         const params: any = { page, limit };
         if (status) params.status = status;
-        return apiClient.get('/api/archive-approval/list', { params });
+        return apiClient.get('/archive-approval/list', { params });
     },
 
     /**
      * 获取审批详情
      */
     getApprovalById: async (id: string) => {
-        return apiClient.get(`/api/archive-approval/${id}`);
+        return apiClient.get(`/archive-approval/${id}`);
     },
 
     /**
      * 创建审批申请
      */
     createApproval: async (approval: Partial<ArchiveApproval>) => {
-        return apiClient.post('/api/archive-approval/create', approval);
+        return apiClient.post('/archive-approval/create', approval);
     },
 
     /**
      * 批准归档
      */
     approveArchive: async (request: ApprovalRequest) => {
-        return apiClient.post('/api/archive-approval/approve', request);
+        return apiClient.post('/archive-approval/approve', request);
     },
 
     /**
      * 拒绝归档
      */
     rejectArchive: async (request: ApprovalRequest) => {
-        return apiClient.post('/api/archive-approval/reject', request);
+        return apiClient.post('/archive-approval/reject', request);
     },
 };

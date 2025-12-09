@@ -15,6 +15,7 @@ spring:
     baseline-on-migrate: true
     repair-on-migrate: true
     ignore-missing-migrations: true
+    out-of-order: true
     locations: classpath:db/migration
   
   jackson:
@@ -75,6 +76,8 @@ logging:
 archive:
   root:
     path: ${ARCHIVE_ROOT_PATH:./data/archives}
+  temp:
+    path: ${ARCHIVE_TEMP_PATH:./data/temp}
 
 # YonSuite (用友) 集成配置 (安全加固: 敏感信息必须通过环境变量设置)
 yonsuite:
@@ -178,10 +181,10 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
-# 归档临时文件路径
+# 归档临时文件路径 (生产环境)
 archive:
   temp:
-    path: ${ARCHIVE_TEMP_PATH:/tmp/nexusarchive}
+    path: ${ARCHIVE_TEMP_PATH:/opt/nexusarchive/data/temp}
   root:
     path: /opt/nexusarchive/data/archives
 
