@@ -12,6 +12,7 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { LoginView } from '../components/LoginView';
+import { ActivationPage } from './ActivationPage';
 
 // 懒加载各功能模块
 const Dashboard = lazy(() => import('../components/Dashboard'));
@@ -64,6 +65,10 @@ export const routes: RouteObject[] = [
 
     // 登录页（独立于 SystemLayout）
     { path: '/system/login', element: <LoginView /> },
+
+    // 激活页（独立于 SystemLayout，但需要基础环境）
+    { path: '/system/activation', element: <ActivationPage /> },
+
 
     // 业务系统（需登录）
     {

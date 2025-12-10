@@ -8,7 +8,7 @@
 
 class SafeStorage {
     private memoryStorage: Map<string, string>;
-    private storageType: 'localStorage' | 'sessionStorage' | 'memory' = 'memory';
+    private storageType: 'localStorage' | 'sessionStorage' | 'memory' | 'cookie' = 'memory';
     private checkedStorage = false;
 
     constructor() {
@@ -48,6 +48,21 @@ class SafeStorage {
             console.warn('[SafeStorage] sessionStorage not available:', e);
         }
 
+        // Try Cookie as fallback (for persistence when Storage API is blocked)
+        if (typeof document !== 'undefined') {
+            try {
+                document.cookie = "test_cookie=1; SameSite=Strict";
+                if (document.cookie.indexOf('test_cookie=') !== -1) {
+                    document.cookie = "test_cookie=1; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Strict";
+                    this.storageType = 'cookie';
+                    console.log('[SafeStorage] Using document.cookie (Storage API unavailable)');
+                    return;
+                }
+            } catch (e) {
+                console.warn('[SafeStorage] Cookie not available:', e);
+            }
+        }
+
         // Fall back to memory
         this.storageType = 'memory';
         console.warn('[SafeStorage] Using memory storage (all browser storage unavailable)');
@@ -61,7 +76,29 @@ class SafeStorage {
         } else if (this.storageType === 'sessionStorage' && typeof window !== 'undefined') {
             return window.sessionStorage;
         }
-        return null; // For memory type
+        return null; // For memory or cookie type
+    }
+
+    // Cookie Helpers
+    private getCookie(name: string): string | null {
+        if (typeof document === 'undefined') return null;
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+        return null;
+    }
+
+    private setCookie(name: string, value: string, days = 7): void {
+        if (typeof document === 'undefined') return;
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/;SameSite=Strict";
+    }
+
+    private removeCookie(name: string): void {
+        if (typeof document === 'undefined') return;
+        document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;SameSite=Strict";
     }
 
     getItem(key: string): string | null {
@@ -71,10 +108,16 @@ class SafeStorage {
                 return storage.getItem(key);
             }
         } catch (e) {
-            console.warn(`[SafeStorage] getItem('${key}') failed, falling back to memory:`, e);
-            // Fallback: If storage access fails (e.g. SecurityError), switch to memory for this session
-            this.storageType = 'memory';
+            console.warn(`[SafeStorage] getItem('${key}') failed, forcing fallback to Cookie:`, e);
+            if (this.storageType === 'localStorage' || this.storageType === 'sessionStorage') {
+                this.storageType = 'cookie';
+            }
         }
+
+        if (this.storageType === 'cookie') {
+            return this.getCookie(key);
+        }
+
         return this.memoryStorage.get(key) || null;
     }
 
@@ -86,9 +129,19 @@ class SafeStorage {
                 return;
             }
         } catch (e) {
-            console.warn(`[SafeStorage] setItem('${key}') failed, falling back to memory:`, e);
-            this.storageType = 'memory';
+            console.warn(`[SafeStorage] setItem('${key}') failed, forcing fallback to Cookie:`, e);
+            if (this.storageType === 'localStorage' || this.storageType === 'sessionStorage') {
+                this.storageType = 'cookie';
+            }
         }
+
+        if (this.storageType === 'cookie') {
+            this.setCookie(key, value);
+            // Also update memory for consistency/perf? optional.
+            // But let's just use cookie.
+            return;
+        }
+
         this.memoryStorage.set(key, value);
     }
 
@@ -97,12 +150,20 @@ class SafeStorage {
             const storage = this.getStorage();
             if (storage) {
                 storage.removeItem(key);
-                return; // Should return, but also clear memory just in case
+                return;
             }
         } catch (e) {
             console.warn(`[SafeStorage] removeItem('${key}') failed:`, e);
-            this.storageType = 'memory';
+            if (this.storageType === 'localStorage' || this.storageType === 'sessionStorage') {
+                this.storageType = 'cookie';
+            }
         }
+
+        if (this.storageType === 'cookie') {
+            this.removeCookie(key);
+            return;
+        }
+
         this.memoryStorage.delete(key);
     }
 
@@ -114,8 +175,11 @@ class SafeStorage {
             }
         } catch (e) {
             console.warn('[SafeStorage] clear failed:', e);
-            this.storageType = 'memory';
+            this.initStorage();
         }
+        // Easy clear for cookies is hard (need to know all keys). 
+        // We might just leave them or implement a prefix scan if needed.
+        // For now, clear memory.
         this.memoryStorage.clear();
     }
 }

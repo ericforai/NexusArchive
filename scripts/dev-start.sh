@@ -56,6 +56,30 @@ check_port() {
     return 0
 }
 
+# 检查依赖服务连接
+check_service_connection() {
+    local host=$1
+    local port=$2
+    local name=$3
+    local max_attempts=5 # 快速检查，5秒超时
+    local attempt=1
+
+    log_info "检查 $name ($host:$port)..."
+
+    while [ $attempt -le $max_attempts ]; do
+        if nc -z "$host" "$port" 2>/dev/null || timeout 1 bash -c "cat < /dev/null > /dev/tcp/$host/$port" 2>/dev/null; then
+            log_success "$name 已就绪"
+            return 0
+        fi
+        
+        sleep 1
+        ((attempt++))
+    done
+
+    log_warn "$name 未就绪或无法连接 (尝试了 $max_attempts 次)"
+    return 1
+}
+
 # 主流程
 main() {
     echo ""
@@ -64,6 +88,25 @@ main() {
     echo "=========================================="
     echo ""
     
+    # 0. 预检依赖服务
+    log_info "步骤 0/3: 检查依赖服务..."
+    
+    # 数据库 (默认 5432)
+    DB_HOST=${DB_HOST:-localhost}
+    DB_PORT=${DB_PORT:-5432}
+    if ! check_service_connection "$DB_HOST" "$DB_PORT" "PostgreSQL"; then
+        log_warn "继续启动，但后端可能会因无法连接数据库而失败..."
+        sleep 2
+    fi
+
+    # Redis (默认 6379)
+    REDIS_HOST=${REDIS_HOST:-localhost}
+    REDIS_PORT=${REDIS_PORT:-6379}
+    if ! check_service_connection "$REDIS_HOST" "$REDIS_PORT" "Redis"; then
+        log_warn "继续启动，但后端可能会因无法连接Redis而失败..."
+        sleep 2
+    fi
+
     # 检查端口
     if ! check_port 8080; then
         log_warn "后端端口8080已占用，尝试终止..."

@@ -69,3 +69,4 @@ pending_list.json
 temp_approvals.json
 *.pem
 test_upload.pdf
+!latest_dev_dump.sql
