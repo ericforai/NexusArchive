@@ -94,12 +94,23 @@ elasticsearch:
   connect-timeout: 5000
   socket-timeout: 30000
 
+# 电子签章配置
+signature:
+  keystore:
+    path: ${SIGNATURE_KEYSTORE_PATH:/tmp/nexusarchive/keystore.p12}
+    password: ${SIGNATURE_KEYSTORE_PASSWORD:password123}
+
 # Entity-Database Schema 一致性验证 (防止 Entity 字段与数据库列不同步)
 schema:
   validation:
     enabled: ${SCHEMA_VALIDATION_ENABLED:true}           # 是否启用验证
     fail-on-error: ${SCHEMA_VALIDATION_FAIL:true}       # 发现问题时是否阻止启动
     entity-package: com.nexusarchive.entity              # Entity 包路径
+
+# License 配置
+license:
+  public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMrI4RYBcukhqboFUKZlIMIANgPyt5HK6m4DK6V5bt6CVSPD2V1vKBQ3dpYo4vBZKAk6zOv3Uyq2fEPijKFozQwBo/YNu05LV6bJHu696lPaevK9Y04Grrkj2oOIH8aBqMNfotrBAPFso2IbVlnoEiS6K8AYgQ1GrfvIYoEpfeqDF3rhvw1gauWVez3nxHbGUvnvRxik77PNoBnnuO7YpgQTK6XxdxtsV1EYn0/GSL1EdwadgdxwJHwoQL4vI07lNkbI/dBiF9RRamTX8u+7kFDuw0J0e6nlD9C9vcMX/e6HnCETK9AIb1axqi1cjE1A+5xJ07ONoVYo4xTPbFVCOQIDAQAB
+
 ---
 # 开发环境 - PostgreSQL
 spring:

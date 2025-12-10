@@ -317,6 +317,8 @@ package_all() {
     
     # 创建最终包
     cd ..
+    # 禁止 Mac 生成 ._ 文件 (Extended Attributes)
+    export COPYFILE_DISABLE=1
     tar -czf "${PACKAGE_NAME}.tar.gz" -C "${OUTPUT_DIR}" .
     mv "${PACKAGE_NAME}.tar.gz" "${OUTPUT_DIR}/"
     

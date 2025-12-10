@@ -67,3 +67,5 @@ walkthrough.md
 nexusarchive-java/data/
 pending_list.json
 temp_approvals.json
+*.pem
+test_upload.pdf

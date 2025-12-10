@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.nio.file.Path;
 import java.util.*;
 
 import org.springframework.context.annotation.Lazy;
@@ -39,6 +40,15 @@ public class PreArchiveSubmitService {
     private final ArchiveMapper archiveMapper;
 
     private final ArchiveApprovalService archiveApprovalService;
+    private final com.nexusarchive.service.converter.OfdConverterHelper ofdConverterHelper;
+    private final com.nexusarchive.service.signature.OfdSignatureHelper ofdSignatureHelper;
+    private final com.nexusarchive.util.FileHashUtil fileHashUtil;
+
+    @org.springframework.beans.factory.annotation.Value("${signature.keystore.path}")
+    private String keystorePath;
+
+    @org.springframework.beans.factory.annotation.Value("${signature.keystore.password}")
+    private String keystorePassword;
 
     @Autowired
     @Lazy
@@ -137,6 +147,53 @@ public class PreArchiveSubmitService {
         List<ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
 
         for (ArcFileContent file : files) {
+            // 1. 格式统一化: 强制转换为 OFD
+            Path storagePath = java.nio.file.Paths.get(file.getStoragePath());
+                    
+            if (!file.getFileName().toLowerCase().endsWith(".ofd")) {
+                try {
+                    String newFileName = file.getFileName().substring(0, file.getFileName().lastIndexOf('.')) + ".ofd";
+                    Path targetPath = storagePath.getParent().resolve(newFileName);
+                    
+                    ofdConverterHelper.convertToOfd(storagePath, targetPath);
+                    
+                    // 更新文件记录
+                    file.setStoragePath(targetPath.toString());
+                    file.setFileName(newFileName);
+                    file.setFileType("OFD");
+                    storagePath = targetPath; // 指向新文件
+                    log.info("归档并转换文件格式: {} -> OFD", file.getId());
+                } catch (Exception e) {
+                    log.error("归档转换OFD失败: {}", e.getMessage());
+                    throw new RuntimeException("归档转换失败", e);
+                }
+            }
+
+            // 2. 电子签章: 对 OFD 加盖归档章
+            try {
+                // 生成带签名的临时文件
+                Path signedPath = storagePath.getParent().resolve("signed_" + storagePath.getFileName());
+                
+                ofdSignatureHelper.signOfd(storagePath, signedPath, keystorePath, keystorePassword);
+                
+                // 替换原文件 (或者保存已签文件)
+                // 这里选择替换，保持 storagePath 不变，但文件内容已变
+                java.nio.file.Files.move(signedPath, storagePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                
+                // 3. 更新哈希
+                // 因为文件被签名修改了，必须重新计算哈希
+                String newHash = fileHashUtil.calculateSM3(java.nio.file.Files.newInputStream(storagePath));
+                file.setCurrentHash(newHash); // Update current hash to signed hash
+                file.setSignValue(("SIGNED_SM2_" + java.time.LocalDateTime.now()).getBytes(java.nio.charset.StandardCharsets.UTF_8)); // Mark as signed
+                log.info("归档文件已加签: {}", file.getId());
+                
+            } catch (Exception e) {
+                 log.error("归档加签失败: {}", e.getMessage());
+                 // 即使加签失败，最好也允许归档完成？或者作为必须项抛出异常？
+                 // 作为合规系统，加签失败应该回滚
+                 throw new RuntimeException("归档加签失败", e);
+            }
+
             file.setPreArchiveStatus(PreArchiveStatus.ARCHIVED.getCode());
             file.setArchivedTime(LocalDateTime.now());
             arcFileContentMapper.updateById(file);

@@ -5,6 +5,7 @@ import { FourNatureReportView } from './FourNatureReportView';
 import { DemoBadge } from './common/DemoBadge';
 import { isDemoMode } from '../utils/env';
 import { safeStorage } from '../utils/storage';
+import { statsApi, ErpStats } from '../api/stats';
 
 interface IntegrationChannel {
     id: string;
@@ -98,6 +99,27 @@ export const OnlineReceptionView: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [newChannel, setNewChannel] = useState({ name: '', system: 'SAP ERP', description: '' });
+
+    const [stats, setStats] = useState<ErpStats>({
+        connectedSystems: 0,
+        todayReceived: 0,
+        activeInterfaces: 0,
+        abnormalCount: 0
+    });
+
+    React.useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await statsApi.getErpStats();
+                if (res.code === 200) {
+                    setStats(res.data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch ERP stats", e);
+            }
+        };
+        fetchStats();
+    }, []);
 
     // YonSuite 同步配置
     const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
@@ -264,19 +286,19 @@ export const OnlineReceptionView: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div className="text-slate-500 text-sm mb-1">接入系统总数</div>
-                    <div className="text-2xl font-bold text-slate-900">6</div>
+                    <div className="text-2xl font-bold text-slate-900">{stats.connectedSystems}</div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div className="text-slate-500 text-sm mb-1">今日接收数据</div>
-                    <div className="text-2xl font-bold text-emerald-600">241 条</div>
+                    <div className="text-2xl font-bold text-emerald-600">{stats.todayReceived} 条</div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div className="text-slate-500 text-sm mb-1">运行正常接口</div>
-                    <div className="text-2xl font-bold text-blue-600">5</div>
+                    <div className="text-2xl font-bold text-blue-600">{stats.activeInterfaces}</div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div className="text-slate-500 text-sm mb-1">异常报警</div>
-                    <div className="text-2xl font-bold text-red-600">1</div>
+                    <div className="text-2xl font-bold text-red-600">{stats.abnormalCount}</div>
                 </div>
             </div>
 

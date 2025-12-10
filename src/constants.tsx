@@ -27,10 +27,10 @@ export const NAV_ITEMS: NavItem[] = [
     label: '档案管理',
     icon: Archive,
     permission: 'nav:archive_mgmt',
-    subItems: ['会计凭证', '会计账簿', '财务报告', '档案装盒', '档案组卷', '归档审批', '开放鉴定', '销毁鉴定']
+    subItems: ['会计凭证', '会计账簿', '财务报告', '其他会计资料', '档案装盒', '档案组卷', '归档审批', '开放鉴定', '销毁鉴定']
   },
   { id: ViewState.QUERY, label: '档案查询', icon: Search, permission: 'nav:query', subItems: ['穿透联查', '全文检索'] },
-  { id: ViewState.BORROWING, label: '档案借阅', icon: BookOpenCheck, permission: 'nav:borrowing', subItems: ['借阅审批', '水印预览'] },
+  { id: ViewState.BORROWING, label: '档案借阅', icon: BookOpenCheck, permission: 'nav:borrowing', subItems: ['借阅审批'] },
   { id: ViewState.DESTRUCTION, label: '档案销毁', icon: Flame, permission: 'nav:destruction' },
   { id: ViewState.WAREHOUSE, label: '库房管理', icon: Warehouse, permission: 'nav:warehouse', subItems: ['密集架控制', '温湿度监控'] },
   { id: ViewState.STATS, label: '数据统计', icon: BarChart3, permission: 'nav:stats' },

@@ -36,6 +36,7 @@ public class PreArchiveCheckService {
     private final ArcFileContentMapper arcFileContentMapper;
     private final FileHashUtil fileHashUtil;
     private final VirusScanAdapter virusScanAdapter;
+    private final com.nexusarchive.service.signature.OfdSignatureHelper ofdSignatureHelper;
     private final Tika tika = new Tika();
 
     /**
@@ -172,10 +173,29 @@ public class PreArchiveCheckService {
                 } else {
                     details.add("文件哈希验证通过");
                 }
-            } else {
                 item.setStatus(OverallStatus.WARNING);
                 details.add("WARNING: 无原始哈希记录，跳过校验");
             }
+
+            // 验证电子签章 (针对 OFD 文件)
+            if (file.getFileName().toLowerCase().endsWith(".ofd")) {
+                try {
+                    boolean isValid = ofdSignatureHelper.verifyOfd(java.nio.file.Paths.get(file.getStoragePath()));
+                    if (isValid) {
+                        details.add("电子签章有效性验证通过");
+                    } else {
+                        item.addError("电子签章验证失败: 签名无效或证书过期");
+                    }
+                } catch (Exception e) {
+                    // 如果是 ARCHIVED 状态，必须验证通过
+                    if ("ARCHIVED".equals(file.getPreArchiveStatus())) {
+                        item.addError("已归档文件签章验证异常: " + e.getMessage());
+                    } else {
+                        details.add("未检测到有效签章 (非强制)");
+                    }
+                }
+            }
+
 
         } catch (Exception e) {
             item.addError("哈希计算失败: " + e.getMessage());

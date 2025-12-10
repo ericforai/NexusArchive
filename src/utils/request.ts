@@ -25,8 +25,8 @@ instance.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             safeStorage.removeItem('token');
             // Avoid infinite reload loop if 401 persists
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+            if (!window.location.pathname.includes('/system/login')) {
+                window.location.href = '/system/login';
             }
         }
         return Promise.reject(error);

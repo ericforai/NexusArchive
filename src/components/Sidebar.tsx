@@ -207,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {/* 子菜单项 */}
               {!collapsed && item.subItems && isExpanded && (
-                <div className="mt-1 ml-10 space-y-1 border-l border-slate-800 pl-2 animate-in slide-in-from-left-2 duration-300">
+                <div className="mt-1 ml-10 space-y-0.5 border-l border-slate-800 pl-2">
                   {item.subItems.map((sub) => {
                     const subPath = SUBITEM_TO_PATH[sub] || mainPath;
                     const isSubActive = isSubItemActive(sub);
@@ -216,13 +216,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <NavLink
                         key={sub}
                         to={subPath}
-                        className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center group/sub ${isSubActive
+                        className={`block w-full text-left px-3 py-2.5 text-xs rounded-lg transition-colors ${isSubActive
                           ? 'text-primary-300 bg-slate-800/60 font-medium'
                           : 'text-slate-400 hover:text-primary-300 hover:bg-slate-800/30'
                           }`}
                       >
-                        <ChevronRight size={10} className={`mr-2 transition-opacity ${isSubActive ? 'opacity-100' : 'opacity-0 group-hover/sub:opacity-100'}`} />
-                        {sub}
+                        <span className="flex items-center">
+                          <ChevronRight size={10} className={`mr-2 transition-opacity ${isSubActive ? 'opacity-100' : 'opacity-0'}`} />
+                          {sub}
+                        </span>
                       </NavLink>
                     );
                   })}

@@ -45,4 +45,22 @@ public class DestructionController {
         destructionService.executeDestruction(id);
         return Result.success();
     }
+    @GetMapping("/stats")
+    public Result<java.util.Map<String, Object>> getStats() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        // 1. 待鉴定档案 (模拟查询: 真实应查询 acc_archive where retention_period expired)
+        stats.put("pendingAppraisal", 0);
+        
+        // 2. AI 建议销毁
+        stats.put("aiSuggested", 0);
+        
+        // 3. 进行中批次
+        stats.put("activeBatches", destructionService.getDestructions(1, 100, "PENDING").getTotal());
+        
+        // 4. 已安全销毁 (模拟)
+        stats.put("safeDestructionCount", 0);
+        
+        return Result.success(stats);
+    }
 }

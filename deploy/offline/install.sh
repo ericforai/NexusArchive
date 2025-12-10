@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # --- 全局变量 ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.0.0"
+APP_VERSION="2.0.0"
 CONFIG_FILE="${SCRIPT_DIR}/install.conf"
 LOG_FILE="/tmp/nexusarchive_install_$(date +%Y%m%d_%H%M%S).log"
 
@@ -345,7 +345,7 @@ deploy_application() {
     log_step "部署应用程序..."
     
     # 复制 JAR
-    local jar_file="${SCRIPT_DIR}/bin/nexusarchive-backend-${VERSION}.jar"
+    local jar_file="${SCRIPT_DIR}/bin/nexusarchive-backend-${APP_VERSION}.jar"
     if [[ -f "$jar_file" ]]; then
         cp "$jar_file" "$INSTALL_DIR/app.jar"
         log_info "后端应用已部署"
@@ -545,7 +545,7 @@ show_banner() {
     echo "╔══════════════════════════════════════════════════════════╗"
     echo "║                                                          ║"
     echo "║     NexusArchive 电子会计档案管理系统                    ║"
-    echo "║     离线安装程序 v${VERSION}                                 ║"
+    echo "║     离线安装程序 v${APP_VERSION}                                 ║"
     echo "║                                                          ║"
     echo "║     支持: PostgreSQL | 达梦 | 人大金仓                   ║"
     echo "║                                                          ║"

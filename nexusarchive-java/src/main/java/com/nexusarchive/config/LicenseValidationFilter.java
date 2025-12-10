@@ -36,10 +36,6 @@ public class LicenseValidationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // DEV MODE: 临时禁用 License 验证以便开发调试
-        // TODO: 生产环境需要删除此行并恢复正常验证
-        if (true) return true;
-        
         String path = request.getRequestURI();
         return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
     }

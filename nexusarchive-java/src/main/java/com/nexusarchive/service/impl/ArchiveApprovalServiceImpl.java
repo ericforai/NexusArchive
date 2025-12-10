@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArchiveApproval;
+import com.nexusarchive.annotation.ArchivalAudit;
 import com.nexusarchive.mapper.ArchiveApprovalMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.ArchiveApprovalService;
+import com.nexusarchive.service.PreArchiveSubmitService;
+import org.springframework.context.annotation.Lazy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,15 +20,27 @@ import java.time.LocalDateTime;
  * 档案审批服务实现
  */
 @Service
-@RequiredArgsConstructor
 public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
     private final ArchiveApprovalMapper approvalMapper;
     private final ArchiveMapper archiveMapper;
     private final com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
+    private final PreArchiveSubmitService preArchiveSubmitService;
+
+    public ArchiveApprovalServiceImpl(
+            ArchiveApprovalMapper approvalMapper,
+            ArchiveMapper archiveMapper,
+            com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper,
+            @Lazy PreArchiveSubmitService preArchiveSubmitService) {
+        this.approvalMapper = approvalMapper;
+        this.archiveMapper = archiveMapper;
+        this.arcFileContentMapper = arcFileContentMapper;
+        this.preArchiveSubmitService = preArchiveSubmitService;
+    }
 
     @Override
     @Transactional
+    @ArchivalAudit(operationType = "CREATE_APPROVAL", resourceType = "ARCHIVE_APPROVAL", description = "创建归档审批申请")
     public ArchiveApproval createApproval(ArchiveApproval approval) {
         // 验证档案是否存在
         Archive archive = archiveMapper.selectById(approval.getArchiveId());
@@ -44,6 +59,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
     @Override
     @Transactional
+    @ArchivalAudit(operationType = "APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批准归档申请")
     public void approveArchive(String id, String approverId, String approverName, String comment) {
         ArchiveApproval approval = approvalMapper.selectById(id);
         if (approval == null) {
@@ -63,28 +79,17 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         approval.setLastModifiedTime(LocalDateTime.now()); // Manual update
         approvalMapper.updateById(approval);
 
-        // Update archive status
+        // Update archive status and trigger locking/conversion
         Archive archive = archiveMapper.selectById(approval.getArchiveId());
         if (archive != null) {
-            archive.setStatus("ARCHIVED");
-            archive.setLastModifiedTime(LocalDateTime.now()); // Manual update
-            archiveMapper.updateById(archive); // Ensure updated_at is set
-            
-            // Sync status to ArcFileContent
-            QueryWrapper<com.nexusarchive.entity.ArcFileContent> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("archival_code", archive.getArchiveCode());
-            java.util.List<com.nexusarchive.entity.ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
-            
-            for (com.nexusarchive.entity.ArcFileContent file : files) {
-                file.setPreArchiveStatus("ARCHIVED");
-                file.setArchivedTime(LocalDateTime.now());
-                arcFileContentMapper.updateById(file);
-            }
+            // Call the complete archival process (OFD conversion, Signing, Locking)
+            preArchiveSubmitService.completeArchival(archive.getId());
         }
     }
 
     @Override
     @Transactional
+    @ArchivalAudit(operationType = "REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "拒绝归档申请")
     public void rejectArchive(String id, String approverId, String approverName, String comment) {
         ArchiveApproval approval = approvalMapper.selectById(id);
         if (approval == null) {

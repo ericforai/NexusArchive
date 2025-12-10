@@ -4,6 +4,7 @@ import { adminApi, User, Role } from '../api/admin';
 import { Tree } from './org/Tree';
 import { AuditLogView } from './AuditLogView';
 import { FondsManagement } from './admin/FondsManagement';
+import { LicenseSettings } from './settings/LicenseSettings';
 
 type UserStatus = 'active' | 'disabled' | 'locked';
 
@@ -552,6 +553,9 @@ export const SettingsView: React.FC = () => {
 
         {/* Fonds Management Section */}
         <FondsManagement />
+
+        {/* License Management Section */}
+        <LicenseSettings />
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-4">

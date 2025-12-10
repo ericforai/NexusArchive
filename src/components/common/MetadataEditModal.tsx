@@ -4,12 +4,12 @@ import { createPortal } from 'react-dom';
 import { client as apiClient } from '../../api/client';
 import { toast } from 'react-hot-toast';
 
-// 单据类型选项 (《会计档案管理办法》第6条)
+// 单据类型选项 (《会计档案管理办法》财政部79号令 第6条)
 const VOUCHER_TYPE_OPTIONS = [
-    { code: 'AC01', label: '会计凭证', desc: '原始凭证、记账凭证' },
-    { code: 'AC02', label: '会计账簿', desc: '总账、明细账、日记账' },
+    { code: 'AC01', label: '会计凭证', desc: '原始凭证（发票、收据、银行回单等）、记账凭证' },
+    { code: 'AC02', label: '会计账簿', desc: '总账、明细账、日记账、固定资产卡片' },
     { code: 'AC03', label: '财务会计报告', desc: '月度/季度/半年度/年度报告' },
-    { code: 'AC04', label: '其他会计资料', desc: '银行对账单、发票、纳税申报表等' },
+    { code: 'AC04', label: '其他会计资料', desc: '银行对账单、纳税申报表、会计档案鉴定意见书等' },
 ];
 
 interface MetadataEditModalProps {
@@ -44,7 +44,7 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
 
     // Form state
     const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
-    const [voucherType, setVoucherType] = useState('AC04');
+    const [voucherType, setVoucherType] = useState('AC01');
     const [creator, setCreator] = useState('');
     const [fondsCode, setFondsCode] = useState('');
     const [modifyReason, setModifyReason] = useState('');

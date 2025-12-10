@@ -214,13 +214,18 @@
         <!-- OFDRW -->
         <dependency>
             <groupId>org.ofdrw</groupId>
-            <artifactId>ofdrw-converter</artifactId>
-            <version>2.2.6</version>
+            <artifactId>ofdrw-full</artifactId>
+            <version>2.2.7</version>
         </dependency>
         <dependency>
             <groupId>org.ofdrw</groupId>
-            <artifactId>ofdrw-reader</artifactId>
-            <version>2.2.6</version>
+            <artifactId>ofdrw-sign</artifactId>
+            <version>2.2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gm</artifactId>
+            <version>2.2.7</version>
         </dependency>
 
 

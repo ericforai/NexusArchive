@@ -1144,14 +1144,14 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                             // Partial success
                             // Combine error messages
                             const errorDetails = Object.values(result.failures).join('; ');
-                            showToast(`提交部分成功: 成功 ${successCount} 个, 失败 ${failureCount} 个. 详情: ${errorDetails}`, 'warning');
+                            showToast(`提交部分成功: 成功 ${successCount} 个, 失败 ${failureCount} 个. 详情: ${errorDetails}`, 'error');
                           } else if (successCount === 0 && failureCount > 0) {
                             // All failed
                             const errorDetails = Object.values(result.failures).join('\n');
                             showToast(`提交失败 (${failureCount}个): \n${errorDetails}`, 'error');
                           } else {
                             // No items?
-                            showToast('未提交任何申请', 'warning');
+                            showToast('未提交任何申请', 'error');
                           }
 
                           if (successCount > 0) {

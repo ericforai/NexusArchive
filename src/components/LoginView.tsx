@@ -69,13 +69,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
     };
 
 
-    const handleVisitLanding = () => {
-        if (onVisitLanding) {
-            onVisitLanding();
-        } else {
-            navigate('/');
-        }
-    };
+
 
     return (
         <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -118,13 +112,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
                     {loading ? '登录中...' : '登录'}
                 </button>
 
-                <button
-                    type="button"
-                    onClick={handleVisitLanding}
-                    className="w-full bg-transparent border border-blue-600 text-blue-600 py-2 rounded hover:bg-blue-50"
-                >
-                    访问产品官网
-                </button>
+
             </form>
         </div>
     );

@@ -85,7 +85,6 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
 
     // 档案借阅
     '借阅审批': ROUTE_PATHS.BORROWING,
-    '水印预览': ROUTE_PATHS.BORROWING,
 
     // 库房管理
     '密集架控制': ROUTE_PATHS.WAREHOUSE,

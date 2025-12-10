@@ -3,7 +3,7 @@ package com.nexusarchive.controller;
 import com.nexusarchive.service.ArchiveExportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
@@ -42,8 +41,8 @@ public class ArchiveExportController {
         // 生成 ZIP 文件
         File zipFile = exportService.exportAipPackage(archivalCode);
         
-        // 创建文件流资源
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(zipFile));
+        // 使用 FileSystemResource 避免流被多次读取的问题
+        FileSystemResource resource = new FileSystemResource(zipFile);
         
         // 设置响应头
         String filename = archivalCode + ".zip";

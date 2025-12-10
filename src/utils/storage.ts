@@ -54,65 +54,67 @@ class SafeStorage {
     }
 
     private getStorage(): Storage | null {
-        try {
-            this.initStorage();
-            if (this.storageType === 'localStorage' && typeof window !== 'undefined') {
-                return window.localStorage;
-            } else if (this.storageType === 'sessionStorage' && typeof window !== 'undefined') {
-                return window.sessionStorage;
-            }
-        } catch (e) {
-            console.warn('[SafeStorage] getStorage failed, using memory:', e);
-            this.storageType = 'memory';
+        // initStorage logic is just for probe. We will try to access it dynamically.
+        this.initStorage();
+        if (this.storageType === 'localStorage' && typeof window !== 'undefined') {
+            return window.localStorage;
+        } else if (this.storageType === 'sessionStorage' && typeof window !== 'undefined') {
+            return window.sessionStorage;
         }
-        return null;
+        return null; // For memory type
     }
 
     getItem(key: string): string | null {
-        const storage = this.getStorage();
-        if (storage) {
-            try {
+        try {
+            const storage = this.getStorage();
+            if (storage) {
                 return storage.getItem(key);
-            } catch (e) {
-                console.warn(`[SafeStorage] getItem('${key}') failed:`, e);
             }
+        } catch (e) {
+            console.warn(`[SafeStorage] getItem('${key}') failed, falling back to memory:`, e);
+            // Fallback: If storage access fails (e.g. SecurityError), switch to memory for this session
+            this.storageType = 'memory';
         }
         return this.memoryStorage.get(key) || null;
     }
 
     setItem(key: string, value: string): void {
-        const storage = this.getStorage();
-        if (storage) {
-            try {
+        try {
+            const storage = this.getStorage();
+            if (storage) {
                 storage.setItem(key, value);
                 return;
-            } catch (e) {
-                console.warn(`[SafeStorage] setItem('${key}') failed:`, e);
             }
+        } catch (e) {
+            console.warn(`[SafeStorage] setItem('${key}') failed, falling back to memory:`, e);
+            this.storageType = 'memory';
         }
         this.memoryStorage.set(key, value);
     }
 
     removeItem(key: string): void {
-        const storage = this.getStorage();
-        if (storage) {
-            try {
+        try {
+            const storage = this.getStorage();
+            if (storage) {
                 storage.removeItem(key);
-            } catch (e) {
-                // Ignore
+                return; // Should return, but also clear memory just in case
             }
+        } catch (e) {
+            console.warn(`[SafeStorage] removeItem('${key}') failed:`, e);
+            this.storageType = 'memory';
         }
         this.memoryStorage.delete(key);
     }
 
     clear(): void {
-        const storage = this.getStorage();
-        if (storage) {
-            try {
+        try {
+            const storage = this.getStorage();
+            if (storage) {
                 storage.clear();
-            } catch (e) {
-                // Ignore
             }
+        } catch (e) {
+            console.warn('[SafeStorage] clear failed:', e);
+            this.storageType = 'memory';
         }
         this.memoryStorage.clear();
     }

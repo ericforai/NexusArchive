@@ -5,7 +5,8 @@
  */
 import React, { lazy, Suspense } from 'react';
 import { Navigate, RouteObject } from 'react-router-dom';
-import { ProductWebsite } from '../components/ProductWebsite';
+
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 // 布局组件（非懒加载，因为是框架级别）
 import { SystemLayout } from '../layouts/SystemLayout';
@@ -58,8 +59,8 @@ const withSuspense = (Component: React.LazyExoticComponent<any>, props?: any) =>
  * 路由配置
  */
 export const routes: RouteObject[] = [
-    // 产品官网
-    { path: '/', element: <ProductWebsite /> },
+    // 根路径重定向到登录页
+    { path: '/', element: <Navigate to="/system/login" replace /> },
 
     // 登录页（独立于 SystemLayout）
     { path: '/system/login', element: <LoginView /> },
@@ -69,7 +70,9 @@ export const routes: RouteObject[] = [
         path: '/system',
         element: (
             <ProtectedRoute>
-                <SystemLayout />
+                <ErrorBoundary>
+                    <SystemLayout />
+                </ErrorBoundary>
             </ProtectedRoute>
         ),
         children: [

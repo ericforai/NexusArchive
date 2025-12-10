@@ -14,21 +14,21 @@ export interface AbnormalVoucher {
 
 export const getPendingAbnormals = () => {
     return request<AbnormalVoucher[]>({
-        url: '/api/v1/abnormal',
+        url: '/v1/abnormal',
         method: 'GET',
     });
 };
 
 export const retryAbnormal = (id: string) => {
     return request<void>({
-        url: `/api/v1/abnormal/${id}/retry`,
+        url: `/v1/abnormal/${id}/retry`,
         method: 'POST',
     });
 };
 
 export const updateAbnormalSip = (id: string, sipData: any) => {
     return request<void>({
-        url: `/api/v1/abnormal/${id}`,
+        url: `/v1/abnormal/${id}`,
         method: 'PUT',
         data: sipData,
     });
