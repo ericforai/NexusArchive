@@ -41,10 +41,17 @@ client.interceptors.response.use(
     (error) => {
         console.error('[Axios] Response Error:', error.message);
         if (error.response && error.response.status === 401) {
-            console.warn('[Axios] 401 Unauthorized for:', error.config?.url);
-            // 注意：不再自动删除 token 和重定向
-            // 让 SystemApp 或 usePermissions 自己处理认证状态
-            // 这避免了登录后立即被踢出的循环问题
+            const url = error.config?.url || '';
+            // 排除登录接口本身的 401（密码错误等情况）
+            if (!url.includes('/auth/login')) {
+                console.warn('[Axios] 401 - Token invalid or expired, auto logout');
+                const { logout } = useAuthStore.getState();
+                logout();
+                // 重定向到登录页（如果不在登录页）
+                if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                    window.location.href = '/system/login';
+                }
+            }
         }
         return Promise.reject(error);
     }

@@ -150,6 +150,19 @@ export const useAuthStore = create<AuthState>()(
         }),
         {
             name: 'nexus-auth', // localStorage key
+            version: 1, // 存储版本号，更新时递增以自动清除旧数据
+            migrate: (persistedState, version) => {
+                // 如果版本不匹配（旧版本或无版本），清除旧数据
+                if (version < 1) {
+                    console.warn('[AuthStore] Old storage version detected, clearing stale data');
+                    return {
+                        token: null,
+                        user: null,
+                        isAuthenticated: false,
+                    };
+                }
+                return persistedState as AuthState;
+            },
             partialize: (state) => ({
                 // 只持久化这些字段
                 token: state.token,

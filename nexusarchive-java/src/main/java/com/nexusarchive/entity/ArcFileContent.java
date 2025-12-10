@@ -67,7 +67,7 @@ public class ArcFileContent {
     private String certificate;
 
     // ===== 预归档状态管理 (第一阶段新增) =====
-    
+
     /**
      * 预归档状态: PENDING_CHECK/CHECK_FAILED/PENDING_METADATA/PENDING_ARCHIVE/ARCHIVED
      */
@@ -89,7 +89,7 @@ public class ArcFileContent {
     private LocalDateTime archivedTime;
 
     // ===== DA/T 94-2022 必填元数据 =====
-    
+
     /**
      * 会计年度
      */
@@ -115,11 +115,19 @@ public class ArcFileContent {
      */
     private String sourceSystem;
 
+    /**
+     * 业务单据号 (来自 ERP 的凭证号，如 JZ-202312-0051)
+     */
+    private String businessDocNo;
+
     private LocalDateTime createdTime;
 
-    public ArcFileContent() {}
+    public ArcFileContent() {
+    }
 
-    public ArcFileContent(String id, String archivalCode, String fileName, String fileType, Long fileSize, String fileHash, String hashAlgorithm, String storagePath, LocalDateTime createdTime, String itemId, String originalHash, String currentHash, byte[] timestampToken, byte[] signValue) {
+    public ArcFileContent(String id, String archivalCode, String fileName, String fileType, Long fileSize,
+            String fileHash, String hashAlgorithm, String storagePath, LocalDateTime createdTime, String itemId,
+            String originalHash, String currentHash, byte[] timestampToken, byte[] signValue) {
         this.id = id;
         this.archivalCode = archivalCode;
         this.fileName = fileName;
@@ -136,78 +144,206 @@ public class ArcFileContent {
         this.signValue = signValue;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        return id;
+    }
 
-    public String getArchivalCode() { return archivalCode; }
-    public void setArchivalCode(String archivalCode) { this.archivalCode = archivalCode; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
+    public String getArchivalCode() {
+        return archivalCode;
+    }
 
-    public String getFileType() { return fileType; }
-    public void setFileType(String fileType) { this.fileType = fileType; }
+    public void setArchivalCode(String archivalCode) {
+        this.archivalCode = archivalCode;
+    }
 
-    public Long getFileSize() { return fileSize; }
-    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+    public String getFileName() {
+        return fileName;
+    }
 
-    public String getFileHash() { return fileHash; }
-    public void setFileHash(String fileHash) { this.fileHash = fileHash; }
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
-    public String getHashAlgorithm() { return hashAlgorithm; }
-    public void setHashAlgorithm(String hashAlgorithm) { this.hashAlgorithm = hashAlgorithm; }
+    public String getFileType() {
+        return fileType;
+    }
 
-    public String getStoragePath() { return storagePath; }
-    public void setStoragePath(String storagePath) { this.storagePath = storagePath; }
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
 
-    public LocalDateTime getCreatedTime() { return createdTime; }
-    public void setCreatedTime(LocalDateTime createdTime) { this.createdTime = createdTime; }
+    public Long getFileSize() {
+        return fileSize;
+    }
 
-    public String getItemId() { return itemId; }
-    public void setItemId(String itemId) { this.itemId = itemId; }
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
 
-    public String getOriginalHash() { return originalHash; }
-    public void setOriginalHash(String originalHash) { this.originalHash = originalHash; }
+    public String getFileHash() {
+        return fileHash;
+    }
 
-    public String getCurrentHash() { return currentHash; }
-    public void setCurrentHash(String currentHash) { this.currentHash = currentHash; }
+    public void setFileHash(String fileHash) {
+        this.fileHash = fileHash;
+    }
 
-    public byte[] getTimestampToken() { return timestampToken; }
-    public void setTimestampToken(byte[] timestampToken) { this.timestampToken = timestampToken; }
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
+    }
 
-    public byte[] getSignValue() { return signValue; }
-    public void setSignValue(byte[] signValue) { this.signValue = signValue; }
+    public void setHashAlgorithm(String hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
 
-    public String getCertificate() { return certificate; }
-    public void setCertificate(String certificate) { this.certificate = certificate; }
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public void setStoragePath(String storagePath) {
+        this.storagePath = storagePath;
+    }
+
+    public LocalDateTime getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(LocalDateTime createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this.itemId = itemId;
+    }
+
+    public String getOriginalHash() {
+        return originalHash;
+    }
+
+    public void setOriginalHash(String originalHash) {
+        this.originalHash = originalHash;
+    }
+
+    public String getCurrentHash() {
+        return currentHash;
+    }
+
+    public void setCurrentHash(String currentHash) {
+        this.currentHash = currentHash;
+    }
+
+    public byte[] getTimestampToken() {
+        return timestampToken;
+    }
+
+    public void setTimestampToken(byte[] timestampToken) {
+        this.timestampToken = timestampToken;
+    }
+
+    public byte[] getSignValue() {
+        return signValue;
+    }
+
+    public void setSignValue(byte[] signValue) {
+        this.signValue = signValue;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
 
     // New field getters/setters
-    public String getPreArchiveStatus() { return preArchiveStatus; }
-    public void setPreArchiveStatus(String preArchiveStatus) { this.preArchiveStatus = preArchiveStatus; }
+    public String getPreArchiveStatus() {
+        return preArchiveStatus;
+    }
 
-    public String getCheckResult() { return checkResult; }
-    public void setCheckResult(String checkResult) { this.checkResult = checkResult; }
+    public void setPreArchiveStatus(String preArchiveStatus) {
+        this.preArchiveStatus = preArchiveStatus;
+    }
 
-    public LocalDateTime getCheckedTime() { return checkedTime; }
-    public void setCheckedTime(LocalDateTime checkedTime) { this.checkedTime = checkedTime; }
+    public String getCheckResult() {
+        return checkResult;
+    }
 
-    public LocalDateTime getArchivedTime() { return archivedTime; }
-    public void setArchivedTime(LocalDateTime archivedTime) { this.archivedTime = archivedTime; }
+    public void setCheckResult(String checkResult) {
+        this.checkResult = checkResult;
+    }
 
-    public String getFiscalYear() { return fiscalYear; }
-    public void setFiscalYear(String fiscalYear) { this.fiscalYear = fiscalYear; }
+    public LocalDateTime getCheckedTime() {
+        return checkedTime;
+    }
 
-    public String getVoucherType() { return voucherType; }
-    public void setVoucherType(String voucherType) { this.voucherType = voucherType; }
+    public void setCheckedTime(LocalDateTime checkedTime) {
+        this.checkedTime = checkedTime;
+    }
 
-    public String getCreator() { return creator; }
-    public void setCreator(String creator) { this.creator = creator; }
+    public LocalDateTime getArchivedTime() {
+        return archivedTime;
+    }
 
-    public String getFondsCode() { return fondsCode; }
-    public void setFondsCode(String fondsCode) { this.fondsCode = fondsCode; }
+    public void setArchivedTime(LocalDateTime archivedTime) {
+        this.archivedTime = archivedTime;
+    }
 
-    public String getSourceSystem() { return sourceSystem; }
-    public void setSourceSystem(String sourceSystem) { this.sourceSystem = sourceSystem; }
+    public String getFiscalYear() {
+        return fiscalYear;
+    }
+
+    public void setFiscalYear(String fiscalYear) {
+        this.fiscalYear = fiscalYear;
+    }
+
+    public String getVoucherType() {
+        return voucherType;
+    }
+
+    public void setVoucherType(String voucherType) {
+        this.voucherType = voucherType;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public String getFondsCode() {
+        return fondsCode;
+    }
+
+    public void setFondsCode(String fondsCode) {
+        this.fondsCode = fondsCode;
+    }
+
+    public String getSourceSystem() {
+        return sourceSystem;
+    }
+
+    public void setSourceSystem(String sourceSystem) {
+        this.sourceSystem = sourceSystem;
+    }
+
+    public String getBusinessDocNo() {
+        return businessDocNo;
+    }
+
+    public void setBusinessDocNo(String businessDocNo) {
+        this.businessDocNo = businessDocNo;
+    }
 
     public static ArcFileContentBuilder builder() {
         return new ArcFileContentBuilder();
@@ -216,31 +352,133 @@ public class ArcFileContent {
     public static class ArcFileContentBuilder {
         private ArcFileContent entity = new ArcFileContent();
 
-        public ArcFileContentBuilder id(String id) { entity.setId(id); return this; }
-        public ArcFileContentBuilder archivalCode(String archivalCode) { entity.setArchivalCode(archivalCode); return this; }
-        public ArcFileContentBuilder fileName(String fileName) { entity.setFileName(fileName); return this; }
-        public ArcFileContentBuilder fileType(String fileType) { entity.setFileType(fileType); return this; }
-        public ArcFileContentBuilder fileSize(Long fileSize) { entity.setFileSize(fileSize); return this; }
-        public ArcFileContentBuilder fileHash(String fileHash) { entity.setFileHash(fileHash); return this; }
-        public ArcFileContentBuilder hashAlgorithm(String hashAlgorithm) { entity.setHashAlgorithm(hashAlgorithm); return this; }
-        public ArcFileContentBuilder storagePath(String storagePath) { entity.setStoragePath(storagePath); return this; }
-        public ArcFileContentBuilder createdTime(LocalDateTime createdTime) { entity.setCreatedTime(createdTime); return this; }
-        public ArcFileContentBuilder itemId(String itemId) { entity.setItemId(itemId); return this; }
-        public ArcFileContentBuilder originalHash(String originalHash) { entity.setOriginalHash(originalHash); return this; }
-        public ArcFileContentBuilder currentHash(String currentHash) { entity.setCurrentHash(currentHash); return this; }
-        public ArcFileContentBuilder timestampToken(byte[] timestampToken) { entity.setTimestampToken(timestampToken); return this; }
-        public ArcFileContentBuilder signValue(byte[] signValue) { entity.setSignValue(signValue); return this; }
-        public ArcFileContentBuilder certificate(String certificate) { entity.setCertificate(certificate); return this; }
-        public ArcFileContentBuilder preArchiveStatus(String preArchiveStatus) { entity.setPreArchiveStatus(preArchiveStatus); return this; }
-        public ArcFileContentBuilder checkResult(String checkResult) { entity.setCheckResult(checkResult); return this; }
-        public ArcFileContentBuilder checkedTime(LocalDateTime checkedTime) { entity.setCheckedTime(checkedTime); return this; }
-        public ArcFileContentBuilder archivedTime(LocalDateTime archivedTime) { entity.setArchivedTime(archivedTime); return this; }
-        public ArcFileContentBuilder fiscalYear(String fiscalYear) { entity.setFiscalYear(fiscalYear); return this; }
-        public ArcFileContentBuilder voucherType(String voucherType) { entity.setVoucherType(voucherType); return this; }
-        public ArcFileContentBuilder creator(String creator) { entity.setCreator(creator); return this; }
-        public ArcFileContentBuilder fondsCode(String fondsCode) { entity.setFondsCode(fondsCode); return this; }
-        public ArcFileContentBuilder sourceSystem(String sourceSystem) { entity.setSourceSystem(sourceSystem); return this; }
+        public ArcFileContentBuilder id(String id) {
+            entity.setId(id);
+            return this;
+        }
 
-        public ArcFileContent build() { return entity; }
+        public ArcFileContentBuilder archivalCode(String archivalCode) {
+            entity.setArchivalCode(archivalCode);
+            return this;
+        }
+
+        public ArcFileContentBuilder fileName(String fileName) {
+            entity.setFileName(fileName);
+            return this;
+        }
+
+        public ArcFileContentBuilder fileType(String fileType) {
+            entity.setFileType(fileType);
+            return this;
+        }
+
+        public ArcFileContentBuilder fileSize(Long fileSize) {
+            entity.setFileSize(fileSize);
+            return this;
+        }
+
+        public ArcFileContentBuilder fileHash(String fileHash) {
+            entity.setFileHash(fileHash);
+            return this;
+        }
+
+        public ArcFileContentBuilder hashAlgorithm(String hashAlgorithm) {
+            entity.setHashAlgorithm(hashAlgorithm);
+            return this;
+        }
+
+        public ArcFileContentBuilder storagePath(String storagePath) {
+            entity.setStoragePath(storagePath);
+            return this;
+        }
+
+        public ArcFileContentBuilder createdTime(LocalDateTime createdTime) {
+            entity.setCreatedTime(createdTime);
+            return this;
+        }
+
+        public ArcFileContentBuilder itemId(String itemId) {
+            entity.setItemId(itemId);
+            return this;
+        }
+
+        public ArcFileContentBuilder originalHash(String originalHash) {
+            entity.setOriginalHash(originalHash);
+            return this;
+        }
+
+        public ArcFileContentBuilder currentHash(String currentHash) {
+            entity.setCurrentHash(currentHash);
+            return this;
+        }
+
+        public ArcFileContentBuilder timestampToken(byte[] timestampToken) {
+            entity.setTimestampToken(timestampToken);
+            return this;
+        }
+
+        public ArcFileContentBuilder signValue(byte[] signValue) {
+            entity.setSignValue(signValue);
+            return this;
+        }
+
+        public ArcFileContentBuilder certificate(String certificate) {
+            entity.setCertificate(certificate);
+            return this;
+        }
+
+        public ArcFileContentBuilder preArchiveStatus(String preArchiveStatus) {
+            entity.setPreArchiveStatus(preArchiveStatus);
+            return this;
+        }
+
+        public ArcFileContentBuilder checkResult(String checkResult) {
+            entity.setCheckResult(checkResult);
+            return this;
+        }
+
+        public ArcFileContentBuilder checkedTime(LocalDateTime checkedTime) {
+            entity.setCheckedTime(checkedTime);
+            return this;
+        }
+
+        public ArcFileContentBuilder archivedTime(LocalDateTime archivedTime) {
+            entity.setArchivedTime(archivedTime);
+            return this;
+        }
+
+        public ArcFileContentBuilder fiscalYear(String fiscalYear) {
+            entity.setFiscalYear(fiscalYear);
+            return this;
+        }
+
+        public ArcFileContentBuilder voucherType(String voucherType) {
+            entity.setVoucherType(voucherType);
+            return this;
+        }
+
+        public ArcFileContentBuilder creator(String creator) {
+            entity.setCreator(creator);
+            return this;
+        }
+
+        public ArcFileContentBuilder fondsCode(String fondsCode) {
+            entity.setFondsCode(fondsCode);
+            return this;
+        }
+
+        public ArcFileContentBuilder sourceSystem(String sourceSystem) {
+            entity.setSourceSystem(sourceSystem);
+            return this;
+        }
+
+        public ArcFileContentBuilder businessDocNo(String businessDocNo) {
+            entity.setBusinessDocNo(businessDocNo);
+            return this;
+        }
+
+        public ArcFileContent build() {
+            return entity;
+        }
     }
 }

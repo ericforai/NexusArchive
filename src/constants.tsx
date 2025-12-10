@@ -76,7 +76,8 @@ export const DESTRUCTION_BATCHES = [
 // 1.1 电子凭证池
 export const PRE_ARCHIVE_POOL_CONFIG: ModuleConfig = {
   columns: [
-    { key: 'code', header: '唯一流水号', type: 'text' },
+    { key: 'businessDocNo', header: '业务单据号', type: 'text' },
+    { key: 'code', header: '系统流水号', type: 'text' },
     { key: 'source', header: '来源系统', type: 'text' },
     { key: 'type', header: '单据类型', type: 'text' },
     { key: 'amount', header: '金额', type: 'money' },
@@ -84,10 +85,10 @@ export const PRE_ARCHIVE_POOL_CONFIG: ModuleConfig = {
     { key: 'status', header: '解析状态', type: 'status' },
   ],
   data: [
-    { id: '1', code: 'POOL-20231101-001', source: 'SAP ERP', type: '记账凭证', amount: '¥ 12,000.00', date: '2023-11-01 09:00', status: '待处理' },
-    { id: '2', code: 'POOL-20231101-002', source: '费控系统', type: '差旅报销单', amount: '¥ 3,450.00', date: '2023-11-01 09:05', status: '待处理' },
-    { id: '3', code: 'POOL-20231101-003', source: '资金系统', type: '银行回单', amount: '¥ 150,000.00', date: '2023-11-01 09:12', status: '处理中' },
-    { id: '4', code: 'POOL-20231101-004', source: '影像系统', type: '电子发票', amount: '¥ 500.00', date: '2023-11-01 09:15', status: '已完成' },
+    { id: '1', businessDocNo: 'JZ-202311-0051', code: 'POOL-20231101-001', source: 'SAP ERP', type: '记账凭证', amount: '¥ 12,000.00', date: '2023-11-01 09:00', status: '待处理' },
+    { id: '2', businessDocNo: 'BX-202311-0023', code: 'POOL-20231101-002', source: '费控系统', type: '差旅报销单', amount: '¥ 3,450.00', date: '2023-11-01 09:05', status: '待处理' },
+    { id: '3', businessDocNo: 'YH-202311-0089', code: 'POOL-20231101-003', source: '资金系统', type: '银行回单', amount: '¥ 150,000.00', date: '2023-11-01 09:12', status: '处理中' },
+    { id: '4', businessDocNo: '-', code: 'POOL-20231101-004', source: '影像系统', type: '电子发票', amount: '¥ 500.00', date: '2023-11-01 09:15', status: '已完成' },
   ]
 };
 

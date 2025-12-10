@@ -94,7 +94,12 @@ elasticsearch:
   connect-timeout: 5000
   socket-timeout: 30000
 
-
+# Entity-Database Schema 一致性验证 (防止 Entity 字段与数据库列不同步)
+schema:
+  validation:
+    enabled: ${SCHEMA_VALIDATION_ENABLED:true}           # 是否启用验证
+    fail-on-error: ${SCHEMA_VALIDATION_FAIL:true}       # 发现问题时是否阻止启动
+    entity-package: com.nexusarchive.entity              # Entity 包路径
 ---
 # 开发环境 - PostgreSQL
 spring:

@@ -420,6 +420,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   // Export State
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
+  // Archive Confirmation Modal State
+  const [isArchiveConfirmOpen, setIsArchiveConfirmOpen] = useState(false);
+
   // --- Actions ---
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -471,28 +474,34 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   // Formal Archiving Handler
   const [isArchiving, setIsArchiving] = useState(false);
 
-  const handleFormalArchiving = async () => {
+  const handleFormalArchiving = () => {
     if (selectedRows.length === 0) {
       showToast('请先选择要归档的凭证', 'error');
       return;
     }
+    // Open confirmation modal instead of native confirm()
+    setIsArchiveConfirmOpen(true);
+  };
 
-    if (!confirm(`确定要将选中的 ${selectedRows.length} 条凭证正式归档吗？\n归档后将生成 AIP 档案包。`)) {
-      return;
-    }
+  const executeArchiving = async () => {
+    console.log('executeArchiving started, isArchiveConfirmOpen:', isArchiveConfirmOpen);
+    setIsArchiveConfirmOpen(false);
 
     setIsArchiving(true);
     try {
+      console.log('Calling poolApi.archiveItems with:', selectedRows);
       await poolApi.archiveItems(selectedRows);
+      console.log('poolApi.archiveItems returned success');
       showToast(`成功归档 ${selectedRows.length} 条凭证`);
       setSelectedRows([]);
       // Reload pool data
       loadPoolData();
     } catch (error) {
-      console.error('归档失败:', error);
+      console.error('归档失败 detailed error:', error);
       showToast('归档失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
     } finally {
       setIsArchiving(false);
+      console.log('executeArchiving finished');
     }
   };
 
@@ -738,11 +747,18 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
     }
 
     if (column.type === 'status') {
+      // 优先使用预定义的状态映射 (PRE_ARCHIVE_STATUS_LABELS)
+      const exactStatus = String(value);
+      if (PRE_ARCHIVE_STATUS_LABELS[exactStatus]) {
+        const { label, color, icon } = PRE_ARCHIVE_STATUS_LABELS[exactStatus];
+        return <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>{icon}{label}</span>;
+      }
+
       let colorClass = 'bg-slate-100 text-slate-600 border-slate-200';
       let Icon = null;
       const statusLower = String(value).toLowerCase();
 
-      // Chinese Status Mappings
+      // Chinese Status Mappings (Existing logic for other statuses)
       if (['已完成', '已归档', '已通过', '已归还', '正常', '机密', '已关联', '已审核', '已记账', '匹配成功', '打开', '通风中'].some(s => statusLower.includes(s))) {
         colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
         Icon = CheckCircle2;
@@ -861,6 +877,56 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
             {toast.type === 'success' ? <CheckCircle2 size={20} className="text-emerald-400" /> : <AlertTriangle size={20} className="text-white" />}
             <span className="font-medium text-sm">{toast.message}</span>
             <button onClick={() => setToast(prev => ({ ...prev, visible: false }))} className="ml-2 text-slate-400 hover:text-white"><XCircle size={16} /></button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Archive Confirmation Modal (Portal) */}
+      {isArchiveConfirmOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsArchiveConfirmOpen(false)} />
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                <Layers className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">确认归档</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">此操作不可撤销</p>
+              </div>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
+              确定要将选中的 <span className="font-bold text-emerald-600">{selectedRows.length}</span> 条凭证正式归档吗？
+              <br />
+              <span className="text-sm text-slate-500">归档后将生成 AIP 档案包。</span>
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsArchiveConfirmOpen(false)}
+                className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+              >
+                取消
+              </button>
+              <button
+                id="confirm-archive-btn"
+                onClick={executeArchiving}
+                disabled={isArchiving}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isArchiving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    归档中...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={16} />
+                    确认归档
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>,
         document.body
@@ -987,21 +1053,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               <label htmlFor="file-upload" className="cursor-pointer px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center shadow-sm transition-all active:scale-95">
                 <Upload size={16} className="mr-2" /> 上传
               </label>
-              <button
-                onClick={handleFormalArchiving}
-                disabled={isArchiving || selectedRows.length === 0}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 flex items-center shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isArchiving ? (
-                  <>
-                    <Loader2 size={16} className="mr-2 animate-spin" /> 归档中...
-                  </>
-                ) : (
-                  <>
-                    <Layers size={16} className="mr-2" /> 正式归档{selectedRows.length > 0 && ` (${selectedRows.length})`}
-                  </>
-                )}
-              </button>
+              {/* 正式归档按钮已移除，使用提交归档代替 */}
             </>
           )}
           {selectedRows.length > 0 && subTitle === '凭证关联' && (
@@ -1163,9 +1215,12 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               </button>
             </>
           )}
-          <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 flex items-center shadow-lg shadow-primary-500/30 transition-all active:scale-95">
-            <Plus size={16} className="mr-2" /> 新增
-          </button>
+          {/* 新增按钮：电子凭证池视图隐藏（合规要求：凭证应从ERP系统采集，不应手工新增） */}
+          {!isPoolView && (
+            <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 flex items-center shadow-lg shadow-primary-500/30 transition-all active:scale-95">
+              <Plus size={16} className="mr-2" /> 新增
+            </button>
+          )}
         </div>
       </div>
 

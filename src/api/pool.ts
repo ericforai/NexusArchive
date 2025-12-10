@@ -61,6 +61,8 @@ export const poolApi = {
       reason: '批量归档申请'
     });
 
+    console.log('poolApi.archiveItems response:', response.data);
+
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '归档失败');
     }

@@ -19,6 +19,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+
 /**
  * 预归档提交服务
  * 用于将预归档库文件提交归档申请
@@ -33,41 +37,48 @@ public class PreArchiveSubmitService {
 
     private final ArcFileContentMapper arcFileContentMapper;
     private final ArchiveMapper archiveMapper;
+
     private final ArchiveApprovalService archiveApprovalService;
+
+    @Autowired
+    @Lazy
+    private PreArchiveSubmitService self;
 
     /**
      * 提交单个文件归档申请
-     * @param fileId 预归档文件ID
-     * @param applicantId 申请人ID
+     * 
+     * @param fileId        预归档文件ID
+     * @param applicantId   申请人ID
      * @param applicantName 申请人姓名
-     * @param reason 申请理由
+     * @param reason        申请理由
      * @return 归档申请记录
      */
-    @Transactional
-    public ArchiveApproval submitForArchival(String fileId, String applicantId, 
-                                             String applicantName, String reason) {
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ArchiveApproval submitForArchival(String fileId, String applicantId,
+            String applicantName, String reason) {
         log.info("提交归档申请: fileId={}, applicant={}", fileId, applicantName);
-        
+
         // 1. 验证文件状态
         ArcFileContent file = arcFileContentMapper.selectById(fileId);
         if (file == null) {
             throw new RuntimeException("文件不存在: " + fileId);
         }
-        
+
         String status = file.getPreArchiveStatus();
         if (!PreArchiveStatus.PENDING_ARCHIVE.getCode().equals(status)) {
             throw new RuntimeException("文件状态不允许提交归档，当前状态: " + status);
         }
-        
+
         // 2. 创建正式档案记录
         Archive archive = createArchiveFromPoolFile(file);
         archiveMapper.insert(archive);
-        
+
         // 3. 更新文件的正式档号和状态
         file.setArchivalCode(archive.getArchiveCode());
         file.setPreArchiveStatus(PreArchiveStatus.PENDING_APPROVAL.getCode()); // Move to pending approval
         arcFileContentMapper.updateById(file);
-        
+
         // 4. 创建审批申请
         ArchiveApproval approval = new ArchiveApproval();
         approval.setArchiveId(archive.getId());
@@ -79,22 +90,21 @@ public class PreArchiveSubmitService {
         approval.setApplicationReason(reason != null ? reason : "预归档库文件归档申请");
         approval.setCreatedTime(LocalDateTime.now()); // Manually set created_at
         approval.setLastModifiedTime(LocalDateTime.now()); // Manually set updated_at
-        
+
         return archiveApprovalService.createApproval(approval);
     }
 
     /**
      * 批量提交归档申请
      */
-    @Transactional
-    public BatchOperationResult<ArchiveApproval> submitBatchForArchival(List<String> fileIds, 
-                                                         String applicantId, 
-                                                         String applicantName,
-                                                         String reason) {
+    public BatchOperationResult<ArchiveApproval> submitBatchForArchival(List<String> fileIds,
+            String applicantId,
+            String applicantName,
+            String reason) {
         BatchOperationResult<ArchiveApproval> result = new BatchOperationResult<>();
         for (String fileId : fileIds) {
             try {
-                ArchiveApproval approval = submitForArchival(fileId, applicantId, applicantName, reason);
+                ArchiveApproval approval = self.submitForArchival(fileId, applicantId, applicantName, reason);
                 result.addSuccess(approval);
             } catch (Exception e) {
                 log.error("提交归档申请失败: fileId={}, error={}", fileId, e.getMessage());
@@ -111,21 +121,21 @@ public class PreArchiveSubmitService {
     @Transactional
     public void completeArchival(String archiveId) {
         log.info("完成归档，锁定文件: archiveId={}", archiveId);
-        
+
         Archive archive = archiveMapper.selectById(archiveId);
         if (archive == null) {
             throw new RuntimeException("档案不存在: " + archiveId);
         }
-        
+
         // 更新档案状态为已归档
         archive.setStatus("ARCHIVED");
         archiveMapper.updateById(archive);
-        
+
         // 锁定关联的文件
         QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("archival_code", archive.getArchiveCode());
         List<ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
-        
+
         for (ArcFileContent file : files) {
             file.setPreArchiveStatus(PreArchiveStatus.ARCHIVED.getCode());
             file.setArchivedTime(LocalDateTime.now());
@@ -140,25 +150,25 @@ public class PreArchiveSubmitService {
     private Archive createArchiveFromPoolFile(ArcFileContent file) {
         Archive archive = new Archive();
         archive.setId(UUID.randomUUID().toString().replace("-", ""));
-        
+
         // 生成正式档号
         String archiveCode = generateArchiveCode(file);
         archive.setArchiveCode(archiveCode);
-        
+
         // 设置基本信息
         archive.setTitle(extractTitle(file));
         archive.setSummary(file.getFileName());
         archive.setStatus("PENDING"); // 待审批
-        
+
         // 设置分类（默认为会计凭证）
         archive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : "AC01");
-        
+
         // 设置保管期限（默认30年）
         archive.setRetentionPeriod("30Y");
-        
+
         // 设置全宗号
         archive.setFondsNo(file.getFondsCode() != null ? file.getFondsCode() : "DEFAULT");
-        
+
         // 设置日期
         if (file.getFiscalYear() != null) {
             archive.setDocDate(LocalDate.parse(file.getFiscalYear() + "-01-01"));
@@ -167,10 +177,10 @@ public class PreArchiveSubmitService {
             archive.setDocDate(LocalDate.now());
             archive.setFiscalYear(String.valueOf(LocalDate.now().getYear()));
         }
-        
+
         // 设置创建者
         archive.setCreator(file.getCreator() != null ? file.getCreator() : "系统");
-        
+
         // 设置立档单位名称 (使用全宗号或默认值)
         archive.setOrgName(file.getFondsCode() != null ? file.getFondsCode() : "默认立档单位");
 
@@ -183,12 +193,11 @@ public class PreArchiveSubmitService {
      */
     private String generateArchiveCode(ArcFileContent file) {
         String fondsCode = file.getFondsCode() != null ? file.getFondsCode() : "QZ";
-        String year = file.getFiscalYear() != null ? file.getFiscalYear() : 
-                      String.valueOf(LocalDate.now().getYear());
+        String year = file.getFiscalYear() != null ? file.getFiscalYear() : String.valueOf(LocalDate.now().getYear());
         String retention = "30Y";
         String category = file.getVoucherType() != null ? file.getVoucherType() : "KJ";
         String sequence = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-        
+
         return String.format("%s-%s-%s-%s-%s", fondsCode, year, retention, category, sequence);
     }
 
@@ -197,8 +206,9 @@ public class PreArchiveSubmitService {
      */
     private String extractTitle(ArcFileContent file) {
         String fileName = file.getFileName();
-        if (fileName == null) return "未命名档案";
-        
+        if (fileName == null)
+            return "未命名档案";
+
         // 去除扩展名
         int dotIndex = fileName.lastIndexOf('.');
         if (dotIndex > 0) {
