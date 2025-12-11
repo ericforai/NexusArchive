@@ -10,6 +10,14 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$DIR/.." && pwd)"
 BACKEND_DIR="$ROOT/nexusarchive-java"
 
+# 加载环境变量文件 (如果存在)
+if [ -f "$ROOT/.env" ]; then
+    echo "加载环境变量: $ROOT/.env"
+    set -a  # 自动导出变量
+    source "$ROOT/.env"
+    set +a
+fi
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'

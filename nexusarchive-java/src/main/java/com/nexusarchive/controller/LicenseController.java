@@ -15,7 +15,7 @@ public class LicenseController {
     private final LicenseService licenseService;
 
     @PostMapping("/load")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN') or hasAuthority('nav:all')")
+    // 注意：此接口需对匿名用户开放，因为系统激活时尚未登录
     @ArchivalAudit(operationType = "LOAD_LICENSE", resourceType = "LICENSE", description = "加载/切换 License")
     public Result<LicenseService.LicenseInfo> load(@RequestBody String licenseText) {
         return Result.success("License 加载成功", licenseService.validate(licenseText));

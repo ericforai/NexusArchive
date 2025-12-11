@@ -6,10 +6,12 @@ import { PositionManagement } from './PositionManagement';
 
 interface AdminLayoutProps {
     onExit: () => void;
+    children?: React.ReactNode;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExit, children }) => {
     const [activeTab, setActiveTab] = useState<'fonds' | 'positions' | 'custom'>('custom');
+    const [collapsed, setCollapsed] = useState(false);
 
     const renderContent = () => {
         if (children) return children;
@@ -20,7 +22,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExit, children }) =>
 
     return (
         <div className="flex h-screen bg-slate-50">
-            <Sidebar activeView={null as any} setActiveView={() => { }} activeSubItem={''} setActiveSubItem={() => { }} />
+            <Sidebar
+                collapsed={collapsed}
+                onToggle={() => setCollapsed(!collapsed)}
+                onVisitLanding={onExit}
+            />
             <div className="flex-1 flex flex-col">
                 <TopBar />
                 <div className="px-4 pt-4 flex gap-2">

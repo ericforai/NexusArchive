@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { safeStorage } from '../../utils/storage'
+import { useAuthStore } from '../../store'
 
 interface FileViewerProps {
     fileUrl: string
@@ -22,8 +23,8 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
 
         async function loadFile() {
             try {
-                // Get token from safeStorage
-                const token = safeStorage.getItem('token')
+                // Get token from AuthStore (Fix: use correct store instead of legacy storage)
+                const token = useAuthStore.getState().token
                 const headers: Record<string, string> = {}
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`

@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/refresh",
                                 "/auth/logout",
+                                "/license/**",  // License 导入需要在未授权时可访问
                                 "/health",
                                 "/health/**",
                                 "/actuator/health",

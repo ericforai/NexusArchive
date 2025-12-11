@@ -40,16 +40,31 @@ client.interceptors.response.use(
     },
     (error) => {
         console.error('[Axios] Response Error:', error.message);
-        if (error.response && error.response.status === 401) {
+        if (error.response) {
+            const { status } = error.response;
             const url = error.config?.url || '';
-            // 排除登录接口本身的 401（密码错误等情况）
-            if (!url.includes('/auth/login')) {
-                console.warn('[Axios] 401 - Token invalid or expired, auto logout');
-                const { logout } = useAuthStore.getState();
-                logout();
-                // 重定向到登录页（如果不在登录页）
-                if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                    window.location.href = '/system/login';
+            const isAuthError = status === 401;
+            // Handle 403 (Forbidden) - often implies missing/invalid token or license issue
+            const isForbidden = status === 403 && !url.includes('/auth/login');
+
+            if (isAuthError || isForbidden) {
+                console.warn(`[Axios] ${status} - Token invalid, expired, or forbidden. Auto logout.`);
+
+                // Avoid infinite loops if we are already logging out
+                const { token, logout } = useAuthStore.getState();
+                if (token) {
+                    logout();
+                }
+
+                // Redirect to login if not already there
+                if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/activation')) {
+                    // Check if it's a license 403 (special case)
+                    const msg = error.response.data?.message || '';
+                    if (msg.includes('License') || msg.includes('许可')) {
+                        window.location.href = '/system/activation';
+                    } else {
+                        window.location.href = '/system/login';
+                    }
                 }
             }
         }

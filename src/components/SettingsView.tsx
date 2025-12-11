@@ -1013,7 +1013,7 @@ export const SettingsView: React.FC = () => {
                   <div key={group}>
                     <div className="text-xs font-bold text-slate-500 mb-1 bg-slate-50 px-1">{group}</div>
                     <div className="flex flex-wrap gap-2">
-                      {perms.map((perm) => (
+                      {perms.map((perm: any) => (
                         <label
                           key={perm.key}
                           className="inline-flex items-center space-x-1 px-2 py-1 border border-slate-200 rounded text-xs cursor-pointer hover:bg-slate-50"

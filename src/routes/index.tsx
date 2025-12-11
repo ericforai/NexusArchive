@@ -30,7 +30,7 @@ const BorrowingView = lazy(() => import('../components/BorrowingView'));
 const WarehouseView = lazy(() => import('../components/WarehouseView'));
 const StatsView = lazy(() => import('../components/StatsView'));
 const ComplianceReportView = lazy(() => import('../components/ComplianceReportView'));
-const AdminLayout = lazy(() => import('../components/admin/AdminLayout'));
+const AdminLayout = lazy(() => import('../components/admin/AdminLayout').then(module => ({ default: module.AdminLayout })));
 
 // 系统设置模块（Tab 拆分子路由）
 const SettingsLayout = lazy(() => import('../components/settings/SettingsLayout'));

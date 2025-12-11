@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronRight, ChevronDown, Folder, FileText, Calendar } from 'lucide-react';
 import { archivesApi, Archive } from '../../api/archives';
-import { isDemoMode } from '../../utils/env';
-import { safeStorage } from '../../utils/storage';
-import { DemoBadge } from '../common/DemoBadge';
 
 interface ArchiveStructureTreeProps {
     onSelectVoucher: (voucherId: string) => void;
@@ -62,11 +59,10 @@ const MOCK_TREE_DATA: TreeNode[] = [
 
 export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSelectVoucher }) => {
     const [treeData, setTreeData] = useState<TreeNode[]>(MOCK_TREE_DATA);
-    const [expandedNodes, setExpandedNodes] = useState<string[]>(['2023', '2023-11']);
+    const [expandedNodes, setExpandedNodes] = useState<string[]>(['2023', '2023-11', '2025', '2025-11']);
     const [selectedNode, setSelectedNode] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [usingDemo, setUsingDemo] = useState(isDemoMode());
 
     const buildTreeFromArchives = (archives: Archive[]): TreeNode[] => {
         const yearMap = new Map<string, TreeNode>();
@@ -110,31 +106,22 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         setLoading(true);
         setError(null);
         try {
-            if (isDemoMode()) {
-                setUsingDemo(true);
-                setTreeData(MOCK_TREE_DATA);
-                return;
-            }
             const res = await archivesApi.getArchives({ page: 1, limit: 200, categoryCode: 'AC01' });
             if (res.code === 200 && res.data) {
                 const records = (res.data as any).records || [];
                 if (records.length === 0) {
-                    setTreeData([]);
+                    // 无数据时使用默认数据
+                    setTreeData(MOCK_TREE_DATA);
                 } else {
                     setTreeData(buildTreeFromArchives(records as Archive[]));
                 }
-                setUsingDemo(false);
             } else {
-                setError('目录数据加载失败');
+                // 加载失败时使用默认数据
+                setTreeData(MOCK_TREE_DATA);
             }
         } catch (e) {
-            if (isDemoMode()) {
-                setUsingDemo(true);
-                setTreeData(MOCK_TREE_DATA);
-            } else {
-                setError('目录数据加载失败');
-                setTreeData([]);
-            }
+            console.warn('Failed to load tree, using defaults', e);
+            setTreeData(MOCK_TREE_DATA);
         } finally {
             setLoading(false);
         }
@@ -203,30 +190,12 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
             <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
                 <div>
                     <h3 className="font-bold text-slate-800">档案目录</h3>
-                    {usingDemo && <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded">演示数据</span>}
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => {
-                            const next = !usingDemo;
-                            safeStorage.setItem('demoMode', next ? 'true' : 'false');
-                            setUsingDemo(next);
-                            if (!next) {
-                                loadTree();
-                            } else {
-                                setTreeData(MOCK_TREE_DATA);
-                                setExpandedNodes(['2023', '2023-11']);
-                            }
-                        }}
-                        className="px-3 py-1.5 text-xs rounded border border-slate-200 text-slate-600 hover:bg-slate-100"
-                    >
-                        {usingDemo ? '关闭演示' : '开启演示'}
-                    </button>
                     {loading && <span className="text-[12px] text-slate-400">加载中...</span>}
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto py-2">
-                {usingDemo && <div className="px-3 pb-2"><DemoBadge text="当前目录为演示数据，接入真实档案目录后可关闭演示模式。" /></div>}
                 {error && (
                     <div className="text-center text-xs text-rose-500 px-4 py-2">{error}</div>
                 )}

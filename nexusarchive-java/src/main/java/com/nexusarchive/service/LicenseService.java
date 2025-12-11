@@ -1,9 +1,15 @@
 package com.nexusarchive.service;
 
 import com.nexusarchive.common.exception.BusinessException;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
@@ -12,18 +18,68 @@ import java.util.Base64;
 import java.util.Map;
 
 /**
- * 简化版 License 校验服务
- * License 内容采用 Base64(JSON) 格式，含到期日与允许的节点数。
+ * License 校验服务 (支持文件持久化)
+ * License 保存到文件系统，服务重启后自动加载。
  */
+@Slf4j
 @Service
 public class LicenseService {
 
     @Value("${license.public-key:}")
     private String licensePublicKey; // Base64 编码的 RSA 公钥
 
+    @Value("${archive.root.path:./data/archives}")
+    private String archiveRootPath;
+
     private volatile LicenseInfo cached;
 
+    private static final String LICENSE_FILENAME = "license.json";
+
+    /**
+     * 服务启动时自动加载已持久化的 License
+     */
+    @PostConstruct
+    public void init() {
+        Path licensePath = getLicensePath();
+        if (Files.exists(licensePath)) {
+            try {
+                String licenseText = Files.readString(licensePath);
+                log.info("[License] 正在加载已保存的 License: {}", licensePath);
+                validate(licenseText, false); // 加载但不重复保存
+                log.info("[License] ✓ License 加载成功, 有效期至: {}", cached.getExpireAt());
+            } catch (IOException e) {
+                log.warn("[License] 无法读取 License 文件: {}", e.getMessage());
+            } catch (BusinessException e) {
+                log.warn("[License] License 已失效或损坏, 需要重新激活: {}", e.getMessage());
+            }
+        } else {
+            log.info("[License] 未找到已保存的 License 文件, 系统需要激活");
+        }
+    }
+
+    /**
+     * 获取 License 文件存储路径
+     */
+    private Path getLicensePath() {
+        Path dataDir = Paths.get(archiveRootPath).getParent();
+        if (dataDir == null) {
+            dataDir = Paths.get("./data");
+        }
+        return dataDir.resolve(LICENSE_FILENAME);
+    }
+
+    /**
+     * 验证并加载 License
+     */
     public LicenseInfo validate(String licenseText) {
+        return validate(licenseText, true);
+    }
+
+    /**
+     * 验证并加载 License
+     * @param persist 是否持久化到文件
+     */
+    private LicenseInfo validate(String licenseText, boolean persist) {
         try {
             // License 格式：Base64(JSON) + 签名，形如 {"payload":"...","sig":"..."}
             Map<String, Object> wrapper = new com.fasterxml.jackson.databind.ObjectMapper()
@@ -65,11 +121,31 @@ public class LicenseService {
             info.setNodeLimit(nodeLimit);
             info.setRaw(licenseText);
             this.cached = info;
+
+            // 持久化到文件
+            if (persist) {
+                saveLicenseToFile(licenseText);
+            }
+
             return info;
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
             throw new BusinessException("License 无效");
+        }
+    }
+
+    /**
+     * 保存 License 到文件
+     */
+    private void saveLicenseToFile(String licenseText) {
+        try {
+            Path licensePath = getLicensePath();
+            Files.createDirectories(licensePath.getParent());
+            Files.writeString(licensePath, licenseText);
+            log.info("[License] ✓ License 已保存到: {}", licensePath.toAbsolutePath());
+        } catch (IOException e) {
+            log.error("[License] 保存 License 文件失败: {}", e.getMessage());
         }
     }
 
@@ -110,3 +186,4 @@ public class LicenseService {
         }
     }
 }
+

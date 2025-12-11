@@ -14,8 +14,8 @@ import {
     Building2,
     FileDigit
 } from 'lucide-react';
-import { ViewState } from '../types';
-import { request } from '../utils/request';
+import { ViewState, ApiResponse } from '../types';
+import { client } from '../api/client';
 
 interface ComplianceReportViewProps {
     archiveId: string;
@@ -54,7 +54,9 @@ export const ComplianceReportView: React.FC<ComplianceReportViewProps> = ({ arch
         try {
             setLoading(true);
             // Fetch compliance result
-            const res = await request<ComplianceResult>({ url: `/api/compliance/archives/${archiveId}`, method: 'GET' });
+            const response = await client.get<ApiResponse<ComplianceResult>>(`/compliance/archives/${archiveId}`);
+            const res = response.data;
+
             if (res && res.code === 200) {
                 setResult(res.data);
             } else {
@@ -74,7 +76,8 @@ export const ComplianceReportView: React.FC<ComplianceReportViewProps> = ({ arch
 
     const handleExport = async (format: 'xml' | 'json') => {
         try {
-            const res = await request<string>({ url: `/compliance/archives/${archiveId}/report?format=${format}`, method: 'GET' });
+            const response = await client.get<ApiResponse<string>>(`/compliance/archives/${archiveId}/report?format=${format}`);
+            const res = response.data;
             if (res && res.code === 200) {
                 // Trigger download
                 const blob = new Blob([res.data], { type: format === 'json' ? 'application/json' : 'text/xml' });

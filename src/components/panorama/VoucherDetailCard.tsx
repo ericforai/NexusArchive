@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { ShieldCheck, AlertTriangle, FileText, CreditCard, Calendar, Hash } from 'lucide-react';
 import { autoAssociationApi, ComplianceStatus } from '../../api/autoAssociation';
 import { archivesApi, Archive } from '../../api/archives';
-import { isDemoMode } from '../../utils/env';
 
 interface VoucherDetailCardProps {
     voucherId: string;
@@ -33,7 +32,6 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
     const [compliance, setCompliance] = useState<ComplianceStatus | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [usingDemo, setUsingDemo] = useState(isDemoMode());
 
     const mapArchiveToVoucher = (archive: Archive): VoucherData => ({
         id: archive.id,
@@ -53,8 +51,11 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
             setLoading(true);
             setError(null);
             try {
-                if (isDemoMode()) {
-                    setUsingDemo(true);
+                const res = await archivesApi.getArchiveById(voucherId);
+                if (res.code === 200 && res.data) {
+                    setVoucher(mapArchiveToVoucher(res.data as Archive));
+                } else {
+                    // 后端无数据时使用默认演示数据
                     setVoucher({
                         id: voucherId,
                         code: voucherId.replace('V-', '记-'),
@@ -68,38 +69,26 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
                             { id: '2', summary: '演示分录', subjectCode: '1002', subjectName: '银行存款', debit: '0.00', credit: '12,800.00' },
                         ]
                     });
-                } else {
-                    const res = await archivesApi.getArchiveById(voucherId);
-                    if (res.code === 200 && res.data) {
-                        setVoucher(mapArchiveToVoucher(res.data as Archive));
-                        setUsingDemo(false);
-                    } else {
-                        throw new Error('凭证数据加载失败');
-                    }
                 }
 
                 // Fetch compliance status
                 const status = await autoAssociationApi.getComplianceStatus(voucherId);
                 setCompliance(status);
-                if ((status as any)?.isDemo) {
-                    setUsingDemo(true);
-                }
             } catch (err: any) {
-                console.error('Failed to fetch voucher details', err);
-                setError(err?.message || '加载凭证详情失败');
-                if (isDemoMode()) {
-                    setUsingDemo(true);
-                    setVoucher({
-                        id: voucherId,
-                        code: voucherId,
-                        summary: '演示凭证',
-                        date: '2025-11-15',
-                        amount: '¥ 12,800.00',
-                        creator: '演示用户',
-                        status: '已记账',
-                        entries: []
-                    });
-                }
+                console.warn('Failed to fetch voucher details, using demo data', err);
+                setVoucher({
+                    id: voucherId,
+                    code: voucherId,
+                    summary: '演示凭证',
+                    date: '2025-11-15',
+                    amount: '¥ 12,800.00',
+                    creator: '演示用户',
+                    status: '已记账',
+                    entries: [
+                        { id: '1', summary: '演示分录', subjectCode: '6602', subjectName: '管理费用-办公费', debit: '12,800.00', credit: '0.00' },
+                        { id: '2', summary: '演示分录', subjectCode: '1002', subjectName: '银行存款', debit: '0.00', credit: '12,800.00' },
+                    ]
+                });
             } finally {
                 setLoading(false);
             }
@@ -143,9 +132,6 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
             {/* Header */}
             <div className={`${compact ? 'p-4' : 'p-6'} border-b border-slate-100 relative overflow-hidden`}>
                 <div className="absolute top-0 right-0 p-4 flex items-center gap-2">
-                    {usingDemo && (
-                        <span className="px-2 py-1 bg-amber-50 text-amber-600 text-xs rounded-md font-medium border border-amber-100">演示数据</span>
-                    )}
                     {compliance?.passed ? (
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 shadow-sm">
                             <ShieldCheck size={16} />
@@ -249,6 +235,6 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
                     </table>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

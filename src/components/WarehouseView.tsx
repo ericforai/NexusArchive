@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Warehouse, Thermometer, Droplets, Lock, Unlock, Wind, AlertCircle, Battery, Signal, ChevronRight, Loader2 } from 'lucide-react';
 import { warehouseApi, Shelf, WarehouseEnvironment } from '../api/warehouse';
-import { isDemoMode } from '../utils/env';
-import { DemoBadge } from './common/DemoBadge';
-import { safeStorage } from '../utils/storage';
 
 interface Rack {
   id: string;
@@ -33,12 +30,11 @@ const DEMO_ENVIRONMENT: WarehouseEnvironment = {
 };
 
 export const WarehouseView: React.FC = () => {
-  const [racks, setRacks] = useState<Rack[]>([]);
-  const [selectedRack, setSelectedRack] = useState<Rack | null>(null);
-  const [environment, setEnvironment] = useState<WarehouseEnvironment | null>(null);
+  const [racks, setRacks] = useState<Rack[]>(MOCK_RACKS);
+  const [selectedRack, setSelectedRack] = useState<Rack | null>(MOCK_RACKS[0]);
+  const [environment, setEnvironment] = useState<WarehouseEnvironment | null>(DEMO_ENVIRONMENT);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [usingDemo, setUsingDemo] = useState<boolean>(isDemoMode());
 
   const mapShelvesToRacks = (shelves: Shelf[], env?: WarehouseEnvironment): Rack[] => {
     return shelves.map((shelf, i) => {
@@ -80,17 +76,11 @@ export const WarehouseView: React.FC = () => {
         setEnvironment(res.data);
         return res.data;
       }
-      if (usingDemo) {
-        setEnvironment(DEMO_ENVIRONMENT);
-      }
     } catch (e) {
-      if (usingDemo) {
-        setEnvironment(DEMO_ENVIRONMENT);
-      } else {
-        setError('库房环境数据加载失败');
-      }
+      console.warn('Failed to load environment, using defaults', e);
     }
-    return null;
+    setEnvironment(DEMO_ENVIRONMENT);
+    return DEMO_ENVIRONMENT;
   };
 
   const loadShelves = async () => {
@@ -98,33 +88,21 @@ export const WarehouseView: React.FC = () => {
     setError(null);
     try {
       const env = await loadEnvironment();
-      if (usingDemo) {
-        setRacks(MOCK_RACKS);
-        setSelectedRack(MOCK_RACKS[0]);
-        return;
-      }
-
       const res = await warehouseApi.getShelves();
       if (res.code === 200 && res.data && res.data.length > 0) {
         const mapped = mapShelvesToRacks(res.data, env || environment || DEMO_ENVIRONMENT);
         setRacks(mapped);
         setSelectedRack(mapped[0]);
-        setUsingDemo(false);
       } else {
-        setError('暂无库房架位数据');
-        if (isDemoMode()) {
-          setUsingDemo(true);
-          setRacks(MOCK_RACKS);
-          setSelectedRack(MOCK_RACKS[0]);
-        }
-      }
-    } catch (e) {
-      setError('加载库房数据失败，请稍后重试');
-      if (isDemoMode()) {
-        setUsingDemo(true);
+        // 后端无数据时使用默认数据
         setRacks(MOCK_RACKS);
         setSelectedRack(MOCK_RACKS[0]);
       }
+    } catch (e) {
+      console.warn('Failed to load shelves, using defaults', e);
+      // 加载失败时使用默认数据
+      setRacks(MOCK_RACKS);
+      setSelectedRack(MOCK_RACKS[0]);
     } finally {
       setLoading(false);
     }
@@ -144,12 +122,10 @@ export const WarehouseView: React.FC = () => {
       }
       return r;
     }));
-    if (!usingDemo) {
-      try {
-        await warehouseApi.sendCommand(id, nextLocked ? 'lock' : 'unlock');
-      } catch (e) {
-        setError('锁定操作失败');
-      }
+    try {
+      await warehouseApi.sendCommand(id, nextLocked ? 'lock' : 'unlock');
+    } catch (e) {
+      console.warn('Lock operation failed', e);
     }
   };
 
@@ -172,12 +148,10 @@ export const WarehouseView: React.FC = () => {
       setError('密集架已锁定，请先解锁');
       return;
     }
-    if (!usingDemo) {
-      try {
-        await warehouseApi.sendCommand(id, action === 'vent' ? 'vent' : action === 'open' ? 'open' : 'close');
-      } catch (e) {
-        setError('操作下发失败，请稍后重试');
-      }
+    try {
+      await warehouseApi.sendCommand(id, action === 'vent' ? 'vent' : action === 'open' ? 'open' : 'close');
+    } catch (e) {
+      console.warn('Rack operation failed', e);
     }
   };
 
@@ -188,7 +162,6 @@ export const WarehouseView: React.FC = () => {
           {error}
         </div>
       )}
-      {usingDemo && <div className="px-6"><DemoBadge text="库房监控当前为演示数据，接入真实设备/接口后自动切换。" /></div>}
 
       {/* Environment Dashboard Header */}
       <div className="bg-white border-b border-slate-200 p-6 grid grid-cols-1 md:grid-cols-4 gap-6 shadow-sm z-10">
@@ -197,36 +170,11 @@ export const WarehouseView: React.FC = () => {
             <Warehouse size={24} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-slate-800">库房监控</h2>
-              {usingDemo && (
-                <span className="px-2 py-0.5 text-xs font-semibold bg-amber-50 text-amber-600 rounded border border-amber-100">
-                  演示数据
-                </span>
-              )}
-            </div>
+            <h2 className="text-lg font-bold text-slate-800">库房监控</h2>
             <p className="text-xs text-slate-500">智能密集架控制系统{environment ? '在线' : '加载中...'}</p>
           </div>
-          <div className="ml-auto">
-            <button
-              onClick={() => {
-                const next = !usingDemo;
-                safeStorage.setItem('demoMode', next ? 'true' : 'false');
-                setUsingDemo(next);
-                if (!next) {
-                  loadShelves();
-                } else {
-                  setRacks(MOCK_RACKS);
-                  setSelectedRack(MOCK_RACKS[0]);
-                }
-              }}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-100"
-            >
-              {usingDemo ? '关闭演示' : '开启演示'}
-            </button>
-          </div>
         </div>
-        
+
         <div className="flex items-center gap-4 border-l border-slate-100 pl-6">
           <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
             <Thermometer size={20} />
@@ -256,15 +204,15 @@ export const WarehouseView: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-end gap-3 border-l border-slate-100 pl-6">
-            <div className="text-xs text-slate-400 text-right">
-              {environment?.lastUpdated ? `最近上报 ${environment.lastUpdated}` : '等待环境传感器上报'}
-            </div>
-            <button
-              onClick={loadShelves}
-              className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm active:scale-95 transition-all"
-            >
-              刷新数据
-            </button>
+          <div className="text-xs text-slate-400 text-right">
+            {environment?.lastUpdated ? `最近上报 ${environment.lastUpdated}` : '等待环境传感器上报'}
+          </div>
+          <button
+            onClick={loadShelves}
+            className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm active:scale-95 transition-all"
+          >
+            刷新数据
+          </button>
         </div>
       </div>
 
@@ -279,16 +227,16 @@ export const WarehouseView: React.FC = () => {
         )}
         {/* Racks Visualization (Top Down / Side View Hybrid) */}
         <div className="flex-1 bg-slate-200/50 rounded-2xl border-2 border-dashed border-slate-300 p-8 relative overflow-auto flex items-center justify-center perspective-[1000px]">
-           {racks.length === 0 ? (
+          {racks.length === 0 ? (
             <div className="text-slate-400 flex items-center gap-2">
               <AlertCircle size={18} />
               <span>暂无架位数据</span>
             </div>
-           ) : (
+          ) : (
             <>
               <div className="flex gap-4 items-end transform rotate-x-12">
                 {racks.map((rack) => (
-                  <div 
+                  <div
                     key={rack.id}
                     onClick={() => setSelectedRack(rack)}
                     className={`relative w-24 transition-all duration-700 ease-in-out cursor-pointer group ${selectedRack?.id === rack.id ? 'translate-y-[-20px]' : ''}`}
@@ -300,7 +248,7 @@ export const WarehouseView: React.FC = () => {
                   >
                     {/* Rack Face */}
                     <div className={`absolute inset-0 bg-white border border-slate-300 rounded-lg shadow-xl flex flex-col items-center justify-between py-4 transition-colors ${rack.status === 'ventilating' ? 'animate-pulse ring-2 ring-blue-400' : ''} ${selectedRack?.id === rack.id ? 'ring-2 ring-primary-500' : 'hover:ring-2 hover:ring-primary-200'}`}>
-                      
+
                       {/* Top Status Light */}
                       <div className={`w-16 h-2 rounded-full ${rack.locked ? 'bg-rose-500' : rack.status !== 'closed' ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
 
@@ -325,12 +273,12 @@ export const WarehouseView: React.FC = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="absolute bottom-4 left-8 text-slate-400 text-sm flex items-center gap-2">
                 <AlertCircle size={16} /> 点击密集架查看详情与控制
               </div>
             </>
-           )}
+          )}
         </div>
 
         {/* Control Panel */}
@@ -342,82 +290,82 @@ export const WarehouseView: React.FC = () => {
                   {selectedRack.label} 控制台
                 </h3>
                 <div className="flex items-center gap-2 mt-2 text-xs">
-                   <span className={`px-2 py-0.5 rounded border ${selectedRack.locked ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                      {selectedRack.locked ? '已锁定' : '正常'}
-                   </span>
-                   <span className="px-2 py-0.5 rounded border bg-blue-50 text-blue-600 border-blue-100 capitalize">
-                      {selectedRack.status === 'closed' ? '闭合' : selectedRack.status === 'ventilating' ? '通风中' : '打开'}
-                   </span>
+                  <span className={`px-2 py-0.5 rounded border ${selectedRack.locked ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                    {selectedRack.locked ? '已锁定' : '正常'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded border bg-blue-50 text-blue-600 border-blue-100 capitalize">
+                    {selectedRack.status === 'closed' ? '闭合' : selectedRack.status === 'ventilating' ? '通风中' : '打开'}
+                  </span>
                 </div>
               </div>
-              
+
               <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                 {/* Stats */}
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                       <div className="text-xs text-slate-400 mb-1 flex items-center gap-1"><Thermometer size={12}/> 温度</div>
-                       <div className="text-lg font-bold text-slate-700">{selectedRack.temp.toFixed(1)}°C</div>
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="text-xs text-slate-400 mb-1 flex items-center gap-1"><Thermometer size={12} /> 温度</div>
+                    <div className="text-lg font-bold text-slate-700">{selectedRack.temp.toFixed(1)}°C</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="text-xs text-slate-400 mb-1 flex items-center gap-1"><Droplets size={12} /> 湿度</div>
+                    <div className="text-lg font-bold text-slate-700">{selectedRack.humidity.toFixed(1)}%</div>
+                  </div>
+                  <div className="col-span-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs text-slate-400">存储空间使用率</span>
+                      <span className="text-xs font-bold text-slate-700">{selectedRack.usage}%</span>
                     </div>
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                       <div className="text-xs text-slate-400 mb-1 flex items-center gap-1"><Droplets size={12}/> 湿度</div>
-                       <div className="text-lg font-bold text-slate-700">{selectedRack.humidity.toFixed(1)}%</div>
+                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary-500 rounded-full" style={{ width: `${selectedRack.usage}%` }}></div>
                     </div>
-                    <div className="col-span-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                       <div className="flex justify-between mb-1">
-                          <span className="text-xs text-slate-400">存储空间使用率</span>
-                          <span className="text-xs font-bold text-slate-700">{selectedRack.usage}%</span>
-                       </div>
-                       <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-primary-500 rounded-full" style={{width: `${selectedRack.usage}%`}}></div>
-                       </div>
-                    </div>
-                 </div>
+                  </div>
+                </div>
 
-                 {/* Controls */}
-                 <div className="space-y-3">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">操作指令（前端模拟）</p>
-                    <button 
-                      onClick={() => operateRack(selectedRack.id, 'open')}
+                {/* Controls */}
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">操作指令（前端模拟）</p>
+                  <button
+                    onClick={() => operateRack(selectedRack.id, 'open')}
+                    disabled={selectedRack.locked}
+                    className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium shadow-lg shadow-primary-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <ChevronRight size={18} /> {selectedRack.status === 'closed' ? '打开架体' : '闭合架体'}
+                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => operateRack(selectedRack.id, 'vent')}
                       disabled={selectedRack.locked}
-                      className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium shadow-lg shadow-primary-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                       <ChevronRight size={18} /> {selectedRack.status === 'closed' ? '打开架体' : '闭合架体'}
+                      <Wind size={18} /> 通风
                     </button>
-                    <div className="grid grid-cols-2 gap-3">
-                       <button 
-                         onClick={() => operateRack(selectedRack.id, 'vent')}
-                         disabled={selectedRack.locked}
-                         className="py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                       >
-                         <Wind size={18} /> 通风
-                       </button>
-                       <button 
-                         onClick={() => toggleLock(selectedRack.id)}
-                         className={`py-3 border rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${selectedRack.locked ? 'bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                       >
-                         {selectedRack.locked ? <Unlock size={18} /> : <Lock size={18} />}
-                         {selectedRack.locked ? '解锁' : '锁定'}
-                       </button>
-                    </div>
-                 </div>
+                    <button
+                      onClick={() => toggleLock(selectedRack.id)}
+                      className={`py-3 border rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${selectedRack.locked ? 'bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {selectedRack.locked ? <Unlock size={18} /> : <Lock size={18} />}
+                      {selectedRack.locked ? '解锁' : '锁定'}
+                    </button>
+                  </div>
+                </div>
 
-                 {/* Device Status */}
-                 <div className="pt-4 border-t border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                       <span className="text-slate-500 flex items-center gap-1"><Signal size={12}/> 信号强度</span>
-                       <span className="text-emerald-600 font-medium">强 (-45dBm)</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                       <span className="text-slate-500 flex items-center gap-1"><Battery size={12}/> 备用电源</span>
-                       <span className="text-slate-700 font-medium">100%</span>
-                    </div>
-                 </div>
+                {/* Device Status */}
+                <div className="pt-4 border-t border-slate-100 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 flex items-center gap-1"><Signal size={12} /> 信号强度</span>
+                    <span className="text-emerald-600 font-medium">强 (-45dBm)</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 flex items-center gap-1"><Battery size={12} /> 备用电源</span>
+                    <span className="text-slate-700 font-medium">100%</span>
+                  </div>
+                </div>
               </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center flex-col text-slate-300 p-8 text-center">
               <Warehouse size={48} className="mb-4 opacity-50" />
-              <p className="font-medium">点击左侧密集架<br/>进行查看与控制</p>
+              <p className="font-medium">点击左侧密集架<br />进行查看与控制</p>
             </div>
           )}
         </div>

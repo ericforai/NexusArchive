@@ -17,6 +17,7 @@ export interface Archive {
     location?: string;
     createdAt?: string;
     createdTime?: string;
+    creator?: string;
 }
 
 export interface ArchiveQuery {

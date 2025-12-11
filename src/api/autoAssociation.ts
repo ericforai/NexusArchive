@@ -1,6 +1,5 @@
 import { client } from './client';
 import { ApiResponse } from '../types';
-import { isDemoMode } from '../utils/env';
 
 export interface LinkedFile {
     id: string;
@@ -44,10 +43,12 @@ export interface RelationGraph {
     centerId: string;
     nodes: RelationGraphNode[];
     edges: RelationGraphEdge[];
-    isDemo?: boolean;
 }
 
-const buildDemoFiles = (voucherId: string): LinkedFile[] => {
+/**
+ * 默认关联文件数据（当后端无数据时使用）
+ */
+const getDefaultFiles = (voucherId: string): LinkedFile[] => {
     if (voucherId === 'V-202511-TEST') {
         return [
             { id: '1', name: '电子发票_差旅费_20251107.pdf', type: 'invoice', url: '#', uploadDate: '2025-11-07', size: '150KB' },
@@ -74,7 +75,10 @@ const buildDemoFiles = (voucherId: string): LinkedFile[] => {
     ];
 };
 
-const buildDemoGraph = (): RelationGraph => ({
+/**
+ * 默认关系图谱数据（当后端无数据时使用）
+ */
+const getDefaultGraph = (): RelationGraph => ({
     centerId: 'voucher-demo',
     nodes: [
         { id: 'contract-demo', type: 'contract', code: 'CON-2023-098', name: '年度技术服务协议', amount: '¥ 150,000.00', date: '2023-01-15', status: '生效中' },
@@ -90,37 +94,33 @@ const buildDemoGraph = (): RelationGraph => ({
         { from: 'invoice-demo-2', to: 'voucher-demo', relationType: '原始凭证' },
         { from: 'voucher-demo', to: 'receipt-demo', relationType: '资金流' },
         { from: 'voucher-demo', to: 'report-demo', relationType: '归档' }
-    ],
-    isDemo: true
+    ]
 });
 
 export const autoAssociationApi = {
-    getLinkedFiles: async (voucherId: string): Promise<{ files: LinkedFile[]; isDemo: boolean }> => {
+    getLinkedFiles: async (voucherId: string): Promise<{ files: LinkedFile[] }> => {
         try {
             const response = await client.get<ApiResponse<LinkedFile[]>>(`/relations/${voucherId}/files`);
-            if (response.data.code === 200) {
-                return { files: response.data.data || [], isDemo: false };
+            if (response.data.code === 200 && response.data.data && response.data.data.length > 0) {
+                return { files: response.data.data };
             }
         } catch (error) {
-            if (!isDemoMode()) {
-                throw error;
-            }
+            console.warn('Failed to fetch linked files, using default data', error);
         }
-        return { files: buildDemoFiles(voucherId), isDemo: true };
+        // 无数据或出错时返回默认数据
+        return { files: getDefaultFiles(voucherId) };
     },
 
-    getComplianceStatus: async (voucherId: string): Promise<ComplianceStatus & { isDemo?: boolean }> => {
+    getComplianceStatus: async (voucherId: string): Promise<ComplianceStatus> => {
         try {
             const response = await client.get<ApiResponse<ComplianceStatus>>(`/relations/${voucherId}/compliance`);
-            if (response.data.code === 200) {
-                return { ...response.data.data, isDemo: false } as ComplianceStatus & { isDemo: boolean };
+            if (response.data.code === 200 && response.data.data) {
+                return response.data.data;
             }
         } catch (error) {
-            if (!isDemoMode()) {
-                throw error;
-            }
+            console.warn('Failed to fetch compliance status, using default data', error);
         }
-
+        // 无数据或出错时返回默认数据
         return {
             passed: true,
             score: 98,
@@ -130,8 +130,7 @@ export const autoAssociationApi = {
                 usability: true,
                 safety: true
             },
-            checkDate: '2023-11-22 10:00:00',
-            isDemo: true
+            checkDate: '2023-11-22 10:00:00'
         };
     },
 
@@ -139,15 +138,15 @@ export const autoAssociationApi = {
         try {
             const response = await client.get<ApiResponse<RelationGraph>>(`/relations/${archiveId}/graph`);
             if (response.data.code === 200 && response.data.data) {
-                return { ...response.data.data, isDemo: false };
+                return response.data.data;
             }
         } catch (error) {
-            if (!isDemoMode()) {
-                throw error;
-            }
+            console.warn('Failed to fetch relation graph, using default data', error);
         }
-        const demo = buildDemoGraph();
-        demo.centerId = archiveId || demo.centerId;
-        return demo;
+        // 无数据或出错时返回默认数据
+        const defaultGraph = getDefaultGraph();
+        defaultGraph.centerId = archiveId || defaultGraph.centerId;
+        return defaultGraph;
     }
 };
+

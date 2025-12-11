@@ -267,10 +267,6 @@ export const SystemApp: React.FC = () => {
     return (
         <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
             <Sidebar
-                activeView={activeView}
-                setActiveView={setActiveView}
-                activeSubItem={activeSubItem}
-                setActiveSubItem={setActiveSubItem}
                 onVisitLanding={() => navigate('/')}
                 collapsed={sidebarCollapsed}
                 onToggle={toggleSidebar}

@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import { Activity, RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Download, Plus, Server, Clock, ArrowRight } from 'lucide-react';
-import { ModuleConfig, ViewState } from '../types';
+import { Activity, RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Plus, Server, Clock } from 'lucide-react';
 import { FourNatureReportView } from './FourNatureReportView';
-import { DemoBadge } from './common/DemoBadge';
-import { isDemoMode } from '../utils/env';
-import { safeStorage } from '../utils/storage';
 import { statsApi, ErpStats } from '../api/stats';
+import { client } from '../api/client';
 
 interface IntegrationChannel {
     id: string;
@@ -22,6 +19,9 @@ interface IntegrationChannel {
         periodStart?: string;
         periodEnd?: string;
     };
+    accbookCode?: string;
+    periodStart?: string;
+    periodEnd?: string;
 }
 
 const MOCK_CHANNELS: IntegrationChannel[] = [
@@ -91,9 +91,11 @@ const MOCK_CHANNELS: IntegrationChannel[] = [
     }
 ];
 
+// 默认数据（种子数据来自数据库，此处作为前端 fallback）
+const DEFAULT_CHANNELS = MOCK_CHANNELS;
+
 export const OnlineReceptionView: React.FC = () => {
-    const [demoMode, setDemoMode] = useState<boolean>(isDemoMode());
-    const [channels, setChannels] = useState<IntegrationChannel[]>(demoMode ? MOCK_CHANNELS : []);
+    const [channels, setChannels] = useState<IntegrationChannel[]>(DEFAULT_CHANNELS);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -177,23 +179,17 @@ export const OnlineReceptionView: React.FC = () => {
         setSyncError(null);
 
         try {
-            const token = safeStorage.getItem('token');
-            const response = await fetch(`/api${channel.apiEndpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                },
-                body: JSON.stringify({
-                    accbookCode: channel.syncConfig?.accbookCode || 'BR01',
-                    periodStart: syncPeriod.start,
-                    periodEnd: syncPeriod.end
-                })
+            // 使用统一 client 进行请求，自动处理 token
+            const response = await client.post(channel.apiEndpoint, {
+                accbookCode: channel.syncConfig?.accbookCode || 'BR01',
+                periodStart: syncPeriod.start,
+                periodEnd: syncPeriod.end
             });
 
-            const result = await response.json();
+            // Axios result is in data
+            const result = response.data;
 
-            if (response.ok && result.status === 'SUCCESS') {
+            if (response.status === 200 && result.status === 'SUCCESS') {
                 setChannels(prev => prev.map(c =>
                     c.id === syncChannelId ? {
                         ...c,
@@ -230,23 +226,8 @@ export const OnlineReceptionView: React.FC = () => {
         setNewChannel({ name: '', system: 'SAP ERP', description: '' });
     };
 
-    const toggleDemo = (flag: boolean) => {
-        safeStorage.setItem('demoMode', flag ? 'true' : 'false');
-        setDemoMode(flag);
-        setChannels(flag ? MOCK_CHANNELS : []);
-    };
-
     return (
         <div className="p-6 max-w-[1600px] mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-                <DemoBadge text={demoMode ? '在线接收当前为演示通道，可切换生产模式尝试真实接口。' : '生产模式：未配置真实集成接口时列表为空，可切换演示模式体验。'} />
-                <button
-                    onClick={() => toggleDemo(!demoMode)}
-                    className="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
-                >
-                    {demoMode ? '关闭演示模式' : '开启演示模式'}
-                </button>
-            </div>
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div>

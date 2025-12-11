@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileText, CheckCircle2, AlertTriangle, X, ScanLine, Loader2, ArrowRight, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info } from 'lucide-react';
-import { isDemoMode } from '../utils/env';
-import { safeStorage } from '../utils/storage';
-import { DemoBadge } from './common/DemoBadge';
 
 interface OCRField {
   name: string;
@@ -68,11 +65,11 @@ const MOCK_HISTORY: OCRResult[] = [
 ];
 
 export const OCRProcessingView: React.FC = () => {
-  const [demoMode, setDemoMode] = useState<boolean>(isDemoMode());
   const [taskList, setTaskList] = useState<OCRResult[]>(MOCK_HISTORY);
   const [activeTask, setActiveTask] = useState<OCRResult | null>(MOCK_HISTORY[0]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Auto-save State
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
@@ -113,12 +110,6 @@ export const OCRProcessingView: React.FC = () => {
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    if (!demoMode) {
-      e.preventDefault();
-      setIsDragging(false);
-      alert('当前为生产模式，请接入真实 OCR 服务后再上传。可切换为演示模式体验。');
-      return;
-    }
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -127,10 +118,6 @@ export const OCRProcessingView: React.FC = () => {
   };
 
   const handleFileUpload = (file: File) => {
-    if (!demoMode) {
-      alert('当前为生产模式，请接入真实 OCR 服务后再上传。可切换为演示模式体验。');
-      return;
-    }
     // Create a temporary mock task
     const newTask: OCRResult = {
       id: `ocr-${Date.now()}`,
@@ -207,28 +194,6 @@ export const OCRProcessingView: React.FC = () => {
     return 'bg-rose-500 text-rose-600';
   };
 
-  const toggleDemoMode = (flag: boolean) => {
-    safeStorage.setItem('demoMode', flag ? 'true' : 'false');
-    setDemoMode(flag);
-    // 简单处理：刷新以让其他视图同步状态
-    window.location.reload();
-  };
-
-  if (!demoMode) {
-    return (
-      <div className="p-8 bg-slate-50 h-full flex flex-col items-center justify-center text-center gap-4">
-        <DemoBadge text="当前为生产模式，OCR 模块未接入真实引擎，已关闭演示数据。" />
-        <p className="text-slate-600">接入真实 OCR 服务后启用此模块，或切换到演示模式体验界面。</p>
-        <button
-          onClick={() => toggleDemoMode(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          切换到演示模式
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full flex flex-col bg-slate-50/50 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -241,13 +206,6 @@ export const OCRProcessingView: React.FC = () => {
           <p className="text-slate-500 mt-1 text-sm">上传图像或 PDF，AI 引擎将自动提取关键结构化数据。</p>
         </div>
         <div className="flex gap-4 items-center">
-          <DemoBadge text="演示模式：使用模拟识别结果，不调用真实 OCR 引擎。" className="mb-0" />
-          <button
-            onClick={() => toggleDemoMode(false)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
-          >
-            关闭演示模式
-          </button>
           <div className="text-right">
             <p className="text-xs text-slate-400">今日识别</p>
             <p className="text-xl font-bold text-slate-800">1,204 <span className="text-xs font-normal text-slate-400">页</span></p>

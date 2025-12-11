@@ -16,10 +16,8 @@ import { archivesApi } from '../api/archives';
 import { RelationshipVisualizer } from './RelationshipVisualizer';
 import { client } from '../api/client';
 import { adminApi } from '../api/admin';
-import { isDemoMode } from '../utils/env';
-import { safeStorage } from '../utils/storage';
+import { useAuthStore } from '../store';
 import { triggerAuditRefresh } from '../utils/audit';
-import { DemoBadge } from './common/DemoBadge';
 import {
   PRE_ARCHIVE_POOL_CONFIG,
   PRE_ARCHIVE_LINK_CONFIG,
@@ -210,7 +208,6 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   const config = resolvedConfig?.config || propConfig || GENERIC_CONFIG;
 
   // State for Real CRUD
-  const [demoMode, setDemoMode] = useState<boolean>(isDemoMode());
   const [localData, setLocalData] = useState<GenericRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -242,10 +239,6 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   const [orgFilter, setOrgFilter] = useState<string>('');
   const [pageInfo, setPageInfo] = useState({ total: 0, page: 1, pageSize: 10 });
   const [currentPage, setCurrentPage] = useState(1);
-  const toggleDemo = (flag: boolean) => {
-    safeStorage.setItem('demoMode', flag ? 'true' : 'false');
-    setDemoMode(flag);
-  };
 
   const resolveCategoryCode = useCallback(() => {
     switch (subTitle) {
@@ -604,10 +597,6 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
   // --- Linking Logic ---
   const openLinkModal = (row: GenericRow) => {
-    if (!demoMode) {
-      showToast('当前为生产模式，手工关联演示已关闭。接入真实关联接口后启用。', 'error');
-      return;
-    }
     setLinkingRow(row);
     setSelectedCandidates([]);
     setIsLinkModalOpen(true);
@@ -1124,8 +1113,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                     onClick={async () => {
                       setIsLoading(true);
                       try {
-                        const userId = safeStorage.getItem('userId') || 'admin';
-                        const userName = safeStorage.getItem('fullName') || '管理员';
+                        const user = useAuthStore.getState().user;
+                        const userId = user?.id || 'admin';
+                        const userName = user?.fullName || user?.realName || '管理员';
                         const response = await client.post('/pool/submit/batch', {
                           fileIds: selectedRows,
                           applicantId: userId,
@@ -1204,7 +1194,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               <button
                 onClick={() => {
                   showToast(`已将 ${selectedRows.length} 个案卷正式归档，档案已锁定`, 'success');
-                  setLocalData(prev => prev.map(row =>
+                  setLocalData((prev: GenericRow[]) => prev.map((row: GenericRow) =>
                     selectedRows.includes(row.id) ? { ...row, status: '已归档' } : row
                   ));
                   setSelectedRows([]);
@@ -1264,7 +1254,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
             {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label, color, icon }]) => (
               <button
                 key={key}
-                onClick={() => setPoolStatusFilter(key)}
+                onClick={() => setPoolStatusFilter(key as any)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${poolStatusFilter === key
                   ? 'bg-slate-800 text-white shadow-lg'
                   : `${color} hover:opacity-80`

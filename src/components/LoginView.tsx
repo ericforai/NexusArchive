@@ -35,7 +35,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
         setError(null);
 
         try {
-            const res = await authApi.login({ username, password });
+            const res = await authApi.login({ username: username.trim(), password: password.trim() });
             if (res.code === 200) {
                 // 使用 AuthStore 存储登录状态
                 login(res.data.token, {

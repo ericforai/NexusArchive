@@ -34,12 +34,15 @@ export const LicenseSettings: React.FC = () => {
                 setSuccess(true);
                 setLicense(res.data);
                 setImportText('');
-                setTimeout(() => setSuccess(false), 3000);
+                // 导入成功后1.5秒刷新页面，让路由守卫重新检测 License 状态
+                setTimeout(() => {
+                    window.location.href = '/system';
+                }, 1500);
             } else {
                 setError(res.message || '导入失败');
             }
         } catch (e: any) {
-            setError(e?.message || '导入异常');
+            setError(e?.response?.data?.message || e?.message || '导入异常');
         } finally {
             setLoading(false);
         }
