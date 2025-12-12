@@ -12,6 +12,8 @@ export interface PoolItem {
   amount: string;
   date: string;
   status: string;
+  /** 来源系统 (如 YonSuite, Kingdee, Manual) */
+  sourceSystem?: string;
 }
 
 /**

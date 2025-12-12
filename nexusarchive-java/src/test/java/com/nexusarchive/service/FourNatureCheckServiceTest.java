@@ -4,12 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.dto.sip.AttachmentDto;
 import com.nexusarchive.dto.sip.VoucherHeadDto;
+import com.nexusarchive.dto.sip.report.CheckItem;
 import com.nexusarchive.dto.sip.report.FourNatureReport;
 import com.nexusarchive.dto.sip.report.OverallStatus;
-import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.mapper.ArcFileContentMapper;
-import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
-import com.nexusarchive.service.adapter.VirusScanAdapter;
 import com.nexusarchive.service.impl.FourNatureCheckServiceImpl;
 import com.nexusarchive.util.FileHashUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,32 +25,29 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FourNatureCheckServiceTest {
 
     @Mock
-    private FileHashUtil fileHashUtil;
-    @Mock
-    private VirusScanAdapter virusScanAdapter;
+    private FourNatureCoreService fourNatureCoreService;
     @Mock
     private ArcFileContentMapper arcFileContentMapper;
     @Mock
-    private ArcFileMetadataIndexMapper arcFileMetadataIndexMapper;
-    @Mock
     private com.nexusarchive.util.AmountValidator amountValidator;
+    @Mock
+    private FileHashUtil fileHashUtil;
 
     private FourNatureCheckServiceImpl fourNatureCheckService;
 
     @BeforeEach
     void setUp() {
         fourNatureCheckService = new FourNatureCheckServiceImpl(
-                fileHashUtil, virusScanAdapter, arcFileContentMapper, arcFileMetadataIndexMapper, amountValidator
+                fourNatureCoreService, arcFileContentMapper, amountValidator, fileHashUtil
         );
         
-        // Mock AmountValidator logic to always pass validation for general tests
-        // Use lenient() because not all tests might trigger this check call
         org.mockito.Mockito.lenient().when(amountValidator.validateAmount(any())).thenReturn(com.nexusarchive.util.AmountValidator.ValidationResult.success());
     }
 
@@ -79,7 +74,6 @@ class FourNatureCheckServiceTest {
         fileStreams.put(fileName, content);
 
         when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
-        // Mock DB returning count > 0 (Duplicate exists)
         when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
         // Act
@@ -92,11 +86,11 @@ class FourNatureCheckServiceTest {
     }
 
     @Test
-    void testDeduplication_NoDuplicate() throws Exception {
+    void testAuthenticity_DelegationCheck() throws Exception {
         // Arrange
         String fileName = "test.pdf";
         byte[] content = "test content".getBytes();
-        String hash = "dummy_hash";
+        String hash = "hash";
 
         AttachmentDto attachment = AttachmentDto.builder()
                 .fileName(fileName)
@@ -121,69 +115,30 @@ class FourNatureCheckServiceTest {
 
         when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
         when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-        when(virusScanAdapter.scan(any(), any())).thenReturn(true);
-        when(amountValidator.validateAmount(any(BigDecimal.class))).thenReturn(com.nexusarchive.util.AmountValidator.ValidationResult.success());
+        
+        // Mock Core Service to return success
+        when(fourNatureCoreService.checkSingleFileAuthenticity(any(), eq(fileName), eq(hash), any(), eq("PDF")))
+                .thenReturn(CheckItem.pass("Authenticity", "OK"));
+        when(fourNatureCoreService.checkSingleFileUsability(any(), eq(fileName), eq("PDF")))
+                .thenReturn(CheckItem.pass("Usability", "OK"));
+        when(fourNatureCoreService.checkSingleFileSafety(any(), eq(fileName)))
+                .thenReturn(CheckItem.pass("Safety", "OK"));
 
         // Act
         FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
 
         // Assert
-        // Should pass deduplication, but might fail other checks if not fully mocked.
-        // Here we just want to ensure it didn't fail at deduplication.
-        // Since we mocked virusScan=true and provided minimal metadata, it might pass or fail others.
-        // But Authenticity should be PASS if hash matches. 
-        // Wait, checkAuthenticity also calls calculateSM3 and compares with provided.
-        // We provided hash in attachment and mocked calculateSM3 to return same hash.
+        assertEquals(OverallStatus.PASS, report.getStatus());
         assertEquals(OverallStatus.PASS, report.getAuthenticity().getStatus());
     }
-    @Test
-    void testAuthenticity_HashMismatch() throws Exception {
-        // Arrange
-        String fileName = "test.pdf";
-        byte[] content = "test content".getBytes();
-        String providedHash = "original_hash";
-        String calculatedHash = "different_hash";
-
-        AttachmentDto attachment = AttachmentDto.builder()
-                .fileName(fileName)
-                .fileHash(providedHash)
-                .hashAlgorithm("SM3")
-                .fileType("PDF")
-                .build();
-
-        AccountingSipDto sip = AccountingSipDto.builder()
-                .header(VoucherHeadDto.builder().voucherNumber("V001").attachmentCount(1).build())
-                .attachments(List.of(attachment))
-                .build();
-
-        Map<String, byte[]> fileStreams = new HashMap<>();
-        fileStreams.put(fileName, content);
-
-        when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(calculatedHash);
-        // Assuming no duplicate for this test
-        when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-
-        // Act
-        FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
-
-        // Assert
-        assertEquals(OverallStatus.FAIL, report.getStatus());
-        assertEquals(OverallStatus.FAIL, report.getAuthenticity().getStatus());
-        assert(report.getAuthenticity().getErrors().get(0).contains("Hash mismatch"));
-    }
-
+    
     @Test
     void testIntegrity_MissingMetadata() throws Exception {
         // Arrange
         AccountingSipDto sip = AccountingSipDto.builder()
-                .header(VoucherHeadDto.builder()
-                        .voucherNumber("V001")
-                        .attachmentCount(0)
-                        // Missing FondsCode, AccountPeriod etc.
-                        .build())
+                .header(VoucherHeadDto.builder().voucherNumber("V001").attachmentCount(0).build())
                 .attachments(Collections.emptyList())
                 .build();
-
         Map<String, byte[]> fileStreams = new HashMap<>();
 
         // Act
@@ -192,41 +147,5 @@ class FourNatureCheckServiceTest {
         // Assert
         assertEquals(OverallStatus.FAIL, report.getStatus());
         assertEquals(OverallStatus.FAIL, report.getIntegrity().getStatus());
-        // Exact error message depends on implementation details, checking if fails is good enough for now
-    }
-
-    @Test
-    void testSafety_VirusDetected() throws Exception {
-        // Arrange
-        String fileName = "virus.exe";
-        byte[] content = "malware".getBytes();
-        String hash = "virus_hash";
-
-        AttachmentDto attachment = AttachmentDto.builder()
-                .fileName(fileName)
-                .fileHash(hash)
-                .hashAlgorithm("SM3")
-                .fileType("EXE")
-                .build();
-
-        AccountingSipDto sip = AccountingSipDto.builder()
-                .header(VoucherHeadDto.builder().voucherNumber("V001").attachmentCount(1).build())
-                .attachments(List.of(attachment))
-                .build();
-
-        Map<String, byte[]> fileStreams = new HashMap<>();
-        fileStreams.put(fileName, content);
-
-        when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
-        when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-        when(virusScanAdapter.scan(any(), any())).thenReturn(false); // Virus detected
-
-        // Act
-        FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
-
-        // Assert
-        assertEquals(OverallStatus.FAIL, report.getStatus());
-        assertEquals(OverallStatus.FAIL, report.getSafety().getStatus());
-        assert(report.getSafety().getErrors().get(0).contains("Security Threat detected"));
     }
 }

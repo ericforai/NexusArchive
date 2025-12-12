@@ -72,9 +72,19 @@ class SafeStorage {
         // initStorage logic is just for probe. We will try to access it dynamically.
         this.initStorage();
         if (this.storageType === 'localStorage' && typeof window !== 'undefined') {
-            return window.localStorage;
+            try {
+                return window.localStorage;
+            } catch (e) {
+                console.warn('[SafeStorage] localStorage access blocked:', e);
+                return null;
+            }
         } else if (this.storageType === 'sessionStorage' && typeof window !== 'undefined') {
-            return window.sessionStorage;
+            try {
+                return window.sessionStorage;
+            } catch (e) {
+                console.warn('[SafeStorage] sessionStorage access blocked:', e);
+                return null;
+            }
         }
         return null; // For memory or cookie type
     }

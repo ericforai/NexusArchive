@@ -15,6 +15,9 @@ description: 开发环境启动流程 - 确保后端先于前端启动
 ```bash
 cd /Users/user/nexusarchive
 ./scripts/dev-start.sh
+
+# 或使用 restart-services.sh
+./scripts/restart-services.sh
 ```
 
 ### 方式二：手动启动

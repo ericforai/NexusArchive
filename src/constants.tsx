@@ -76,8 +76,8 @@ export const DESTRUCTION_BATCHES = [
 // 1.1 电子凭证池
 export const PRE_ARCHIVE_POOL_CONFIG: ModuleConfig = {
   columns: [
-    { key: 'businessDocNo', header: '业务单据号', type: 'text' },
-    { key: 'code', header: '系统流水号', type: 'text' },
+    { key: 'businessDocNo', header: '来源标识', type: 'text' },
+    { key: 'erpVoucherNo', header: 'ERP凭证号', type: 'text' },
     { key: 'source', header: '来源系统', type: 'text' },
     { key: 'type', header: '单据类型', type: 'text' },
     { key: 'amount', header: '金额', type: 'money' },

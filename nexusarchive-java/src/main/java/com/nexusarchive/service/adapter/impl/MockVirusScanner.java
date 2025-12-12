@@ -2,6 +2,7 @@ package com.nexusarchive.service.adapter.impl;
 
 import com.nexusarchive.service.adapter.VirusScanAdapter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "virus.scan.type", havingValue = "mock", matchIfMissing = true)
 public class MockVirusScanner implements VirusScanAdapter {
 
     @Override

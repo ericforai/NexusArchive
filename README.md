@@ -64,7 +64,7 @@ npm install && npm run dev
 | **后端** | Spring Boot 3.1.6 / Java 17 / MyBatis-Plus |
 | **前端** | React 19 / TypeScript / Vite 6 / Tailwind CSS |
 | **数据库** | PostgreSQL / 达梦 / 人大金仓 |
-| **安全** | Spring Security + JWT / Argon2 / SM3 |
+| **安全** | Spring Security / Argon2 / SM3 / ClamAV (防病毒) |
 
 👉 详细技术说明请参阅 [技术栈](/docs/references/技术栈.md)
 

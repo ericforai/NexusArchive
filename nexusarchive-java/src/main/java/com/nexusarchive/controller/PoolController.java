@@ -560,23 +560,30 @@ public class PoolController {
     }
 
     /**
-     * 转换实体为DTO
-     */
-    private PoolItemDto convertToPoolItemDto(ArcFileContent fileContent) {
-        // 生成显示用的流水号 (去掉 TEMP- 前缀)
-        String displayCode = fileContent.getArchivalCode().replace("TEMP-", "");
+ * 转换实体为DTO
+ */
+private PoolItemDto convertToPoolItemDto(ArcFileContent fileContent) {
+    // 生成显示用的流水号 (去掉 TEMP- 前缀)
+    String displayCode = fileContent.getArchivalCode().replace("TEMP-", "");
 
-        // 查询元数据获取金额
-        String amountStr = "-";
-        ArcFileMetadataIndex metadata = arcFileMetadataIndexMapper.selectOne(
-                new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileContent.getId()));
+    // 查询元数据获取金额
+    String amountStr = "-";
+    ArcFileMetadataIndex metadata = arcFileMetadataIndexMapper.selectOne(
+            new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileContent.getId()));
 
-        if (metadata != null && metadata.getTotalAmount() != null) {
-            amountStr = metadata.getTotalAmount().toString();
-        }
+    if (metadata != null && metadata.getTotalAmount() != null) {
+        amountStr = metadata.getTotalAmount().toString();
+    }
 
-        // 解析来源系统
-        String source = "Web上传";
+    // 解析来源系统：优先使用数据库中的 sourceSystem 字段
+    String source = "Web上传";
+    String sourceSystem = fileContent.getSourceSystem();
+    
+    if (sourceSystem != null && !sourceSystem.isEmpty()) {
+        // 使用数据库中的来源系统
+        source = sourceSystem;
+    } else {
+        // 兼容旧逻辑：从文件哈希解析
         String fileHash = fileContent.getFileHash();
         if (fileHash != null && fileHash.startsWith("DEMO_HASH_")) {
             try {
@@ -591,16 +598,19 @@ public class PoolController {
                 // ignore
             }
         }
-
-        return PoolItemDto.builder()
-                .id(fileContent.getId())
-                .businessDocNo(fileContent.getBusinessDocNo())
-                .code(displayCode)
-                .source(source)
-                .type(fileContent.getFileType())
-                .amount(amountStr)
-                .date(fileContent.getCreatedTime().format(FORMATTER))
-                .status(fileContent.getPreArchiveStatus() != null ? fileContent.getPreArchiveStatus() : "PENDING_CHECK")
-                .build();
     }
+
+    return PoolItemDto.builder()
+            .id(fileContent.getId())
+            .businessDocNo(fileContent.getBusinessDocNo())
+            .erpVoucherNo(fileContent.getErpVoucherNo())  // 用户可读的凭证号
+            .code(displayCode)
+            .source(source)
+            .type(fileContent.getFileType())
+            .amount(amountStr)
+            .date(fileContent.getCreatedTime().format(FORMATTER))
+            .status(fileContent.getPreArchiveStatus() != null ? fileContent.getPreArchiveStatus() : "PENDING_CHECK")
+            .sourceSystem(sourceSystem)
+            .build();
+}
 }

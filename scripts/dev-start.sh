@@ -128,12 +128,15 @@ main() {
         sleep 2
     fi
     
+    # Ensure logs directory exists
+    mkdir -p "$ROOT/logs"
+
     # 步骤1：启动后端
     log_info "步骤 1/3: 启动后端服务..."
     cd "$BACKEND_DIR"
     mvn spring-boot:run -q &
     BACKEND_PID=$!
-    echo $BACKEND_PID > "$ROOT/.backend.pid"
+    echo $BACKEND_PID > "$ROOT/logs/backend.pid"
     log_info "后端进程 PID: $BACKEND_PID"
     
     # 步骤2：等待后端就绪
@@ -148,7 +151,7 @@ main() {
     cd "$ROOT"
     npm run dev &
     FRONTEND_PID=$!
-    echo $FRONTEND_PID > "$ROOT/.frontend.pid"
+    echo $FRONTEND_PID > "$ROOT/logs/frontend.pid"
     log_info "前端进程 PID: $FRONTEND_PID"
     
     sleep 3
@@ -172,14 +175,14 @@ cleanup() {
     echo ""
     log_warn "正在停止服务..."
     
-    if [ -f "$ROOT/.backend.pid" ]; then
-        kill $(cat "$ROOT/.backend.pid") 2>/dev/null || true
-        rm -f "$ROOT/.backend.pid"
+    if [ -f "$ROOT/logs/backend.pid" ]; then
+        kill $(cat "$ROOT/logs/backend.pid") 2>/dev/null || true
+        rm -f "$ROOT/logs/backend.pid"
     fi
     
-    if [ -f "$ROOT/.frontend.pid" ]; then
-        kill $(cat "$ROOT/.frontend.pid") 2>/dev/null || true
-        rm -f "$ROOT/.frontend.pid"
+    if [ -f "$ROOT/logs/frontend.pid" ]; then
+        kill $(cat "$ROOT/logs/frontend.pid") 2>/dev/null || true
+        rm -f "$ROOT/logs/frontend.pid"
     fi
     
     # 确保端口释放

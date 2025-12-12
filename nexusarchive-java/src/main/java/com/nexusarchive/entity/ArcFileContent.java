@@ -116,9 +116,14 @@ public class ArcFileContent {
     private String sourceSystem;
 
     /**
-     * 业务单据号 (来自 ERP 的凭证号，如 JZ-202312-0051)
+     * 来源唯一标识（幂等性控制，如 YonSuite_xxx）
      */
     private String businessDocNo;
+
+    /**
+     * ERP原始凭证号（用户可读，如 记-3）
+     */
+    private String erpVoucherNo;
 
     private LocalDateTime createdTime;
 
@@ -345,6 +350,14 @@ public class ArcFileContent {
         this.businessDocNo = businessDocNo;
     }
 
+    public String getErpVoucherNo() {
+        return erpVoucherNo;
+    }
+
+    public void setErpVoucherNo(String erpVoucherNo) {
+        this.erpVoucherNo = erpVoucherNo;
+    }
+
     public static ArcFileContentBuilder builder() {
         return new ArcFileContentBuilder();
     }
@@ -474,6 +487,11 @@ public class ArcFileContent {
 
         public ArcFileContentBuilder businessDocNo(String businessDocNo) {
             entity.setBusinessDocNo(businessDocNo);
+            return this;
+        }
+
+        public ArcFileContentBuilder erpVoucherNo(String erpVoucherNo) {
+            entity.setErpVoucherNo(erpVoucherNo);
             return this;
         }
 

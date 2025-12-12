@@ -16,9 +16,14 @@ public class PoolItemDto {
     private String id;
 
     /**
-     * 业务单据号 (来自 ERP 凭证号，优先显示)
+     * 来源唯一标识（幂等性控制，如 YonSuite_xxx）
      */
     private String businessDocNo;
+
+    /**
+     * ERP原始凭证号（用户可读，如 记-3）
+     */
+    private String erpVoucherNo;
 
     /**
      * 唯一流水号 (系统生成，用于前端显示)
@@ -49,4 +54,9 @@ public class PoolItemDto {
      * 解析状态
      */
     private String status;
+
+    /**
+     * 来源系统 (如 YonSuite, Kingdee, Manual)
+     */
+    private String sourceSystem;
 }

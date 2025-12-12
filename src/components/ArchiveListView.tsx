@@ -303,9 +303,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
       const poolItems = await poolApi.getList();
       let filtered = poolItems.filter((item) => {
         // Filter by status if selected
-        if (poolStatusFilter) {
+        if (statusFilter) {
           const itemStatus = (item as any).status || 'PENDING_CHECK';
-          if (itemStatus !== poolStatusFilter) return false;
+          if (itemStatus !== statusFilter) return false;
         }
         // Filter by search term
         if (!searchTerm) return true;
@@ -826,18 +826,20 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
             </button>
           )}
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onNavigate && row.id) {
-                onNavigate(ViewState.COMPLIANCE_REPORT, subTitle, row.id);
-              }
-            }}
-            className="text-slate-400 hover:text-indigo-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100"
-            title="合规性检查"
-          >
-            <ShieldCheck size={16} />
-          </button>
+          {!isPoolView && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onNavigate && row.id) {
+                  onNavigate(ViewState.COMPLIANCE_REPORT, subTitle, row.id);
+                }
+              }}
+              className="text-slate-400 hover:text-indigo-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100"
+              title="合规性检查"
+            >
+              <ShieldCheck size={16} />
+            </button>
+          )}
 
           {exportCode && (
             <button
@@ -849,10 +851,28 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               {isExporting === exportCode ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
             </button>
           )}
-          <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id) }} className="text-slate-400 hover:text-rose-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="删除"><Trash2 size={16} /></button>
+          {!isPoolView && (
+            <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id) }} className="text-slate-400 hover:text-rose-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="删除"><Trash2 size={16} /></button>
+          )}
         </div>
       )
     }
+
+    // 格式化文件类型显示 (MIME type -> 用户友好名称)
+    if (column.key === 'type') {
+      const mimeTypeMapping: Record<string, string> = {
+        'application/pdf': 'PDF',
+        'application/json': 'JSON',
+        'application/ofd': 'OFD',
+        'application/xml': 'XML',
+        'text/plain': 'TXT',
+        'image/jpeg': 'JPG',
+        'image/png': 'PNG',
+      };
+      const displayValue = mimeTypeMapping[String(value).toLowerCase()] || value;
+      return <span className="text-slate-700 font-medium">{displayValue}</span>;
+    }
+
     return <span className="text-slate-700 font-medium">{value}</span>;
   };
 
@@ -973,9 +993,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="">全部状态</option>
-              <option value="draft">草稿</option>
-              <option value="pending">待归档</option>
-              <option value="archived">已归档</option>
+              {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label }]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
             </select>
           )}
           {isFilterOpen && orgOptions.length > 0 && (
@@ -1236,37 +1256,79 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
           </button>
         </div>
 
-        {/* Pre-Archive Status Tabs (Pool View Only) */}
+        {/* Pre-Archive Status Stepper (Pool View Only) */}
         {isPoolView && (
-          <div className="flex items-center gap-2 mb-4 px-1 overflow-x-auto pb-1">
-            <button
-              onClick={() => setPoolStatusFilter(null)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${poolStatusFilter === null
-                ? 'bg-slate-800 text-white shadow-lg'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-            >
-              全部
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${poolStatusFilter === null ? 'bg-white/20' : 'bg-slate-300'}`}>
-                {Object.values(poolStatusStats).reduce((a: number, b: number) => a + b, 0) + (poolStatusStats.NO_STATUS || 0)}
-              </span>
-            </button>
-            {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label, color, icon }]) => (
+          <div className="mb-6 px-1">
+            {/* Stepper Container */}
+            <div className="flex items-center justify-between relative">
+              {/* Connection Line (Background) */}
+              <div className="absolute top-4 left-8 right-8 h-0.5 bg-slate-200 dark:bg-slate-700" />
+
+              {/* "全部" Step */}
               <button
-                key={key}
-                onClick={() => setPoolStatusFilter(key as any)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${poolStatusFilter === key
-                  ? 'bg-slate-800 text-white shadow-lg'
-                  : `${color} hover:opacity-80`
-                  }`}
+                onClick={() => setPoolStatusFilter(null)}
+                className="relative z-10 flex flex-col items-center group"
               >
-                {icon}
-                {label}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${poolStatusFilter === key ? 'bg-white/20' : 'bg-black/10'}`}>
-                  {poolStatusStats[key] || 0}
-                </span>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border-2 ${poolStatusFilter === null
+                  ? 'bg-slate-800 border-slate-800 text-white shadow-lg scale-110'
+                  : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'
+                  }`}>
+                  <span className="text-xs font-bold">{Object.values(poolStatusStats).reduce((a: number, b: number) => a + b, 0)}</span>
+                </div>
+                <span className={`mt-2 text-xs font-medium transition-colors ${poolStatusFilter === null ? 'text-slate-800 dark:text-white' : 'text-slate-500 group-hover:text-slate-700'
+                  }`}>全部</span>
               </button>
-            ))}
+
+              {/* Status Steps */}
+              {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label, color, icon }], index) => {
+                const isActive = poolStatusFilter === key;
+                const count = poolStatusStats[key] || 0;
+                const isFailedStatus = key === 'CHECK_FAILED';
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setPoolStatusFilter(key as any)}
+                    className="relative z-10 flex flex-col items-center group"
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border-2 ${isActive
+                      ? isFailedStatus
+                        ? 'bg-red-500 border-red-500 text-white shadow-lg scale-110'
+                        : 'bg-primary-600 border-primary-600 text-white shadow-lg scale-110'
+                      : count > 0
+                        ? isFailedStatus
+                          ? 'bg-red-100 border-red-300 text-red-600 hover:border-red-400'
+                          : 'bg-primary-50 border-primary-300 text-primary-600 hover:border-primary-400'
+                        : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                      }`}>
+                      {count > 0 ? (
+                        <span className="text-xs font-bold">{count}</span>
+                      ) : (
+                        <span className="text-xs">-</span>
+                      )}
+                    </div>
+                    <span className={`mt-2 text-xs font-medium transition-colors whitespace-nowrap ${isActive
+                      ? isFailedStatus ? 'text-red-600' : 'text-primary-600'
+                      : 'text-slate-500 group-hover:text-slate-700'
+                      }`}>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Flow Description */}
+            <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
+              <span>流程：</span>
+              <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded">待检测</span>
+              <span>→</span>
+              <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">待补录</span>
+              <span>→</span>
+              <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">待归档</span>
+              <span>→</span>
+              <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded">审批中</span>
+              <span>→</span>
+              <span className="px-1.5 py-0.5 bg-green-50 text-green-600 rounded">已归档</span>
+            </div>
           </div>
         )}
 
@@ -1550,7 +1612,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {(viewRow.archivalCode || viewRow.code) && (
+                  {!isPoolView && (viewRow.archivalCode || viewRow.code) && (
                     <button
                       onClick={() => handleAipExport(viewRow)}
                       disabled={isExporting === (viewRow.archivalCode || viewRow.code)}
@@ -1663,7 +1725,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                         <Loader2 size={32} className="animate-spin" />
                       </div>
                       {(viewRow.fileName?.toLowerCase().endsWith('.ofd') || viewRow.fileType?.toLowerCase() === 'ofd' || viewRow.type?.toLowerCase() === 'ofd' ||
-                        viewRow.fileName?.toLowerCase().endsWith('.pdf') || viewRow.fileType?.toLowerCase() === 'pdf' || viewRow.type?.toLowerCase() === 'pdf') ? (
+                        viewRow.fileName?.toLowerCase().endsWith('.pdf') || viewRow.fileType?.toLowerCase() === 'pdf' || viewRow.type?.toLowerCase() === 'pdf' ||
+                        viewRow.fileType?.toLowerCase() === 'application/pdf' || viewRow.type?.toLowerCase() === 'application/pdf' ||
+                        viewRow.fileType?.toLowerCase()?.includes('pdf') || viewRow.type?.toLowerCase()?.includes('pdf')) ? (
                         <div className="w-full h-full bg-white relative z-10 overflow-hidden">
                           <OfdViewer
                             fileUrl={`/api/pool/preview/${viewRow.id}`}

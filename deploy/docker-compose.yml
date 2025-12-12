@@ -45,7 +45,16 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  clamav:
+    image: clamav/clamav:latest
+    container_name: nexusarchive-clamav
+    restart: unless-stopped
+    ports:
+      - "3310:3310"
+    volumes:
+      - clamav-db:/var/lib/clamav
 
 volumes:
   pgdata:
   backend-data:
+  clamav-db:

@@ -10,6 +10,7 @@ export const ArchiveApprovalView: React.FC = () => {
     const [showModal, setShowModal] = useState(false);
     const [comment, setComment] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [statusCounts, setStatusCounts] = useState({ PENDING: 0, APPROVED: 0, REJECTED: 0 });
 
     useEffect(() => {
         loadApprovals();
@@ -18,8 +19,21 @@ export const ArchiveApprovalView: React.FC = () => {
     const loadApprovals = async () => {
         try {
             setLoading(true);
+            // 加载当前筛选的数据
             const response = await archiveApprovalApi.getApprovalList(1, 50, statusFilter);
             setApprovals(response.data.data.records || []);
+
+            // 加载各状态计数
+            const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+                archiveApprovalApi.getApprovalList(1, 1, 'PENDING'),
+                archiveApprovalApi.getApprovalList(1, 1, 'APPROVED'),
+                archiveApprovalApi.getApprovalList(1, 1, 'REJECTED'),
+            ]);
+            setStatusCounts({
+                PENDING: pendingRes.data.data.total || 0,
+                APPROVED: approvedRes.data.data.total || 0,
+                REJECTED: rejectedRes.data.data.total || 0,
+            });
         } catch (error) {
             console.error('Failed to load approvals:', error);
         } finally {
@@ -114,7 +128,7 @@ export const ArchiveApprovalView: React.FC = () => {
                                 <Clock size={16} className="text-amber-300" />
                             </div>
                             <div className="text-3xl font-bold mt-2">
-                                {approvals.filter(a => a.status === 'PENDING').length}
+                                {statusCounts.PENDING}
                                 <span className="text-xs font-normal text-indigo-200 ml-1">件</span>
                             </div>
                         </div>
@@ -124,7 +138,7 @@ export const ArchiveApprovalView: React.FC = () => {
                                 <CheckCircle2 size={16} className="text-emerald-300" />
                             </div>
                             <div className="text-3xl font-bold mt-2">
-                                {approvals.filter(a => a.status === 'APPROVED').length}
+                                {statusCounts.APPROVED}
                                 <span className="text-xs font-normal text-indigo-200 ml-1">件</span>
                             </div>
                         </div>
@@ -134,7 +148,7 @@ export const ArchiveApprovalView: React.FC = () => {
                                 <XCircle size={16} className="text-rose-300" />
                             </div>
                             <div className="text-3xl font-bold mt-2">
-                                {approvals.filter(a => a.status === 'REJECTED').length}
+                                {statusCounts.REJECTED}
                                 <span className="text-xs font-normal text-indigo-200 ml-1">件</span>
                             </div>
                         </div>

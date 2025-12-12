@@ -1,6 +1,8 @@
 package com.nexusarchive.integration.yonsuite.mapper;
 
+import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
+import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.integration.yonsuite.dto.YonVoucherDetailResponse;
 import com.nexusarchive.integration.yonsuite.dto.YonVoucherListResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -184,6 +187,139 @@ public class YonVoucherMapper {
                 return "deleted"; // 作废
             default:
                 return "draft";
+        }
+    }
+
+    /**
+     * 将凭证详情映射到预归档文件表 (ArcFileContent)
+     * 用于 ERP 同步进入预归档库的场景
+     * 
+     * @param detail 凭证详情
+     * @param sourceSystem 来源系统标识
+     * @return ArcFileContent 预归档文件记录
+     */
+    public ArcFileContent toPreArchiveFile(YonVoucherDetailResponse.VoucherDetail detail, String sourceSystem) {
+        if (detail == null) {
+            return null;
+        }
+        
+        // 生成临时档号 (待正式归档时会重新生成)
+        String period = detail.getPeriodUnion() != null ? detail.getPeriodUnion() : "0000-00";
+        String displayName = detail.getDisplayName() != null ? detail.getDisplayName() : detail.getId();
+        String archivalCode = "YS-" + period + "-" + displayName;
+        
+        // 生成业务单据号
+        String businessDocNo = sourceSystem + "_" + detail.getId();
+        
+        // 序列化凭证分录为 JSON (用于作为虚拟文件内容)
+        String voucherJson = "";
+        if (detail.getBodies() != null) {
+            try {
+                voucherJson = objectMapper.writeValueAsString(detail);
+            } catch (Exception e) {
+                log.warn("Failed to serialize voucher detail: {}", detail.getId(), e);
+            }
+        }
+        
+        // 计算 JSON 内容的大小和哈希
+        long fileSize = voucherJson.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+        String fileHash = calculateHash(voucherJson);
+        
+        // 临时存储路径 (PDF 生成后会更新为实际路径)
+        String tempStoragePath = "pending/" + sourceSystem + "/" + businessDocNo + ".json";
+        
+        return ArcFileContent.builder()
+                .archivalCode(archivalCode)
+                .fileName("会计凭证-" + displayName + ".json")
+                .fileType("application/json")
+                .fileSize(fileSize)
+                .fileHash(fileHash)
+                .hashAlgorithm("SM3")
+                .storagePath(tempStoragePath)
+                .preArchiveStatus(PreArchiveStatus.PENDING_CHECK.getCode())
+                .sourceSystem(sourceSystem)
+                .businessDocNo(businessDocNo)
+                .erpVoucherNo(displayName)  // 用户可读的凭证号
+                .fiscalYear(period.length() >= 4 ? period.substring(0, 4) : null)
+                .voucherType("AC01")
+                .creator(detail.getMakerObj() != null ? detail.getMakerObj().getName() : null)
+                .fondsCode(detail.getAccBookObj() != null ? detail.getAccBookObj().getCode() : null)
+                .createdTime(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * 将列表记录映射到预归档文件表 (ArcFileContent)
+     */
+    public ArcFileContent toPreArchiveFile(YonVoucherListResponse.VoucherRecord record, String sourceSystem) {
+        if (record == null || record.getHeader() == null) {
+            return null;
+        }
+        
+        YonVoucherListResponse.VoucherHeader header = record.getHeader();
+        
+        // 生成临时档号
+        String period = header.getPeriod() != null ? header.getPeriod() : "0000-00";
+        String displayName = header.getDisplayname() != null ? header.getDisplayname() : header.getId();
+        String archivalCode = "YS-" + period + "-" + displayName;
+        
+        // 生成业务单据号
+        String businessDocNo = sourceSystem + "_" + header.getId();
+        
+        // 序列化凭证为 JSON
+        String voucherJson = "";
+        try {
+            voucherJson = objectMapper.writeValueAsString(record);
+        } catch (Exception e) {
+            log.warn("Failed to serialize voucher record: {}", header.getId(), e);
+        }
+        
+        long fileSize = voucherJson.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+        String fileHash = calculateHash(voucherJson);
+        
+        // 临时存储路径 (PDF 生成后会更新为实际路径)
+        String tempStoragePath = "pending/" + sourceSystem + "/" + businessDocNo + ".json";
+        
+        return ArcFileContent.builder()
+                .archivalCode(archivalCode)
+                .fileName("会计凭证-" + displayName + ".json")
+                .fileType("application/json")
+                .fileSize(fileSize)
+                .fileHash(fileHash)
+                .hashAlgorithm("SM3")
+                .storagePath(tempStoragePath)
+                .preArchiveStatus(PreArchiveStatus.PENDING_CHECK.getCode())
+                .sourceSystem(sourceSystem)
+                .businessDocNo(businessDocNo)
+                .erpVoucherNo(displayName)  // 用户可读的凭证号
+                .fiscalYear(period.length() >= 4 ? period.substring(0, 4) : null)
+                .voucherType("AC01")
+                .creator(header.getMaker() != null ? header.getMaker().getName() : null)
+                .fondsCode(header.getAccbook() != null ? header.getAccbook().getCode() : null)
+                .createdTime(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * 计算字符串的 SM3 哈希值
+     */
+    private String calculateHash(String content) {
+        try {
+            byte[] data = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            // 使用 BouncyCastle SM3
+            org.bouncycastle.crypto.digests.SM3Digest digest = new org.bouncycastle.crypto.digests.SM3Digest();
+            digest.update(data, 0, data.length);
+            byte[] hash = new byte[digest.getDigestSize()];
+            digest.doFinal(hash, 0);
+            // 转换为十六进制字符串
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.warn("Failed to calculate SM3 hash, falling back to empty", e);
+            return "";
         }
     }
 }

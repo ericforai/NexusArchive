@@ -1,12 +1,19 @@
 package com.nexusarchive.integration.yonsuite.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.integration.yonsuite.client.YonSuiteClient;
 import com.nexusarchive.integration.yonsuite.dto.*;
 import com.nexusarchive.integration.yonsuite.mapper.YonVoucherMapper;
+import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.service.ArchiveService;
+import com.nexusarchive.service.PreArchiveCheckService;
+import com.nexusarchive.service.VoucherPdfGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +22,13 @@ import java.util.List;
 
 /**
  * YonSuite 凭证同步服务
+ * 
+ * 改造后流程：
+ * 1. 同步凭证数据 -> 写入 arc_file_content (预归档表)
+ * 2. 生成 PDF 版式文件
+ * 3. 状态设为 PENDING_CHECK
+ * 4. 异步触发四性检测
+ * 5. 用户在电子凭证池查看并提交归档申请
  */
 @Service
 @RequiredArgsConstructor
@@ -25,16 +39,23 @@ public class YonSuiteVoucherSyncService {
 
     private final YonSuiteClient yonSuiteClient;
     private final YonVoucherMapper yonVoucherMapper;
+    private final ArcFileContentMapper arcFileContentMapper;
+    private final PreArchiveCheckService preArchiveCheckService;
+    private final VoucherPdfGeneratorService pdfGeneratorService;
+    private final ObjectMapper objectMapper;
+    
+    // 保留原有 ArchiveService 用于兼容旧逻辑（如需要）
     private final ArchiveService archiveService;
 
     /**
-     * 按期间同步凭证列表 (非事务，每条记录单独处理)
+     * 按期间同步凭证列表 (写入预归档库)
      */
     public List<String> syncVouchersByPeriod(String accessToken, String accbookCode, 
                                               String periodStart, String periodEnd) {
-        log.info("开始同步凭证: accbookCode={}, period={}-{}", accbookCode, periodStart, periodEnd);
+        log.info("开始同步凭证到预归档库: accbookCode={}, period={}-{}", accbookCode, periodStart, periodEnd);
         
         List<String> syncedIds = new ArrayList<>();
+        List<VoucherSyncResult> syncResults = new ArrayList<>();
         int pageIndex = 1;
         int pageSize = 100;
         boolean hasMore = true;
@@ -49,7 +70,6 @@ public class YonSuiteVoucherSyncService {
             request.setAccbookCode(accbookCode);
             request.setPeriodStart(periodStart);
             request.setPeriodEnd(periodEnd);
-            // 同步所有状态的凭证 (不设状态过滤)
             
             // 调用 API
             YonVoucherListResponse response = yonSuiteClient.queryVouchers(accessToken, request);
@@ -62,9 +82,10 @@ public class YonSuiteVoucherSyncService {
             
             for (YonVoucherListResponse.VoucherRecord record : records) {
                 try {
-                    String archiveId = processVoucherRecord(record);
-                    if (archiveId != null) {
-                        syncedIds.add(archiveId);
+                    VoucherSyncResult result = processVoucherRecordToPreArchive(record);
+                    if (result != null) {
+                        syncedIds.add(result.fileId);
+                        syncResults.add(result);
                     }
                 } catch (Exception e) {
                     log.error("Failed to process voucher: {}", record.getHeader().getId(), e);
@@ -77,16 +98,22 @@ public class YonSuiteVoucherSyncService {
             pageIndex++;
         }
         
-        log.info("凭证同步完成: 共同步 {} 条", syncedIds.size());
+        log.info("凭证同步到预归档库完成: 共同步 {} 条", syncedIds.size());
+        
+        // 异步生成 PDF 和触发四性检测
+        if (!syncResults.isEmpty()) {
+            generatePdfsAndCheck(syncResults);
+        }
+        
         return syncedIds;
     }
 
     /**
-     * 按凭证ID同步单个凭证
+     * 按凭证ID同步单个凭证 (写入预归档库)
      */
     @Transactional
     public String syncVoucherById(String accessToken, String voucherId) {
-        log.info("同步单个凭证: voucherId={}", voucherId);
+        log.info("同步单个凭证到预归档库: voucherId={}", voucherId);
         
         YonVoucherDetailResponse response = yonSuiteClient.queryVoucherById(accessToken, voucherId);
         
@@ -95,56 +122,143 @@ public class YonSuiteVoucherSyncService {
             return null;
         }
         
-        Archive archive = yonVoucherMapper.fromDetail(response.getData(), SOURCE_SYSTEM);
+        // 映射为预归档文件记录
+        ArcFileContent fileContent = yonVoucherMapper.toPreArchiveFile(response.getData(), SOURCE_SYSTEM);
         
-        if (archive == null) {
+        if (fileContent == null) {
             return null;
         }
         
-        // 幂等性检查
-        Archive existing = archiveService.getByUniqueBizId(archive.getUniqueBizId());
+        // 幂等性检查：根据业务单据号查找
+        String businessDocNo = fileContent.getBusinessDocNo();
+        ArcFileContent existing = arcFileContentMapper.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
+                .eq(ArcFileContent::getBusinessDocNo, businessDocNo)
+        );
         
+        String fileId;
         if (existing != null) {
-            if ("archived".equalsIgnoreCase(existing.getStatus())) {
+            // 已存在，检查状态
+            if ("ARCHIVED".equals(existing.getPreArchiveStatus())) {
                 log.info("凭证已归档，跳过更新: {}", voucherId);
                 return existing.getId();
             }
-            // 更新草稿
-            archive.setId(existing.getId());
-            archiveService.updateArchive(existing.getId(), archive);
-            log.info("更新凭证: {}", voucherId);
-            return existing.getId();
+            // 更新现有记录
+            fileContent.setId(existing.getId());
+            arcFileContentMapper.updateById(fileContent);
+            log.info("更新预归档凭证: voucherId={}, fileId={}", voucherId, existing.getId());
+            fileId = existing.getId();
+        } else {
+            // 创建新记录
+            arcFileContentMapper.insert(fileContent);
+            log.info("创建预归档凭证: voucherId={}, fileId={}", voucherId, fileContent.getId());
+            fileId = fileContent.getId();
         }
         
-        // 创建新记录
-        Archive saved = archiveService.createArchive(archive, "system");
-        log.info("创建凭证: voucherId={}, archiveId={}", voucherId, saved.getId());
-        return saved.getId();
+        // 生成 PDF 文件
+        try {
+            String voucherJson = objectMapper.writeValueAsString(response.getData());
+            pdfGeneratorService.generatePdfForPreArchive(fileId, voucherJson);
+        } catch (Exception e) {
+            log.error("生成 PDF 失败: voucherId={}", voucherId, e);
+        }
+        
+        // 异步触发四性检测
+        triggerPreArchiveCheck(List.of(fileId));
+        
+        return fileId;
     }
 
     /**
-     * 处理单条凭证记录
+     * 处理单条凭证记录 (写入预归档库)
+     * @return VoucherSyncResult 包含 fileId 和凭证 JSON 用于后续 PDF 生成
      */
-    private String processVoucherRecord(YonVoucherListResponse.VoucherRecord record) {
-        Archive archive = yonVoucherMapper.fromListRecord(record, SOURCE_SYSTEM);
+    private VoucherSyncResult processVoucherRecordToPreArchive(YonVoucherListResponse.VoucherRecord record) {
+        ArcFileContent fileContent = yonVoucherMapper.toPreArchiveFile(record, SOURCE_SYSTEM);
         
-        if (archive == null) {
+        if (fileContent == null) {
             return null;
         }
         
         // 幂等性检查
-        Archive existing = archiveService.getByUniqueBizId(archive.getUniqueBizId());
+        String businessDocNo = fileContent.getBusinessDocNo();
+        ArcFileContent existing = arcFileContentMapper.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
+                .eq(ArcFileContent::getBusinessDocNo, businessDocNo)
+        );
         
+        String fileId;
         if (existing != null) {
-            if ("archived".equalsIgnoreCase(existing.getStatus())) {
-                return existing.getId();
+            if ("ARCHIVED".equals(existing.getPreArchiveStatus())) {
+                return null; // 已归档，跳过
             }
-            archive.setId(existing.getId());
-            archiveService.updateArchive(existing.getId(), archive);
-            return existing.getId();
+            fileContent.setId(existing.getId());
+            arcFileContentMapper.updateById(fileContent);
+            fileId = existing.getId();
+        } else {
+            arcFileContentMapper.insert(fileContent);
+            fileId = fileContent.getId();
         }
         
-        Archive saved = archiveService.createArchive(archive, "system");
-        return saved.getId();
+        // 序列化凭证 JSON 用于 PDF 生成
+        String voucherJson = "";
+        try {
+            voucherJson = objectMapper.writeValueAsString(record);
+        } catch (Exception e) {
+            log.warn("Failed to serialize voucher record: {}", record.getHeader().getId());
+        }
+        
+        return new VoucherSyncResult(fileId, voucherJson);
+    }
+
+    /**
+     * 异步生成 PDF 并触发四性检测
+     */
+    @Async
+    public void generatePdfsAndCheck(List<VoucherSyncResult> results) {
+        log.info("异步生成 PDF 并检测: {} 条记录", results.size());
+        
+        List<String> fileIds = new ArrayList<>();
+        for (VoucherSyncResult result : results) {
+            try {
+                pdfGeneratorService.generatePdfForPreArchive(result.fileId, result.voucherJson);
+                fileIds.add(result.fileId);
+            } catch (Exception e) {
+                log.error("PDF 生成失败: fileId={}", result.fileId, e);
+            }
+        }
+        
+        // 触发四性检测
+        if (!fileIds.isEmpty()) {
+            triggerPreArchiveCheck(fileIds);
+        }
+    }
+
+    /**
+     * 异步触发四性检测
+     */
+    @Async
+    public void triggerPreArchiveCheck(List<String> fileIds) {
+        log.info("触发四性检测: fileIds={}", fileIds);
+        try {
+            preArchiveCheckService.checkMultipleFiles(fileIds);
+        } catch (Exception e) {
+            log.error("四性检测失败: {}", fileIds, e);
+        }
+    }
+
+    /**
+     * 凭证同步结果内部类
+     */
+    private static class VoucherSyncResult {
+        final String fileId;
+        final String voucherJson;
+
+        VoucherSyncResult(String fileId, String voucherJson) {
+            this.fileId = fileId;
+            this.voucherJson = voucherJson;
+        }
     }
 }
+
+

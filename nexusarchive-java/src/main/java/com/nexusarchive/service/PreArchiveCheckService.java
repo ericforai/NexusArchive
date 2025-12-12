@@ -6,14 +6,10 @@ import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
-import com.nexusarchive.service.adapter.VirusScanAdapter;
-import com.nexusarchive.util.FileHashUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,10 +30,7 @@ import java.util.UUID;
 public class PreArchiveCheckService {
 
     private final ArcFileContentMapper arcFileContentMapper;
-    private final FileHashUtil fileHashUtil;
-    private final VirusScanAdapter virusScanAdapter;
-    private final com.nexusarchive.service.signature.OfdSignatureHelper ofdSignatureHelper;
-    private final Tika tika = new Tika();
+    private final FourNatureCoreService fourNatureCoreService;
 
     /**
      * 对单个预归档文件执行四性检测
@@ -68,31 +61,50 @@ public class PreArchiveCheckService {
 
             byte[] content = Files.readAllBytes(filePath);
 
-            // 1. 真实性检测 - 哈希校验
-            CheckItem authenticity = checkAuthenticity(file, content);
+            // 1. 真实性检测 (Delegated to Core)
+            // Use OriginalHash if available, otherwise FileHash
+            String expectedHash = (file.getOriginalHash() != null && !file.getOriginalHash().isEmpty()) 
+                    ? file.getOriginalHash() 
+                    : file.getFileHash();
+            
+            CheckItem authenticity = fourNatureCoreService.checkSingleFileAuthenticity(
+                    content, 
+                    file.getFileName(), 
+                    expectedHash, 
+                    file.getHashAlgorithm(),
+                    file.getFileType()
+            );
             report.setAuthenticity(authenticity);
+            
             if (authenticity.getStatus() == OverallStatus.FAIL) {
                 report.setStatus(OverallStatus.FAIL);
                 updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
                 return report;
             }
 
-            // 2. 完整性检测 - 元数据完整性
+            // 2. 完整性检测 - 元数据完整性 (Still local as it depends on Entity fields)
             CheckItem integrity = checkMetadataIntegrity(file);
             report.setIntegrity(integrity);
             if (integrity.getStatus() == OverallStatus.FAIL) {
                 report.setStatus(OverallStatus.FAIL);
             }
 
-            // 3. 可用性检测 - 文件格式验证
-            CheckItem usability = checkFileUsability(file, content);
+            // 3. 可用性检测 (Delegated to Core)
+            CheckItem usability = fourNatureCoreService.checkSingleFileUsability(
+                    content, 
+                    file.getFileName(), 
+                    file.getFileType()
+            );
             report.setUsability(usability);
             if (usability.getStatus() == OverallStatus.FAIL) {
                 report.setStatus(OverallStatus.FAIL);
             }
 
-            // 4. 安全性检测 - 病毒扫描
-            CheckItem safety = checkFileSafety(file, content);
+            // 4. 安全性检测 (Delegated to Core)
+            CheckItem safety = fourNatureCoreService.checkSingleFileSafety(
+                    content, 
+                    file.getFileName()
+            );
             report.setSafety(safety);
             if (safety.getStatus() == OverallStatus.FAIL) {
                 report.setStatus(OverallStatus.FAIL);
@@ -140,73 +152,6 @@ public class PreArchiveCheckService {
         return reports;
     }
 
-    private CheckItem checkAuthenticity(ArcFileContent file, byte[] content) {
-        CheckItem item = CheckItem.pass("真实性检测", "哈希校验通过");
-        List<String> details = new ArrayList<>();
-
-        try {
-            // 计算当前哈希
-            String algo = file.getHashAlgorithm() != null ? file.getHashAlgorithm() : "SM3";
-            String currentHash;
-            if ("SM3".equalsIgnoreCase(algo)) {
-                currentHash = fileHashUtil.calculateSM3(new ByteArrayInputStream(content));
-            } else {
-                currentHash = fileHashUtil.calculateSHA256(new ByteArrayInputStream(content));
-            }
-
-            // 更新当前哈希
-            file.setCurrentHash(currentHash);
-
-            // 与原始哈希比对
-            if (file.getOriginalHash() != null && !file.getOriginalHash().isEmpty()) {
-                if (!file.getOriginalHash().equalsIgnoreCase(currentHash)) {
-                    item.addError(String.format("哈希不一致: 原始=%s, 当前=%s", 
-                            file.getOriginalHash(), currentHash));
-                } else {
-                    details.add("文件哈希一致性验证通过");
-                }
-            } else if (file.getFileHash() != null && !file.getFileHash().isEmpty()) {
-                // Fallback to fileHash
-                if (!file.getFileHash().equalsIgnoreCase(currentHash)) {
-                    item.setStatus(OverallStatus.WARNING);
-                    details.add("WARNING: 哈希与记录不一致，可能是文件被修改");
-                } else {
-                    details.add("文件哈希验证通过");
-                }
-                item.setStatus(OverallStatus.WARNING);
-                details.add("WARNING: 无原始哈希记录，跳过校验");
-            }
-
-            // 验证电子签章 (针对 OFD 文件)
-            if (file.getFileName().toLowerCase().endsWith(".ofd")) {
-                try {
-                    boolean isValid = ofdSignatureHelper.verifyOfd(java.nio.file.Paths.get(file.getStoragePath()));
-                    if (isValid) {
-                        details.add("电子签章有效性验证通过");
-                    } else {
-                        item.addError("电子签章验证失败: 签名无效或证书过期");
-                    }
-                } catch (Exception e) {
-                    // 如果是 ARCHIVED 状态，必须验证通过
-                    if ("ARCHIVED".equals(file.getPreArchiveStatus())) {
-                        item.addError("已归档文件签章验证异常: " + e.getMessage());
-                    } else {
-                        details.add("未检测到有效签章 (非强制)");
-                    }
-                }
-            }
-
-
-        } catch (Exception e) {
-            item.addError("哈希计算失败: " + e.getMessage());
-        }
-
-        if (!details.isEmpty()) {
-            item.setMessage(String.join("; ", details));
-        }
-        return item;
-    }
-
     private CheckItem checkMetadataIntegrity(ArcFileContent file) {
         CheckItem item = CheckItem.pass("完整性检测", "元数据完整");
         List<String> missing = new ArrayList<>();
@@ -234,7 +179,6 @@ public class PreArchiveCheckService {
             missing.add("责任者");
         }
         if (file.getFondsCode() == null || file.getFondsCode().isEmpty()) {
-            // item.setStatus(OverallStatus.WARNING); // 全宗号可选，不影响完整性状态
             missing.add("全宗号(建议完善)");
         }
 
@@ -243,71 +187,6 @@ public class PreArchiveCheckService {
         }
 
         return item;
-    }
-
-    private CheckItem checkFileUsability(ArcFileContent file, byte[] content) {
-        CheckItem item = CheckItem.pass("可用性检测", "文件格式有效");
-        List<String> details = new ArrayList<>();
-
-        try {
-            // 使用 Tika 检测实际文件类型
-            String detectedType = tika.detect(content);
-            String declaredType = file.getFileType();
-
-            if (declaredType != null) {
-                boolean match = checkTypeMatch(declaredType, detectedType);
-                if (!match) {
-                    item.setStatus(OverallStatus.WARNING);
-                    details.add(String.format("文件类型不匹配: 声明=%s, 检测=%s", 
-                            declaredType, detectedType));
-                } else {
-                    details.add("文件格式验证通过: " + detectedType);
-                }
-            }
-
-            // 检查文件是否可读取
-            if (content.length == 0) {
-                item.addError("文件内容为空");
-            }
-
-        } catch (Exception e) {
-            item.addError("格式检测失败: " + e.getMessage());
-        }
-
-        if (!details.isEmpty()) {
-            item.setMessage(String.join("; ", details));
-        }
-        return item;
-    }
-
-    private CheckItem checkFileSafety(ArcFileContent file, byte[] content) {
-        CheckItem item = CheckItem.pass("安全性检测", "无安全威胁");
-
-        try {
-            boolean isSafe = virusScanAdapter.scan(content, file.getFileName());
-            if (!isSafe) {
-                item.addError("检测到安全威胁: " + file.getFileName());
-            }
-        } catch (Exception e) {
-            item.setStatus(OverallStatus.WARNING);
-            item.setMessage("安全扫描跳过: " + e.getMessage());
-        }
-
-        return item;
-    }
-
-    private boolean checkTypeMatch(String declared, String detected) {
-        if (declared == null || detected == null) return false;
-        declared = declared.toUpperCase();
-        detected = detected.toLowerCase();
-
-        if (declared.equals("PDF") && detected.contains("pdf")) return true;
-        if (declared.equals("OFD") && (detected.contains("xml") || detected.contains("zip") || detected.contains("ofd"))) return true;
-        if (declared.equals("XML") && detected.contains("xml")) return true;
-        if ((declared.equals("JPG") || declared.equals("JPEG")) && detected.contains("jpeg")) return true;
-        if (declared.equals("PNG") && detected.contains("png")) return true;
-
-        return false;
     }
 
     private boolean isMetadataIncomplete(ArcFileContent file) {

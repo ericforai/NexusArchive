@@ -40,7 +40,17 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
                 const url = URL.createObjectURL(blob)
 
                 // Detect file type from content-type or file extension
-                let type = fileType?.toLowerCase() || ''
+                let type = ''
+                const inputType = fileType?.toLowerCase() || ''
+
+                // First check input fileType
+                if (inputType.includes('pdf') || inputType === 'pdf') {
+                    type = 'pdf'
+                } else if (inputType.includes('ofd') || inputType === 'ofd') {
+                    type = 'ofd'
+                }
+
+                // Fallback to content-type detection
                 if (!type) {
                     if (contentType.includes('pdf')) {
                         type = 'pdf'
