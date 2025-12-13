@@ -61,6 +61,12 @@ public class ComplianceControllerIntegrationTest {
     @MockBean
     private com.nexusarchive.service.CustomUserDetailsService userDetailsService;
 
+    @MockBean
+    private com.nexusarchive.service.LicenseService licenseService;
+
+    @MockBean
+    private com.nexusarchive.mapper.UserMapper userMapper;
+
     @BeforeEach
     void setUp() {
         Archive archive = new Archive();

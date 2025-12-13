@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, AlertCircle } from 'lucide-react';
+import { X } from 'lucide-react';
+import { DemoBadge } from '../common/DemoBadge';
 
 interface LinkCandidate {
     id: string;
@@ -20,16 +21,6 @@ interface LinkModalProps {
     onConfirm: () => void;
     demoMode: boolean;
 }
-
-/**
- * 演示模式提示组件
- */
-const DemoBadge: React.FC<{ text: string }> = ({ text }) => (
-    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg text-sm text-amber-700">
-        <AlertCircle size={16} />
-        <span>{text}</span>
-    </div>
-);
 
 /**
  * 手动凭证关联模态框组件

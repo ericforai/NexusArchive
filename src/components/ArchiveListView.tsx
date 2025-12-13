@@ -14,6 +14,7 @@ import { ModuleConfig, TableColumn, GenericRow, ViewState } from '../types';
 import { poolApi } from '../api/pool';
 import { archivesApi } from '../api/archives';
 import { RelationshipVisualizer } from './RelationshipVisualizer';
+import { DemoBadge } from './common/DemoBadge';
 import { client } from '../api/client';
 import { adminApi } from '../api/admin';
 import { useAuthStore } from '../store';
@@ -415,6 +416,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
   // Archive Confirmation Modal State
   const [isArchiveConfirmOpen, setIsArchiveConfirmOpen] = useState(false);
+
+  // Demo Mode State (Temporary)
+  const [demoMode] = useState(true);
 
   // --- Actions ---
 
