@@ -16,6 +16,7 @@ spring:
     repair-on-migrate: true
     ignore-missing-migrations: true
     out-of-order: true
+    validate-on-migrate: false
     locations: classpath:db/migration
   
   jackson:
