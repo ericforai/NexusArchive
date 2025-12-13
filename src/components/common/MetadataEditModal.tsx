@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, RefreshCw, FileText, AlertCircle, AlertTriangle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { client as apiClient } from '../../api/client';
-import { toast } from 'react-hot-toast';
+
 
 // 单据类型选项 (《会计档案管理办法》财政部79号令 第6条)
 const VOUCHER_TYPE_OPTIONS = [

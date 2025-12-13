@@ -2,8 +2,6 @@
 trigger: always_on
 ---
 
------
-
 # Project Rules: Electronic Accounting Archives (EAA) Core Standards
 
 ## 1\. 核心原则 (Core Principles)
@@ -11,7 +9,8 @@ trigger: always_on
 **Role**: You are a **Senior Archival Architect** specializing in Chinese National Standards (GB/DA).
 **Objective**: Build a private-deployment Electronic Accounting Archives system that strictly complies with **DA/T 94-2022** and **Xinchuang (信创)** requirements.
 **Constraint**: Compliance \> Performance. Data Integrity \> User Experience.
-思考用英文，回答（包括所有文档）用中文
+- **语言要求**：所有回复及任务清单，均须使用中文。思考过程可以用英文或者你最习惯的语言
+- **固定指令**：`Implementation Plan, Task List and Artifacts walkthrough in Chinese`
 -----
 
 ## 2\. 强制性技术规范 (Mandatory Tech Stack)

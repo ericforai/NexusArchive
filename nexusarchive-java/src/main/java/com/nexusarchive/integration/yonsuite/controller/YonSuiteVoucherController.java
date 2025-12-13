@@ -19,27 +19,29 @@ import java.util.Map;
 @Slf4j
 public class YonSuiteVoucherController {
 
-    private final YonSuiteVoucherSyncService syncService;
+    private final com.nexusarchive.integration.service.UniversalSyncEngine universalSyncEngine;
 
     /**
      * 按期间同步凭证
      */
     @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> syncVouchers(@RequestBody SyncByPeriodRequest request) {
-        log.info("Request to sync vouchers: {}", request);
-        
-        List<String> syncedIds = syncService.syncVouchersByPeriod(
-                request.getAccessToken(),
-                request.getAccbookCode(),
-                request.getPeriodStart(),
-                request.getPeriodEnd()
-        );
-        
+        log.info("Request to sync vouchers via Universal Engine: {}", request);
+
+        // Build Context
+        com.nexusarchive.integration.core.context.SyncContext context = com.nexusarchive.integration.core.context.SyncContext
+                .builder()
+                .accountBookCode(request.getAccbookCode())
+                .startDate(java.time.LocalDate.parse(request.getPeriodStart() + "-01")) // Assuming YYYY-MM
+                .endDate(java.time.LocalDate.parse(request.getPeriodEnd() + "-01")) // Simplified
+                .accessToken(request.getAccessToken())
+                .build();
+
+        String result = universalSyncEngine.sync(context, "YONSUITE");
+
         return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
-                "synced_count", syncedIds.size(),
-                "synced_ids", syncedIds
-        ));
+                "message", result));
     }
 
     /**
@@ -47,24 +49,24 @@ public class YonSuiteVoucherController {
      */
     @PostMapping("/sync-by-id")
     public ResponseEntity<Map<String, Object>> syncVoucherById(@RequestBody SyncByIdRequest request) {
-        log.info("Request to sync voucher by id: {}", request.getVoucherId());
-        
-        String archiveId = syncService.syncVoucherById(
-                request.getAccessToken(),
-                request.getVoucherId()
-        );
-        
+        log.info("Request to sync voucher by id via Universal Engine: {}", request.getVoucherId());
+
+        com.nexusarchive.integration.core.context.SyncContext context = com.nexusarchive.integration.core.context.SyncContext
+                .builder()
+                .accessToken(request.getAccessToken())
+                .build();
+
+        String archiveId = universalSyncEngine.syncById(context, "YONSUITE", request.getVoucherId());
+
         if (archiveId == null) {
             return ResponseEntity.ok(Map.of(
                     "status", "NOT_FOUND",
-                    "message", "Voucher not found in YonSuite"
-            ));
+                    "message", "Voucher not found in YonSuite"));
         }
-        
+
         return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
-                "archive_id", archiveId
-        ));
+                "archive_id", archiveId));
     }
 
     @Data

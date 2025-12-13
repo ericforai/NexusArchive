@@ -56,10 +56,14 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
                         type = 'pdf'
                     } else if (contentType.includes('ofd')) {
                         type = 'ofd'
+                    } else if (contentType.includes('image')) {
+                        type = 'image'
                     } else if (fileName?.toLowerCase().endsWith('.pdf')) {
                         type = 'pdf'
                     } else if (fileName?.toLowerCase().endsWith('.ofd')) {
                         type = 'ofd'
+                    } else if (fileName?.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp)$/)) {
+                        type = 'image'
                     }
                 }
 
@@ -127,6 +131,19 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
                     src={blobUrl}
                     className="w-full h-full min-h-[500px] border-0"
                     title="PDF Preview"
+                />
+            </div>
+        )
+    }
+
+    // Image Preview
+    if (detectedType === 'image' && blobUrl) {
+        return (
+            <div className={`file-viewer-wrapper ${className || ''} flex items-center justify-center bg-gray-100 overflow-auto`} style={style}>
+                <img
+                    src={blobUrl}
+                    alt={fileName || 'Preview'}
+                    className="max-w-full max-h-full object-contain shadow-lg"
                 />
             </div>
         )

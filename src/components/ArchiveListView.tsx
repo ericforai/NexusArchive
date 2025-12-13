@@ -11,7 +11,7 @@ import {
   Settings2, Play, Zap, BarChart2, Lock, ArrowRight, Package
 } from 'lucide-react';
 import { ModuleConfig, TableColumn, GenericRow, ViewState } from '../types';
-import { poolApi } from '../api/pool';
+import { poolApi, PoolItem } from '../api/pool';
 import { archivesApi } from '../api/archives';
 import { RelationshipVisualizer } from './RelationshipVisualizer';
 import { DemoBadge } from './common/DemoBadge';
@@ -191,6 +191,10 @@ const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
     date
   };
 };
+
+
+
+
 
 export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   title: propTitle,
@@ -408,6 +412,25 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   // 4-Nature Compliance Feature State
   const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
 
+  // Attachment Preview State
+  const [relatedFiles, setRelatedFiles] = useState<PoolItem[]>([]);
+  const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
+  const [activeDetailTab, setActiveDetailTab] = useState<'main' | 'attachments'>('main');
+
+  // Load related files when viewing details
+  useEffect(() => {
+    if (isViewModalOpen && viewRow) {
+      setActivePreviewId(viewRow.id);
+      setActiveDetailTab('main'); // Reset to main tab
+      poolApi.getRelatedFiles(viewRow.id).then(files => {
+        setRelatedFiles(files);
+      });
+    } else {
+      setRelatedFiles([]);
+      setActivePreviewId(null);
+    }
+  }, [isViewModalOpen, viewRow]);
+
   // Toast Notification State
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' }>({ visible: false, message: '', type: 'success' });
 
@@ -417,8 +440,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   // Archive Confirmation Modal State
   const [isArchiveConfirmOpen, setIsArchiveConfirmOpen] = useState(false);
 
-  // Demo Mode State (Temporary)
-  const [demoMode] = useState(true);
+  // Demo Mode State
+  const [demoMode, setDemoMode] = useState(true);
 
   // --- Actions ---
 
@@ -883,7 +906,70 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   return (
     <div className="p-8 space-y-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
 
-      {/* Toast (Portal) */}
+      {
+        isAddModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-800">新增记录</h3>
+                <button onClick={() => setIsAddModalOpen(false)}><X size={20} className="text-slate-400" /></button>
+              </div>
+              <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
+                {config.columns.filter(c => c.type !== 'status' && c.type !== 'progress' && c.type !== 'action').map(col => (
+                  <div key={col.key}><label className="text-sm font-medium">{col.header}</label><input className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newRowData[col.key] || ''} onChange={(e) => setNewRowData({ ...newRowData, [col.key]: e.target.value })} /></div>
+                ))}
+                <div className="pt-4 flex justify-end gap-2"><button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-slate-600">取消</button><button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg">确认</button></div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        isLinkModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-800">手动凭证关联</h3>
+                <button onClick={() => setIsLinkModalOpen(false)}><X size={20} className="text-slate-400" /></button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 space-y-2">
+                <DemoBadge text="关联候选为演示数据，接入真实关联接口后可关闭演示模式。" />
+                {demoMode ? (
+                  MOCK_CANDIDATES.map(c => (
+                    <div key={c.id} onClick={() => toggleCandidateSelection(c.id)} className={`flex justify-between p-3 rounded-xl border cursor-pointer ${selectedCandidates.includes(c.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
+                      <div><p className="font-bold">{c.name}</p><p className="text-xs text-slate-500">{c.code}</p></div>
+                      <div className="text-right"><span className={`font-bold ${c.score > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{c.score}%</span></div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-slate-500">当前为生产模式，未接入关联候选接口。</div>
+                )}
+              </div>
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-2">
+                <button onClick={() => setIsLinkModalOpen(false)} className="px-4 py-2 text-slate-600">取消</button>
+                <button onClick={handleLinkConfirm} disabled={!demoMode || selectedCandidates.length === 0} className="px-6 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50">确认关联</button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      {/* Metadata Edit Modal */}
+      {
+        editingFile && (
+          <MetadataEditModal
+            isOpen={isMetadataEditOpen}
+            onClose={() => { setIsMetadataEditOpen(false); setEditingFile(null); }}
+            fileId={editingFile.id}
+            fileName={editingFile.fileName}
+            onSuccess={() => {
+              loadPoolData();
+              loadPoolStatusStats();
+              showToast('元数据更新成功', 'success');
+            }}
+          />
+        )
+      }
       {toast.visible && createPortal(
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] animate-in slide-in-from-top-2 fade-in duration-300">
           <div className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border ${toast.type === 'success' ? 'bg-slate-800 text-white border-slate-700' : 'bg-rose-600 text-white border-rose-500'}`}>
@@ -1636,475 +1722,220 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
-                {/* Left: Metadata */}
-                <div className="col-span-1 bg-slate-50/30 p-6 overflow-y-auto">
-                  <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    {subTitle === '会计账簿' ? (
-                      <>
-                        <Book size={16} className="text-blue-500" />
-                        账簿信息
-                      </>
-                    ) : subTitle === '财务报告' ? (
-                      <>
-                        <FileText size={16} className="text-purple-500" />
-                        报告信息
-                      </>
-                    ) : (
-                      <>
-                        <Receipt size={16} className="text-primary-500" />
-                        凭证信息
-                      </>
-                    )}
-                  </h4>
-                  <div className="space-y-4">
-                    {config.columns.filter(c => c.type !== 'action').map((col) => (
-                      <div key={col.key} className="group">
-                        <label className="text-xs font-medium text-slate-500 mb-1 block">{col.header}</label>
-                        <div className="text-sm text-slate-800 font-medium break-all bg-white border border-slate-200 rounded-lg p-3 group-hover:border-primary-200 transition-colors">
-                          {renderCell(viewRow, col)}
+              {/* Content Container - Panorama Layout */}
+              <div className="flex-1 overflow-hidden flex flex-col lg:flex-row bg-slate-50/50">
+                {/* Left Panel: Business Data */}
+                <div className="flex-1 lg:w-3/5 flex flex-col min-w-0 border-r border-slate-200 bg-white">
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {/* Voucher Header Info */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                          <FileText size={24} />
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-bold text-slate-800">{viewRow?.code || '未命名档案'}</h2>
+                          <p className="text-xs text-slate-500 font-mono">ID: {viewRow?.id}</p>
+                        </div>
+                        <div className="ml-auto">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${(!viewRow?.status || viewRow.status === 'draft') ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                            viewRow.status === 'archived' ? 'bg-green-50 text-green-700 border-green-200' :
+                              'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                            {formatStatus(viewRow?.status)}
+                          </span>
                         </div>
                       </div>
-                    ))}
+                    </div>
 
-                    {/* Additional System Info */}
-                    <div className="pt-4 border-t border-slate-200 mt-6">
-                      <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <ShieldCheck size={16} className="text-emerald-500" />
-                        系统元数据
-                      </h4>
-                      <div className="space-y-3">
+                    {/* Metadata Grid */}
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-5 mb-6">
+                      <h3 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                        <Layers size={16} /> 业务元数据
+                      </h3>
+                      <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                        {config.columns.filter(col => !['selection', 'actions', 'status'].includes(col.key)).map(col => (
+                          <div key={col.key} className="group">
+                            <label className="text-xs font-medium text-slate-400 mb-1 block group-hover:text-primary-600 transition-colors">
+                              {col.header}
+                            </label>
+                            <div className="text-sm font-medium text-slate-700 min-h-[20px] break-words">
+                              {renderCell(viewRow!, col)}
+                            </div>
+                          </div>
+                        ))}
+                        {/* Extra System Metadata */}
                         <div>
-                          <label className="text-xs font-medium text-slate-500">存储ID</label>
-                          <div className="text-xs font-mono text-slate-600 mt-1">{viewRow.id}</div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-slate-500">四性检测状态</label>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-100">
-                              <CheckCircle2 size={12} /> 检测通过
-                            </span>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">入池时间</label>
+                          <div className="text-sm font-medium text-slate-700">
+                            {viewRow?.date || '-'}
                           </div>
                         </div>
+                        <div>
+                          <label className="text-xs font-medium text-slate-400 mb-1 block">存储ID</label>
+                          <div className="text-xs font-mono text-slate-500 truncate" title={String(viewRow?.fileId || '-')}>
+                            {String(viewRow?.fileId || '-')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Accounting Entries Stub */}
+                    <div className="border border-slate-200 rounded-xl overflow-hidden">
+                      <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                          <Book size={16} /> 会计分录
+                        </h3>
+                      </div>
+                      <div className="p-8 text-center text-slate-400 text-sm bg-white">
+                        暂无分录数据
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Preview / Visualizer */}
-                <div className="col-span-1 lg:col-span-2 bg-slate-100/50 flex flex-col relative">
-                  {/* View Mode Tabs */}
-                  {subTitle === '凭证关联' && (
-                    <div className="absolute top-4 right-4 z-20 bg-white rounded-lg shadow-sm border border-slate-200 p-1 flex gap-1">
-                      <button
-                        onClick={() => setViewMode('preview')}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === 'preview' ? 'bg-primary-50 text-primary-600' : 'text-slate-600 hover:bg-slate-50'}`}
-                      >
-                        档案预览
-                      </button>
-                      <button
-                        onClick={() => setViewMode('relation')}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === 'relation' ? 'bg-primary-50 text-primary-600' : 'text-slate-600 hover:bg-slate-50'}`}
-                      >
-                        关联全景
-                      </button>
-                    </div>
-                  )}
-
-                  {viewMode === 'relation' && subTitle === '凭证关联' ? (
-                    <RelationshipVisualizer
-                      voucher={viewRow}
-                      onDocumentClick={(doc) => {
-                        // Open a nested preview or switch view row temporarily (simplified for now)
-                        // In a real app, this might stack modals or change the main view
-                        console.log('Clicked document:', doc);
-                        showToast(`正在打开关联文档: ${doc.code}`, 'success');
-                        // Ideally, we would fetch the full document details here. 
-                        // For this demo, we can just show a toast or maybe switch the preview content if we had the ID.
+                {/* Right Panel: Files & Preview */}
+                <div className="lg:w-2/5 flex flex-col bg-slate-100/50 border-l border-white shadow-inner">
+                  {/* Tabs */}
+                  <div className="flex items-center px-4 pt-4 gap-2 border-b border-slate-200 bg-white shadow-sm z-10">
+                    <button
+                      onClick={() => {
+                        setActiveDetailTab('main');
+                        setActivePreviewId(viewRow?.id || null);
                       }}
-                    />
-                  ) : (
-                    <>
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-400 pointer-events-none">
-                        <Loader2 size={32} className="animate-spin" />
-                      </div>
-                      {(viewRow.fileName?.toLowerCase().endsWith('.ofd') || viewRow.fileType?.toLowerCase() === 'ofd' || viewRow.type?.toLowerCase() === 'ofd' ||
-                        viewRow.fileName?.toLowerCase().endsWith('.pdf') || viewRow.fileType?.toLowerCase() === 'pdf' || viewRow.type?.toLowerCase() === 'pdf' ||
-                        viewRow.fileType?.toLowerCase() === 'application/pdf' || viewRow.type?.toLowerCase() === 'application/pdf' ||
-                        viewRow.fileType?.toLowerCase()?.includes('pdf') || viewRow.type?.toLowerCase()?.includes('pdf')) ? (
-                        <div className="w-full h-full bg-white relative z-10 overflow-hidden">
-                          <OfdViewer
-                            fileUrl={`/api/pool/preview/${viewRow.id}`}
-                            fileType={viewRow.type?.toLowerCase() || viewRow.fileType?.toLowerCase()}
-                            fileName={viewRow.fileName}
-                            className="w-full h-full"
-                          />
-                        </div>
-                      ) : (
-                        <iframe
-                          src={(viewRow.linkedFileId || viewRow.id) ? (() => {
-                            // Enhanced Preview Logic with Multi-Type Support
-                            let content = '';
-
-                            // 1. Accounting Books (Ledger) Template
-                            if (subTitle === '会计账簿') {
-                              const title = viewRow.name || '总分类账';
-                              content = `
-                              <!DOCTYPE html>
-                              <html>
-                                <head>
-                                  <style>
-                                    body { margin: 0; padding: 20px; font-family: "SimSun", "Songti SC", serif; background: #f1f5f9; display: flex; justify-content: center; }
-                                    .paper { width: 210mm; min-height: 297mm; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 40px; position: relative; box-sizing: border-box; }
-                                    .header { text-align: center; margin-bottom: 20px; }
-                                    .title { font-size: 28px; font-weight: bold; color: #1e293b; letter-spacing: 2px; border-bottom: 3px double #1e293b; display: inline-block; padding-bottom: 5px; }
-                                    .meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; color: #475569; }
-                                    .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                                    .ledger-table th, .ledger-table td { border: 1px solid #94a3b8; padding: 8px; text-align: center; }
-                                    .ledger-table th { background: #f1f5f9; font-weight: bold; color: #334155; }
-                                    .amount { font-family: "Courier New", monospace; text-align: right; }
-                                    .watermark { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 100px; color: rgba(0,0,0,0.03); pointer-events: none; white-space: nowrap; }
-                                  </style>
-                                </head>
-                                <body>
-                                  <div class="paper">
-                                    <div class="watermark">NEXUS ARCHIVE</div>
-                                    <div class="header"><div class="title">${title}</div></div>
-                                    <div class="meta">
-                                      <span>科目: 1002 银行存款</span>
-                                      <span>期间: ${viewRow.year || '2023'}年</span>
-                                      <span>币种: 人民币</span>
-                                    </div>
-                                    <table class="ledger-table">
-                                      <thead>
-                                        <tr>
-                                          <th width="15%">日期</th>
-                                          <th width="15%">凭证号</th>
-                                          <th width="30%">摘要</th>
-                                          <th width="15%">借方</th>
-                                          <th width="15%">贷方</th>
-                                          <th width="10%">方向</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        <tr><td>2023-01-01</td><td>-</td><td>期初余额</td><td></td><td></td><td>借</td></tr>
-                                        <tr><td>2023-01-15</td><td>记-001</td><td>收到货款</td><td class="amount">50,000.00</td><td></td><td>借</td></tr>
-                                        <tr><td>2023-01-20</td><td>记-005</td><td>支付采购款</td><td></td><td class="amount">20,000.00</td><td>借</td></tr>
-                                        <tr><td>2023-01-31</td><td>-</td><td>本月合计</td><td class="amount">50,000.00</td><td class="amount">20,000.00</td><td>借</td></tr>
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </body>
-                              </html>`;
-                            }
-                            // 2. Financial Reports Template
-                            else if (subTitle === '财务报告') {
-                              const title = viewRow.title || viewRow.name || '资产负债表';
-                              const isIncomeStatement = title.includes('利润') || title.includes('损益');
-
-                              if (isIncomeStatement) {
-                                // Income Statement Template
-                                content = `
-                                <!DOCTYPE html>
-                                <html>
-                                  <head>
-                                    <style>
-                                      body { margin: 0; padding: 20px; font-family: "SimSun", "Songti SC", serif; background: #f1f5f9; display: flex; justify-content: center; }
-                                      .paper { width: 210mm; min-height: 297mm; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 40px; position: relative; box-sizing: border-box; }
-                                      .header { text-align: center; margin-bottom: 30px; }
-                                      .title { font-size: 26px; font-weight: bold; color: #0f172a; margin-bottom: 10px; }
-                                      .subtitle { font-size: 14px; color: #64748b; }
-                                      .report-table { width: 100%; border-collapse: collapse; font-size: 13px; border: 2px solid #0f172a; }
-                                      .report-table th, .report-table td { border: 1px solid #cbd5e1; padding: 8px; }
-                                      .report-table th { background: #e2e8f0; font-weight: bold; text-align: center; }
-                                      .section-header { background: #f8fafc; font-weight: bold; }
-                                      .amount { font-family: "Courier New", monospace; text-align: right; }
-                                      .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.03); pointer-events: none; }
-                                    </style>
-                                  </head>
-                                  <body>
-                                    <div class="paper">
-                                      <div class="watermark">CONFIDENTIAL</div>
-                                      <div class="header">
-                                        <div class="title">${title}</div>
-                                        <div class="subtitle">编制单位：Nexus 集团 &nbsp;&nbsp; 日期：${viewRow.date || '2023-12-31'} &nbsp;&nbsp; 单位：元</div>
-                                      </div>
-                                      <table class="report-table">
-                                        <thead>
-                                          <tr>
-                                            <th width="40%">项目</th>
-                                            <th width="10%">行次</th>
-                                            <th width="25%">本期金额</th>
-                                            <th width="25%">上期金额</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          <tr class="section-header"><td colspan="4">一、营业收入</td></tr>
-                                          <tr><td>其中：主营业务收入</td><td style="text-align:center">1</td><td class="amount">1,500,000.00</td><td class="amount">1,200,000.00</td></tr>
-                                          <tr class="section-header"><td colspan="4">二、营业成本</td></tr>
-                                          <tr><td>其中：主营业务成本</td><td style="text-align:center">2</td><td class="amount">800,000.00</td><td class="amount">600,000.00</td></tr>
-                                          <tr><td>税金及附加</td><td style="text-align:center">3</td><td class="amount">50,000.00</td><td class="amount">40,000.00</td></tr>
-                                          <tr style="font-weight:bold; background:#f1f5f9"><td>三、营业利润</td><td style="text-align:center">10</td><td class="amount">650,000.00</td><td class="amount">560,000.00</td></tr>
-                                          <tr><td>加：营业外收入</td><td style="text-align:center">11</td><td class="amount">10,000.00</td><td class="amount">5,000.00</td></tr>
-                                          <tr style="font-weight:bold; background:#f1f5f9"><td>四、利润总额</td><td style="text-align:center">15</td><td class="amount">660,000.00</td><td class="amount">565,000.00</td></tr>
-                                          <tr><td>减：所得税费用</td><td style="text-align:center">16</td><td class="amount">165,000.00</td><td class="amount">141,250.00</td></tr>
-                                          <tr style="font-weight:bold; background:#e2e8f0"><td>五、净利润</td><td style="text-align:center">20</td><td class="amount">495,000.00</td><td class="amount">423,750.00</td></tr>
-                                        </tbody>
-                                      </table>
-                                      <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:14px;">
-                                        <span>企业负责人：(签章)</span>
-                                        <span>财务负责人：(签章)</span>
-                                        <span>制表人：系统自动</span>
-                                      </div>
-                                    </div>
-                                  </body>
-                                </html>`;
-                              } else {
-                                // Balance Sheet Template (Default)
-                                content = `
-                                <!DOCTYPE html>
-                                <html>
-                                  <head>
-                                    <style>
-                                      body { margin: 0; padding: 20px; font-family: "SimSun", "Songti SC", serif; background: #f1f5f9; display: flex; justify-content: center; }
-                                      .paper { width: 210mm; min-height: 297mm; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 40px; position: relative; box-sizing: border-box; }
-                                      .header { text-align: center; margin-bottom: 30px; }
-                                      .title { font-size: 26px; font-weight: bold; color: #0f172a; margin-bottom: 10px; }
-                                      .subtitle { font-size: 14px; color: #64748b; }
-                                      .report-table { width: 100%; border-collapse: collapse; font-size: 13px; border: 2px solid #0f172a; }
-                                      .report-table th, .report-table td { border: 1px solid #cbd5e1; padding: 8px; }
-                                      .report-table th { background: #e2e8f0; font-weight: bold; text-align: center; }
-                                      .section-header { background: #f8fafc; font-weight: bold; }
-                                      .amount { font-family: "Courier New", monospace; text-align: right; }
-                                      .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.03); pointer-events: none; }
-                                    </style>
-                                  </head>
-                                  <body>
-                                    <div class="paper">
-                                      <div class="watermark">CONFIDENTIAL</div>
-                                      <div class="header">
-                                        <div class="title">${title}</div>
-                                        <div class="subtitle">编制单位：Nexus 集团 &nbsp;&nbsp; 日期：${viewRow.date || '2023-12-31'} &nbsp;&nbsp; 单位：元</div>
-                                      </div>
-                                      <table class="report-table">
-                                        <thead>
-                                          <tr>
-                                            <th width="40%">资产</th>
-                                            <th width="10%">行次</th>
-                                            <th width="25%">期末余额</th>
-                                            <th width="25%">年初余额</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          <tr class="section-header"><td colspan="4">流动资产：</td></tr>
-                                          <tr><td>货币资金</td><td style="text-align:center">1</td><td class="amount">1,250,000.00</td><td class="amount">1,000,000.00</td></tr>
-                                          <tr><td>应收账款</td><td style="text-align:center">2</td><td class="amount">450,000.00</td><td class="amount">320,000.00</td></tr>
-                                          <tr><td>存货</td><td style="text-align:center">3</td><td class="amount">890,000.00</td><td class="amount">750,000.00</td></tr>
-                                          <tr style="font-weight:bold; background:#f1f5f9"><td>流动资产合计</td><td style="text-align:center">10</td><td class="amount">2,590,000.00</td><td class="amount">2,070,000.00</td></tr>
-                                        </tbody>
-                                      </table>
-                                      <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:14px;">
-                                        <span>企业负责人：(签章)</span>
-                                        <span>财务负责人：(签章)</span>
-                                        <span>制表人：系统自动</span>
-                                      </div>
-                                    </div>
-                                  </body>
-                                </html>`;
-                              }
-                            }
-                            // 3. Default: Vouchers / Invoices
-                            else {
-                              const isInvoice = viewRow.type === 'invoice' || (viewRow.name && viewRow.name.includes('发票'));
-                              const title = isInvoice ? '电子发票（增值税普通发票）' : '记账凭证';
-                              const color = isInvoice ? '#3b82f6' : '#ef4444';
-
-                              content = `
-                              <!DOCTYPE html>
-                              <html>
-                                <head>
-                                  <style>
-                                    body { margin: 0; padding: 20px; font-family: "SimSun", "Songti SC", serif; background: #f1f5f9; display: flex; justify-content: center; }
-                                    .paper {
-                                      width: 210mm;
-                                      min-height: 140mm; /* Half A4 for voucher */
-                                      background: white;
-                                      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                                      padding: 40px;
-                                      position: relative;
-                                      box-sizing: border-box;
-                                    }
-                                    .header { text-align: center; border-bottom: 2px solid ${color}; padding-bottom: 20px; margin-bottom: 30px; }
-                                    .title { font-size: 24px; font-weight: bold; color: ${color}; letter-spacing: 4px; }
-                                    .meta { display: flex; justify-content: space-between; margin-bottom: 20px; color: #64748b; font-size: 14px; }
-                                    .content-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                                    .content-table th, .content-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
-                                    .content-table th { background: #f8fafc; font-weight: bold; width: 100px; }
-                                    .amount { font-family: "Courier New", monospace; font-weight: bold; font-size: 18px; }
-                                    .stamp {
-                                      position: absolute;
-                                      bottom: 40px;
-                                      right: 60px;
-                                      width: 120px;
-                                      height: 120px;
-                                      border: 3px solid #ef4444;
-                                      border-radius: 50%;
-                                      color: #ef4444;
-                                      display: flex;
-                                      align-items: center;
-                                      justify-content: center;
-                                      font-size: 14px;
-                                      font-weight: bold;
-                                      transform: rotate(-15deg);
-                                      opacity: 0.8;
-                                      pointer-events: none;
-                                    }
-                                    .watermark {
-                                      position: absolute;
-                                      top: 50%;
-                                      left: 50%;
-                                      transform: translate(-50%, -50%) rotate(-45deg);
-                                      font-size: 80px;
-                                      color: rgba(0,0,0,0.03);
-                                      pointer-events: none;
-                                      white-space: nowrap;
-                                    }
-                                  </style>
-                                </head>
-                                <body>
-                                  <div class="paper">
-                                    <div class="watermark">NEXUS ARCHIVE</div>
-                                    <div class="header">
-                                      <div class="title">${title}</div>
-                                      <div style="margin-top: 10px; font-size: 12px; color: #94a3b8;">E-ARCHIVE ORIGINAL COPY</div>
-                                    </div>
-                                    
-                                    <div class="meta">
-                                      <span>凭证编号: <b>${viewRow.code || viewRow.id}</b></span>
-                                      <span>日期: ${viewRow.date || new Date().toISOString().split('T')[0]}</span>
-                                    </div>
-
-                                    <table class="content-table">
-                                      <tr>
-                                        <th>摘要</th>
-                                        <td colspan="3">${viewRow.name || '标准业务记账'}</td>
-                                      </tr>
-                                      <tr>
-                                        <th>会计主体</th>
-                                        <td>${viewRow.entity || '总公司'}</td>
-                                        <th>凭证类型</th>
-                                        <td>${viewRow.type === 'invoice' ? '原始凭证' : '记账凭证'}</td>
-                                      </tr>
-                                      <tr>
-                                        <th>金额</th>
-                                        <td colspan="3" class="amount">${viewRow.amount || '¥ 0.00'}</td>
-                                      </tr>
-                                      <tr>
-                                        <th>备注</th>
-                                        <td colspan="3" style="color: #94a3b8; font-style: italic;">
-                                          本凭证已通过四性检测（真实性、完整性、可用性、安全性）。
-                                          <br/>档号: ${viewRow.archivalCode || '待归档'}
-                                        </td>
-                                      </tr>
-                                    </table>
-
-                                    <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
-                                      <span>制单人: 系统自动</span>
-                                      <span>审核人: 财务主管</span>
-                                      <span>记账人: 结算中心</span>
-                                    </div>
-
-                                    <div class="stamp">
-                                      <div style="text-align: center; line-height: 1.4;">
-                                        财务专用章<br/>
-                                        <span style="font-size: 10px">VALIDATED</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </body>
-                              </html>`;
-                            }
-
-                            return URL.createObjectURL(new Blob([content], { type: 'text/html' }));
-                          })() : ''}
-                          className="w-full h-full relative z-10 bg-white"
-                          title="File Preview"
-                        />
+                      className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all relative ${activeDetailTab === 'main'
+                        ? 'text-primary-600 bg-white border-x border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.02)] -mb-px hover:text-primary-700'
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                        }`}
+                    >
+                      原始凭证
+                      {activeDetailTab === 'main' && (
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary-500 rounded-t-full" />
                       )}
-                    </>
-                  )}
+                    </button>
+
+                    <button
+                      onClick={() => setActiveDetailTab('attachments')}
+                      className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all relative flex items-center gap-2 ${activeDetailTab === 'attachments'
+                        ? 'text-primary-600 bg-white border-x border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.02)] -mb-px hover:text-primary-700'
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                        }`}
+                    >
+                      关联附件
+                      {relatedFiles.length > 0 && (
+                        <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${activeDetailTab === 'attachments' ? 'bg-primary-100 text-primary-700' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                          {relatedFiles.length}
+                        </span>
+                      )}
+                      {activeDetailTab === 'attachments' && (
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary-500 rounded-t-full" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Preview Area Container */}
+                  <div className="flex-1 relative flex flex-col overflow-hidden">
+                    {/* Attachment List (Visible only when 'attachments' tab is active) */}
+                    {activeDetailTab === 'attachments' && (
+                      <div className="max-h-[200px] overflow-y-auto bg-white border-b border-slate-200 p-2 space-y-1 shadow-sm relative z-10">
+                        {relatedFiles.length === 0 ? (
+                          <div className="text-center py-8 text-slate-400 text-xs">暂无关联附件</div>
+                        ) : (
+                          relatedFiles.map((file, idx) => (
+                            <div
+                              key={file.id || idx}
+                              onClick={() => setActivePreviewId(file.id)}
+                              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border ${activePreviewId === file.id
+                                ? 'bg-blue-50 border-blue-200 shadow-sm'
+                                : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-sm'
+                                }`}
+                            >
+                              <div className={`p-2 rounded-lg ${activePreviewId === file.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                }`}>
+                                {file.fileName?.endsWith('.pdf') ? <FileText size={18} /> :
+                                  file.fileName?.match(/\.(jpg|jpeg|png)$/i) ? <Receipt size={18} /> : <FileText size={18} />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className={`text-sm font-medium truncate ${activePreviewId === file.id ? 'text-blue-700' : 'text-slate-700'
+                                  }`}>
+                                  {file.fileName || '未知文件'}
+                                </div>
+                                <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                                  <span>{file.type || '附件'}</span>
+                                  {activePreviewId === file.id && (
+                                    <span className="ml-auto text-blue-500 flex items-center gap-1">
+                                      <Eye size={12} /> 预览中
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actual Previewer */}
+                    <div className="flex-1 bg-slate-200 overflow-hidden relative">
+                      {activePreviewId ? (
+                        // Logic to determine preview content based on activePreviewId
+                        (() => {
+                          // Find active file details (either main row or from relatedFiles)
+                          let fileName = '';
+                          const isMain = activePreviewId === viewRow?.id;
+
+                          if (isMain) {
+                            fileName = viewRow?.title || (viewRow?.code ? viewRow.code + '.pdf' : 'unknown.pdf');
+                          } else {
+                            const att = relatedFiles.find(f => f.id === activePreviewId);
+                            fileName = att?.fileName || '';
+                          }
+
+                          // Determine type for viewer
+                          const isImage = fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+
+                          if (isImage) {
+                            return (
+                              <div className="w-full h-full flex items-center justify-center bg-slate-800 overflow-auto p-4">
+                                <img
+                                  src={`/api/pool/preview/${activePreviewId}`}
+                                  alt="Preview"
+                                  className="max-w-full max-h-full object-contain shadow-2xl"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '';
+                                  }}
+                                />
+                              </div>
+                            );
+                          }
+                          const type = fileName.toLowerCase().endsWith('.ofd') ? 'ofd' : 'pdf';
+
+                          return (
+                            <OfdViewer
+                              fileUrl={`/api/pool/preview/${activePreviewId}`}
+                              fileName={fileName}
+                              fileType={type}
+                              className="w-full h-full"
+                            />
+                          );
+                        })()
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-100">
+                          <div className="text-center">
+                            <FileText size={48} className="mx-auto mb-4 opacity-20" />
+                            <p>请选择文件预览</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        )
-      }
-
-      {/* Re-including Add Modal and Linking Modal logic to ensure file integrity */}
-      {
-        isAddModalOpen && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-800">新增记录</h3>
-                <button onClick={() => setIsAddModalOpen(false)}><X size={20} className="text-slate-400" /></button>
-              </div>
-              <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
-                {config.columns.filter(c => c.type !== 'status' && c.type !== 'progress' && c.type !== 'action').map(col => (
-                  <div key={col.key}><label className="text-sm font-medium">{col.header}</label><input className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" value={newRowData[col.key] || ''} onChange={(e) => setNewRowData({ ...newRowData, [col.key]: e.target.value })} /></div>
-                ))}
-                <div className="pt-4 flex justify-end gap-2"><button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-slate-600">取消</button><button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg">确认</button></div>
-              </form>
-            </div>
-          </div>
-        )
-      }
-
-      {
-        isLinkModalOpen && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-100 flex flex-col max-h-[90vh]">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-800">手动凭证关联</h3>
-                <button onClick={() => setIsLinkModalOpen(false)}><X size={20} className="text-slate-400" /></button>
-              </div>
-              <div className="p-6 overflow-y-auto flex-1 space-y-2">
-                <DemoBadge text="关联候选为演示数据，接入真实关联接口后可关闭演示模式。" />
-                {demoMode ? (
-                  MOCK_CANDIDATES.map(c => (
-                    <div key={c.id} onClick={() => toggleCandidateSelection(c.id)} className={`flex justify-between p-3 rounded-xl border cursor-pointer ${selectedCandidates.includes(c.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
-                      <div><p className="font-bold">{c.name}</p><p className="text-xs text-slate-500">{c.code}</p></div>
-                      <div className="text-right"><span className={`font-bold ${c.score > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{c.score}%</span></div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-slate-500">当前为生产模式，未接入关联候选接口。</div>
-                )}
-              </div>
-              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-2">
-                <button onClick={() => setIsLinkModalOpen(false)} className="px-4 py-2 text-slate-600">取消</button>
-                <button onClick={handleLinkConfirm} disabled={!demoMode || selectedCandidates.length === 0} className="px-6 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50">确认关联</button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-      {/* Metadata Edit Modal */}
-      {editingFile && (
-        <MetadataEditModal
-          isOpen={isMetadataEditOpen}
-          onClose={() => { setIsMetadataEditOpen(false); setEditingFile(null); }}
-          fileId={editingFile.id}
-          fileName={editingFile.fileName}
-          onSuccess={() => {
-            loadPoolData();
-            loadPoolStatusStats();
-            showToast('元数据更新成功', 'success');
-          }}
-        />
-      )}
+        )}
     </div>
   )
 }
-
 export default ArchiveListView;

@@ -14,6 +14,8 @@ export interface PoolItem {
   status: string;
   /** 来源系统 (如 YonSuite, Kingdee, Manual) */
   sourceSystem?: string;
+  /** 文件名 */
+  fileName?: string;
 }
 
 /**
@@ -43,6 +45,22 @@ export const poolApi = {
       }
     } catch (error) {
       console.error('Error fetching pool list:', error);
+      return [];
+    }
+  },
+
+  /**
+   * 获取关联附件列表
+   */
+  getRelatedFiles: async (id: string): Promise<PoolItem[]> => {
+    try {
+      const response = await client.get<ApiResponse<PoolItem[]>>(`/pool/related/${id}`);
+      if (response.data.code === 200) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching related files:', error);
       return [];
     }
   },

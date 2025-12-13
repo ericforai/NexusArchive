@@ -59,4 +59,9 @@ public class PoolItemDto {
      * 来源系统 (如 YonSuite, Kingdee, Manual)
      */
     private String sourceSystem;
+
+    /**
+     * 文件名称
+     */
+    private String fileName;
 }
