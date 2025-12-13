@@ -2,8 +2,8 @@ package com.nexusarchive.config;
 
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.common.result.Result;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,76 +18,85 @@ import java.util.Map;
 
 /**
  * 全局异常处理器
+ * <p>
+ * Standardized Exception Handling for Commercial Viability.
+ * Ensures all responses follow the Result&lt;T&gt; schema.
+ * </p>
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
     /**
      * 处理业务异常
+     * Returns 400 Bad Request with standardized error code structure.
      */
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException e) {
-        Map<String, Object> errorMap = new HashMap<>();
-        // 如果 code 是数字，转换为 EAA_ 前缀格式，或者直接使用
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Map<String, String>> handleBusinessException(BusinessException e) {
+        log.warn("Business Exception: {}", e.getMessage());
+
+        // Standardize the "data" field to contain ref info
+        Map<String, String> errorDetails = new HashMap<>();
         String codeStr = String.valueOf(e.getCode());
         if (!codeStr.startsWith("EAA_")) {
             codeStr = "EAA_" + codeStr;
         }
+        errorDetails.put("errCode", codeStr);
+        errorDetails.put("ref", "DA/T 104-2024");
         
-        errorMap.put("code", codeStr);
-        errorMap.put("msg", e.getMessage());
-        errorMap.put("ref", "DA/T 104-2024"); // 默认引用接口规范
-        
-        return new ResponseEntity<>(errorMap, HttpStatus.BAD_REQUEST);
+        // Fix: Pass errorDetails to the Result
+        return new Result<>(400, e.getMessage(), errorDetails);
     }
     
     /**
      * 处理参数验证异常
-     * Return strict JSON: { "code": "EAA_400", "msg": "...", "ref": "..." }
+     * Returns 400 Bad Request
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleValidationException(MethodArgumentNotValidException e) {
-        Map<String, Object> errorMap = new HashMap<>();
-        errorMap.put("code", "EAA_400");
+    public Result<Map<String, String>> handleValidationException(MethodArgumentNotValidException e) {
+        log.warn("Validation Failed: {}", e.getMessage());
         
-        // 获取第一个错误信息
         FieldError error = e.getBindingResult().getFieldError();
         String message = error != null ? error.getDefaultMessage() : "参数验证失败";
         String field = error != null ? error.getField() : "unknown";
         
-        errorMap.put("msg", String.format("Field '%s' error: %s", field, message));
+        String detailedMsg = String.format("Field '%s': %s", field, message);
         
-        // 尝试从消息中提取引用，如果没有则默认
-        if (message != null && message.contains("DA/T")) {
-            // 简单提取，实际可优化
-            errorMap.put("ref", "DA/T 94-2022");
-        } else {
-            errorMap.put("ref", "DA/T 94-2022");
-        }
+        Map<String, String> details = new HashMap<>();
+        details.put("field", field);
+        details.put("violation", message);
+        details.put("ref", "DA/T 94-2022");
         
-        return errorMap;
+        return new Result<>(400, detailedMsg, details);
     }
     
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result<Void> handleAccessDenied(AccessDeniedException e) {
+        log.warn("Access Denied: {}", e.getMessage());
         return Result.forbidden("无权限访问");
     }
     
     @ExceptionHandler({AuthenticationCredentialsNotFoundException.class, BadCredentialsException.class})
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result<Void> handleAuthErrors(RuntimeException e) {
+        log.warn("Auth Error: {}", e.getMessage());
         return Result.unauthorized("未登录或登录已过期");
     }
     
     /**
      * 处理其他异常
+     * Catches all unhandled exceptions.
+     * SECURITY: Does NOT leak stack trace or internal message to client.
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception e) {
-        e.printStackTrace();
-        return Result.error("系统错误: " + e.getMessage());
+        // Log the full stack trace server-side
+        log.error("Unhandled System Exception", e);
+        // Return a generic safe message to client
+        return Result.error(500, "系统内部错误，请联系管理员");
     }
 }

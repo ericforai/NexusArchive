@@ -1,6 +1,9 @@
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -25,6 +28,8 @@ public class Archive {
     /**
      * 全宗号 (M9) - 冗余存储，便于查询
      */
+    @NotBlank(message = "全宗号不能为空")
+    @Size(max = 50, message = "全宗号长度不能超过50")
     private String fondsNo;
 
     /**
@@ -40,12 +45,15 @@ public class Archive {
     /**
      * 题名 (M22) - Encrypted with SM4
      */
+    @NotBlank(message = "题名不能为空")
     @TableField(typeHandler = com.nexusarchive.config.mybatis.EncryptTypeHandler.class)
     private String title;
 
     /**
      * 年度 (M11)
      */
+    @NotBlank(message = "年度不能为空")
+    @Pattern(regexp = "^\\d{4}$", message = "年度格式必须为4位数字")
     private String fiscalYear;
 
     /**
@@ -56,11 +64,13 @@ public class Archive {
     /**
      * 保管期限 (M12)
      */
+    @NotBlank(message = "保管期限不能为空")
     private String retentionPeriod;
 
     /**
      * 立档单位名称 (M6)
      */
+    @NotBlank(message = "立档单位名称不能为空")
     private String orgName;
 
     /**
