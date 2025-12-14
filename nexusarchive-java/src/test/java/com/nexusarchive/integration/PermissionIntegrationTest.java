@@ -46,7 +46,7 @@ public class PermissionIntegrationTest {
 
         // 获取受限用户 token（只有 audit:view 权限）
         try {
-            limitedUserToken = loginAndGetToken("auditonly", "admin123");
+            limitedUserToken = loginAndGetToken("auditonly", "Admin123!");
             System.out.println("✅ 受限用户登录成功");
         } catch (Exception e) {
             System.out.println("⚠️ 受限用户 auditonly 不存在或登录失败，部分测试将跳过");
