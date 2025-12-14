@@ -4,7 +4,7 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
-  
+
   sql:
     init:
       mode: always
@@ -35,8 +35,32 @@ yonsuite:
 archive:
   root:
     path: ./target/test-archives
+  temp:
+    path: ./target/test-temp
 
 jwt:
   secret: TestSecretKeyDoNotUseInProductionMustBe256BitsLong
   expiration: 3600000
+
+# Test signature config
+signature:
+  keystore:
+    path: ./target/test-keystore.p12
+    password: testpassword
+
+# Test timestamp config
+timestamp:
+  enabled: false
+  tsa:
+    url: http://mock-tsa
+    username: test
+    password: test
+    timeout: 1000
+  fallback-on-error: true
+
+# Disable schema validation in tests
+schema:
+  validation:
+    enabled: false
+    fail-on-error: false
 
