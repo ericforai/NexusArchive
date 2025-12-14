@@ -29,11 +29,13 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isCheckingAuth: boolean;
+    _hasHydrated: boolean; // 标记 zustand persist 是否已完成 hydration
 
     // Actions
     login: (token: string, user: User) => void;
     logout: () => void;
     setCheckingAuth: (checking: boolean) => void;
+    setHasHydrated: (hydrated: boolean) => void;
     updateUser: (user: Partial<User>) => void;
     updatePermissions: (permissions: string[], roles?: string[]) => void;
 
@@ -58,6 +60,7 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAuthenticated: false,
             isCheckingAuth: true,
+            _hasHydrated: false, // 初始为 false，hydration 完成后变为 true
 
             // 登录
             login: (token, user) => {
@@ -87,6 +90,9 @@ export const useAuthStore = create<AuthState>()(
 
             // 设置检查中状态
             setCheckingAuth: (checking) => set({ isCheckingAuth: checking }),
+
+            // 设置 hydration 完成状态
+            setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
 
             // 更新用户信息
             updateUser: (userData) => {
@@ -171,6 +177,34 @@ export const useAuthStore = create<AuthState>()(
             }),
             // 使用 createJSONStorage 包装 safeStorage，处理序列化和类型
             storage: createJSONStorage(() => safeStorage),
+            // hydration 完成后设置 _hasHydrated 为 true
+            onRehydrateStorage: (state) => {
+                console.log('[AuthStore] Starting hydration...');
+                return (hydratedState, error) => {
+                    if (error) {
+                        console.error('[AuthStore] Hydration failed:', error);
+                    } else {
+                        console.log('[AuthStore] Hydration completed, token:', hydratedState?.token ? 'present' : 'null');
+                    }
+                };
+            },
         }
     )
 );
+
+// 在 store 创建后手动检查和设置 hydration 状态
+// 使用 persist API 的 onFinishHydration
+if (typeof window !== 'undefined') {
+    // 使用 zustand persist 的 rehydrate 完成时间很短，通常在下一个 tick 就完成
+    // 我们使用 setTimeout 0 来确保在 hydration 完成后设置标志
+    const unsubFinishHydration = useAuthStore.persist.onFinishHydration(() => {
+        console.log('[AuthStore] onFinishHydration called');
+        useAuthStore.setState({ _hasHydrated: true });
+    });
+
+    // 如果 hydration 已经完成（快速加载场景），立即设置
+    if (useAuthStore.persist.hasHydrated()) {
+        console.log('[AuthStore] Already hydrated on init');
+        useAuthStore.setState({ _hasHydrated: true });
+    }
+}

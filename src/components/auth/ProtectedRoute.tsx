@@ -17,11 +17,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const location = useLocation();
     const [isChecking, setIsChecking] = useState(true);
 
-    // 从 Zustand store 获取认证状态
-    const { token, user, isAuthenticated, login, logout } = useAuthStore();
+    // 从 Zustand store 获取认证状态（包括 hydration 状态）
+    const { token, user, isAuthenticated, _hasHydrated, login, logout } = useAuthStore();
 
     useEffect(() => {
         const checkAuth = async () => {
+            // 等待 zustand persist hydration 完成
+            if (!_hasHydrated) {
+                console.log('[ProtectedRoute] Waiting for hydration...');
+                return; // 等待 hydration，不做任何决定
+            }
+
             // 如果已经有 token 和 user，直接认证成功
             if (token && user) {
                 console.log('[ProtectedRoute] Token and user found in store, authenticated');
@@ -60,10 +66,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         };
 
         checkAuth();
-    }, [token, user, login, logout]);
+    }, [token, user, _hasHydrated, login, logout]);
 
-    // 检查中显示加载状态
-    if (isChecking) {
+    // 等待 hydration 完成或检查中显示加载状态
+    if (!_hasHydrated || isChecking) {
         return (
             <div className="flex items-center justify-center h-screen text-slate-600">
                 <span className="animate-pulse text-sm">正在校验登录状态...</span>

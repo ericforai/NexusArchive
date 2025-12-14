@@ -6,7 +6,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.AuditInspectionLogMapper;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.ComplianceCheckService;
-import com.nexusarchive.service.StandardReportGenerator;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,9 +48,6 @@ public class ComplianceControllerIntegrationTest {
 
     @MockBean
     private AuditInspectionLogMapper auditInspectionLogMapper;
-    
-    @MockBean
-    private StandardReportGenerator standardReportGenerator;
 
     @MockBean
     private com.nexusarchive.util.JwtUtil jwtUtil;
@@ -75,16 +72,16 @@ public class ComplianceControllerIntegrationTest {
         archive.setCategoryCode("AC01");
         archive.setAmount(new BigDecimal("100.00"));
         archive.setDocDate(LocalDate.of(2024, 1, 1));
-        
+
         when(archiveService.getArchiveById("test-archive-id")).thenReturn(archive);
-        
+
         ArcFileContent file = new ArcFileContent();
         file.setId("file-1");
         file.setItemId("test-archive-id");
         List<ArcFileContent> files = Collections.singletonList(file);
-        
+
         when(arcFileContentMapper.selectList(any())).thenReturn(files);
-        
+
         ComplianceCheckService.ComplianceResult result = new ComplianceCheckService.ComplianceResult();
         // Assume compliant for this test
         when(complianceCheckService.checkCompliance(any(), any())).thenReturn(result);
@@ -108,7 +105,7 @@ public class ComplianceControllerIntegrationTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.containsString("<?xml")));
     }
-    
+
     @Test
     @DisplayName("Test Get Compliance Report JSON")
     void testGetComplianceReportJson() throws Exception {
@@ -117,12 +114,12 @@ public class ComplianceControllerIntegrationTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.containsString("archiveId")));
     }
-    
+
     @Test
     @DisplayName("Test Get Statistics Endpoint")
     void testGetStatistics() throws Exception {
         when(auditInspectionLogMapper.selectCount(any())).thenReturn(10L);
-        
+
         mockMvc.perform(get("/api/compliance/statistics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))

@@ -84,4 +84,12 @@ public interface ErpAdapter {
     default boolean verifyWebhookSignature(String payload, String signature, ErpConfig config) {
         return false;
     }
+
+    /**
+     * 获取该适配器支持的标准业务场景列表 (Layer 2 定义)
+     * 系统初始化时会调用此方法，将场景写入 sys_erp_scenario 表
+     */
+    default java.util.List<com.nexusarchive.entity.ErpScenario> getAvailableScenarios() {
+        return java.util.Collections.emptyList();
+    }
 }

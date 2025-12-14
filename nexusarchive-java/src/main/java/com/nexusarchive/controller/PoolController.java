@@ -226,7 +226,7 @@ public class PoolController {
         queryWrapper.and(w -> w.likeRight("archival_code", "TEMP-POOL-")
                 .or()
                 .isNotNull("pre_archive_status"))
-                .ne("voucher_type", "ATTACHMENT")
+                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"))
                 .orderByDesc("created_time");
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
@@ -253,7 +253,7 @@ public class PoolController {
 
         QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("pre_archive_status", status)
-                .ne("voucher_type", "ATTACHMENT")
+                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"))
                 .orderByDesc("created_time");
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
@@ -282,7 +282,7 @@ public class PoolController {
         for (String status : statuses) {
             QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("pre_archive_status", status)
-                    .ne("voucher_type", "ATTACHMENT");
+                    .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
             Long count = arcFileContentMapper.selectCount(queryWrapper);
             stats.put(status, count);
         }
@@ -291,7 +291,7 @@ public class PoolController {
         QueryWrapper<ArcFileContent> nullStatusQuery = new QueryWrapper<>();
         nullStatusQuery.likeRight("archival_code", "TEMP-POOL-")
                 .isNull("pre_archive_status")
-                .ne("voucher_type", "ATTACHMENT");
+                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
         Long nullCount = arcFileContentMapper.selectCount(nullStatusQuery);
         stats.put("NO_STATUS", nullCount);
 
@@ -458,6 +458,8 @@ public class PoolController {
         private String reason;
     }
 
+    private final com.nexusarchive.service.VoucherPdfGeneratorService pdfGeneratorService;
+
     /**
      * 预览文件
      * 
@@ -477,6 +479,24 @@ public class PoolController {
         try {
             Path filePath = Paths.get(fileContent.getStoragePath());
             Resource resource = new UrlResource(filePath.toUri());
+
+            // 如果文件不存在，但在 arc_file_content 表记录存在，且是 PDF，则尝试实时生成
+            if (!resource.exists()) {
+                if (fileContent.getFileName().toLowerCase().endsWith(".pdf")) {
+                    log.info("PDF 文件未找到，尝试实时生成: {}", filePath);
+                    try {
+                        // 优先使用数据库中保存的原始JSON数据
+                        String sourceData = fileContent.getSourceData();
+                        String voucherJson = (sourceData != null && !sourceData.isEmpty()) ? sourceData : "{}";
+
+                        pdfGeneratorService.generatePdfForPreArchive(id, voucherJson);
+                        log.debug("PDF 实时生成完成");
+                        resource = new UrlResource(filePath.toUri()); // 重新加载
+                    } catch (Exception e) {
+                        log.error("实时生成 PDF 失败", e);
+                    }
+                }
+            }
 
             if (resource.exists() || resource.isReadable()) {
                 String contentType = "application/octet-stream";

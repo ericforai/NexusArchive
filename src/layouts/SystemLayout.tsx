@@ -9,6 +9,7 @@ import { Sidebar } from '../components/Sidebar';
 import { TopBar } from '../components/TopBar';
 import { authApi } from '../api/auth';
 import { safeStorage } from '../utils/storage';
+import { Toaster } from 'react-hot-toast';
 
 // 加载占位符
 const LoadingSpinner = () => (
@@ -38,6 +39,7 @@ export const SystemLayout: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+            <Toaster position="top-center" reverseOrder={false} />
             <Sidebar
                 collapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}

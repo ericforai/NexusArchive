@@ -46,7 +46,7 @@ public class ArchiveService {
      * @param orgId 部门ID
      * @return 分页结果
      */
-    public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode, String orgId) {
+    public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode, String orgId, String uniqueBizId) {
         Page<Archive> pageObj = new Page<>(page, limit);
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
 
@@ -67,6 +67,9 @@ public class ArchiveService {
 
         if (orgId != null && !orgId.isEmpty()) {
             wrapper.eq("department_id", orgId);
+        }
+        if (uniqueBizId != null && !uniqueBizId.isEmpty()) {
+            wrapper.eq("unique_biz_id", uniqueBizId);
         }
 
         DataScopeContext scope = dataScopeService.resolve();
@@ -121,6 +124,9 @@ public class ArchiveService {
         if (archive.getArchiveCode() != null) {
             checkArchiveCodeUnique(archive.getArchiveCode(), null);
         }
+        if (archive.getUniqueBizId() != null && !archive.getUniqueBizId().isEmpty()) {
+            checkUniqueBizId(archive.getUniqueBizId(), null);
+        }
 
         if (archive.getId() == null) {
             archive.setId(UUID.randomUUID().toString().replace("-", ""));
@@ -138,7 +144,7 @@ public class ArchiveService {
             archiveMapper.insert(archive);
         } catch (DuplicateKeyException e) {
             log.error("Duplicate key error during archive creation: {}", e.getMessage());
-            throw new BusinessException("保存失败：档号或唯一标识已存在");
+            throw new BusinessException(409, "保存失败：档号或唯一标识已存在");
         }
 
         return archive;
@@ -158,6 +164,10 @@ public class ArchiveService {
         if (archive.getArchiveCode() != null && !existing.getArchiveCode().equals(archive.getArchiveCode())) {
             checkArchiveCodeUnique(archive.getArchiveCode(), id);
         }
+        if (archive.getUniqueBizId() != null && !archive.getUniqueBizId().isEmpty()
+                && !archive.getUniqueBizId().equals(existing.getUniqueBizId())) {
+            checkUniqueBizId(archive.getUniqueBizId(), id);
+        }
 
         archive.setId(id);
         archive.setLastModifiedTime(LocalDateTime.now());
@@ -165,7 +175,7 @@ public class ArchiveService {
         try {
             archiveMapper.updateById(archive);
         } catch (DuplicateKeyException e) {
-            throw new BusinessException("更新失败：档号或唯一标识已存在");
+            throw new BusinessException(409, "更新失败：档号或唯一标识已存在");
         }
     }
 
@@ -222,6 +232,18 @@ public class ArchiveService {
         }
         if (archiveMapper.selectCount(wrapper) > 0) {
             throw new BusinessException("档号已存在: " + code);
+        }
+    }
+
+    private void checkUniqueBizId(String uniqueBizId, String excludeId) {
+        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
+        wrapper.eq("unique_biz_id", uniqueBizId);
+        wrapper.eq("deleted", 0);
+        if (excludeId != null) {
+            wrapper.ne("id", excludeId);
+        }
+        if (archiveMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException(409, "唯一业务ID已存在: " + uniqueBizId);
         }
     }
 }

@@ -46,6 +46,9 @@ class ProcessingListenerTest {
 
     private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private ProcessingListener processingListener;
 
     private AccountingSipDto sipDto;
@@ -66,7 +69,8 @@ class ProcessingListenerTest {
             autoAssociationService,
             archiveMapper,
             statusMapper,
-            objectMapper
+            objectMapper,
+            eventPublisher
         );
 
         sipDto = new AccountingSipDto();

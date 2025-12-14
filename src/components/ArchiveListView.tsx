@@ -98,13 +98,13 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 // 预归档状态标签（根据法规要求）
-const PRE_ARCHIVE_STATUS_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  PENDING_CHECK: { label: '待检测', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: <Clock size={14} /> },
-  CHECK_FAILED: { label: '检测失败', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: <XCircle size={14} /> },
-  PENDING_METADATA: { label: '待补录', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: <FileText size={14} /> },
-  PENDING_ARCHIVE: { label: '待归档', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: <Package size={14} /> },
-  PENDING_APPROVAL: { label: '归档审批中', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', icon: <Clock size={14} /> },
-  ARCHIVED: { label: '已归档', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: <CheckCircle2 size={14} /> },
+const PRE_ARCHIVE_STATUS_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode; description: string }> = {
+  PENDING_CHECK: { label: '待检测', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: <Clock size={14} />, description: '新同步的凭证，等待进行四性检测' },
+  CHECK_FAILED: { label: '检测失败', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: <XCircle size={14} />, description: '四性检测未通过，需修正元数据' },
+  PENDING_METADATA: { label: '待补录', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: <FileText size={14} />, description: '元数据不完整，请补充业务信息' },
+  PENDING_ARCHIVE: { label: '待归档', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: <Package size={14} />, description: '检测通过，等待提交归档申请' },
+  PENDING_APPROVAL: { label: '归档审批中', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', icon: <Clock size={14} />, description: '已提交申请，等待管理员审批' },
+  ARCHIVED: { label: '已归档', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: <CheckCircle2 size={14} />, description: '已完成归档，生成AIP包' },
 };
 
 const resolveCategoryLabel = (code?: string) => {
@@ -114,7 +114,23 @@ const resolveCategoryLabel = (code?: string) => {
 
 const formatStatus = (status?: string) => {
   if (!status) return '-';
-  return STATUS_LABELS[status] || status;
+  return STATUS_LABELS[status] || PRE_ARCHIVE_STATUS_LABELS[status]?.label || status;
+};
+
+// 根据文档类型解析标签名称 (DA/T 94-2022 合规)
+const resolveDocumentTypeLabel = (type?: string) => {
+  if (!type) return '业务单据';
+  const t = type.toUpperCase();
+  if (t.includes('COLLECTION') || t.includes('收款')) return '收款单';
+  if (t.includes('PAYMENT') || t.includes('付款')) return '付款单';
+  if (t.includes('VOUCHER') || t.includes('凭证')) return '记账凭证';
+  if (t.includes('INVOICE') || t.includes('发票')) return '发票';
+  if (t.includes('BANK') || t.includes('回单')) return '银行回单';
+  if (t.includes('AC01')) return '会计凭证';
+  if (t.includes('AC02')) return '会计账簿';
+  if (t.includes('AC03')) return '财务报告';
+  if (t.includes('AC04')) return '其他会计资料';
+  return '业务单据';
 };
 
 const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
@@ -832,57 +848,90 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
       );
     }
 
-    if (column.type === 'action') {
+    if (column.type === 'money') {
+      if (!value || value === '-') {
+        return <span className="text-slate-400 font-mono">-</span>;
+      }
+      // Handle existing formatted strings (e.g. from mock data)
+      if (String(value).startsWith('¥')) {
+        return <span className="text-slate-700 font-mono font-medium">{value}</span>;
+      }
+      // Format raw numbers
+      const num = parseFloat(String(value));
+      if (!isNaN(num)) {
+        return <span className="text-slate-700 font-mono font-medium">¥ {num.toFixed(2)}</span>;
+      }
+      return <span className="text-slate-700 font-mono font-medium">{value}</span>;
+    }
+
+
+
+    // --- Enhanced Voucher Number Column (Replacing Action Column) ---
+    if (['erpVoucherNo', 'voucherNo'].includes(column.key)) {
       const exportCode = !isPoolView ? (row.archivalCode || row.code) : null;
       const fileStatus = (row as any).status || '';
+
       return (
-        <div className="flex gap-1">
-          {subTitle === '凭证关联' && (
-            <button onClick={(e) => { e.stopPropagation(); openLinkModal(row); }} className="text-slate-400 hover:text-primary-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="关联单据"><LinkIcon size={16} /></button>
-          )}
-          <button onClick={(e) => { e.stopPropagation(); setViewRow(row); setIsViewModalOpen(true); }} className="text-slate-400 hover:text-primary-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="查看"><Eye size={16} /></button>
+        <div className="flex items-center gap-3 group relative">
+          {/* Clickable Voucher Number */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setViewRow(row); setIsViewModalOpen(true); }}
+            className="font-medium text-slate-700 hover:text-primary-600 transition-colors border-b border-transparent hover:border-primary-600 hover:border-dashed text-left"
+            title="点击预览"
+          >
+            {value}
+          </button>
 
-          {/* 元数据补录按钮 - 仅对待补录状态显示 */}
-          {isPoolView && fileStatus === 'PENDING_METADATA' && (
-            <button
-              onClick={(e) => { e.stopPropagation(); openMetadataEdit(row); }}
-              className="text-slate-400 hover:text-blue-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100"
-              title="补录元数据"
-            >
-              <Edit size={16} />
-            </button>
-          )}
+          {/* Eye Icon (Always visible or hover? User said 'Put eye after number'. We'll make it subtle but visible) */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setViewRow(row); setIsViewModalOpen(true); }}
+            className="p-1.5 text-primary-600 bg-primary-50/50 hover:bg-primary-100 border border-primary-100/50 hover:border-primary-200 rounded-full transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-110"
+            title="点击预览"
+          >
+            <Eye size={15} />
+          </button>
 
-          {!isPoolView && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onNavigate && row.id) {
-                  onNavigate(ViewState.COMPLIANCE_REPORT, subTitle, row.id);
-                }
-              }}
-              className="text-slate-400 hover:text-indigo-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100"
-              title="合规性检查"
-            >
-              <ShieldCheck size={16} />
-            </button>
-          )}
+          {/* Context Actions (Appear on hover) */}
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute left-full ml-2 bg-white/90 backdrop-blur shadow-sm border border-slate-200 rounded px-1.5 py-0.5 z-10 whitespace-nowrap">
+            {/* Edit Metadata (Pool Only) */}
+            {isPoolView && fileStatus === 'PENDING_METADATA' && (
+              <button onClick={(e) => { e.stopPropagation(); openMetadataEdit(row); }} className="text-slate-500 hover:text-blue-600 p-1" title="补录"><Edit size={14} /></button>
+            )}
 
-          {exportCode && (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleAipExport(row); }}
-              className="text-slate-400 hover:text-emerald-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="导出 AIP 包"
-              disabled={isExporting === exportCode}
-            >
-              {isExporting === exportCode ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
-            </button>
-          )}
-          {!isPoolView && (
-            <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id) }} className="text-slate-400 hover:text-rose-600 font-medium text-xs flex items-center gap-1 p-1 rounded hover:bg-slate-100" title="删除"><Trash2 size={16} /></button>
-          )}
+            {/* Export AIP */}
+            {exportCode && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleAipExport(row); }}
+                className="text-slate-500 hover:text-emerald-600 p-1 disabled:opacity-50"
+                title="导出AIP"
+                disabled={isExporting === exportCode}
+              >
+                {isExporting === exportCode ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
+              </button>
+            )}
+
+            {/* Compliance Check (Non-Pool) */}
+            {!isPoolView && (
+              <button onClick={(e) => { e.stopPropagation(); if (onNavigate && row.id) onNavigate(ViewState.COMPLIANCE_REPORT, subTitle, row.id); }} className="text-slate-500 hover:text-indigo-600 p-1" title="合规检测"><ShieldCheck size={14} /></button>
+            )}
+
+            {/* Link (Relation View) */}
+            {subTitle === '凭证关联' && (
+              <button onClick={(e) => { e.stopPropagation(); openLinkModal(row); }} className="text-slate-500 hover:text-primary-600 p-1" title="关联"><LinkIcon size={14} /></button>
+            )}
+
+            {/* Delete (Non-Pool, Admin) */}
+            {!isPoolView && (
+              <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id) }} className="text-slate-500 hover:text-rose-600 p-1" title="删除"><Trash2 size={14} /></button>
+            )}
+          </div>
         </div>
-      )
+      );
+    }
+
+    // Legacy Action Column Handler (Kept null or strictly removed, but just in case)
+    if (column.type === 'action') {
+      return null;
     }
 
     // 格式化文件类型显示 (MIME type -> 用户友好名称)
@@ -1071,9 +1120,10 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               className="w-full px-3 py-2 text-sm outline-none bg-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="archive-search-input"
             />
           </div>
-          <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center shadow-sm transition-all active:scale-95 ${isFilterOpen ? 'bg-slate-100 text-primary-600 border-primary-200' : ''}`}>
+          <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center shadow-sm transition-all active:scale-95 ${isFilterOpen ? 'bg-slate-100 text-primary-600 border-primary-200' : ''}`} data-testid="archive-search-button">
             <Filter size={16} className="mr-2" /> 筛选
           </button>
           {isFilterOpen && (
@@ -1317,7 +1367,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
           )}
           {/* 新增按钮：电子凭证池视图隐藏（合规要求：凭证应从ERP系统采集，不应手工新增） */}
           {!isPoolView && (
-            <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 flex items-center shadow-lg shadow-primary-500/30 transition-all active:scale-95">
+            <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 flex items-center shadow-lg shadow-primary-500/30 transition-all active:scale-95" data-testid="archive-create-button">
               <Plus size={16} className="mr-2" /> 新增
             </button>
           )}
@@ -1346,78 +1396,62 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
           </button>
         </div>
 
-        {/* Pre-Archive Status Stepper (Pool View Only) */}
+        {/* Pre-Archive Status Flow (Pool View Only) */}
         {isPoolView && (
           <div className="mb-6 px-1">
-            {/* Stepper Container */}
-            <div className="flex items-center justify-between relative">
-              {/* Connection Line (Background) */}
-              <div className="absolute top-4 left-8 right-8 h-0.5 bg-slate-200 dark:bg-slate-700" />
+            <div className="flex items-center justify-between bg-slate-50 rounded-xl p-4 border border-slate-100 overflow-visible">
+              <div className="flex items-center gap-2 mx-auto flex-wrap justify-center">
+                {/* "All" Button */}
+                <button
+                  onClick={() => setPoolStatusFilter(null)}
+                  className={`relative group px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${poolStatusFilter === null
+                    ? 'bg-slate-800 text-white shadow-md'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                >
+                  全部 ({Object.values(poolStatusStats).reduce((a: number, b: number) => a + b, 0)})
+                </button>
+                <div className="w-px h-4 bg-slate-300 mx-2" />
 
-              {/* "全部" Step */}
-              <button
-                onClick={() => setPoolStatusFilter(null)}
-                className="relative z-10 flex flex-col items-center group"
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border-2 ${poolStatusFilter === null
-                  ? 'bg-slate-800 border-slate-800 text-white shadow-lg scale-110'
-                  : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'
-                  }`}>
-                  <span className="text-xs font-bold">{Object.values(poolStatusStats).reduce((a: number, b: number) => a + b, 0)}</span>
-                </div>
-                <span className={`mt-2 text-xs font-medium transition-colors ${poolStatusFilter === null ? 'text-slate-800 dark:text-white' : 'text-slate-500 group-hover:text-slate-700'
-                  }`}>全部</span>
-              </button>
+                {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label, color, description }], index, array) => {
+                  const isActive = poolStatusFilter === key;
+                  const count = poolStatusStats[key] || 0;
+                  const isLast = index === array.length - 1;
 
-              {/* Status Steps */}
-              {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, { label, color, icon }], index) => {
-                const isActive = poolStatusFilter === key;
-                const count = poolStatusStats[key] || 0;
-                const isFailedStatus = key === 'CHECK_FAILED';
+                  return (
+                    <React.Fragment key={key}>
+                      <div className="relative group">
+                        <button
+                          onClick={() => setPoolStatusFilter(key as any)}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
+                            ? 'bg-white ring-2 ring-primary-500 shadow-md transform scale-105 z-10'
+                            : 'bg-white hover:bg-slate-50 border border-slate-200'
+                            }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full ${isActive ? 'animate-pulse' : ''} ${color.split(' ')[0].replace('bg-', 'bg-')}`}></span>
+                          <span className={isActive ? 'text-slate-800 font-bold' : 'text-slate-600'}>{label}</span>
+                          {count > 0 && (
+                            <span className={`px-1.5 rounded-full text-[10px] ${isActive ? 'bg-slate-100 text-slate-800' : 'bg-slate-100 text-slate-500'}`}>
+                              {count}
+                            </span>
+                          )}
+                        </button>
 
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setPoolStatusFilter(key as any)}
-                    className="relative z-10 flex flex-col items-center group"
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border-2 ${isActive
-                      ? isFailedStatus
-                        ? 'bg-red-500 border-red-500 text-white shadow-lg scale-110'
-                        : 'bg-primary-600 border-primary-600 text-white shadow-lg scale-110'
-                      : count > 0
-                        ? isFailedStatus
-                          ? 'bg-red-100 border-red-300 text-red-600 hover:border-red-400'
-                          : 'bg-primary-50 border-primary-300 text-primary-600 hover:border-primary-400'
-                        : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
-                      }`}>
-                      {count > 0 ? (
-                        <span className="text-xs font-bold">{count}</span>
-                      ) : (
-                        <span className="text-xs">-</span>
+                        {/* Simple Hover Tooltip (Positioned BELOW) */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 text-center">
+                          {description}
+                          {/* Arrow pointing up */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-800"></div>
+                        </div>
+                      </div>
+
+                      {!isLast && (
+                        <ArrowRight size={12} className="text-slate-300 mx-1 flex-shrink-0" />
                       )}
-                    </div>
-                    <span className={`mt-2 text-xs font-medium transition-colors whitespace-nowrap ${isActive
-                      ? isFailedStatus ? 'text-red-600' : 'text-primary-600'
-                      : 'text-slate-500 group-hover:text-slate-700'
-                      }`}>{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Flow Description */}
-            <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
-              <span>流程：</span>
-              <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded">待检测</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">待补录</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">待归档</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded">审批中</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 bg-green-50 text-green-600 rounded">已归档</span>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -1450,19 +1484,15 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                 {config.columns.map((col) => (
                   <th key={col.key} className="p-4 font-medium bg-slate-50 whitespace-nowrap">{col.header}</th>
                 ))}
-                <th className="p-4 font-medium text-right bg-slate-50 sticky right-0 shadow-[-12px_0_12px_-12px_rgba(0,0,0,0.1)]">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {localData.map((row, idx) => (
-                <tr key={`${row.id}-${idx}`} className={`hover:bg-slate-50 transition-colors group ${selectedRows.includes(row.id) ? 'bg-primary-50/30' : ''}`}>
+                <tr key={`${row.id}-${idx}`} className={`hover:bg-slate-50 transition-colors group ${selectedRows.includes(row.id) ? 'bg-primary-50/30' : ''}`} data-testid={`archive-row-${row.id}`}>
                   <td className="p-4"><input type="checkbox" checked={selectedRows.includes(row.id)} onChange={() => toggleRowSelection(row.id)} className="rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" /></td>
                   {config.columns.map((col) => (
                     <td key={`${row.id}-${col.key}`} className="p-4 whitespace-nowrap">{renderCell(row, col)}</td>
                   ))}
-                  <td className="p-4 text-right sticky right-0 bg-white group-hover:bg-slate-50 shadow-[-12px_0_12px_-12px_rgba(0,0,0,0.1)]">
-                    {renderCell(row, { key: 'action', header: '操作', type: 'action' })}
-                  </td>
                 </tr>
               ))}
               {!isLoading && localData.length === 0 && (
@@ -1780,17 +1810,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Accounting Entries Stub */}
-                    <div className="border border-slate-200 rounded-xl overflow-hidden">
-                      <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                          <Book size={16} /> 会计分录
-                        </h3>
-                      </div>
-                      <div className="p-8 text-center text-slate-400 text-sm bg-white">
-                        暂无分录数据
-                      </div>
-                    </div>
+
                   </div>
                 </div>
 
@@ -1808,7 +1828,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                         : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                         }`}
                     >
-                      原始凭证
+                      {resolveDocumentTypeLabel(viewRow?.type)}
                       {activeDetailTab === 'main' && (
                         <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary-500 rounded-t-full" />
                       )}

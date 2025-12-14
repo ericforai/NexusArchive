@@ -1,0 +1,22 @@
+# 开发环境特定配置
+
+# 电子签章配置（开发环境）
+signature:
+  keystore:
+    path: ${SIGNATURE_KEYSTORE_PATH:./keystore/signature.p12}
+    password: ${SIGNATURE_KEYSTORE_PASSWORD:changeit}
+  auto-sign: ${SIGNATURE_AUTO_SIGN:true}  # 开发环境默认启用自动签章
+  default-cert-alias: ${SIGNATURE_CERT_ALIAS:signing-cert}
+
+# 时间戳服务配置（开发环境）
+timestamp:
+  enabled: ${TIMESTAMP_ENABLED:false}  # 开发环境默认禁用（需要配置TSA URL）
+  tsa:
+    url: ${TSA_URL:}  # 开发环境可以留空，使用降级模式
+    username: ${TSA_USERNAME:}
+    password: ${TSA_PASSWORD:}
+    timeout: ${TSA_TIMEOUT:5000}
+  fallback-on-error: ${TIMESTAMP_FALLBACK:true}  # 开发环境默认启用降级
+  auto-request: ${TIMESTAMP_AUTO_REQUEST:true}  # 开发环境默认启用自动时间戳
+
+

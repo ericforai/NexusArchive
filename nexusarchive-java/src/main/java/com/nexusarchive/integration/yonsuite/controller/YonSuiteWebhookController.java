@@ -3,6 +3,7 @@ package com.nexusarchive.integration.yonsuite.controller;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.nexusarchive.integration.yonsuite.event.YonSuiteVoucherEvent;
+import com.nexusarchive.integration.yonsuite.security.WebhookNonceStore;
 import com.yonyou.iuap.open.invoke.EventParamDecrypt;
 import com.yonyou.iuap.open.utils.BeanJsonConvertUtil;
 import com.yonyou.iuap.open.utils.crypto.EncryptionHolder;
@@ -10,8 +11,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/integration/yonsuite/webhook")
@@ -20,6 +28,8 @@ import org.springframework.web.bind.annotation.*;
 public class YonSuiteWebhookController {
 
     private final ApplicationEventPublisher eventPublisher;
+    private final com.nexusarchive.integration.yonsuite.security.YonSuiteSignatureValidator signatureValidator;
+    private final WebhookNonceStore nonceStore;
 
     @Value("${yonsuite.app-key:}")
     private String appKey;
@@ -27,21 +37,44 @@ public class YonSuiteWebhookController {
     @Value("${yonsuite.app-secret:}")
     private String appSecret;
 
-    @GetMapping
-    public ResponseEntity<String> checkHealth() {
-        log.info("Received YonSuite webhook health check (GET)");
-        return ResponseEntity.ok("success");
-    }
+    @Value("${yonsuite.webhook.allowed-ips:127.0.0.1,::1}")
+    private List<String> allowedIps;
 
     @PostMapping
-    public ResponseEntity<String> handleWebhook(@RequestBody(required = false) String body) {
-        
-        log.debug("Webhook body: {}", body);
+    public ResponseEntity<String> handleWebhook(
+            @RequestHeader(value = "X-Timestamp", required = false) String timestamp,
+            @RequestHeader(value = "X-Nonce", required = false) String nonce,
+            @RequestHeader(value = "X-Signature", required = false) String signature,
+            @RequestBody(required = false) String body,
+            HttpServletRequest request) {
 
-        if (body == null) {
-            log.warn("Received empty body");
-            return ResponseEntity.ok("success");
+        if (!ipAllowed(request.getRemoteAddr())) {
+            log.warn("Webhook request blocked by IP whitelist, ip={}", request.getRemoteAddr());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("forbidden");
         }
+
+        if (body == null || body.isBlank()) {
+            log.warn("Received empty body");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("body required");
+        }
+
+        if (!signatureValidator.validate(timestamp, nonce, body, signature)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("invalid signature");
+        }
+
+        long ts;
+        try {
+            ts = Long.parseLong(timestamp);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid timestamp");
+        }
+
+        if (!nonceStore.registerIfNew(nonce, ts)) {
+            log.warn("Duplicate nonce detected: {}", nonce);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("replay detected");
+        }
+
+        log.debug("Webhook body: {}", body);
 
         try {
             JSONObject json = JSONUtil.parseObj(body);
@@ -70,8 +103,7 @@ public class YonSuiteWebhookController {
                     
                 } catch (Exception e) {
                     log.error("SDK Decryption Failed!", e);
-                    // Return 200 to allow YS to mark as delivered (prevent retry storm)
-                    return ResponseEntity.ok("success");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("decrypt failed");
                 }
             } else {
                  log.info("Received Plaintext Webhook.");
@@ -126,7 +158,16 @@ public class YonSuiteWebhookController {
             return ResponseEntity.ok("success");
         } catch (Exception e) {
             log.error("Error parsing webhook body", e);
-            return ResponseEntity.ok("success");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("internal error");
         }
+    }
+
+    private boolean ipAllowed(String remoteAddr) {
+        if (remoteAddr == null) return false;
+        Set<String> wl = new HashSet<>();
+        for (String ip : allowedIps) {
+            wl.add(ip.trim());
+        }
+        return wl.contains(remoteAddr);
     }
 }

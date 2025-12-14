@@ -159,6 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'hover:bg-slate-800/50 hover:text-slate-100'
                     }`}
                   title={collapsed ? item.label : ''}
+                  data-testid={`nav-${item.id}`}
                 >
                   <div className={`flex items-center ${collapsed ? '' : 'space-x-3'}`}>
                     <item.icon
@@ -190,6 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }`}
                   title={collapsed ? item.label : ''}
                   end={item.id === ViewState.PORTAL}
+                  data-testid={`nav-${item.id}`}
                 >
                   <div className={`flex items-center ${collapsed ? '' : 'space-x-3'}`}>
                     <item.icon
@@ -220,6 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           ? 'text-primary-300 bg-slate-800/60 font-medium'
                           : 'text-slate-400 hover:text-primary-300 hover:bg-slate-800/30'
                           }`}
+                        data-testid={`nav-${item.id}-${sub}`}
                       >
                         <span className="flex items-center">
                           <ChevronRight size={10} className={`mr-2 transition-opacity ${isSubActive ? 'opacity-100' : 'opacity-0'}`} />

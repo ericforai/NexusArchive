@@ -123,7 +123,16 @@ public class ArcFileContent {
     /**
      * ERP原始凭证号（用户可读，如 记-3）
      */
+    /**
+     * ERP原始凭证号（用户可读，如 记-3）
+     */
     private String erpVoucherNo;
+
+    /**
+     * 原始业务数据(JSON)
+     * 用于按需生成文件或审计追溯
+     */
+    private String sourceData;
 
     private LocalDateTime createdTime;
 
@@ -356,6 +365,14 @@ public class ArcFileContent {
 
     public void setErpVoucherNo(String erpVoucherNo) {
         this.erpVoucherNo = erpVoucherNo;
+    }
+
+    public String getSourceData() {
+        return sourceData;
+    }
+
+    public void setSourceData(String sourceData) {
+        this.sourceData = sourceData;
     }
 
     public static ArcFileContentBuilder builder() {

@@ -134,7 +134,7 @@ main() {
     # 步骤1：启动后端
     log_info "步骤 1/3: 启动后端服务..."
     cd "$BACKEND_DIR"
-    mvn spring-boot:run -q &
+    mvn spring-boot:run -Dmaven.test.skip=true > "$ROOT/logs/backend.log" 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > "$ROOT/logs/backend.pid"
     log_info "后端进程 PID: $BACKEND_PID"

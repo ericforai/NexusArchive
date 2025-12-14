@@ -31,6 +31,7 @@ public class YonSuiteClient {
         this.yonAuthService = yonAuthService;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper.setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
     }
 
     /**
@@ -136,16 +137,17 @@ public class YonSuiteClient {
      */
     public YonAttachmentListResponse queryVoucherAttachments(String accessToken, String voucherId) {
         String token = getToken(accessToken);
-        // 注意：这里假设了附件查询接口的 URL，实际开发中需核对 YonSuite API 文档
-        String url = baseUrl + "/yonbip/fi/ficloud/openapi/voucher/queryAttachments"
+        // 尝试使用 YonBIP 通用附件查询接口 (Digital Model)
+        String url = baseUrl + "/yonbip/digitalModel/adm/attachmentInfo/query"
                 + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
 
-        log.info("Calling YonSuite queryVoucherAttachments: voucherId={}", voucherId);
+        log.info("Calling YonSuite attachment query: id={}", voucherId);
 
         try {
             JSONObject body = new JSONObject();
-            // YonSuite 通常要求传这类 ID
-            body.putOnce("voucherId", voucherId);
+            // 通用接口通常使用 id 或 businessId
+            body.putOnce("id", voucherId);
+            // body.putOnce("busiType", "???"); // 如果需要业务类型
             // 某些版本的接口可能需要 billType 等参数，这里先传基础的 ID
 
             String respStr = HttpRequest.post(url)
@@ -178,6 +180,48 @@ public class YonSuiteClient {
     }
 
     /**
+     * 获取收款单文件
+     * POST /yonbip/EFI/collection/file/url
+     */
+    public YonCollectionFileResponse queryCollectionFiles(String accessToken, YonCollectionFileRequest request) {
+        String token = getToken(accessToken);
+        String url = baseUrl + "/yonbip/EFI/collection/file/url"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        try {
+            String body = objectMapper.writeValueAsString(request);
+            log.info("Calling YonSuite collection file url: fileIds={}", request.getFileId());
+
+            String respStr = HttpRequest.post(url)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.debug("YonSuite collection file response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                YonCollectionFileResponse empty = new YonCollectionFileResponse();
+                empty.setCode("200");
+                empty.setMessage("No data");
+                empty.setData(java.util.Collections.emptyList());
+                return empty;
+            }
+
+            YonCollectionFileResponse response = objectMapper.readValue(respStr, YonCollectionFileResponse.class);
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite collection file API returned code {} message {}", response.getCode(),
+                        response.getMessage());
+            }
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite collection file API", e);
+            throw new RuntimeException("Failed to call YonSuite collection file API: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 下载附件
      */
     public java.io.InputStream downloadStream(String url) {
@@ -185,5 +229,87 @@ public class YonSuiteClient {
             return null;
         log.info("Downloading from: {}", url);
         return HttpRequest.get(url).timeout(60_000).execute().bodyStream();
+    }
+
+    /**
+     * 查询收款单列表
+     * POST /yonbip/EFI/collection/list
+     */
+    public YonCollectionBillResponse queryCollectionBills(String accessToken, YonCollectionBillRequest request) {
+        String token = getToken(accessToken);
+        String url = baseUrl + "/yonbip/EFI/collection/list"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        try {
+            String body = objectMapper.writeValueAsString(request);
+            log.info("Calling YonSuite queryCollectionBills: body={}", body);
+
+            String respStr = HttpRequest.post(url)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.info("YonSuite collection list response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                return null;
+            }
+
+            YonCollectionBillResponse response = objectMapper.readValue(respStr, YonCollectionBillResponse.class);
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite collection list API warning: {} - {}", response.getCode(), response.getMessage());
+            }
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryCollectionBills", e);
+            throw new RuntimeException("YonSuite API Error", e);
+        }
+    }
+
+    /**
+     * 收款单详情查询 (官方 API)
+     * GET /yonbip/EFI/collection/detail
+     * 文档: docs/api/收款单详情查询.md
+     * 
+     * @param accessToken  可选, 为null则自动获取
+     * @param collectionId 收款单ID (必填)
+     * @return 收款单详情
+     */
+    public YonCollectionDetailResponse queryCollectionDetail(String accessToken, String collectionId) {
+        String token = getToken(accessToken);
+        // 官方示例: /yonbip/EFI/collection/detail?access_token=访问令牌&id=2326431654121728
+        String url = baseUrl + "/yonbip/EFI/collection/detail"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8)
+                + "&id=" + URLEncoder.encode(collectionId, StandardCharsets.UTF_8);
+
+        log.info("Calling YonSuite queryCollectionDetail: id={}", collectionId);
+
+        try {
+            // 官方文档指定为 GET 请求
+            String respStr = HttpRequest.get(url)
+                    .header("Content-Type", "application/json")
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.debug("YonSuite collection detail response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                log.warn("YonSuite queryCollectionDetail returned empty response for id={}", collectionId);
+                return null;
+            }
+
+            YonCollectionDetailResponse response = objectMapper.readValue(respStr, YonCollectionDetailResponse.class);
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite collection detail API warning: code={}, message={}",
+                        response.getCode(), response.getMessage());
+            }
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryCollectionDetail for id={}", collectionId, e);
+            return null; // 允许单个失败, 不阻断批量处理
+        }
     }
 }

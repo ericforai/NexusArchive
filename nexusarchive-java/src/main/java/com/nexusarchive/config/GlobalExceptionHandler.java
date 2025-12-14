@@ -4,11 +4,13 @@ import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -29,11 +31,10 @@ public class GlobalExceptionHandler {
     
     /**
      * 处理业务异常
-     * Returns 400 Bad Request with standardized error code structure.
+     * Returns error with HTTP status derived from BusinessException code (defaults to 400).
      */
     @ExceptionHandler(BusinessException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result<Map<String, String>> handleBusinessException(BusinessException e) {
+    public ResponseEntity<Result<Map<String, String>>> handleBusinessException(BusinessException e) {
         log.warn("Business Exception: {}", e.getMessage());
 
         // Standardize the "data" field to contain ref info
@@ -44,9 +45,15 @@ public class GlobalExceptionHandler {
         }
         errorDetails.put("errCode", codeStr);
         errorDetails.put("ref", "DA/T 104-2024");
-        
-        // Fix: Pass errorDetails to the Result
-        return new Result<>(400, e.getMessage(), errorDetails);
+
+        HttpStatus status = HttpStatus.resolve(e.getCode());
+        if (status == null) {
+            status = HttpStatus.BAD_REQUEST;
+        }
+
+        // Fix: Pass errorDetails to the Result and honor custom status code
+        Result<Map<String, String>> body = new Result<>(status.value(), e.getMessage(), errorDetails);
+        return ResponseEntity.status(status).body(body);
     }
     
     /**
@@ -70,6 +77,19 @@ public class GlobalExceptionHandler {
         details.put("ref", "DA/T 94-2022");
         
         return new Result<>(400, detailedMsg, details);
+    }
+
+    /**
+     * 处理空/不可读请求体
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Map<String, String>> handleUnreadableBody(HttpMessageNotReadableException e) {
+        log.warn("Body unreadable or missing: {}", e.getMessage());
+        Map<String, String> details = new HashMap<>();
+        details.put("ref", "DA/T 104-2024");
+        details.put("violation", "请求体不能为空或格式错误");
+        return new Result<>(400, "请求体不能为空或格式错误", details);
     }
     
     @ExceptionHandler(AccessDeniedException.class)

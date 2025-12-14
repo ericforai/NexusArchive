@@ -34,7 +34,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: ViewState.DESTRUCTION, label: '档案销毁', icon: Flame, permission: 'nav:destruction' },
   { id: ViewState.WAREHOUSE, label: '库房管理', icon: Warehouse, permission: 'nav:warehouse', subItems: ['密集架控制', '温湿度监控'] },
   { id: ViewState.STATS, label: '数据统计', icon: BarChart3, permission: 'nav:stats' },
-  { id: ViewState.SETTINGS, label: '系统设置', icon: Settings, permission: 'nav:settings', subItems: ['基础设置', '用户管理', '角色权限', '组织架构', '全宗管理', '安全合规', '审计日志'] },
+  { id: ViewState.SETTINGS, label: '系统设置', icon: Settings, permission: 'nav:settings', subItems: ['基础设置', '用户管理', '角色权限', '组织架构', '全宗管理', '安全合规', '集成中心', '审计日志'] },
 ];
 
 export const MOCK_STATS: ArchiveStat[] = [

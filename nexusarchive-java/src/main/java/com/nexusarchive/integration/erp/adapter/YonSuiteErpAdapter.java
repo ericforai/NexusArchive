@@ -2,18 +2,14 @@ package com.nexusarchive.integration.erp.adapter;
 
 import com.nexusarchive.integration.erp.dto.*;
 import com.nexusarchive.integration.yonsuite.client.YonSuiteClient;
-import com.nexusarchive.integration.yonsuite.dto.YonVoucherListRequest;
-import com.nexusarchive.integration.yonsuite.dto.YonVoucherListResponse;
-import com.nexusarchive.integration.yonsuite.dto.YonVoucherDetailResponse;
+import com.nexusarchive.integration.yonsuite.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * YonSuite (用友) ERP 适配器
@@ -46,6 +42,40 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     @Override
     public boolean supportsWebhook() {
         return true;
+    }
+
+    @Override
+    public List<com.nexusarchive.entity.ErpScenario> getAvailableScenarios() {
+        List<com.nexusarchive.entity.ErpScenario> scenarios = new ArrayList<>();
+
+        // 凭证同步场景
+        com.nexusarchive.entity.ErpScenario voucherSync = new com.nexusarchive.entity.ErpScenario();
+        voucherSync.setScenarioKey("VOUCHER_SYNC");
+        voucherSync.setName("凭证同步");
+        voucherSync.setDescription("从用友YonSuite同步会计凭证到档案系统");
+        voucherSync.setIsActive(true);
+        voucherSync.setSyncStrategy("MANUAL");
+        scenarios.add(voucherSync);
+
+        // 附件同步场景
+        com.nexusarchive.entity.ErpScenario attachmentSync = new com.nexusarchive.entity.ErpScenario();
+        attachmentSync.setScenarioKey("ATTACHMENT_SYNC");
+        attachmentSync.setName("附件同步");
+        attachmentSync.setDescription("同步凭证关联的电子发票和原始单据");
+        attachmentSync.setIsActive(true);
+        attachmentSync.setSyncStrategy("REALTIME");
+        scenarios.add(attachmentSync);
+
+        // 收款单文件同步场景
+        com.nexusarchive.entity.ErpScenario collectionFileSync = new com.nexusarchive.entity.ErpScenario();
+        collectionFileSync.setScenarioKey("COLLECTION_FILE_SYNC");
+        collectionFileSync.setName("收款单文件同步");
+        collectionFileSync.setDescription("从YonSuite获取收款单文件");
+        collectionFileSync.setIsActive(true);
+        collectionFileSync.setSyncStrategy("MANUAL");
+        scenarios.add(collectionFileSync);
+
+        return scenarios;
     }
 
     @Override
@@ -201,6 +231,102 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             return attachments;
         } catch (Exception e) {
             log.error("YonSuite getAttachments error", e);
+            return Collections.emptyList();
+        }
+    }
+
+    public List<VoucherDTO> syncCollectionFiles(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        // 1. 查询收款单列表获取单据ID
+        try {
+            YonCollectionBillRequest billReq = new YonCollectionBillRequest();
+            billReq.setPageIndex(1);
+            billReq.setPageSize(100); // 暂时限制100条
+
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            billReq.setOpen_billDate_begin(startDate.atStartOfDay().format(fmt));
+            billReq.setOpen_billDate_end(endDate.atTime(23, 59, 59).format(fmt));
+
+            // 默认查询已审批(2)的单据。为Debug暂时注释掉，查所有状态
+            // billReq.setVerifyState(Collections.singletonList("2"));
+
+            // 处理组织参数: 文档称 financeOrg 是必填 (通常指ID)
+            // 但如果只有 Code (BRYS002), 传给 financeOrg (ID字段) 会导致查询为空
+            // 尝试: 不传 financeOrg (null), 仅传 simple.financeOrg.code
+            // 如果接口强校验 financeOrg 不为 null, 这里可能会报错, 需观察
+            // 最终修正: financeOrg 设为 null (配合 Jackson NON_NULL 不发送该字段)
+            billReq.setFinanceOrg(null);
+
+            Map<String, Object> simple = new HashMap<>();
+            simple.put("financeOrg.code", config.getAccbookCode());
+            billReq.setSimple(simple);
+
+            log.info("YonSuite Sync Request: Date=[{} to {}], OrgCode=[{}], VerifyState=[ALL (null)]",
+                    billReq.getOpen_billDate_begin(), billReq.getOpen_billDate_end(), config.getAccbookCode());
+
+            YonCollectionBillResponse billResp = yonSuiteClient.queryCollectionBills(null, billReq);
+            log.info("Query Collection Bills Result Count: {}",
+                    (billResp != null && billResp.getData() != null) ? billResp.getData().getRecordCount() : "null");
+
+            if (billResp == null || !"200".equals(billResp.getCode()) || billResp.getData() == null
+                    || billResp.getData().getRecordList() == null || billResp.getData().getRecordList().isEmpty()) {
+                log.info("No collection bills found or API error: {}",
+                        (billResp != null ? billResp.getMessage() : "null response"));
+                return Collections.emptyList();
+            }
+
+            List<String> ids = new ArrayList<>();
+            // Map billCode to ID for reference if needed
+            for (YonCollectionBillResponse.Record record : billResp.getData().getRecordList()) {
+                ids.add(record.getId());
+            }
+
+            // 2. 使用官方 API 获取每个收款单的详情
+            // 官方接口: GET /yonbip/EFI/collection/detail
+            // 文档: docs/api/收款单详情查询.md
+            List<VoucherDTO> result = new ArrayList<>();
+
+            for (YonCollectionBillResponse.Record record : billResp.getData().getRecordList()) {
+                String billId = record.getId();
+                try {
+                    // 调用官方详情查询接口
+                    var detailResp = yonSuiteClient.queryCollectionDetail(null, billId);
+
+                    if (detailResp != null && "200".equals(detailResp.getCode()) && detailResp.getData() != null) {
+                        var detail = detailResp.getData();
+
+                        // 映射收款单详情到 VoucherDTO
+                        VoucherDTO dto = VoucherDTO.builder()
+                                .voucherId(detail.getId())
+                                .voucherNo(detail.getCode()) // 单据编号
+                                .status("COLLECTION_BILL")
+                                .summary(String.format("收款单: %s, 客户: %s, 金额: %.2f CNY",
+                                        detail.getCode(),
+                                        detail.getCustomerName() != null ? detail.getCustomerName() : "N/A",
+                                        detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount()
+                                                : 0.0))
+                                .accountPeriod(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                                .build();
+
+                        // 设置额外信息
+                        dto.setCreator(detail.getCreatorUserName());
+
+                        result.add(dto);
+                        log.debug("Synced Collection Bill: {} - {}", detail.getCode(), detail.getCustomerName());
+                    } else {
+                        log.warn("Failed to fetch detail for collection bill id={}, code={}: {}",
+                                billId, record.getCode(),
+                                detailResp != null ? detailResp.getMessage() : "null response");
+                    }
+                } catch (Exception e) {
+                    log.warn("Error fetching detail for collection bill id={}", billId, e);
+                }
+            }
+
+            log.info("Sync Collection Files completed: {} items", result.size());
+            return result;
+
+        } catch (Exception e) {
+            log.error("Sync Collection Files error", e);
             return Collections.emptyList();
         }
     }

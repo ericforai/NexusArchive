@@ -7,7 +7,8 @@ import {
     Building2,
     FolderTree,
     Lock,
-    FileSearch
+    FileSearch,
+    Link
 } from 'lucide-react';
 
 const SETTINGS_TABS = [
@@ -17,6 +18,7 @@ const SETTINGS_TABS = [
     { key: 'org', label: '组织架构', path: '/system/settings/org', icon: Building2 },
     { key: 'fonds', label: '全宗管理', path: '/system/settings/fonds', icon: FolderTree },
     { key: 'security', label: '安全合规', path: '/system/settings/security', icon: Lock },
+    { key: 'integration', label: '集成中心', path: '/system/settings/integration', icon: Link },
     { key: 'audit', label: '审计日志', path: '/system/settings/audit', icon: FileSearch },
 ];
 

@@ -40,8 +40,9 @@ public class ArchiveController {
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String search,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "类别号") @RequestParam(required = false) String categoryCode,
-            @Parameter(description = "部门ID") @RequestParam(required = false) String orgId) {
-        return Result.success(archiveService.getArchives(page, limit, search, status, categoryCode, orgId));
+            @Parameter(description = "部门ID") @RequestParam(required = false) String orgId,
+            @Parameter(description = "唯一业务ID") @RequestParam(required = false) String uniqueBizId) {
+        return Result.success(archiveService.getArchives(page, limit, search, status, categoryCode, orgId, uniqueBizId));
     }
 
     @GetMapping("/{id}")

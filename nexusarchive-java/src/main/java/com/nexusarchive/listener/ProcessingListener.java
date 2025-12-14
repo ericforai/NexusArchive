@@ -14,6 +14,7 @@ import com.nexusarchive.service.IAutoAssociationService;
 import com.nexusarchive.service.SmartParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class ProcessingListener {
     private final ArchiveMapper archiveMapper;
     private final IngestRequestStatusMapper statusMapper;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Async("ingestTaskExecutor")
     @EventListener
@@ -64,7 +66,16 @@ public class ProcessingListener {
                 autoAssociationService.triggerAssociation(archive.getId());
             }
 
-            // 5. 完成
+            // 5. 发布归档完成事件（触发签章和时间戳）
+            if (archive != null && !archivedFiles.isEmpty()) {
+                eventPublisher.publishEvent(
+                    new com.nexusarchive.listener.SignatureTimestampListener.ArchiveCompletedEvent(
+                        archive, archivedFiles
+                    )
+                );
+            }
+
+            // 6. 完成
             updateStatus(requestId, "COMPLETED", "归档完成，已存储至: " + storagePath);
 
         } catch (Exception e) {

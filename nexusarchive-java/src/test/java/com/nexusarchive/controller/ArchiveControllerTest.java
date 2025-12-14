@@ -44,7 +44,7 @@ public class ArchiveControllerTest {
 
     @org.springframework.boot.test.mock.mockito.MockBean
     private JwtUtil jwtUtil;
-    
+
     // Mock for SecurityUserDetailsService which might be needed by SecurityConfig
     @org.springframework.boot.test.mock.mockito.MockBean
     private CustomUserDetailsService userDetailsService;
@@ -69,45 +69,47 @@ public class ArchiveControllerTest {
     @BeforeEach
     public void setup() {
         // 生成测试Token
-        org.mockito.Mockito.when(jwtUtil.generateToken(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
-            .thenReturn("mock-token");
+        org.mockito.Mockito
+                .when(jwtUtil.generateToken(org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn("mock-token");
         token = "mock-token";
-        
+
         // Mock JWT parsing if filter uses it
         org.mockito.Mockito.when(jwtUtil.validateToken(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         org.mockito.Mockito.when(jwtUtil.extractUsername(org.mockito.ArgumentMatchers.anyString())).thenReturn("admin");
-        
+
         // Mock blacklist
-        org.mockito.Mockito.when(tokenBlacklistService.isBlacklisted(org.mockito.ArgumentMatchers.anyString())).thenReturn(false);
-        
+        org.mockito.Mockito.when(tokenBlacklistService.isBlacklisted(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(false);
+
         // Mock Claims
         io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
         org.mockito.Mockito.when(claims.getSubject()).thenReturn("admin");
         org.mockito.Mockito.when(claims.get("userId", String.class)).thenReturn("1");
         org.mockito.Mockito.when(jwtUtil.extractAllClaims(org.mockito.ArgumentMatchers.anyString())).thenReturn(claims);
-        
+
         // Stub UserDetailsService
         org.springframework.security.core.userdetails.User user = new org.springframework.security.core.userdetails.User(
-            "admin", 
-            "password", 
-            java.util.Arrays.asList(
-                new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SYSTEM_ADMIN"),
-                new org.springframework.security.core.authority.SimpleGrantedAuthority("archive:manage"),
-                new org.springframework.security.core.authority.SimpleGrantedAuthority("nav:all")
-            )
-        );
+                "admin",
+                "password",
+                java.util.Arrays.asList(
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SYSTEM_ADMIN"),
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("archive:manage"),
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("nav:all")));
         org.mockito.Mockito.when(userDetailsService.loadUserByUsername("admin")).thenReturn(user);
         org.mockito.Mockito.when(userDetailsService.loadUserById("1")).thenReturn(user);
-        
+
         // Mock validateToken(token, username)
-        org.mockito.Mockito.when(jwtUtil.validateToken(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+        org.mockito.Mockito.when(jwtUtil.validateToken(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
     }
 
     @Test
     public void testArchiveCrud() throws Exception {
         String archiveCode = "ARC_" + System.currentTimeMillis();
         String archiveId = UUID.randomUUID().toString();
-        
+
         // 1. 创建档案 Mock
         Archive archive = new Archive();
         archive.setFondsNo("F001");
@@ -117,18 +119,20 @@ public class ArchiveControllerTest {
         archive.setFiscalYear("2023");
         archive.setRetentionPeriod("10Y");
         archive.setOrgName("Test Org");
-        
+
         Archive createdArchive = new Archive();
         org.springframework.beans.BeanUtils.copyProperties(archive, createdArchive);
         createdArchive.setId(archiveId);
-        
-        org.mockito.Mockito.when(archiveService.createArchive(org.mockito.ArgumentMatchers.any(Archive.class), org.mockito.ArgumentMatchers.any()))
-            .thenReturn(createdArchive);
+
+        org.mockito.Mockito
+                .when(archiveService.createArchive(org.mockito.ArgumentMatchers.any(Archive.class),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(createdArchive);
 
         mockMvc.perform(post("/archives")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(archive)))
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(archive)))
                 .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -138,30 +142,32 @@ public class ArchiveControllerTest {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Archive> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>();
         page.setRecords(java.util.Collections.singletonList(createdArchive));
         page.setTotal(1);
-        
+
         org.mockito.Mockito.when(archiveService.getArchives(
-                org.mockito.ArgumentMatchers.anyInt(), 
-                org.mockito.ArgumentMatchers.anyInt(), 
-                org.mockito.ArgumentMatchers.eq(archiveCode), 
-                org.mockito.ArgumentMatchers.any(), 
-                org.mockito.ArgumentMatchers.any(), 
+                org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.eq(archiveCode),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any()))
-            .thenReturn(page);
+                .thenReturn(page);
 
         mockMvc.perform(get("/archives")
-                        .header("Authorization", "Bearer " + token)
-                        .param("search", archiveCode))
+                .header("Authorization", "Bearer " + token)
+                .param("search", archiveCode))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records[0].id").value(archiveId));
 
         // 3. 更新档案 Mock
         archive.setTitle("Updated Archive Title");
-        org.mockito.Mockito.doNothing().when(archiveService).updateArchive(org.mockito.ArgumentMatchers.eq(archiveId), org.mockito.ArgumentMatchers.any(Archive.class));
-        
+        org.mockito.Mockito.doNothing().when(archiveService).updateArchive(org.mockito.ArgumentMatchers.eq(archiveId),
+                org.mockito.ArgumentMatchers.any(Archive.class));
+
         mockMvc.perform(put("/archives/" + archiveId)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(archive)))
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(archive)))
                 .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
@@ -171,7 +177,7 @@ public class ArchiveControllerTest {
         org.mockito.Mockito.when(archiveService.getArchiveById(archiveId)).thenReturn(createdArchive);
 
         mockMvc.perform(get("/archives/" + archiveId)
-                        .header("Authorization", "Bearer " + token))
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.title").value("Updated Archive Title"));
 
@@ -179,7 +185,7 @@ public class ArchiveControllerTest {
         org.mockito.Mockito.doNothing().when(archiveService).deleteArchive(archiveId);
 
         mockMvc.perform(delete("/archives/" + archiveId)
-                        .header("Authorization", "Bearer " + token))
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
     }

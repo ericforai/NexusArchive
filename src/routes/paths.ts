@@ -47,6 +47,7 @@ export const ROUTE_PATHS = {
     SETTINGS_ORG: '/system/settings/org',
     SETTINGS_FONDS: '/system/settings/fonds',
     SETTINGS_SECURITY: '/system/settings/security',
+    SETTINGS_INTEGRATION: '/system/settings/integration',
     SETTINGS_AUDIT: '/system/settings/audit',
     ADMIN: '/system/admin',
 } as const;
@@ -97,5 +98,6 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '组织架构': ROUTE_PATHS.SETTINGS_ORG,
     '全宗管理': ROUTE_PATHS.SETTINGS_FONDS,
     '安全合规': ROUTE_PATHS.SETTINGS_SECURITY,
+    '集成中心': ROUTE_PATHS.SETTINGS_INTEGRATION,
     '审计日志': ROUTE_PATHS.SETTINGS_AUDIT,
 };

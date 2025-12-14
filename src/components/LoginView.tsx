@@ -21,6 +21,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const landingUrl = 'https://www.zhitoujianli.com';
 
     // 使用 AuthStore
     const { login } = useAuthStore();
@@ -68,6 +69,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
         setLoading(false);
     };
 
+    const handleVisitLanding = () => {
+        if (onVisitLanding) {
+            onVisitLanding();
+        }
+        navigate('/');
+        if (process.env.NODE_ENV === 'test') return;
+        if (typeof window !== 'undefined' && typeof window.open === 'function') {
+            window.open(landingUrl, '_blank', 'noreferrer');
+        } else {
+            window.location.href = landingUrl;
+        }
+    };
+
 
 
 
@@ -83,7 +97,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
                     </p>
                 )}
 
-                {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+                {error && <p className="text-red-500 text-sm mb-2" data-testid="login-error">{error}</p>}
                 <div className="mb-3">
                     <label className="block text-sm mb-1">用户名</label>
                     <input
@@ -92,6 +106,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
                         onChange={e => setUsername(e.target.value)}
                         className="w-full border rounded px-2 py-1"
                         required
+                        data-testid="login-username"
                     />
                 </div>
                 <div className="mb-3">
@@ -102,17 +117,24 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
                         onChange={e => setPassword(e.target.value)}
                         className="w-full border rounded px-2 py-1"
                         required
+                        data-testid="login-password"
                     />
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
                     className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 mb-4 disabled:opacity-50"
+                    data-testid="login-submit"
                 >
                     {loading ? '登录中...' : '登录'}
                 </button>
-
-
+                <button
+                    type="button"
+                    onClick={handleVisitLanding}
+                    className="w-full border border-blue-600 text-blue-600 py-2 rounded hover:bg-blue-50"
+                >
+                    访问产品官网
+                </button>
             </form>
         </div>
     );

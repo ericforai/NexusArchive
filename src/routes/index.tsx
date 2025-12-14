@@ -41,6 +41,7 @@ const OrgSettings = lazy(() => import('../components/settings/OrgSettings'));
 const SecuritySettings = lazy(() => import('../components/settings/SecuritySettings'));
 const FondsManagement = lazy(() => import('../components/admin/FondsManagement'));
 const AuditLogView = lazy(() => import('../components/AuditLogView'));
+const IntegrationSettings = lazy(() => import('../components/settings/IntegrationSettings'));
 
 // 加载占位符
 const LoadingFallback = () => (
@@ -143,6 +144,7 @@ export const routes: RouteObject[] = [
                     { path: 'org', element: withSuspense(OrgSettings) },
                     { path: 'fonds', element: withSuspense(FondsManagement) },
                     { path: 'security', element: withSuspense(SecuritySettings) },
+                    { path: 'integration', element: withSuspense(IntegrationSettings) },
                     { path: 'audit', element: withSuspense(AuditLogView) },
                 ],
             },

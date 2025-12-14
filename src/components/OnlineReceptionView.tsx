@@ -1,102 +1,20 @@
-import React, { useState } from 'react';
-import { Activity, RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Plus, Server, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Activity, RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Plus, Server, Clock, Loader2 } from 'lucide-react';
 import { FourNatureReportView } from './FourNatureReportView';
 import { statsApi, ErpStats } from '../api/stats';
+import { integrationApi, IntegrationChannel } from '../api/erp';
 import { client } from '../api/client';
 
-interface IntegrationChannel {
-    id: string;
-    name: string;
-    system: string;
-    frequency: string;
-    lastSync: string;
-    receivedCount: number;
-    status: 'normal' | 'error' | 'syncing';
-    description: string;
-    apiEndpoint?: string; // 真实同步API端点
-    syncConfig?: {
-        accbookCode?: string;
-        periodStart?: string;
-        periodEnd?: string;
-    };
-    accbookCode?: string;
-    periodStart?: string;
-    periodEnd?: string;
+// 扩展 IntegrationChannel 以支持本地状态
+interface LocalChannel extends IntegrationChannel {
+    localStatus?: 'normal' | 'error' | 'syncing';
 }
 
-const MOCK_CHANNELS: IntegrationChannel[] = [
-    {
-        id: 'yonsuite',
-        name: 'YONSUITE_VOUCHER_SYNC',
-        system: '用友YonSuite',
-        frequency: '手动/实时',
-        lastSync: '-',
-        receivedCount: 0,
-        status: 'normal',
-        description: '用友YonSuite会计凭证自动采集接口',
-        apiEndpoint: '/integration/yonsuite/vouchers/sync',
-        syncConfig: {
-            accbookCode: 'BR01'
-        }
-    },
-    {
-        id: '1',
-        name: 'SAP_VOUCHER_SYNC',
-        system: 'SAP ERP',
-        frequency: '实时',
-        lastSync: '2025-12-02 19:00:00',
-        receivedCount: 128,
-        status: 'normal',
-        description: 'SAP 财务凭证自动同步接口'
-    },
-    {
-        id: '2',
-        name: 'K3_INVENTORY_SYNC',
-        system: '金蝶云星空',
-        frequency: '每日 23:00',
-        lastSync: '2025-12-01 23:00:00',
-        receivedCount: 56,
-        status: 'normal',
-        description: '存货核算数据同步'
-    },
-    {
-        id: '3',
-        name: 'OA_EXPENSE_SYNC',
-        system: '泛微OA',
-        frequency: '每小时',
-        lastSync: '2025-12-02 18:00:00',
-        receivedCount: 12,
-        status: 'normal',
-        description: '员工报销单据同步'
-    },
-    {
-        id: '4',
-        name: 'EKB_TRAVEL_SYNC',
-        system: '易快报',
-        frequency: '每小时',
-        lastSync: '2025-12-02 18:30:00',
-        receivedCount: 45,
-        status: 'normal',
-        description: '差旅费用数据同步'
-    },
-    {
-        id: '5',
-        name: 'HLY_REIMBURSE_SYNC',
-        system: '汇联易',
-        frequency: '每小时',
-        lastSync: '2025-12-02 18:15:00',
-        receivedCount: 0,
-        status: 'error',
-        description: '费用报销同步 (连接超时)'
-    }
-];
-
-// 默认数据（种子数据来自数据库，此处作为前端 fallback）
-const DEFAULT_CHANNELS = MOCK_CHANNELS;
-
 export const OnlineReceptionView: React.FC = () => {
-    const [channels, setChannels] = useState<IntegrationChannel[]>(DEFAULT_CHANNELS);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [channels, setChannels] = useState<LocalChannel[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
@@ -109,37 +27,55 @@ export const OnlineReceptionView: React.FC = () => {
         abnormalCount: 0
     });
 
-    React.useEffect(() => {
-        const fetchStats = async () => {
+    // Sync Modal State
+    const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+    const [syncChannelId, setSyncChannelId] = useState<number | null>(null);
+    const [syncPeriod, setSyncPeriod] = useState({ start: '2024-01', end: '2024-12' });
+    const [syncError, setSyncError] = useState<string | null>(null);
+
+    // 加载集成通道数据
+    useEffect(() => {
+        const loadData = async () => {
+            setLoading(true);
             try {
-                const res = await statsApi.getErpStats();
-                if (res.code === 200) {
-                    setStats(res.data);
+                // 加载统计数据
+                const statsRes = await statsApi.getErpStats();
+                if (statsRes.code === 200) {
+                    setStats(statsRes.data);
                 }
-            } catch (e) {
-                console.error("Failed to fetch ERP stats", e);
+
+                // 加载集成通道列表
+                const channelsRes = await integrationApi.getChannels();
+                if (channelsRes.code === 200 && channelsRes.data) {
+                    setChannels(channelsRes.data.map(ch => ({
+                        ...ch,
+                        localStatus: ch.status
+                    })));
+                }
+            } catch (e: any) {
+                console.error("Failed to load integration data", e);
+                setError(e.message || String(e));
+            } finally {
+                setLoading(false);
             }
         };
-        fetchStats();
+        loadData();
     }, []);
 
     // YonSuite 同步配置
-    const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
-    const [syncChannelId, setSyncChannelId] = useState<string | null>(null);
-    const [syncPeriod, setSyncPeriod] = useState({ start: '2025-08', end: '2025-08' });
-    const [syncError, setSyncError] = useState<string | null>(null);
+    // State for Log Modal
+    const [logModalOpen, setLogModalOpen] = useState(false);
+    const [currentLog, setCurrentLog] = useState<{ title: string, content: string | null }>({ title: '', content: '' });
 
-    const toggleSelection = (id: string) => {
-        const newSelected = new Set(selectedIds);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
-        } else {
-            newSelected.add(id);
-        }
-        setSelectedIds(newSelected);
+    const handleViewLog = (channel: LocalChannel) => {
+        setCurrentLog({
+            title: `${channel.name} - 同步日志`,
+            content: channel.lastSyncMsg || '暂无日志记录'
+        });
+        setLogModalOpen(true);
     };
 
-    const handleSync = async (id: string) => {
+    const handleSync = async (id: number) => {
         const channel = channels.find(c => c.id === id);
         if (!channel) return;
 
@@ -151,19 +87,39 @@ export const OnlineReceptionView: React.FC = () => {
             return;
         }
 
-        // 其他接口 - 模拟同步
-        const newChannels = channels.map(c => {
-            if (c.id === id) {
-                return {
-                    ...c,
-                    lastSync: new Date().toLocaleString('zh-CN'),
-                    receivedCount: Math.floor(Math.random() * 50) + 1,
-                    status: 'normal' as const
-                };
-            }
-            return c;
-        });
+        // 通用接口 (E10 等) - 调用统一触发接口
+        // 更新 UI 状态
+        const newChannels = channels.map(c =>
+            c.id === id ? { ...c, status: 'syncing' as const } : c
+        );
         setChannels(newChannels);
+
+        try {
+            // 调用真实后端 API
+            // 注意: id 其实是 scenarioId
+            const res = await import('../api/erp').then(m => m.erpApi.triggerSync(id));
+            if (res && res.code === 200) {
+                // 成功触发后，后端是异步还是同步? 
+                // 根据 ErpScenarioService 目前实现是同步执行的 (没用 @Async)
+                // 所以可以直接刷新列表
+                const channelsRes = await integrationApi.getChannels();
+                if (channelsRes.code === 200 && channelsRes.data) {
+                    setChannels(channelsRes.data.map(ch => ({
+                        ...ch,
+                        localStatus: ch.status
+                    })));
+                }
+                setSyncError(null); // Reuse syncError for toast if needed, or just refresh
+            } else {
+                throw new Error(res.message || '触发失败');
+            }
+        } catch (e: any) {
+            console.error("Sync failed", e);
+            setChannels(prev => prev.map(c =>
+                c.id === id ? { ...c, status: 'error' as const } : c
+            ));
+            // 可以加个 toast 提示
+        }
     };
 
     const executeRealSync = async () => {
@@ -181,7 +137,7 @@ export const OnlineReceptionView: React.FC = () => {
         try {
             // 使用统一 client 进行请求，自动处理 token
             const response = await client.post(channel.apiEndpoint, {
-                accbookCode: channel.syncConfig?.accbookCode || 'BR01',
+                accbookCode: channel.accbookCode || 'BR01',
                 periodStart: syncPeriod.start,
                 periodEnd: syncPeriod.end
             });
@@ -212,23 +168,68 @@ export const OnlineReceptionView: React.FC = () => {
 
     const handleAddChannel = () => {
         const channel: IntegrationChannel = {
-            id: Date.now().toString(),
+            id: Date.now().toString() as any, // Temporary ID
             name: newChannel.name,
-            system: newChannel.system,
+            displayName: newChannel.name, // Added displayName
+            configName: newChannel.system, // Added configName
+            erpType: 'unknown', // Added erpType
+            system: newChannel.system, // Keep existing if needed or map
             frequency: '每小时',
             lastSync: '-',
             receivedCount: 0,
             status: 'normal',
-            description: newChannel.description
+            description: newChannel.description,
+            apiEndpoint: null,
+            accbookCode: null,
+            lastSyncMsg: null
         };
-        setChannels([...channels, channel]);
+        // Note: This local add is just for UI demo of "Add Channel" which might not be fully backed by API yet
+        // casting to any to bypass strict type checks for this demo feature
+        setChannels([...channels, channel as any]);
         setIsModalOpen(false);
         setNewChannel({ name: '', system: 'SAP ERP', description: '' });
     };
 
     return (
-        <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+        <div className="p-6 max-w-[1600px] mx-auto space-y-6 relative">
+            {/* Log Modal */}
+            {logModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-xl w-[600px] max-w-[90vw] flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="font-medium text-slate-800 flex items-center gap-2">
+                                <CheckCircle size={16} className="text-blue-500" />
+                                {currentLog.title}
+                            </h3>
+                            <button
+                                onClick={() => setLogModalOpen(false)}
+                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto bg-slate-50 font-mono text-sm text-slate-600 whitespace-pre-wrap">
+                            {currentLog.content}
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-white rounded-b-lg flex justify-end">
+                            <button
+                                onClick={() => setLogModalOpen(false)}
+                                className="px-4 py-2 bg-slate-100 text-slate-600 rounded hover:bg-slate-200 transition-colors text-sm font-medium"
+                            >
+                                关闭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4">
+                    <strong>Error:</strong> {error}
+                </div>
+            )}
+
             <div className="flex justify-between items-start">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -242,24 +243,11 @@ export const OnlineReceptionView: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => setIsReportOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                        <Activity className="w-4 h-4" />
-                        四性检测
-                    </button>
                     <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
                         <Filter className="w-4 h-4" />
                         筛选
                     </button>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                    >
-                        <Plus className="w-4 h-4" />
-                        新增接口
-                    </button>
+                    {/* 新增接口功能已移至集成中心，以保持职责分离 */}
                 </div>
             </div>
 
@@ -336,7 +324,7 @@ export const OnlineReceptionView: React.FC = () => {
                                         <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500">
                                             <Server className="w-4 h-4" />
                                         </div>
-                                        <span className="font-medium text-slate-700">{channel.system}</span>
+                                        <span className="font-medium text-slate-700">{channel.configName}</span>
                                     </div>
                                 </td>
                                 <td className="p-4">
@@ -346,7 +334,7 @@ export const OnlineReceptionView: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="p-4 text-slate-600 font-mono text-xs">
-                                    {channel.lastSync}
+                                    {channel.lastSync || '-'}
                                 </td>
                                 <td className="p-4">
                                     <span className="font-medium text-slate-900">{channel.receivedCount}</span>
@@ -371,7 +359,7 @@ export const OnlineReceptionView: React.FC = () => {
                                     )}
                                 </td>
                                 <td className="p-4 text-right">
-                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center justify-end gap-2">
                                         <button
                                             onClick={() => handleSync(channel.id)}
                                             className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg tooltip"
@@ -379,7 +367,11 @@ export const OnlineReceptionView: React.FC = () => {
                                         >
                                             <RefreshCw className="w-4 h-4" />
                                         </button>
-                                        <button className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg" title="查看日志">
+                                        <button
+                                            onClick={() => handleViewLog(channel)}
+                                            className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg"
+                                            title="查看日志"
+                                        >
                                             <Eye className="w-4 h-4" />
                                         </button>
                                         <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="删除配置">

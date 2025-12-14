@@ -98,8 +98,18 @@ elasticsearch:
 # 电子签章配置
 signature:
   keystore:
-    path: ${SIGNATURE_KEYSTORE_PATH:/tmp/nexusarchive/keystore.p12}
-    password: ${SIGNATURE_KEYSTORE_PASSWORD:password123}
+    path: ${SIGNATURE_KEYSTORE_PATH:./keystore/signature.p12}
+    password: ${SIGNATURE_KEYSTORE_PASSWORD:changeit}
+
+# 时间戳服务配置
+timestamp:
+  enabled: ${TIMESTAMP_ENABLED:false}
+  tsa:
+    url: ${TSA_URL:}
+    username: ${TSA_USERNAME:}
+    password: ${TSA_PASSWORD:}
+    timeout: ${TSA_TIMEOUT:5000}
+  fallback-on-error: ${TIMESTAMP_FALLBACK:true}  # TSA 不可用时使用本地时间
 
 # Entity-Database Schema 一致性验证 (防止 Entity 字段与数据库列不同步)
 schema:
