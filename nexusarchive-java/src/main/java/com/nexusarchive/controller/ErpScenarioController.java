@@ -34,7 +34,7 @@ public class ErpScenarioController {
     @PostMapping("/{id}/sync")
     @Operation(summary = "手动触发同步")
     public Result<Void> triggerSync(@PathVariable Long id) {
-        erpScenarioService.triggerSync(id);
+        erpScenarioService.syncScenario(id);
         return Result.success();
     }
 

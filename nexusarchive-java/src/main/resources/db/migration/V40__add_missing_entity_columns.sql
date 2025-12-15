@@ -9,6 +9,15 @@
 -- ============================================
 
 -- 分组/类别 (如 system/storage/retention)
+-- Ensure table exists first
+CREATE TABLE IF NOT EXISTS sys_setting (
+    id VARCHAR(64) PRIMARY KEY,
+    config_key VARCHAR(128),
+    config_value TEXT,
+    description VARCHAR(512),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 ALTER TABLE sys_setting ADD COLUMN IF NOT EXISTS category VARCHAR(64);
 COMMENT ON COLUMN sys_setting.category IS '配置分组/类别';
 

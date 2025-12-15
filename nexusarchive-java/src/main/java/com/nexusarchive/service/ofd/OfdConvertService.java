@@ -103,28 +103,19 @@ public class OfdConvertService {
             
             log.info("转换 PDF -> OFD: {} -> {}", sourcePath, targetPath);
             
-            // OFDRW 2.2.6 API: 使用静态方法 ConvertHelper
-            // 注意: ConvertHelper 主要用于 OFD->PDF 转换
-            // PDF->OFD 需要使用 ofdrw-full 库，当前暂时跳过实际转换
-            // TODO: 集成 ofdrw-full 库实现真正的 PDF->OFD 转换
-            log.warn("PDF->OFD 转换功能待完善，当前仅记录转换请求");
+            // 【合规修复】PDF→OFD 转换功能需要集成 ofdrw-graphics2d 库
+            // 当前版本暂不支持真正转换，必须明确抛出异常而非伪造 OFD 文件
+            // 依据：GB/T 33190-2016 要求 OFD 文件格式符合标准
+            //
+            // 后续实现计划：
+            // 1. 使用 PDFBox PDFRenderer 将 PDF 页面渲染为图像
+            // 2. 使用 ofdrw-graphics2d 将图像写入 OFD 页面
+            // 3. 重新计算 OFD 文件 SM3 哈希
             
-            // 模拟创建一个空的 OFD 文件作为占位符
-            if (!Files.exists(targetPath)) {
-                Files.copy(sourcePath, targetPath);  // 临时：复制 PDF 作为占位符
-            }
-            
-            long duration = System.currentTimeMillis() - startTime;
-            
-            // 记录转换日志
-            saveConvertLog(archiveId, pdfPath, targetPath.toString(), "SUCCESS", 
-                null, duration, pdfFile.getFileSize(), Files.size(targetPath));
-            
-            // 创建 OFD 文件记录
-            createOfdFileRecord(pdfFile, targetPath.toString());
-            
-            log.info("PDF 转 OFD 成功: {} (耗时 {}ms)", targetPath, duration);
-            return ConvertResult.success(targetPath.toString(), duration);
+            throw new UnsupportedOperationException(
+                "PDF→OFD 转换功能尚未实现。" +
+                "请使用专业的 OFD 转换工具或联系系统管理员启用转换模块。" +
+                "【合规提示】根据 GB/T 33190-2016，OFD 文件必须符合标准格式。");
             
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;

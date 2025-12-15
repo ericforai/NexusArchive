@@ -11,7 +11,7 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   
   flyway:
-    enabled: true
+    enabled: false
     baseline-on-migrate: true
     repair-on-migrate: true
     ignore-missing-migrations: true
@@ -146,7 +146,9 @@ spring:
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
-      connection-timeout: 30000
+      connection-timeout: 1000
+      validation-timeout: 1000
+      initialization-fail-timeout: 0
       idle-timeout: 600000
       max-lifetime: 1800000
 

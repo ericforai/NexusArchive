@@ -109,6 +109,12 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
         return report;
     }
     
+    /**
+     * 去重检测
+     * 
+     * 【合规增强】增加 original_hash 校验
+     * 依据：DA/T 92-2022 要求真实性检测覆盖原始哈希
+     */
     private CheckItem checkDeduplication(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
         CheckItem item = CheckItem.pass("De-duplication Check", "No duplicates found");
         
@@ -131,9 +137,12 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     hash = fileHashUtil.calculateSHA256(new ByteArrayInputStream(content));
                 }
                 
+                // 【合规增强】同时检查 file_hash 和 original_hash
                 Long count = arcFileContentMapper.selectCount(
                     new LambdaQueryWrapper<ArcFileContent>()
                         .eq(ArcFileContent::getFileHash, hash)
+                        .or()
+                        .eq(ArcFileContent::getOriginalHash, hash)
                 );
                 
                 if (count > 0) {
@@ -271,6 +280,26 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     continue;
                 }
                 byte[] content = java.nio.file.Files.readAllBytes(path);
+                
+                // 【合规增强】实测哈希 vs original_hash 比对
+                // 依据：DA/T 92-2022 要求真实性检测校验原始哈希
+                if (file.getOriginalHash() != null && !file.getOriginalHash().isEmpty()) {
+                    String currentHash;
+                    String algo = file.getHashAlgorithm();
+                    if ("SM3".equalsIgnoreCase(algo)) {
+                        currentHash = fileHashUtil.calculateSM3(new ByteArrayInputStream(content));
+                    } else {
+                        currentHash = fileHashUtil.calculateSHA256(new ByteArrayInputStream(content));
+                    }
+                    
+                    if (!currentHash.equalsIgnoreCase(file.getOriginalHash())) {
+                        authenticity.setStatus(OverallStatus.FAIL);
+                        authenticity.addError(String.format(
+                            "Hash mismatch for %s: expected %s, got %s (文件可能已被篡改)", 
+                            file.getFileName(), file.getOriginalHash(), currentHash));
+                        continue;
+                    }
+                }
                 
                 CheckItem single = fourNatureCoreService.checkSingleFileAuthenticity(
                     content, file.getFileName(), file.getOriginalHash(), file.getHashAlgorithm(), file.getFileType()

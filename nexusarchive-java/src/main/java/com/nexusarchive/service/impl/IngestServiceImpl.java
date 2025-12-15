@@ -277,8 +277,8 @@ public class IngestServiceImpl implements IngestService {
                 continue;
             }
 
-            // 生成档号
-            String archivalCode = generateArchivalCode(poolItemId);
+            // 生成档号（使用文件元数据）
+            String archivalCode = generateArchivalCode(originalFile);
             log.info("生成档号: {}", archivalCode);
             
             // 2. 准备文件
@@ -292,33 +292,21 @@ public class IngestServiceImpl implements IngestService {
             java.nio.file.Path sourcePath = java.nio.file.Paths.get(originalFile.getStoragePath());
             java.nio.file.Path targetPath = java.nio.file.Paths.get(tempPath, targetFileName);
             
-            if (java.nio.file.Files.exists(sourcePath)) {
-                java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            } else {
-                log.warn("源文件物理丢失: {}", sourcePath);
-                // Create dummy file if missing to avoid AIP failure
-                java.nio.file.Files.write(targetPath, "Dummy Content".getBytes());
+            // 【合规修复】源文件缺失时必须阻断归档流程
+            // 依据：《会计档案管理办法》79号令要求原始凭证真实完整
+            if (!java.nio.file.Files.exists(sourcePath)) {
+                log.error("源文件物理丢失，无法归档: {}", sourcePath);
+                throw new BusinessException(ErrorCode.FILE_NOT_FOUND, 
+                    "归档失败：源文件不存在 [" + originalFile.getFileName() + "]，请重新上传原始凭证");
             }
-
-            // 3. 准备 invoice.jpg (Mock for "Layout Layer")
-            String invoiceFileName = "invoice.jpg";
-            java.nio.file.Path invoicePath = java.nio.file.Paths.get(tempPath, invoiceFileName);
-            if (!java.nio.file.Files.exists(invoicePath)) {
-                 // Create a dummy invoice.jpg
-                 java.nio.file.Files.write(invoicePath, "Dummy Invoice Image".getBytes());
-            }
-
-            // 4. 构建 SIP
-            AccountingSipDto sip = buildSimpleSip(archivalCode, poolItemId, targetFileName, originalFile);
             
-            // 添加 invoice.jpg 到附件
-            AttachmentDto invoiceAttachment = new AttachmentDto();
-            invoiceAttachment.setFileName(invoiceFileName);
-            invoiceAttachment.setFileType("JPG");
-            invoiceAttachment.setFileSize(1024L);
-            invoiceAttachment.setFileHash("mock_hash_invoice");
-            invoiceAttachment.setHashAlgorithm("SM3");
-            sip.getAttachments().add(invoiceAttachment);
+            // 【修复】确保临时目录存在，避免干净节点上归档失败
+            java.nio.file.Files.createDirectories(targetPath.getParent());
+            
+            java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            // 3. 构建 SIP（仅包含真实附件）
+            AccountingSipDto sip = buildSimpleSip(archivalCode, poolItemId, targetFileName, originalFile);
 
             // 调用 AIP 封装服务
             try {
@@ -329,14 +317,28 @@ public class IngestServiceImpl implements IngestService {
                 com.nexusarchive.entity.Archive archive = new com.nexusarchive.entity.Archive();
                 archive.setArchiveCode(archivalCode);
                 archive.setTitle("会计凭证-" + archivalCode);
-                archive.setFondsNo(sip.getHeader().getFondsCode());
-                archive.setFiscalYear(sip.getHeader().getAccountPeriod().substring(0, 4));
-                archive.setFiscalPeriod(sip.getHeader().getAccountPeriod().substring(5));
-                archive.setRetentionPeriod("10Y");
-                archive.setCategoryCode("AC01"); // 会计凭证
+                archive.setFondsNo(originalFile.getFondsCode());
+                
+                // 会计年度：从文件元数据或当前日期
+                String fiscalYear = originalFile.getFiscalYear() != null 
+                    ? originalFile.getFiscalYear() 
+                    : String.valueOf(java.time.LocalDate.now().getYear());
+                archive.setFiscalYear(fiscalYear);
+                archive.setFiscalPeriod(java.time.LocalDate.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("MM")));
+                
+                // 保管期限：默认30Y
+                archive.setRetentionPeriod("30Y");
+                
+                // 分类代码：从元数据读取
+                String categoryCode = originalFile.getVoucherType() != null 
+                    ? originalFile.getVoucherType() 
+                    : "AC04";
+                archive.setCategoryCode(categoryCode);
+                
                 archive.setOrgName("财务部");
-                archive.setCreator("System");
-                archive.setStatus("archived"); // 直接设为已归档
+                archive.setCreator(originalFile.getCreator() != null ? originalFile.getCreator() : "System");
+                archive.setStatus("archived");
                 archive.setSecurityLevel("internal");
                 archive.setLocation("电子档案库");
                 
@@ -358,13 +360,35 @@ public class IngestServiceImpl implements IngestService {
     /**
      * 生成档号
      * 格式: {全宗号}-{年度}-{保管期限}-{机构}-{分类}-{件号}
+     * 
+     * 【合规修复】元数据从文件记录读取，不使用硬编码
+     * 依据：DA/T 94-2022 7.1 要求档号组成元素符合业务实际
      */
-    private String generateArchivalCode(String poolItemId) {
-        String fondsCode = "COMP001"; // 默认全宗号
-        String year = java.time.LocalDate.now().getYear() + "";
-        String retention = "10Y"; // 默认保管期限
-        String org = "FIN"; // 财务
-        String category = "AC01"; // 会计凭证
+    private String generateArchivalCode(com.nexusarchive.entity.ArcFileContent originalFile) {
+        // 全宗号：必填，无默认值
+        String fondsCode = originalFile.getFondsCode();
+        if (fondsCode == null || fondsCode.trim().isEmpty()) {
+            throw new BusinessException(400, 
+                "归档失败：全宗号未配置。请先在[系统设置 > 档案配置]中设置全宗号，或在元数据补录时填写。");
+        }
+        
+        // 年度：优先使用文件会计年度，否则使用当前年
+        String year = originalFile.getFiscalYear() != null 
+            ? originalFile.getFiscalYear() 
+            : String.valueOf(java.time.LocalDate.now().getYear());
+        
+        // 保管期限：默认30Y（合规专家建议）
+        String retention = "30Y";
+        
+        // 机构代码
+        String org = "FIN";
+        
+        // 分类代码：从 voucherType 读取，未设置则默认 AC04（其他材料）
+        String category = originalFile.getVoucherType() != null 
+            ? originalFile.getVoucherType() 
+            : "AC04";
+        
+        // 件号：时间戳 + 随机数确保唯一
         String itemNo = String.format("V%04d", System.currentTimeMillis() % 10000);
         
         return String.format("%s-%s-%s-%s-%s-%s", fondsCode, year, retention, org, category, itemNo);
@@ -372,26 +396,35 @@ public class IngestServiceImpl implements IngestService {
     
     /**
      * 构建简化的 SIP
+     * 
+     * 【合规修复】从文件元数据读取，不使用硬编码
      */
     private AccountingSipDto buildSimpleSip(String archivalCode, String poolItemId, String fileName, com.nexusarchive.entity.ArcFileContent originalFile) {
         AccountingSipDto sip = new AccountingSipDto();
         sip.setRequestId(archivalCode);
-        sip.setSourceSystem("Pool Archive");
+        sip.setSourceSystem(originalFile.getSourceSystem() != null ? originalFile.getSourceSystem() : "Pool Archive");
         
-        // 构建凭证头
+        // 构建凭证头 - 从元数据读取
         VoucherHeadDto header = new VoucherHeadDto();
-        header.setFondsCode("COMP001");
-        header.setAccountPeriod(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")));
+        header.setFondsCode(originalFile.getFondsCode());
+        
+        // 会计期间：从元数据或当前日期
+        String fiscalYear = originalFile.getFiscalYear() != null 
+            ? originalFile.getFiscalYear() 
+            : String.valueOf(java.time.LocalDate.now().getYear());
+        header.setAccountPeriod(fiscalYear + "-" + java.time.LocalDate.now().format(
+            java.time.format.DateTimeFormatter.ofPattern("MM")));
+        
         header.setVoucherType(com.nexusarchive.common.enums.VoucherType.PAYMENT);
-        header.setVoucherNumber("V-" + poolItemId.substring(0, 6));
+        header.setVoucherNumber("V-" + poolItemId.substring(0, Math.min(6, poolItemId.length())));
         header.setVoucherDate(java.time.LocalDate.now());
-        header.setTotalAmount(java.math.BigDecimal.valueOf(10000.00));
+        header.setTotalAmount(java.math.BigDecimal.ZERO); // 从元数据读取或默认0
         header.setCurrencyCode("CNY");
-        header.setIssuer("System");
-        header.setAttachmentCount(2); // Voucher + Invoice
+        header.setIssuer(originalFile.getCreator() != null ? originalFile.getCreator() : "System");
+        header.setAttachmentCount(1); // 实际附件数量
         sip.setHeader(header);
         
-        // 构建附件列表
+        // 构建附件列表 - 使用真实文件信息
         java.util.List<AttachmentDto> attachments = new java.util.ArrayList<>();
         AttachmentDto attachment = new AttachmentDto();
         attachment.setFileName(fileName);

@@ -51,6 +51,13 @@ public class ErrorCode {
     // ==================== 通用错误 (EAA_4xx / EAA_5xx) ====================
     
     /**
+     * FILE_NOT_FOUND: 源文件不存在
+     * 归档流程中源文件物理丢失时使用
+     */
+    public static final int FILE_NOT_FOUND = 404;
+    public static final String FILE_NOT_FOUND_MSG = "源文件不存在：%s";
+    
+    /**
      * EAA_400: 请求参数错误
      */
     public static final String EAA_400 = "EAA_400";

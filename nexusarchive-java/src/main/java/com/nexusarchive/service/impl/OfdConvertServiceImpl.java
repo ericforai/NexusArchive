@@ -171,10 +171,19 @@ public class OfdConvertServiceImpl implements OfdConvertService {
         Path src = Paths.get(sourcePath);
         Path dst = Paths.get(targetPath);
         
-        // Mock implementation for now as ConvertHelper does not support PDF->OFD directly in this version
-        // or usage is incorrect.
-        log.warn("Mocking PDF to OFD conversion. Copying file only.");
-        Files.copy(src, dst, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        return true;
+        // 【合规修复】PDF→OFD 转换功能需要集成 ofdrw-graphics2d 库
+        // 当前版本暂不支持真正转换，必须明确抛出异常而非伪造 OFD 文件
+        // 依据：GB/T 33190-2016 要求 OFD 文件格式符合标准，简单复制 PDF 不合规
+        //
+        // 后续实现计划：
+        // 1. 使用 PDFBox PDFRenderer 将 PDF 页面渲染为图像
+        // 2. 使用 ofdrw-graphics2d 将图像写入 OFD 页面
+        // 3. 重新计算 OFD 文件 SM3 哈希
+        
+        log.error("PDF→OFD 转换功能尚未完整实现，无法生成合规的 OFD 文件");
+        throw new UnsupportedOperationException(
+            "PDF→OFD 转换功能尚未实现。" +
+            "请使用专业的 OFD 转换工具或联系系统管理员启用转换模块。" +
+            "【合规提示】根据 GB/T 33190-2016，OFD 文件必须符合标准格式，简单复制 PDF 到 .ofd 扩展名不符合法规要求。");
     }
 }

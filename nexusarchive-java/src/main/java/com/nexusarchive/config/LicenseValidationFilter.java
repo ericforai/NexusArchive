@@ -22,12 +22,23 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class LicenseValidationFilter extends OncePerRequestFilter {
 
+    /**
+     * 白名单路径 - 这些路径不需要 License 校验
+     * 
+     * 【修复】同时支持 /api 前缀和非前缀路径，确保登录和激活流程可用
+     */
     private static final Set<String> EXCLUDED_PATHS = Set.of(
+            // /api 前缀路径
             "/api/auth",
             "/api/license/load",
             "/api/license",
             "/api/health",
-            "/api/health/self-check"
+            "/api/health/self-check",
+            // 非 /api 前缀路径（部分前端/网关可能直接访问）
+            "/auth",
+            "/license/load",
+            "/license",
+            "/health"
     );
 
     private final LicenseService licenseService;

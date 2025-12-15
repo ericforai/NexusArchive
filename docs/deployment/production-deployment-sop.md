@@ -257,9 +257,45 @@ kubectl get constraintviolations -A
 
 ---
 
-## 7. 渐进式交付与监控 (Progressive Delivery)
+## 7. 交付验收门禁 (Delivery Acceptance Gate)
 
-### 7.1 基础设施指标
+> [!IMPORTANT]
+> **红线要求**: 每次交付（Delivery）、客户现场部署（Deployment）或升级（Upgrade）前，**必须** 运行门禁脚本并存档记录。
+
+### 7.1 执行门禁
+
+使用提供的自动化验收脚本执行全栈检查：
+
+```bash
+# 执行交付门禁
+node scripts/delivery_gatekeeper.cjs
+```
+
+### 7.2 验收标准 (一票否决)
+
+任何以下项触发 VETO (否决) 时，**严禁交付**：
+
+| 检查项 | VETO 条件 | 风险 |
+|--------|-----------|------|
+| **DB 宕机启动** | 应用无法启动 / Health 返回 200 (装健康) | 生产事故风险 (假死/无限悬挂) |
+| **冷启动延迟** | Health 接口耗时 > 1s | 线程池耗尽风险 |
+| **业务门禁** | 初始化期间 (Migrating) 允许业务请求 | 数据不一致风险 |
+| **自动恢复** | DB 恢复后应用无法自愈 (需人工重启) | 运维成本过高 |
+| **性能基线** | 核心接口 P99 > 1.5s | 客户投诉风险 |
+| **日志审计** | 缺失关键生命周期签名 (Start/Migrate/Success) | 无法定责 |
+
+### 7.3 门禁日志归档
+
+```bash
+# 归档门禁报告
+cp logs/gatekeeper_test.log /opt/nexusarchive/audit/delivery_gate_$(date +%Y%m%d).log
+```
+
+---
+
+## 8. 渐进式交付与监控 (Progressive Delivery)
+
+### 8.1 基础设施指标
 
 | 指标 | 告警阈值 | 数据源 |
 |------|----------|--------|
@@ -268,7 +304,7 @@ kubectl get constraintviolations -A
 | HTTP 5xx 错误率 | > 1% | Prometheus |
 | 响应延迟 P99 | > 2s | Prometheus |
 
-### 7.2 业务指标（归档系统专用）
+### 8.2 业务指标（归档系统专用）
 
 | 指标 | 告警阈值 | 说明 |
 |------|----------|------|
@@ -277,7 +313,7 @@ kubectl get constraintviolations -A
 | **OFD 转换成功率** | < 98% | 转换成功/总转换数 |
 | **审计日志写入延迟** | > 100ms | 异步日志写入时间 |
 
-### 7.3 SLO 验证检查点
+### 8.3 SLO 验证检查点
 
 ```
 部署后 5 分钟  → 第一次 SLO 检查
@@ -285,7 +321,7 @@ kubectl get constraintviolations -A
 部署后 2 小时  → 第三次 SLO 检查（解除回滚窗口）
 ```
 
-### 7.4 自动回滚触发条件
+### 8.4 自动回滚触发条件
 
 满足以下任一条件时自动触发回滚：
 
@@ -293,7 +329,7 @@ kubectl get constraintviolations -A
 - 归档成功率 < 95%（持续 3 分钟）
 - 服务不可用（健康检查连续失败 3 次）
 
-### 7.5 回滚数据一致性保护
+### 8.5 回滚数据一致性保护
 
 > [!CAUTION]
 > **回滚前必须执行以下步骤**，防止归档数据不一致。
@@ -318,9 +354,9 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 
 ---
 
-## 8. 合规验证与审计 (Compliance Validation & Audit)
+## 9. 合规验证与审计 (Compliance Validation & Audit)
 
-### 8.1 冒烟测试
+### 9.1 冒烟测试
 
 | 测试项 | 验证方法 | 预期结果 |
 |--------|----------|----------|
@@ -329,7 +365,7 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 | 新建归档 | 上传测试文件 | 归档成功 |
 | OFD 预览 | 预览已归档文件 | 正常显示 |
 
-### 8.2 四性自动化检测
+### 9.2 四性自动化检测
 
 > [!IMPORTANT]
 > **合规必须项**：部署后必须执行四性检测验证。
@@ -345,7 +381,7 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 # - 安全性：权限验证
 ```
 
-### 8.3 抽样完整性校验
+### 9.3 抽样完整性校验
 
 ```bash
 # 随机抽取 50 条归档记录进行 Hash 比对
@@ -356,7 +392,7 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 # [WARNING] 0 records failed (expected < 0.1%)
 ```
 
-### 8.4 审计日志连续性验证
+### 9.4 审计日志连续性验证
 
 ```bash
 # 验证审计日志链完整性
@@ -368,7 +404,7 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 # - 无断链现象
 ```
 
-### 8.5 License 验证
+### 9.5 License 验证
 
 ```bash
 # 验证 License 状态
@@ -381,7 +417,7 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 # Status: VALID
 ```
 
-### 8.6 部署后检查清单
+### 9.6 部署后检查清单
 
 - [ ] 所有服务健康检查通过
 - [ ] 冒烟测试全部通过
@@ -391,7 +427,7 @@ curl -X POST http://localhost:8080/api/system/resume-ingestion
 - [ ] 监控告警配置已更新
 - [ ] 通知相关方部署完成
 
-### 8.7 审计记录归档
+### 9.7 审计记录归档
 
 ```bash
 # 生成部署审计报告
