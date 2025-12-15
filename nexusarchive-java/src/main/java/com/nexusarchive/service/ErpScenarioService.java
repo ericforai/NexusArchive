@@ -7,6 +7,8 @@ import com.nexusarchive.integration.erp.adapter.ErpAdapter;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ErpScenarioMapper;
+import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
+import com.nexusarchive.entity.ArcFileMetadataIndex;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class ErpScenarioService {
     private final ErpConfigMapper erpConfigMapper;
     private final ErpAdapterFactory erpAdapterFactory;
     private final ArcFileContentMapper arcFileContentMapper;
+    private final ArcFileMetadataIndexMapper arcFileMetadataIndexMapper;
     private final VoucherPdfGeneratorService pdfGeneratorService;
     private final ObjectMapper objectMapper;
 
@@ -195,6 +198,25 @@ public class ErpScenarioService {
                     // 保存
                     arcFileContentMapper.insert(fileContent);
                     savedCount++;
+
+                    // 4.1 保存金额元数据到 ArcFileMetadataIndex (用于列表显示金额)
+                    java.math.BigDecimal amount = dto.getDebitTotal();
+                    if (amount == null) {
+                        amount = dto.getCreditTotal();
+                    }
+                    if (amount != null) {
+                        ArcFileMetadataIndex metadataIndex = ArcFileMetadataIndex.builder()
+                                .fileId(fileContent.getId())
+                                .totalAmount(amount)
+                                .invoiceNumber(dto.getVoucherNo())
+                                .issueDate(
+                                        dto.getVoucherDate() != null ? dto.getVoucherDate() : java.time.LocalDate.now())
+                                .parsedTime(LocalDateTime.now())
+                                .parserType("ERP_SYNC")
+                                .build();
+                        arcFileMetadataIndexMapper.insert(metadataIndex);
+                        log.debug("Metadata saved: fileId={}, amount={}", fileContent.getId(), amount);
+                    }
 
                     log.debug("Record saved with source_data: fileId={}", fileContent.getId());
                 }

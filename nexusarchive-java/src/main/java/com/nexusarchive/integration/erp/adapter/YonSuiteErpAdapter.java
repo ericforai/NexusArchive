@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -305,6 +306,9 @@ public class YonSuiteErpAdapter implements ErpAdapter {
                                         detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount()
                                                 : 0.0))
                                 .accountPeriod(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                                .debitTotal(new BigDecimal(
+                                        detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount()
+                                                : 0.0))
                                 .build();
 
                         // 设置额外信息
