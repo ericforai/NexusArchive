@@ -60,6 +60,7 @@ export interface TableColumn {
 
 export interface GenericRow {
   id: string;
+  rawStatus?: string; // Stored raw status code for logic checks
   [key: string]: any;
 }
 

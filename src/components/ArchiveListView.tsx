@@ -152,7 +152,8 @@ const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
       type: categoryLabel,
       amount,
       date,
-      status: statusText
+      status: statusText,
+      rawStatus: archive?.preArchiveStatus || archive?.status // Capture raw status
     };
   }
 
@@ -168,7 +169,8 @@ const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
       period: archive?.fiscalPeriod || '全年',
       subject: archive?.title,
       pageCount: archive?.pageCount || archive?.customMetadata?.pageCount || '-',
-      status: statusText
+      status: statusText,
+      rawStatus: archive?.preArchiveStatus || archive?.status
     };
   }
 
@@ -184,7 +186,8 @@ const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
       title: archive?.title,
       period: archive?.fiscalPeriod || '',
       date,
-      status: statusText
+      status: statusText,
+      rawStatus: archive?.preArchiveStatus || archive?.status
     };
   }
 
@@ -200,7 +203,8 @@ const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
     security: archive?.securityLevel || '-',
     status: statusText,
     orgName: archive?.orgName,
-    date
+    date,
+    rawStatus: archive?.preArchiveStatus || archive?.status
   };
 };
 
@@ -333,7 +337,11 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
       const total = filtered.length;
       const start = (page - 1) * pageInfo.pageSize;
       const paged = filtered.slice(start, start + pageInfo.pageSize);
-      setLocalData(paged as GenericRow[]);
+      const mappedPaged = paged.map((item: any) => ({
+        ...item,
+        rawStatus: item.status // Ensure rawStatus is available for pool items
+      }));
+      setLocalData(mappedPaged as GenericRow[]);
       setPageInfo((prev) => ({ ...prev, total, page }));
       // Refresh stats after data load
       loadPoolStatusStats();
@@ -727,7 +735,9 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
     if (column.type === 'status') {
       // 优先使用预定义的状态映射 (PRE_ARCHIVE_STATUS_LABELS)
-      const exactStatus = String(value);
+      // 优先使用预定义的状态映射 (PRE_ARCHIVE_STATUS_LABELS)
+      // FIX: Ensure case-insensitive match for status codes
+      const exactStatus = String(value).toUpperCase();
       if (PRE_ARCHIVE_STATUS_LABELS[exactStatus]) {
         const { label, color, icon } = PRE_ARCHIVE_STATUS_LABELS[exactStatus];
         return <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>{icon}{label}</span>;
@@ -1509,9 +1519,33 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                   {(() => {
                     const total = localData.length;
                     // Use backend status codes: PENDING_ARCHIVE means check passed
-                    const passed = localData.filter(i => i.status === 'PENDING_ARCHIVE').length;
-                    const failed = localData.filter(i => i.status === 'CHECK_FAILED').length;
-                    const pending = localData.filter(i => i.status === 'PENDING_CHECK').length;
+                    // Use rawStatus instead of status (which is formatted label)
+                    // Expanded status logic:
+                    // Passed: PENDING_ARCHIVE, PENDING_APPROVAL, ARCHIVED
+                    // Failed: CHECK_FAILED, PENDING_METADATA
+                    // Pending: PENDING_CHECK
+                    // Expanded status logic with Case-Insensitive Check
+                    // Passed: PENDING_ARCHIVE, PENDING_APPROVAL, ARCHIVED
+                    // Failed: CHECK_FAILED, PENDING_METADATA
+                    // Pending: PENDING_CHECK
+
+                    const normalize = (s: string) => String(s || '').toUpperCase();
+
+                    const passed = localData.filter(i => {
+                      const s = normalize(i.rawStatus || i.status);
+                      return ['PENDING_ARCHIVE', 'PENDING_APPROVAL', 'ARCHIVED', '已归档'].includes(s) || ['已归档'].includes(i.status);
+                    }).length;
+
+                    const failed = localData.filter(i => {
+                      const s = normalize(i.rawStatus || i.status);
+                      return ['CHECK_FAILED', 'PENDING_METADATA'].includes(s);
+                    }).length;
+
+                    const pending = localData.filter(i => {
+                      const s = normalize(i.rawStatus || i.status);
+                      return ['PENDING_CHECK', '待检测', 'DRAFT', 'DRAFT'].includes(s) || s === 'PENDING' || s === '草稿';
+                    }).length;
+
                     const score = total > 0 ? Math.round((passed / total) * 100) : 0;
 
                     return (

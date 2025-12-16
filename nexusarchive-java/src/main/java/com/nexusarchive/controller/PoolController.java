@@ -100,7 +100,9 @@ public class PoolController {
 
     /**
      * 获取关联附件列表
-     * <p>优先查询关联表(archive_attachment)，同时兼容旧的命名约定(business_doc_no + _ATT_)</p>
+     * <p>
+     * 优先查询关联表(archive_attachment)，同时兼容旧的命名约定(business_doc_no + _ATT_)
+     * </p>
      * 
      * @param id 主文件ID
      * @return 附件列表
@@ -115,7 +117,7 @@ public class PoolController {
 
         // 1. 通过关联表查询 (新逻辑)
         List<ArcFileContent> linkedAttachments = attachmentService.getAttachmentsByArchive(id);
-        
+
         // 2. 通过命名约定查询 (旧逻辑兼容)
         String businessDocNo = mainFile.getBusinessDocNo();
         if (businessDocNo != null && !businessDocNo.isEmpty()) {
@@ -123,7 +125,7 @@ public class PoolController {
             query.likeRight("business_doc_no", businessDocNo + "_ATT_")
                     .orderByAsc("business_doc_no");
             List<ArcFileContent> legacyAttachments = arcFileContentMapper.selectList(query);
-            
+
             // 合并并去重
             for (ArcFileContent legacy : legacyAttachments) {
                 boolean exists = linkedAttachments.stream().anyMatch(a -> a.getId().equals(legacy.getId()));
@@ -374,7 +376,9 @@ public class PoolController {
         QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
         queryWrapper.likeRight("archival_code", "TEMP-POOL-")
                 .and(w -> w.isNull("pre_archive_status")
-                        .or().eq("pre_archive_status", "PENDING_CHECK"));
+                        .or().eq("pre_archive_status", "PENDING_CHECK")
+                        .or().eq("pre_archive_status", "draft")
+                        .or().eq("pre_archive_status", "DRAFT"));
 
         java.util.List<ArcFileContent> pendingFiles = arcFileContentMapper.selectList(queryWrapper);
         java.util.List<String> fileIds = pendingFiles.stream()
