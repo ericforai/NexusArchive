@@ -673,41 +673,33 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
     }
   };
 
-  const handleLinkConfirm = () => {
+  const handleLinkConfirm = async () => {
     if (!linkingRow) return;
 
-    console.log('Confirming Link. Selected Candidates:', selectedCandidates);
+    if (selectedCandidates.length === 0) {
+      showToast('请选择要关联的单据', 'error');
+      return;
+    }
 
-    const selectedDocs = LINK_CANDIDATES.filter((c) => selectedCandidates.includes(c.id));
-    console.log('Selected Docs:', selectedDocs);
+    try {
+      setIsLoading(true);
+      // Link all selected candidates
+      await Promise.all(selectedCandidates.map(fileId =>
+        attachmentsApi.link(linkingRow.id, fileId, 'other')
+      ));
 
-    const invoiceCount = selectedDocs.filter((d) => d.type === 'invoice').length;
-    console.log('Calculated Invoice Count:', invoiceCount);
-
-    const contractDoc = selectedDocs.find((d) => d.type === 'contract');
-
-    // Calculate average match score from selected candidates
-    const totalScore = selectedDocs.reduce((sum: number, doc) => sum + doc.score, 0);
-    const avgScore = selectedDocs.length > 0 ? Math.round(totalScore / selectedDocs.length) : 0;
-
-    const updatedData = localData.map(item => {
-      if (item.id === linkingRow.id) {
-        return {
-          ...item,
-          invoiceCount: `${invoiceCount} 张`, // Always update to reflect current selection
-          contractNo: contractDoc ? contractDoc.code : '-', // Clear contract if not selected
-          matchScore: avgScore, // Use dynamic score from candidates
-          autoLink: '手工关联',
-          status: '已关联',
-          linkedFileId: selectedCandidates[0] // Store the first selected file ID as the linked file
-        };
-      }
-      return item;
-    });
-    setLocalData(updatedData);
-    setIsLinkModalOpen(false);
-    setLinkingRow(null);
-    showToast(`成功关联 ${selectedCandidates.length} 个单据`);
+      showToast(`成功关联 ${selectedCandidates.length} 个单据`);
+      setIsLinkModalOpen(false);
+      setLinkingRow(null);
+      setSelectedCandidates([]);
+      // Refresh list to show updated status/counts
+      loadCurrentView(currentPage);
+    } catch (error: any) {
+      console.error('Link failed', error);
+      showToast('关联失败: ' + (error.message || '未知错误'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // --- Auto Match Logic ---
@@ -716,76 +708,11 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   };
 
   const runAutoMatch = () => {
-    setIsMatching(true);
-    setIsRuleModalOpen(false);
-
-    // Simulate Algorithm Delay
-    setTimeout(() => {
-      const previewResults = localData.map(row => {
-        if (row.autoLink === '手工关联' || row.status === '已关联') return row;
-
-        let newScore = Math.floor(Math.random() * 30) + 60; // 60-90 base
-        if (Math.random() > 0.3) newScore += 15; // Boost chance
-        newScore = Math.min(newScore, 100);
-
-        const isHighConfidence = newScore >= matchThreshold;
-        const isSuspected = newScore >= 60 && newScore < matchThreshold;
-
-        if (isHighConfidence || isSuspected) {
-          return {
-            ...row,
-            matchScore: newScore,
-            // Temporary status for preview
-            _previewStatus: isHighConfidence ? 'high' : 'suspect',
-            _previewDesc: isHighConfidence ? '高置信度匹配' : '疑似匹配 (需人工确认)',
-            // Mock potential links
-            _proposedLinks: [
-              { type: 'invoice', code: `INV-AUTO-${Math.floor(Math.random() * 1000)}`, score: newScore }
-            ]
-          };
-        }
-        return row;
-      });
-
-      setMatchPreviewData(previewResults);
-      setIsMatching(false);
-      setIsMatchPreviewOpen(true);
-    }, 1500);
+    showToast('自动匹配功能建设中，暂未开放', 'error');
   };
 
   const confirmAutoMatch = () => {
-    const updatedData = matchPreviewData.map(row => {
-      if (row._previewStatus === 'high') {
-        return {
-          ...row,
-          status: '已关联',
-          autoLink: '规则引擎',
-          invoiceCount: '1 张', // Mock update
-          // Clean up temp fields
-          _previewStatus: undefined,
-          _previewDesc: undefined,
-          _proposedLinks: undefined
-        };
-      }
-      // Keep suspected as is, or mark as '待确认'
-      if (row._previewStatus === 'suspect') {
-        return {
-          ...row,
-          status: '待确认',
-          autoLink: '智能推荐',
-          matchScore: row.matchScore,
-          _previewStatus: undefined,
-          _previewDesc: undefined,
-          _proposedLinks: undefined
-        };
-      }
-      return row;
-    });
-
-    setLocalData(updatedData);
-    setIsMatchPreviewOpen(false);
-    const matchCount = updatedData.filter(r => r.status === '已关联').length;
-    showToast(`自动匹配完成，已自动关联 ${matchCount} 条凭证`);
+    // No-op
   };
 
   // --- Render Helpers ---
@@ -1122,11 +1049,11 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
           {/* Special Toolbar for Linking */}
           {subTitle === '凭证关联' && (
             <>
-              <button onClick={() => setIsRuleModalOpen(true)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center shadow-sm transition-all active:scale-95">
+              <button disabled className="px-4 py-2 bg-white border border-slate-200 text-slate-300 rounded-lg text-sm font-medium flex items-center shadow-sm cursor-not-allowed" title="匹配规则暂未开放">
                 <Settings2 size={16} className="mr-2" /> 匹配规则
               </button>
-              <button onClick={runAutoMatch} disabled={isMatching} className="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-100 flex items-center shadow-sm transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
-                {isMatching ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Zap size={16} className="mr-2" />} {isMatching ? '匹配中...' : '自动匹配'}
+              <button disabled className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-300 rounded-lg text-sm font-medium flex items-center shadow-sm cursor-not-allowed" title="自动匹配功能建设中">
+                <Zap size={16} className="mr-2" /> 自动匹配
               </button>
               <div className="h-8 w-px bg-slate-200 mx-1"></div>
             </>
@@ -1569,8 +1496,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><ShieldCheck size={24} /></div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-800">四性检测智能诊断报告</h3>
-                    <p className="text-xs text-slate-500">依据标准 DA/T 70-2018 执行检测</p>
+                    <h3 className="text-lg font-bold text-slate-800">四性检测概览</h3>
+                    <p className="text-xs text-slate-500">依据标准 DA/T 94-2022 执行真实性、完整性、可用性、安全性检测</p>
                   </div>
                 </div>
                 <button onClick={() => setIsComplianceModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
@@ -1579,49 +1506,76 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Overall Score */}
                 <div className="md:col-span-1 flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="64" cy="64" r="60" stroke="#e2e8f0" strokeWidth="8" fill="transparent" />
-                      <circle cx="64" cy="64" r="60" stroke="#4f46e5" strokeWidth="8" fill="transparent" strokeDasharray="377" strokeDashoffset="37.7" strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute flex flex-col items-center">
-                      <span className="text-4xl font-bold text-indigo-600">90</span>
-                      <span className="text-xs font-bold text-slate-400 uppercase">综合得分</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-center mt-4 text-slate-600">检测对象: <span className="font-bold">{localData.length}</span> 份档案<br />状态: <span className="text-emerald-600 font-bold">通过</span></p>
+                  {(() => {
+                    const total = localData.length;
+                    // Use backend status codes: PENDING_ARCHIVE means check passed
+                    const passed = localData.filter(i => i.status === 'PENDING_ARCHIVE').length;
+                    const failed = localData.filter(i => i.status === 'CHECK_FAILED').length;
+                    const pending = localData.filter(i => i.status === 'PENDING_CHECK').length;
+                    const score = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+                    return (
+                      <>
+                        <div className="relative w-32 h-32 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle cx="64" cy="64" r="60" stroke="#e2e8f0" strokeWidth="8" fill="transparent" />
+                            <circle cx="64" cy="64" r="60" stroke={score >= 90 ? "#4f46e5" : score >= 60 ? "#f59e0b" : "#e11d48"} strokeWidth="8" fill="transparent" strokeDasharray="377" strokeDashoffset={377 - (377 * score) / 100} strokeLinecap="round" />
+                          </svg>
+                          <div className="absolute flex flex-col items-center">
+                            <span className={`text-4xl font-bold ${score >= 90 ? "text-indigo-600" : score >= 60 ? "text-amber-600" : "text-rose-600"}`}>{score}</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase">当前通过率</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-center mt-4 text-slate-600">当前视图: <span className="font-bold">{total}</span> 份档案</p>
+                        <div className="mt-2 text-xs flex gap-2">
+                          <span className="text-emerald-600 font-bold">通过 {passed}</span>
+                          <span className="text-rose-600 font-bold">失败 {failed}</span>
+                          <span className="text-slate-500 font-bold">待测 {pending}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
-                {/* Details */}
-                <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { label: '真实性', score: 98, color: 'bg-emerald-500', items: ['电子签名有效', '时间戳完整'] },
-                    { label: '完整性', score: 100, color: 'bg-blue-500', items: ['元数据齐全', '附件无缺失'] },
-                    { label: '可用性', score: 95, color: 'bg-cyan-500', items: ['格式标准兼容', '索引库正常'] },
-                    { label: '安全性', score: 85, color: 'bg-amber-500', items: ['病毒扫描通过', '权限配置待优化'] },
-                  ].map((item, idx) => (
-                    <div key={idx} className="border border-slate-100 rounded-xl p-4 hover:shadow-sm transition-shadow">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-slate-700">{item.label}</span>
-                        <span className={`text-xs font-bold text-white px-2 py-0.5 rounded-full ${item.color.replace('bg-', 'bg-')}`}>{item.score}</span>
-                      </div>
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full mb-3">
-                        <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.score}%` }}></div>
-                      </div>
-                      <ul className="space-y-1">
-                        {item.items.map((check, i) => (
-                          <li key={i} className="text-xs text-slate-500 flex items-center gap-1.5">
-                            <CheckCircle2 size={10} className="text-emerald-500" /> {check}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                {/* Details / Actions */}
+                <div className="md:col-span-2 flex flex-col justify-center gap-4">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h4 className="font-bold text-slate-700 mb-2">检测说明</h4>
+                    <ul className="text-sm text-slate-500 space-y-2">
+                      <li className="flex items-start gap-2"><CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" /> <span><strong>真实性</strong>: 校验文件哈希值与原始哈希是否一致 (SM3/SHA256)。</span></li>
+                      <li className="flex items-start gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0 mt-0.5" /> <span><strong>完整性</strong>: 检查元数据（全宗号、会计年度、责任者等）是否齐全。</span></li>
+                      <li className="flex items-start gap-2"><CheckCircle2 size={16} className="text-cyan-500 shrink-0 mt-0.5" /> <span><strong>可用性</strong>: 验证文件格式是否为标准 OFD/PDF/XML。</span></li>
+                      <li className="flex items-start gap-2"><CheckCircle2 size={16} className="text-amber-500 shrink-0 mt-0.5" /> <span><strong>安全性</strong>: 扫描病毒特征码 (ClamAV集成)。</span></li>
+                    </ul>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end">
-                <button onClick={() => setIsComplianceModalOpen(false)} className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all active:scale-95">生成详细报告</button>
+              <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
+                <button onClick={() => setIsComplianceModalOpen(false)} className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">关闭</button>
+                <button
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      // Call Check All Pending API
+                      const response = await client.get('/pool/check/all-pending');
+                      if (response.data.code === 200) {
+                        const reports = response.data.data || [];
+                        const passCount = reports.filter((r: any) => r.status === 'PASS').length;
+                        showToast(`检测完成，共 ${reports.length} 个文件，通过 ${passCount} 个`, 'success');
+                        loadCurrentView(currentPage); // Refresh list
+                        setIsComplianceModalOpen(false);
+                      }
+                    } catch (error: any) {
+                      showToast('检测失败: ' + (error.message || '系统错误'), 'error');
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <ShieldCheck size={18} /> 执行全量检测
+                </button>
               </div>
             </div>
           </div>
