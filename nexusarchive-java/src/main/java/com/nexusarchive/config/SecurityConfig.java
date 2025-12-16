@@ -29,8 +29,8 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
-                                // 开启跨域支持
-                                .cors(org.springframework.security.config.Customizer.withDefaults())
+                                // 禁用 Spring Security 的 CORS 处理，使用我们自己的 FilterRegistrationBean
+                                .cors(cors -> cors.disable())
 
                                 // 禁用CSRF（使用JWT不需要CSRF保护）
                                 .csrf(csrf -> csrf.disable())
@@ -68,6 +68,8 @@ public class SecurityConfig {
                                 // 添加JWT过滤器
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                                 .addFilterBefore(licenseValidationFilter, JwtAuthenticationFilter.class)
+                                // 添加 SimpleCorsFilter 作为第一个过滤器
+                                .addFilterBefore(new SimpleCorsFilter(), org.springframework.security.web.session.DisableEncodeUrlFilter.class)
 
                                 // 安全响应头配置 (安全加固)
                                 .headers(headers -> headers

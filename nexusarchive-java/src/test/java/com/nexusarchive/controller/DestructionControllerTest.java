@@ -46,7 +46,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 
  * @author Agent E - 质量保障工程师
  */
-@WebMvcTest(DestructionController.class)
+@WebMvcTest(
+    value = DestructionController.class,
+    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+        classes = {com.nexusarchive.aspect.ArchivalAuditAspect.class}
+    )
+)
 @Import(com.nexusarchive.config.SecurityConfig.class)
 class DestructionControllerTest {
 
@@ -80,11 +86,23 @@ class DestructionControllerTest {
     @MockBean
     private RestAccessDeniedHandler restAccessDeniedHandler;
 
+    @MockBean
+    private com.nexusarchive.config.ResilientFlywayRunner resilientFlywayRunner;
+
+    @MockBean
+    private com.nexusarchive.config.MigrationGatekeeperInterceptor migrationGatekeeperInterceptor;
+
+    @MockBean
+    private com.nexusarchive.config.WebMvcConfig webMvcConfig;
+
     private String token = "mock-token";
     private Destruction testDestruction;
 
     @BeforeEach
     void setUp() throws Exception {
+        // Mock ResilientFlywayRunner to indicate system is ready
+        when(resilientFlywayRunner.isReady()).thenReturn(true);
+
         // Mock JWT
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
         when(jwtUtil.extractUsername(anyString())).thenReturn("admin");

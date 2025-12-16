@@ -27,46 +27,12 @@ const DOC_TYPES = [
   { value: 'unknown', label: '其他/未知类型', icon: FileText },
 ];
 
-// Mock Initial Data
-const MOCK_HISTORY: OCRResult[] = [
-  {
-    id: 'ocr-001',
-    fileName: '2023年11月服务器采购发票.jpg',
-    fileSize: '2.4 MB',
-    uploadTime: '10:23 AM',
-    status: 'completed',
-    type: 'invoice',
-    imageUrl: 'https://placehold.co/600x800/e2e8f0/475569?text=INVOICE+SCAN',
-    overallScore: 98,
-    fields: [
-      { name: '发票代码', value: '031001900111', confidence: 99 },
-      { name: '发票号码', value: '88291023', confidence: 99 },
-      { name: '开票日期', value: '2023年11月05日', confidence: 96 },
-      { name: '购买方', value: 'DigiVoucher 科技有限公司', confidence: 98 },
-      { name: '价税合计', value: '¥ 12,800.00', confidence: 99 },
-    ]
-  },
-  {
-    id: 'ocr-002',
-    fileName: '技术服务合同_签字页.pdf',
-    fileSize: '1.8 MB',
-    uploadTime: '09:15 AM',
-    status: 'review',
-    type: 'contract',
-    imageUrl: 'https://placehold.co/600x800/f1f5f9/475569?text=CONTRACT+SCAN',
-    overallScore: 75,
-    fields: [
-      { name: '合同编号', value: 'CON-2023-9982', confidence: 92 },
-      { name: '甲方', value: 'DigiVoucher 科技', confidence: 88 },
-      { name: '乙方', value: '云智算力服务商', confidence: 65 },
-      { name: '签署日期', value: '2023/10/-- (模糊)', confidence: 40 },
-    ]
-  }
-];
+// Mock 数据已移除 - OCR 任务列表初始为空
+const INITIAL_OCR_LIST: OCRResult[] = [];
 
 export const OCRProcessingView: React.FC = () => {
-  const [taskList, setTaskList] = useState<OCRResult[]>(MOCK_HISTORY);
-  const [activeTask, setActiveTask] = useState<OCRResult | null>(MOCK_HISTORY[0]);
+  const [taskList, setTaskList] = useState<OCRResult[]>(INITIAL_OCR_LIST);
+  const [activeTask, setActiveTask] = useState<OCRResult | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

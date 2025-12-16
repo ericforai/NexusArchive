@@ -18,6 +18,7 @@ export interface Archive {
     createdAt?: string;
     createdTime?: string;
     creator?: string;
+    customMetadata?: string; // JSON 格式的会计分录数据
 }
 
 export interface ArchiveQuery {

@@ -26,7 +26,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest(ArchiveController.class)
+@org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest(
+    value = ArchiveController.class,
+    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+        classes = {com.nexusarchive.aspect.ArchivalAuditAspect.class}
+    )
+)
 @org.springframework.context.annotation.Import(com.nexusarchive.config.SecurityConfig.class)
 public class ArchiveControllerTest {
 
@@ -64,10 +70,22 @@ public class ArchiveControllerTest {
     @org.springframework.boot.test.mock.mockito.MockBean
     private RestAccessDeniedHandler restAccessDeniedHandler;
 
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.nexusarchive.config.ResilientFlywayRunner resilientFlywayRunner;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.nexusarchive.config.MigrationGatekeeperInterceptor migrationGatekeeperInterceptor;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.nexusarchive.config.WebMvcConfig webMvcConfig;
+
     private String token;
 
     @BeforeEach
     public void setup() {
+        // Mock ResilientFlywayRunner to indicate system is ready
+        org.mockito.Mockito.when(resilientFlywayRunner.isReady()).thenReturn(true);
+
         // 生成测试Token
         org.mockito.Mockito
                 .when(jwtUtil.generateToken(org.mockito.ArgumentMatchers.anyString(),
@@ -132,6 +150,7 @@ public class ArchiveControllerTest {
         mockMvc.perform(post("/archives")
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(archive)))
                 .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                 .andExpect(status().isOk())

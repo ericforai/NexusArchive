@@ -13,53 +13,11 @@ interface TreeNode {
     children?: TreeNode[];
 }
 
-const MOCK_TREE_DATA: TreeNode[] = [
-    {
-        id: '2023',
-        label: '2023年度',
-        type: 'year',
-        children: [
-            {
-                id: '2023-11',
-                label: '11月',
-                type: 'month',
-                children: [
-                    { id: 'V-202311-001', label: '记-001: 阿里云服务费', type: 'voucher' },
-                    { id: 'V-202311-002', label: '记-002: 办公用品采购', type: 'voucher' },
-                    { id: 'V-202311-003', label: '记-003: 员工差旅报销', type: 'voucher' },
-                ]
-            },
-            {
-                id: '2023-10',
-                label: '10月',
-                type: 'month',
-                children: [
-                    { id: 'V-202310-001', label: '记-001: 季度房租支付', type: 'voucher' },
-                ]
-            }
-        ]
-    },
-    {
-        id: '2025',
-        label: '2025年度',
-        type: 'year',
-        children: [
-            {
-                id: '2025-11',
-                label: '11月',
-                type: 'month',
-                children: [
-                    { id: 'V-202511-TEST', label: '记-001: 报销差旅费', type: 'voucher' },
-                    { id: 'C-202511-002', label: '合-002: 服务器采购合同', type: 'voucher' },
-                ]
-            }
-        ]
-    }
-];
+// Mock 数据已移除 - 档案树通过 API 动态构建
 
 export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSelectVoucher }) => {
-    const [treeData, setTreeData] = useState<TreeNode[]>(MOCK_TREE_DATA);
-    const [expandedNodes, setExpandedNodes] = useState<string[]>(['2023', '2023-11', '2025', '2025-11']);
+    const [treeData, setTreeData] = useState<TreeNode[]>([]);
+    const [expandedNodes, setExpandedNodes] = useState<string[]>([]);
     const [selectedNode, setSelectedNode] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -110,18 +68,22 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
             if (res.code === 200 && res.data) {
                 const records = (res.data as any).records || [];
                 if (records.length === 0) {
-                    // 无数据时使用默认数据
-                    setTreeData(MOCK_TREE_DATA);
+                    // 无数据时显示空状态
+                    setTreeData([]);
                 } else {
-                    setTreeData(buildTreeFromArchives(records as Archive[]));
+                    const tree = buildTreeFromArchives(records as Archive[]);
+                    setTreeData(tree);
+                    // 自动展开所有年度和月份
+                    const expandIds = tree.flatMap(y => [y.id, ...(y.children?.map(m => m.id) || [])]);
+                    setExpandedNodes(expandIds);
                 }
             } else {
-                // 加载失败时使用默认数据
-                setTreeData(MOCK_TREE_DATA);
+                // 加载失败显示空状态
+                setTreeData([]);
             }
         } catch (e) {
-            console.warn('Failed to load tree, using defaults', e);
-            setTreeData(MOCK_TREE_DATA);
+            console.warn('Failed to load tree', e);
+            setTreeData([]);
         } finally {
             setLoading(false);
         }

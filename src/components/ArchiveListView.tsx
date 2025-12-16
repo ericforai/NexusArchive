@@ -13,6 +13,7 @@ import {
 import { ModuleConfig, TableColumn, GenericRow, ViewState } from '../types';
 import { poolApi, PoolItem } from '../api/pool';
 import { archivesApi } from '../api/archives';
+import { attachmentsApi } from '../api/attachments';
 import { RelationshipVisualizer } from './RelationshipVisualizer';
 import { DemoBadge } from './common/DemoBadge';
 import { client } from '../api/client';
@@ -61,13 +62,8 @@ interface ArchiveListViewProps {
   routeConfig?: string;
 }
 
-// Mock candidates for linking with dynamic scores
-const MOCK_CANDIDATES = [
-  { id: '1', type: 'invoice', code: 'INV-202311-089', name: '阿里云计算服务费发票', amount: '¥ 12,800.00', date: '2023-11-02', score: 98 },
-  { id: '2', type: 'contract', code: 'CON-2023-098', name: '年度技术服务协议', amount: '¥ 150,000.00', date: '2023-01-01', score: 92 },
-  { id: '3', type: 'invoice', code: 'INV-202311-092', name: '服务器采购报销', amount: '¥ 45,200.00', date: '2023-11-03', score: 85 },
-  { id: '4', type: 'invoice', code: 'INV-202310-011', name: '办公用品采购', amount: '¥ 2,300.00', date: '2023-10-15', score: 45 },
-];
+// Mock 候选数据已移除 - 关联候选应通过 API 获取
+const LINK_CANDIDATES: { id: string; type: string; code: string; name: string; amount: string; date: string; score: number }[] = [];
 
 interface MatchRule {
   id: string;
@@ -430,6 +426,30 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
   // Attachment Preview State
   const [relatedFiles, setRelatedFiles] = useState<PoolItem[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !viewRow?.id) return;
+
+    try {
+      setIsUploading(true);
+      await attachmentsApi.uploadAndLink(viewRow.id, file, 'other');
+      // 刷新关联文件列表
+      const files = await poolApi.getRelatedFiles(viewRow.id);
+      setRelatedFiles(files);
+      showToast('上传成功', 'success');
+    } catch (error: any) {
+      console.error('Upload failed', error);
+      alert('上传失败: ' + (error.message || '未知错误'));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
   const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<'main' | 'attachments'>('main');
 
@@ -658,16 +678,16 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
 
     console.log('Confirming Link. Selected Candidates:', selectedCandidates);
 
-    const selectedDocs = MOCK_CANDIDATES.filter(c => selectedCandidates.includes(c.id));
+    const selectedDocs = LINK_CANDIDATES.filter((c) => selectedCandidates.includes(c.id));
     console.log('Selected Docs:', selectedDocs);
 
-    const invoiceCount = selectedDocs.filter(d => d.type === 'invoice').length;
+    const invoiceCount = selectedDocs.filter((d) => d.type === 'invoice').length;
     console.log('Calculated Invoice Count:', invoiceCount);
 
-    const contractDoc = selectedDocs.find(d => d.type === 'contract');
+    const contractDoc = selectedDocs.find((d) => d.type === 'contract');
 
     // Calculate average match score from selected candidates
-    const totalScore = selectedDocs.reduce((sum, doc) => sum + doc.score, 0);
+    const totalScore = selectedDocs.reduce((sum: number, doc) => sum + doc.score, 0);
     const avgScore = selectedDocs.length > 0 ? Math.round(totalScore / selectedDocs.length) : 0;
 
     const updatedData = localData.map(item => {
@@ -985,7 +1005,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
               <div className="p-6 overflow-y-auto flex-1 space-y-2">
                 <DemoBadge text="关联候选为演示数据，接入真实关联接口后可关闭演示模式。" />
                 {demoMode ? (
-                  MOCK_CANDIDATES.map(c => (
+                  LINK_CANDIDATES.map((c) => (
                     <div key={c.id} onClick={() => toggleCandidateSelection(c.id)} className={`flex justify-between p-3 rounded-xl border cursor-pointer ${selectedCandidates.includes(c.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
                       <div><p className="font-bold">{c.name}</p><p className="text-xs text-slate-500">{c.code}</p></div>
                       <div className="text-right"><span className={`font-bold ${c.score > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{c.score}%</span></div>
@@ -1859,8 +1879,35 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                     {/* Attachment List (Visible only when 'attachments' tab is active) */}
                     {activeDetailTab === 'attachments' && (
                       <div className="max-h-[200px] overflow-y-auto bg-white border-b border-slate-200 p-2 space-y-1 shadow-sm relative z-10">
+                        {isPoolView && (
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-slate-500">共 {relatedFiles.length} 个附件</span>
+                            <div>
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleUpload}
+                                className="hidden"
+                                accept=".pdf,.ofd,.jpg,.jpeg,.png"
+                              />
+                              <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                                className={`px-3 py-1.5 text-xs bg-primary-50 text-primary-600 border border-primary-200 rounded hover:bg-primary-100 flex items-center gap-1 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                {isUploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                                {isUploading ? '上传中...' : '添加附件'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         {relatedFiles.length === 0 ? (
-                          <div className="text-center py-8 text-slate-400 text-xs">暂无关联附件</div>
+                          <div className="text-center py-8 text-slate-400 text-xs">
+                            <p>暂无关联附件</p>
+                            {!isPoolView && (
+                              <p className="mt-2 text-slate-400">已归档档案不可添加附件</p>
+                            )}
+                          </div>
                         ) : (
                           relatedFiles.map((file, idx) => (
                             <div
@@ -1906,6 +1953,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                           const isMain = activePreviewId === viewRow?.id;
 
                           if (isMain) {
+                            // 保持显示主凭证，除非用户显式点击了某个附件
                             fileName = viewRow?.title || (viewRow?.code ? viewRow.code + '.pdf' : 'unknown.pdf');
                           } else {
                             const att = relatedFiles.find(f => f.id === activePreviewId);

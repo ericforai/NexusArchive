@@ -13,7 +13,15 @@ class SafeStorage {
 
     constructor() {
         this.memoryStorage = new Map<string, string>();
-        console.log('[SafeStorage] Initialized');
+        // 提前初始化，确保在任何访问前确定可用的存储类型
+        try {
+            this.initStorage();
+        } catch (e) {
+            console.warn('[SafeStorage] Init failed, using memory storage:', e);
+            this.storageType = 'memory';
+            this.checkedStorage = true;
+        }
+        console.log('[SafeStorage] Initialized with:', this.storageType);
     }
 
     private initStorage(): void {

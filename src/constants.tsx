@@ -37,12 +37,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: ViewState.SETTINGS, label: '系统设置', icon: Settings, permission: 'nav:settings', subItems: ['基础设置', '用户管理', '角色权限', '组织架构', '全宗管理', '安全合规', '集成中心', '审计日志'] },
 ];
 
-export const MOCK_STATS: ArchiveStat[] = [
-  { label: '本月归档量', value: '12,845', trend: 12.5, trendLabel: 'vs 上月', icon: FileText, color: 'bg-blue-500' },
-  { label: 'OCR 识别率', value: '99.8%', trend: 0.4, trendLabel: '精度提升', icon: CheckCircle2, color: 'bg-emerald-500' },
-  { label: '四性检测异常', value: '23', trend: -5, trendLabel: '待处理', icon: AlertTriangle, color: 'bg-amber-500' },
-  { label: '借阅申请', value: '8', trend: 2, trendLabel: '今日新增', icon: Clock, color: 'bg-purple-500' },
-];
+// MOCK_STATS 已移除 - 统计数据通过 /api/stats/dashboard 获取真实数据
+export const MOCK_STATS: ArchiveStat[] = [];
 
 export const NOTIFICATIONS: Notification[] = [
   { id: '1', title: 'OCR识别完成：10月进项发票批次', time: '10分钟前', type: 'success' },

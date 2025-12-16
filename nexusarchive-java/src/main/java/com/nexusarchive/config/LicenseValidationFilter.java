@@ -48,6 +48,13 @@ public class LicenseValidationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        String method = request.getMethod();
+        
+        // OPTIONS 请求（CORS 预检）不需要 License 检查
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
+        
         return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
     }
 

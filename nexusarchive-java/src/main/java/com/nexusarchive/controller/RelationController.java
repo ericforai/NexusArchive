@@ -55,7 +55,8 @@ public class RelationController {
             return Result.error(404, "Archive not found");
         }
 
-        boolean isArchived = "ARCHIVED".equals(archive.getStatus());
+        // 使用 equalsIgnoreCase 忽略大小写
+        boolean isArchived = "ARCHIVED".equalsIgnoreCase(archive.getStatus());
         
         ComplianceStatusDto status = ComplianceStatusDto.builder()
                 .passed(isArchived)

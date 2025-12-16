@@ -12,27 +12,12 @@ interface Rack {
   humidity: number;
 }
 
-const MOCK_RACKS: Rack[] = Array.from({ length: 8 }).map((_, i) => ({
-  id: `rack-${i + 1}`,
-  label: `第 ${i + 1} 列`,
-  status: i === 2 ? 'open-left' : 'closed',
-  locked: i === 0,
-  usage: Math.floor(Math.random() * 40) + 50,
-  temp: 22 + Math.random(),
-  humidity: 45 + Math.random() * 5,
-}));
-
-const DEMO_ENVIRONMENT: WarehouseEnvironment = {
-  temperature: 22.4,
-  humidity: 45.8,
-  status: 'NORMAL',
-  lastUpdated: new Date().toISOString()
-};
+// Mock 数据已移除 - 货架数据通过 API 获取
 
 export const WarehouseView: React.FC = () => {
-  const [racks, setRacks] = useState<Rack[]>(MOCK_RACKS);
-  const [selectedRack, setSelectedRack] = useState<Rack | null>(MOCK_RACKS[0]);
-  const [environment, setEnvironment] = useState<WarehouseEnvironment | null>(DEMO_ENVIRONMENT);
+  const [racks, setRacks] = useState<Rack[]>([]);
+  const [selectedRack, setSelectedRack] = useState<Rack | null>(null);
+  const [environment, setEnvironment] = useState<WarehouseEnvironment | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,10 +62,11 @@ export const WarehouseView: React.FC = () => {
         return res.data;
       }
     } catch (e) {
-      console.warn('Failed to load environment, using defaults', e);
+      console.warn('Failed to load environment', e);
     }
-    setEnvironment(DEMO_ENVIRONMENT);
-    return DEMO_ENVIRONMENT;
+    // API 无数据时返回 null，界面显示空状态
+    setEnvironment(null);
+    return null;
   };
 
   const loadShelves = async () => {
@@ -90,19 +76,19 @@ export const WarehouseView: React.FC = () => {
       const env = await loadEnvironment();
       const res = await warehouseApi.getShelves();
       if (res.code === 200 && res.data && res.data.length > 0) {
-        const mapped = mapShelvesToRacks(res.data, env || environment || DEMO_ENVIRONMENT);
+        const mapped = mapShelvesToRacks(res.data, env || undefined);
         setRacks(mapped);
-        setSelectedRack(mapped[0]);
+        setSelectedRack(mapped[0] || null);
       } else {
-        // 后端无数据时使用默认数据
-        setRacks(MOCK_RACKS);
-        setSelectedRack(MOCK_RACKS[0]);
+        // 后端无数据时显示空状态
+        setRacks([]);
+        setSelectedRack(null);
       }
     } catch (e) {
-      console.warn('Failed to load shelves, using defaults', e);
-      // 加载失败时使用默认数据
-      setRacks(MOCK_RACKS);
-      setSelectedRack(MOCK_RACKS[0]);
+      console.warn('Failed to load shelves', e);
+      // 加载失败时显示空状态
+      setRacks([]);
+      setSelectedRack(null);
     } finally {
       setLoading(false);
     }

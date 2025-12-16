@@ -71,6 +71,43 @@ public class ArchiveFileController {
         }
     }
 
+    /**
+     * 通过文件 ID 直接下载文件
+     * 用于全景视图附件预览（不需要额外权限校验，已登录即可）
+     */
+    @GetMapping("/files/download/{fileId}")
+    @Operation(summary = "通过文件ID下载文件")
+    public ResponseEntity<Resource> downloadByFileId(@PathVariable String fileId) {
+        // 直接通过文件 ID 查询
+        ArcFileContent content = fileContentMapper.selectById(fileId);
+
+        if (content == null || content.getStoragePath() == null) {
+            throw new BusinessException("File not found: " + fileId);
+        }
+
+        try {
+            Path filePath = fileStorageService.resolvePath(content.getStoragePath());
+            
+            if (!fileStorageService.exists(content.getStoragePath())) {
+                throw new BusinessException("Physical file not found: " + content.getStoragePath());
+            }
+
+            FileInputStream fis = new FileInputStream(filePath.toFile());
+            InputStreamResource resource = new InputStreamResource(fis);
+
+            String contentType = determineContentType(content.getFileType(), content.getFileName());
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(resource);
+
+        } catch (FileNotFoundException e) {
+            log.error("File not found: {}", content.getStoragePath(), e);
+            throw new BusinessException("File not accessible");
+        }
+    }
+
     private String determineContentType(String fileType, String fileName) {
         if (fileType != null) {
             switch (fileType.toLowerCase()) {

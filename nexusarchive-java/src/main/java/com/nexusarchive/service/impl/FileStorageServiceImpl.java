@@ -29,6 +29,12 @@ public class FileStorageServiceImpl implements FileStorageService {
         if (relativePath.contains("..")) {
             throw new BusinessException("Invalid file path: " + relativePath);
         }
+        
+        // 处理以 ./ 开头的相对路径（相对于工作目录）
+        if (relativePath.startsWith("./")) {
+            return Paths.get(relativePath).toAbsolutePath().normalize();
+        }
+        
         return Paths.get(archiveRootPath, relativePath).toAbsolutePath();
     }
 
