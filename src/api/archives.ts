@@ -28,6 +28,7 @@ export interface ArchiveQuery {
     status?: string;
     categoryCode?: string;
     orgId?: string;
+    subType?: string; // Generic sub-type filter (e.g. bookType, reportType)
 }
 
 export const archivesApi = {

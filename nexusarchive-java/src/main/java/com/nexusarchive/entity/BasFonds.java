@@ -54,4 +54,9 @@ public class BasFonds {
      */
     @TableField(value = "updated_time", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedTime;
+
+    /**
+     * 关联组织ID (Company Level)
+     */
+    private String orgId;
 }

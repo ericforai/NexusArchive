@@ -35,6 +35,7 @@ import {
   QUERY_CONFIG,
   GENERIC_CONFIG,
 } from '../constants';
+import { Link, useLocation } from 'react-router-dom';
 
 // 路由配置标识符到配置对象的映射
 const ROUTE_CONFIG_MAP: Record<string, { config: ModuleConfig; title: string; subTitle: string }> = {
@@ -235,6 +236,17 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   const [orgOptions, setOrgOptions] = useState<{ label: string; value: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sub Type Filter from URL (Generic for bookType, reportType, otherType)
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const [subTypeFilter, setSubTypeFilter] = useState<string>(searchParams.get('type') || '');
+
+  // Update filter when URL changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setSubTypeFilter(params.get('type') || '');
+  }, [location.search]);
+
   // Load organizations for filtering (basic example)
   useEffect(() => {
     const loadOrgs = async () => {
@@ -365,7 +377,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
         search: searchTerm || undefined,
         status: statusFilter || resolveDefaultStatus(),
         categoryCode: resolveCategoryCode(),
-        orgId: orgFilter || undefined
+        orgId: orgFilter || undefined,
+        subType: subTypeFilter || undefined // Pass generic sub-type filter
       });
 
       if (result.code !== 200 || !result.data) {
@@ -385,7 +398,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageInfo.pageSize, searchTerm, statusFilter, resolveDefaultStatus, resolveCategoryCode, orgFilter, subTitle, title]);
+  }, [currentPage, pageInfo.pageSize, searchTerm, statusFilter, resolveDefaultStatus, resolveCategoryCode, orgFilter, subTitle, title, subTypeFilter]);
 
   const loadCurrentView = useCallback((page = currentPage) => {
     if (isPoolView) {
@@ -397,7 +410,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   // Initial and reactive loading
   useEffect(() => {
     setCurrentPage(1);
-  }, [subTitle, searchTerm, statusFilter, orgFilter, resolveCategoryCode, resolveDefaultStatus]);
+  }, [subTitle, searchTerm, statusFilter, orgFilter, resolveCategoryCode, resolveDefaultStatus, subTypeFilter]);
 
   useEffect(() => {
     loadCurrentView(currentPage);

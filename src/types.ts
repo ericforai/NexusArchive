@@ -4,8 +4,11 @@ export enum ViewState {
   PORTAL = 'PORTAL',
   PRE_ARCHIVE = 'PRE_ARCHIVE',
   COLLECTION = 'COLLECTION',
-  ARCHIVE_MGMT = 'ARCHIVE_MGMT',
-  QUERY = 'QUERY',
+  ARCHIVE_MGMT = 'ARCHIVE_MGMT', // Deprecated? Sending to keep for history or strict refactor? Let's keep for now but add new ones.
+  ACCOUNT_ARCHIVES = 'ACCOUNT_ARCHIVES', // New: Repository
+  ARCHIVE_OPS = 'ARCHIVE_OPS', // New: Operations
+  ARCHIVE_UTILIZATION = 'ARCHIVE_UTILIZATION', // New: Query + Borrowing
+  QUERY = 'QUERY', // Keep for backward compat or sub-feature reference? Maybe deprecated but safe to keep.
   BORROWING = 'BORROWING',
   WAREHOUSE = 'WAREHOUSE',
   STATS = 'STATS',
@@ -18,18 +21,15 @@ export enum ViewState {
   COMPLIANCE_REPORT = 'COMPLIANCE_REPORT',
 }
 
-export interface SubCategory {
-  label: string;
-  items: string[];
-}
+
 
 export interface NavItem {
-  id: ViewState;
+  id: string;
   label: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  path?: string; // New: Explicit path or identifier for routing
   permission?: string;
-  subItems?: string[]; // 2级菜单（向后兼容）
-  subCategories?: SubCategory[]; // 3级菜单结构
+  children?: NavItem[]; // New: Recursive structure
 }
 
 export interface ArchiveStat {

@@ -174,15 +174,21 @@ export const SystemApp: React.FC = () => {
             return COLLECTION_CONFIG;
         }
 
-        // Archive Management
-        if (activeView === ViewState.ARCHIVE_MGMT) {
-            if (activeSubItem === '档案装盒') return ARCHIVE_BOX_CONFIG;
+        // Archive Repository Configs
+        if (activeView === ViewState.ACCOUNT_ARCHIVES) {
             if (activeSubItem === '会计凭证') return ACCOUNTING_VOUCHER_CONFIG;
             if (activeSubItem === '会计账簿') return ACCOUNTING_LEDGER_CONFIG;
             if (activeSubItem === '财务报告') return FINANCIAL_REPORT_CONFIG;
             if (activeSubItem === '其他会计资料') return OTHER_ACCOUNTING_MATERIALS_CONFIG;
             return ARCHIVE_VIEW_CONFIG;
         }
+
+        // Archive Operations Configs
+        if (activeView === ViewState.ARCHIVE_OPS) {
+            if (activeSubItem === '档案装盒') return ARCHIVE_BOX_CONFIG;
+            return GENERIC_CONFIG;
+        }
+
 
         // Query
         if (activeView === ViewState.QUERY) {
@@ -220,25 +226,34 @@ export const SystemApp: React.FC = () => {
                 if (activeSubItem === '在线接收') return <OnlineReceptionView />;
                 return <ArchiveListView title="资料收集" subTitle={activeSubItem || '概览'} config={getModuleConfig()} onNavigate={handleNavigate} />;
 
-            case ViewState.ARCHIVE_MGMT:
+            // --- Accounting Archives (Repository) ---
+            case ViewState.ACCOUNT_ARCHIVES:
+                return <ArchiveListView
+                    title="会计档案"
+                    subTitle={activeSubItem || '档案列表'}
+                    config={getModuleConfig()}
+                    onNavigate={handleNavigate}
+                />;
+
+            // --- Archive Operations ---
+            case ViewState.ARCHIVE_OPS:
                 if (activeSubItem === '归档审批') return <ArchiveApprovalView />;
-                if (activeSubItem === '关联查看') return <RelationshipView />;
-                if (activeSubItem === '开放鉴定') return <OpenAppraisalView />;
-                if (activeSubItem === '开放清册') return <OpenInventoryView />;
-                if (activeSubItem === '销毁鉴定') return <DestructionView />;
-                if (activeSubItem === '销毁库') return <DestructionRepositoryView />;
                 if (activeSubItem === '档案组卷') return <VolumeManagement />;
-                return <ArchiveListView title="档案管理" subTitle={activeSubItem || '归档查看'} config={getModuleConfig()} onNavigate={handleNavigate} />;
+                if (activeSubItem === '开放鉴定') return <OpenAppraisalView />;
+                if (activeSubItem === '销毁鉴定') return <DestructionView />;
+                if (activeSubItem === '档案装盒') return <ArchiveListView title="档案装盒" subTitle="装盒作业" config={getModuleConfig()} onNavigate={handleNavigate} />;
 
-            case ViewState.QUERY:
+                return <ArchiveListView title="档案作业" subTitle={activeSubItem} config={getModuleConfig()} onNavigate={handleNavigate} />;
+
+            case ViewState.ARCHIVE_MGMT: // Backward compatibility fallback
+                return <ArchiveListView title="档案管理" subTitle={activeSubItem} config={getModuleConfig()} onNavigate={handleNavigate} />;
+
+            case ViewState.ARCHIVE_UTILIZATION:
                 if (activeSubItem === '穿透联查') return <RelationshipQueryView />;
-                return <ArchiveListView title="档案查询" subTitle={activeSubItem || '全文检索'} config={getModuleConfig()} onNavigate={handleNavigate} />;
+                if (activeSubItem === '借阅申请') return <BorrowingView />;
+                return <ArchiveListView title="档案利用" subTitle={activeSubItem || '全文检索'} config={QUERY_CONFIG} onNavigate={handleNavigate} />;
 
-            case ViewState.BORROWING:
-                return <BorrowingView />;
-
-            case ViewState.WAREHOUSE:
-                return <WarehouseView />;
+            // case ViewState.WAREHOUSE: return <WarehouseView />; // Removed
 
             case ViewState.DESTRUCTION:
                 return <DestructionView />;

@@ -24,4 +24,9 @@ public class ErpConfig {
     private LocalDateTime createdTime;
     
     private LocalDateTime lastModifiedTime;
+
+    /**
+     * 关联组织ID
+     */
+    private String orgId;
 }

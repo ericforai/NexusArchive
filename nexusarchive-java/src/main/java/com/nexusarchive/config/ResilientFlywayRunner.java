@@ -94,6 +94,8 @@ public class ResilientFlywayRunner implements ApplicationRunner {
                         .validateOnMigrate(false)
                         .load();
                 
+                // 自动修复元数据表 (清除 Failed 状态的记录)
+                flyway.repair();
                 flyway.migrate();
                 
                 isReady.set(true);

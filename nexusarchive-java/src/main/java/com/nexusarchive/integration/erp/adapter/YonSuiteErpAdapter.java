@@ -3,6 +3,7 @@ package com.nexusarchive.integration.erp.adapter;
 import com.nexusarchive.integration.erp.dto.*;
 import com.nexusarchive.integration.yonsuite.client.YonSuiteClient;
 import com.nexusarchive.integration.yonsuite.dto.*;
+import com.nexusarchive.integration.yonsuite.service.YonPaymentFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ import java.util.*;
 public class YonSuiteErpAdapter implements ErpAdapter {
 
     private final YonSuiteClient yonSuiteClient;
+    private final YonPaymentFileService yonPaymentFileService;
+    private final com.nexusarchive.integration.yonsuite.service.YonPaymentListService yonPaymentListService;
 
     @Override
     public String getIdentifier() {
@@ -75,6 +78,15 @@ public class YonSuiteErpAdapter implements ErpAdapter {
         collectionFileSync.setIsActive(true);
         collectionFileSync.setSyncStrategy("MANUAL");
         scenarios.add(collectionFileSync);
+
+        // [AI Generated] 付款单文件获取场景
+        com.nexusarchive.entity.ErpScenario paymentFileSync = new com.nexusarchive.entity.ErpScenario();
+        paymentFileSync.setScenarioKey("PAYMENT_FILE_SYNC");
+        paymentFileSync.setName("付款单文件获取");
+        paymentFileSync.setDescription("从YonSuite获取资金结算文件 (AI集成)");
+        paymentFileSync.setIsActive(true);
+        paymentFileSync.setSyncStrategy("MANUAL");
+        scenarios.add(paymentFileSync);
 
         return scenarios;
     }
@@ -332,6 +344,60 @@ public class YonSuiteErpAdapter implements ErpAdapter {
         } catch (Exception e) {
             log.error("Sync Collection Files error", e);
             return Collections.emptyList();
+        }
+    }
+
+    public List<VoucherDTO> syncPaymentFiles(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        log.info("Executing AI-Generated Logic: syncPaymentFiles...");
+        try {
+            // 1. Determine File IDs to fetch
+            // [AI Connector Factory - Pass 3 Integration]
+            // We now call the generated Query Service to get real IDs based on date range.
+            List<String> fileIds = yonPaymentListService.queryPaymentIds(config, startDate, endDate);
+            
+            if (fileIds.isEmpty()) {
+                log.info("No payment bills found in range: {} to {}", startDate, endDate);
+                return Collections.emptyList();
+            }
+            log.info("Found {} payment bills to fetch files for.", fileIds.size());
+            
+            // 2. Call AI Generated Service
+            // Adapter config to service config logic is handled here or in the service?
+            // Service expects DTO config.
+            List<cn.hutool.json.JSONObject> results = yonPaymentFileService.getPaymentFileUrls(config, fileIds);
+            
+            // 3. Map to VoucherDTO (to be saved as ArcFileContent in Pre-Archive)
+            List<VoucherDTO> vouchers = new ArrayList<>();
+            for (cn.hutool.json.JSONObject res : results) {
+                // Determine status. If downLoadUrl is present, it's successful.
+                String url = res.getStr("downLoadUrl");
+                if (url == null) continue;
+                
+                VoucherDTO dto = VoucherDTO.builder()
+                        .voucherNo(res.getStr("id")) // Use File ID as Voucher No for uniqueness
+                        .summary("Payment File: " + res.getStr("fileName"))
+                        .accountPeriod(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                        .status("GENERATED")
+                        .debitTotal(BigDecimal.ZERO)
+                        .creditTotal(BigDecimal.ZERO)
+                        .build();
+                
+                // Store the URL in the entries/custom metadata so it can be used later
+                // The ErpScenarioService saves sourceData as JSON.
+                // We can also put it in custom fields if we had them extended.
+                // For now, simple mapping.
+                // Hack: Use 'entries' to store the URL in the summary of an entry
+                VoucherDTO.VoucherEntryDTO entry = new VoucherDTO.VoucherEntryDTO();
+                entry.setSummary("Download URL: " + url);
+                dto.setEntries(Collections.singletonList(entry));
+                
+                vouchers.add(dto);
+            }
+            log.info("Synced Payment Files: {}", vouchers.size());
+            return vouchers;
+        } catch (Exception e) {
+            log.error("Sync Payment Files Logic Error", e);
+            throw new RuntimeException(e);
         }
     }
 }

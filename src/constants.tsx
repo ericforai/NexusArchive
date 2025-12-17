@@ -20,21 +20,120 @@ import { NavItem, ViewState, ArchiveStat, Notification, ModuleConfig } from './t
 export const NAV_ITEMS: NavItem[] = [
   { id: ViewState.PORTAL, label: '档案门户', icon: LayoutDashboard, permission: 'nav:portal' },
   { id: ViewState.PANORAMA, label: '全景视图', icon: PanelLeft, permission: 'nav:panorama' },
-  { id: ViewState.PRE_ARCHIVE, label: '预归档库', icon: Layers, permission: 'nav:pre_archive', subItems: ['电子凭证池', 'OCR识别', '凭证关联', '异常数据'] },
-  { id: ViewState.COLLECTION, label: '资料收集', icon: FileInput, permission: 'nav:collection', subItems: ['在线接收', '扫描集成', '批量上传'] },
   {
-    id: ViewState.ARCHIVE_MGMT,
-    label: '档案管理',
-    icon: Archive,
-    permission: 'nav:archive_mgmt',
-    subItems: ['会计凭证', '会计账簿', '财务报告', '其他会计资料', '档案装盒', '档案组卷', '归档审批', '开放鉴定', '销毁鉴定']
+    id: ViewState.PRE_ARCHIVE,
+    label: '预归档库',
+    icon: Layers,
+    permission: 'nav:pre_archive',
+    children: [
+      { id: '电子凭证池', label: '电子凭证池', path: '电子凭证池' },
+      { id: 'OCR识别', label: 'OCR识别', path: 'OCR识别' },
+      { id: '凭证关联', label: '凭证关联', path: '凭证关联' },
+      { id: '异常数据', label: '异常数据', path: '异常数据' }
+    ]
   },
-  { id: ViewState.QUERY, label: '档案查询', icon: Search, permission: 'nav:query', subItems: ['穿透联查', '全文检索'] },
-  { id: ViewState.BORROWING, label: '档案借阅', icon: BookOpenCheck, permission: 'nav:borrowing', subItems: ['借阅审批'] },
-  { id: ViewState.DESTRUCTION, label: '档案销毁', icon: Flame, permission: 'nav:destruction' },
-  { id: ViewState.WAREHOUSE, label: '库房管理', icon: Warehouse, permission: 'nav:warehouse', subItems: ['密集架控制', '温湿度监控'] },
+  {
+    id: ViewState.COLLECTION,
+    label: '资料收集',
+    icon: FileInput,
+    permission: 'nav:collection',
+    children: [
+      { id: '在线接收', label: '在线接收', path: '在线接收' },
+      { id: '扫描集成', label: '扫描集成', path: '扫描集成' },
+      { id: '批量上传', label: '批量上传', path: '批量上传' }
+    ]
+  },
+  // --- 1. 会计档案库 (Repository) ---
+  {
+    id: ViewState.ACCOUNT_ARCHIVES,
+    label: '会计档案',
+    icon: Archive,
+    permission: 'nav:repository',
+    children: [
+      // Level 2
+      { id: '会计凭证', label: '会计凭证', path: '会计凭证' },
+      {
+        id: '会计账簿',
+        label: '会计账簿',
+        children: [
+          { id: '总账', label: '总账', path: '总账' },
+          { id: '明细账', label: '明细账', path: '明细账' },
+          { id: '现金日记账', label: '现金日记账', path: '现金日记账' },
+          { id: '银行存款日记账', label: '银行存款日记账', path: '银行存款日记账' },
+          { id: '固定资产卡片', label: '固定资产卡片', path: '固定资产卡片' },
+          { id: '其他辅助账簿', label: '其他辅助账簿', path: '其他辅助账簿' }
+        ]
+      },
+      {
+        id: '财务报告',
+        label: '财务报告',
+        children: [
+          { id: '月度财务报告', label: '月度财务报告', path: '月度财务报告' },
+          { id: '季度财务报告', label: '季度财务报告', path: '季度财务报告' },
+          { id: '半年度财务报告', label: '半年度财务报告', path: '半年度财务报告' },
+          { id: '年度财务报告', label: '年度财务报告', path: '年度财务报告' },
+          { id: '专项财务报告', label: '专项财务报告', path: '专项财务报告' }
+        ]
+      },
+      {
+        id: '其他会计资料',
+        label: '其他会计资料',
+        children: [
+          { id: '银行存款余额调节表', label: '银行存款余额调节表', path: '银行存款余额调节表' },
+          { id: '银行对账单', label: '银行对账单', path: '银行对账单' },
+          { id: '纳税申报表', label: '纳税申报表', path: '纳税申报表' },
+          { id: '会计档案移交清册', label: '会计档案移交清册', path: '会计档案移交清册' },
+          { id: '会计档案保管清册', label: '会计档案保管清册', path: '会计档案保管清册' },
+          { id: '会计档案销毁清册', label: '会计档案销毁清册', path: '会计档案销毁清册' },
+          { id: '会计档案鉴定意见书', label: '会计档案鉴定意见书', path: '会计档案鉴定意见书' }
+        ]
+      }
+    ]
+  },
+  // --- 2. 档案作业 (Operations) ---
+  {
+    id: ViewState.ARCHIVE_OPS,
+    label: '档案作业',
+    icon: FileText, // Change Icon to distinguish
+    permission: 'nav:operations',
+    children: [
+      { id: '档案装盒', label: '档案装盒', path: '档案装盒' },
+      { id: '档案组卷', label: '档案组卷', path: '档案组卷' },
+      { id: '归档审批', label: '归档审批', path: '归档审批' },
+      { id: '开放鉴定', label: '开放鉴定', path: '开放鉴定' },
+      { id: '销毁鉴定', label: '销毁鉴定', path: '销毁鉴定' }
+    ]
+  },
+  {
+    id: ViewState.ARCHIVE_UTILIZATION,
+    label: '档案利用',
+    icon: Search, // Or BookOpenCheck? Search is broader.
+    permission: 'nav:utilization',
+    children: [
+      { id: '全文检索', label: '全文检索', path: '全文检索' },
+      { id: '穿透联查', label: '穿透联查', path: '穿透联查' },
+      { id: '借阅申请', label: '借阅申请', path: '借阅申请' }
+    ]
+  },
+  // DESTRUCTION removed as per user request (redundant with Operations)
+  // WAREHOUSE removed as per expert review (Out of Scope)
   { id: ViewState.STATS, label: '数据统计', icon: BarChart3, permission: 'nav:stats' },
-  { id: ViewState.SETTINGS, label: '系统设置', icon: Settings, permission: 'nav:settings', subItems: ['基础设置', '用户管理', '角色权限', '组织架构', '全宗管理', '安全合规', '集成中心', '审计日志'] },
+  {
+    id: ViewState.SETTINGS,
+    label: '系统设置',
+    icon: Settings,
+    permission: 'nav:settings',
+    children: [
+      { id: '基础设置', label: '基础设置', path: '基础设置' },
+      { id: '用户管理', label: '用户管理', path: '用户管理' },
+      { id: '角色权限', label: '角色权限', path: '角色权限' },
+      { id: '组织架构', label: '组织架构', path: '组织架构' },
+      { id: '全宗管理', label: '全宗管理', path: '全宗管理' },
+      { id: '安全合规', label: '安全合规', path: '安全合规' },
+      { id: '集成中心', label: '集成中心', path: '集成中心' },
+      { id: '审计日志', label: '审计日志', path: '审计日志' }
+    ]
+  },
 ];
 
 // MOCK_STATS 已移除 - 统计数据通过 /api/stats/dashboard 获取真实数据

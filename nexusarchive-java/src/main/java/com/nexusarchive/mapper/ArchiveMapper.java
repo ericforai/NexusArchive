@@ -30,4 +30,7 @@ public interface ArchiveMapper extends BaseMapper<Archive> {
             + "<foreach collection='departmentIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>"
             + "</script>")
     List<String> selectIdsByDepartmentIds(@Param("departmentIds") Collection<String> departmentIds);
+
+    @Select("SELECT DISTINCT custom_metadata->>'bookType' FROM acc_archive WHERE category_code = 'AC02' AND fonds_no = #{fondsNo} AND custom_metadata->>'bookType' IS NOT NULL")
+    List<String> selectDistinctBookTypes(@Param("fondsNo") String fondsNo);
 }

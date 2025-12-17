@@ -30,6 +30,10 @@ public class ErpAdapterFactory {
      */
     public ErpAdapter getAdapter(String type) {
         ErpAdapter adapter = adapters.get(type);
+        if (adapter == null && type != null) {
+            // Try lowercase fallback to be robust against "YONSUITE" vs "yonsuite"
+            adapter = adapters.get(type.toLowerCase());
+        }
         if (adapter == null) {
             throw new IllegalArgumentException("不支持的 ERP 类型: " + type + 
                 "。可用类型: " + String.join(", ", adapters.keySet()));

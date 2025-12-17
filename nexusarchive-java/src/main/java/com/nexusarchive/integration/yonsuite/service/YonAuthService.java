@@ -49,6 +49,16 @@ public class YonAuthService {
      * 获取 access_token (指定 appKey/appSecret)
      */
     public String getAccessToken(String appKey, String appSecret) {
+        // 防御性检查：ConcurrentHashMap 不支持 null key
+        if (appKey == null || appKey.isEmpty()) {
+            log.error("YonAuthService: appKey is null or empty, cannot fetch token");
+            throw new IllegalArgumentException("YonSuite appKey 未配置，请检查 ERP 配置中的 appKey 字段");
+        }
+        if (appSecret == null || appSecret.isEmpty()) {
+            log.error("YonAuthService: appSecret is null or empty, cannot fetch token");
+            throw new IllegalArgumentException("YonSuite appSecret 未配置，请检查 ERP 配置中的 appSecret 字段");
+        }
+        
         String cacheKey = appKey;
         TokenInfo cached = tokenCache.get(cacheKey);
 

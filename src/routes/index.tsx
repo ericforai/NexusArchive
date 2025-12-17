@@ -43,6 +43,8 @@ const FondsManagement = lazy(() => import('../components/admin/FondsManagement')
 const AuditLogView = lazy(() => import('../components/AuditLogView'));
 const IntegrationSettings = lazy(() => import('../components/settings/IntegrationSettings'));
 
+const PaymentFileTestView = lazy(() => import('../components/debug/PaymentFileTestView'));
+
 // 加载占位符
 const LoadingFallback = () => (
     <div className="flex items-center justify-center h-full text-slate-600">
@@ -101,32 +103,32 @@ export const routes: RouteObject[] = [
             { path: 'collection/scan', element: withSuspense(ArchiveListView, { routeConfig: 'scan' }) },
             { path: 'collection/upload', element: withSuspense(ArchiveListView, { routeConfig: 'collection' }) },
 
-            // ========== 档案管理 ==========
+            // ========== 档案管理 (Repository) ==========
             { path: 'archive', element: withSuspense(ArchiveListView, { routeConfig: 'view' }) },
             { path: 'archive/vouchers', element: withSuspense(ArchiveListView, { routeConfig: 'voucher' }) },
             { path: 'archive/ledgers', element: withSuspense(ArchiveListView, { routeConfig: 'ledger' }) },
             { path: 'archive/reports', element: withSuspense(ArchiveListView, { routeConfig: 'report' }) },
             { path: 'archive/other', element: withSuspense(ArchiveListView, { routeConfig: 'other' }) },
-            { path: 'archive/boxing', element: withSuspense(ArchiveListView, { routeConfig: 'box' }) },
-            { path: 'archive/volume', element: withSuspense(VolumeManagement) },
-            { path: 'archive/approval', element: withSuspense(ArchiveApprovalView) },
-            { path: 'archive/open-appraisal', element: withSuspense(OpenAppraisalView) },
-            { path: 'archive/destruction', element: withSuspense(DestructionView) },
             { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView) },
 
-            // ========== 档案查询 ==========
-            { path: 'query', element: withSuspense(ArchiveListView, { routeConfig: 'query' }) },
-            { path: 'query/relationship', element: withSuspense(RelationshipQueryView) },
+            // ========== 档案作业 (Operations) ==========
+            { path: 'operations', element: withSuspense(ArchiveListView, { routeConfig: 'view' }) }, // Fallback/Default
+            { path: 'operations/boxing', element: withSuspense(ArchiveListView, { routeConfig: 'box' }) },
+            { path: 'operations/volume', element: withSuspense(VolumeManagement) },
+            { path: 'operations/approval', element: withSuspense(ArchiveApprovalView) },
+            { path: 'operations/open-appraisal', element: withSuspense(OpenAppraisalView) },
+            { path: 'operations/destruction', element: withSuspense(DestructionView) },
 
-            // ========== 档案借阅 ==========
-            { path: 'borrowing', element: withSuspense(BorrowingView) },
+            // ========== 档案利用 (Utilization) ==========
+            { path: 'utilization', element: withSuspense(ArchiveListView, { routeConfig: 'query' }) }, // Fallback
+            { path: 'utilization/query', element: withSuspense(ArchiveListView, { routeConfig: 'query' }) },
+            { path: 'utilization/relationship', element: withSuspense(RelationshipQueryView) },
+            { path: 'utilization/borrowing', element: withSuspense(BorrowingView) },
 
             // ========== 档案销毁 ==========
             { path: 'destruction', element: withSuspense(DestructionView) },
 
-            // ========== 库房管理 ==========
-            { path: 'warehouse', element: withSuspense(WarehouseView) },
-            { path: 'warehouse/env', element: withSuspense(WarehouseView, { tab: 'env' }) },
+            // ========== 库房管理 - Removed ==========
 
             // ========== 数据统计 ==========
             { path: 'stats', element: withSuspense(StatsView) },
@@ -151,6 +153,9 @@ export const routes: RouteObject[] = [
 
             // ========== 后台管理 ==========
             { path: 'admin/*', element: withSuspense(AdminLayout) },
+
+            // ========== Debug ==========
+            { path: 'debug/payment-file', element: withSuspense(PaymentFileTestView) },
         ],
     },
 

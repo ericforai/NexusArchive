@@ -26,19 +26,26 @@ export const ROUTE_PATHS = {
     ARCHIVE_LEDGERS: '/system/archive/ledgers',
     ARCHIVE_REPORTS: '/system/archive/reports',
     ARCHIVE_OTHER: '/system/archive/other',
-    ARCHIVE_BOXING: '/system/archive/boxing',
-    ARCHIVE_VOLUME: '/system/archive/volume',
-    ARCHIVE_APPROVAL: '/system/archive/approval',
-    ARCHIVE_OPEN_APPRAISAL: '/system/archive/open-appraisal',
-    ARCHIVE_DESTRUCTION: '/system/archive/destruction',
 
-    QUERY: '/system/query',
-    QUERY_RELATIONSHIP: '/system/query/relationship',
+    // New: Archive Operations Path (Separated from Repository)
+    ARCHIVE_OPS: '/system/operations',
+    ARCHIVE_BOXING: '/system/operations/boxing',
+    ARCHIVE_VOLUME: '/system/operations/volume',
+    ARCHIVE_APPROVAL: '/system/operations/approval',
+    ARCHIVE_OPEN_APPRAISAL: '/system/operations/open-appraisal',
+    ARCHIVE_DESTRUCTION: '/system/operations/destruction',
 
-    BORROWING: '/system/borrowing',
+    ARCHIVE_OPEN_APPRAISAL: '/system/operations/open-appraisal',
+    ARCHIVE_DESTRUCTION: '/system/operations/destruction',
+
+    // New: Archive Utilization (Query + Borrowing)
+    ARCHIVE_UTILIZATION: '/system/utilization',
+    QUERY: '/system/utilization/query',
+    QUERY_RELATIONSHIP: '/system/utilization/relationship',
+    BORROWING: '/system/utilization/borrowing',
+
     DESTRUCTION: '/system/destruction',
-    WAREHOUSE: '/system/warehouse',
-    WAREHOUSE_ENV: '/system/warehouse/env',
+    // WAREHOUSE removed
     STATS: '/system/stats',
     SETTINGS: '/system/settings',
     SETTINGS_BASIC: '/system/settings/basic',
@@ -50,6 +57,9 @@ export const ROUTE_PATHS = {
     SETTINGS_INTEGRATION: '/system/settings/integration',
     SETTINGS_AUDIT: '/system/settings/audit',
     ADMIN: '/system/admin',
+
+    // Debug Routes
+    TEST_PAYMENT_FILE: '/debug/payment-file',
 } as const;
 
 /**
@@ -68,28 +78,48 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '扫描集成': ROUTE_PATHS.COLLECTION_SCAN,
     '批量上传': '/system/collection/upload',
 
-    // 档案管理
-    '归档查看': ROUTE_PATHS.ARCHIVE,
+    // --- 会计档案 (Level 1: ACCOUNT_ARCHIVES) ---
+    // Level 2: 会计凭证
     '会计凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
-    '会计账簿': ROUTE_PATHS.ARCHIVE_LEDGERS,
-    '财务报告': ROUTE_PATHS.ARCHIVE_REPORTS,
-    '其他会计资料': ROUTE_PATHS.ARCHIVE_OTHER,
+
+    // Level 2: 会计账簿 -> Level 3
+    '总账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=GENERAL_LEDGER',
+    '明细账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=SUBSIDIARY_LEDGER',
+    '现金日记账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=CASH_JOURNAL',
+    '银行存款日记账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=BANK_JOURNAL',
+    '固定资产卡片': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=FIXED_ASSETS_CARD',
+    '其他辅助账簿': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=OTHER_BOOKS',
+
+    // Level 2: 财务报告 -> Level 3
+    '月度财务报告': ROUTE_PATHS.ARCHIVE_REPORTS + '?type=MONTHLY',
+    '季度财务报告': ROUTE_PATHS.ARCHIVE_REPORTS + '?type=QUARTERLY',
+    '半年度财务报告': ROUTE_PATHS.ARCHIVE_REPORTS + '?type=SEMI_ANNUAL',
+    '年度财务报告': ROUTE_PATHS.ARCHIVE_REPORTS + '?type=ANNUAL',
+    '专项财务报告': ROUTE_PATHS.ARCHIVE_REPORTS + '?type=SPECIAL',
+
+    // Level 2: 其他会计资料 -> Level 3
+    '银行存款余额调节表': ROUTE_PATHS.ARCHIVE_OTHER + '?type=BANK_RECONCILIATION',
+    '银行对账单': ROUTE_PATHS.ARCHIVE_OTHER + '?type=BANK_STATEMENT',
+    '纳税申报表': ROUTE_PATHS.ARCHIVE_OTHER + '?type=TAX_RETURN',
+    '会计档案移交清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=HANDOVER_REGISTER',
+    '会计档案保管清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=CUSTODY_REGISTER',
+    '会计档案销毁清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=DESTRUCTION_REGISTER',
+    '会计档案鉴定意见书': ROUTE_PATHS.ARCHIVE_OTHER + '?type=APPRAISAL_OPINION',
+
+    // --- 档案作业 (Level 1: ARCHIVE_OPS) ---
     '档案装盒': ROUTE_PATHS.ARCHIVE_BOXING,
     '档案组卷': ROUTE_PATHS.ARCHIVE_VOLUME,
     '归档审批': ROUTE_PATHS.ARCHIVE_APPROVAL,
     '开放鉴定': ROUTE_PATHS.ARCHIVE_OPEN_APPRAISAL,
     '销毁鉴定': ROUTE_PATHS.ARCHIVE_DESTRUCTION,
 
-    // 档案查询
+    // 档案利用 (ARCHIVE_UTILIZATION)
     '穿透联查': ROUTE_PATHS.QUERY_RELATIONSHIP,
     '全文检索': ROUTE_PATHS.QUERY,
+    '借阅申请': ROUTE_PATHS.BORROWING,
 
-    // 档案借阅
-    '借阅审批': ROUTE_PATHS.BORROWING,
-
-    // 库房管理
-    '密集架控制': ROUTE_PATHS.WAREHOUSE,
-    '温湿度监控': ROUTE_PATHS.WAREHOUSE_ENV,
+    // 库房管理 - Removed
+    // '密集架控制', '温湿度监控' removed
 
     // 系统设置
     '基础设置': ROUTE_PATHS.SETTINGS_BASIC,

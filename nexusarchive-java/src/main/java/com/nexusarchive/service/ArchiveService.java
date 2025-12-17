@@ -46,7 +46,7 @@ public class ArchiveService {
      * @param orgId 部门ID
      * @return 分页结果
      */
-    public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode, String orgId, String uniqueBizId) {
+    public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode, String orgId, String uniqueBizId, String subType) {
         Page<Archive> pageObj = new Page<>(page, limit);
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
 
@@ -70,6 +70,23 @@ public class ArchiveService {
         }
         if (uniqueBizId != null && !uniqueBizId.isEmpty()) {
             wrapper.eq("unique_biz_id", uniqueBizId);
+        }
+        
+        // Dynamic Book Type Filter (JSONB)
+        // Dynamic SubType Filter (JSONB)
+        if (subType != null && !subType.isEmpty()) {
+            if ("AC02".equals(categoryCode)) {
+                wrapper.apply("custom_metadata ->> 'bookType' = {0}", subType);
+            } else if ("AC03".equals(categoryCode)) {
+                // AC03: Time-based types (MONTHLY, QUARTERLY, ANNUAL) stored in reportType?
+                // The plan said "reportType" key.
+                wrapper.apply("custom_metadata ->> 'reportType' = {0}", subType);
+            } else if ("AC04".equals(categoryCode)) {
+                wrapper.apply("custom_metadata ->> 'otherType' = {0}", subType);
+            } else {
+                // Fallback: try to match bookType as default if no category context (backward compat)
+                wrapper.apply("custom_metadata ->> 'bookType' = {0}", subType);
+            }
         }
 
         DataScopeContext scope = dataScopeService.resolve();

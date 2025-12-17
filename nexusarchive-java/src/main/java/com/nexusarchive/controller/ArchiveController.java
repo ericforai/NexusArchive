@@ -41,8 +41,9 @@ public class ArchiveController {
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "类别号") @RequestParam(required = false) String categoryCode,
             @Parameter(description = "部门ID") @RequestParam(required = false) String orgId,
+            @Parameter(description = "子类型(账簿类型/报表周期/其他类型)") @RequestParam(required = false) String subType,
             @Parameter(description = "唯一业务ID") @RequestParam(required = false) String uniqueBizId) {
-        return Result.success(archiveService.getArchives(page, limit, search, status, categoryCode, orgId, uniqueBizId));
+        return Result.success(archiveService.getArchives(page, limit, search, status, categoryCode, orgId, uniqueBizId, subType));
     }
 
     @GetMapping("/{id}")

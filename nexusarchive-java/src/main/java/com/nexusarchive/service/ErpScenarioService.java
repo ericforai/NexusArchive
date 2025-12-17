@@ -62,26 +62,44 @@ public class ErpScenarioService {
         // 获取配置信息
         ErpConfig config = erpConfigMapper.selectById(configId);
         if (config == null) {
-            throw new RuntimeException("ERP配置不存在: " + configId);
+            log.warn("ERP配置不存在: {}", configId);
+            return java.util.Collections.emptyList();
         }
 
-        // 获取适配器
-        ErpAdapter adapter = erpAdapterFactory.getAdapter(config.getErpType());
+        try {
+            // 获取适配器 (转小写以防万一)
+            String erpType = config.getErpType() != null ? config.getErpType().toLowerCase() : "generic";
+            if (!erpAdapterFactory.isSupported(erpType)) {
+                log.warn("未找到对应类型的适配器: {}, 跳过场景初始化", erpType);
+                return java.util.Collections.emptyList();
+            }
+            
+            ErpAdapter adapter = erpAdapterFactory.getAdapter(erpType);
 
-        // 获取该适配器的标准场景
-        List<ErpScenario> availableScenarios = adapter.getAvailableScenarios();
+            // 获取该适配器的标准场景
+            List<ErpScenario> availableScenarios = adapter.getAvailableScenarios();
+            if (availableScenarios == null) {
+                return java.util.Collections.emptyList();
+            }
 
-        // 保存到数据库
-        LocalDateTime now = LocalDateTime.now();
-        for (ErpScenario scenario : availableScenarios) {
-            scenario.setConfigId(configId);
-            scenario.setCreatedTime(now);
-            scenario.setLastModifiedTime(now);
-            scenario.setLastSyncStatus("NONE");
-            // 确保没有 ID (MyBatis Plus 会自动生成)
-            scenario.setId(null);
+            // 保存到数据库
+            LocalDateTime now = LocalDateTime.now();
+            for (ErpScenario scenario : availableScenarios) {
+                try {
+                    scenario.setConfigId(configId);
+                    scenario.setCreatedTime(now);
+                    scenario.setLastModifiedTime(now);
+                    scenario.setLastSyncStatus("NONE");
+                    // 确保没有 ID (MyBatis Plus 会自动生成)
+                    scenario.setId(null);
 
-            erpScenarioMapper.insert(scenario);
+                    erpScenarioMapper.insert(scenario);
+                } catch (Exception e) {
+                    log.error("Failed to insert scenario: {}", scenario.getScenarioKey(), e);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error initializing scenarios for config {}", configId, e);
         }
 
         // 再次查询并返回
@@ -131,8 +149,18 @@ public class ErpScenarioService {
             if (entityConfig.getConfigJson() != null) {
                 cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(entityConfig.getConfigJson());
                 dtoConfig.setBaseUrl(json.getStr("baseUrl"));
-                dtoConfig.setAppKey(json.getStr("clientId")); // 映射: DB(clientId) -> DTO(appKey)
-                dtoConfig.setAppSecret(json.getStr("clientSecret"));
+                // 优先使用 appKey/appSecret (YonSuite)，回退到 clientId/clientSecret (泛微等)
+                String appKey = json.getStr("appKey");
+                if (appKey == null || appKey.isEmpty()) {
+                    appKey = json.getStr("clientId");
+                }
+                dtoConfig.setAppKey(appKey);
+                
+                String appSecret = json.getStr("appSecret");
+                if (appSecret == null || appSecret.isEmpty()) {
+                    appSecret = json.getStr("clientSecret");
+                }
+                dtoConfig.setAppSecret(appSecret);
                 dtoConfig.setAccbookCode(json.getStr("accbookCode"));
                 dtoConfig.setExtraConfig(entityConfig.getConfigJson());
             }
@@ -157,6 +185,11 @@ public class ErpScenarioService {
                 log.info("Dispatching to syncCollectionFiles...");
                 vouchers = ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
                         .syncCollectionFiles(dtoConfig, startDate, endDate);
+            } else if ("PAYMENT_FILE_SYNC".equals(scenario.getScenarioKey())
+                    && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
+                log.info("Dispatching to syncPaymentFiles (AI Generated Logic)...");
+                vouchers = ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
+                        .syncPaymentFiles(dtoConfig, startDate, endDate);
             } else {
                 vouchers = adapter.syncVouchers(dtoConfig, startDate, endDate);
             }
@@ -298,40 +331,44 @@ public class ErpScenarioService {
 
         // 2. 对每个配置获取其场景
         for (ErpConfig config : configs) {
-            List<ErpScenario> scenarios = listScenariosByConfigId(config.getId());
+            try {
+                List<ErpScenario> scenarios = listScenariosByConfigId(config.getId());
 
-            for (ErpScenario scenario : scenarios) {
-                // 仅显示已启用的场景 (符合操作手册逻辑)
-                if (scenario.getIsActive() == null || !scenario.getIsActive()) {
-                    continue;
+                for (ErpScenario scenario : scenarios) {
+                    // 仅显示已启用的场景 (符合操作手册逻辑)
+                    if (scenario.getIsActive() == null || !scenario.getIsActive()) {
+                        continue;
+                    }
+
+                    com.nexusarchive.dto.IntegrationChannelDTO channel = com.nexusarchive.dto.IntegrationChannelDTO
+                            .builder()
+                            .id(scenario.getId())
+                            .name(scenario.getScenarioKey())
+                            .displayName(scenario.getName())
+                            .configName(config.getName())
+                            .erpType(config.getErpType())
+                            .frequency(convertSyncStrategyToFrequency(scenario.getSyncStrategy(),
+                                    scenario.getCronExpression()))
+                            .lastSync(
+                                    scenario.getLastSyncTime() != null
+                                            ? scenario.getLastSyncTime().format(
+                                                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                                            : null)
+                            .receivedCount(extractReceivedCount(scenario.getLastSyncMsg()))
+                            .status(convertStatusToChannelStatus(scenario.getLastSyncStatus()))
+                            .description(scenario.getDescription())
+                            .apiEndpoint(getApiEndpointForType(config.getErpType(), scenario.getScenarioKey()))
+                            .accbookCode(extractAccbookCode(config.getConfigJson()))
+                            .lastSyncMsg(scenario.getLastSyncMsg())
+                            .build();
+
+                    log.info("构建通道 DTO: ID={}, Name={}, Msg={}, Count={}",
+                            channel.getId(), channel.getName(), channel.getLastSyncMsg(), channel.getReceivedCount());
+
+                    channels.add(channel);
                 }
-
-                com.nexusarchive.dto.IntegrationChannelDTO channel = com.nexusarchive.dto.IntegrationChannelDTO
-                        .builder()
-                        .id(scenario.getId())
-                        .name(scenario.getScenarioKey())
-                        .displayName(scenario.getName())
-                        .configName(config.getName())
-                        .erpType(config.getErpType())
-                        .frequency(convertSyncStrategyToFrequency(scenario.getSyncStrategy(),
-                                scenario.getCronExpression()))
-                        .lastSync(
-                                scenario.getLastSyncTime() != null
-                                        ? scenario.getLastSyncTime().format(
-                                                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                        : null)
-                        .receivedCount(extractReceivedCount(scenario.getLastSyncMsg()))
-                        .status(convertStatusToChannelStatus(scenario.getLastSyncStatus()))
-                        .description(scenario.getDescription())
-                        .apiEndpoint(getApiEndpointForType(config.getErpType(), scenario.getScenarioKey()))
-                        .accbookCode(extractAccbookCode(config.getConfigJson()))
-                        .lastSyncMsg(scenario.getLastSyncMsg())
-                        .build();
-
-                log.info("构建通道 DTO: ID={}, Name={}, Msg={}, Count={}",
-                        channel.getId(), channel.getName(), channel.getLastSyncMsg(), channel.getReceivedCount());
-
-                channels.add(channel);
+            } catch (Exception e) {
+                log.error("Error processing config channel: {} ({})", config.getName(), config.getId(), e);
             }
         }
 

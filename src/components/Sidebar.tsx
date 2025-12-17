@@ -1,13 +1,8 @@
-/**
- * 侧边栏导航组件（路由版本）
- * 
- * 使用 React Router NavLink 实现真正的路由导航
- */
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { NAV_ITEMS } from '../constants';
-import { ViewState } from '../types';
-import { ChevronRight, ChevronDown, ChevronsLeft, ChevronsRight, Command } from 'lucide-react';
+import { NavItem, ViewState } from '../types';
+import { ChevronRight, ChevronDown, ChevronsLeft, ChevronsRight, Command, FolderOpen, LucideIcon } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../routes/paths';
 
@@ -17,16 +12,18 @@ interface SidebarProps {
   onVisitLanding: () => void;
 }
 
-// ViewState 到路由路径的映射
-const VIEW_TO_PATH: Record<ViewState, string> = {
+// Map ViewState to Route Paths
+const VIEW_TO_PATH: Record<string, string> = {
   [ViewState.PORTAL]: ROUTE_PATHS.PORTAL,
   [ViewState.PANORAMA]: ROUTE_PATHS.PANORAMA,
   [ViewState.PRE_ARCHIVE]: ROUTE_PATHS.PRE_ARCHIVE,
   [ViewState.COLLECTION]: ROUTE_PATHS.COLLECTION,
-  [ViewState.ARCHIVE_MGMT]: ROUTE_PATHS.ARCHIVE,
-  [ViewState.QUERY]: ROUTE_PATHS.QUERY,
-  [ViewState.BORROWING]: ROUTE_PATHS.BORROWING,
-  [ViewState.WAREHOUSE]: ROUTE_PATHS.WAREHOUSE,
+
+  [ViewState.ACCOUNT_ARCHIVES]: ROUTE_PATHS.ARCHIVE, // Repository
+  [ViewState.ARCHIVE_OPS]: ROUTE_PATHS.ARCHIVE_OPS, // Operations
+  [ViewState.ARCHIVE_UTILIZATION]: ROUTE_PATHS.ARCHIVE_UTILIZATION, // Utilization
+
+  // [ViewState.WAREHOUSE]: ROUTE_PATHS.WAREHOUSE, // Removed
   [ViewState.STATS]: ROUTE_PATHS.STATS,
   [ViewState.SETTINGS]: ROUTE_PATHS.SETTINGS,
   [ViewState.ADMIN]: ROUTE_PATHS.ADMIN,
@@ -36,14 +33,17 @@ const VIEW_TO_PATH: Record<ViewState, string> = {
   [ViewState.COMPLIANCE_REPORT]: ROUTE_PATHS.ARCHIVE,
 };
 
-// 路径前缀到 ViewState 的映射（用于判断当前激活的菜单组）
-const PATH_PREFIX_TO_VIEW: Record<string, ViewState> = {
+// Map Path Prefixes to IDs for auto-expansion
+const PATH_PREFIX_TO_VIEW: Record<string, string> = {
   '/system/pre-archive': ViewState.PRE_ARCHIVE,
   '/system/collection': ViewState.COLLECTION,
-  '/system/archive': ViewState.ARCHIVE_MGMT,
-  '/system/query': ViewState.QUERY,
-  '/system/borrowing': ViewState.BORROWING,
-  '/system/warehouse': ViewState.WAREHOUSE,
+
+  // Specific prefixes ensure correct menu is highlighted
+  '/system/operations': ViewState.ARCHIVE_OPS,
+  '/system/archive': ViewState.ACCOUNT_ARCHIVES,
+  '/system/utilization': ViewState.ARCHIVE_UTILIZATION,
+
+  // '/system/warehouse': ViewState.WAREHOUSE, // Removed
   '/system/stats': ViewState.STATS,
   '/system/settings': ViewState.SETTINGS,
   '/system/admin': ViewState.ADMIN,
@@ -58,36 +58,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { hasPermission } = usePermissions();
   const location = useLocation();
-  const [expandedMenus, setExpandedMenus] = React.useState<Set<string>>(new Set());
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
 
-  // 根据当前路径确定激活的菜单组
-  const activeViewFromPath = useMemo(() => {
+  // --- Auto-Expand Logic ---
+  // Find which top-level ID matches the current path
+  const activeTopLevelId = useMemo(() => {
     const path = location.pathname;
+    if (path === '/system' || path === '/system/') return ViewState.PORTAL;
 
-    // 精确匹配 /system
-    if (path === '/system' || path === '/system/') {
-      return ViewState.PORTAL;
+    for (const [prefix, viewId] of Object.entries(PATH_PREFIX_TO_VIEW)) {
+      if (path.startsWith(prefix)) return viewId;
     }
-
-    // 前缀匹配
-    for (const [prefix, view] of Object.entries(PATH_PREFIX_TO_VIEW)) {
-      if (path.startsWith(prefix)) {
-        return view;
-      }
-    }
-
     return ViewState.PORTAL;
   }, [location.pathname]);
 
-  // 自动展开当前激活的菜单组
+  // Initial expansion of top-level menu
   useEffect(() => {
     setExpandedMenus(prev => {
       const next = new Set(prev);
-      next.add(activeViewFromPath);
+      if (activeTopLevelId) next.add(activeTopLevelId);
       return next;
     });
-  }, [activeViewFromPath]);
+  }, [activeTopLevelId]);
 
+  // Filter Nav Items by Permission
   const filteredNav = useMemo(() => {
     return NAV_ITEMS.filter(item => {
       if (!item.permission) return true;
@@ -95,35 +89,173 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   }, [hasPermission]);
 
-  const handleMainClick = (id: ViewState, hasSubItems: boolean) => {
+  // --- Accordion Logic ---
+  // Toggles an ID while closing its siblings
+  const handleToggle = useCallback((id: string, siblings: string[]) => {
     if (collapsed) {
       onToggle();
       return;
     }
 
-    // 切换子菜单展开状态
-    if (hasSubItems) {
-      setExpandedMenus(prev => {
-        const next = new Set(prev);
-        if (next.has(id)) {
-          next.delete(id);
-        } else {
-          next.add(id);
-        }
-        return next;
-      });
+    setExpandedMenus(prev => {
+      const next = new Set(prev);
+      const isCurrentlyExpanded = next.has(id);
+
+      if (isCurrentlyExpanded) {
+        // Just collapse this one
+        next.delete(id);
+      } else {
+        // Expand this one, collapse siblings
+        siblings.forEach(siblingId => next.delete(siblingId));
+        next.add(id);
+      }
+      return next;
+    });
+  }, [collapsed, onToggle]);
+
+  // --- Active Check Logic ---
+  const isItemActive = useCallback((item: NavItem) => {
+    // 1. If it's a top-level item, check against activeTopLevelId
+    // But this is only for 'highlight'. 
+    // For leaf nodes, we want precise match.
+
+    // Determine target path
+    let targetPath = item.path;
+    if (!targetPath && VIEW_TO_PATH[item.id]) {
+      targetPath = VIEW_TO_PATH[item.id];
+    } else if (item.path && SUBITEM_TO_PATH[item.path]) {
+      targetPath = SUBITEM_TO_PATH[item.path];
     }
+
+    if (!targetPath) return false;
+
+    // Split path and query
+    const [pathStr, queryStr] = targetPath.split('?');
+
+    // Check path match
+    const isPathMatch = location.pathname === pathStr || location.pathname.startsWith(pathStr + '/');
+    if (!isPathMatch) return false;
+
+    // Check query param (e.g. ?type=MONTHLY)
+    if (queryStr) {
+      return location.search.includes(queryStr);
+    }
+
+    return true;
+  }, [location.pathname, location.search]);
+
+
+  // --- Recursive Render Function ---
+  const renderNavNode = (item: NavItem, level: number, siblings: string[]) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedMenus.has(item.id);
+    const isActive = isItemActive(item);
+
+    // Determine the main link path (if it's a leaf or clickable parent)
+    let mainPath = '#';
+    if (!hasChildren) {
+      if (VIEW_TO_PATH[item.id]) mainPath = VIEW_TO_PATH[item.id];
+      else if (item.path && SUBITEM_TO_PATH[item.path]) mainPath = SUBITEM_TO_PATH[item.path];
+      else if (item.path) mainPath = item.path;
+    }
+
+    // Indentation based on level
+    const paddingLeft = level === 0 ? 'px-4' : level === 1 ? 'pl-10 pr-4' : 'pl-14 pr-4';
+    // Font size adjustments
+    const fontSize = level === 0 ? 'text-sm font-medium' : 'text-xs';
+
+    const Icon = item.icon;
+
+    // Wrapper for Leaf vs Parent
+    const commonClasses = `w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${paddingLeft} py-${level === 0 ? '3' : '2'} rounded-xl transition-all duration-300 mb-0.5`;
+    const activeClasses = 'bg-primary-600/10 text-white shadow-md shadow-primary-900/20 border border-primary-500/20';
+    const inactiveClasses = 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400';
+
+    // If it's a Top Level Item and Collapsed, show tooltip? (Handled by standard HTML title usually)
+
+    return (
+      <div key={item.id} className="group relative">
+        {hasChildren ? (
+          // Parent Node: Button to toggle
+          <button
+            onClick={() => handleToggle(item.id, siblings)}
+            className={`${commonClasses} ${isItemActive(item) && collapsed ? activeClasses : filterActiveParent(isActive, isExpanded) ? 'text-white' : inactiveClasses}`}
+            title={collapsed ? item.label : ''}
+          >
+            <div className={`flex items-center ${collapsed ? '' : 'space-x-3'} ${collapsed ? 'justify-center' : ''}`}>
+              {Icon && <Icon size={20} className={`transition-colors flex-shrink-0 ${(isActive || isExpanded) ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`} />}
+              {!collapsed && <span className={`${fontSize} tracking-wide whitespace-normal text-left leading-tight`}>{item.label}</span>}
+            </div>
+            {!collapsed && (
+              <div className="flex items-center">
+                {/* Folder Icon Decoration for Level > 0 */}
+                {level > 0 && <FolderOpen size={12} className="mr-2 text-slate-500" />}
+                <ChevronDown
+                  size={14}
+                  className={`text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </div>
+            )}
+          </button>
+        ) : (
+          // Leaf Node: NavLink
+          <NavLink
+            to={mainPath}
+            className={({ isActive: linkActive }) => {
+              // Custom active check because of query params
+              const active = isActive || linkActive;
+              return `${commonClasses} ${active ? activeClasses : inactiveClasses}`;
+            }}
+            title={collapsed ? item.label : ''}
+            end={item.id === ViewState.PORTAL}
+          >
+            <div className={`flex items-center ${collapsed ? '' : 'space-x-3'} ${collapsed ? 'justify-center' : ''}`}>
+              {Icon && <Icon size={20} className={`transition-colors flex-shrink-0 ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`} />}
+              {/* For Level 1+ leaf nodes without icon (like sub-menus), maybe add a dot or chevron? */}
+              {!Icon && level > 0 && (
+                <span className={`w-1.5 h-1.5 rounded-full mr-2 flex-shrink-0 ${isActive ? 'bg-primary-400' : 'bg-slate-600 group-hover:bg-slate-500'}`}></span>
+              )}
+              {!collapsed && <span className={`${fontSize} tracking-wide whitespace-normal text-left leading-tight`}>{item.label}</span>}
+            </div>
+            {!collapsed && isActive && level === 0 && (
+              <div className="w-1.5 h-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
+            )}
+          </NavLink>
+        )}
+
+        {/* Children Container (Accordion Body) */}
+        {!collapsed && hasChildren && isExpanded && (
+          <div className={`overflow-hidden transition-all duration-300 ${level === 0 ? 'mt-1' : ''}`}>
+            {/* Border line for hierarchy */}
+            {level === 0 && <div className="ml-7 border-l border-slate-800 space-y-1">
+              {item.children!.map((child) => renderNavNode( // eslint-disable-line
+                child,
+                level + 1,
+                item.children!.map(s => s.id).filter(id => id !== child.id) // Pass siblings logic
+              ))}
+            </div>}
+            {level > 0 && <div className="ml-4 border-l border-slate-800 space-y-1">
+              {item.children!.map((child) => renderNavNode( // eslint-disable-line
+                child,
+                level + 1,
+                item.children!.map(s => s.id).filter(id => id !== child.id)
+              ))}
+            </div>}
+          </div>
+        )}
+      </div>
+    );
   };
 
-  // 检查当前路径是否匹配某个子菜单项
-  const isSubItemActive = (subItem: string): boolean => {
-    const path = SUBITEM_TO_PATH[subItem];
-    if (!path) return false;
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+  // Helper to determine if a parent text should be highlighted (when expanded)
+  const filterActiveParent = (isActive: boolean, isExpanded: boolean) => {
+    // Logic: If expanded, maybe highlight text slightly?
+    return isExpanded;
   };
+
 
   return (
-    <aside className={`${collapsed ? 'w-20' : 'w-64'} h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 shadow-2xl z-20 relative transition-all duration-300`}>
+    <aside className={`${collapsed ? 'w-20' : 'w-72'} h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 shadow-2xl z-20 relative transition-all duration-300`}>
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none" />
 
@@ -143,98 +275,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-700">
         {filteredNav.map((item) => {
-          const isActive = activeViewFromPath === item.id;
-          const isExpanded = expandedMenus.has(item.id);
-          const mainPath = VIEW_TO_PATH[item.id] || '/system';
-
-          return (
-            <div key={item.id} className="group relative">
-              {/* 主导航项 */}
-              {item.subItems ? (
-                // 有子菜单：使用 button 控制展开
-                <button
-                  onClick={() => handleMainClick(item.id, true)}
-                  className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-300 ${isActive
-                    ? 'bg-primary-600/10 text-white shadow-md shadow-primary-900/20 border border-primary-500/20'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100'
-                    }`}
-                  title={collapsed ? item.label : ''}
-                  data-testid={`nav-${item.id}`}
-                >
-                  <div className={`flex items-center ${collapsed ? '' : 'space-x-3'}`}>
-                    <item.icon
-                      size={20}
-                      className={`transition-colors ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`}
-                    />
-                    {!collapsed && <span className="font-medium text-sm tracking-wide">{item.label}</span>}
-                  </div>
-
-                  {!collapsed && (
-                    <div className="flex items-center">
-                      <ChevronDown
-                        size={14}
-                        className={`mr-2 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                      />
-                      {isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
-                      )}
-                    </div>
-                  )}
-                </button>
-              ) : (
-                // 无子菜单：直接使用 NavLink
-                <NavLink
-                  to={mainPath}
-                  className={({ isActive: linkActive }) => `w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-300 ${linkActive || isActive
-                    ? 'bg-primary-600/10 text-white shadow-md shadow-primary-900/20 border border-primary-500/20'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100'
-                    }`}
-                  title={collapsed ? item.label : ''}
-                  end={item.id === ViewState.PORTAL}
-                  data-testid={`nav-${item.id}`}
-                >
-                  <div className={`flex items-center ${collapsed ? '' : 'space-x-3'}`}>
-                    <item.icon
-                      size={20}
-                      className={`transition-colors ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`}
-                    />
-                    {!collapsed && <span className="font-medium text-sm tracking-wide">{item.label}</span>}
-                  </div>
-
-                  {!collapsed && isActive && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
-                  )}
-                </NavLink>
-              )}
-
-              {/* 子菜单项 */}
-              {!collapsed && item.subItems && isExpanded && (
-                <div className="mt-1 ml-10 space-y-0.5 border-l border-slate-800 pl-2">
-                  {item.subItems.map((sub) => {
-                    const subPath = SUBITEM_TO_PATH[sub] || mainPath;
-                    const isSubActive = isSubItemActive(sub);
-
-                    return (
-                      <NavLink
-                        key={sub}
-                        to={subPath}
-                        className={`block w-full text-left px-3 py-2.5 text-xs rounded-lg transition-colors ${isSubActive
-                          ? 'text-primary-300 bg-slate-800/60 font-medium'
-                          : 'text-slate-400 hover:text-primary-300 hover:bg-slate-800/30'
-                          }`}
-                        data-testid={`nav-${item.id}-${sub}`}
-                      >
-                        <span className="flex items-center">
-                          <ChevronRight size={10} className={`mr-2 transition-opacity ${isSubActive ? 'opacity-100' : 'opacity-0'}`} />
-                          {sub}
-                        </span>
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
+          // Top level siblings
+          const siblings = filteredNav.map(n => n.id).filter(id => id !== item.id);
+          return renderNavNode(item, 0, siblings);
         })}
       </nav>
 
