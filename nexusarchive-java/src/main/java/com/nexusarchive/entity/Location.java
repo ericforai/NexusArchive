@@ -56,6 +56,14 @@ public class Location {
      */
     private String status;
 
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return this.status;
+    }
+
     /**
      * RFID标签号 (如果是密集架或档案盒)
      */

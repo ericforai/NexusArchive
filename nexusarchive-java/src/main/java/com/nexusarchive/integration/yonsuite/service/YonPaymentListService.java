@@ -64,17 +64,19 @@ public class YonPaymentListService {
         if (endDate != null) {
             body.set("open_billDate_end", endDate.atTime(23, 59, 59).format(DatePattern.NORM_DATETIME_FORMATTER));
         }
-        
+
         // 组织编码参数 (必填，参考收款单逻辑)
         // financeOrg 设为 null，使用 simple.financeOrg.code 传递编码
-        if (config.getAccbookCode() != null && !config.getAccbookCode().isEmpty()) {
-            JSONObject simple = new JSONObject();
-            simple.set("financeOrg.code", config.getAccbookCode());
-            body.set("simple", simple);
-            log.info("付款单查询增加组织编码筛选: financeOrg.code={}", config.getAccbookCode());
-        } else {
-            log.warn("未配置 accbookCode，可能导致查询结果为空");
-        }
+        // 组织编码参数 (必填，参考收款单逻辑)
+        // financeOrg 设为 null，使用 simple.financeOrg.code 传递编码
+        // if (config.getAccbookCode() != null && !config.getAccbookCode().isEmpty()) {
+        // JSONObject simple = new JSONObject();
+        // simple.set("financeOrg.code", config.getAccbookCode());
+        // body.set("simple", simple);
+        // log.info("付款单查询增加组织编码筛选: financeOrg.code={}", config.getAccbookCode());
+        // } else {
+        // log.warn("未配置 accbookCode，可能导致查询结果为空");
+        // }
 
         List<String> allIds = new ArrayList<>();
         int pageIndex = 1;
@@ -87,9 +89,10 @@ public class YonPaymentListService {
             try {
                 // 使用 YonAuthService 获取真实 Token
                 String accessToken = yonAuthService.getAccessToken(config.getAppKey(), config.getAppSecret());
-                
+
                 // 将 access_token 作为 URL 查询参数（与 YonSuiteClient 保持一致）
-                String urlWithToken = fullUrl + "?access_token=" + java.net.URLEncoder.encode(accessToken, java.nio.charset.StandardCharsets.UTF_8);
+                String urlWithToken = fullUrl + "?access_token="
+                        + java.net.URLEncoder.encode(accessToken, java.nio.charset.StandardCharsets.UTF_8);
 
                 HttpResponse response = HttpRequest.post(urlWithToken)
                         .header("Content-Type", "application/json")
@@ -113,7 +116,8 @@ public class YonPaymentListService {
 
                 // Parse Data
                 JSONObject data = jsonRes.getJSONObject("data");
-                if (data == null) break;
+                if (data == null)
+                    break;
 
                 JSONArray recordList = data.getJSONArray("recordList");
                 if (recordList == null || recordList.isEmpty()) {
@@ -123,6 +127,9 @@ public class YonPaymentListService {
                 // Extract IDs
                 for (int i = 0; i < recordList.size(); i++) {
                     JSONObject record = recordList.getJSONObject(i);
+                    if (i == 0) {
+                        log.debug("YonPaymentListService First Record: {}", record);
+                    }
                     String id = record.getStr("id");
                     if (id != null) {
                         allIds.add(id);
@@ -134,9 +141,10 @@ public class YonPaymentListService {
                 if (pageCount != null && pageIndex >= pageCount) {
                     break;
                 }
-                
+
                 // Safety break
-                if (pageIndex >= 100) break;
+                if (pageIndex >= 100)
+                    break;
 
                 pageIndex++;
 

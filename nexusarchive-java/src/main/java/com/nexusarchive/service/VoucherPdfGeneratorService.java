@@ -68,7 +68,17 @@ public class VoucherPdfGeneratorService {
             // 3. 生成 PDF 文件名 (使用ERP凭证号或业务单据号)
             String docNo = fileContent.getErpVoucherNo() != null ? fileContent.getErpVoucherNo()
                     : (fileContent.getBusinessDocNo() != null ? fileContent.getBusinessDocNo() : fileId);
-            String pdfFileName = docNo + ".pdf";
+
+            String suffix = ".pdf";
+            if ("PAYMENT".equals(fileContent.getVoucherType())) {
+                suffix = "_Payment.pdf";
+            } else if ("COLLECTION_BILL".equals(fileContent.getVoucherType())) {
+                suffix = "_Collection.pdf";
+            } else {
+                suffix = "_Voucher.pdf";
+            }
+
+            String pdfFileName = docNo + suffix;
             Path pdfPath = storageDir.resolve(pdfFileName);
 
             // 4. 根据单据类型选择 PDF 生成器
@@ -77,6 +87,10 @@ public class VoucherPdfGeneratorService {
                 // 收款单专用生成器
                 log.debug("生成收款单 PDF: target={}", pdfPath);
                 generateCollectionBillPdf(pdfPath, fileContent, voucherData);
+            } else if ("PAYMENT".equals(voucherType)) {
+                // 付款单专用生成器
+                log.debug("生成付款单 PDF: target={}", pdfPath);
+                generatePaymentPdf(pdfPath, fileContent, voucherData);
             } else {
                 // 默认会计凭证生成器
                 generateVoucherPdf(pdfPath, fileContent, voucherData);
@@ -94,7 +108,11 @@ public class VoucherPdfGeneratorService {
             fileContent.setFileHash(fileHash);
             fileContent.setHashAlgorithm("SM3");
             fileContent.setStoragePath(pdfPath.toString());
-            fileContent.setOriginalHash(fileHash);
+            // 如果是第一次生成，更新原始哈希；重新生成保留原始哈希?
+            // 策略：预归档阶段的生成视为"原始"生成。
+            if (fileContent.getOriginalHash() == null || fileContent.getOriginalHash().isEmpty()) {
+                fileContent.setOriginalHash(fileHash);
+            }
             fileContent.setCurrentHash(fileHash);
 
             arcFileContentMapper.updateById(fileContent);
@@ -107,6 +125,240 @@ public class VoucherPdfGeneratorService {
             return null;
         }
     }
+
+    /**
+     * 生成付款单 PDF 文件 - 增强版 (YonSuite 风格)
+     */
+    /**
+     * 生成付款单 PDF 文件（横向简洁版）
+     * 参考收款单样式，但使用横向页面以容纳更多信息
+     */
+    private void generatePaymentPdf(Path targetPath, ArcFileContent fileContent, JsonNode data) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            // 设置为横向 A4 页面 (842 x 595)
+            PDPage page = new PDPage(new org.apache.pdfbox.pdmodel.common.PDRectangle(842, 595));
+            document.addPage(page);
+
+            // 加载中文字体
+            org.apache.pdfbox.pdmodel.font.PDFont chineseFont = loadChineseFont(document);
+            boolean useChinese = chineseFont != null;
+            org.apache.pdfbox.pdmodel.font.PDFont regularFont = useChinese ? chineseFont : PDType1Font.HELVETICA;
+            org.apache.pdfbox.pdmodel.font.PDFont boldFont = useChinese ? chineseFont : PDType1Font.HELVETICA_BOLD;
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                int margin = 40;
+                float pageWidth = 842; // Landscape A4 width
+                float yPosition = 555; // Start from top (595 - 40)
+
+                // === 标题 ===
+                contentStream.beginText();
+                contentStream.setFont(boldFont, 18);
+                contentStream.newLineAtOffset((pageWidth / 2) - 40, yPosition);
+                contentStream.showText(useChinese ? "付 款 单" : "Payment Bill");
+                contentStream.endText();
+                yPosition -= 35;
+
+                // === 表头信息 (三列布局) ===
+                String code = data.path("code").asText(fileContent.getBusinessDocNo());
+                String billDate = data.path("billDate").asText(
+                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                String orgName = data.path("financeOrgName").asText("-");
+                String supplier = data.path("supplierName").asText("-");
+                String currency = data.path("oriCurrencyName").asText("CNY");
+                double totalAmount = data.path("oriTaxIncludedAmount").asDouble(0.0);
+                String creator = data.path("creatorUserName").asText(
+                        fileContent.getCreator() != null ? fileContent.getCreator() : "");
+
+                contentStream.setFont(regularFont, 10);
+
+                // 第一行: 单据编号、交易类型、单据日期
+                contentStream.beginText();
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText(safeText("单据编号: " + code, useChinese));
+                contentStream.newLineAtOffset(250, 0);
+                contentStream.showText(safeText("交易类型: 采购付款", useChinese));
+                contentStream.newLineAtOffset(250, 0);
+                contentStream.showText(safeText("单据日期: " + billDate, useChinese));
+                contentStream.endText();
+                yPosition -= 18;
+
+                // 第二行: 付款组织、供应商、币种
+                contentStream.beginText();
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText(safeText("付款组织: " + orgName, useChinese));
+                contentStream.newLineAtOffset(250, 0);
+                contentStream.showText(safeText("供应商: " + supplier, useChinese));
+                contentStream.newLineAtOffset(250, 0);
+                contentStream.showText(safeText("币种: " + currency, useChinese));
+                contentStream.endText();
+                yPosition -= 18;
+
+                // 第三行: 付款金额（高亮）、往来对象类型、制单人
+                contentStream.beginText();
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.setFont(boldFont, 11);
+                contentStream.showText(safeText(
+                        "付款金额: " + String.format("%.2f", totalAmount) + " " + currency,
+                        useChinese));
+                contentStream.setFont(regularFont, 10);
+                contentStream.newLineAtOffset(250, 0);
+                contentStream.showText(safeText("往来对象类型: 供应商", useChinese));
+                contentStream.newLineAtOffset(250, 0);
+                contentStream.showText(safeText("创建人: " + creator, useChinese));
+                contentStream.endText();
+                yPosition -= 18;
+
+                // 第四行: 来源系统
+                contentStream.beginText();
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText(safeText("来源系统: "
+                        + (fileContent.getSourceSystem() != null ? fileContent.getSourceSystem() : "用友YonSuite"),
+                        useChinese));
+                contentStream.endText();
+                yPosition -= 30;
+
+                // === 分隔线 ===
+                contentStream.moveTo(margin, yPosition);
+                contentStream.lineTo(pageWidth - margin, yPosition);
+                contentStream.stroke();
+                yPosition -= 10;
+
+                // === 付款明细表头 ===
+                contentStream.beginText();
+                contentStream.setFont(boldFont, 10);
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText(safeText("付款明细", useChinese));
+                contentStream.endText();
+                yPosition -= 20;
+
+                // 表格表头 (8列)
+                float[] columnPositions = { 0, 40, 120, 220, 320, 420, 540, 660 };
+                String[] headers = { "序号", "款项类型", "物料名称", "应结算款", "付款金额", "本币金额", "供应商", "订单编号" };
+
+                contentStream.beginText();
+                contentStream.setFont(boldFont, 9);
+                for (int i = 0; i < headers.length; i++) {
+                    contentStream.newLineAtOffset(
+                            margin + columnPositions[i] - (i == 0 ? 0 : columnPositions[i - 1]),
+                            yPosition);
+                    contentStream.showText(safeText(headers[i], useChinese));
+                }
+                contentStream.endText();
+                yPosition -= 15;
+
+                // 表格线
+                contentStream.moveTo(margin, yPosition + 10);
+                contentStream.lineTo(pageWidth - margin, yPosition + 10);
+                contentStream.stroke();
+
+                // === 表体数据 ===
+                contentStream.setFont(regularFont, 9);
+                JsonNode bodyItems = data.path("bodyItem");
+
+                if (bodyItems.isArray() && bodyItems.size() > 0) {
+                    int index = 1;
+                    for (JsonNode item : bodyItems) {
+                        String typeName = item.path("quickTypeName").asText("-");
+                        String materialName = getTextValue(item, "materialName", "productName", "invName");
+                        if (materialName.isEmpty())
+                            materialName = "-";
+                        double itemAmount = item.path("oriTaxIncludedAmount").asDouble(0.0);
+                        String orderNo = getTextValue(item, "srcBillNo", "orderNo", "订单编号");
+
+                        contentStream.beginText();
+                        contentStream.newLineAtOffset(margin + columnPositions[0], yPosition);
+                        contentStream.showText(String.valueOf(index++));
+
+                        contentStream.newLineAtOffset(columnPositions[1] - columnPositions[0], 0);
+                        contentStream.showText(safeText(truncateText(typeName, 10), useChinese));
+
+                        contentStream.newLineAtOffset(columnPositions[2] - columnPositions[1], 0);
+                        contentStream.showText(safeText(truncateText(materialName, 12), useChinese));
+
+                        contentStream.newLineAtOffset(columnPositions[3] - columnPositions[2], 0);
+                        contentStream.showText(String.format("%.2f", itemAmount));
+
+                        contentStream.newLineAtOffset(columnPositions[4] - columnPositions[3], 0);
+                        contentStream.showText(String.format("%.2f", itemAmount));
+
+                        contentStream.newLineAtOffset(columnPositions[5] - columnPositions[4], 0);
+                        contentStream.showText(String.format("%.2f", itemAmount));
+
+                        contentStream.newLineAtOffset(columnPositions[6] - columnPositions[5], 0);
+                        contentStream.showText(safeText(truncateText(supplier, 12), useChinese));
+
+                        contentStream.newLineAtOffset(columnPositions[7] - columnPositions[6], 0);
+                        contentStream.showText(safeText(truncateText(orderNo, 15), useChinese));
+
+                        contentStream.endText();
+                        yPosition -= 15;
+
+                        if (yPosition < 100)
+                            break;
+                    }
+                } else {
+                    // 无明细数据时显示汇总行
+                    contentStream.beginText();
+                    contentStream.newLineAtOffset(margin + columnPositions[0], yPosition);
+                    contentStream.showText("1");
+                    contentStream.newLineAtOffset(columnPositions[1] - columnPositions[0], 0);
+                    contentStream.showText(safeText("应付款", useChinese));
+                    contentStream.newLineAtOffset(columnPositions[2] - columnPositions[1], 0);
+                    contentStream.showText("-");
+                    contentStream.newLineAtOffset(columnPositions[3] - columnPositions[2], 0);
+                    contentStream.showText(String.format("%.2f", totalAmount));
+                    contentStream.newLineAtOffset(columnPositions[4] - columnPositions[3], 0);
+                    contentStream.showText(String.format("%.2f", totalAmount));
+                    contentStream.newLineAtOffset(columnPositions[5] - columnPositions[4], 0);
+                    contentStream.showText(String.format("%.2f", totalAmount));
+                    contentStream.newLineAtOffset(columnPositions[6] - columnPositions[5], 0);
+                    contentStream.showText(safeText(truncateText(supplier, 12), useChinese));
+                    contentStream.newLineAtOffset(columnPositions[7] - columnPositions[6], 0);
+                    contentStream.showText("-");
+                    contentStream.endText();
+                    yPosition -= 15;
+                }
+
+                // 表格底线
+                contentStream.moveTo(margin, yPosition + 10);
+                contentStream.lineTo(pageWidth - margin, yPosition + 10);
+                contentStream.stroke();
+                yPosition -= 15;
+
+                // === 合计行 ===
+                contentStream.beginText();
+                contentStream.setFont(boldFont, 10);
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText(safeText("合计", useChinese));
+                contentStream.newLineAtOffset(columnPositions[3], 0);
+                contentStream.showText(String.format("%.2f", totalAmount));
+                contentStream.newLineAtOffset(columnPositions[4] - columnPositions[3], 0);
+                contentStream.showText(String.format("%.2f", totalAmount));
+                contentStream.newLineAtOffset(columnPositions[5] - columnPositions[4], 0);
+                contentStream.showText(String.format("%.2f", totalAmount));
+                contentStream.endText();
+                yPosition -= 30;
+
+                // === 页脚信息 ===
+                contentStream.setFont(regularFont, 8);
+                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                contentStream.beginText();
+                contentStream.newLineAtOffset(margin, 30);
+                contentStream.showText(safeText("生成时间: " + timestamp, useChinese));
+                contentStream.newLineAtOffset(300, 0);
+                contentStream.showText(safeText("制单人: " + creator, useChinese));
+                contentStream.endText();
+            }
+
+            document.save(targetPath.toFile());
+            log.info("付款单PDF生成成功(Landscape简洁版): {}", targetPath);
+
+        } catch (Exception e) {
+            log.error("付款单PDF生成失败: {}", targetPath, e);
+            throw new IOException("付款单PDF生成失败", e);
+        }
+    }
+
 
     /**
      * 生成收款单 PDF 文件

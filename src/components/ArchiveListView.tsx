@@ -1842,6 +1842,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                     <button
                       onClick={() => {
                         setActiveDetailTab('main');
+                        // 主单据Tab：显示主文件
                         setActivePreviewId(viewRow?.id || null);
                       }}
                       className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all relative ${activeDetailTab === 'main'
@@ -1856,7 +1857,11 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                     </button>
 
                     <button
-                      onClick={() => setActiveDetailTab('attachments')}
+                      onClick={() => {
+                        setActiveDetailTab('attachments');
+                        // 关联附件Tab：清空预览，只有点击附件时才显示
+                        setActivePreviewId(null);
+                      }}
                       className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all relative flex items-center gap-2 ${activeDetailTab === 'attachments'
                         ? 'text-primary-600 bg-white border-x border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.02)] -mb-px hover:text-primary-700'
                         : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
@@ -1944,7 +1949,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                       </div>
                     )}
 
-                    {/* Actual Previewer */}
+                    {/* Actual Previewer（横向显示优化）*/}
                     <div className="flex-1 bg-slate-200 overflow-hidden relative">
                       {activePreviewId ? (
                         // Logic to determine preview content based on activePreviewId
@@ -1953,8 +1958,20 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                           let fileName = '';
                           const isMain = activePreviewId === viewRow?.id;
 
+                          if (isMain && activeDetailTab === 'attachments') {
+                            // **修复**: 在关联附件Tab下，不应该显示主文件
+                            return (
+                              <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-100">
+                                <div className="text-center">
+                                  <FileText size={48} className="mx-auto mb-4 opacity-20" />
+                                  <p>请从左侧列表选择附件预览</p>
+                                </div>
+                              </div>
+                            );
+                          }
+
                           if (isMain) {
-                            // 保持显示主凭证，除非用户显式点击了某个附件
+                            // 显示主凭证（仅在业务单据Tab）
                             fileName = viewRow?.title || (viewRow?.code ? viewRow.code + '.pdf' : 'unknown.pdf');
                           } else {
                             const att = relatedFiles.find(f => f.id === activePreviewId);

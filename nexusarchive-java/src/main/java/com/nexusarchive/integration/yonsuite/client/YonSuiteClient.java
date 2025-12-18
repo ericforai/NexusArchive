@@ -312,4 +312,47 @@ public class YonSuiteClient {
             return null; // 允许单个失败, 不阻断批量处理
         }
     }
+    /**
+     * 付款单详情查询 (官方 API)
+     * GET /yonbip/EFI/payment/detail
+     *
+     * @param accessToken 可选, 为null则自动获取
+     * @param paymentId   付款单ID (必填)
+     * @return 付款单详情
+     */
+    public YonPaymentDetailResponse queryPaymentDetail(String accessToken, String paymentId) {
+        String token = getToken(accessToken);
+        // 官方文档: /yonbip/EFI/payment/detail?access_token=访问令牌&id=xxx
+        String url = baseUrl + "/yonbip/EFI/payment/detail"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8)
+                + "&id=" + URLEncoder.encode(paymentId, StandardCharsets.UTF_8);
+
+        log.info("Calling YonSuite queryPaymentDetail: id={}", paymentId);
+
+        try {
+            // GET 请求
+            String respStr = HttpRequest.get(url)
+                    .header("Content-Type", "application/json")
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.debug("YonSuite payment detail response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                log.warn("YonSuite queryPaymentDetail returned empty response for id={}", paymentId);
+                return null;
+            }
+
+            YonPaymentDetailResponse response = objectMapper.readValue(respStr, YonPaymentDetailResponse.class);
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite payment detail API warning: code={}, message={}",
+                        response.getCode(), response.getMessage());
+            }
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryPaymentDetail for id={}", paymentId, e);
+            throw new RuntimeException("Failed to call YonSuite API: " + e.getMessage(), e);
+        }
+    }
 }

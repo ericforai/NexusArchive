@@ -354,43 +354,35 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             // [AI Connector Factory - Pass 3 Integration]
             // We now call the generated Query Service to get real IDs based on date range.
             List<String> fileIds = yonPaymentListService.queryPaymentIds(config, startDate, endDate);
-            
+
             if (fileIds.isEmpty()) {
                 log.info("No payment bills found in range: {} to {}", startDate, endDate);
                 return Collections.emptyList();
             }
             log.info("Found {} payment bills to fetch files for.", fileIds.size());
-            
+
             // 2. Call AI Generated Service
-            // Adapter config to service config logic is handled here or in the service?
-            // Service expects DTO config.
-            List<cn.hutool.json.JSONObject> results = yonPaymentFileService.getPaymentFileUrls(config, fileIds);
-            
+            // Refactored Logic: Fetch Detail -> Store -> Generate PDF
+            List<cn.hutool.json.JSONObject> results = yonPaymentFileService.syncPaymentDetailsAndGeneratePdfs(config,
+                    fileIds);
+
             // 3. Map to VoucherDTO (to be saved as ArcFileContent in Pre-Archive)
             List<VoucherDTO> vouchers = new ArrayList<>();
             for (cn.hutool.json.JSONObject res : results) {
-                // Determine status. If downLoadUrl is present, it's successful.
-                String url = res.getStr("downLoadUrl");
-                if (url == null) continue;
-                
+                // If localFileId is present, it's successful.
+                String localId = res.getStr("localFileId");
+                if (localId == null)
+                    continue;
+
                 VoucherDTO dto = VoucherDTO.builder()
-                        .voucherNo(res.getStr("id")) // Use File ID as Voucher No for uniqueness
-                        .summary("Payment File: " + res.getStr("fileName"))
+                        .voucherNo(res.getStr("fileId")) // Payment ID
+                        .summary("Generated Payment Record")
                         .accountPeriod(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM")))
-                        .status("GENERATED")
+                        .status("PENDING_CHECK")
                         .debitTotal(BigDecimal.ZERO)
                         .creditTotal(BigDecimal.ZERO)
                         .build();
-                
-                // Store the URL in the entries/custom metadata so it can be used later
-                // The ErpScenarioService saves sourceData as JSON.
-                // We can also put it in custom fields if we had them extended.
-                // For now, simple mapping.
-                // Hack: Use 'entries' to store the URL in the summary of an entry
-                VoucherDTO.VoucherEntryDTO entry = new VoucherDTO.VoucherEntryDTO();
-                entry.setSummary("Download URL: " + url);
-                dto.setEntries(Collections.singletonList(entry));
-                
+
                 vouchers.add(dto);
             }
             log.info("Synced Payment Files: {}", vouchers.size());

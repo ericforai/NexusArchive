@@ -13,6 +13,20 @@ INSERT INTO sys_org (id, name, code, parent_id, type, order_num, created_at, upd
 VALUES ('ORG_BR_GROUP', '泊冉集团有限公司', 'BR-GROUP', NULL, 'COMPANY', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- =====================================================
+-- 修复外键关联: sys_user.department_id -> sys_org.id
+-- =====================================================
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sys_user_department_id_fkey') THEN
+        ALTER TABLE sys_user DROP CONSTRAINT sys_user_department_id_fkey;
+    END IF;
+    
+    -- 只有当 sys_org 表存在时才添加新外键 (V54 上下文肯定是存在的)
+    ALTER TABLE sys_user ADD CONSTRAINT sys_user_department_id_fkey 
+    FOREIGN KEY (department_id) REFERENCES sys_org(id);
+END $$;
+
+-- =====================================================
 -- 二级：子公司
 -- =====================================================
 -- 销售公司
