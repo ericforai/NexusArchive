@@ -4,6 +4,9 @@ import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory.ErpAdapterInfo;
+import com.nexusarchive.util.SM4Utils;
+import cn.hutool.json.JSONUtil;
+import cn.hutool.json.JSONObject;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +24,7 @@ public class ErpConfigController {
 
     private final ErpConfigMapper erpConfigMapper;
     private final ErpAdapterFactory erpAdapterFactory;
+    private final com.nexusarchive.service.ErpDiagnosisService erpDiagnosisService;
 
     @GetMapping
     @Operation(summary = "获取所有配置")
@@ -33,12 +37,34 @@ public class ErpConfigController {
     @Operation(summary = "新增/更新配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> save(@RequestBody ErpConfig config) {
+        // 敏感信息加固: 加密 configJson 中的 secret
+        if (config.getConfigJson() != null && !config.getConfigJson().isEmpty()) {
+            try {
+                JSONObject json = JSONUtil.parseObj(config.getConfigJson());
+                encryptSecret(json, "appSecret");
+                encryptSecret(json, "clientSecret");
+                config.setConfigJson(json.toString());
+            } catch (Exception e) {
+                // 如果不是 JSON 则跳过，由前端保证格式
+            }
+        }
+
         if (config.getId() == null) {
             erpConfigMapper.insert(config);
         } else {
             erpConfigMapper.updateById(config);
         }
         return Result.success();
+    }
+
+    private void encryptSecret(JSONObject json, String key) {
+        String secret = json.getStr(key);
+        if (secret != null && !secret.isEmpty()) {
+            // 如果已经是 32 位 hex (SM4 密文格式)，则不再加密
+            if (secret.length() != 32 || !secret.matches("^[0-9a-fA-F]{32}$")) {
+                json.set(key, SM4Utils.encrypt(secret));
+            }
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -109,5 +135,12 @@ public class ErpConfigController {
         }
 
         return Result.success(result);
+    }
+
+    @GetMapping("/{id}/diagnose")
+    @Operation(summary = "一键诊断")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
+    public Result<java.util.Map<String, Object>> diagnose(@PathVariable Long id) {
+        return Result.success(erpDiagnosisService.diagnose(id));
     }
 }

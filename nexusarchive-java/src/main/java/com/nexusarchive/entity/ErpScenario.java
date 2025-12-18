@@ -46,6 +46,9 @@ public class ErpScenario {
     // 最后一次同步消息/日志
     private String lastSyncMsg;
 
+    // 场景参数配置 (JSON)
+    private String paramsJson;
+
     private LocalDateTime createdTime;
 
     private LocalDateTime lastModifiedTime;

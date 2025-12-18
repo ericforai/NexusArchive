@@ -36,6 +36,11 @@ public enum PreArchiveStatus {
     PENDING_APPROVAL("PENDING_APPROVAL", "归档审批中"),
     
     /**
+     * 归档处理中 - 异步任务正在执行（哈希计算、存证挂接等）
+     */
+    ARCHIVING("ARCHIVING", "归档处理中"),
+    
+    /**
      * 已归档 - 正式归档完成
      */
     ARCHIVED("ARCHIVED", "已归档");

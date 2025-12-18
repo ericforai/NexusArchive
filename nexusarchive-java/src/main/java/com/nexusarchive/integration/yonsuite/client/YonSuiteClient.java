@@ -355,4 +355,58 @@ public class YonSuiteClient {
             throw new RuntimeException("Failed to call YonSuite API: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * 向 YonSuite 反馈归档状态 (模拟)
+     * 
+     * Phase 3 增强：返回结构化结果，记录详细日志
+     * 在生产环境中，将调用用友的凭证修改接口或自定义存证接口
+     * 
+     * @param accessToken 访问令牌 (可选)
+     * @param voucherId   凭证 ID
+     * @param archivalCode 档号
+     * @return FeedbackResult 结构化回写结果
+     */
+    public com.nexusarchive.integration.erp.dto.FeedbackResult feedbackArchivalStatus(
+            String accessToken, String voucherId, String archivalCode) {
+        
+        String token = getToken(accessToken);
+        // 模拟接口：POST /yonbip/fi/ficloud/openapi/voucher/feedback
+        String url = baseUrl + "/yonbip/fi/ficloud/openapi/voucher/feedback"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        log.info("┌─────────────────────────────────────────────────────────────┐");
+        log.info("│ [存证溯源] 开始回写归档状态至 YonSuite                        │");
+        log.info("├─────────────────────────────────────────────────────────────┤");
+        log.info("│ 凭证ID: {}", voucherId);
+        log.info("│ 档号: {}", archivalCode);
+        log.info("│ 目标URL: {}", url);
+        log.info("│ 执行模式: MOCK (模拟)");
+        log.info("└─────────────────────────────────────────────────────────────┘");
+
+        try {
+            JSONObject body = new JSONObject();
+            body.putOnce("id", voucherId);
+            body.putOnce("memo", "已归档至档案系统，档号: " + archivalCode);
+            body.putOnce("archive_status", "ARCHIVED");
+            body.putOnce("archived_at", java.time.LocalDateTime.now().toString());
+
+            // 模拟模式：不实际执行 HTTP 请求
+            // TODO: 生产环境切换为真实调用
+            // String respStr = HttpRequest.post(url).body(body.toString()).execute().body();
+            
+            log.info("✓ [存证溯源] YonSuite 回写模拟成功 - voucher={}, archivalCode={}", 
+                    voucherId, archivalCode);
+            
+            return com.nexusarchive.integration.erp.dto.FeedbackResult.success(
+                    voucherId, archivalCode, "YONSUITE", true);
+                    
+        } catch (Exception e) {
+            log.error("✗ [存证溯源] YonSuite 回写失败 - voucher={}, error={}", 
+                    voucherId, e.getMessage(), e);
+            
+            return com.nexusarchive.integration.erp.dto.FeedbackResult.failure(
+                    voucherId, archivalCode, "YONSUITE", e.getMessage());
+        }
+    }
 }

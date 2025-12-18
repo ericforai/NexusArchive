@@ -36,6 +36,9 @@ public class IngestFlowTest {
     private com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
     private com.nexusarchive.service.ArchivalPackageService archivalPackageService;
     private com.nexusarchive.service.ArchiveService archiveService;
+    private com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper;
+    private com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory;
+    private com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
 
     @BeforeEach
     void setUp() {
@@ -44,8 +47,11 @@ public class IngestFlowTest {
         arcFileContentMapper = mock(com.nexusarchive.mapper.ArcFileContentMapper.class);
         archivalPackageService = mock(com.nexusarchive.service.ArchivalPackageService.class);
         archiveService = mock(com.nexusarchive.service.ArchiveService.class);
+        erpConfigMapper = mock(com.nexusarchive.mapper.ErpConfigMapper.class);
+        erpAdapterFactory = mock(com.nexusarchive.integration.erp.adapter.ErpAdapterFactory.class);
+        archiveSecurityService = mock(com.nexusarchive.service.ArchiveSecurityService.class);
         
-        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService);
+        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpConfigMapper, erpAdapterFactory, archiveSecurityService);
         
         // 注入临时路径配置
         ReflectionTestUtils.setField(ingestService, "tempRootPath", "/tmp/nexus-test");

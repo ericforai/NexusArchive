@@ -8,7 +8,9 @@ import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ErpScenarioMapper;
 import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
+import com.nexusarchive.mapper.SyncHistoryMapper;
 import com.nexusarchive.entity.ArcFileMetadataIndex;
+import com.nexusarchive.entity.SyncHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,8 +35,11 @@ public class ErpScenarioService {
     private final ErpAdapterFactory erpAdapterFactory;
     private final ArcFileContentMapper arcFileContentMapper;
     private final ArcFileMetadataIndexMapper arcFileMetadataIndexMapper;
+    private final SyncHistoryMapper syncHistoryMapper;
     private final VoucherPdfGeneratorService pdfGeneratorService;
     private final ObjectMapper objectMapper;
+    private final AuditLogService auditLogService;
+    private final com.nexusarchive.engine.ErpMappingEngine mappingEngine;
 
     /**
      * 获取指定配置的所有业务场景
@@ -123,13 +128,27 @@ public class ErpScenarioService {
      * 执行场景同步
      */
     @Transactional
-    public void syncScenario(Long scenarioId) {
+    public void syncScenario(Long scenarioId, Long operatorId, String clientIp) {
         ErpScenario scenario = erpScenarioMapper.selectById(scenarioId);
         if (scenario == null) {
             throw new RuntimeException("场景不存在");
         }
 
-        log.info("手动触发同步场景: {}", scenario.getName());
+        log.info("触发同步场景: {} (Operator: {}, IP: {})", scenario.getName(), operatorId, clientIp);
+
+        // 0. 创建并初始化同步历史记录
+        SyncHistory history = new SyncHistory();
+        history.setScenarioId(scenarioId);
+        history.setSyncStartTime(LocalDateTime.now());
+        history.setStatus("RUNNING");
+        history.setOperatorId(operatorId);
+        history.setClientIp(clientIp);
+        history.setSyncParams(scenario.getParamsJson());
+        history.setCreatedTime(LocalDateTime.now());
+        syncHistoryMapper.insert(history);
+
+        int totalFetched = 0;
+        int savedCount = 0;
 
         try {
             // 1. 获取配置和适配器
@@ -149,7 +168,6 @@ public class ErpScenarioService {
             if (entityConfig.getConfigJson() != null) {
                 cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(entityConfig.getConfigJson());
                 dtoConfig.setBaseUrl(json.getStr("baseUrl"));
-                // 优先使用 appKey/appSecret (YonSuite)，回退到 clientId/clientSecret (泛微等)
                 String appKey = json.getStr("appKey");
                 if (appKey == null || appKey.isEmpty()) {
                     appKey = json.getStr("clientId");
@@ -160,52 +178,78 @@ public class ErpScenarioService {
                 if (appSecret == null || appSecret.isEmpty()) {
                     appSecret = json.getStr("clientSecret");
                 }
-                dtoConfig.setAppSecret(appSecret);
+                // 使用 SM4 解密 (如果是明文则原样返回)
+                dtoConfig.setAppSecret(com.nexusarchive.util.SM4Utils.decrypt(appSecret));
                 dtoConfig.setAccbookCode(json.getStr("accbookCode"));
                 dtoConfig.setExtraConfig(entityConfig.getConfigJson());
             }
 
-            // 2. 确定同步时间范围 (默认同步最近30天，或基于上次同步时间)
-            // 简单起见，这里固定同步本月数据，实际应根据场景参数
+            // 2. 确定同步时间范围
+            // 获取场景参数
             java.time.LocalDate endDate = java.time.LocalDate.now();
-            // 修正: 探针验证通过的日期是 2020-01-01 起，minusYears(5) 只能到 2020-12，导致漏掉年初数据
             java.time.LocalDate startDate = java.time.LocalDate.of(2020, 1, 1);
+            
+            if (scenario.getParamsJson() != null) {
+                try {
+                    cn.hutool.json.JSONObject params = cn.hutool.json.JSONUtil.parseObj(scenario.getParamsJson());
+                    String startStr = params.getStr("startDate");
+                    String endStr = params.getStr("endDate");
+                    if (cn.hutool.core.util.StrUtil.isNotEmpty(startStr)) {
+                        startDate = java.time.LocalDate.parse(startStr);
+                    }
+                    if (cn.hutool.core.util.StrUtil.isNotEmpty(endStr)) {
+                        endDate = java.time.LocalDate.parse(endStr);
+                    }
+                } catch (Exception paramEx) {
+                    log.warn("解析场景参数失败，使用默认值: {}", paramEx.getMessage());
+                }
+            }
 
             // 3. 调用适配器同步
             log.info("调用适配器同步数据: {} - {}", startDate, endDate);
             List<com.nexusarchive.integration.erp.dto.VoucherDTO> vouchers;
 
-            // Special handling for YonSuite Collection File Sync
-            log.info("TriggerSync Check: key={}, adapter={}, isYonSuite={}",
-                    scenario.getScenarioKey(), adapter.getClass().getName(),
-                    (adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter));
-
             if ("COLLECTION_FILE_SYNC".equals(scenario.getScenarioKey())
                     && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
-                log.info("Dispatching to syncCollectionFiles...");
                 vouchers = ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
                         .syncCollectionFiles(dtoConfig, startDate, endDate);
             } else if ("PAYMENT_FILE_SYNC".equals(scenario.getScenarioKey())
                     && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
-                log.info("Dispatching to syncPaymentFiles (AI Generated Logic)...");
                 vouchers = ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
                         .syncPaymentFiles(dtoConfig, startDate, endDate);
             } else {
                 vouchers = adapter.syncVouchers(dtoConfig, startDate, endDate);
             }
 
+            totalFetched = vouchers != null ? vouchers.size() : 0;
+
             // 4. 保存数据到预归档库
-            int savedCount = 0;
             if (vouchers != null && !vouchers.isEmpty()) {
                 VoucherMapper mapper = new VoucherMapper();
+                
+                // 解析场景中的映射配置
+                cn.hutool.json.JSONObject mappingConfig = null;
+                if (scenario.getParamsJson() != null) {
+                    cn.hutool.json.JSONObject params = cn.hutool.json.JSONUtil.parseObj(scenario.getParamsJson());
+                    mappingConfig = params.getJSONObject("mapping");
+                }
+
                 for (com.nexusarchive.integration.erp.dto.VoucherDTO dto : vouchers) {
                     if (isVoucherExist(dto.getVoucherNo(), entityConfig.getId())) {
-                        continue; // 避免重复 (简单的幂等)
+                        continue;
                     }
-                    com.nexusarchive.entity.ArcFileContent fileContent = mapper.toArcFileContent(dto);
+
+                    com.nexusarchive.entity.ArcFileContent fileContent;
+                    if (mappingConfig != null) {
+                        log.info("提取映射配置，执行动态字段映射...");
+                        cn.hutool.json.JSONObject sourceJson = cn.hutool.json.JSONUtil.parseObj(dto);
+                        fileContent = mappingEngine.mapToArcFileContent(sourceJson, mappingConfig);
+                    } else {
+                        fileContent = mapper.toArcFileContent(dto);
+                    }
+                    
                     fileContent.setSourceSystem(entityConfig.getName());
 
-                    // 设置正确的存储路径 (使用相对路径)
                     if (fileContent.getStoragePath() == null || fileContent.getStoragePath().isEmpty()) {
                         String fondsCode = fileContent.getFondsCode() != null ? fileContent.getFondsCode() : "DEFAULT";
                         String fileName = fileContent.getFileName();
@@ -213,14 +257,11 @@ public class ErpScenarioService {
                         fileContent.setStoragePath(storagePath);
                     }
 
-                    // 必须字段填充 (DA/T 94 要求)
                     if (fileContent.getFondsCode() == null)
                         fileContent.setFondsCode("DEFAULT");
                     if (fileContent.getFiscalYear() == null)
                         fileContent.setFiscalYear(String.valueOf(startDate.getYear()));
 
-                    // 保存
-                    // 设置原始数据 (Source Data) - 用于后续按需生成PDF
                     try {
                         String voucherJson = objectMapper.writeValueAsString(dto);
                         fileContent.setSourceData(voucherJson);
@@ -228,49 +269,71 @@ public class ErpScenarioService {
                         log.warn("序列化原始数据失败: {}", jsonEx.getMessage());
                     }
 
-                    // 保存
                     arcFileContentMapper.insert(fileContent);
                     savedCount++;
 
-                    // 4.1 保存金额元数据到 ArcFileMetadataIndex (用于列表显示金额)
-                    java.math.BigDecimal amount = dto.getDebitTotal();
-                    if (amount == null) {
-                        amount = dto.getCreditTotal();
-                    }
+                    // 保存元数据索引
+                    java.math.BigDecimal amount = dto.getDebitTotal() != null ? dto.getDebitTotal() : dto.getCreditTotal();
                     if (amount != null) {
                         ArcFileMetadataIndex metadataIndex = ArcFileMetadataIndex.builder()
                                 .fileId(fileContent.getId())
                                 .totalAmount(amount)
                                 .invoiceNumber(dto.getVoucherNo())
-                                .issueDate(
-                                        dto.getVoucherDate() != null ? dto.getVoucherDate() : java.time.LocalDate.now())
+                                .issueDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : java.time.LocalDate.now())
                                 .parsedTime(LocalDateTime.now())
                                 .parserType("ERP_SYNC")
                                 .build();
                         arcFileMetadataIndexMapper.insert(metadataIndex);
-                        log.debug("Metadata saved: fileId={}, amount={}", fileContent.getId(), amount);
                     }
-
-                    log.debug("Record saved with source_data: fileId={}", fileContent.getId());
                 }
             }
 
-            // 5. 更新状态
+            // 5. 更新状态和历史
             scenario.setLastSyncTime(LocalDateTime.now());
             scenario.setLastSyncStatus("SUCCESS");
-            scenario.setLastSyncMsg(
-                    "同步成功: 获取 " + (vouchers == null ? 0 : vouchers.size()) + " 条，其中新增 " + savedCount + " 条 ("
-                            + startDate + "至" + endDate + ")");
+            String msg = String.format("同步成功: 获取 %d 条，其中新增 %d 条 (%s至%s)", 
+                                      totalFetched, savedCount, startDate, endDate);
+            scenario.setLastSyncMsg(msg);
+
+            history.setStatus("SUCCESS");
+            history.setSyncEndTime(LocalDateTime.now());
+            history.setTotalCount(totalFetched);
+            history.setSuccessCount(savedCount);
+            history.setFailCount(totalFetched - savedCount); // 这里的失败通常指已存在跳过或保存异常
 
         } catch (Exception e) {
             log.error("同步失败", e);
             scenario.setLastSyncTime(LocalDateTime.now());
             scenario.setLastSyncStatus("FAIL");
             scenario.setLastSyncMsg("同步异常: " + e.getMessage());
-        }
 
-        erpScenarioMapper.updateById(scenario);
+            history.setStatus("FAIL");
+            history.setSyncEndTime(LocalDateTime.now());
+            history.setErrorMessage(e.getMessage());
+        } finally {
+            erpScenarioMapper.updateById(scenario);
+            syncHistoryMapper.updateById(history);
+
+            // 记录合规审计日志 (GB/T 39362)
+            String auditDetails = String.format("ERP采集同步: 场景=%s, 结果=%s, 获取=%d, 成功=%d, 失败=%d",
+                    scenario.getName(), history.getStatus(), history.getTotalCount(), history.getSuccessCount(), history.getFailCount());
+            if ("FAIL".equals(history.getStatus())) {
+                auditDetails += ", 错误=" + history.getErrorMessage();
+            }
+
+            auditLogService.log(
+                    operatorId != null ? String.valueOf(operatorId) : "SYSTEM",
+                    "USER_" + operatorId, // 简化处理，实际应从上下文获取姓名
+                    "CAPTURE",
+                    "ERP_SYNC",
+                    String.valueOf(scenarioId),
+                    history.getStatus(),
+                    auditDetails,
+                    clientIp
+            );
+        }
     }
+
 
     private boolean isVoucherExist(String voucherNo, Long configId) {
         // 简单查重：基于文件名（通常包含单号）或备注
@@ -457,4 +520,28 @@ public class ErpScenarioService {
             return "BR01";
         }
     }
+
+    /**
+     * 更新场景参数配置
+     * 将传入的参数 Map 序列化为 JSON 存储到 params_json 字段
+     */
+    @Transactional
+    public void updateScenarioParams(Long scenarioId, java.util.Map<String, Object> params) {
+        ErpScenario scenario = erpScenarioMapper.selectById(scenarioId);
+        if (scenario == null) {
+            throw new RuntimeException("场景不存在: " + scenarioId);
+        }
+
+        try {
+            String paramsJson = objectMapper.writeValueAsString(params);
+            scenario.setParamsJson(paramsJson);
+            scenario.setLastModifiedTime(LocalDateTime.now());
+            erpScenarioMapper.updateById(scenario);
+            log.info("场景参数已更新: scenarioId={}, params={}", scenarioId, paramsJson);
+        } catch (Exception e) {
+            log.error("序列化场景参数失败", e);
+            throw new RuntimeException("参数格式错误: " + e.getMessage());
+        }
+    }
 }
+

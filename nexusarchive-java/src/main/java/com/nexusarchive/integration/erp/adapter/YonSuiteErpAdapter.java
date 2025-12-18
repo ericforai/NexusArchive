@@ -392,4 +392,45 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public FeedbackResult feedbackArchivalStatus(ErpConfig config, String voucherNo, String archivalCode, String status) {
+        try {
+            log.info("┌── [YonSuite Adapter] 执行存证溯源 ──────────────────────────┐");
+            log.info("│ voucherNo={}, archivalCode={}", voucherNo, archivalCode);
+            log.info("└────────────────────────────────────────────────────────────┘");
+            
+            // 调用 YonSuiteClient 的增强反馈方法
+            FeedbackResult result = yonSuiteClient.feedbackArchivalStatus(null, voucherNo, archivalCode);
+            
+            log.info("YonSuite 回写结果: success={}, mocked={}", result.isSuccess(), result.isMocked());
+            return result;
+        } catch (Exception e) {
+            log.error("YonSuite feedbackArchivalStatus 异常", e);
+            return FeedbackResult.failure(voucherNo, archivalCode, "YONSUITE", e.getMessage());
+        }
+    }
+
+
+    @Override
+    public List<com.nexusarchive.integration.erp.dto.AccountSummaryDTO> fetchAccountSummary(
+            ErpConfig config, String subjectCode, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        log.info("Executing YonSuite Account Summary Fetch (PoC Mock): subject={}, range={} to {}", 
+                subjectCode, startDate, endDate);
+        
+        // 模拟从 YonSuite 获取科目余额
+        // 在实际生产中，这将调用 YonSuite 的余额表或辅助账接口
+        List<com.nexusarchive.integration.erp.dto.AccountSummaryDTO> summaries = new java.util.ArrayList<>();
+        
+        summaries.add(com.nexusarchive.integration.erp.dto.AccountSummaryDTO.builder()
+                .subjectCode(subjectCode != null ? subjectCode : "1001")
+                .subjectName("库存现金")
+                .debitTotal(new java.math.BigDecimal("50000.00"))
+                .creditTotal(new java.math.BigDecimal("30000.00"))
+                .voucherCount(10)
+                .currency("CNY")
+                .build());
+        
+        return summaries;
+    }
 }

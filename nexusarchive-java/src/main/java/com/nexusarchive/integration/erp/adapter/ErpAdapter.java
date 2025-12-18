@@ -92,4 +92,36 @@ public interface ErpAdapter {
     default java.util.List<com.nexusarchive.entity.ErpScenario> getAvailableScenarios() {
         return java.util.Collections.emptyList();
     }
+
+    /**
+     * 将归档状态、档号或存证哈希回写至 ERP 系统 (存证溯源)
+     * 
+     * Phase 3 增强：返回结构化结果 FeedbackResult
+     * 
+     * @param config ERP 配置
+     * @param voucherNo 凭证/单据编号
+     * @param archivalCode 生成的档号
+     * @param status 归档状态 (如 ARCHIVED)
+     * @return FeedbackResult 回写结果（含成功/失败状态、时间戳、错误信息）
+     */
+    default com.nexusarchive.integration.erp.dto.FeedbackResult feedbackArchivalStatus(
+            ErpConfig config, String voucherNo, String archivalCode, String status) {
+        return com.nexusarchive.integration.erp.dto.FeedbackResult.failure(
+                voucherNo, archivalCode, "UNKNOWN", "Adapter does not implement feedbackArchivalStatus");
+    }
+
+
+    /**
+     * 获取财务科目汇总数据 (用于三位一体核对)
+     * 
+     * @param config ERP配置
+     * @param subjectCode 科目代码
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 汇总数据列表
+     */
+    default java.util.List<com.nexusarchive.integration.erp.dto.AccountSummaryDTO> fetchAccountSummary(
+            ErpConfig config, String subjectCode, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        return null;
+    }
 }

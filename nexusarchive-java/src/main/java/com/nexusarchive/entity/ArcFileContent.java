@@ -134,6 +134,16 @@ public class ArcFileContent {
      */
     private String sourceData;
 
+    /**
+     * 归档批次 ID
+     */
+    private Long batchId;
+
+    /**
+     * 批次内序号
+     */
+    private Integer sequenceInBatch;
+
     private LocalDateTime createdTime;
 
     public ArcFileContent() {
@@ -375,6 +385,22 @@ public class ArcFileContent {
         this.sourceData = sourceData;
     }
 
+    public Long getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(Long batchId) {
+        this.batchId = batchId;
+    }
+
+    public Integer getSequenceInBatch() {
+        return sequenceInBatch;
+    }
+
+    public void setSequenceInBatch(Integer sequenceInBatch) {
+        this.sequenceInBatch = sequenceInBatch;
+    }
+
     public static ArcFileContentBuilder builder() {
         return new ArcFileContentBuilder();
     }
@@ -509,6 +535,16 @@ public class ArcFileContent {
 
         public ArcFileContentBuilder erpVoucherNo(String erpVoucherNo) {
             entity.setErpVoucherNo(erpVoucherNo);
+            return this;
+        }
+
+        public ArcFileContentBuilder batchId(Long batchId) {
+            entity.setBatchId(batchId);
+            return this;
+        }
+
+        public ArcFileContentBuilder sequenceInBatch(Integer sequenceInBatch) {
+            entity.setSequenceInBatch(sequenceInBatch);
             return this;
         }
 

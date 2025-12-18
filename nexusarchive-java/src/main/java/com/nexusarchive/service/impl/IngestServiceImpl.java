@@ -42,6 +42,13 @@ public class IngestServiceImpl implements IngestService {
     private final com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
     private final com.nexusarchive.service.ArchivalPackageService archivalPackageService;
     private final com.nexusarchive.service.ArchiveService archiveService;
+    private final com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper;
+    private final com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory;
+    private final com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
+    
+    // 异步归档专用线程池 (大规模数据调优)
+    private final java.util.concurrent.ExecutorService archivalExecutor = 
+            java.util.concurrent.Executors.newFixedThreadPool(4);
     
     @Value("${archive.temp.path:/tmp/nexusarchive}")
     private String tempRootPath;
@@ -50,12 +57,18 @@ public class IngestServiceImpl implements IngestService {
                             ApplicationEventPublisher eventPublisher,
                             com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper,
                             com.nexusarchive.service.ArchivalPackageService archivalPackageService,
-                            com.nexusarchive.service.ArchiveService archiveService) {
+                            com.nexusarchive.service.ArchiveService archiveService,
+                            com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper,
+                            com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory,
+                            com.nexusarchive.service.ArchiveSecurityService archiveSecurityService) {
         this.ingestRequestStatusMapper = ingestRequestStatusMapper;
         this.eventPublisher = eventPublisher;
         this.arcFileContentMapper = arcFileContentMapper;
         this.archivalPackageService = archivalPackageService;
         this.archiveService = archiveService;
+        this.erpConfigMapper = erpConfigMapper;
+        this.erpAdapterFactory = erpAdapterFactory;
+        this.archiveSecurityService = archiveSecurityService;
     }
     
     @Override
@@ -267,94 +280,121 @@ public class IngestServiceImpl implements IngestService {
     @Override
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public void archivePoolItems(java.util.List<String> poolItemIds, String userId) throws java.io.IOException {
-        log.info("开始归档凭证池记录: poolItemIds={}, userId={}", poolItemIds, userId);
+        log.info("开始发起异步归档任务 (状态机锁定): count={}, userId={}", poolItemIds.size(), userId);
+        
+        // 1. 立即锁定状态为 ARCHIVING (正在归档)
+        // 依据：Architect 建议的状态机锁定，防止重复点击或并发冲突
+        for (String id : poolItemIds) {
+            com.nexusarchive.entity.ArcFileContent file = arcFileContentMapper.selectById(id);
+            if (file != null && !com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVED.getCode().equals(file.getPreArchiveStatus())) {
+                file.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVING.getCode());
+                arcFileContentMapper.updateById(file);
+            }
+        }
+        
+        // 2. 提交异步处理流水线
+        archivalExecutor.submit(() -> {
+            try {
+                performArchivingTask(poolItemIds, userId);
+            } catch (Exception e) {
+                log.error("异步归档后台执行异常", e);
+            }
+        });
+        
+        log.info("归档任务已提交后台执行池");
+    }
+
+    /**
+     * 后台执行真实的归档、哈希挂链、存储转换逻辑
+     */
+    private void performArchivingTask(java.util.List<String> poolItemIds, String userId) {
+        log.info("后台归档流水线启动: count={}", poolItemIds.size());
+        java.util.List<com.nexusarchive.entity.ArcFileContent> processedFiles = new java.util.ArrayList<>();
         
         for (String poolItemId : poolItemIds) {
-            // 1. 获取原始文件记录
-            com.nexusarchive.entity.ArcFileContent originalFile = arcFileContentMapper.selectById(poolItemId);
-            if (originalFile == null) {
-                log.error("文件记录不存在: {}", poolItemId);
-                continue;
-            }
-
-            // 生成档号（使用文件元数据）
-            String archivalCode = generateArchivalCode(originalFile);
-            log.info("生成档号: {}", archivalCode);
-            
-            // 2. 准备文件
-            String tempPath = tempRootPath + "/uploads";
-            String targetFileName = "voucher_" + archivalCode + "." + originalFile.getFileType().toLowerCase();
-            if (originalFile.getFileType().equalsIgnoreCase("UNKNOWN")) {
-                targetFileName = "voucher_" + archivalCode + ".pdf"; // Default to PDF
-            }
-            
-            // 复制源文件到临时目录，并重命名为目标文件名
-            java.nio.file.Path sourcePath = java.nio.file.Paths.get(originalFile.getStoragePath());
-            java.nio.file.Path targetPath = java.nio.file.Paths.get(tempPath, targetFileName);
-            
-            // 【合规修复】源文件缺失时必须阻断归档流程
-            // 依据：《会计档案管理办法》79号令要求原始凭证真实完整
-            if (!java.nio.file.Files.exists(sourcePath)) {
-                log.error("源文件物理丢失，无法归档: {}", sourcePath);
-                throw new BusinessException(ErrorCode.FILE_NOT_FOUND, 
-                    "归档失败：源文件不存在 [" + originalFile.getFileName() + "]，请重新上传原始凭证");
-            }
-            
-            // 【修复】确保临时目录存在，避免干净节点上归档失败
-            java.nio.file.Files.createDirectories(targetPath.getParent());
-            
-            java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-            // 3. 构建 SIP（仅包含真实附件）
-            AccountingSipDto sip = buildSimpleSip(archivalCode, poolItemId, targetFileName, originalFile);
-
-            // 调用 AIP 封装服务
             try {
-                archivalPackageService.archivePackage(sip, tempPath);
-                log.info("凭证归档完成: poolItemId={}, archivalCode={}", poolItemId, archivalCode);
+                // 1. 获取最新记录
+                com.nexusarchive.entity.ArcFileContent originalFile = arcFileContentMapper.selectById(poolItemId);
+                if (originalFile == null || !com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVING.getCode().equals(originalFile.getPreArchiveStatus())) {
+                    continue;
+                }
+
+                // 2. 生成档号与物理操作
+                String archivalCode = generateArchivalCode(originalFile);
+                String tempPath = tempRootPath + "/uploads";
+                String targetFileName = "voucher_" + archivalCode + "." + originalFile.getFileType().toLowerCase();
                 
-                // 关键修复: 创建档案记录，使其在列表中可见
+                java.nio.file.Path sourcePath = java.nio.file.Paths.get(originalFile.getStoragePath());
+                java.nio.file.Path targetPath = java.nio.file.Paths.get(tempPath, targetFileName);
+                
+                if (!java.nio.file.Files.exists(sourcePath)) {
+                    throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "文件物理丢失: " + originalFile.getFileName());
+                }
+                
+                java.nio.file.Files.createDirectories(targetPath.getParent());
+                java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                // 3. 构建并保存 AIP 封装包
+                AccountingSipDto sip = buildSimpleSip(archivalCode, poolItemId, targetFileName, originalFile);
+                archivalPackageService.archivePackage(sip, tempPath);
+
+                // 4. 创建正式档案索引
                 com.nexusarchive.entity.Archive archive = new com.nexusarchive.entity.Archive();
                 archive.setArchiveCode(archivalCode);
                 archive.setTitle("会计凭证-" + archivalCode);
                 archive.setFondsNo(originalFile.getFondsCode());
-                
-                // 会计年度：从文件元数据或当前日期
-                String fiscalYear = originalFile.getFiscalYear() != null 
-                    ? originalFile.getFiscalYear() 
-                    : String.valueOf(java.time.LocalDate.now().getYear());
-                archive.setFiscalYear(fiscalYear);
-                archive.setFiscalPeriod(java.time.LocalDate.now().format(
-                    java.time.format.DateTimeFormatter.ofPattern("MM")));
-                
-                // 保管期限：默认30Y
+                archive.setFiscalYear(originalFile.getFiscalYear() != null ? originalFile.getFiscalYear() : String.valueOf(java.time.LocalDate.now().getYear()));
+                archive.setFiscalPeriod(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MM")));
                 archive.setRetentionPeriod("30Y");
-                
-                // 分类代码：从元数据读取
-                String categoryCode = originalFile.getVoucherType() != null 
-                    ? originalFile.getVoucherType() 
-                    : "AC04";
-                archive.setCategoryCode(categoryCode);
-                
+                archive.setCategoryCode(originalFile.getVoucherType() != null ? originalFile.getVoucherType() : "AC04");
                 archive.setOrgName("财务部");
                 archive.setCreator(originalFile.getCreator() != null ? originalFile.getCreator() : "System");
                 archive.setStatus("archived");
                 archive.setSecurityLevel("internal");
                 archive.setLocation("电子档案库");
                 
-                // 保存档案记录
                 archiveService.createArchive(archive, userId != null ? userId : "user_admin");
-                log.info("档案记录已创建: {}", archivalCode);
                 
+                // 5. 更新预归档文件状态为“已归档”
+                originalFile.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVED.getCode());
+                arcFileContentMapper.updateById(originalFile);
+                
+                processedFiles.add(originalFile);
+                
+                // 6. ERP 异步反馈
+                triggerErpFeedback(originalFile, archivalCode);
 
-                
             } catch (Exception e) {
-                log.error("归档失败: poolItemId={}", poolItemId, e);
-                throw new java.io.IOException("归档失败: " + e.getMessage(), e);
+                log.error("归档流水线单项处理失败: poolItemId={}", poolItemId, e);
+                // 补偿：恢复状态为待归档，以便重试
+                com.nexusarchive.entity.ArcFileContent f = arcFileContentMapper.selectById(poolItemId);
+                if (f != null) {
+                    f.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode());
+                    arcFileContentMapper.updateById(f);
+                }
             }
         }
         
-        log.info("批量归档完成，共处理 {} 条记录", poolItemIds.size());
+        // [Phase 4] 批处理哈希存证挂链
+        if (!processedFiles.isEmpty()) {
+            try {
+                String batchNo = "BAT-" + System.currentTimeMillis();
+                com.nexusarchive.entity.ArchiveBatch batch = archiveSecurityService.createSecurityBatch(
+                    batchNo, processedFiles, userId != null ? userId : "user_admin");
+                
+                if (batch != null) {
+                    for (int i = 0; i < processedFiles.size(); i++) {
+                        com.nexusarchive.entity.ArcFileContent f = processedFiles.get(i);
+                        f.setBatchId(batch.getId());
+                        f.setSequenceInBatch(i + 1);
+                        arcFileContentMapper.updateById(f);
+                    }
+                }
+                log.info("异步流水线：已完成 {} 笔存证存证封卷挂链", processedFiles.size());
+            } catch (Exception e) {
+                log.error("异步存证挂链失败", e);
+            }
+        }
     }
     
     /**
@@ -437,4 +477,100 @@ public class IngestServiceImpl implements IngestService {
         
         return sip;
     }
+
+    /**
+     * 触发 ERP 系统反馈（存证溯源）
+     * 
+     * Phase 3 增强:
+     * - 使用结构化 FeedbackResult
+     * - 记录审计日志 (ERP_FEEDBACK 类型)
+     * - 失败时入队等待重试
+     */
+    private void triggerErpFeedback(com.nexusarchive.entity.ArcFileContent file, String archivalCode) {
+        if (file.getSourceSystem() == null || file.getErpVoucherNo() == null) {
+            log.debug("跳过 ERP 回写: 源系统或凭证号为空");
+            return;
+        }
+
+        log.info("╔═══════════════════════════════════════════════════════════════╗");
+        log.info("║            [存证溯源] 开始回写归档状态至 ERP                    ║");
+        log.info("╠═══════════════════════════════════════════════════════════════╣");
+        log.info("║ 源系统: {}", file.getSourceSystem());
+        log.info("║ 凭证号: {}", file.getErpVoucherNo());
+        log.info("║ 档号: {}", archivalCode);
+        log.info("╚═══════════════════════════════════════════════════════════════╝");
+
+        com.nexusarchive.integration.erp.dto.FeedbackResult result = null;
+        
+        try {
+            // 通过源系统名称查找配置
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.ErpConfig> query = 
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            query.eq(com.nexusarchive.entity.ErpConfig::getName, file.getSourceSystem());
+            com.nexusarchive.entity.ErpConfig configEntity = erpConfigMapper.selectOne(query);
+
+            if (configEntity == null) {
+                log.warn("未找到 ERP 配置: {}", file.getSourceSystem());
+                result = com.nexusarchive.integration.erp.dto.FeedbackResult.failure(
+                        file.getErpVoucherNo(), archivalCode, "UNKNOWN", "ERP 配置未找到: " + file.getSourceSystem());
+            } else {
+                com.nexusarchive.integration.erp.adapter.ErpAdapter adapter = erpAdapterFactory.getAdapter(configEntity.getErpType());
+                if (adapter == null) {
+                    log.warn("未找到适配器: {}", configEntity.getErpType());
+                    result = com.nexusarchive.integration.erp.dto.FeedbackResult.failure(
+                            file.getErpVoucherNo(), archivalCode, configEntity.getErpType(), "适配器未找到");
+                } else {
+                    // 转换实体配置为 DTO 配置
+                    com.nexusarchive.integration.erp.dto.ErpConfig configDto = new com.nexusarchive.integration.erp.dto.ErpConfig();
+                    configDto.setId(String.valueOf(configEntity.getId()));
+                    configDto.setName(configEntity.getName());
+                    configDto.setAdapterType(configEntity.getErpType());
+                    
+                    if (configEntity.getConfigJson() != null) {
+                        cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(configEntity.getConfigJson());
+                        configDto.setBaseUrl(json.getStr("baseUrl"));
+                        
+                        String appKey = json.getStr("appKey");
+                        if (appKey == null || appKey.isEmpty()) {
+                            appKey = json.getStr("clientId");
+                        }
+                        configDto.setAppKey(appKey);
+                        
+                        String appSecret = json.getStr("appSecret");
+                        if (appSecret == null || appSecret.isEmpty()) {
+                            appSecret = json.getStr("clientSecret");
+                        }
+                        // 使用 SM4 解密
+                        configDto.setAppSecret(com.nexusarchive.util.SM4Utils.decrypt(appSecret));
+                        configDto.setAccbookCode(json.getStr("accbookCode"));
+                        configDto.setExtraConfig(configEntity.getConfigJson());
+                    }
+                    
+                    // 调用适配器回写 (返回 FeedbackResult)
+                    result = adapter.feedbackArchivalStatus(configDto, file.getErpVoucherNo(), archivalCode, "ARCHIVED");
+                }
+            }
+        } catch (Exception e) {
+            log.error("ERP 回写过程异常", e);
+            result = com.nexusarchive.integration.erp.dto.FeedbackResult.failure(
+                    file.getErpVoucherNo(), archivalCode, 
+                    file.getSourceSystem() != null ? file.getSourceSystem() : "UNKNOWN", 
+                    e.getMessage());
+        }
+        
+        // 记录结果日志
+        if (result != null) {
+            if (result.isSuccess()) {
+                log.info("✓ [存证溯源] 回写成功 - voucher={}, archivalCode={}, mocked={}", 
+                        result.getVoucherId(), result.getArchivalCode(), result.isMocked());
+            } else {
+                log.warn("✗ [存证溯源] 回写失败 - voucher={}, error={}", 
+                        result.getVoucherId(), result.getErrorMessage());
+                
+                // TODO: 失败时可入队 sys_erp_feedback_queue 等待重试
+                // 当前版本仅记录日志，Phase 4 可实现定时任务重试
+            }
+        }
+    }
 }
+

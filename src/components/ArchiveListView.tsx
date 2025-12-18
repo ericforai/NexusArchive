@@ -101,6 +101,7 @@ const PRE_ARCHIVE_STATUS_LABELS: Record<string, { label: string; color: string; 
   PENDING_METADATA: { label: '待补录', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: <FileText size={14} />, description: '元数据不完整，请补充业务信息' },
   PENDING_ARCHIVE: { label: '待归档', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: <Package size={14} />, description: '检测通过，等待提交归档申请' },
   PENDING_APPROVAL: { label: '归档审批中', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', icon: <Clock size={14} />, description: '已提交申请，等待管理员审批' },
+  ARCHIVING: { label: '归档中', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: <Loader2 size={14} className="animate-spin" />, description: '归档流水线正在异步处理中...' },
   ARCHIVED: { label: '已归档', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: <CheckCircle2 size={14} />, description: '已完成归档，生成AIP包' },
 };
 
