@@ -11,7 +11,7 @@ RUN npm install
 # 复制源码
 COPY . .
 
-EXPOSE 5173
+EXPOSE 15175
 
 # 运行开发服务器，监听所有 IP
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

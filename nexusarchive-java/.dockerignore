@@ -1,0 +1,9 @@
+# Allow target folder but ignore most contents that are not jars
+target/*
+!target/*.jar
+
+*.log
+.idea
+.vscode
+*.iml
+.DS_Store

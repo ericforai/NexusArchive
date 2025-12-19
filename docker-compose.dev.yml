@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   nexus-db:
@@ -44,11 +44,11 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: nexus-frontend
     ports:
-      - "15175:5173" # 前端映射到 15175
+      - "15175:15175" # 前端映射到 15175
     depends_on:
       - nexus-backend
     environment:
-      - VITE_API_BASE_URL=http://localhost:19090/api
+      - VITE_API_BASE_URL=http://nexus-backend:19090/api
     volumes:
       - .:/app
       - /app/node_modules
