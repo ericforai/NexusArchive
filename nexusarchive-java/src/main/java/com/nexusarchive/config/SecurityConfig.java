@@ -44,13 +44,12 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/auth/login",
                                                                 "/auth/refresh",
-                                                                "/auth/logout",
-                                                                "/license/**", // License 导入需要在未授权时可访问
-                                                                "/health",
-                                                                "/health/**",
-                                                                "/actuator/health",
-                                                                "/pool/preview/**",
-                                                                "/error")
+                                                "/auth/logout",
+                                                "/license/**", // License 导入需要在未授权时可访问
+                                                "/health",
+                                                "/health/**",
+                                                "/actuator/health",
+                                                "/error")
                                                 .permitAll()
                                                 // 允许所有 OPTIONS 请求 (CORS 预检)
                                                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")

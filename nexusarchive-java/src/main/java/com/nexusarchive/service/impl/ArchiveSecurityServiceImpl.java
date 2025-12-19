@@ -2,6 +2,7 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.entity.ArchiveBatch;
 import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveBatchMapper;
 import com.nexusarchive.service.ArchiveSecurityService;
 import com.nexusarchive.util.SM3Utils;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class ArchiveSecurityServiceImpl implements ArchiveSecurityService {
 
     private final ArchiveBatchMapper batchMapper;
+    private final ArcFileContentMapper fileContentMapper; // 注入Mapper (High #5 Fix)
     private final SM3Utils sm3Utils;
 
     @Override
@@ -58,7 +60,7 @@ public class ArchiveSecurityServiceImpl implements ArchiveSecurityService {
                 .build();
 
         batchMapper.insert(batch);
-        
+
         log.info("Security Batch created successfully ID: {}, ChainedHash: {}", batch.getId(), chainedHash);
         return batch;
     }
@@ -66,11 +68,31 @@ public class ArchiveSecurityServiceImpl implements ArchiveSecurityService {
     @Override
     public boolean verifyBatchIntegrity(Long batchId) {
         ArchiveBatch batch = batchMapper.selectById(batchId);
-        if (batch == null) return false;
+        if (batch == null)
+            return false;
 
-        // 验证逻辑：重新计算 chainedHash 并对比
-        String expectedHash = sm3Utils.hash(batch.getPrevBatchHash() + batch.getCurrentBatchHash());
-        return sm3Utils.verifyHash(expectedHash, batch.getChainedHash());
+        // 1. 获取关联文件的真实数据 (按顺序)
+        List<ArcFileContent> files = fileContentMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
+                        .eq(ArcFileContent::getBatchId, batchId)
+                        .orderByAsc(ArcFileContent::getSequenceInBatch));
+
+        // 2. 重新计算当前批次数据哈希
+        String dataContent = files.stream()
+                .map(item -> item.getFileHash() + "|" + item.getId())
+                .collect(Collectors.joining(","));
+        String recalculatedHash = sm3Utils.hash(dataContent);
+
+        // 3. 验证当前批次哈希是否被篡改
+        if (!recalculatedHash.equals(batch.getCurrentBatchHash())) {
+            log.warn("Batch {} integrity check failed: Data hash mismatch! DB={}, Calc={}",
+                    batchId, batch.getCurrentBatchHash(), recalculatedHash);
+            return false;
+        }
+
+        // 4. 验证哈希链是否断裂
+        String expectedChainHash = sm3Utils.hash(batch.getPrevBatchHash() + recalculatedHash);
+        return expectedChainHash.equals(batch.getChainedHash());
     }
 
     @Override

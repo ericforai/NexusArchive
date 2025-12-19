@@ -112,11 +112,24 @@ public class GlobalExceptionHandler {
      * SECURITY: Does NOT leak stack trace or internal message to client.
      */
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Result<Void> handleException(Exception e) {
+    public org.springframework.http.ResponseEntity<Result<?>> handleException(Exception e) {
+        // 若异常链中包含 BusinessException，则按业务异常处理（可返回 4xx/409 等）
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause instanceof com.nexusarchive.common.exception.BusinessException be) {
+                // 直接复用业务异常处理逻辑
+                @SuppressWarnings("unchecked")
+                org.springframework.http.ResponseEntity<Result<?>> delegated =
+                        (org.springframework.http.ResponseEntity<Result<?>>) (org.springframework.http.ResponseEntity<?>) handleBusinessException(be);
+                return delegated;
+            }
+            cause = cause.getCause();
+        }
         // Log the full stack trace server-side
         log.error("Unhandled System Exception", e);
-        // Return a generic safe message to client
-        return Result.error(500, "系统内部错误，请联系管理员");
+        // Return a generic safe message to client with 500
+        return org.springframework.http.ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Result.error(500, "系统内部错误，请联系管理员"));
     }
 }

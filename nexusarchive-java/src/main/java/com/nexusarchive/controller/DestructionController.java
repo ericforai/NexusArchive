@@ -6,6 +6,10 @@ import com.nexusarchive.entity.Destruction;
 import com.nexusarchive.service.DestructionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.nexusarchive.security.CustomUserDetails;
+import com.nexusarchive.annotation.ArchivalAudit;
 
 @RestController
 @RequestMapping("/destruction")
@@ -15,16 +19,19 @@ public class DestructionController {
     private final DestructionService destructionService;
 
     @PostMapping
-    public Result<Destruction> createDestruction(@RequestBody Destruction destruction) {
-        // Mock user info
-        if (destruction.getApplicantId() == null) {
-            destruction.setApplicantId("current-user-id");
-            destruction.setApplicantName("Current User");
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "CREATE_DESTRUCTION", resourceType = "DESTRUCTION", description = "创建销毁申请")
+    public Result<Destruction> createDestruction(@RequestBody Destruction destruction,
+                                                @AuthenticationPrincipal CustomUserDetails user) {
+        if (destruction.getApplicantId() == null && user != null) {
+            destruction.setApplicantId(user.getId());
+            destruction.setApplicantName(user.getFullName());
         }
         return Result.success(destructionService.createDestruction(destruction));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:read','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Page<Destruction>> getDestructions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -33,19 +40,25 @@ public class DestructionController {
     }
 
     @PostMapping("/{id}/approve")
-    public Result<Void> approveDestruction(@PathVariable String id, @RequestBody(required = false) String comment) {
-        // Mock approver
-        String approverId = "admin-user-id";
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "APPROVE_DESTRUCTION", resourceType = "DESTRUCTION", description = "审批销毁")
+    public Result<Void> approveDestruction(@PathVariable String id,
+                                           @RequestBody(required = false) String comment,
+                                           @AuthenticationPrincipal CustomUserDetails user) {
+        String approverId = user != null ? user.getId() : "system";
         destructionService.approveDestruction(id, approverId, comment);
         return Result.success();
     }
 
     @PostMapping("/{id}/execute")
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "EXECUTE_DESTRUCTION", resourceType = "DESTRUCTION", description = "执行销毁")
     public Result<Void> executeDestruction(@PathVariable String id) {
         destructionService.executeDestruction(id);
         return Result.success();
     }
     @GetMapping("/stats")
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:read','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.Map<String, Object>> getStats() {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
         

@@ -14,6 +14,7 @@ import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.service.PreArchiveCheckService;
 import com.nexusarchive.service.PreArchiveSubmitService;
 import com.nexusarchive.service.AuditLogService;
+import com.nexusarchive.annotation.ArchivalAudit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
@@ -74,6 +76,7 @@ public class PoolController {
      * @return 文件详情
      */
     @GetMapping("/detail/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<PoolItemDetailDto> getFileDetail(@PathVariable String id) {
         log.info("获取文件详情: {}", id);
 
@@ -151,6 +154,8 @@ public class PoolController {
      * @return 更新结果
      */
     @PostMapping("/metadata/update")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "METADATA_UPDATE", resourceType = "ARC_FILE_CONTENT", description = "更新预归档元数据")
     public Result<String> updateMetadata(
             @RequestBody @Validated MetadataUpdateDTO dto,
             HttpServletRequest request) {
@@ -229,6 +234,7 @@ public class PoolController {
      * @return 凭证池列表
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<PoolItemDto>> listPoolItems() {
         log.info("查询电子凭证池列表");
 
@@ -260,6 +266,7 @@ public class PoolController {
      * @return 文件列表
      */
     @GetMapping("/list/status/{status}")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<PoolItemDto>> listByStatus(@PathVariable String status) {
         log.info("按状态查询预归档文件: {}", status);
 
@@ -284,6 +291,7 @@ public class PoolController {
      * @return 各状态计数
      */
     @GetMapping("/stats/status")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.Map<String, Long>> getStatusStats() {
         log.info("统计预归档各状态数量");
 
@@ -346,6 +354,7 @@ public class PoolController {
      * @return 检测报告
      */
     @GetMapping("/check/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<FourNatureReport> checkSingleFile(@PathVariable String id) {
         log.info("执行四性检测: {}", id);
         FourNatureReport report = preArchiveCheckService.checkSingleFile(id);
@@ -359,6 +368,7 @@ public class PoolController {
      * @return 检测报告列表
      */
     @PostMapping("/check/batch")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.List<FourNatureReport>> checkBatchFiles(@RequestBody java.util.List<String> fileIds) {
         log.info("批量执行四性检测: {} 个文件", fileIds.size());
         java.util.List<FourNatureReport> reports = preArchiveCheckService.checkMultipleFiles(fileIds);
@@ -371,6 +381,7 @@ public class PoolController {
      * @return 检测报告列表
      */
     @GetMapping("/check/all-pending")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.List<FourNatureReport>> checkAllPendingFiles() {
         log.info("检测所有待检测文件");
         QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
@@ -398,6 +409,8 @@ public class PoolController {
      * @return 审批记录
      */
     @PostMapping("/submit/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "SUBMIT_ARCHIVE", resourceType = "PRE_ARCHIVE", description = "提交归档申请")
     public Result<ArchiveApproval> submitForArchival(
             @PathVariable String id,
             @RequestBody SubmitRequest request) {
@@ -419,6 +432,8 @@ public class PoolController {
      * @return 审批记录列表
      */
     @PostMapping("/submit/batch")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "SUBMIT_ARCHIVE_BATCH", resourceType = "PRE_ARCHIVE", description = "批量提交归档申请")
     public Result<BatchOperationResult<ArchiveApproval>> submitBatchForArchival(
             @RequestBody BatchSubmitRequest request) {
         log.info("批量提交归档申请: {} 个文件", request.getFileIds().size());
@@ -440,15 +455,12 @@ public class PoolController {
      * @return 结果
      */
     @PostMapping("/complete/{archiveId}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "COMPLETE_ARCHIVE", resourceType = "ARCHIVE", description = "完成归档")
     public Result<String> completeArchival(@PathVariable String archiveId) {
         log.info("完成归档: archiveId={}", archiveId);
-        try {
-            preArchiveSubmitService.completeArchival(archiveId);
-            return Result.success("归档完成");
-        } catch (Exception e) {
-            log.error("完成归档失败: {}", e.getMessage());
-            return Result.error(500, e.getMessage());
-        }
+        preArchiveSubmitService.completeArchival(archiveId);
+        return Result.success("归档完成");
     }
 
     /**
@@ -481,6 +493,7 @@ public class PoolController {
      * @return 文件流
      */
     @GetMapping("/preview/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<Resource> previewFile(@PathVariable String id) {
         log.info("请求预览文件: {}", id);
 

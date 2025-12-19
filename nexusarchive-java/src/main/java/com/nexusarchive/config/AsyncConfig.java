@@ -6,7 +6,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 @EnableAsync
 public class AsyncConfig {
@@ -21,5 +25,23 @@ public class AsyncConfig {
         executor.setThreadNamePrefix("IngestAsync-");
         executor.initialize();
         return executor;
+    }
+
+    /**
+     * 对账服务专用线程池 (修复Critical bug #1)
+     */
+    @Bean(name = "reconciliationExecutor", destroyMethod = "shutdown")
+    public ExecutorService reconciliationExecutor() {
+        int threadCount = Math.min(Runtime.getRuntime().availableProcessors(), 8);
+        log.info("初始化对账线程池,线程数: {}", threadCount);
+
+        return Executors.newFixedThreadPool(
+                threadCount,
+                runnable -> {
+                    Thread thread = new Thread(runnable);
+                    thread.setName("recon-worker-" + thread.getId());
+                    thread.setDaemon(false);
+                    return thread;
+                });
     }
 }

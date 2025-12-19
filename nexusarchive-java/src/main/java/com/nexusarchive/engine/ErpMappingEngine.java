@@ -29,12 +29,18 @@ public class ErpMappingEngine {
 
     private static final Logger log = LoggerFactory.getLogger(ErpMappingEngine.class);
 
+    // 安全白名单：允许通过映射修改的 Archive 字段 (High #6 Fix)
+    private static final java.util.Set<String> ALLOWED_ARCHIVE_FIELDS = java.util.Set.of(
+            "fondsCode", "fiscalYear", "fiscalPeriod", "voucherType", "voucherNumber",
+            "voucherDate", "amount", "summary", "attachmentCount", "creator",
+            "auditor", "poster", "sourceSystem", "externalId", "remark", "docDate");
+
     private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
 
     /**
      * 将解析后的 ERP JSON 数据转换为 Archive 实体
      * 
-     * @param sourceData 原始 ERP 数据
+     * @param sourceData    原始 ERP 数据
      * @param mappingConfig 映射规则配置 (JSON 格式)
      * @return 转换后的 Archive 实体
      */
@@ -123,7 +129,7 @@ public class ErpMappingEngine {
     /**
      * 将解析后的 ERP JSON 数据转换为 ArcFileContent 实体 (预归档)
      * 
-     * @param sourceData 原始 ERP 数据
+     * @param sourceData    原始 ERP 数据
      * @param mappingConfig 映射规则配置
      * @return 转换后的 ArcFileContent 实体
      */
@@ -152,8 +158,9 @@ public class ErpMappingEngine {
      * 设置 Archive 字段值
      */
     private void setFieldValue(Archive archive, String fieldName, String value) {
-        if (StrUtil.isEmpty(value)) return;
-        
+        if (StrUtil.isEmpty(value))
+            return;
+
         try {
             // 优先处理特殊逻辑字段
             if ("amount".equals(fieldName)) {
@@ -162,8 +169,14 @@ public class ErpMappingEngine {
                 archive.setDocDate(LocalDate.parse(value));
             } else {
                 // 通用反射设置 (遵循 camelCase)
+                // 安全校验：必须在白名单内 (High #6 Fix)
+                if (!ALLOWED_ARCHIVE_FIELDS.contains(fieldName)) {
+                    throw new SecurityException("非法字段映射: " + fieldName + " 不在允许名单中");
+                }
                 cn.hutool.core.util.ReflectUtil.setFieldValue(archive, fieldName, value);
             }
+        } catch (SecurityException e) {
+            throw e; // 抛出安全异常
         } catch (Exception e) {
             log.warn("设置 Archive 字段 [{}] 出错: {}", fieldName, e.getMessage());
         }
@@ -173,7 +186,8 @@ public class ErpMappingEngine {
      * 设置 ArcFileContent 字段值
      */
     private void setArcFieldValue(com.nexusarchive.entity.ArcFileContent content, String fieldName, String value) {
-        if (StrUtil.isEmpty(value)) return;
+        if (StrUtil.isEmpty(value))
+            return;
 
         try {
             if ("fileSize".equals(fieldName)) {

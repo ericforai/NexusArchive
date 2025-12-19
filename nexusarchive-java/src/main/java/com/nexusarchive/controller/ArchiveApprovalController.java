@@ -6,6 +6,10 @@ import com.nexusarchive.entity.ArchiveApproval;
 import com.nexusarchive.service.ArchiveApprovalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.nexusarchive.security.CustomUserDetails;
+import com.nexusarchive.annotation.ArchivalAudit;
 
 /**
  * 档案审批控制器
@@ -21,6 +25,7 @@ public class ArchiveApprovalController {
      * 获取审批列表
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Page<ArchiveApproval>> getApprovalList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -33,6 +38,7 @@ public class ArchiveApprovalController {
      * 获取审批详情
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<ArchiveApproval> getApprovalById(@PathVariable String id) {
         ArchiveApproval approval = approvalService.getApprovalById(id);
         if (approval == null) {
@@ -45,7 +51,14 @@ public class ArchiveApprovalController {
      * 创建审批申请
      */
     @PostMapping("/create")
-    public Result<ArchiveApproval> createApproval(@RequestBody ArchiveApproval approval) {
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "CREATE_APPROVAL", resourceType = "ARCHIVE_APPROVAL", description = "创建归档审批申请")
+    public Result<ArchiveApproval> createApproval(@RequestBody ArchiveApproval approval,
+                                                  @AuthenticationPrincipal CustomUserDetails user) {
+        if (user != null && approval.getApplicantId() == null) {
+            approval.setApplicantId(user.getId());
+            approval.setApplicantName(user.getFullName());
+        }
         try {
             ArchiveApproval created = approvalService.createApproval(approval);
             return Result.success(created);
@@ -58,36 +71,38 @@ public class ArchiveApprovalController {
      * 批准归档
      */
     @PostMapping("/approve")
-    public Result<Void> approveArchive(@RequestBody ApprovalRequest request) {
-        try {
-            approvalService.approveArchive(
-                request.getId(),
-                request.getApproverId(),
-                request.getApproverName(),
-                request.getComment()
-            );
-            return Result.success(null);
-        } catch (Exception e) {
-            return Result.error(500, e.getMessage());
-        }
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批准归档申请")
+    public Result<Void> approveArchive(@RequestBody ApprovalRequest request,
+                                       @AuthenticationPrincipal CustomUserDetails user) {
+        String approverId = user != null ? user.getId() : "system";
+        String approverName = user != null ? user.getFullName() : "system";
+        approvalService.approveArchive(
+            request.getId(),
+            approverId,
+            approverName,
+            request.getComment()
+        );
+        return Result.success(null);
     }
 
     /**
      * 拒绝归档
      */
     @PostMapping("/reject")
-    public Result<Void> rejectArchive(@RequestBody ApprovalRequest request) {
-        try {
-            approvalService.rejectArchive(
-                request.getId(),
-                request.getApproverId(),
-                request.getApproverName(),
-                request.getComment()
-            );
-            return Result.success(null);
-        } catch (Exception e) {
-            return Result.error(500, e.getMessage());
-        }
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "拒绝归档申请")
+    public Result<Void> rejectArchive(@RequestBody ApprovalRequest request,
+                                      @AuthenticationPrincipal CustomUserDetails user) {
+        String approverId = user != null ? user.getId() : "system";
+        String approverName = user != null ? user.getFullName() : "system";
+        approvalService.rejectArchive(
+            request.getId(),
+            approverId,
+            approverName,
+            request.getComment()
+        );
+        return Result.success(null);
     }
 
     /**

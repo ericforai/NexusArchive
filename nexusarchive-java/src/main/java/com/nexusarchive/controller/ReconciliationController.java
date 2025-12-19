@@ -5,9 +5,14 @@ import com.nexusarchive.service.ReconciliationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import com.nexusarchive.dto.reconciliation.ReconciliationRequest;
+import com.nexusarchive.entity.ReconciliationRecord;
+import com.nexusarchive.service.ReconciliationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 账、凭、证三位一体核对控制器
@@ -23,18 +28,18 @@ public class ReconciliationController {
      * 触发对账
      */
     @PostMapping("/trigger")
-    public ReconciliationRecord triggerReconciliation(@RequestBody Map<String, Object> params) {
-        Long configId = Long.valueOf(params.get("configId").toString());
-        String subjectCode = (String) params.get("subjectCode");
-        String startDateStr = (String) params.get("startDate");
-        String endDateStr = (String) params.get("endDate");
-        String operatorId = (String) params.get("operatorId");
+    public ReconciliationRecord triggerReconciliation(@RequestBody @Valid ReconciliationRequest request) {
+        // TODO: 集成Spring Security后，应从SecurityContextHolder获取operatorId
+        // String operatorId =
+        // SecurityContextHolder.getContext().getAuthentication().getName();
+        String operatorId = "user_admin"; // 暂使用默认安全上下文，杜绝前端伪造
 
-        LocalDate startDate = LocalDate.parse(startDateStr);
-        LocalDate endDate = LocalDate.parse(endDateStr);
-
-        return reconciliationService.performReconciliation(configId, subjectCode, startDate, endDate, 
-                operatorId != null ? operatorId : "user_admin");
+        return reconciliationService.performReconciliation(
+                request.getConfigId(),
+                request.getSubjectCode(),
+                request.getStartDate(),
+                request.getEndDate(),
+                operatorId);
     }
 
     /**

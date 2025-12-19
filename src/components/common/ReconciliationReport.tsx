@@ -68,7 +68,7 @@ export const ReconciliationReport: React.FC<Props> = ({ record, loading }) => {
                     size="small"
                     pagination={false}
                     dataSource={[
-                        { key: 'amount', item: '发生额总计', erp: `¥${record.erpDebitTotal}`, arc: `¥${record.arcDebitTotal}`, status: record.erpDebitTotal === record.arcDebitTotal },
+                        { key: 'amount', item: '发生额总计', erp: `¥${record.erpDebitTotal.toFixed(2)}`, arc: `¥${record.arcDebitTotal.toFixed(2)}`, status: Math.abs(record.erpDebitTotal - record.arcDebitTotal) < 0.01 },
                         { key: 'count', item: '凭证总笔数', erp: record.erpVoucherCount, arc: record.arcVoucherCount, status: record.erpVoucherCount === record.arcVoucherCount },
                         { key: 'file', item: '原始附件完整性', erp: '-', arc: `${record.arcVoucherCount - record.attachmentMissingCount} / ${record.arcVoucherCount}`, status: record.attachmentMissingCount === 0 },
                     ]}

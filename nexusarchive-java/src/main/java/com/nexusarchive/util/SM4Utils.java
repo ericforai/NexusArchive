@@ -22,22 +22,22 @@ import org.slf4j.LoggerFactory;
  * @author Agent B - 合规开发工程师
  */
 public class SM4Utils {
-    
+
     private static final Logger log = LoggerFactory.getLogger(SM4Utils.class);
-    
+
     // 默认密钥（仅用于开发测试，生产环境必须修改）
     private static final String DEFAULT_KEY = "0123456789abcdeffedcba9876543210";
-    
+
     // 实际使用的密钥
     private static final String ACTIVE_KEY;
-    
+
     // SM4 加密实例
     private static final SymmetricCrypto sm4;
-    
+
     static {
         // 从环境变量读取密钥
         String envKey = System.getenv("SM4_KEY");
-        
+
         if (envKey != null && !envKey.isEmpty()) {
             if (isValidKey(envKey)) {
                 ACTIVE_KEY = envKey;
@@ -57,10 +57,10 @@ public class SM4Utils {
                 log.warn("⚠️ SM4 加密: 使用默认密钥！生产环境请设置环境变量 SM4_KEY");
             }
         }
-        
+
         sm4 = SmUtil.sm4(HexUtil.decodeHex(ACTIVE_KEY));
     }
-    
+
     /**
      * 加密字符串
      * 
@@ -73,7 +73,7 @@ public class SM4Utils {
         }
         return sm4.encryptHex(content);
     }
-    
+
     /**
      * 解密字符串
      * 
@@ -93,7 +93,26 @@ public class SM4Utils {
             return hex;
         }
     }
-    
+
+    /**
+     * 解密字符串 (严格模式) - 修复 High #7
+     * 
+     * @param hex 加密后的十六进制字符串
+     * @return 解密后的原始内容
+     * @throws RuntimeException 当解密失败时抛出异常
+     */
+    public static String decryptStrict(String hex) {
+        if (StrUtil.isEmpty(hex)) {
+            return hex;
+        }
+        try {
+            return sm4.decryptStr(hex, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            log.error("SM4 严格解密失败: {}", e.getMessage());
+            throw new RuntimeException("SM4解密失败", e);
+        }
+    }
+
     /**
      * 验证密钥格式
      * 
@@ -107,7 +126,7 @@ public class SM4Utils {
         // 验证是否为有效的 16 进制字符串
         return key.matches("^[0-9a-fA-F]{32}$");
     }
-    
+
     /**
      * 检查是否使用默认密钥
      * 
@@ -116,7 +135,7 @@ public class SM4Utils {
     public static boolean isUsingDefaultKey() {
         return DEFAULT_KEY.equals(ACTIVE_KEY);
     }
-    
+
     /**
      * 获取当前密钥的哈希（用于日志，不暴露真实密钥）
      * 

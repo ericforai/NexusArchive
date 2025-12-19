@@ -40,15 +40,16 @@ public class TokenBlacklistService {
     }
 
     /**
-     * isBlacklisted - 在Redis不可用时返回false（允许token通过验证）
+     * isBlacklisted
+     * 安全加固：Redis 不可用时采取 fail-closed（视为黑名单命中）
      */
     public boolean isBlacklisted(String token) {
         try {
             return Boolean.TRUE.equals(redisTemplate.hasKey(getBlacklistKey(token)));
         } catch (Exception e) {
-            // Redis不可用时降级处理：假设token不在黑名单中
-            log.warn("Redis unavailable for blacklist check, assuming token is valid: {}", e.getMessage());
-            return false;
+            // 安全加固：Redis 异常时采取 fail-closed，避免吊销失效
+            log.error("Redis unavailable for blacklist check, rejecting token for safety: {}", e.getMessage());
+            return true;
         }
     }
 
@@ -56,4 +57,3 @@ public class TokenBlacklistService {
         return "auth:blacklist:" + token;
     }
 }
-

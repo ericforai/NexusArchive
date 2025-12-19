@@ -9,6 +9,8 @@ import com.nexusarchive.mapper.ArchiveApprovalMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.ArchiveApprovalService;
 import com.nexusarchive.service.PreArchiveSubmitService;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import org.springframework.context.annotation.Lazy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -66,18 +68,21 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             throw new RuntimeException("Approval record not found");
         }
 
-        if (!"PENDING".equals(approval.getStatus())) {
-            throw new RuntimeException("Only pending approvals can be processed");
-        }
-
-        // Update approval record
+        // 防重锁：仅允许 PENDING -> APPROVED 的单次状态跳转
         approval.setStatus("APPROVED");
         approval.setApproverId(approverId);
         approval.setApproverName(approverName);
         approval.setApprovalComment(comment);
         approval.setApprovalTime(LocalDateTime.now());
         approval.setLastModifiedTime(LocalDateTime.now()); // Manual update
-        approvalMapper.updateById(approval);
+
+        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<ArchiveApproval> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+        wrapper.eq("id", id).eq("status", "PENDING");
+        int updated = approvalMapper.update(approval, wrapper);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Approval already processed");
+        }
 
         // Update archive status and trigger locking/conversion
         Archive archive = archiveMapper.selectById(approval.getArchiveId());
@@ -96,18 +101,21 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             throw new RuntimeException("Approval record not found");
         }
 
-        if (!"PENDING".equals(approval.getStatus())) {
-            throw new RuntimeException("Only pending approvals can be processed");
-        }
-
-        // Update approval record
+        // 防重锁：仅允许 PENDING -> REJECTED 的单次状态跳转
         approval.setStatus("REJECTED");
         approval.setApproverId(approverId);
         approval.setApproverName(approverName);
         approval.setApprovalComment(comment);
         approval.setApprovalTime(LocalDateTime.now());
         approval.setLastModifiedTime(LocalDateTime.now());
-        approvalMapper.updateById(approval);
+
+        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<ArchiveApproval> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+        wrapper.eq("id", id).eq("status", "PENDING");
+        int updated = approvalMapper.update(approval, wrapper);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Approval already processed");
+        }
 
         // Update archive status
         Archive archive = archiveMapper.selectById(approval.getArchiveId());

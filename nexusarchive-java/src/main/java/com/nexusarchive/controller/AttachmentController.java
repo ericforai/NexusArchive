@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.nexusarchive.annotation.ArchivalAudit;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +36,7 @@ public class AttachmentController {
      */
     @GetMapping("/by-archive/{archiveId}")
     @Operation(summary = "获取档案附件", description = "获取指定档案关联的所有附件文件列表")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<ArcFileContent>> getAttachmentsByArchive(@PathVariable String archiveId) {
         log.info("获取档案附件: archiveId={}", archiveId);
         List<ArcFileContent> files = attachmentService.getAttachmentsByArchive(archiveId);
@@ -45,6 +48,7 @@ public class AttachmentController {
      */
     @GetMapping("/links/{archiveId}")
     @Operation(summary = "获取关联记录", description = "获取档案的附件关联记录详情")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<ArchiveAttachment>> getAttachmentLinks(@PathVariable String archiveId) {
         List<ArchiveAttachment> links = attachmentService.getAttachmentLinks(archiveId);
         return Result.success(links);
@@ -55,6 +59,8 @@ public class AttachmentController {
      */
     @PostMapping("/link")
     @Operation(summary = "关联附件", description = "将已上传的文件关联到档案")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "LINK_ATTACHMENT", resourceType = "ARCHIVE_ATTACHMENT", description = "关联附件到档案")
     public Result<ArchiveAttachment> linkAttachment(
             @RequestBody Map<String, String> request,
             @AuthenticationPrincipal CustomUserDetails user) {
@@ -72,6 +78,8 @@ public class AttachmentController {
      */
     @PostMapping("/upload")
     @Operation(summary = "上传附件", description = "上传文件并自动关联到指定档案")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "UPLOAD_ATTACHMENT", resourceType = "ARCHIVE_ATTACHMENT", description = "上传并关联附件")
     public Result<ArcFileContent> uploadAndLink(
             @RequestParam("file") MultipartFile file,
             @RequestParam("archiveId") String archiveId,
@@ -89,6 +97,8 @@ public class AttachmentController {
      */
     @DeleteMapping("/{attachmentId}")
     @Operation(summary = "删除关联", description = "删除附件与档案的关联关系")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "UNLINK_ATTACHMENT", resourceType = "ARCHIVE_ATTACHMENT", description = "删除附件关联")
     public Result<Void> unlinkAttachment(@PathVariable String attachmentId) {
         attachmentService.unlinkAttachment(attachmentId);
         return Result.success("删除成功", null);

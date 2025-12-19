@@ -9,6 +9,8 @@ import com.nexusarchive.entity.ArchiveApproval;
 import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -138,9 +140,15 @@ public class PreArchiveSubmitService {
             throw new RuntimeException("档案不存在: " + archiveId);
         }
 
-        // 更新档案状态为已归档
-        archive.setStatus("ARCHIVED");
-        archiveMapper.updateById(archive);
+        // 防重锁：仅允许非 ARCHIVED 状态转 ARCHIVED
+        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Archive> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+        wrapper.eq("id", archiveId).ne("status", "ARCHIVED")
+                .set("status", "ARCHIVED");
+        int updated = archiveMapper.update(null, wrapper);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "归档已完成或状态不允许重复完成");
+        }
 
         // 锁定关联的文件
         QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();

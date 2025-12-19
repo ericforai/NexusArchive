@@ -27,6 +27,11 @@ public class SecurityConfigValidator {
     @Value("${yonsuite.app-secret:}")
     private String yonsuiteAppSecret;
 
+    @Value("${virus.scan.type:mock}")
+    private String virusScanType;
+
+    private static final String DEFAULT_JWT_SECRET = "NexusArchiveDev2024SecretKey!!MustBeAtLeast256BitsLongForHS256Algorithm";
+
     public SecurityConfigValidator(Environment environment) {
         this.environment = environment;
     }
@@ -47,6 +52,8 @@ public class SecurityConfigValidator {
                 log.warn("⚠️ JWT_SECRET 未设置，使用临时密钥（仅限开发环境）");
                 // 开发环境使用临时密钥，但会在日志中警告
             }
+        } else if (DEFAULT_JWT_SECRET.equals(jwtSecret) && isProduction) {
+            throw new IllegalStateException("【安全错误】生产环境禁止使用默认 JWT 密钥，请设置随机的 JWT_SECRET。");
         } else if (jwtSecret.length() < 32) {
             log.warn("⚠️ JWT_SECRET 长度不足32位，建议使用更强的密钥");
         }
@@ -60,6 +67,11 @@ public class SecurityConfigValidator {
                        yonsuiteAppSecret == null || yonsuiteAppSecret.isBlank()) {
                 log.warn("⚠️ YonSuite 配置不完整 - 请同时设置 YONSUITE_APP_KEY 和 YONSUITE_APP_SECRET");
             }
+        }
+
+        // 病毒扫描配置验证：生产环境禁止 mock
+        if (isProduction && ("mock".equalsIgnoreCase(virusScanType) || virusScanType.isBlank())) {
+            throw new IllegalStateException("【安全错误】生产环境必须启用真实病毒扫描 (virus.scan.type!=mock)");
         }
 
         log.info("✅ 安全配置验证完成，当前环境: {}", 
