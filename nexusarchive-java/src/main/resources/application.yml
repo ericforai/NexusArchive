@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:19090}
   servlet:
     context-path: /api
 
@@ -69,6 +69,7 @@ logging:
   level:
     root: INFO
     com.nexusarchive: DEBUG
+    org.springframework.security: DEBUG
     com.baomidou.mybatisplus: DEBUG
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'

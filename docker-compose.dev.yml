@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  nexus-db:
+    image: postgres:14-alpine
+    container_name: nexus-db
+    environment:
+      POSTGRES_DB: nexusarchive
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "54321:5432" # 外部映射到 54321 避免与本地 5432 冲突
+    volumes:
+      - nexus-db-data:/var/lib/postgresql/data
+
+  nexus-redis:
+    image: redis:7-alpine
+    container_name: nexus-redis
+    ports:
+      - "16379:6379"
+
+  nexus-backend:
+    build:
+      context: ./nexusarchive-java
+      dockerfile: Dockerfile
+    container_name: nexus-backend
+    ports:
+      - "19090:19090" # 保持与之前一致，映射到 19090
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://nexus-db:5432/nexusarchive
+      - SPRING_DATA_REDIS_HOST=nexus-redis
+      - SERVER_PORT=19090
+    depends_on:
+      - nexus-db
+      - nexus-redis
+    volumes:
+      - ./nexusarchive-java/data:/app/data
+      - ./nexusarchive-java/keystore:/app/keystore
+      - ./nexusarchive-java/logs:/app/logs
+
+  nexus-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: nexus-frontend
+    ports:
+      - "15175:5173" # 前端映射到 15175
+    depends_on:
+      - nexus-backend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:19090/api
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  nexus-db-data:

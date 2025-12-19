@@ -36,7 +36,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
         setError(null);
 
         try {
+            console.log('[LoginView] Attempting login for:', username.trim());
             const res = await authApi.login({ username: username.trim(), password: password.trim() });
+            console.log('[LoginView] Login response:', res);
             if (res.code === 200) {
                 // 使用 AuthStore 存储登录状态
                 login(res.data.token, {
@@ -60,10 +62,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
                 console.log('[LoginView] Login success, navigating to:', from);
                 navigate(from, { replace: true });
             } else {
+                console.error('[LoginView] Login failed with code:', res.code, res.message);
                 setError(res.message || '登录失败');
             }
         } catch (err: any) {
-            const message = err?.response?.data?.message || '网络错误';
+            console.error('[LoginView] Login error exception:', err);
+            const message = err?.response?.data?.message || err?.message || '网络错误';
             setError(message);
         }
         setLoading(false);

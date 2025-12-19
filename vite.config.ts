@@ -6,12 +6,17 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     server: {
-      port: 5173,
+      port: 15175,
       host: '0.0.0.0',
       strictPort: true,
+      hmr: {
+        protocol: 'ws',
+        host: '127.0.0.1',
+        port: 15175,
+      },
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: 'http://127.0.0.1:19090',
           changeOrigin: true,
           secure: false,
         }

@@ -39,8 +39,8 @@ wait_for_backend() {
     
     while [ $attempt -le $max_attempts ]; do
         # 检查8080端口是否在监听
-        if curl -s http://localhost:8080/api/auth/login -X POST &>/dev/null; then
-            log_success "后端已就绪 (端口 8080)"
+        if curl -s http://127.0.0.1:19090/api/auth/login -X POST &>/dev/null; then
+            log_success "后端已就绪 (端口 19090)"
             return 0
         fi
         
@@ -116,17 +116,21 @@ main() {
     fi
 
     # 检查端口
-    if ! check_port 8080; then
-        log_warn "后端端口8080已占用，尝试终止..."
-        lsof -ti :8080 | xargs kill -9 2>/dev/null || true
+    if ! check_port 19090; then
+        log_warn "后端端口 19090 已占用，尝试终止..."
+        lsof -ti :19090 | xargs kill -9 2>/dev/null || true
         sleep 2
     fi
     
-    if ! check_port 5173; then
-        log_warn "前端端口5173已占用，尝试终止..."
-        lsof -ti :5173 | xargs kill -9 2>/dev/null || true
+    if ! check_port 15175; then
+        log_warn "前端端口 15175 已占用，尝试终止..."
+        lsof -ti :15175 | xargs kill -9 2>/dev/null || true
         sleep 2
     fi
+    
+    # 清理 Vite 缓存以防止端口残留
+    log_info "清理 Vite 缓存..."
+    rm -rf "$ROOT/node_modules/.vite" || true
     
     # Ensure logs directory exists
     mkdir -p "$ROOT/logs"
@@ -160,8 +164,8 @@ main() {
     log_success "   开发环境启动完成！"
     log_success "=========================================="
     echo ""
-    log_info "前端地址: http://localhost:5173"
-    log_info "后端地址: http://localhost:8080"
+    log_info "前端地址: http://localhost:15175"
+    log_info "后端地址: http://localhost:19090"
     echo ""
     log_info "按 Ctrl+C 停止服务"
     echo ""
@@ -186,8 +190,8 @@ cleanup() {
     fi
     
     # 确保端口释放
-    lsof -ti :8080 | xargs kill -9 2>/dev/null || true
-    lsof -ti :5173 | xargs kill -9 2>/dev/null || true
+    lsof -ti :19090 | xargs kill -9 2>/dev/null || true
+    lsof -ti :15175 | xargs kill -9 2>/dev/null || true
     
     log_success "服务已停止"
     exit 0

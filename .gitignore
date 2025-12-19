@@ -70,8 +70,9 @@ test_upload.pdf
 # pending_list.json
 # temp_approvals.json
 
-# 证书文件（如果需要同步则注释掉）
-# *.pem
+# 密钥与证书文件（严禁同步到公共仓库）
+nexusarchive-java/keystore/*.pem
+*.pem
 
 # ----------------
 # 需要同步的重要文件（确保没有被忽略）

@@ -25,6 +25,7 @@
         <jjwt.version>0.12.3</jjwt.version>
         <dameng.version>8.1.2.192</dameng.version>
         <kingbase.version>8.6.0</kingbase.version>
+        <yonsuite.sdk.version>8.2.100-RELEASE</yonsuite.sdk.version>
     </properties>
 
     <dependencies>
@@ -88,34 +89,25 @@
         </dependency>
 
         <!-- Database Drivers -->
-        <!-- PostgreSQL (开发环境) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
         
-        <!-- 达梦数据库 (生产环境 - 信创) -->
-        <!-- 注意：达梦驱动需要手动安装到本地Maven仓库 -->
-        <!--
         <dependency>
             <groupId>com.dameng</groupId>
             <artifactId>DmJdbcDriver18</artifactId>
             <version>${dameng.version}</version>
             <scope>runtime</scope>
-            <optional>true</optional>
         </dependency>
-        -->
         
-        <!-- 人大金仓 (生产环境 - 信创) -->
-        <!-- 注意：金仓驱动需要手动安装到本地Maven仓库 -->
         <!--
         <dependency>
             <groupId>com.kingbase8</groupId>
             <artifactId>kingbase8</artifactId>
             <version>${kingbase.version}</version>
             <scope>runtime</scope>
-            <optional>true</optional>
         </dependency>
         -->
 
@@ -188,14 +180,14 @@
             <version>1.78.1</version>
         </dependency>
 
-        <!-- YonSuite OpenAPI SDK (事件订阅解密) -->
+        <!-- YonSuite OpenAPI SDK -->
+        <!--
         <dependency>
             <groupId>com.yonyou.iuap</groupId>
             <artifactId>iuap-ip-openapi-sdk</artifactId>
-            <version>8.2.100-RELEASE</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/iuap-ip-openapi-sdk-8.2.100-RELEASE.jar</systemPath>
+            <version>${yonsuite.sdk.version}</version>
         </dependency>
+        -->
 
         <!-- Apache Tika (文件类型检测) -->
         <dependency>
@@ -227,13 +219,6 @@
             <artifactId>ofdrw-gm</artifactId>
             <version>2.2.7</version>
         </dependency>
-
-
-
-        <!-- AspectJ (AOP支持) -->
-        <!-- Removed duplicate spring-boot-starter-aop -->
-
-
 
         <!-- Test Dependencies -->
         <dependency>
@@ -275,15 +260,19 @@
     </dependencies>
 
     <repositories>
+        <!--
+        <repository>
+            <id>nexus-private</id>
+            <url>https://nexus.yourcompany.com/repository/maven-releases/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        -->
         <repository>
             <id>aliyun</id>
             <url>https://maven.aliyun.com/repository/public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
         </repository>
     </repositories>
     
@@ -291,17 +280,12 @@
         <pluginRepository>
             <id>aliyun-plugin</id>
             <url>https://maven.aliyun.com/repository/public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
         </pluginRepository>
     </pluginRepositories>
 
     <build>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -333,7 +317,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <includeSystemScope>true</includeSystemScope>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

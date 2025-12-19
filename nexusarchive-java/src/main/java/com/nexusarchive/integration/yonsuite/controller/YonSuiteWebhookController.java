@@ -4,9 +4,9 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.nexusarchive.integration.yonsuite.event.YonSuiteVoucherEvent;
 import com.nexusarchive.integration.yonsuite.security.WebhookNonceStore;
-import com.yonyou.iuap.open.invoke.EventParamDecrypt;
-import com.yonyou.iuap.open.utils.BeanJsonConvertUtil;
-import com.yonyou.iuap.open.utils.crypto.EncryptionHolder;
+// import com.yonyou.iuap.open.invoke.EventParamDecrypt;
+// import com.yonyou.iuap.open.utils.BeanJsonConvertUtil;
+// import com.yonyou.iuap.open.utils.crypto.EncryptionHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +82,9 @@ public class YonSuiteWebhookController {
             // 1. Check for Encryption
             String encrypt = json.getStr("encrypt");
             if (encrypt != null) {
-                log.info("Received Encrypted Webhook. Attempting to decrypt using YonSuite SDK (Self-Built App)...");
+                log.warn("Received Encrypted Webhook, but YonSuite SDK is currently DISABLED in pom.xml. Please restore the SDK to enable decryption.");
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body("decryption disabled (missing SDK)");
+                /*
                 try {
                     // 1. Convert JSON string to SDK's EncryptionHolder
                     EncryptionHolder holder = BeanJsonConvertUtil.jsonToBean(body, EncryptionHolder.class);
@@ -105,6 +107,7 @@ public class YonSuiteWebhookController {
                     log.error("SDK Decryption Failed!", e);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("decrypt failed");
                 }
+                */
             } else {
                  log.info("Received Plaintext Webhook.");
             }

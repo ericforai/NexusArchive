@@ -45,19 +45,19 @@ public class AuthService {
      */
     public LoginResponse login(LoginRequest request) {
         if (loginAttemptService.isLocked(request.getUsername())) {
-            throw new BusinessException("账户已锁定，请稍后再试");
+            throw new BusinessException(401, "账户已锁定，请稍后再试");
         }
 
         // 1. 查询用户
         User user = userMapper.findByUsername(request.getUsername());
         if (user == null) {
             loginAttemptService.recordFailure(request.getUsername());
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException(401, "用户名或密码错误");
         }
         
         // 2. 检查用户状态
         if (!"active".equals(user.getStatus())) {
-            throw new BusinessException("用户已被禁用或锁定");
+            throw new BusinessException(401, "用户已被禁用或锁定");
         }
         
         // 3. 验证密码
@@ -65,9 +65,9 @@ public class AuthService {
             loginAttemptService.recordFailure(request.getUsername());
             int remaining = loginAttemptService.getRemainingAttempts(request.getUsername());
             if (remaining == 0) {
-                throw new BusinessException("密码错误次数过多，账号已锁定15分钟");
+                throw new BusinessException(401, "密码错误次数过多，账号已锁定15分钟");
             }
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException(401, "用户名或密码错误");
         }
 
         loginAttemptService.recordSuccess(request.getUsername());
