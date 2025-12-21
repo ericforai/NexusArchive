@@ -128,7 +128,7 @@ public class ErpScenarioService {
      * 执行场景同步
      */
     @Transactional
-    public void syncScenario(Long scenarioId, Long operatorId, String clientIp) {
+    public void syncScenario(Long scenarioId, String operatorId, String clientIp) {
         ErpScenario scenario = erpScenarioMapper.selectById(scenarioId);
         if (scenario == null) {
             throw new RuntimeException("场景不存在");
@@ -321,9 +321,11 @@ public class ErpScenarioService {
                 auditDetails += ", 错误=" + history.getErrorMessage();
             }
 
+            String auditUserId = operatorId != null && !operatorId.isEmpty() ? operatorId : "SYSTEM";
+            String auditUsername = operatorId != null && !operatorId.isEmpty() ? "USER_" + operatorId : "SYSTEM";
             auditLogService.log(
-                    operatorId != null ? String.valueOf(operatorId) : "SYSTEM",
-                    "USER_" + operatorId, // 简化处理，实际应从上下文获取姓名
+                    auditUserId,
+                    auditUsername, // 简化处理，实际应从上下文获取姓名
                     "CAPTURE",
                     "ERP_SYNC",
                     String.valueOf(scenarioId),
@@ -544,4 +546,3 @@ public class ErpScenarioService {
         }
     }
 }
-

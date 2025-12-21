@@ -43,23 +43,23 @@ public class ErpScenarioController {
     @Operation(summary = "手动触发同步")
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "CAPTURE", resourceType = "ERP_SYNC", description = "手动触发ERP同步场景")
     public Result<Void> triggerSync(@PathVariable Long id, jakarta.servlet.http.HttpServletRequest request) {
-        Long operatorId = resolveUserId(request);
+        String operatorId = resolveUserId(request);
         String clientIp = getClientIp(request);
         erpScenarioService.syncScenario(id, operatorId, clientIp);
         return Result.success();
     }
 
-    private Long resolveUserId(jakarta.servlet.http.HttpServletRequest request) {
+    private String resolveUserId(jakarta.servlet.http.HttpServletRequest request) {
         Object userIdAttr = request.getAttribute("userId");
         if (userIdAttr != null) {
-            return Long.valueOf(userIdAttr.toString());
+            return userIdAttr.toString();
         }
         org.springframework.security.core.Authentication authentication = 
             org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof com.nexusarchive.security.CustomUserDetails details) {
-            return Long.valueOf(details.getId());
+            return details.getId();
         }
-        return -1L; // 系统或未知用户
+        return null; // 系统或未知用户
     }
 
     private String getClientIp(jakarta.servlet.http.HttpServletRequest request) {
@@ -138,4 +138,3 @@ public class ErpScenarioController {
         return Result.success();
     }
 }
-

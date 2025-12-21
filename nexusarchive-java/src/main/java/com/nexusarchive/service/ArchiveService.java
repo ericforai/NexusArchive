@@ -108,7 +108,7 @@ public class ArchiveService {
     public Archive getArchiveById(String id) {
         Archive archive = archiveMapper.selectById(id);
         if (archive == null) {
-            throw new BusinessException("档案不存在");
+            throw new BusinessException(404, "档案不存在");
         }
         DataScopeContext scope = dataScopeService.resolve();
         if (!dataScopeService.canAccessArchive(archive, scope)) {

@@ -45,7 +45,7 @@ public class SyncHistory {
     private String syncParams;
 
     // 操作人ID
-    private Long operatorId;
+    private String operatorId;
 
     // 操作客户端IP
     private String clientIp;
