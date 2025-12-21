@@ -42,10 +42,15 @@ docker-compose -f docker-compose.dev.yml up -d --build
 ```
 
 ### 常用端口
-- **前端**: http://localhost:15175
-- **后端**: http://localhost:18080
-- **数据库 (Postgres)**: localhost:15432
-- **Redis**: localhost:16379
+
+> ⚠️ **端口隔离策略**：Docker 使用 28xxx 端口段，与本地开发端口完全隔离，可同时运行。
+
+| 服务 | Docker 端口 | 本地开发端口 |
+|------|-------------|--------------|
+| **前端** | http://localhost:28175 | 15175 |
+| **后端** | http://localhost:28080 | 19090 |
+| **数据库** | localhost:54321 | 5432 |
+| **Redis** | localhost:16379 | 6379 |
 
 ## 4. 数据恢复 (Data Restore)
 
@@ -64,6 +69,7 @@ cp -r ./backup/files ./data/files
 
 ## 5. 常见问题 (Troubleshooting)
 
-- **端口冲突**: 确保本地未启动原生 PostgreSQL 或 Redis 服务，以免占用 Docker 映射端口。
+- **端口冲突**: Docker 已使用独立端口段 (28xxx)，正常情况下不会与本地开发冲突。
 - **构建失败**: 检查 `Dockerfile.frontend` 和 `nexusarchive-java/Dockerfile` 是否存在且正确。
 - **依赖问题**: 前端构建建议先执行 `npm install`。
+- **JWT 密钥缺失**: 运行 `bash nexusarchive-java/scripts/generate_jwt_keys.sh` 生成密钥。
