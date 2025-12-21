@@ -80,13 +80,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (SignatureException e) {
             // 这是一个严重的安全事件，签名无效意味着Token可能被篡改或伪造
-            logger.error("[SECURITY] Invalid JWT Signature: " + e.getMessage() + " - Token: " + jwt);
+            logger.error("[SECURITY] Invalid JWT Signature: " + e.getMessage() + " - Token: " + maskToken(jwt));
         } catch (ExpiredJwtException e) {
             // Token过期是正常情况，记录为警告即可
             logger.warn("Expired JWT Token: " + e.getMessage());
         } catch (MalformedJwtException e) {
             // Token格式错误，可能是客户端问题或攻击尝试
-            logger.warn("Malformed JWT Token: " + e.getMessage() + " - Token: " + jwt);
+            logger.warn("Malformed JWT Token: " + e.getMessage() + " - Token: " + maskToken(jwt));
         } catch (JwtException e) {
             // 其他JWT相关异常
             logger.error("JWT processing error: " + e.getMessage());
@@ -96,5 +96,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String maskToken(String token) {
+        if (token == null || token.length() < 12) {
+            return "[redacted]";
+        }
+        return token.substring(0, 6) + "..." + token.substring(token.length() - 4);
     }
 }

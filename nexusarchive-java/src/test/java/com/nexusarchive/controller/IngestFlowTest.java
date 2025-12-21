@@ -10,6 +10,7 @@ import com.nexusarchive.dto.sip.VoucherHeadDto;
 import com.nexusarchive.event.VoucherReceivedEvent;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
 import com.nexusarchive.service.impl.IngestServiceImpl;
+import com.nexusarchive.util.PathSecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +40,7 @@ public class IngestFlowTest {
     private com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper;
     private com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory;
     private com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
+    private PathSecurityUtils pathSecurityUtils;
 
     @BeforeEach
     void setUp() {
@@ -50,8 +52,10 @@ public class IngestFlowTest {
         erpConfigMapper = mock(com.nexusarchive.mapper.ErpConfigMapper.class);
         erpAdapterFactory = mock(com.nexusarchive.integration.erp.adapter.ErpAdapterFactory.class);
         archiveSecurityService = mock(com.nexusarchive.service.ArchiveSecurityService.class);
+        pathSecurityUtils = mock(PathSecurityUtils.class);
+        when(pathSecurityUtils.getSafeFileName(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         
-        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpConfigMapper, erpAdapterFactory, archiveSecurityService);
+        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpConfigMapper, erpAdapterFactory, archiveSecurityService, pathSecurityUtils);
         
         // 注入临时路径配置
         ReflectionTestUtils.setField(ingestService, "tempRootPath", "/tmp/nexus-test");
@@ -114,4 +118,3 @@ public class IngestFlowTest {
         verify(statusMapper).insert(any(com.nexusarchive.entity.IngestRequestStatus.class));
     }
 }
-

@@ -8,6 +8,8 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.service.DataScopeService;
+import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import com.nexusarchive.service.GlobalSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
     private final ArchiveMapper archiveMapper;
     private final ArcFileMetadataIndexMapper metadataIndexMapper;
     private final ArcFileContentMapper fileContentMapper;
+    private final DataScopeService dataScopeService;
 
     @Override
     public List<GlobalSearchDTO> search(String query) {
@@ -34,12 +37,13 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
 
         String keyword = query.trim();
         List<GlobalSearchDTO> results = new ArrayList<>();
+        DataScopeContext scope = dataScopeService.resolve();
 
         // 1. Search Archive Table
-        searchArchives(keyword, results);
+        searchArchives(keyword, results, scope);
 
         // 2. Search Metadata Index Table
-        searchMetadata(keyword, results);
+        searchMetadata(keyword, results, scope);
 
         // Deduplicate results based on Archive ID
         return results.stream()
@@ -49,12 +53,13 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
                 ));
     }
 
-    private void searchArchives(String keyword, List<GlobalSearchDTO> results) {
-        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(Archive::getArchiveCode, keyword)
-                .or().like(Archive::getTitle, keyword)
-                .or().like(Archive::getFondsNo, keyword)
+    private void searchArchives(String keyword, List<GlobalSearchDTO> results, DataScopeContext scope) {
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive> wrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        wrapper.like("archive_code", keyword)
+                .or().like("title", keyword)
+                .or().like("fonds_no", keyword)
                 .last("LIMIT 20"); // Limit to prevent too many results
+        dataScopeService.applyArchiveScope(wrapper, scope);
 
         List<Archive> archives = archiveMapper.selectList(wrapper);
         for (Archive archive : archives) {
@@ -68,7 +73,7 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
         }
     }
 
-    private void searchMetadata(String keyword, List<GlobalSearchDTO> results) {
+    private void searchMetadata(String keyword, List<GlobalSearchDTO> results, DataScopeContext scope) {
         LambdaQueryWrapper<ArcFileMetadataIndex> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(ArcFileMetadataIndex::getInvoiceCode, keyword)
                 .or().like(ArcFileMetadataIndex::getInvoiceNumber, keyword)
@@ -102,8 +107,9 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
         }
 
         // Resolve Archival Code -> Archive
-        LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
-        archiveWrapper.in(Archive::getArchiveCode, archivalCodes);
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive> archiveWrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        archiveWrapper.in("archive_code", archivalCodes);
+        dataScopeService.applyArchiveScope(archiveWrapper, scope);
         List<Archive> archives = archiveMapper.selectList(archiveWrapper);
         Map<String, Archive> archiveMap = archives.stream()
                 .collect(Collectors.toMap(Archive::getArchiveCode, a -> a));

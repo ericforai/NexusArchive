@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -41,6 +42,22 @@ public class ReconciliationRecord {
 
     /** 科目名称 */
     private String subjectName;
+
+    /** ERP 配置ID */
+    @TableField("config_id")
+    private Long configId;
+
+    /** 账套代码 */
+    @TableField("accbook_code")
+    private String accbookCode;
+
+    /** 核对开始日期 */
+    @TableField("recon_start_date")
+    private LocalDate reconStartDate;
+
+    /** 核对结束日期 */
+    @TableField("recon_end_date")
+    private LocalDate reconEndDate;
 
     /** ERP 侧借方合计 */
     private BigDecimal erpDebitTotal;

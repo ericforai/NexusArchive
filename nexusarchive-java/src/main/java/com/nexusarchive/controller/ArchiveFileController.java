@@ -3,7 +3,10 @@ package com.nexusarchive.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArcFileContentMapper;
+import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +32,9 @@ import java.nio.file.Path;
 public class ArchiveFileController {
 
     private final ArcFileContentMapper fileContentMapper;
+    private final ArchiveMapper archiveMapper;
     private final FileStorageService fileStorageService;
+    private final DataScopeService dataScopeService;
 
     @GetMapping("/{id}/content")
     @Operation(summary = "获取档案文件内容（支持 PDF/OFD 等）")
@@ -46,6 +51,7 @@ public class ArchiveFileController {
         if (content == null || content.getStoragePath() == null) {
             throw new BusinessException("File not found for archive: " + id);
         }
+        authorizeArchiveAccess(content.getArchivalCode());
 
         try {
             Path filePath = fileStorageService.resolvePath(content.getStoragePath());
@@ -77,6 +83,7 @@ public class ArchiveFileController {
      */
     @GetMapping("/files/download/{fileId}")
     @Operation(summary = "通过文件ID下载文件")
+    @PreAuthorize("hasAuthority('archive:query')")
     public ResponseEntity<Resource> downloadByFileId(@PathVariable String fileId) {
         // 直接通过文件 ID 查询
         ArcFileContent content = fileContentMapper.selectById(fileId);
@@ -84,6 +91,7 @@ public class ArchiveFileController {
         if (content == null || content.getStoragePath() == null) {
             throw new BusinessException("File not found: " + fileId);
         }
+        authorizeArchiveAccess(content.getArchivalCode());
 
         try {
             Path filePath = fileStorageService.resolvePath(content.getStoragePath());
@@ -131,5 +139,25 @@ public class ArchiveFileController {
         }
         
         return "application/octet-stream";
+    }
+
+    private void authorizeArchiveAccess(String archivalCode) {
+        if (archivalCode == null || archivalCode.isEmpty()) {
+            throw new BusinessException("File not bound to an archive");
+        }
+
+        Archive archive = archiveMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive>()
+                        .eq("archive_code", archivalCode)
+                        .last("LIMIT 1")
+        );
+        if (archive == null) {
+            throw new BusinessException("Archive not found for code: " + archivalCode);
+        }
+
+        DataScopeService.DataScopeContext scope = dataScopeService.resolve();
+        if (!dataScopeService.canAccessArchive(archive, scope)) {
+            throw new BusinessException("无权访问该档案文件");
+        }
     }
 }

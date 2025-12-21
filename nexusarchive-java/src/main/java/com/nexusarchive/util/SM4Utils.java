@@ -25,9 +25,6 @@ public class SM4Utils {
 
     private static final Logger log = LoggerFactory.getLogger(SM4Utils.class);
 
-    // 默认密钥（仅用于开发测试，生产环境必须修改）
-    private static final String DEFAULT_KEY = "0123456789abcdeffedcba9876543210";
-
     // 实际使用的密钥
     private static final String ACTIVE_KEY;
 
@@ -38,27 +35,30 @@ public class SM4Utils {
         // 从环境变量读取密钥
         String envKey = System.getenv("SM4_KEY");
 
+        String resolvedKey = null;
         if (envKey != null && !envKey.isEmpty()) {
             if (isValidKey(envKey)) {
-                ACTIVE_KEY = envKey;
+                resolvedKey = envKey;
                 log.info("SM4 加密: 使用环境变量配置的密钥");
             } else {
-                log.error("SM4 加密: 环境变量 SM4_KEY 格式无效（需要 32 位 16 进制字符串），使用默认密钥");
-                ACTIVE_KEY = DEFAULT_KEY;
-            }
-        } else {
-            // 尝试从系统属性读取
-            String propKey = System.getProperty("sm4.key");
-            if (propKey != null && !propKey.isEmpty() && isValidKey(propKey)) {
-                ACTIVE_KEY = propKey;
-                log.info("SM4 加密: 使用系统属性配置的密钥");
-            } else {
-                ACTIVE_KEY = DEFAULT_KEY;
-                log.warn("⚠️ SM4 加密: 使用默认密钥！生产环境请设置环境变量 SM4_KEY");
+                log.error("SM4 加密: 环境变量 SM4_KEY 格式无效（需要 32 位 16 进制字符串）");
             }
         }
 
-        sm4 = SmUtil.sm4(HexUtil.decodeHex(ACTIVE_KEY));
+        if (resolvedKey == null) {
+            // 尝试从系统属性读取
+            String propKey = System.getProperty("sm4.key");
+            if (propKey != null && !propKey.isEmpty() && isValidKey(propKey)) {
+                resolvedKey = propKey;
+                log.info("SM4 加密: 使用系统属性配置的密钥");
+            }
+        }
+
+        ACTIVE_KEY = resolvedKey;
+        sm4 = (ACTIVE_KEY != null) ? SmUtil.sm4(HexUtil.decodeHex(ACTIVE_KEY)) : null;
+        if (sm4 == null) {
+            log.error("SM4 加密: 未配置有效密钥，相关加解密功能将不可用");
+        }
     }
 
     /**
@@ -71,6 +71,7 @@ public class SM4Utils {
         if (StrUtil.isEmpty(content)) {
             return content;
         }
+        ensureReady();
         return sm4.encryptHex(content);
     }
 
@@ -84,6 +85,7 @@ public class SM4Utils {
         if (StrUtil.isEmpty(hex)) {
             return hex;
         }
+        ensureReady();
         try {
             return sm4.decryptStr(hex, CharsetUtil.CHARSET_UTF_8);
         } catch (Exception e) {
@@ -105,11 +107,18 @@ public class SM4Utils {
         if (StrUtil.isEmpty(hex)) {
             return hex;
         }
+        ensureReady();
         try {
             return sm4.decryptStr(hex, CharsetUtil.CHARSET_UTF_8);
         } catch (Exception e) {
             log.error("SM4 严格解密失败: {}", e.getMessage());
             throw new RuntimeException("SM4解密失败", e);
+        }
+    }
+
+    private static void ensureReady() {
+        if (sm4 == null) {
+            throw new IllegalStateException("SM4_KEY 未配置或格式非法，无法执行加解密操作");
         }
     }
 
@@ -132,8 +141,8 @@ public class SM4Utils {
      * 
      * @return 是否使用默认密钥
      */
-    public static boolean isUsingDefaultKey() {
-        return DEFAULT_KEY.equals(ACTIVE_KEY);
+    public static boolean isKeyMissing() {
+        return ACTIVE_KEY == null || ACTIVE_KEY.isEmpty();
     }
 
     /**
@@ -143,6 +152,9 @@ public class SM4Utils {
      */
     public static String getKeyHash() {
         try {
+            if (ACTIVE_KEY == null) {
+                return "missing";
+            }
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(ACTIVE_KEY.getBytes());
             StringBuilder sb = new StringBuilder();

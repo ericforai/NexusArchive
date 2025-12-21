@@ -47,10 +47,10 @@ public class PreArchiveSubmitService {
     private final com.nexusarchive.util.FileHashUtil fileHashUtil;
     private final ArchivalCodeGenerator archivalCodeGenerator;
 
-    @org.springframework.beans.factory.annotation.Value("${signature.keystore.path}")
+    @org.springframework.beans.factory.annotation.Value("${signature.keystore.path:}")
     private String keystorePath;
 
-    @org.springframework.beans.factory.annotation.Value("${signature.keystore.password}")
+    @org.springframework.beans.factory.annotation.Value("${signature.keystore.password:}")
     private String keystorePassword;
 
     @Autowired

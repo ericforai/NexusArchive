@@ -13,7 +13,7 @@ public interface ReconciliationService {
      * 执行核对
      * 
      * @param configId ERP配置ID
-     * @param subjectCode 科目代码
+     * @param subjectCode 科目代码(可选；为空时执行凭证级核对)
      * @param startDate 开始日期
      * @param endDate 结束日期
      * @param operatorId 操作人ID

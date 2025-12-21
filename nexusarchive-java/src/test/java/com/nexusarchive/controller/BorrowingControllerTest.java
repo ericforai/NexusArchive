@@ -49,13 +49,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 
  * @author Agent E - 质量保障工程师
  */
-@WebMvcTest(
-    value = BorrowingController.class,
-    excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
-        type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
-        classes = {com.nexusarchive.aspect.ArchivalAuditAspect.class}
-    )
-)
+@WebMvcTest(value = BorrowingController.class, excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = {
+        com.nexusarchive.aspect.ArchivalAuditAspect.class }))
 @Import(com.nexusarchive.config.SecurityConfig.class)
 class BorrowingControllerTest {
 
@@ -116,7 +111,6 @@ class BorrowingControllerTest {
         when(claims.getSubject()).thenReturn("admin");
         when(claims.get("userId", String.class)).thenReturn("user-001");
         when(jwtUtil.extractAllClaims(anyString())).thenReturn(claims);
-        when(jwtUtil.validateToken(anyString(), anyString())).thenReturn(true);
 
         // Mock UserDetailsService with permissions
         User user = new User(
@@ -129,9 +123,7 @@ class BorrowingControllerTest {
                         new SimpleGrantedAuthority("borrowing:approve"),
                         new SimpleGrantedAuthority("borrowing:return"),
                         new SimpleGrantedAuthority("borrowing:cancel"),
-                        new SimpleGrantedAuthority("nav:all")
-                )
-        );
+                        new SimpleGrantedAuthority("nav:all")));
         when(userDetailsService.loadUserByUsername("admin")).thenReturn(user);
         when(userDetailsService.loadUserById("user-001")).thenReturn(user);
 
@@ -167,9 +159,9 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/borrowing")
-                            .header("Authorization", "Bearer " + token)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
@@ -185,8 +177,8 @@ class BorrowingControllerTest {
             when(jwtUtil.validateToken(anyString())).thenReturn(false);
 
             mockMvc.perform(post("/borrowing")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
                     // 没有有效的认证会导致 403 或通过（取决于具体配置）
                     .andDo(print());
         }
@@ -211,9 +203,9 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/borrowing")
-                            .header("Authorization", "Bearer " + token)
-                            .param("page", "1")
-                            .param("limit", "10"))
+                    .header("Authorization", "Bearer " + token)
+                    .param("page", "1")
+                    .param("limit", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data.records[0].id").value("bor-001"));
@@ -232,8 +224,8 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/borrowing")
-                            .header("Authorization", "Bearer " + token)
-                            .param("status", "PENDING"))
+                    .header("Authorization", "Bearer " + token)
+                    .param("status", "PENDING"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.records[0].status").value("PENDING"));
         }
@@ -257,9 +249,9 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/borrowing/bor-001/approve")
-                            .header("Authorization", "Bearer " + token)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(requestBody))
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data.status").value("APPROVED"));
@@ -277,9 +269,9 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/borrowing/bor-001/approve")
-                            .header("Authorization", "Bearer " + token)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(requestBody))
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.status").value("REJECTED"));
         }
@@ -299,7 +291,7 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/borrowing/bor-001/return")
-                            .header("Authorization", "Bearer " + token))
+                    .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200));
 
@@ -321,7 +313,7 @@ class BorrowingControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/borrowing/bor-001/cancel")
-                            .header("Authorization", "Bearer " + token))
+                    .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200));
 

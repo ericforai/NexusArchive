@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.springframework.util.FileSystemUtils;
 
 /**
  * 档案导出服务实现
@@ -88,8 +89,7 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
             for (ArcFileContent fileContent : files) {
                 Path sourcePath = Paths.get(fileContent.getStoragePath());
                 if (!Files.exists(sourcePath)) {
-                    log.warn("文件丢失: {}", sourcePath);
-                    continue;
+                    throw new BusinessException("文件丢失: " + sourcePath);
                 }
                 
                 String fileName = fileContent.getFileName();
@@ -155,7 +155,11 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
             
         } finally {
             // 清理临时目录 (简单实现，生产环境建议使用专门的清理工具或异步清理)
-            // FileUtil.del(tempDir); // 如果引入了 Hutool
+            try {
+                FileSystemUtils.deleteRecursively(tempDir);
+            } catch (Exception e) {
+                log.warn("临时目录清理失败: {}", tempDir, e);
+            }
         }
     }
     
@@ -180,4 +184,3 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
         });
     }
 }
-

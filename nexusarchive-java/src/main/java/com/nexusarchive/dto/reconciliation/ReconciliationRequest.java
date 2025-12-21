@@ -3,7 +3,6 @@ package com.nexusarchive.dto.reconciliation;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
@@ -18,8 +17,7 @@ public class ReconciliationRequest {
     @NotNull(message = "ERP配置ID不能为空")
     private Long configId;
 
-    @NotBlank(message = "科目代码不能为空")
-    @Pattern(regexp = "^[A-Z0-9_.]{4,50}$", message = "科目代码格式非法(仅允许字母数字下划线及点)")
+    @Pattern(regexp = "^$|^[A-Z0-9_.]{4,50}$", message = "科目代码格式非法(仅允许字母数字下划线及点)")
     private String subjectCode;
 
     @NotNull(message = "开始日期不能为空")

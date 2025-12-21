@@ -6,6 +6,7 @@ import com.nexusarchive.util.SM3Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,9 @@ public class AuditLogService {
 
     private final SysAuditLogMapper auditLogMapper;
     private final SM3Utils sm3Utils;
+
+    @Value("${audit.log.hmac-key:}")
+    private String auditLogHmacKey;
     
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -88,36 +92,30 @@ public class AuditLogService {
      */
     @Transactional
     public void saveAuditLogWithHash(SysAuditLog auditLog) {
-        try {
-            // 获取前一条日志的哈希
-            String prevHash = auditLogMapper.getLatestLogHash();
-            auditLog.setPrevLogHash(prevHash);
-            
-            // 计算当前日志的哈希
-            String createdTimeStr = auditLog.getCreatedTime() != null 
-                    ? auditLog.getCreatedTime().format(TIME_FORMATTER) 
-                    : LocalDateTime.now().format(TIME_FORMATTER);
-            
-            String logHash = sm3Utils.calculateLogHash(
-                    auditLog.getUserId(),
-                    auditLog.getAction(),
-                    auditLog.getObjectDigest(),
-                    createdTimeStr,
-                    prevHash
-            );
-            auditLog.setLogHash(logHash);
-            
-            // 插入日志
-            auditLogMapper.insert(auditLog);
-            
-            log.debug("审计日志已记录: 用户={}, 操作={}, 哈希={}", 
-                    auditLog.getUserId(), auditLog.getAction(), logHash);
-                    
-        } catch (Exception e) {
-            log.error("保存审计日志失败: {}", e.getMessage(), e);
-            // 即使哈希计算失败，也要确保日志被记录
-            auditLogMapper.insert(auditLog);
-        }
+        // 获取前一条日志的哈希 (加锁避免链分叉)
+        String prevHash = auditLogMapper.getLatestLogHashForUpdate();
+        auditLog.setPrevLogHash(prevHash);
+
+        // 计算当前日志的哈希
+        String createdTimeStr = auditLog.getCreatedTime() != null
+                ? auditLog.getCreatedTime().format(TIME_FORMATTER)
+                : LocalDateTime.now().format(TIME_FORMATTER);
+
+        String payload = buildLogChainPayload(
+                auditLog.getUserId(),
+                auditLog.getAction(),
+                auditLog.getObjectDigest(),
+                createdTimeStr,
+                prevHash
+        );
+        String logHash = sm3Utils.hmac(auditLogHmacKey, payload);
+        auditLog.setLogHash(logHash);
+
+        // 插入日志
+        auditLogMapper.insert(auditLog);
+
+        log.debug("审计日志已记录: 用户={}, 操作={}, 哈希={}",
+                auditLog.getUserId(), auditLog.getAction(), logHash);
     }
     
     /**
@@ -169,14 +167,15 @@ public class AuditLogService {
             String createdTimeStr = current.getCreatedTime() != null 
                     ? current.getCreatedTime().format(TIME_FORMATTER) 
                     : null;
-            
-            String recalculatedHash = sm3Utils.calculateLogHash(
+
+            String payload = buildLogChainPayload(
                     current.getUserId(),
                     current.getAction(),
                     current.getObjectDigest(),
                     createdTimeStr,
                     current.getPrevLogHash()
             );
+            String recalculatedHash = sm3Utils.hmac(auditLogHmacKey, payload);
             
             if (current.getLogHash() != null && recalculatedHash != null) {
                 if (!current.getLogHash().equals(recalculatedHash)) {
@@ -217,5 +216,20 @@ public class AuditLogService {
         private int totalLogs;
         private int verifiedLogs;
         private String message;
+    }
+
+    private String buildLogChainPayload(String userId, String action, String objectDigest,
+                                        String createdTime, String prevHash) {
+        StringBuilder content = new StringBuilder();
+        content.append(userId != null ? userId : "");
+        content.append("|");
+        content.append(action != null ? action : "");
+        content.append("|");
+        content.append(objectDigest != null ? objectDigest : "");
+        content.append("|");
+        content.append(createdTime != null ? createdTime : "");
+        content.append("|");
+        content.append(prevHash != null ? prevHash : "");
+        return content.toString();
     }
 }

@@ -59,6 +59,10 @@ public class JwtUtil {
     @PostConstruct
     public void initKeys() {
         try {
+            if (publicKeyLocation == null || publicKeyLocation.isBlank()
+                    || privateKeyLocation == null || privateKeyLocation.isBlank()) {
+                throw new IllegalStateException("JWT 公私钥路径未配置");
+            }
             this.publicKey = loadPublicKey(publicKeyLocation);
             this.privateKey = loadPrivateKey(privateKeyLocation);
         } catch (Exception e) {

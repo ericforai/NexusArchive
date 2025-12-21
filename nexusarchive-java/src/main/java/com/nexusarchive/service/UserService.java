@@ -82,9 +82,9 @@ public class UserService {
         // 三员互斥校验（排除自身已有角色）
         roleValidationService.validateThreeRoleExclusion(request.getId(), request.getRoleIds());
         // 更新字段
-        existing.setFullName(request.getFullName());
-        existing.setEmail(request.getEmail());
-        existing.setPhone(request.getPhone());
+        existing.setFullName(com.nexusarchive.util.XssFilter.clean(request.getFullName()));
+        existing.setEmail(com.nexusarchive.util.XssFilter.clean(request.getEmail()));
+        existing.setPhone(com.nexusarchive.util.XssFilter.clean(request.getPhone()));
         existing.setAvatar(request.getAvatar());
         existing.setDepartmentId(request.getDepartmentId());
         existing.setLastModifiedTime(LocalDateTime.now());

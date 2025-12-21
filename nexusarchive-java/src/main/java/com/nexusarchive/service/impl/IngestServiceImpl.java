@@ -8,6 +8,7 @@ import com.nexusarchive.entity.IngestRequestStatus;
 import com.nexusarchive.event.VoucherReceivedEvent;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
 import com.nexusarchive.service.IngestService;
+import com.nexusarchive.util.PathSecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ public class IngestServiceImpl implements IngestService {
     private final com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper;
     private final com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory;
     private final com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
+    private final PathSecurityUtils pathSecurityUtils;
 
     // 异步归档专用线程池 (大规模数据调优)
     private final java.util.concurrent.ExecutorService archivalExecutor = java.util.concurrent.Executors
@@ -60,7 +62,8 @@ public class IngestServiceImpl implements IngestService {
             com.nexusarchive.service.ArchiveService archiveService,
             com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper,
             com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory,
-            com.nexusarchive.service.ArchiveSecurityService archiveSecurityService) {
+            com.nexusarchive.service.ArchiveSecurityService archiveSecurityService,
+            PathSecurityUtils pathSecurityUtils) {
         this.ingestRequestStatusMapper = ingestRequestStatusMapper;
         this.eventPublisher = eventPublisher;
         this.arcFileContentMapper = arcFileContentMapper;
@@ -69,6 +72,7 @@ public class IngestServiceImpl implements IngestService {
         this.erpConfigMapper = erpConfigMapper;
         this.erpAdapterFactory = erpAdapterFactory;
         this.archiveSecurityService = archiveSecurityService;
+        this.pathSecurityUtils = pathSecurityUtils;
     }
 
     @Override
@@ -125,12 +129,20 @@ public class IngestServiceImpl implements IngestService {
 
         for (AttachmentDto attachment : sipDto.getAttachments()) {
             try {
+                String safeFileName = pathSecurityUtils.getSafeFileName(attachment.getFileName());
+                if (fileStreams.containsKey(safeFileName)) {
+                    throw new BusinessException(400, "重复附件文件名: " + safeFileName);
+                }
+
                 byte[] decoded = Base64.decode(attachment.getBase64Content());
-                fileStreams.put(attachment.getFileName(), decoded);
+                fileStreams.put(safeFileName, decoded);
+                attachment.setFileName(safeFileName);
 
                 // 写入临时文件
-                java.nio.file.Files.write(java.nio.file.Paths.get(tempPath, attachment.getFileName()), decoded);
+                java.nio.file.Files.write(java.nio.file.Paths.get(tempPath, safeFileName), decoded);
 
+            } catch (BusinessException e) {
+                throw e;
             } catch (Exception e) {
                 throw new BusinessException(
                         Integer.parseInt(ErrorCode.EAA_1006_BASE64_ERROR.replace("EAA_", "")),
@@ -286,18 +298,38 @@ public class IngestServiceImpl implements IngestService {
     public void archivePoolItems(java.util.List<String> poolItemIds, String userId) throws java.io.IOException {
         log.info("开始发起异步归档任务 (状态机锁定): count={}, userId={}", poolItemIds.size(), userId);
 
-        // 1. 立即锁定状态为 ARCHIVING (正在归档)
-        // 依据：Architect 建议的状态机锁定，防止重复点击或并发冲突
+        // 1. 严格校验状态，仅允许 PENDING_ARCHIVE 进入归档
+        java.util.List<String> invalidIds = new java.util.ArrayList<>();
         for (String id : poolItemIds) {
             com.nexusarchive.entity.ArcFileContent file = arcFileContentMapper.selectById(id);
-            if (file != null && !com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVED.getCode()
+            if (file == null) {
+                invalidIds.add(id + "(不存在)");
+                continue;
+            }
+            if (!com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode()
                     .equals(file.getPreArchiveStatus())) {
-                file.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVING.getCode());
-                arcFileContentMapper.updateById(file);
+                invalidIds.add(id + "(" + file.getPreArchiveStatus() + ")");
+            }
+        }
+        if (!invalidIds.isEmpty()) {
+            throw new BusinessException(400, "存在不允许归档的记录: " + String.join(", ", invalidIds));
+        }
+
+        // 2. 立即锁定状态为 ARCHIVING (正在归档)
+        // 依据：状态机锁定，防止重复点击或并发冲突
+        for (String id : poolItemIds) {
+            com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<com.nexusarchive.entity.ArcFileContent> wrapper =
+                    new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+            wrapper.eq("id", id)
+                    .eq("pre_archive_status", com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode())
+                    .set("pre_archive_status", com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVING.getCode());
+            int updated = arcFileContentMapper.update(null, wrapper);
+            if (updated == 0) {
+                throw new BusinessException(409, "归档状态冲突，请刷新后重试: " + id);
             }
         }
 
-        // 2. 提交异步处理流水线
+        // 3. 提交异步处理流水线
         archivalExecutor.submit(() -> {
             try {
                 performArchivingTask(poolItemIds, userId);
@@ -353,6 +385,7 @@ public class IngestServiceImpl implements IngestService {
                         : String.valueOf(java.time.LocalDate.now().getYear()));
                 archive.setFiscalPeriod(
                         java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MM")));
+                archive.setUniqueBizId(poolItemId);
                 archiveService.createArchive(archive, userId != null ? userId : "user_admin");
                 processedFiles.add(originalFile);
 

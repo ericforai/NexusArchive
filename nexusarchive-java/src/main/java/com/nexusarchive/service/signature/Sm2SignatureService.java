@@ -48,7 +48,7 @@ public class Sm2SignatureService implements SignatureAdapter {
     @Value("${signature.keystore.path:#{null}}")
     private String keystorePath;
     
-    @Value("${signature.keystore.password:changeit}")
+    @Value("${signature.keystore.password:}")
     private String keystorePassword;
     
     @Override
@@ -238,6 +238,10 @@ public class Sm2SignatureService implements SignatureAdapter {
     @Override
     public boolean isAvailable() {
         try {
+            if (keystorePath == null || keystorePath.isEmpty()
+                    || keystorePassword == null || keystorePassword.isEmpty()) {
+                return false;
+            }
             // 检查 BouncyCastle 提供者是否可用
             Provider provider = Security.getProvider(PROVIDER);
             if (provider == null) {
@@ -246,7 +250,7 @@ public class Sm2SignatureService implements SignatureAdapter {
             
             // 检查 SM3withSM2 算法是否可用
             Signature.getInstance(SIGNATURE_ALGORITHM, PROVIDER);
-            return true;
+            return loadKeyStore() != null;
             
         } catch (Exception e) {
             log.warn("SM2 签名服务不可用: {}", e.getMessage());
@@ -261,8 +265,8 @@ public class Sm2SignatureService implements SignatureAdapter {
         try {
             KeyStore keyStore = loadKeyStore();
             if (keyStore == null) {
-                log.warn("密钥库未配置，使用模拟私钥");
-                return generateMockPrivateKey();
+                log.warn("密钥库未配置，无法加载私钥");
+                return null;
             }
             
             return (PrivateKey) keyStore.getKey(certAlias, keystorePassword.toCharArray());
@@ -311,21 +315,6 @@ public class Sm2SignatureService implements SignatureAdapter {
             return keyStore;
         } catch (Exception e) {
             log.error("加载密钥库失败: {}", e.getMessage());
-            return null;
-        }
-    }
-    
-    /**
-     * 生成模拟私钥（仅用于开发测试）
-     */
-    private PrivateKey generateMockPrivateKey() {
-        try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", PROVIDER);
-            keyPairGenerator.initialize(256);
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-            return keyPair.getPrivate();
-        } catch (Exception e) {
-            log.error("生成模拟私钥失败: {}", e.getMessage());
             return null;
         }
     }

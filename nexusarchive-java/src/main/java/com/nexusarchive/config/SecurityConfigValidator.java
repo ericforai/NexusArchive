@@ -18,8 +18,11 @@ public class SecurityConfigValidator {
 
     private final Environment environment;
 
-    @Value("${jwt.secret:}")
-    private String jwtSecret;
+    @Value("${jwt.public-key-location:}")
+    private String jwtPublicKeyLocation;
+
+    @Value("${jwt.private-key-location:}")
+    private String jwtPrivateKeyLocation;
 
     @Value("${yonsuite.app-key:}")
     private String yonsuiteAppKey;
@@ -30,7 +33,17 @@ public class SecurityConfigValidator {
     @Value("${virus.scan.type:mock}")
     private String virusScanType;
 
-    private static final String DEFAULT_JWT_SECRET = "NexusArchiveDev2024SecretKey!!MustBeAtLeast256BitsLongForHS256Algorithm";
+    @Value("${audit.log.hmac-key:}")
+    private String auditLogHmacKey;
+
+    @Value("${signature.keystore.path:}")
+    private String signatureKeystorePath;
+
+    @Value("${signature.keystore.password:}")
+    private String signatureKeystorePassword;
+
+    @Value("${timestamp.fallback-on-error:true}")
+    private boolean timestampFallbackOnError;
 
     public SecurityConfigValidator(Environment environment) {
         this.environment = environment;
@@ -42,20 +55,15 @@ public class SecurityConfigValidator {
         boolean isProduction = Arrays.stream(activeProfiles)
                 .anyMatch(profile -> profile.startsWith("prod"));
 
-        // JWT 密钥验证
-        if (jwtSecret == null || jwtSecret.isBlank()) {
-            if (isProduction) {
-                throw new IllegalStateException(
-                    "【安全错误】生产环境必须设置 JWT_SECRET 环境变量！" +
-                    "请使用 'openssl rand -base64 32' 生成强密钥。");
-            } else {
-                log.warn("⚠️ JWT_SECRET 未设置，使用临时密钥（仅限开发环境）");
-                // 开发环境使用临时密钥，但会在日志中警告
+        // JWT RSA 密钥验证
+        if (isProduction) {
+            if (jwtPublicKeyLocation == null || jwtPublicKeyLocation.isBlank()
+                    || jwtPrivateKeyLocation == null || jwtPrivateKeyLocation.isBlank()) {
+                throw new IllegalStateException("【安全错误】生产环境必须配置 JWT 公私钥路径 (JWT_PUBLIC_KEY_LOCATION/JWT_PRIVATE_KEY_LOCATION)");
             }
-        } else if (DEFAULT_JWT_SECRET.equals(jwtSecret) && isProduction) {
-            throw new IllegalStateException("【安全错误】生产环境禁止使用默认 JWT 密钥，请设置随机的 JWT_SECRET。");
-        } else if (jwtSecret.length() < 32) {
-            log.warn("⚠️ JWT_SECRET 长度不足32位，建议使用更强的密钥");
+        } else if ((jwtPublicKeyLocation == null || jwtPublicKeyLocation.isBlank())
+                || (jwtPrivateKeyLocation == null || jwtPrivateKeyLocation.isBlank())) {
+            log.warn("⚠️ JWT 公私钥路径未配置，JWT 将无法正常签发/校验");
         }
 
         // YonSuite 配置验证（仅当需要使用时）
@@ -72,6 +80,31 @@ public class SecurityConfigValidator {
         // 病毒扫描配置验证：生产环境禁止 mock
         if (isProduction && ("mock".equalsIgnoreCase(virusScanType) || virusScanType.isBlank())) {
             throw new IllegalStateException("【安全错误】生产环境必须启用真实病毒扫描 (virus.scan.type!=mock)");
+        }
+
+        // 审计日志 HMAC 关键密钥校验
+        if (isProduction && (auditLogHmacKey == null || auditLogHmacKey.isBlank())) {
+            throw new IllegalStateException("【安全错误】生产环境必须设置审计日志 HMAC 密钥 (AUDIT_LOG_HMAC_KEY)");
+        }
+
+        // SM4 密钥校验
+        if (isProduction && com.nexusarchive.util.SM4Utils.isKeyMissing()) {
+            throw new IllegalStateException("【安全错误】生产环境必须设置 SM4_KEY，用于敏感字段加解密");
+        }
+
+        // 签章密钥库校验（配置了路径则要求密码）
+        if (isProduction && signatureKeystorePath != null && !signatureKeystorePath.isBlank()) {
+            if (signatureKeystorePassword == null || signatureKeystorePassword.isBlank()) {
+                throw new IllegalStateException("【安全错误】签章密钥库已配置，但密码为空");
+            }
+            if ("changeit".equalsIgnoreCase(signatureKeystorePassword)) {
+                throw new IllegalStateException("【安全错误】生产环境禁止使用默认签章密钥库口令");
+            }
+        }
+
+        // 时间戳降级策略
+        if (isProduction && timestampFallbackOnError) {
+            throw new IllegalStateException("【安全错误】生产环境禁止时间戳服务降级到本地时间");
         }
 
         log.info("✅ 安全配置验证完成，当前环境: {}", 

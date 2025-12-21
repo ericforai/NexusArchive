@@ -5,16 +5,33 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.Objects;
+
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.tsp.TimeStampRequest;
+import org.bouncycastle.tsp.TimeStampRequestGenerator;
+import org.bouncycastle.tsp.TimeStampResponse;
+import org.bouncycastle.tsp.TimeStampToken;
+import org.bouncycastle.tsp.TimeStampTokenInfo;
+import org.bouncycastle.util.Store;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.security.Security;
 
 /**
  * 时间戳服务
@@ -30,6 +47,11 @@ import java.util.Base64;
 @Slf4j
 @Service
 public class TimestampService {
+    static {
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     @Value("${timestamp.tsa.url:#{null}}")
     private String tsaUrl;
@@ -49,6 +71,9 @@ public class TimestampService {
     @Value("${timestamp.fallback-on-error:true}")
     private boolean fallbackOnError;
 
+    @Value("${timestamp.hash-algorithm:SHA-256}")
+    private String hashAlgorithm;
+
     /**
      * 请求时间戳
      * 
@@ -67,13 +92,16 @@ public class TimestampService {
         }
 
         try {
-            // 计算数据的哈希值（SHA-256）
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String algo = normalizeHashAlgorithm(hashAlgorithm);
+            MessageDigest digest = MessageDigest.getInstance(algo);
             byte[] hash = digest.digest(data);
-            String hashBase64 = Base64.getEncoder().encodeToString(hash);
 
-            // 构建时间戳请求（简化版，实际应使用 BouncyCastle 的 TimeStampRequestGenerator）
-            TimestampResult result = sendTimestampRequest(hashBase64);
+            TimeStampRequestGenerator reqGen = new TimeStampRequestGenerator();
+            reqGen.setCertReq(true);
+            ASN1ObjectIdentifier oid = resolveHashOid(algo);
+            TimeStampRequest request = reqGen.generate(oid.getId(), hash, new java.math.BigInteger(64, new SecureRandom()));
+
+            TimestampResult result = sendTimestampRequest(request.getEncoded(), request);
 
             if (result.isSuccess()) {
                 log.info("时间戳请求成功: 时间={}", result.getTimestamp());
@@ -109,22 +137,35 @@ public class TimestampService {
      */
     public TimestampVerifyResult verifyTimestamp(byte[] data, String timestampToken) {
         try {
-            // 计算数据的哈希值
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(data);
-
-            // 解析时间戳令牌（简化版，实际应使用 BouncyCastle）
-            // 这里仅做基本验证
             byte[] tokenBytes = Base64.getDecoder().decode(timestampToken);
-            
-            // 实际验证应检查：
-            // 1. 时间戳令牌的签名
-            // 2. 哈希值是否匹配
-            // 3. 证书链验证
-            
-            log.info("时间戳验证: 令牌长度={}", tokenBytes.length);
-            
-            return TimestampVerifyResult.success("时间戳验证通过（简化验证）");
+            TimeStampToken token = new TimeStampToken(new CMSSignedData(tokenBytes));
+            TimeStampTokenInfo info = token.getTimeStampInfo();
+
+            ASN1ObjectIdentifier imprintOid = info.getMessageImprintAlgOID();
+            String algo = resolveHashAlgorithmFromOid(imprintOid);
+            MessageDigest digest = MessageDigest.getInstance(algo);
+            byte[] expectedHash = digest.digest(data);
+
+            if (!java.util.Arrays.equals(expectedHash, info.getMessageImprintDigest())) {
+                return TimestampVerifyResult.failure("时间戳数据摘要不匹配");
+            }
+
+            Store<X509CertificateHolder> certStore = token.getCertificates();
+            Collection<X509CertificateHolder> certs = certStore.getMatches(token.getSID());
+            if (certs.isEmpty()) {
+                return TimestampVerifyResult.failure("时间戳令牌缺少签名证书");
+            }
+
+            X509CertificateHolder certHolder = certs.iterator().next();
+            java.security.cert.X509Certificate cert = new JcaX509CertificateConverter()
+                    .setProvider("BC")
+                    .getCertificate(certHolder);
+
+            token.validate(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert));
+
+            TimestampVerifyResult result = TimestampVerifyResult.success("时间戳验证通过");
+            result.setTimestamp(LocalDateTime.ofInstant(info.getGenTime().toInstant(), ZoneId.systemDefault()));
+            return result;
         } catch (Exception e) {
             log.error("时间戳验证异常: {}", e.getMessage(), e);
             return TimestampVerifyResult.failure("时间戳验证失败: " + e.getMessage());
@@ -134,7 +175,7 @@ public class TimestampService {
     /**
      * 发送时间戳请求
      */
-    private TimestampResult sendTimestampRequest(String hashBase64) {
+    private TimestampResult sendTimestampRequest(byte[] requestData, TimeStampRequest request) {
         try {
             URL url = new URL(tsaUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -151,21 +192,28 @@ public class TimestampService {
                 conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
             }
 
-            // 发送请求（简化版，实际应使用 RFC 3161 格式）
-            // 这里仅做示例，实际应使用 BouncyCastle 的 TimeStampRequestGenerator
-            byte[] requestData = hashBase64.getBytes(StandardCharsets.UTF_8);
             conn.getOutputStream().write(requestData);
             conn.getOutputStream().flush();
 
             int responseCode = conn.getResponseCode();
             if (responseCode == 200) {
-                // 读取响应（简化版）
                 InputStream is = conn.getInputStream();
                 byte[] response = is.readAllBytes();
-                String timestampToken = Base64.getEncoder().encodeToString(response);
+                TimeStampResponse tsResponse = new TimeStampResponse(response);
+                tsResponse.validate(request);
 
-                // 解析时间戳（简化版）
-                LocalDateTime timestamp = LocalDateTime.now(); // 实际应从响应中解析
+                if (tsResponse.getFailInfo() != null || tsResponse.getStatus() != 0) {
+                    return TimestampResult.failure("TSA 响应失败: " + tsResponse.getStatusString());
+                }
+
+                TimeStampToken token = tsResponse.getTimeStampToken();
+                if (token == null) {
+                    return TimestampResult.failure("TSA 响应缺少时间戳令牌");
+                }
+
+                TimeStampTokenInfo info = token.getTimeStampInfo();
+                LocalDateTime timestamp = LocalDateTime.ofInstant(info.getGenTime().toInstant(), ZoneId.systemDefault());
+                String timestampToken = Base64.getEncoder().encodeToString(token.getEncoded());
 
                 return TimestampResult.success(timestamp, timestampToken);
             } else {
@@ -191,6 +239,38 @@ public class TimestampService {
      */
     public boolean isAvailable() {
         return enabled && tsaUrl != null && !tsaUrl.isEmpty();
+    }
+
+    private String normalizeHashAlgorithm(String algo) {
+        if (algo == null || algo.isBlank()) {
+            return "SHA-256";
+        }
+        String upper = algo.trim().toUpperCase();
+        if ("SM3".equals(upper)) {
+            return "SM3";
+        }
+        if ("SHA256".equals(upper)) {
+            return "SHA-256";
+        }
+        return upper;
+    }
+
+    private ASN1ObjectIdentifier resolveHashOid(String algo) {
+        String normalized = normalizeHashAlgorithm(algo);
+        if ("SM3".equals(normalized)) {
+            return GMObjectIdentifiers.sm3;
+        }
+        return NISTObjectIdentifiers.id_sha256;
+    }
+
+    private String resolveHashAlgorithmFromOid(ASN1ObjectIdentifier oid) {
+        if (Objects.equals(oid, GMObjectIdentifiers.sm3)) {
+            return "SM3";
+        }
+        if (Objects.equals(oid, NISTObjectIdentifiers.id_sha256)) {
+            return "SHA-256";
+        }
+        return "SHA-256";
     }
 
     /**
@@ -267,6 +347,8 @@ public class TimestampService {
         }
     }
 }
+
+
 
 
 

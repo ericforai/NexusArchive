@@ -9,6 +9,7 @@ import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.dto.sip.AttachmentDto;
 import com.nexusarchive.dto.sip.VoucherHeadDto;
 import com.nexusarchive.service.ArchivalPackageService;
+import com.nexusarchive.util.PathSecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ public class ArchivalPackageServiceImpl implements ArchivalPackageService {
     private String archiveRootPath;
     
     private final com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
+    private final PathSecurityUtils pathSecurityUtils;
     private final XmlMapper xmlMapper = new XmlMapper();
     
     {
@@ -146,12 +148,12 @@ public class ArchivalPackageServiceImpl implements ArchivalPackageService {
         if (sip.getAttachments() == null) return savedFiles;
         
         for (AttachmentDto attachment : sip.getAttachments()) {
-            Path sourceFile = Paths.get(tempPath, attachment.getFileName());
-            Path targetFile = contentDir.resolve(attachment.getFileName());
+            String safeFileName = pathSecurityUtils.getSafeFileName(attachment.getFileName());
+            Path sourceFile = Paths.get(tempPath, safeFileName);
+            Path targetFile = contentDir.resolve(safeFileName);
             
             if (!Files.exists(sourceFile)) {
-                log.warn("源文件不存在，尝试从 Base64 写入: {}", attachment.getFileName());
-                continue; 
+                throw new BusinessException("源文件不存在: " + safeFileName);
             }
             
             // 移动文件
@@ -164,7 +166,7 @@ public class ArchivalPackageServiceImpl implements ArchivalPackageService {
             // 保存到数据库
             com.nexusarchive.entity.ArcFileContent fileContent = com.nexusarchive.entity.ArcFileContent.builder()
                     .archivalCode(archivalCode)
-                    .fileName(attachment.getFileName())
+                    .fileName(safeFileName)
                     .fileType(attachment.getFileType())
                     .fileSize(attachment.getFileSize())
                     .fileHash(attachment.getFileHash())

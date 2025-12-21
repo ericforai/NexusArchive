@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,12 +32,13 @@ import java.util.List;
 @RequestMapping("/api/admin/certificates")
 @RequiredArgsConstructor
 @Tag(name = "证书管理", description = "证书查询和管理功能")
+@PreAuthorize("hasAnyRole('SYSTEM_ADMIN','SECURITY_ADMIN')")
 public class CertificateController {
 
     @Value("${signature.keystore.path:#{null}}")
     private String keystorePath;
 
-    @Value("${signature.keystore.password:changeit}")
+    @Value("${signature.keystore.password:}")
     private String keystorePassword;
 
     /**
@@ -316,6 +318,11 @@ public class CertificateController {
         }
     }
 }
+
+
+
+
+
 
 
 

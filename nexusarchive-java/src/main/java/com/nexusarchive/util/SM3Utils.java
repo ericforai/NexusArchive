@@ -1,6 +1,8 @@
 package com.nexusarchive.util;
 
 import org.bouncycastle.crypto.digests.SM3Digest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.stereotype.Component;
 
@@ -89,6 +91,33 @@ public class SM3Utils {
         content.append(prevLogHash != null ? prevLogHash : "");
         
         return hash(content.toString());
+    }
+
+    /**
+     * 计算 SM3 HMAC
+     *
+     * @param key HMAC 密钥
+     * @param content 待摘要内容
+     * @return HMAC 值（十六进制）
+     */
+    public String hmac(String key, String content) {
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        if (key == null || key.isEmpty()) {
+            return hash(content);
+        }
+
+        HMac hmac = new HMac(new SM3Digest());
+        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+        hmac.init(new KeyParameter(keyBytes));
+
+        byte[] data = content.getBytes(StandardCharsets.UTF_8);
+        hmac.update(data, 0, data.length);
+
+        byte[] out = new byte[hmac.getMacSize()];
+        hmac.doFinal(out, 0);
+        return bytesToHex(out);
     }
     
     /**

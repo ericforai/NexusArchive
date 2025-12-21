@@ -44,9 +44,10 @@ spring:
           max-idle: 8
           min-idle: 0
 
-# JWT配置 (安全加固: 生产环境必须设置 JWT_SECRET 环境变量)
+# JWT配置 (RS256)
 jwt:
-  secret: ${JWT_SECRET:NexusArchiveDev2024SecretKey!!MustBeAtLeast256BitsLongForHS256Algorithm}
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:}
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:}
   expiration: 86400000 # 24小时 (毫秒)
   header: Authorization
   prefix: "Bearer "
@@ -99,8 +100,8 @@ elasticsearch:
 # 电子签章配置
 signature:
   keystore:
-    path: ${SIGNATURE_KEYSTORE_PATH:./keystore/signature.p12}
-    password: ${SIGNATURE_KEYSTORE_PASSWORD:changeit}
+    path: ${SIGNATURE_KEYSTORE_PATH:}
+    password: ${SIGNATURE_KEYSTORE_PASSWORD:}
 
 # 时间戳服务配置
 timestamp:
@@ -110,7 +111,7 @@ timestamp:
     username: ${TSA_USERNAME:}
     password: ${TSA_PASSWORD:}
     timeout: ${TSA_TIMEOUT:5000}
-  fallback-on-error: ${TIMESTAMP_FALLBACK:true}  # TSA 不可用时使用本地时间
+  fallback-on-error: ${TIMESTAMP_FALLBACK:false}  # TSA 不可用时默认失败
 
 # Entity-Database Schema 一致性验证 (防止 Entity 字段与数据库列不同步)
 schema:
@@ -122,6 +123,11 @@ schema:
 # License 配置
 license:
   public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMrI4RYBcukhqboFUKZlIMIANgPyt5HK6m4DK6V5bt6CVSPD2V1vKBQ3dpYo4vBZKAk6zOv3Uyq2fEPijKFozQwBo/YNu05LV6bJHu696lPaevK9Y04Grrkj2oOIH8aBqMNfotrBAPFso2IbVlnoEiS6K8AYgQ1GrfvIYoEpfeqDF3rhvw1gauWVez3nxHbGUvnvRxik77PNoBnnuO7YpgQTK6XxdxtsV1EYn0/GSL1EdwadgdxwJHwoQL4vI07lNkbI/dBiF9RRamTX8u+7kFDuw0J0e6nlD9C9vcMX/e6HnCETK9AIb1axqi1cjE1A+5xJ07ONoVYo4xTPbFVCOQIDAQAB
+
+# 审计日志哈希链 HMAC 密钥
+audit:
+  log:
+    hmac-key: ${AUDIT_LOG_HMAC_KEY:}
 
 # 病毒扫描配置 (Mock | ClamAV)
 virus:
@@ -225,4 +231,3 @@ archive:
     path: ${ARCHIVE_TEMP_PATH:/opt/nexusarchive/data/temp}
   root:
     path: /opt/nexusarchive/data/archives
-

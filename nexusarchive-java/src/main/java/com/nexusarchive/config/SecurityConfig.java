@@ -1,6 +1,7 @@
 package com.nexusarchive.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Spring Security配置 (安全重构版本)
@@ -25,6 +27,7 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -32,11 +35,18 @@ public class SecurityConfig {
     private final RestAccessDeniedHandler accessDeniedHandler;
     private final LicenseValidationFilter licenseValidationFilter;
 
-    @Value("${app.security.cors.allowed-origins:*}")
+    @Value("${app.security.cors.allowed-origins:}")
     private String corsAllowedOrigins;
+
+    @Value("${app.security.csp.allow-unsafe-inline:false}")
+    private boolean cspAllowUnsafeInline;
+
+    @Value("${app.security.csp.allow-unsafe-eval:false}")
+    private boolean cspAllowUnsafeEval;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        String cspDirectives = buildCspDirectives();
         http
                 // 启用并配置集中的CORS策略
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -85,14 +95,7 @@ public class SecurityConfig {
                         // 防止点击劫持：仅允许同源 iframe 嵌入
                         .frameOptions(frame -> frame.sameOrigin())
                         // [CRITICAL] 实施严格的内容安全策略 (CSP)，禁止内联脚本和eval
-                        .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("default-src 'self'; " +
-                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://aistudiocdn.com; " +
-                                        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-                                        "img-src 'self' data: blob: https:; " +
-                                        "font-src 'self' data: https://fonts.gstatic.com; " +
-                                        "connect-src 'self' ws: wss:; " +
-                                        "frame-ancestors 'self';"))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(cspDirectives))
                         // 防止 MIME 类型嗅探
                         .contentTypeOptions(cto -> {})
                         // 引用策略
@@ -112,15 +115,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        List<String> origins = Arrays.asList(corsAllowedOrigins.split(","));
+
+        List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
+        if (origins.contains("*")) {
+            log.warn("CORS 配置包含通配符 '*', 已忽略以避免与凭证模式冲突");
+            origins = origins.stream().filter(origin -> !"*".equals(origin)).collect(Collectors.toList());
+        }
         configuration.setAllowedOrigins(origins);
-        // 也加入 127.0.0.1 变体
-        configuration.addAllowedOrigin("http://127.0.0.1:15175");
-        configuration.addAllowedOrigin("http://localhost:15175");
-        configuration.addAllowedOrigin("http://127.0.0.1:5175");
-        configuration.addAllowedOrigin("http://localhost:5175");
-        
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setAllowCredentials(true);
@@ -129,5 +134,29 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private String buildCspDirectives() {
+        String scriptSrc = "script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com";
+        if (cspAllowUnsafeInline) {
+            scriptSrc += " 'unsafe-inline'";
+        }
+        if (cspAllowUnsafeEval) {
+            scriptSrc += " 'unsafe-eval'";
+        }
+
+        String styleSrc = "style-src 'self' https://fonts.googleapis.com";
+        if (cspAllowUnsafeInline) {
+            styleSrc += " 'unsafe-inline'";
+        }
+
+        return String.join(" ",
+                "default-src 'self';",
+                scriptSrc + ";",
+                styleSrc + ";",
+                "img-src 'self' data: blob: https:;",
+                "font-src 'self' data: https://fonts.gstatic.com;",
+                "connect-src 'self' ws: wss:;",
+                "frame-ancestors 'self';");
     }
 }

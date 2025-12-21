@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
@@ -27,6 +28,7 @@ import java.util.Base64;
 @RequestMapping("/api/timestamp")
 @RequiredArgsConstructor
 @Tag(name = "时间戳服务", description = "时间戳请求和验证功能")
+@PreAuthorize("hasAnyRole('SYSTEM_ADMIN','SECURITY_ADMIN')")
 public class TimestampController {
 
     private final TimestampService timestampService;
@@ -116,6 +118,12 @@ public class TimestampController {
         }
     }
 }
+
+
+
+
+
+
 
 
 

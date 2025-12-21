@@ -72,6 +72,8 @@ test_upload.pdf
 
 # 密钥与证书文件（严禁同步到公共仓库）
 nexusarchive-java/keystore/*.pem
+nexusarchive-java/keystore/*.p12
+nexusarchive-java/keystore/*.jks
 *.pem
 
 # ----------------
@@ -88,4 +90,3 @@ nexusarchive-java/keystore/*.pem
 
 # Large Binaries
 deploy/offline/bin/*.jar
-

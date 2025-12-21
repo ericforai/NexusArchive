@@ -67,7 +67,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
             }
         } catch (err: any) {
             console.error('[LoginView] Login error exception:', err);
-            const message = err?.response?.data?.message || err?.message || '网络错误';
+            const serverMessage = err?.response?.data?.message;
+            const rawMessage = err?.message;
+            let message = serverMessage || rawMessage || '网络错误';
+            if (err?.code === 'ERR_NETWORK' || rawMessage === 'Network Error') {
+                message = '网络错误';
+            }
             setError(message);
         }
         setLoading(false);
