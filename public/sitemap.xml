@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Input: 站点 URL 列表 -->
+<!-- Output: 站点地图 -->
+<!-- Pos: 前端 SEO 资源 -->
+<!-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.digivoucher.cn/</loc>

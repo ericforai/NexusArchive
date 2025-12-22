@@ -1,3 +1,8 @@
+// Input: cn.hutool、Lombok、Spring Framework、Javax、等
+// Output: YonAuthService 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.integration.yonsuite.service;
 
 import cn.hutool.http.HttpRequest;
@@ -49,28 +54,29 @@ public class YonAuthService {
      * 获取 access_token (指定 appKey/appSecret)
      */
     public String getAccessToken(String appKey, String appSecret) {
-        // 防御性检查：ConcurrentHashMap 不支持 null key
-        if (appKey == null || appKey.isEmpty()) {
-            log.error("YonAuthService: appKey is null or empty, cannot fetch token");
-            throw new IllegalArgumentException("YonSuite appKey 未配置，请检查 ERP 配置中的 appKey 字段");
+        // ✅ P0 修复: 防御性检查,确保参数非空且非空白
+        if (appKey == null || appKey.trim().isEmpty()) {
+            log.error("YonAuthService: appKey is null or empty");
+            throw new IllegalArgumentException("YonSuite appKey 未配置,请检查 ERP 配置");
         }
-        if (appSecret == null || appSecret.isEmpty()) {
-            log.error("YonAuthService: appSecret is null or empty, cannot fetch token");
-            throw new IllegalArgumentException("YonSuite appSecret 未配置，请检查 ERP 配置中的 appSecret 字段");
+        if (appSecret == null || appSecret.trim().isEmpty()) {
+            log.error("YonAuthService: appSecret is null or empty");
+            throw new IllegalArgumentException("YonSuite appSecret 未配置,请检查 ERP 配置");
         }
         
-        String cacheKey = appKey;
+        // ✅ 使用 trim() 后的值作为缓存键,避免空格导致的问题
+        String cacheKey = appKey.trim();
         TokenInfo cached = tokenCache.get(cacheKey);
 
         // 检查缓存是否有效 (提前60秒刷新)
         if (cached != null && cached.getExpiresAt().isAfter(LocalDateTime.now().plusSeconds(60))) {
-            log.debug("Using cached token for appKey: {}", appKey);
+            log.debug("Using cached token for appKey: {}", cacheKey);
             return cached.getAccessToken();
         }
 
         // 重新获取 token
-        log.info("Fetching new access_token for appKey: {}", appKey);
-        TokenInfo newToken = fetchToken(appKey, appSecret);
+        log.info("Fetching new access_token for appKey: {}", cacheKey);
+        TokenInfo newToken = fetchToken(cacheKey, appSecret.trim());
         tokenCache.put(cacheKey, newToken);
         return newToken.getAccessToken();
     }

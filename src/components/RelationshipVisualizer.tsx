@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 types
+// Output: React 组件 RelationshipVisualizer
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 import { ArrowRight, FileText, Receipt, FileCheck, CreditCard, Building, FileSignature, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { GenericRow, LinkedDocument } from '../types';

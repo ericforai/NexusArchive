@@ -1,3 +1,8 @@
+// Input: Java 标准库、Jackson
+// Output: LicenseGenerator 类
+// Pos: Java 工具类
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 
 import java.security.KeyFactory;
 import java.security.KeyPair;

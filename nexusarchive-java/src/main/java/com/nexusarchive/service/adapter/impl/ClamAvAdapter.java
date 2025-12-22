@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Java 标准库、本地模块
+// Output: ClamAvAdapter 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.adapter.impl;
 
 import com.nexusarchive.service.adapter.VirusScanAdapter;
@@ -41,12 +46,12 @@ public class ClamAvAdapter implements VirusScanAdapter {
     private static final byte[] INSTREAM_CMD = "zINSTREAM\0".getBytes(StandardCharsets.US_ASCII);
 
     @Override
-    public boolean scan(byte[] fileContent, String fileName) {
-        if (fileContent == null || fileContent.length == 0) {
+    public boolean scan(InputStream inputStream, String fileName) {
+        if (inputStream == null) {
             return true;
         }
 
-        log.info("Initiating ClamAV scan for file: {} (Size: {} bytes) -> {}:{}", fileName, fileContent.length, host, port);
+        log.info("Initiating ClamAV stream-based scan for file: {}", fileName);
 
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(host, port), 2000); // 2s timeout
@@ -60,16 +65,15 @@ public class ClamAvAdapter implements VirusScanAdapter {
                 out.flush();
 
                 // 2. Stream Data
-                try (ByteArrayInputStream bis = new ByteArrayInputStream(fileContent)) {
-                    byte[] buffer = new byte[CHUNK_SIZE];
-                    int read;
-                    while ((read = bis.read(buffer)) != -1) {
-                        // Write length (4 bytes big endian)
-                        out.write(intToBytes(read));
-                        // Write data
-                        out.write(buffer, 0, read);
-                    }
+                byte[] buffer = new byte[CHUNK_SIZE];
+                int read;
+                while ((read = inputStream.read(buffer)) != -1) {
+                    // Write length (4 bytes big endian)
+                    out.write(intToBytes(read));
+                    // Write data
+                    out.write(buffer, 0, read);
                 }
+                
                 // Write 0 length to signal end
                 out.write(new byte[]{0, 0, 0, 0});
                 out.flush();
@@ -90,8 +94,6 @@ public class ClamAvAdapter implements VirusScanAdapter {
             }
         } catch (IOException e) {
             log.error("ClamAV scan failed for {}: {}", fileName, e.getMessage());
-            // Fail secure: If we can't scan, valid file cannot be guaranteed safe.
-            // In a strict environment, this should return false.
             return false;
         }
     }

@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Java 标准库、本地模块
+// Output: PreArchiveCheckService 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service;
 
 import com.nexusarchive.dto.sip.report.CheckItem;
@@ -59,78 +64,77 @@ public class PreArchiveCheckService {
                 return createFailedReport(checkId, "文件不存在于存储路径: " + file.getStoragePath());
             }
 
-            byte[] content = Files.readAllBytes(filePath);
+            // [FIXED] P1: Use InputStream instead of readAllBytes to prevent OOM
+            try (java.io.InputStream fis = java.nio.file.Files.newInputStream(filePath);
+                 java.io.BufferedInputStream bis = new java.io.BufferedInputStream(fis)) {
+                
+                bis.mark(Integer.MAX_VALUE);
 
-            // 1. 真实性检测 (Delegated to Core)
-            // Use OriginalHash if available, otherwise FileHash
-            String expectedHash = (file.getOriginalHash() != null && !file.getOriginalHash().isEmpty()) 
-                    ? file.getOriginalHash() 
-                    : file.getFileHash();
-            
-            CheckItem authenticity = fourNatureCoreService.checkSingleFileAuthenticity(
-                    content, 
-                    file.getFileName(), 
-                    expectedHash, 
-                    file.getHashAlgorithm(),
-                    file.getFileType()
-            );
-            report.setAuthenticity(authenticity);
-            
-            if (authenticity.getStatus() == OverallStatus.FAIL) {
-                report.setStatus(OverallStatus.FAIL);
-                updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
-                return report;
-            }
-
-            // 2. 完整性检测 - 元数据完整性 (Still local as it depends on Entity fields)
-            CheckItem integrity = checkMetadataIntegrity(file);
-            report.setIntegrity(integrity);
-            if (integrity.getStatus() == OverallStatus.FAIL) {
-                report.setStatus(OverallStatus.FAIL);
-            }
-
-            // 3. 可用性检测 (Delegated to Core)
-            CheckItem usability = fourNatureCoreService.checkSingleFileUsability(
-                    content, 
-                    file.getFileName(), 
-                    file.getFileType()
-            );
-            report.setUsability(usability);
-            if (usability.getStatus() == OverallStatus.FAIL) {
-                report.setStatus(OverallStatus.FAIL);
-            }
-
-            // 4. 安全性检测 (Delegated to Core)
-            CheckItem safety = fourNatureCoreService.checkSingleFileSafety(
-                    content, 
-                    file.getFileName()
-            );
-            report.setSafety(safety);
-            if (safety.getStatus() == OverallStatus.FAIL) {
-                report.setStatus(OverallStatus.FAIL);
-                updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
-                return report;
-            }
-
-            // Update overall status
-            if (report.getStatus() == OverallStatus.PASS) {
-                boolean hasWarning = authenticity.getStatus() == OverallStatus.WARNING ||
-                        integrity.getStatus() == OverallStatus.WARNING ||
-                        usability.getStatus() == OverallStatus.WARNING ||
-                        safety.getStatus() == OverallStatus.WARNING;
-                if (hasWarning) {
-                    report.setStatus(OverallStatus.WARNING);
+                // 1. 真实性检测 (Delegated to Core)
+                String expectedHash = (file.getOriginalHash() != null && !file.getOriginalHash().isEmpty()) 
+                        ? file.getOriginalHash() 
+                        : file.getFileHash();
+                
+                CheckItem authenticity = fourNatureCoreService.checkSingleFileAuthenticity(
+                        bis, file.getFileName(), expectedHash, file.getHashAlgorithm(), file.getFileType()
+                );
+                report.setAuthenticity(authenticity);
+                
+                if (authenticity.getStatus() == OverallStatus.FAIL) {
+                    report.setStatus(OverallStatus.FAIL);
+                    updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
+                    return report;
                 }
-            }
 
-            // Determine next status based on check result
-            if (report.getStatus() == OverallStatus.FAIL) {
-                updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
-            } else if (integrity.getStatus() == OverallStatus.WARNING || 
-                       isMetadataIncomplete(file)) {
-                updateFileStatus(file, PreArchiveStatus.PENDING_METADATA.getCode(), report);
-            } else {
-                updateFileStatus(file, PreArchiveStatus.PENDING_ARCHIVE.getCode(), report);
+                // 2. 完整性检测 - 元数据完整性
+                CheckItem integrity = checkMetadataIntegrity(file);
+                report.setIntegrity(integrity);
+                if (integrity.getStatus() == OverallStatus.FAIL) {
+                    report.setStatus(OverallStatus.FAIL);
+                }
+
+                // 3. 可用性检测 (Delegated to Core)
+                bis.reset();
+                CheckItem usability = fourNatureCoreService.checkSingleFileUsability(
+                        bis, file.getFileName(), file.getFileType()
+                );
+                report.setUsability(usability);
+                if (usability.getStatus() == OverallStatus.FAIL) {
+                    report.setStatus(OverallStatus.FAIL);
+                }
+
+                // 4. 安全性检测 (Delegated to Core)
+                bis.reset();
+                CheckItem safety = fourNatureCoreService.checkSingleFileSafety(
+                        bis, file.getFileName()
+                );
+                report.setSafety(safety);
+                if (safety.getStatus() == OverallStatus.FAIL) {
+                    report.setStatus(OverallStatus.FAIL);
+                    updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
+                    return report;
+                }
+
+                // Update overall status aggregation (moved inside block)
+                if (report.getStatus() == OverallStatus.PASS) {
+                    boolean hasWarning = authenticity.getStatus() == OverallStatus.WARNING ||
+                            integrity.getStatus() == OverallStatus.WARNING ||
+                            usability.getStatus() == OverallStatus.WARNING ||
+                            safety.getStatus() == OverallStatus.WARNING;
+                    if (hasWarning) {
+                        report.setStatus(OverallStatus.WARNING);
+                    }
+                }
+
+                // Determine next status (moved inside block)
+                if (report.getStatus() == OverallStatus.FAIL) {
+                    updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
+                } else if (integrity.getStatus() == OverallStatus.WARNING || 
+                           isMetadataIncomplete(file)) {
+                    updateFileStatus(file, PreArchiveStatus.PENDING_METADATA.getCode(), report);
+                } else {
+                    updateFileStatus(file, PreArchiveStatus.PENDING_ARCHIVE.getCode(), report);
+                }
             }
 
         } catch (Exception e) {

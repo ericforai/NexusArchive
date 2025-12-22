@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、mkdir、rm、keytool
+# Output: 运维脚本逻辑
+# Pos: 后端运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 # 生成 PKCS12 格式的密钥库脚本
 # 用于电子签章功能
 
@@ -134,7 +139,6 @@ main() {
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     main "$@"
 fi
-
 
 
 

@@ -1,3 +1,8 @@
+// Input: Jakarta EE、Lombok、org.flywaydb、Spring Framework、等
+// Output: ResilientFlywayRunner 类
+// Pos: 配置层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.config;
 
 import com.nexusarchive.common.result.Result;

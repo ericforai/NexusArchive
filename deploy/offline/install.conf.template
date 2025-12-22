@@ -1,3 +1,8 @@
+# Input: 离线安装参数
+# Output: 安装配置模板
+# Pos: 离线安装配置
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 # NexusArchive 安装配置模板
 # 复制此文件为 install.conf 并修改配置值
 # 或直接运行 install.sh 进入交互式配置向导

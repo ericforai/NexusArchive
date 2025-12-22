@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Lombok、Java 标准库
+// Output: SysAuditLog 类
+// Pos: 领域实体/模型
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
@@ -65,7 +70,7 @@ public class SysAuditLog {
     /**
      * 客户端IP地址 (对应 client_ip) - 必填
      */
-    @TableField("ip_address")
+    @TableField("client_ip")
     private String clientIp;
 
     /**
@@ -98,6 +103,6 @@ public class SysAuditLog {
      */
     private String deviceFingerprint;
 
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 }

@@ -1,3 +1,8 @@
+// Input: React、路由导航、鉴权 API、Zustand 状态、界面组件与常量
+// Output: SystemApp 业务主入口组件
+// Pos: 认证后系统工作台入口
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';

@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、io.swagger、Lombok、Spring Framework、等
+// Output: ArchiveFileController 类
+// Pos: 接口层 Controller
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -53,28 +58,22 @@ public class ArchiveFileController {
         }
         authorizeArchiveAccess(content.getArchivalCode());
 
-        try {
-            Path filePath = fileStorageService.resolvePath(content.getStoragePath());
-            
-            if (!fileStorageService.exists(content.getStoragePath())) {
-                throw new BusinessException("Physical file not found: " + content.getStoragePath());
-            }
-
-            FileInputStream fis = new FileInputStream(filePath.toFile());
-            InputStreamResource resource = new InputStreamResource(fis);
-
-            // Determine content type
-            String contentType = determineContentType(content.getFileType(), content.getFileName());
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .body(resource);
-
-        } catch (FileNotFoundException e) {
-            log.error("File not found: {}", content.getStoragePath(), e);
-            throw new BusinessException("File not accessible");
+        Path filePath = fileStorageService.resolvePath(content.getStoragePath());
+        
+        if (!fileStorageService.exists(content.getStoragePath())) {
+            throw new BusinessException("Physical file not found: " + content.getStoragePath());
         }
+
+        // [FIXED P0-3] 使用 FileSystemResource，自动管理资源生命周期
+        Resource resource = new org.springframework.core.io.FileSystemResource(filePath.toFile());
+        
+        String contentType = determineContentType(content.getFileType(), content.getFileName());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType(contentType))
+                .contentLength(content.getFileSize())  // [ADDED] 设置 Content-Length
+                .body(resource);
     }
 
     /**
@@ -93,27 +92,22 @@ public class ArchiveFileController {
         }
         authorizeArchiveAccess(content.getArchivalCode());
 
-        try {
-            Path filePath = fileStorageService.resolvePath(content.getStoragePath());
-            
-            if (!fileStorageService.exists(content.getStoragePath())) {
-                throw new BusinessException("Physical file not found: " + content.getStoragePath());
-            }
-
-            FileInputStream fis = new FileInputStream(filePath.toFile());
-            InputStreamResource resource = new InputStreamResource(fis);
-
-            String contentType = determineContentType(content.getFileType(), content.getFileName());
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .body(resource);
-
-        } catch (FileNotFoundException e) {
-            log.error("File not found: {}", content.getStoragePath(), e);
-            throw new BusinessException("File not accessible");
+        Path filePath = fileStorageService.resolvePath(content.getStoragePath());
+        
+        if (!fileStorageService.exists(content.getStoragePath())) {
+            throw new BusinessException("Physical file not found: " + content.getStoragePath());
         }
+
+        // [FIXED P0-3] 使用 FileSystemResource，自动管理资源生命周期
+        Resource resource = new org.springframework.core.io.FileSystemResource(filePath.toFile());
+        
+        String contentType = determineContentType(content.getFileType(), content.getFileName());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType(contentType))
+                .contentLength(content.getFileSize())  // [ADDED] 设置 Content-Length
+                .body(resource);
     }
 
     private String determineContentType(String fileType, String fileName) {

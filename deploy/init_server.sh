@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、scp、ssh、mkdir
+# Output: 运维脚本逻辑
+# Pos: 部署脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 set -e
 
 # Usage: ./deploy/init_server.sh <SERVER_IP>

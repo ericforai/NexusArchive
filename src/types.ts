@@ -1,3 +1,8 @@
+// Input: lucide-react 图标类型
+// Output: 前端枚举与接口类型集合
+// Pos: 前端共享类型定义
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { LucideIcon } from 'lucide-react';
 
 export enum ViewState {

@@ -1,3 +1,8 @@
+// Input: React、react-dom、本地模块 common/OfdViewer、common/MetadataEditModal
+// Output: React 组件 ArchiveListView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { OfdViewer } from './common/OfdViewer';
@@ -562,24 +567,25 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
   };
 
   const executeArchiving = async () => {
-    console.log('executeArchiving started, isArchiveConfirmOpen:', isArchiveConfirmOpen);
-    setIsArchiveConfirmOpen(false);
-
     setIsArchiving(true);
     try {
-      console.log('Calling poolApi.archiveItems with:', selectedRows);
+      console.log('Executing batch archiving for items:', selectedRows);
       await poolApi.archiveItems(selectedRows);
-      console.log('poolApi.archiveItems returned success');
+
+      // [FIX P0-CRIT] 仅在 API 成功返回后再清空选择集和关闭确认框
       showToast(`成功归档 ${selectedRows.length} 条凭证`);
       setSelectedRows([]);
-      // Reload pool data
+      setIsArchiveConfirmOpen(false);
+
+      // 重新加载数据
       loadPoolData();
     } catch (error) {
-      console.error('归档失败 detailed error:', error);
+      console.error('归档失败:', error);
       showToast('归档失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
+      // 注意：由于无法重试，关闭弹窗但保留已选项以供用户检查
+      setIsArchiveConfirmOpen(false);
     } finally {
       setIsArchiving(false);
-      console.log('executeArchiving finished');
     }
   };
 
@@ -1955,33 +1961,32 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                       {activePreviewId ? (
                         // Logic to determine preview content based on activePreviewId
                         (() => {
-                          // Find active file details (either main row or from relatedFiles)
-                          let fileName = '';
-                          const isMain = activePreviewId === viewRow?.id;
+                          const isMainDocTab = activeDetailTab === 'main';
+                          const isMainFile = activePreviewId === viewRow?.id;
 
-                          if (isMain && activeDetailTab === 'attachments') {
-                            // **修复**: 在关联附件Tab下，不应该显示主文件
+                          // [FIX P0-CRIT] 明确状态机：在附件标签页下，若没有显式选中的附件时，不应显示主文件
+                          if (!isMainDocTab && isMainFile) {
                             return (
-                              <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-100">
-                                <div className="text-center">
+                              <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-100 p-6 text-center">
+                                <div>
                                   <FileText size={48} className="mx-auto mb-4 opacity-20" />
-                                  <p>请从左侧列表选择附件预览</p>
+                                  <p className="max-w-[200px]">请从上方附件列表中选择一个文件进行预览</p>
                                 </div>
                               </div>
                             );
                           }
 
-                          if (isMain) {
-                            // 显示主凭证（仅在业务单据Tab）
+                          let fileName = '';
+                          if (isMainFile) {
                             fileName = viewRow?.title || (viewRow?.code ? viewRow.code + '.pdf' : 'unknown.pdf');
                           } else {
                             const att = relatedFiles.find(f => f.id === activePreviewId);
                             fileName = att?.fileName || '';
                           }
 
-                          // Determine type for viewer
-                          const isImage = fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+                          if (!fileName) return null;
 
+                          const isImage = fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
                           if (isImage) {
                             return (
                               <div className="w-full h-full flex items-center justify-center bg-slate-800 overflow-auto p-4">
@@ -1989,15 +1994,12 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({
                                   src={`/api/pool/preview/${activePreviewId}`}
                                   alt="Preview"
                                   className="max-w-full max-h-full object-contain shadow-2xl"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = '';
-                                  }}
                                 />
                               </div>
                             );
                           }
-                          const type = fileName.toLowerCase().endsWith('.ofd') ? 'ofd' : 'pdf';
 
+                          const type = fileName.toLowerCase().endsWith('.ofd') ? 'ofd' : 'pdf';
                           return (
                             <OfdViewer
                               fileUrl={`/api/pool/preview/${activePreviewId}`}

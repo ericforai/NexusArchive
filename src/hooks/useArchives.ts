@@ -1,3 +1,8 @@
+// Input: react-query、archivesApi 与 query keys
+// Output: 档案相关数据 hooks
+// Pos: 档案数据访问层 hooks
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { archivesApi, archivesApiEx, Archive, ArchiveQuery } from '../api/archives';
 import { QUERY_KEYS } from '../queryClient';

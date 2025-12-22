@@ -1,3 +1,8 @@
+// Input: 任务类型定义与 safeStorage
+// Output: 任务调度与存储工具函数
+// Pos: 定时任务本地管理工具
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { ScheduledTask, TaskExecutionHistory } from '../types';
 import { safeStorage } from './storage';
 

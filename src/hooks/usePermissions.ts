@@ -1,3 +1,8 @@
+// Input: react-query、auth store、client 与 query keys
+// Output: 权限相关 hooks
+// Pos: 权限数据访问层 hooks
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { client } from '../api/client';

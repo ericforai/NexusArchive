@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Java 标准库、本地模块
+// Output: ComplianceListener 类
+// Pos: 事件监听
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.listener;
 
 import com.nexusarchive.dto.sip.report.FourNatureReport;

@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、mvn、npm
+# Output: 启动服务
+# Pos: 运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 
 # Colors for output
 GREEN='\033[0;32m'

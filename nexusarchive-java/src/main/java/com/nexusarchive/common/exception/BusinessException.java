@@ -1,3 +1,8 @@
+// Input: Lombok、Java 标准库
+// Output: BusinessException 类
+// Pos: 异常定义
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.common.exception;
 
 import lombok.Getter;

@@ -1,3 +1,21 @@
+一旦我所属的文件夹有所变化，请更新我。
+本目录包含测试说明与测试脚本文档入口。
+用于汇总 Playwright、k6 与测试报告。
+
+## 文件清单
+
+| 文件 | 地位 | 功能 |
+| --- | --- | --- |
+| `ADVANCED_TEST_RESULTS.md` | 报告文档 | 高级测试结果汇总 |
+| `BUG_ANALYSIS.md` | 报告文档 | 缺陷分析与原因梳理 |
+| `BUG_REPORT.md` | 报告文档 | 缺陷报告与记录 |
+| `FINAL_TEST_REPORT.md` | 报告文档 | 最终测试报告 |
+| `README.md` | 说明文档 | 测试使用说明 |
+| `TEST_RESULTS.md` | 报告文档 | 测试结果记录 |
+| `TEST_SUMMARY.md` | 报告文档 | 测试摘要概览 |
+| `fixtures/` | 目录入口 | 测试数据与夹具 |
+| `playwright/` | 目录入口 | Playwright 测试集合 |
+
 # 测试脚本说明
 
 本文档说明如何运行电子会计档案系统的测试用例。
@@ -209,7 +227,6 @@ npx playwright test --trace on
 - [测试用例文档](../../docs/guides/电子会计档案系统测试用例.md)
 - [Playwright 文档](https://playwright.dev/)
 - [k6 文档](https://k6.io/docs/)
-
 
 
 

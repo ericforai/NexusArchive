@@ -1,3 +1,8 @@
+// Input: React、LicenseSettings、authApi 与路由导航
+// Output: ActivationPage 组件
+// Pos: License 激活路由页面
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 import { LicenseSettings } from '../components/settings/LicenseSettings';
 import { LogOut } from 'lucide-react';

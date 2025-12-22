@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、mkdir、rm、openssl
+# Output: 运维脚本逻辑
+# Pos: 后端运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 # 生成 JWT RS256 密钥对脚本
 # 用于 JWT 鉴权功能
 

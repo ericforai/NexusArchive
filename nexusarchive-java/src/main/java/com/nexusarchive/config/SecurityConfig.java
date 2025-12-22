@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Spring Security、Java 标准库
+// Output: SecurityConfig 类
+// Pos: 配置层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.config;
 
 import lombok.RequiredArgsConstructor;
@@ -120,10 +125,20 @@ public class SecurityConfig {
                 .map(String::trim)
                 .filter(origin -> !origin.isEmpty())
                 .collect(Collectors.toList());
+        
+        // [FIXED P1-6] 禁止通配符，抛出异常阻止启动
         if (origins.contains("*")) {
-            log.warn("CORS 配置包含通配符 '*', 已忽略以避免与凭证模式冲突");
-            origins = origins.stream().filter(origin -> !"*".equals(origin)).collect(Collectors.toList());
+            throw new IllegalStateException(
+                "CORS 配置错误: 不允许使用通配符 '*'。" +
+                "请在 application.yml 中配置具体的允许域名，例如: " +
+                "app.security.cors.allowed-origins=http://localhost:5173,http://localhost:3000"
+            );
         }
+        
+        if (origins.isEmpty()) {
+            log.warn("CORS 配置为空，将拒绝所有跨域请求");
+        }
+        
         configuration.setAllowedOrigins(origins);
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

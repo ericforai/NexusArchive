@@ -1,3 +1,8 @@
+// Input: Lombok、org.bouncycastle、org.ofdrw、Spring Framework、等
+// Output: OfdSignatureHelper 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.signature;
 
 import lombok.extern.slf4j.Slf4j;

@@ -1,3 +1,8 @@
+// Input: API client、ApiResponse/PageResult 与浏览器 Blob/URL
+// Output: archivesApi 与 archivesApiEx
+// Pos: 档案 CRUD 与导出 API 层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { client } from './client';
 import { ApiResponse, PageResult } from '../types';
 

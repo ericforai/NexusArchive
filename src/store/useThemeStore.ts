@@ -1,3 +1,8 @@
+// Input: zustand、persist 中间件、safeStorage 与浏览器主题事件
+// Output: useThemeStore 与 Theme 类型
+// Pos: 前端主题状态与 DOM 应用
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '../utils/storage';

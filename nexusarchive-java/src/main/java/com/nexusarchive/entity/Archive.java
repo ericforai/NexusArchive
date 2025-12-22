@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Jakarta EE、Lombok、Java 标准库
+// Output: Archive 类
+// Pos: 领域实体/模型
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
@@ -35,6 +40,8 @@ public class Archive {
     /**
      * 档号 (M13)
      */
+    @NotBlank(message = "档号不能为空")
+    @TableField(updateStrategy = FieldStrategy.NEVER)
     private String archiveCode;
 
     /**
@@ -156,10 +163,10 @@ public class Archive {
      */
     private String volumeId;
 
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "last_modified_time", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime lastModifiedTime;
 
     /**

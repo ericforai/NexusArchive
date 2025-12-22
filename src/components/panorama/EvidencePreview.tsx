@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/attachments、common/OfdViewer
+// Output: React 组件 EvidencePreview
+// Pos: 归档全景子组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { FileText, Paperclip, ExternalLink, Download, ZoomIn, ZoomOut, RotateCcw, AlertCircle } from 'lucide-react';
 import { attachmentsApi, AttachmentFile } from '../../api/attachments';

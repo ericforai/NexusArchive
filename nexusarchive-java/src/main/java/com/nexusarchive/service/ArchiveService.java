@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、等
+// Output: ArchiveService 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -16,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.UUID;
 
 /**
@@ -72,20 +78,27 @@ public class ArchiveService {
             wrapper.eq("unique_biz_id", uniqueBizId);
         }
         
-        // Dynamic Book Type Filter (JSONB)
-        // Dynamic SubType Filter (JSONB)
+        // [FIXED P0-1] Dynamic SubType Filter with SQL Injection Protection
         if (subType != null && !subType.isEmpty()) {
+            // 白名单校验，防止 SQL 注入
+            if (!isValidSubType(subType, categoryCode)) {
+                throw new BusinessException(400, "Invalid subType parameter: " + subType);
+            }
+            
             if ("AC02".equals(categoryCode)) {
-                wrapper.apply("custom_metadata ->> 'bookType' = {0}", subType);
+                // 使用 PostgreSQL JSONB 包含操作符，参数化查询
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
+                    String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
             } else if ("AC03".equals(categoryCode)) {
-                // AC03: Time-based types (MONTHLY, QUARTERLY, ANNUAL) stored in reportType?
-                // The plan said "reportType" key.
-                wrapper.apply("custom_metadata ->> 'reportType' = {0}", subType);
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
+                    String.format("{\"reportType\":\"%s\"}", escapeJson(subType)));
             } else if ("AC04".equals(categoryCode)) {
-                wrapper.apply("custom_metadata ->> 'otherType' = {0}", subType);
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
+                    String.format("{\"otherType\":\"%s\"}", escapeJson(subType)));
             } else {
-                // Fallback: try to match bookType as default if no category context (backward compat)
-                wrapper.apply("custom_metadata ->> 'bookType' = {0}", subType);
+                // Fallback: try to match bookType as default if no category context
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
+                    String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
             }
         }
 
@@ -93,7 +106,7 @@ public class ArchiveService {
         dataScopeService.applyArchiveScope(wrapper, scope);
 
         // Optimize: Use index-friendly sorting
-        wrapper.orderByDesc("created_at");
+        wrapper.orderByDesc("created_time");
 
         return archiveMapper.selectPage(pageObj, wrapper);
     }
@@ -224,18 +237,33 @@ public class ArchiveService {
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
         DataScopeContext scope = dataScopeService.resolve();
         dataScopeService.applyArchiveScope(wrapper, scope);
-        wrapper.orderByDesc("created_at").last("LIMIT " + limit);
+        wrapper.orderByDesc("created_time").last("LIMIT " + limit);
         return archiveMapper.selectList(wrapper);
     }
 
     /**
-     * 批量获取档案
+     * 批量获取档案 (受控)
+     * [FIXED P1-3] 在 SQL 层面应用数据权限过滤，避免无效查询
      */
     public List<Archive> getArchivesByIds(Set<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         }
-        return archiveMapper.selectBatchIds(ids);
+        
+        // [FIXED P1-3] 先应用数据权限过滤，再查询
+        DataScopeContext scope = dataScopeService.resolve();
+        
+        // 如果用户有全部权限，直接查询
+        if (scope.isAll()) {
+            return archiveMapper.selectBatchIds(ids);
+        }
+        
+        // 否则，构建带权限过滤的查询
+        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
+        wrapper.in("id", ids);
+        dataScopeService.applyArchiveScope(wrapper, scope);
+        
+        return archiveMapper.selectList(wrapper);
     }
 
     /**
@@ -262,5 +290,40 @@ public class ArchiveService {
         if (archiveMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(409, "唯一业务ID已存在: " + uniqueBizId);
         }
+    }
+
+    /**
+     * [ADDED P0-1] 白名单校验 SubType 参数
+     * 防止 SQL 注入攻击
+     */
+    private boolean isValidSubType(String subType, String categoryCode) {
+        if ("AC02".equals(categoryCode)) {
+            // 账簿类型白名单
+            return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL", 
+                         "CASH_BOOK", "BANK_BOOK").contains(subType);
+        } else if ("AC03".equals(categoryCode)) {
+            // 报表周期白名单
+            return Set.of("MONTHLY", "QUARTERLY", "ANNUAL", "SEMI_ANNUAL").contains(subType);
+        } else if ("AC04".equals(categoryCode)) {
+            // 其他类型白名单
+            return Set.of("CONTRACT", "INVOICE", "RECEIPT", "OTHER").contains(subType);
+        }
+        // 未知分类，拒绝
+        return false;
+    }
+
+    /**
+     * [ADDED P0-1] JSON 字符串转义
+     * 防止 JSON 注入
+     */
+    private String escapeJson(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
     }
 }

@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Lombok、Java 标准库
+// Output: Volume 类
+// Pos: 领域实体/模型
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -23,6 +28,7 @@ public class Volume {
      * 案卷号 (格式: 全宗号-分类号-案卷号)
      * 例: BR01-AC01-0001
      */
+    @jakarta.validation.constraints.NotBlank(message = "案卷号不能为空")
     private String volumeCode;
 
     /**
@@ -81,10 +87,10 @@ public class Volume {
      */
     private LocalDateTime archivedAt;
 
-    @TableField("created_at")
+    @TableField("created_time")
     private LocalDateTime createdTime;
 
-    @TableField("updated_at")
+    @TableField("last_modified_time")
     private LocalDateTime lastModifiedTime;
 
     /**

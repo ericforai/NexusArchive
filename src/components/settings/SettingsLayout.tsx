@@ -1,3 +1,8 @@
+// Input: React、react-router-dom 路由
+// Output: React 组件 SettingsLayout
+// Pos: 系统设置组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {

@@ -1,3 +1,8 @@
+// Input: React、react-router-dom 路由创建器、routes 配置
+// Output: 默认导出的 App 路由入口组件
+// Pos: 前端路由挂载入口
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /**
  * 应用根组件
  * 

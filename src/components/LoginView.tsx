@@ -1,3 +1,8 @@
+// Input: React、react-router-dom 路由、本地模块 api/auth、utils/audit、store
+// Output: React 组件 LoginView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../api/auth';

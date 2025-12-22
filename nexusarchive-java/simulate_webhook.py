@@ -1,3 +1,8 @@
+# Input: Python
+# Output: 运维脚本逻辑
+# Pos: 脚本工具
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import hmac
 import hashlib
 import json

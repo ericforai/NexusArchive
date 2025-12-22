@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/fonds
+// Output: React 组件 FondsManagement
+// Pos: 管理后台页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Loader2, Save } from 'lucide-react';
 import { fondsApi, BasFonds } from '../../api/fonds';

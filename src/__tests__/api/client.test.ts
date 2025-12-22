@@ -1,3 +1,8 @@
+// Input: vitest、本地模块 api/client、store
+// Output: 测试用例与断言
+// Pos: 前端单元测试
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { client } from '../../api/client';
 import { useAuthStore } from '../../store';

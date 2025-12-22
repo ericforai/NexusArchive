@@ -1,3 +1,8 @@
+// Input: cn.hutool、io.swagger、Lombok、Spring Security、等
+// Output: ErpConfigController 类
+// Pos: 接口层 Controller
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.controller;
 
 import com.nexusarchive.common.result.Result;
@@ -11,11 +16,13 @@ import com.nexusarchive.mapper.ErpConfigMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/erp/config")
 @RequiredArgsConstructor
@@ -37,15 +44,15 @@ public class ErpConfigController {
     @Operation(summary = "新增/更新配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> save(@RequestBody ErpConfig config) {
-        // 敏感信息加固: 加密 configJson 中的 secret
+        // ✅ P1 修复: 使用加密标记而不是格式检测
         if (config.getConfigJson() != null && !config.getConfigJson().isEmpty()) {
             try {
                 JSONObject json = JSONUtil.parseObj(config.getConfigJson());
-                encryptSecret(json, "appSecret");
-                encryptSecret(json, "clientSecret");
+                encryptSecretIfNeeded(json, "appSecret");
+                encryptSecretIfNeeded(json, "clientSecret");
                 config.setConfigJson(json.toString());
             } catch (Exception e) {
-                // 如果不是 JSON 则跳过，由前端保证格式
+                // 如果不是 JSON 则跳过,由前端保证格式
             }
         }
 
@@ -57,14 +64,27 @@ public class ErpConfigController {
         return Result.success();
     }
 
-    private void encryptSecret(JSONObject json, String key) {
+    /**
+     * ✅ P1 修复: 使用加密标记判断是否已加密
+     */
+    private void encryptSecretIfNeeded(JSONObject json, String key) {
         String secret = json.getStr(key);
-        if (secret != null && !secret.isEmpty()) {
-            // 如果已经是 32 位 hex (SM4 密文格式)，则不再加密
-            if (secret.length() != 32 || !secret.matches("^[0-9a-fA-F]{32}$")) {
-                json.set(key, SM4Utils.encrypt(secret));
-            }
+        if (secret == null || secret.isEmpty()) {
+            return;
         }
+        
+        // ✅ 检查是否有加密标记
+        String encryptedFlag = json.getStr(key + "_encrypted");
+        if ("true".equals(encryptedFlag)) {
+            log.debug("密钥已加密,跳过: key={}", key);
+            return;
+        }
+        
+        // ✅ 加密并设置标记
+        String encrypted = SM4Utils.encrypt(secret);
+        json.set(key, encrypted);
+        json.set(key + "_encrypted", "true");
+        log.info("密钥已加密: key={}", key);
     }
 
     @DeleteMapping("/{id}")

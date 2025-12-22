@@ -1,3 +1,8 @@
+// Input: org.junit、static org.junit、Java 标准库
+// Output: SM4UtilsTest 测试用例类
+// Pos: 后端测试用例
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.util;
 
 import org.junit.jupiter.api.Test;

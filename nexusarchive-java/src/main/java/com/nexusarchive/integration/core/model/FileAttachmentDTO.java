@@ -1,3 +1,8 @@
+// Input: Lombok、Java 标准库
+// Output: FileAttachmentDTO 类
+// Pos: 领域实体/模型
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.integration.core.model;
 
 import lombok.AllArgsConstructor;

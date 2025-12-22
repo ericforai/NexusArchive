@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Jackson、Lombok、Spring Framework、等
+// Output: ReconciliationServiceImpl 类
+// Pos: 业务服务实现层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -50,6 +55,10 @@ public class ReconciliationServiceImpl implements ReconciliationService {
     private static final String ARCHIVE_STATUS_ARCHIVED = "archived";
     private static final String PRE_ARCHIVE_STATUS_ARCHIVED = "ARCHIVED";
     private static final String SUBJECT_CODE_ALL = "ALL";
+    
+    // ✅ P1 修复: 限制最大并发度为 4,避免连接池耗尽
+    private static final int MAX_CONCURRENT_PERIODS = 4;
+    private final java.util.concurrent.Semaphore concurrencyLimiter = new java.util.concurrent.Semaphore(MAX_CONCURRENT_PERIODS);
 
     private final ErpConfigMapper erpConfigMapper;
     private final ErpAdapterFactory erpAdapterFactory;
@@ -100,12 +109,22 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         // 2. 将时间范围按月切分（并行分片策略）
         List<YearMonth> periods = buildPeriods(startDate, endDate);
 
-        // 3. 并行执行各月份的核对任务 (账 - 凭)
+        // 3. 并行执行各月份的核对任务 (账 - 凭) - ✅ P1 修复: 添加 Semaphore 限流
         List<CompletableFuture<PeriodResult>> futures = periods.stream()
-                .map(period -> CompletableFuture.supplyAsync(
-                        () -> computePeriodResult(period, startDate, endDate, normalizedSubjectCode, subjectMode,
-                                accbookCode, adapter, dtoConfig),
-                        reconciliationExecutor)
+                .map(period -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        // ✅ 获取信号量,限制并发度
+                        concurrencyLimiter.acquire();
+                        return computePeriodResult(period, startDate, endDate, normalizedSubjectCode, subjectMode,
+                                accbookCode, adapter, dtoConfig);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return PeriodResult.error(period, "任务被中断");
+                    } finally {
+                        // ✅ 释放信号量
+                        concurrencyLimiter.release();
+                    }
+                }, reconciliationExecutor)
                         .orTimeout(PERIOD_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                         .exceptionally(ex -> PeriodResult.error(period,
                                 "Period execution failed: " + (ex.getMessage() == null ? "timeout" : ex.getMessage()))))
@@ -249,7 +268,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         return saveReconciliationResult(record);
     }
 
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public ReconciliationRecord saveReconciliationResult(ReconciliationRecord record) {
         ReconciliationRecord existing = findExistingRecord(record);
         if (existing != null) {
@@ -606,6 +625,10 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         return null;
     }
 
+    /**
+     * 从 JSON 节点读取 BigDecimal 值
+     * ✅ P0 修复: 添加详细日志,继续尝试其他字段
+     */
     private BigDecimal readBigDecimal(JsonNode node, String... fieldNames) {
         for (String field : fieldNames) {
             JsonNode valueNode = node.get(field);
@@ -617,11 +640,18 @@ public class ReconciliationServiceImpl implements ReconciliationService {
                 continue;
             }
             try {
-                return new BigDecimal(text);
-            } catch (NumberFormatException ignored) {
-                // ignore invalid numeric
+                // ✅ 使用 BigDecimal 构造函数,并记录解析失败的情况
+                BigDecimal value = new BigDecimal(text);
+                return value;
+            } catch (NumberFormatException e) {
+                // ✅ 记录详细日志,便于排查问题
+                log.warn("金额解析失败: field={}, value={}, error={}", 
+                    field, text, e.getMessage());
+                // ✅ 继续尝试下一个字段,而不是直接返回 ZERO
             }
         }
+        // ✅ 所有字段都解析失败时,记录警告日志
+        log.warn("所有金额字段均解析失败,返回 ZERO: fields={}", Arrays.toString(fieldNames));
         return BigDecimal.ZERO;
     }
 

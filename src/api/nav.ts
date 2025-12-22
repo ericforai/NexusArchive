@@ -1,3 +1,8 @@
+// Input: API client
+// Output: fetchAccountBookTypes 与 DynamicBookType
+// Pos: 导航/账簿类型 API 辅助
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { client } from './client';
 
 export interface DynamicBookType {

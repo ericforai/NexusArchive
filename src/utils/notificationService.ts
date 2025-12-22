@@ -1,3 +1,8 @@
+// Input: 类型定义与 safeStorage
+// Output: 通知规则与通知读写工具函数
+// Pos: 前端通知服务工具
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { EnhancedNotification, NotificationRule } from '../types';
 import { safeStorage } from './storage';
 

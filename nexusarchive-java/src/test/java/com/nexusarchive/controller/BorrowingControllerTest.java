@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Jackson、JJWT、org.junit、等
+// Output: BorrowingControllerTest 测试用例类
+// Pos: 后端测试用例
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

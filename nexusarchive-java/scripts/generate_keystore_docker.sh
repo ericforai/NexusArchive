@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、mkdir、rm、docker
+# Output: 运维脚本逻辑
+# Pos: 后端运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 # 使用 Docker 生成密钥库（无需本地 Java 环境）
 
 set -e
@@ -129,7 +134,6 @@ main() {
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     main "$@"
 fi
-
 
 
 

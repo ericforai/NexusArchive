@@ -1,3 +1,8 @@
+// Input: 浏览器存储与 cookie 接口
+// Output: safeStorage 实例与存储封装
+// Pos: 前端存储兼容层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 
 /**
  * Safe Storage Utility

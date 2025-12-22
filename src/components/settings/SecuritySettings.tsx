@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/admin
+// Output: React 组件 SecuritySettings
+// Pos: 系统设置组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { Save, Loader2, ShieldCheck, FileWarning } from 'lucide-react';
 import { adminApi } from '../../api/admin';

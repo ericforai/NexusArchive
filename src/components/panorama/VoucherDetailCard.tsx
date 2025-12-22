@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/autoAssociation、api/archives
+// Output: React 组件 VoucherDetailCard
+// Pos: 归档全景子组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, AlertTriangle, FileText, CreditCard, Calendar, Hash, Info } from 'lucide-react';
 import { autoAssociationApi, ComplianceStatus } from '../../api/autoAssociation';

@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、react-dom、本地模块 api/client
+// Output: React 组件 MetadataEditModal
+// Pos: 通用复用组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { X, Save, RefreshCw, FileText, AlertCircle, AlertTriangle } from 'lucide-react';
 import { createPortal } from 'react-dom';

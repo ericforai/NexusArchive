@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# Input: Shell、rm、mkdir、mvn
+# Output: 启动服务
+# Pos: 运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 #
 # NexusArchive 开发环境启动脚本
 # 确保后端先于前端启动，避免 ECONNREFUSED 错误

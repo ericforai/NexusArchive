@@ -1,3 +1,8 @@
+# Input: 基础镜像与构建上下文
+# Output: 容器镜像构建指令
+# Pos: 容器构建入口
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 FROM eclipse-temurin:17-jdk
 
 WORKDIR /app

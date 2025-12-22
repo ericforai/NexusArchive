@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/admin
+// Output: React 组件 PositionManagement
+// Pos: 管理后台页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../api/admin';
 import { AlertTriangle, Loader2, Plus, Trash2, Edit3 } from 'lucide-react';

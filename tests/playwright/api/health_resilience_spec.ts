@@ -1,3 +1,8 @@
+// Input: Playwright、Node.js 标准库
+// Output: 脚本模块
+// Pos: Playwright 测试
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 
 import { test, expect } from '@playwright/test';
 import { execSync } from 'child_process';

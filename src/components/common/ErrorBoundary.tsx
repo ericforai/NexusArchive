@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标
+// Output: React 组件 ErrorBoundary
+// Pos: 通用复用组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 

@@ -1,3 +1,22 @@
+一旦我所属的文件夹有所变化，请更新我。
+本目录存放技术复盘与知识沉淀。
+用于问题案例与经验总结。
+
+## 文件清单
+
+| 文件 | 地位 | 功能 |
+| --- | --- | --- |
+| `2025-12-09-submission-flow-fix.md` | 文档 | 2025-12-09-submission-flow-fix 文档 |
+| `2025-12-10-approval-ui-fix.md` | 文档 | 2025-12-10-approval-ui-fix 文档 |
+| `2025-12-10-archive-classification-compliance.md` | 文档 | 2025-12-10-archive-classification-compliance 文档 |
+| `2025-12-18-phase4-performance-tuning-integration.md` | 文档 | 2025-12-18-phase4-performance-tuning-integration 文档 |
+| `compliance_standards.md` | 文档 | compliance_standards 文档 |
+| `erp_integration.md` | 文档 | erp_integration 文档 |
+| `expert_review.md` | 文档 | expert_review 文档 |
+| `README.md` | 说明文档 | 本目录说明 |
+| `tech_architecture.md` | 文档 | tech_architecture 文档 |
+| `临时文件存储路径问题排查.md` | 文档 | 临时文件存储路径问题排查 文档 |
+
 # Knowledge Items (项目知识库)
 
 本目录汇总了本项目开发过程中的关键知识点、合规要求与架构决策。

@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Java 标准库、本地模块
+// Output: FileStorageServiceImpl 类
+// Pos: 业务服务实现层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.impl;
 
 import com.nexusarchive.common.exception.BusinessException;
@@ -22,20 +27,38 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public Path resolvePath(String relativePath) {
-        if (relativePath == null) {
-            throw new BusinessException("File path cannot be null");
-        }
-        // 防止路径遍历攻击
-        if (relativePath.contains("..")) {
-            throw new BusinessException("Invalid file path: " + relativePath);
+        if (relativePath == null || relativePath.isEmpty()) {
+            throw new BusinessException("File path cannot be null or empty");
         }
         
-        // 处理以 ./ 开头的相对路径（相对于工作目录）
-        if (relativePath.startsWith("./")) {
-            return Paths.get(relativePath).toAbsolutePath().normalize();
+        // [FIXED P0-2] 1. URL 解码（防止 %2e%2e 绕过）
+        try {
+            relativePath = java.net.URLDecoder.decode(relativePath, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new BusinessException("Invalid file path encoding: " + relativePath);
         }
         
-        return Paths.get(archiveRootPath, relativePath).toAbsolutePath();
+        // [FIXED P0-2] 2. 禁止绝对路径和 ./ 开头
+        if (relativePath.startsWith("/") || relativePath.startsWith("./") || relativePath.startsWith("../")) {
+            throw new BusinessException("Absolute paths and relative paths are not allowed: " + relativePath);
+        }
+        
+        // [FIXED P0-2] 3. 检查所有路径遍历模式
+        if (relativePath.contains("..") || relativePath.contains("./") || relativePath.contains("\\")) {
+            throw new BusinessException("Path traversal detected: " + relativePath);
+        }
+        
+        // [FIXED P0-2] 4. 先拼接再 normalize，然后校验
+        Path basePath = Paths.get(archiveRootPath).toAbsolutePath().normalize();
+        Path targetPath = basePath.resolve(relativePath).normalize();
+        
+        // [FIXED P0-2] 5. 确保最终路径在 archiveRootPath 内
+        if (!targetPath.startsWith(basePath)) {
+            log.error("Path traversal attempt blocked: {} -> {}", relativePath, targetPath);
+            throw new BusinessException("Access denied: path outside archive root");
+        }
+        
+        return targetPath;
     }
 
     @Override

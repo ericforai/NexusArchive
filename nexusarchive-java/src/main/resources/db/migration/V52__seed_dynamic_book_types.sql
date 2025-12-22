@@ -1,3 +1,8 @@
+-- Input: Flyway 迁移引擎、数据库引擎
+-- Output: 数据库结构/数据迁移
+-- Pos: 数据库迁移脚本
+-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 -- AC02 (Accounting Books) - Existing
 INSERT INTO acc_archive (id, archive_code, fonds_no, title, category_code, fiscal_year, retention_period, custom_metadata, created_at, created_by, status, org_name)
 VALUES

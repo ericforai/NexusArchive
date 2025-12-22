@@ -1,3 +1,8 @@
+-- Input: Flyway 迁移引擎、数据库引擎
+-- Output: 数据库结构/数据迁移
+-- Pos: 数据库迁移脚本
+-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 -- V8: 添加-- 开放鉴定表 (Open Appraisal Table)
 -- 用于记录档案的开放性鉴定过程
 CREATE TABLE IF NOT EXISTS biz_open_appraisal (

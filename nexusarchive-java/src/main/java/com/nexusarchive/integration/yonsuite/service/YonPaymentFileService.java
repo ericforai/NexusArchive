@@ -1,3 +1,8 @@
+// Input: cn.hutool、Jackson、MyBatis-Plus、Lombok、等
+// Output: YonPaymentFileService 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.integration.yonsuite.service;
 
 import cn.hutool.core.collection.CollUtil;

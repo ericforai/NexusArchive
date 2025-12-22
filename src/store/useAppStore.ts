@@ -1,3 +1,8 @@
+// Input: zustand 与 ViewState 类型
+// Output: useAppStore 与 AppNotification
+// Pos: 前端全局 UI 状态管理
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { create } from 'zustand';
 import { ViewState } from '../types';
 

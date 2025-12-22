@@ -1,3 +1,8 @@
+// Input: React、antd、@ant-design/icons
+// Output: React 组件 ReconciliationReport
+// Pos: 通用复用组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 import { Card, Table, Tag, Statistic, Row, Col, Progress, Alert, Space } from 'antd';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';

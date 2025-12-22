@@ -1,3 +1,8 @@
+// Input: Jackson、Jakarta EE、Lombok、Spring Framework、等
+// Output: LicenseValidationFilter 类
+// Pos: 配置层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,19 +30,21 @@ public class LicenseValidationFilter extends OncePerRequestFilter {
     /**
      * 白名单路径 - 这些路径不需要 License 校验
      * 
-     * 【修复】同时支持 /api 前缀和非前缀路径，确保登录和激活流程可用
+     * [FIXED P1-1] 使用精确匹配，防止前缀绕过
      */
     private static final Set<String> EXCLUDED_PATHS = Set.of(
-            // /api 前缀路径
-            "/api/auth",
-            "/api/license/load",
-            "/api/license",
+            // /api 前缀路径 - 精确匹配
+            "/api/auth/login",
+            "/api/auth/refresh",
+            "/api/auth/logout",
+            "/api/license/load",  // [FIXED] 仅允许 /load 端点
             "/api/health",
             "/api/health/self-check",
-            // 非 /api 前缀路径（部分前端/网关可能直接访问）
-            "/auth",
+            // 非 /api 前缀路径
+            "/auth/login",
+            "/auth/refresh",
+            "/auth/logout",
             "/license/load",
-            "/license",
             "/health"
     );
 
@@ -55,7 +62,8 @@ public class LicenseValidationFilter extends OncePerRequestFilter {
             return true;
         }
         
-        return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+        // [FIXED P1-1] 使用精确匹配
+        return EXCLUDED_PATHS.contains(path);
     }
 
     @Override

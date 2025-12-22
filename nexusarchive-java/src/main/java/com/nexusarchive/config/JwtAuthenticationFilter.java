@@ -1,3 +1,8 @@
+// Input: JJWT、Jakarta EE、Lombok、Spring Security、等
+// Output: JwtAuthenticationFilter 类
+// Pos: 配置层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.config;
 
 import com.nexusarchive.service.CustomUserDetailsService;
@@ -79,29 +84,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (SignatureException e) {
-            // 这是一个严重的安全事件，签名无效意味着Token可能被篡改或伪造
-            logger.error("[SECURITY] Invalid JWT Signature: " + e.getMessage() + " - Token: " + maskToken(jwt));
+            // [FIXED P0-5] 完全隐藏 Token，仅记录哈希
+            String tokenHash = calculateSHA256(jwt).substring(0, 16);
+            logger.error("[SECURITY] Invalid JWT Signature - TokenHash: " + tokenHash + 
+                ", IP: " + request.getRemoteAddr());
+            
         } catch (ExpiredJwtException e) {
-            // Token过期是正常情况，记录为警告即可
-            logger.warn("Expired JWT Token: " + e.getMessage());
+            logger.warn("Expired JWT Token - User: " + e.getClaims().getSubject());
+            
         } catch (MalformedJwtException e) {
-            // Token格式错误，可能是客户端问题或攻击尝试
-            logger.warn("Malformed JWT Token: " + e.getMessage() + " - Token: " + maskToken(jwt));
+            // [FIXED P0-5] 使用哈希替代 Token
+            String tokenHash = calculateSHA256(jwt).substring(0, 16);
+            logger.warn("Malformed JWT Token - TokenHash: " + tokenHash + 
+                ", IP: " + request.getRemoteAddr());
+                
         } catch (JwtException e) {
-            // 其他JWT相关异常
-            logger.error("JWT processing error: " + e.getMessage());
+            logger.error("JWT processing error: " + e.getClass().getSimpleName());
         } catch (Exception e) {
-            // 其他所有意料之外的异常
             logger.error("An unexpected error occurred in JwtAuthenticationFilter", e);
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String maskToken(String token) {
-        if (token == null || token.length() < 12) {
-            return "[redacted]";
+    /**
+     * [ADDED P0-5] 计算 Token 的 SHA-256 哈希
+     * 用于日志记录，防止 Token 泄露
+     */
+    private String calculateSHA256(String input) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return bytesToHex(hash);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            return "HASH_ERROR";
         }
-        return token.substring(0, 6) + "..." + token.substring(token.length() - 4);
+    }
+
+    /**
+     * [ADDED P0-5] 字节数组转十六进制字符串
+     */
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
     }
 }

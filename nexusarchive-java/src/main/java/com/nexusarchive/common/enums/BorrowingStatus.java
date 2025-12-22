@@ -1,3 +1,8 @@
+// Input: Java 标准库
+// Output: BorrowingStatus 枚举
+// Pos: 后端模块
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.common.enums;
 
 import java.util.Arrays;

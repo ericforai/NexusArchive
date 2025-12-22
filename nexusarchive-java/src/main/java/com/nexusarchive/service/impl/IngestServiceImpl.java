@@ -1,3 +1,8 @@
+// Input: cn.hutool、Lombok、Spring Framework、Java 标准库、等
+// Output: IngestServiceImpl 类
+// Pos: 业务服务实现层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.impl;
 
 import cn.hutool.core.codec.Base64;
@@ -34,7 +39,7 @@ import java.util.Map;
  * 5. 立即返回 (Return Immediately)
  */
 @Service
-public class IngestServiceImpl implements IngestService {
+public class IngestServiceImpl implements IngestService, org.springframework.beans.factory.DisposableBean {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IngestServiceImpl.class);
 
@@ -48,12 +53,14 @@ public class IngestServiceImpl implements IngestService {
     private final com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
     private final PathSecurityUtils pathSecurityUtils;
 
-    // 异步归档专用线程池 (大规模数据调优)
-    private final java.util.concurrent.ExecutorService archivalExecutor = java.util.concurrent.Executors
-            .newFixedThreadPool(4);
+    // [FIXED P1-4] 异步归档专用线程池 - 需要在销毁时关闭
+    private java.util.concurrent.ExecutorService archivalExecutor;
 
-    @Value("${archive.temp.path:/tmp/nexusarchive}")
+    @org.springframework.beans.factory.annotation.Value("${archive.temp.path:/tmp/nexusarchive}")
     private String tempRootPath;
+    
+    @org.springframework.beans.factory.annotation.Value("${archive.async.pool-size:4}")
+    private int poolSize;
 
     public IngestServiceImpl(IngestRequestStatusMapper ingestRequestStatusMapper,
             ApplicationEventPublisher eventPublisher,
@@ -73,6 +80,49 @@ public class IngestServiceImpl implements IngestService {
         this.erpAdapterFactory = erpAdapterFactory;
         this.archiveSecurityService = archiveSecurityService;
         this.pathSecurityUtils = pathSecurityUtils;
+    }
+
+    /**
+     * [ADDED P1-4] 初始化线程池
+     */
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        this.archivalExecutor = java.util.concurrent.Executors.newFixedThreadPool(
+            poolSize,
+            new java.util.concurrent.ThreadFactory() {
+                private final java.util.concurrent.atomic.AtomicInteger counter = new java.util.concurrent.atomic.AtomicInteger(0);
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r);
+                    t.setName("archival-worker-" + counter.incrementAndGet());
+                    t.setDaemon(false);  // 非守护线程，确保任务完成
+                    return t;
+                }
+            }
+        );
+        log.info("Archival executor initialized with pool size: {}", poolSize);
+    }
+
+    /**
+     * [ADDED P1-4] 销毁时关闭线程池
+     */
+    @Override
+    public void destroy() throws Exception {
+        log.info("Shutting down archival executor...");
+        if (archivalExecutor != null) {
+            archivalExecutor.shutdown();
+            try {
+                if (!archivalExecutor.awaitTermination(60, java.util.concurrent.TimeUnit.SECONDS)) {
+                    log.warn("Archival executor did not terminate gracefully, forcing shutdown...");
+                    archivalExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                log.error("Interrupted while waiting for archival executor shutdown", e);
+                archivalExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            log.info("Archival executor shut down successfully");
+        }
     }
 
     @Override
@@ -127,6 +177,10 @@ public class IngestServiceImpl implements IngestService {
 
         java.nio.file.Files.createDirectories(java.nio.file.Paths.get(tempPath));
 
+        // [ADDED P1-8] 文件类型验证器
+        com.nexusarchive.util.FileMagicValidator fileMagicValidator = 
+            new com.nexusarchive.util.FileMagicValidator();
+
         for (AttachmentDto attachment : sipDto.getAttachments()) {
             try {
                 String safeFileName = pathSecurityUtils.getSafeFileName(attachment.getFileName());
@@ -135,6 +189,15 @@ public class IngestServiceImpl implements IngestService {
                 }
 
                 byte[] decoded = Base64.decode(attachment.getBase64Content());
+                
+                // [FIXED P1-8] 验证文件类型与扩展名是否匹配
+                com.nexusarchive.util.FileMagicValidator.ValidationResult validationResult = 
+                    fileMagicValidator.validate(decoded, safeFileName);
+                if (!validationResult.isValid()) {
+                    log.warn("文件类型验证失败: {} - {}", safeFileName, validationResult.getMessage());
+                    throw new BusinessException(400, "文件类型验证失败: " + validationResult.getMessage());
+                }
+                
                 fileStreams.put(safeFileName, decoded);
                 attachment.setFileName(safeFileName);
 

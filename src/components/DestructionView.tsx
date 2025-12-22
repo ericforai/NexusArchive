@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 constants、api/stats
+// Output: React 组件 DestructionView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState } from 'react';
 import { DESTRUCTION_CANDIDATES, DESTRUCTION_BATCHES } from '../constants';
 import { AlertTriangle, FileWarning, ShieldAlert, FileSignature, Flame, CheckCircle2, ArrowRight, History, Trash2, RefreshCw, BrainCircuit, BookOpen } from 'lucide-react';

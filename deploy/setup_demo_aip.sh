@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、mkdir、rm、cp
+# Output: 演示数据导入
+# Pos: 部署脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 
 # Configuration
 ARCHIVE_ROOT="/tmp/archives"

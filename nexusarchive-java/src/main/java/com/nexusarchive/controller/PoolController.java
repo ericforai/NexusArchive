@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Spring Framework、Lombok、Spring Security、等
+// Output: PoolController 类
+// Pos: 接口层 Controller
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -326,6 +331,8 @@ public class PoolController {
      * @return 结果
      */
     @GetMapping("/status/{id}/{status}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "STATUS_UPDATE", resourceType = "PRE_ARCHIVE", description = "更新预归档状态")
     public Result<String> updateStatus(@PathVariable String id, @PathVariable String status) {
         log.info("更新文件状态: {} -> {}", id, status);
 

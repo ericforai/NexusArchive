@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/admin、org/Tree、AuditLogView 等
+// Output: React 组件 SettingsView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { Save, RefreshCw, ShieldCheck, Loader2, Plus, CheckCircle2, Trash2, Edit3, Upload, AlertTriangle } from 'lucide-react';
 import { adminApi, User, Role } from '../api/admin';

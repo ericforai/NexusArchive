@@ -1,3 +1,8 @@
+// Input: Jackson、Lombok、Java 标准库
+// Output: AipIndexXml 类
+// Pos: 数据传输对象
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.dto.aip;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;

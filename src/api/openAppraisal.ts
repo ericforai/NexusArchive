@@ -1,3 +1,8 @@
+// Input: API client
+// Output: openAppraisalApi
+// Pos: 开放鉴定 API 层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { client as apiClient } from './client';
 
 export interface OpenAppraisal {

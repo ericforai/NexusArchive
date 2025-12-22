@@ -1,3 +1,8 @@
+// Input: React、recharts、lucide-react 图标、本地模块 api/stats
+// Output: React 组件 StatsView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { AlertTriangle, Loader2 } from 'lucide-react';

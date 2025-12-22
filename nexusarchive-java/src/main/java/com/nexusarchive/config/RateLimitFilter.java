@@ -1,3 +1,8 @@
+// Input: Jakarta EE、Lombok、Spring Framework、Java 标准库
+// Output: RateLimitFilter 类
+// Pos: 配置层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.config;
 
 import jakarta.servlet.FilterChain;
@@ -135,30 +140,26 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     /**
      * 定期清理过期的限流器（防止内存泄漏）
+     * 使用 Spring 管理的 ScheduledExecutorService 确保优雅关闭
      */
     @jakarta.annotation.PostConstruct
     public void startCleanupTask() {
-        Thread cleanupThread = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(60000); // 每分钟清理一次
-                    long now = System.currentTimeMillis();
-                    
-                    // 清理超过5分钟没有活动的桶
-                    buckets.entrySet().removeIf(entry -> 
-                        now - entry.getValue().getLastAccessTime() > 300000);
-                    
-                    loginLimiters.entrySet().removeIf(entry ->
-                        now - entry.getValue().getLastAccessTime() > 300000);
-                    
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        }, "RateLimitCleanup");
-        cleanupThread.setDaemon(true);
-        cleanupThread.start();
+        java.util.concurrent.ScheduledExecutorService scheduler = 
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "RateLimitCleanup");
+                t.setDaemon(true);
+                return t;
+            });
+        scheduler.scheduleAtFixedRate(this::cleanupExpiredBuckets, 60, 60, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    private void cleanupExpiredBuckets() {
+        long now = System.currentTimeMillis();
+        // 清理超过5分钟没有活动的桶
+        buckets.entrySet().removeIf(entry -> 
+            now - entry.getValue().getLastAccessTime() > 300000);
+        loginLimiters.entrySet().removeIf(entry ->
+            now - entry.getValue().getLastAccessTime() > 300000);
     }
 
     /**

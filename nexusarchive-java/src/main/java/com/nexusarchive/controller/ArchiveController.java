@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、io.swagger、Jakarta EE、Lombok、等
+// Output: ArchiveController 类
+// Pos: 接口层 Controller
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -16,6 +21,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
+
 /**
  * 档案管理控制器
  * <p>
@@ -26,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/archives")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Archive Management", description = "电子会计档案核心管理接口")
 public class ArchiveController {
 
@@ -35,8 +45,13 @@ public class ArchiveController {
     @Operation(summary = "分页查询档案", description = "根据条件分页检索档案列表，支持全宗号、档号、标题模糊搜索")
     @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Page<Archive>> list(
-            @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
-            @Parameter(description = "每页条数", example = "10") @RequestParam(defaultValue = "10") int limit,
+            @Parameter(description = "页码", example = "1")
+            @RequestParam(defaultValue = "1")
+            @Min(value = 1, message = "页码必须大于0") int page,
+
+            @Parameter(description = "每页条数", example = "10")
+            @RequestParam(defaultValue = "10")
+            @Max(value = 100, message = "每页最多显示100条") int limit,
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String search,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "类别号") @RequestParam(required = false) String categoryCode,

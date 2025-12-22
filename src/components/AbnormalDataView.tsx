@@ -1,3 +1,8 @@
+// Input: React、本地模块 api/abnormal
+// Output: React 组件 AbnormalDataView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { getPendingAbnormals, retryAbnormal, AbnormalVoucher } from '../api/abnormal';
 

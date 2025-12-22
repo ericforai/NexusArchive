@@ -1,3 +1,8 @@
+-- Input: Flyway 迁移引擎、数据库引擎
+-- Output: 数据库结构/数据迁移
+-- Pos: 数据库迁移脚本
+-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 -- V4: 创建审计日志表 sys_audit_log (修复原 ALTER 脚本执行失败的问题)
 -- 替代了原有的 ALTER TABLE acc_archive 和 ALTER TABLE sys_audit_log 逻辑
 

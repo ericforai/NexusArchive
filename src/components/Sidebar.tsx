@@ -1,3 +1,8 @@
+// Input: React、react-router-dom 路由、lucide-react 图标、本地模块 constants、types、hooks/usePermissions 等
+// Output: React 组件 Sidebar
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { NAV_ITEMS } from '../constants';

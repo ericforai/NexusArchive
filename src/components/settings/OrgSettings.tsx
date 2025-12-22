@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/admin、org/Tree
+// Output: React 组件 OrgSettings
+// Pos: 系统设置组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react';
 import { Plus, Loader2, Upload } from 'lucide-react';
 import { adminApi } from '../../api/admin';

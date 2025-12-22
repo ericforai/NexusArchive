@@ -1,3 +1,8 @@
+// Input: React
+// Output: React 组件 IntegrationSettings
+// Pos: 系统设置组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect, useCallback } from 'react';
 
 import {

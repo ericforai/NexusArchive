@@ -1,3 +1,8 @@
+// Input: React、react-router-dom 路由、本地模块 store/useAuthStore、api/auth
+// Output: React 组件 ProtectedRoute
+// Pos: 鉴权/路由守卫组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /**
  * 路由守卫组件
  * 

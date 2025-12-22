@@ -1,3 +1,8 @@
+// Input: Jakarta EE、Lombok、Spring Framework、Java 标准库
+// Output: XssFilter 类
+// Pos: 配置层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.config;
 
 import jakarta.servlet.FilterChain;
@@ -88,8 +93,49 @@ public class XssFilter extends OncePerRequestFilter {
             Pattern.compile("<form(.*?)action(.*?)>", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL)
         };
 
-        public XssRequestWrapper(HttpServletRequest request) {
+        private byte[] cachedBody;
+
+        public XssRequestWrapper(HttpServletRequest request) throws IOException {
             super(request);
+            // 缓存并清理请求体
+            String contentType = request.getContentType();
+            if (contentType != null && contentType.contains("application/json")) {
+                java.io.InputStream is = request.getInputStream();
+                byte[] rawBody = is.readAllBytes();
+                String bodyStr = new String(rawBody, java.nio.charset.StandardCharsets.UTF_8);
+                String sanitizedBody = sanitize(bodyStr);
+                this.cachedBody = sanitizedBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            } else {
+                this.cachedBody = null;
+            }
+        }
+
+        @Override
+        public jakarta.servlet.ServletInputStream getInputStream() throws IOException {
+            if (cachedBody == null) {
+                return super.getInputStream();
+            }
+            final java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(cachedBody);
+            return new jakarta.servlet.ServletInputStream() {
+                @Override
+                public int read() { return bais.read(); }
+                @Override
+                public boolean isFinished() { return bais.available() == 0; }
+                @Override
+                public boolean isReady() { return true; }
+                @Override
+                public void setReadListener(jakarta.servlet.ReadListener listener) {}
+            };
+        }
+
+        @Override
+        public java.io.BufferedReader getReader() throws IOException {
+            if (cachedBody == null) {
+                return super.getReader();
+            }
+            return new java.io.BufferedReader(
+                new java.io.InputStreamReader(new java.io.ByteArrayInputStream(cachedBody), 
+                    java.nio.charset.StandardCharsets.UTF_8));
         }
 
         @Override

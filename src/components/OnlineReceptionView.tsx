@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 FourNatureReportView、api/stats、api/erp 等
+// Output: React 组件 OnlineReceptionView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { Activity, RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Plus, Server, Clock, Loader2 } from 'lucide-react';
 import { FourNatureReportView } from './FourNatureReportView';

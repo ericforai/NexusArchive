@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、等
+// Output: GlobalSearchServiceImpl 类
+// Pos: 业务服务实现层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

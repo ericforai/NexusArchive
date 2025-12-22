@@ -1,3 +1,8 @@
+// Input: 无外部依赖
+// Output: ROUTE_PATHS 与 SUBITEM_TO_PATH 常量
+// Pos: 路由路径常量定义
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /**
  * 路由路径常量
  * 

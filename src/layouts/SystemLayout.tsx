@@ -1,3 +1,8 @@
+// Input: React、路由 Outlet、布局组件与 authApi
+// Output: SystemLayout 布局组件
+// Pos: 系统级页面框架
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /**
  * 系统布局组件
  * 

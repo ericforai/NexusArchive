@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Java 标准库、本地模块
+// Output: VoucherReceivedEvent 类
+// Pos: 事件模型
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.event;
 
 import com.nexusarchive.dto.sip.AccountingSipDto;

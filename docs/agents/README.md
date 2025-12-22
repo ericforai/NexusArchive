@@ -1,3 +1,18 @@
+一旦我所属的文件夹有所变化，请更新我。
+本目录存放 Agent 协作说明。
+用于任务分工与协作流程。
+
+## 文件清单
+
+| 文件 | 地位 | 功能 |
+| --- | --- | --- |
+| `README.md` | 说明文档 | 本目录说明 |
+| `task-agent-a.md` | 文档 | task-agent-a 文档 |
+| `task-agent-b.md` | 文档 | task-agent-b 文档 |
+| `task-agent-c.md` | 文档 | task-agent-c 文档 |
+| `task-agent-d.md` | 文档 | task-agent-d 文档 |
+| `task-agent-e.md` | 文档 | task-agent-e 文档 |
+
 # 多 Agent 任务分配使用指南
 
 > 本指南说明如何使用 5 个 AI Agent 协同完成 NexusArchive 优化计划

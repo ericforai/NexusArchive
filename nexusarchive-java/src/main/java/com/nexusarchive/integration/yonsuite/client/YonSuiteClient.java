@@ -1,3 +1,8 @@
+// Input: cn.hutool、Jackson、Lombok、Spring Framework、等
+// Output: YonSuiteClient 类
+// Pos: 外部系统客户端
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.integration.yonsuite.client;
 
 import cn.hutool.http.HttpRequest;
@@ -222,12 +227,52 @@ public class YonSuiteClient {
     }
 
     /**
-     * 下载附件
+     * 下载附件并返回字节数组 (自动关闭连接)
+     * ✅ P1 修复: 返回 byte[] 而不是 InputStream,避免连接泄漏
      */
+    public byte[] downloadFile(String url) {
+        if (url == null || url.isEmpty()) {
+            return null;
+        }
+        log.info("Downloading from: {}", url);
+        
+        try (var response = HttpRequest.get(url).timeout(60_000).execute()) {
+            return response.bodyBytes();
+        } catch (Exception e) {
+            log.error("下载文件失败: url={}, error={}", url, e.getMessage(), e);
+            throw new RuntimeException("下载文件失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 下载附件并使用回调处理 (避免内存溢出)
+     * ✅ P1 修复: 使用回调模式处理大文件
+     */
+    public <T> T downloadFileWithCallback(String url, 
+            java.util.function.Function<java.io.InputStream, T> callback) {
+        if (url == null || url.isEmpty()) {
+            return null;
+        }
+        log.info("Downloading from: {}", url);
+        
+        try (var response = HttpRequest.get(url).timeout(60_000).execute();
+             var inputStream = response.bodyStream()) {
+            return callback.apply(inputStream);
+        } catch (Exception e) {
+            log.error("下载文件失败: url={}, error={}", url, e.getMessage(), e);
+            throw new RuntimeException("下载文件失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * @deprecated 使用 downloadFile() 或 downloadFileWithCallback() 代替
+     * ⚠️ 此方法可能导致连接泄漏,仅用于向后兼容
+     */
+    @Deprecated
     public java.io.InputStream downloadStream(String url) {
         if (url == null)
             return null;
-        log.info("Downloading from: {}", url);
+        log.warn("使用已废弃的 downloadStream() 方法,请迁移到 downloadFile() 或 downloadFileWithCallback()");
         return HttpRequest.get(url).timeout(60_000).execute().bodyStream();
     }
 

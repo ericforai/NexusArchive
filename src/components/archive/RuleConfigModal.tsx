@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标
+// Output: React 组件 RuleConfigModal
+// Pos: 归档流程组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 import { X } from 'lucide-react';
 

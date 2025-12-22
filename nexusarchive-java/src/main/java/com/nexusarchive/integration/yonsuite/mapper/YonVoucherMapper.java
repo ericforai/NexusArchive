@@ -1,3 +1,8 @@
+// Input: Lombok、Spring Framework、Java 标准库、本地模块
+// Output: YonVoucherMapper 类
+// Pos: 数据访问层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.integration.yonsuite.mapper;
 
 import com.nexusarchive.entity.ArcFileContent;

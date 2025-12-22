@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell、mkdir、rm、keytool
+# Output: 运维脚本逻辑
+# Pos: 后端运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 # 简化版密钥库生成脚本（交互式）
 
 set -e
@@ -81,7 +86,6 @@ else
     echo "❌ 密钥库生成失败"
     exit 1
 fi
-
 
 
 

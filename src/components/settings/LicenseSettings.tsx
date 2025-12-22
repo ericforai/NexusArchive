@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/license
+// Output: React 组件 LicenseSettings
+// Pos: 系统设置组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Upload, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { licenseApi, LicenseInfo } from '../../api/license';

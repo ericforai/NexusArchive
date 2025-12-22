@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus、Lombok、Java 标准库
+// Output: ArchiveBatch 类
+// Pos: 领域实体/模型
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -35,6 +40,9 @@ public class ArchiveBatch {
     private Integer itemCount;
 
     private String operatorId;
+
+    // [ADDED P0-4] 批次序列号，用于防止并发竞态
+    private Long batchSequence;
 
     private LocalDateTime createdTime;
 }

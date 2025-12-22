@@ -1,3 +1,8 @@
+// Input: Playwright
+// Output: 脚本模块
+// Pos: 测试工具
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { request, APIRequestContext } from '@playwright/test';
 
 const DEFAULT_USER = process.env.PW_USER ?? 'admin';

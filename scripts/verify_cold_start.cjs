@@ -1,3 +1,8 @@
+// Input: Node.js 标准库
+// Output: 验证脚本
+// Pos: 运维脚本
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');

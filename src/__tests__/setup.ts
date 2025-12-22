@@ -1,3 +1,8 @@
+// Input: @testing-library/jest-dom/vitest
+// Output: 测试环境初始化逻辑
+// Pos: 前端单元测试
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /// <reference types="vitest/globals" />
 import '@testing-library/jest-dom/vitest';
 

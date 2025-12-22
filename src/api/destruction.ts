@@ -1,3 +1,8 @@
+// Input: API client
+// Output: destructionApi
+// Pos: 档案销毁 API 层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { client } from './client';
 
 export const destructionApi = {

@@ -1,3 +1,8 @@
+// Input: zustand、persist 中间件与 safeStorage
+// Output: useAuthStore 与 User 类型
+// Pos: 前端认证状态管理
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '../utils/storage';

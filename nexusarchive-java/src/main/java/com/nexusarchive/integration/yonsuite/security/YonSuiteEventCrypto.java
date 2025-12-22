@@ -1,3 +1,8 @@
+// Input: cn.hutool、Lombok、Spring Framework、Javax、等
+// Output: YonSuiteEventCrypto 类
+// Pos: 安全模块
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.integration.yonsuite.security;
 
 import cn.hutool.core.codec.Base64;

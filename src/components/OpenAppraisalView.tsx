@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/openAppraisal
+// Output: React 组件 OpenAppraisalView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { openAppraisalApi, OpenAppraisal } from '../api/openAppraisal';
 import { Shield, ShieldCheck, ShieldAlert, Clock, Calendar, FileText, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';

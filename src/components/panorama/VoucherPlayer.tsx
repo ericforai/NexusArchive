@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 VoucherDetailCard、EvidencePreview、api/archives
+// Output: React 组件 VoucherPlayer
+// Pos: 归档全景子组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, ShieldCheck, User } from 'lucide-react';
 import { VoucherDetailCard } from './VoucherDetailCard';

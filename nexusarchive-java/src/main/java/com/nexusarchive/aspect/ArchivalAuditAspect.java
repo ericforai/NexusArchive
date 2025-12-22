@@ -1,11 +1,18 @@
+// Input: Jackson、Jakarta EE、Lombok、org.aspectj、等
+// Output: ArchivalAuditAspect 类
+// Pos: 后端模块
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.annotation.ArchivalAudit;
 import com.nexusarchive.entity.SysAuditLog;
 import com.nexusarchive.service.AuditLogService;
+import com.nexusarchive.service.LocalAuditBuffer;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -32,6 +39,7 @@ import java.lang.reflect.Method;
 public class ArchivalAuditAspect {
     
     private final AuditLogService auditLogService;
+    private final LocalAuditBuffer localAuditBuffer;
     private final ObjectMapper objectMapper;
     
     @Around("@annotation(com.nexusarchive.annotation.ArchivalAudit)")
@@ -51,7 +59,16 @@ public class ArchivalAuditAspect {
         // 获取请求信息
         HttpServletRequest request = getHttpServletRequest();
         String clientIp = getClientIp(request);
-        String macAddress = getMacAddress(request); // 尝试获取MAC地址
+        
+        // Initialize riskLevel here, as it can be modified before the main try-catch
+        String operationResult = "SUCCESS";
+        String riskLevel = "LOW";
+
+        MacAddressResult macResult = getMacAddress(request); // [FIXED P1-1: 修复值传递问题]
+        String macAddress = macResult.mac();
+        if (macResult.shouldElevateRisk()) {
+            riskLevel = "MEDIUM"; // MAC 地址未获取时提升风险等级
+        }
         String userAgent = request != null ? request.getHeader("User-Agent") : "";
         
         // 记录操作前数据
@@ -60,6 +77,11 @@ public class ArchivalAuditAspect {
         if (args != null && args.length > 0) {
             try {
                 dataBefore = objectMapper.writeValueAsString(args[0]);
+            } catch (JsonProcessingException e) {
+                // 序列化失败不影响业务流程，记录警告并标记风险等级
+                log.warn("操作前数据序列化失败，记录为 <serialization_error>", e);
+                dataBefore = "<serialization_error>";
+                riskLevel = "MEDIUM";
             } catch (Exception e) {
                 log.warn("无法序列化操作前数据", e);
             }
@@ -67,8 +89,6 @@ public class ArchivalAuditAspect {
         
         // 执行目标方法
         Object result = null;
-        String operationResult = "SUCCESS";
-        String riskLevel = "LOW";
         
         try {
             result = joinPoint.proceed();
@@ -108,11 +128,12 @@ public class ArchivalAuditAspect {
             auditLog.setUserAgent(userAgent);
             auditLog.setDeviceFingerprint(getDeviceFingerprint(request));
             
-            // 异步保存审计日志
+            // 异步保存审计日志 [FIXED P0-1: 失败时写入本地缓冲]
             try {
                 auditLogService.log(auditLog);
             } catch (Exception e) {
-                log.error("保存审计日志失败", e);
+                log.error("保存审计日志失败，写入本地缓冲", e);
+                localAuditBuffer.persist(auditLog);
             }
             
             long duration = System.currentTimeMillis() - startTime;
@@ -169,38 +190,41 @@ public class ArchivalAuditAspect {
     }
     
     /**
-     * 尝试获取MAC地址
+     * [FIXED P1-1] 尝试获取MAC地址
      * 
      * 优化：从请求头 X-Client-Mac 获取客户端传递的 MAC 地址
      * 注意: Web环境下通常无法直接获取客户端MAC地址，需要客户端配合传递
      * 
-     * @author Agent B - 合规开发工程师
+     * @return MacAddressResult 包含 MAC 地址和是否需要提升风险等级
      */
-    private String getMacAddress(HttpServletRequest request) {
+    private MacAddressResult getMacAddress(HttpServletRequest request) {
         if (request == null) {
-            return "UNKNOWN";
+            return new MacAddressResult("UNKNOWN", true);
         }
         
-        // 尝试从请求头获取客户端传递的 MAC 地址
+        // 首先尝试可信内部网络传递的 MAC 地址
         String macAddress = request.getHeader("X-Client-Mac");
-        if (macAddress != null && !macAddress.isEmpty() && !"unknown".equalsIgnoreCase(macAddress)) {
-            // 验证 MAC 地址格式 (XX:XX:XX:XX:XX:XX 或 XX-XX-XX-XX-XX-XX)
-            if (isValidMacAddress(macAddress)) {
-                return macAddress.toUpperCase();
-            }
+        if (isValidMacAddress(macAddress)) {
+            return new MacAddressResult(macAddress.toUpperCase(), false);
         }
         
-        // 尝试从其他可能的请求头获取
+        // 其他可能的 Header（仍需校验格式）
         String[] macHeaders = {"X-MAC-Address", "X-Device-Mac", "Client-MAC"};
         for (String header : macHeaders) {
             String mac = request.getHeader(header);
-            if (mac != null && !mac.isEmpty() && isValidMacAddress(mac)) {
-                return mac.toUpperCase();
+            if (isValidMacAddress(mac)) {
+                return new MacAddressResult(mac.toUpperCase(), false);
             }
         }
         
-        return "UNKNOWN";
+        // 未获取到合法 MAC，返回 UNKNOWN 并标记需要提升风险等级
+        return new MacAddressResult("UNKNOWN", true);
     }
+
+    /**
+     * [FIXED P1-1] MAC 地址获取结果
+     */
+    private record MacAddressResult(String mac, boolean shouldElevateRisk) {}
     
     /**
      * 验证 MAC 地址格式

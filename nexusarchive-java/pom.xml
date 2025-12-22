@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Input: Maven 依赖与插件配置 -->
+<!-- Output: Maven 构建描述 -->
+<!-- Pos: 后端构建配置 -->
+<!-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
@@ -164,6 +168,13 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <!-- Google Guava (Rate Limiting) -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>32.1.3-jre</version>
         </dependency>
 
         <!-- Hutool (Java工具库) -->

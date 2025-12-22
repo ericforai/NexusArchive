@@ -1,3 +1,8 @@
+// Input: API client 与 FormData
+// Output: attachmentsApi
+// Pos: 附件上传/下载 API 层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /**
  * 附件关联 API
  * 用于全景视图中凭证与附件（发票/合同/回单）的关联管理

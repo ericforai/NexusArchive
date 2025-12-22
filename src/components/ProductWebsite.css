@@ -1,3 +1,8 @@
+/* Input: 无外部依赖 */
+/* Output: 组件样式文件 */
+/* Pos: 业务页面组件 */
+/* 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。 */
+
 /* ProductWebsite.css */
 :root {
   --dva-bg-deep: #020617;

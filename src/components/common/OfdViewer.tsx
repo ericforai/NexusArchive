@@ -1,3 +1,8 @@
+// Input: React、本地模块 utils/storage、store
+// Output: React 组件 OfdViewer
+// Pos: 通用复用组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useEffect, useState } from 'react'
 import { safeStorage } from '../../utils/storage'
 import { useAuthStore } from '../../store'

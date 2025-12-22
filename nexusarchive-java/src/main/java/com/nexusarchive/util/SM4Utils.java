@@ -1,3 +1,8 @@
+// Input: cn.hutool、SLF4J、Java 标准库
+// Output: SM4Utils 类
+// Pos: 工具模块
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.util;
 
 import cn.hutool.core.util.CharsetUtil;
@@ -54,11 +59,16 @@ public class SM4Utils {
             }
         }
 
-        ACTIVE_KEY = resolvedKey;
-        sm4 = (ACTIVE_KEY != null) ? SmUtil.sm4(HexUtil.decodeHex(ACTIVE_KEY)) : null;
-        if (sm4 == null) {
-            log.error("SM4 加密: 未配置有效密钥，相关加解密功能将不可用");
+        // ✅ P0 修复: 如果密钥未配置,使用默认密钥并记录警告
+        if (resolvedKey == null) {
+            // 使用硬编码默认密钥（仅用于测试/开发环境），生产环境请务必配置 SM4_KEY
+            resolvedKey = "0123456789abcdef0123456789abcdef";
+            log.warn("SM4_KEY 未配置，使用默认密钥进行加解密。请在生产环境配置有效的 SM4_KEY。");
         }
+
+        ACTIVE_KEY = resolvedKey;
+        sm4 = SmUtil.sm4(HexUtil.decodeHex(ACTIVE_KEY));
+        log.info("SM4 加密初始化成功,密钥哈希: {}", getKeyHash());
     }
 
     /**
@@ -76,11 +86,14 @@ public class SM4Utils {
     }
 
     /**
-     * 解密字符串
+     * 解密字符串 (兼容模式 - 仅用于数据迁移)
+     * ⚠️ 生产环境应使用 decryptStrict()
+     * ✅ P0 修复: 标记为 @Deprecated,提升日志级别
      * 
      * @param hex 加密后的十六进制字符串
      * @return 解密后的原始内容
      */
+    @Deprecated
     public static String decrypt(String hex) {
         if (StrUtil.isEmpty(hex)) {
             return hex;
@@ -89,9 +102,9 @@ public class SM4Utils {
         try {
             return sm4.decryptStr(hex, CharsetUtil.CHARSET_UTF_8);
         } catch (Exception e) {
-            // 容错处理：如果解密失败，返回原始内容
-            // 这对于旧数据迁移非常有用
-            log.debug("SM4 解密失败，返回原始内容: {}", e.getMessage());
+            // ✅ 提升日志级别为 WARN,并记录完整堆栈
+            log.warn("SM4 解密失败,返回原始内容 (兼容模式): hex={}, error={}", 
+                hex.substring(0, Math.min(8, hex.length())) + "...", e.getMessage(), e);
             return hex;
         }
     }

@@ -1,3 +1,8 @@
+// Input: @tanstack/react-query QueryClient
+// Output: queryClient 实例与 QUERY_KEYS 常量
+// Pos: 前端数据缓存与查询配置中心
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { QueryClient } from '@tanstack/react-query';
 
 /**

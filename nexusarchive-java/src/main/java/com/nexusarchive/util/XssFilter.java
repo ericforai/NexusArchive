@@ -1,3 +1,8 @@
+// Input: Spring Framework、Java 标准库
+// Output: XssFilter 类
+// Pos: 工具模块
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.util;
 
 import org.springframework.web.util.HtmlUtils;

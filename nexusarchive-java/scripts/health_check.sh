@@ -1,4 +1,9 @@
 #!/bin/bash
+# Input: Shell
+# Output: 健康检查
+# Pos: 后端运维脚本
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 # ==============================================================================
 # NexusArchive 健康检查脚本 (Health Check Script)
 # 用于生产环境部署后验证系统可用性
@@ -62,7 +67,9 @@ fi
 echo ""
 echo -e "${YELLOW}[2/5] 检查数据库连接...${NC}"
 if command -v psql &> /dev/null; then
-    if PGPASSWORD="${DB_PASSWORD:-Nexus@2025}" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1" > /dev/null 2>&1; then
+    if [ -z "$DB_PASSWORD" ]; then
+        check_fail "DB_PASSWORD 环境变量未设置，无法检查数据库连接"
+    elif PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1" > /dev/null 2>&1; then
         check_pass "PostgreSQL 连接正常 (${DB_HOST}:${DB_PORT}/${DB_NAME})"
     else
         check_fail "PostgreSQL 连接失败"

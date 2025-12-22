@@ -1,3 +1,8 @@
+// Input: Node.js 标准库、Vite、Vite React 插件
+// Output: Vite 构建配置
+// Pos: 构建/测试配置
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';

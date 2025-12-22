@@ -1,3 +1,8 @@
+// Input: React、lucide-react 图标、本地模块 api/archiveApproval
+// Output: React 组件 ArchiveApprovalView
+// Pos: 业务页面组件
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React, { useState, useEffect } from 'react';
 import { archiveApprovalApi, ArchiveApproval } from '../api/archiveApproval';
 import { CheckCircle2, XCircle, FileText, Clock, User, Calendar, MessageSquare, AlertCircle } from 'lucide-react';

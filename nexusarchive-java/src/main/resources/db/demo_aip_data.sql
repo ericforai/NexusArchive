@@ -1,3 +1,8 @@
+-- Input: 数据库引擎
+-- Output: 演示/初始化数据写入
+-- Pos: 数据初始化脚本
+-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 -- Demo Data for Structured AIP Validation
 -- Archival Code: COMP001-2023-10Y-FIN-AC01-V0088
 
