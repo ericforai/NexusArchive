@@ -59,7 +59,17 @@ services:
     volumes:
       - clamav-db:/var/lib/clamav
 
+  redis:
+    image: redis:6.2-alpine
+    container_name: nexusarchive-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
 volumes:
   pgdata:
   backend-data:
   clamav-db:
+  redis-data:
