@@ -2,7 +2,7 @@
 // 用于显示和管理原始凭证
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Search, Filter, Plus, FileText, Eye, Trash2, Link2,
@@ -82,6 +82,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     subTitle = '原始凭证管理'
 }) => {
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
@@ -197,7 +198,10 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                         <RefreshCw className="w-4 h-4" />
                         刷新
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <button
+                        onClick={() => navigate('/system/collection/upload')}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
                         <Plus className="w-4 h-4" />
                         新建原始凭证
                     </button>

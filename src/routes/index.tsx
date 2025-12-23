@@ -26,6 +26,7 @@ const ArchivalPanoramaView = lazy(() => import('../components/ArchivalPanoramaVi
 const ArchiveListView = lazy(() => import('../components/ArchiveListView'));
 const OCRProcessingView = lazy(() => import('../components/OCRProcessingView'));
 const AbnormalDataView = lazy(() => import('../components/AbnormalDataView'));
+const OriginalVoucherListView = lazy(() => import('../components/OriginalVoucherListView'));
 const OnlineReceptionView = lazy(() => import('../components/OnlineReceptionView'));
 const VolumeManagement = lazy(() => import('../components/VolumeManagement'));
 const ArchiveApprovalView = lazy(() => import('../components/ArchiveApprovalView'));
@@ -113,6 +114,7 @@ export const routes: RouteObject[] = [
             { path: 'archive', element: withSuspense(ArchiveListView, { routeConfig: 'view' }) },
             { path: 'archive/vouchers', element: withSuspense(ArchiveListView, { routeConfig: 'voucher' }) },
             { path: 'archive/ledgers', element: withSuspense(ArchiveListView, { routeConfig: 'ledger' }) },
+            { path: 'archive/original-vouchers', element: withSuspense(OriginalVoucherListView) },
             { path: 'archive/reports', element: withSuspense(ArchiveListView, { routeConfig: 'report' }) },
             { path: 'archive/other', element: withSuspense(ArchiveListView, { routeConfig: 'other' }) },
             { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView) },
