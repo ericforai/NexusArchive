@@ -80,8 +80,11 @@ const IntegrationSettings: React.FC = () => {
     const [showConfigModal, setShowConfigModal] = useState(false);
     const [editingConfig, setEditingConfig] = useState<Partial<ErpConfig> | null>(null);
     const [configForm, setConfigForm] = useState({
-        name: '', erpType: 'yonsuite', baseUrl: '', appKey: '', appSecret: '', accbookCode: ''
+        name: '', erpType: 'yonsuite', baseUrl: '', appKey: '', appSecret: '',
+        accbookCode: '',          // Legacy single value
+        accbookCodes: [] as string[]  // Multi-org support
     });
+    const [newAccbookCode, setNewAccbookCode] = useState(''); // For adding new codes
     const [detectedType, setDetectedType] = useState<string | null>(null);
 
     // Diagnosis State
@@ -386,14 +389,14 @@ const IntegrationSettings: React.FC = () => {
 
     const openAddConfig = () => {
         setEditingConfig(null);
-        setConfigForm({ name: '', erpType: 'yonsuite', baseUrl: '', appKey: '', appSecret: '', accbookCode: '' });
+        setConfigForm({ name: '', erpType: 'yonsuite', baseUrl: '', appKey: '', appSecret: '', accbookCode: '', accbookCodes: [] });
         setDetectedType(null);
         setShowConfigModal(true);
     };
 
     const openEditConfig = (config: ErpConfig) => {
         setEditingConfig(config);
-        let parsed = { baseUrl: '', appKey: '', appSecret: '', accbookCode: '' };
+        let parsed = { baseUrl: '', appKey: '', appSecret: '', accbookCode: '', accbookCodes: [] as string[] };
         try {
             parsed = config.configJson ? JSON.parse(config.configJson) : parsed;
         } catch (e) {
@@ -405,7 +408,8 @@ const IntegrationSettings: React.FC = () => {
             baseUrl: parsed.baseUrl || '',
             appKey: parsed.appKey || '',
             appSecret: parsed.appSecret || '',
-            accbookCode: parsed.accbookCode || ''
+            accbookCode: parsed.accbookCode || '',
+            accbookCodes: parsed.accbookCodes || (parsed.accbookCode ? [parsed.accbookCode] : [])
         });
         setDetectedType(null);
         setShowConfigModal(true);
@@ -421,7 +425,9 @@ const IntegrationSettings: React.FC = () => {
             baseUrl: configForm.baseUrl,
             appKey: configForm.appKey,
             appSecret: configForm.appSecret,
-            accbookCode: configForm.accbookCode
+            accbookCode: configForm.accbookCodes.length > 0 ? configForm.accbookCodes[0] : configForm.accbookCode,
+            accbookCodes: configForm.accbookCodes.length > 0 ? configForm.accbookCodes :
+                (configForm.accbookCode ? [configForm.accbookCode] : [])
         });
 
         const data: Partial<ErpConfig> = {
@@ -1038,14 +1044,54 @@ const IntegrationSettings: React.FC = () => {
                                         </select>
                                     </div>
                                     <div className="col-span-1">
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">账簿编码 (可选)</label>
-                                        <input
-                                            type="text"
-                                            placeholder="例如：001"
-                                            value={configForm.accbookCode}
-                                            onChange={e => setConfigForm(p => ({ ...p, accbookCode: e.target.value }))}
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                                        />
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">组织代码 (多选)</label>
+                                        {/* 已添加的组织标签 */}
+                                        <div className="flex flex-wrap gap-1 mb-2">
+                                            {configForm.accbookCodes.map(code => (
+                                                <span key={code} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs">
+                                                    {code}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setConfigForm(p => ({ ...p, accbookCodes: p.accbookCodes.filter(c => c !== code) }))}
+                                                        className="hover:text-red-600"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        {/* 添加新组织 */}
+                                        <div className="flex gap-1">
+                                            <input
+                                                type="text"
+                                                placeholder="输入组织代码"
+                                                value={newAccbookCode}
+                                                onChange={e => setNewAccbookCode(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter' && newAccbookCode.trim()) {
+                                                        e.preventDefault();
+                                                        if (!configForm.accbookCodes.includes(newAccbookCode.trim())) {
+                                                            setConfigForm(p => ({ ...p, accbookCodes: [...p.accbookCodes, newAccbookCode.trim()] }));
+                                                        }
+                                                        setNewAccbookCode('');
+                                                    }
+                                                }}
+                                                className="flex-1 px-2 py-1.5 text-sm bg-white border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (newAccbookCode.trim() && !configForm.accbookCodes.includes(newAccbookCode.trim())) {
+                                                        setConfigForm(p => ({ ...p, accbookCodes: [...p.accbookCodes, newAccbookCode.trim()] }));
+                                                        setNewAccbookCode('');
+                                                    }
+                                                }}
+                                                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                            >
+                                                添加
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-1">按 Enter 或点击添加，支持多个组织</p>
                                     </div>
                                     <div className="col-span-2">
                                         <label className="block text-sm font-medium text-slate-700 mb-1">基础 URL (Endpoint) <span className="text-rose-500">*</span></label>
