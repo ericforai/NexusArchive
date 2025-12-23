@@ -39,6 +39,9 @@ public class ResilientFlywayRunner implements ApplicationRunner {
     @Value("${spring.flyway.locations:classpath:db/migration}")
     private String flywayLocations;
 
+    @Value("${spring.flyway.enabled:true}")
+    private boolean flywayEnabled;
+
     private final AtomicBoolean isReady = new AtomicBoolean(false);
     private final AtomicBoolean isMigrating = new AtomicBoolean(false);
     
@@ -61,6 +64,14 @@ public class ResilientFlywayRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        // 支持通过配置禁用Flyway迁移
+        if (!flywayEnabled) {
+            log.info("Flyway is disabled (spring.flyway.enabled=false), skipping migration");
+            isReady.set(true);
+            scheduler.shutdown();
+            return;
+        }
+        
         log.info("Starting Resilient Flyway Runner...");
         
         // Initial delay 0, start immediately
