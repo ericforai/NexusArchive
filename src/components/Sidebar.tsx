@@ -164,8 +164,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       else if (item.path) mainPath = item.path;
     }
 
-    // Indentation based on level
-    const paddingLeft = level === 0 ? 'px-4' : level === 1 ? 'pl-10 pr-4' : 'pl-14 pr-4';
+    // Indentation based on level - 不同层级需要不同的缩进以区分层次
+    const paddingLeft = level === 0 ? 'px-4' : level === 1 ? 'pl-10 pr-4' : level === 2 ? 'pl-12 pr-4' : 'pl-16 pr-4';
     // Font size adjustments
     const fontSize = level === 0 ? 'text-sm font-medium' : 'text-xs';
 
@@ -216,8 +216,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <div className={`flex items-center ${collapsed ? '' : 'space-x-3'} ${collapsed ? 'justify-center' : ''}`}>
               {Icon && <Icon size={20} className={`transition-colors flex-shrink-0 ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`} />}
-              {/* For Level 1+ leaf nodes without icon (like sub-menus), maybe add a dot or chevron? */}
-              {!Icon && level > 0 && (
+              {/* 只有 level >= 3 的叶子节点才显示点（如销售订单、出库单等） */}
+              {/* level 2 的叶子节点（如记账凭证）不显示任何装饰，与原始凭证等保持一致 */}
+              {!Icon && level >= 3 && (
                 <span className={`w-1.5 h-1.5 rounded-full mr-2 flex-shrink-0 ${isActive ? 'bg-primary-400' : 'bg-slate-600 group-hover:bg-slate-500'}`}></span>
               )}
               {!collapsed && <span className={`${fontSize} tracking-wide whitespace-normal text-left leading-tight`}>{item.label}</span>}

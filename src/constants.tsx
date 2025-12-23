@@ -60,6 +60,7 @@ export const NAV_ITEMS: NavItem[] = [
         id: '会计凭证',
         label: '会计凭证',
         children: [
+          // 原始凭证及其子分类（与记账凭证并列）
           {
             id: '原始凭证',
             label: '原始凭证',
@@ -78,6 +79,7 @@ export const NAV_ITEMS: NavItem[] = [
               { id: '合同协议', label: '合同协议', path: '合同协议' }
             ]
           },
+          // 记账凭证（与原始凭证并列，都是会计凭证的子项）
           { id: '记账凭证', label: '记账凭证', path: '记账凭证' }
         ]
       },

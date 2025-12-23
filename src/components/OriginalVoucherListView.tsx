@@ -1,5 +1,3 @@
-// 原始凭证列表视图组件
-// 用于显示和管理原始凭证
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -20,6 +18,7 @@ import {
     VOUCHER_CATEGORIES,
     ARCHIVE_STATUS
 } from '../api/originalVoucher';
+import { CreateOriginalVoucherDialog } from './archive/CreateOriginalVoucherDialog';
 
 // 状态徽章组件
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -81,8 +80,8 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     title = '原始凭证',
     subTitle = '原始凭证管理'
 }) => {
-    const queryClient = useQueryClient();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
@@ -97,13 +96,15 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     const [statusFilter, setStatusFilter] = useState('');
     const [showFilters, setShowFilters] = useState(false);
 
+    // 新建弹窗状态
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
+
     // Update filter when URL changes
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const t = params.get('type');
         if (t) {
             setTypeFilter(t);
-            // Optionally auto-set category based on type if needed, but let's trust the backend or user
         } else {
             setTypeFilter('');
         }
@@ -114,7 +115,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
 
     // 查询原始凭证列表
     const { data: vouchersData, isLoading, refetch } = useQuery({
-        queryKey: ['originalVouchers', page, limit, search, categoryFilter, statusFilter],
+        queryKey: ['originalVouchers', page, limit, search, categoryFilter, typeFilter, statusFilter],
         queryFn: () => getOriginalVouchers({
             page,
             limit,
@@ -136,6 +137,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
         mutationFn: deleteOriginalVoucher,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['originalVouchers'] });
+            setSelectedRows([]);
         }
     });
 
@@ -199,7 +201,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                         刷新
                     </button>
                     <button
-                        onClick={() => navigate('/system/collection/upload')}
+                        onClick={() => setShowCreateDialog(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                         <Plus className="w-4 h-4" />
@@ -253,181 +255,139 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                     >
                         <Filter className="w-4 h-4" />
                         更多筛选
-                        <ChevronDown className={`w-4 h-4 transition ${showFilters ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
             </div>
 
-            {/* 批量操作栏 */}
-            {selectedRows.length > 0 && (
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 flex items-center justify-between">
-                    <span className="text-sm text-blue-700 dark:text-blue-300">
-                        已选择 {selectedRows.length} 项
-                    </span>
-                    <div className="flex gap-2">
-                        <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                            批量提交归档
-                        </button>
-                        <button className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700">
-                            批量删除
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* 表格 */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
-                        <tr>
-                            <th className="w-10 px-4 py-3">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedRows.length === vouchers.length && vouchers.length > 0}
-                                    onChange={(e) => handleSelectAll(e.target.checked)}
-                                    className="rounded border-gray-300 dark:border-gray-600"
-                                />
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">凭证编号</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">类型</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">业务日期</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">金额</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">对方单位</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">状态</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">版本</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {isLoading ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                        <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-medium">
                             <tr>
-                                <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
-                                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                    加载中...
-                                </td>
+                                <th className="p-4 w-10">
+                                    <input
+                                        type="checkbox"
+                                        className="rounded border-gray-300 dark:border-gray-600"
+                                        checked={selectedRows.length === vouchers.length && vouchers.length > 0}
+                                        onChange={(e) => handleSelectAll(e.target.checked)}
+                                    />
+                                </th>
+                                <th className="p-4">凭证编号</th>
+                                <th className="p-4">类型</th>
+                                <th className="p-4">业务日期</th>
+                                <th className="p-4">摘要</th>
+                                <th className="p-4 text-right">金额</th>
+                                <th className="p-4">状态</th>
+                                <th className="p-4 text-center">操作</th>
                             </tr>
-                        ) : vouchers.length === 0 ? (
-                            <tr>
-                                <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
-                                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                    暂无原始凭证数据
-                                </td>
-                            </tr>
-                        ) : (
-                            vouchers.map((voucher) => (
-                                <tr key={voucher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
-                                    <td className="px-4 py-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedRows.includes(voucher.id)}
-                                            onChange={(e) => handleSelectRow(voucher.id, e.target.checked)}
-                                            className="rounded border-gray-300 dark:border-gray-600"
-                                        />
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={8} className="p-8 text-center">
+                                        加载中...
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <span className="font-mono text-sm text-gray-900 dark:text-white">
-                                            {voucher.voucherNo}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <TypeBadge category={voucher.voucherCategory} typeName={getTypeName(voucher.voucherType)} />
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                                        {formatDate(voucher.businessDate)}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                                        {formatAmount(voucher.amount, voucher.currency)}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 max-w-[200px] truncate">
-                                        {voucher.counterparty || '-'}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <StatusBadge status={voucher.archiveStatus} />
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-500">
-                                        v{voucher.version}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex justify-center gap-1">
-                                            <button
-                                                title="查看详情"
-                                                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                title="关联记账凭证"
-                                                className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded"
-                                            >
-                                                <Link2 className="w-4 h-4" />
-                                            </button>
-                                            {voucher.archiveStatus === 'DRAFT' && (
-                                                <button
-                                                    title="提交归档"
-                                                    onClick={() => submitMutation.mutate(voucher.id)}
-                                                    className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded"
-                                                >
-                                                    <Archive className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                            {voucher.archiveStatus === 'PENDING' && (
-                                                <button
-                                                    title="确认归档"
-                                                    onClick={() => confirmMutation.mutate(voucher.id)}
-                                                    className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded"
-                                                >
-                                                    <CheckCircle2 className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                            {voucher.archiveStatus !== 'ARCHIVED' && (
-                                                <button
-                                                    title="删除"
-                                                    onClick={() => {
-                                                        if (confirm('确定要删除此原始凭证吗？')) {
-                                                            deleteMutation.mutate(voucher.id);
-                                                        }
-                                                    }}
-                                                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            )}
+                                </tr>
+                            ) : vouchers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className="p-12 text-center text-gray-400">
+                                        <div className="flex flex-col items-center">
+                                            <Archive className="w-12 h-12 mb-3 text-gray-300" />
+                                            暂无原始凭证数据
                                         </div>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                vouchers.map((voucher) => (
+                                    <tr key={voucher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                        <td className="p-4">
+                                            <input
+                                                type="checkbox"
+                                                className="rounded border-gray-300 dark:border-gray-600"
+                                                checked={selectedRows.includes(voucher.id)}
+                                                onChange={(e) => handleSelectRow(voucher.id, e.target.checked)}
+                                            />
+                                        </td>
+                                        <td className="p-4 font-medium text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">
+                                            {voucher.voucherNo}
+                                        </td>
+                                        <td className="p-4">
+                                            <TypeBadge category={voucher.voucherCategory} typeName={getTypeName(voucher.voucherType)} />
+                                        </td>
+                                        <td className="p-4 text-gray-900 dark:text-white">
+                                            {formatDate(voucher.businessDate)}
+                                        </td>
+                                        <td className="p-4 max-w-xs truncate" title={voucher.summary}>
+                                            {voucher.summary || '-'}
+                                        </td>
+                                        <td className="p-4 text-right font-medium text-gray-900 dark:text-white font-mono">
+                                            {formatAmount(voucher.amount, voucher.currency)}
+                                        </td>
+                                        <td className="p-4">
+                                            <StatusBadge status={voucher.archiveStatus} />
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button className="p-1 text-gray-500 hover:text-blue-600 transition" title="查看">
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                {voucher.archiveStatus === 'DRAFT' && (
+                                                    <button
+                                                        className="p-1 text-gray-500 hover:text-red-600 transition"
+                                                        title="删除"
+                                                        onClick={() => {
+                                                            if (window.confirm('确认删除此凭证？')) {
+                                                                deleteMutation.mutate(voucher.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                                <button className="p-1 text-gray-500 hover:text-gray-700 transition" title="更多">
+                                                    <MoreHorizontal className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
 
                 {/* 分页 */}
                 {totalPages > 1 && (
-                    <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                            共 {vouchersData?.total || 0} 条记录
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                        >
+                            上一页
+                        </button>
+                        <span className="px-3 py-1 text-gray-500 dark:text-gray-400">
+                            {page} / {totalPages}
                         </span>
-                        <div className="flex gap-2">
-                            <button
-                                disabled={page === 1}
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                className="px-3 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-                            >
-                                上一页
-                            </button>
-                            <span className="px-3 py-1 text-sm">
-                                {page} / {totalPages}
-                            </span>
-                            <button
-                                disabled={page === totalPages}
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                className="px-3 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-                            >
-                                下一页
-                            </button>
-                        </div>
+                        <button
+                            disabled={page === totalPages}
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                        >
+                            下一页
+                        </button>
                     </div>
                 )}
             </div>
+
+            {/* Dialog */}
+            <CreateOriginalVoucherDialog
+                isOpen={showCreateDialog}
+                onClose={() => setShowCreateDialog(false)}
+                initialType={typeFilter}
+                category={categoryFilter}
+            />
         </div>
     );
 };

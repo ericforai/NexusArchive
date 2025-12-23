@@ -1,7 +1,7 @@
 // 原始凭证 API 模块
 // 用于与后端 /original-vouchers 端点交互
 
-import { apiClient } from './client';
+import { client as apiClient } from './client';
 
 // 类型定义
 export interface OriginalVoucher {
@@ -209,6 +209,27 @@ export async function getOriginalVoucherStats(params?: {
     fiscalYear?: string;
 }): Promise<OriginalVoucherStats> {
     const { data } = await apiClient.get('/original-vouchers/stats', { params });
+    return data;
+}
+
+/**
+ * 添加原始凭证文件
+ */
+export async function addOriginalVoucherFile(
+    id: string,
+    file: File,
+    fileRole?: string
+): Promise<OriginalVoucherFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (fileRole) {
+        formData.append('fileRole', fileRole);
+    }
+    const { data } = await apiClient.post(`/original-vouchers/${id}/files`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
     return data;
 }
 
