@@ -129,15 +129,28 @@ curl -s http://localhost:8080/api/actuator/health | jq .
 
 如部署后发现问题，执行紧急回滚：
 
-### 离线安装包回滚（手动）
+### 一键回滚（推荐）
+```bash
+cd deploy/offline
+./rollback.sh
+```
+
+脚本会自动：
+- 检测最新备份目录
+- 验证备份完整性
+- 恢复应用和配置
+- 执行健康检查
+
+### 手动回滚（备用）
 ```bash
 # 1. 停止服务
 systemctl stop nexusarchive
 
-# 2. 恢复应用文件（从 upgrade.sh 生成的备份目录）
-cp /opt/nexusarchive_backup_YYYYMMDD_HHMMSS/app.jar /opt/nexusarchive/
-cp -r /opt/nexusarchive_backup_YYYYMMDD_HHMMSS/frontend /opt/nexusarchive/
-cp /opt/nexusarchive_backup_YYYYMMDD_HHMMSS/.env /opt/nexusarchive/
+# 2. 恢复应用文件
+BACKUP=$(cat /opt/nexusarchive/.latest_backup)
+cp $BACKUP/app.jar /opt/nexusarchive/
+cp -r $BACKUP/frontend /opt/nexusarchive/
+cp $BACKUP/.env /opt/nexusarchive/
 
 # 3. 恢复数据库（需DBA介入）
 # 参照 SOP 文档中的 "5.4 迁移回滚" 章节
@@ -148,14 +161,26 @@ systemctl start nexusarchive
 
 ### Docker 回滚
 ```bash
-# 停止当前版本
 docker-compose -f deploy/docker-compose.yml down
-
-# 恢复上一版本镜像
 docker tag nexusarchive/backend:previous nexusarchive/backend:latest
 docker-compose -f deploy/docker-compose.yml up -d
 ```
 
+## 冒烟测试
+
+部署完成后执行自动化冒烟测试：
+
+```bash
+cd deploy/offline
+./smoke_test.sh
+```
+
+测试内容包括：
+- 端口监听检测
+- 健康检查接口
+- 认证接口响应
+- 核心业务接口
+- 前端资源访问
 
 ---
 

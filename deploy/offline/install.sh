@@ -51,6 +51,51 @@ log_step() {
     echo -e "\n${BLUE}==>${NC} ${BLUE}$1${NC}" | tee -a "$LOG_FILE"
 }
 
+# --- 安全审计日志 ---
+AUDIT_LOG_DIR="/var/log/nexusarchive"
+AUDIT_LOG_FILE="${AUDIT_LOG_DIR}/deploy_audit.log"
+
+log_audit() {
+    local action="$1"
+    local detail="${2:-}"
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local operator="${SUDO_USER:-$(whoami)}"
+    local hostname
+    hostname=$(hostname)
+    
+    # 确保审计日志目录存在
+    mkdir -p "$AUDIT_LOG_DIR" 2>/dev/null || true
+    
+    # 写入审计日志（追加）
+    echo "[${timestamp}] [${operator}@${hostname}] [${action}] ${detail}" >> "$AUDIT_LOG_FILE" 2>/dev/null || true
+    
+    # 同时写入普通日志
+    log_info "[AUDIT] ${action}: ${detail}"
+}
+
+# --- 制品完整性校验 ---
+verify_artifact_integrity() {
+    local jar_file="$1"
+    local checksum_file="${jar_file}.sha256"
+    
+    if [[ ! -f "$checksum_file" ]]; then
+        log_warn "未找到校验文件: $checksum_file，跳过完整性校验"
+        return 0
+    fi
+    
+    log_step "校验制品完整性..."
+    if sha256sum -c "$checksum_file" &>/dev/null; then
+        log_info "制品完整性校验通过 ✓"
+        log_audit "ARTIFACT_VERIFY" "JAR checksum verified: $jar_file"
+        return 0
+    else
+        log_error "制品完整性校验失败！文件可能已损坏或被篡改"
+        log_audit "ARTIFACT_VERIFY_FAILED" "JAR checksum mismatch: $jar_file"
+        return 1
+    fi
+}
+
 confirm() {
     local prompt="$1"
     local default="${2:-N}"
@@ -348,14 +393,20 @@ create_user() {
 
 deploy_application() {
     log_step "部署应用程序..."
+    log_audit "DEPLOY_START" "Version: ${APP_VERSION}, Mode: ${MODE}"
     
     # 复制 JAR
     local jar_file="${SCRIPT_DIR}/bin/nexusarchive-backend-${APP_VERSION}.jar"
     if [[ -f "$jar_file" ]]; then
+        # 执行完整性校验
+        verify_artifact_integrity "$jar_file"
+        
         cp "$jar_file" "$INSTALL_DIR/app.jar"
         log_info "后端应用已部署"
+        log_audit "DEPLOY_JAR" "Deployed: $jar_file -> $INSTALL_DIR/app.jar"
     else
         log_error "未找到后端 JAR 文件: $jar_file"
+        log_audit "DEPLOY_FAILED" "JAR not found: $jar_file"
         exit 1
     fi
     
@@ -363,6 +414,7 @@ deploy_application() {
     if [[ -d "${SCRIPT_DIR}/frontend" ]]; then
         cp -r "${SCRIPT_DIR}/frontend" "$INSTALL_DIR/"
         log_info "前端资源已部署"
+        log_audit "DEPLOY_FRONTEND" "Deployed frontend to $INSTALL_DIR/frontend"
     else
         log_warn "未找到前端资源目录"
     fi
@@ -512,8 +564,11 @@ main() {
     if [[ "$MODE" == "check" ]]; then
         echo ""
         log_info "✅ 环境基线检测通过"
+        log_audit "BASELINE_CHECK" "Passed - OS: $OS_NAME, Arch: $ARCH"
         exit 0
     fi
+
+    log_audit "INSTALL_START" "Version: ${APP_VERSION}, Operator: ${SUDO_USER:-$(whoami)}"
 
     run_config_wizard
     
@@ -528,6 +583,12 @@ main() {
     configure_nginx
     set_permissions
     start_service
+    
+    log_audit "INSTALL_COMPLETE" "Successfully installed to $INSTALL_DIR"
+    
+    # 清理敏感环境变量
+    unset DB_PASSWORD
+    unset JWT_SECRET
     
     show_completion
 }

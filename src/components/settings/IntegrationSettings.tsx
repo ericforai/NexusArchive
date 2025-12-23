@@ -21,6 +21,7 @@ const ADAPTER_CONFIG: Record<string, { icon: React.ReactNode; color: string; lab
     kingdee: { icon: <Zap size={16} />, color: 'bg-orange-500', label: '金蝶云星空' },
     weaver: { icon: <Settings size={16} />, color: 'bg-purple-500', label: '泛微 OA' },
     weavere10: { icon: <Settings size={16} />, color: 'bg-purple-400', label: '泛微 E10' },
+    weaver_e10: { icon: <Settings size={16} />, color: 'bg-purple-400', label: '泛微 E10' }, // 兼容数据库存储格式
     generic: { icon: <Settings size={16} />, color: 'bg-slate-500', label: '通用 REST' },
 };
 
