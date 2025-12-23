@@ -129,10 +129,21 @@ curl -s http://localhost:8080/api/actuator/health | jq .
 
 如部署后发现问题，执行紧急回滚：
 
-### 离线安装包回滚
+### 离线安装包回滚（手动）
 ```bash
-cd deploy/offline
-./install.sh --rollback
+# 1. 停止服务
+systemctl stop nexusarchive
+
+# 2. 恢复应用文件（从 upgrade.sh 生成的备份目录）
+cp /opt/nexusarchive_backup_YYYYMMDD_HHMMSS/app.jar /opt/nexusarchive/
+cp -r /opt/nexusarchive_backup_YYYYMMDD_HHMMSS/frontend /opt/nexusarchive/
+cp /opt/nexusarchive_backup_YYYYMMDD_HHMMSS/.env /opt/nexusarchive/
+
+# 3. 恢复数据库（需DBA介入）
+# 参照 SOP 文档中的 "5.4 迁移回滚" 章节
+
+# 4. 启动服务
+systemctl start nexusarchive
 ```
 
 ### Docker 回滚
@@ -144,6 +155,7 @@ docker-compose -f deploy/docker-compose.yml down
 docker tag nexusarchive/backend:previous nexusarchive/backend:latest
 docker-compose -f deploy/docker-compose.yml up -d
 ```
+
 
 ---
 

@@ -368,177 +368,41 @@ deploy_application() {
     fi
 }
 
-create_env_file() {
-    log_step "生成环境配置..."
-    
-    # 根据数据库类型选择 Spring Profile
-    case "$DB_TYPE" in
-        dameng)   SPRING_PROFILE="prod-dameng" ;;
-        kingbase) SPRING_PROFILE="prod-kingbase" ;;
-        *)        SPRING_PROFILE="prod" ;;
-    esac
-    
-    cat > "$INSTALL_DIR/.env" << EOF
-# NexusArchive 运行时配置
-# 生成时间: $(date)
+#====================================================================
+# 参数解析
+#====================================================================
 
-SPRING_PROFILES_ACTIVE=$SPRING_PROFILE
-SERVER_PORT=$SERVER_PORT
-
-# 数据库
-DB_HOST=$DB_HOST
-DB_PORT=$DB_PORT
-DB_NAME=$DB_NAME
-DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
-
-# JWT
-JWT_SECRET=$JWT_SECRET
-
-# 存储路径
-ARCHIVE_ROOT_PATH=$DATA_DIR/archives
-ARCHIVE_TEMP_PATH=$DATA_DIR/temp
-EOF
-    
-    chmod 600 "$INSTALL_DIR/.env"
-    chown nexus:nexus "$INSTALL_DIR/.env"
-    log_info "环境配置已生成"
-}
-
-install_systemd_service() {
-    log_step "配置 Systemd 服务..."
-    
-    local service_file="${SCRIPT_DIR}/config/nexusarchive.service"
-    
-    if [[ -f "$service_file" ]]; then
-        cp "$service_file" /etc/systemd/system/
-    else
-        # 动态生成 service 文件
-        cat > /etc/systemd/system/nexusarchive.service << EOF
-[Unit]
-Description=NexusArchive 电子会计档案管理系统
-After=syslog.target network.target
-
-[Service]
-User=nexus
-WorkingDirectory=$INSTALL_DIR
-EnvironmentFile=$INSTALL_DIR/.env
-ExecStart=$JAVA_CMD -jar $INSTALL_DIR/app.jar
-SuccessExitStatus=143
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    fi
-    
-    systemctl daemon-reload
-    systemctl enable nexusarchive
-    log_info "Systemd 服务已配置"
-}
-
-configure_nginx() {
-    log_step "配置 Nginx..."
-    
-    # 检查 Nginx 是否已安装
-    if ! command -v nginx &> /dev/null; then
-        log_warn "Nginx 未安装，跳过配置"
-        log_info "您可以稍后手动配置反向代理"
-        return 0
-    fi
-    
-    local nginx_conf="${SCRIPT_DIR}/config/nginx.conf"
-    
-    # 检测 Nginx 配置目录
-    local nginx_conf_dir
-    if [[ -d "/etc/nginx/sites-available" ]]; then
-        nginx_conf_dir="/etc/nginx/sites-available"
-        local nginx_enabled="/etc/nginx/sites-enabled"
-    elif [[ -d "/etc/nginx/conf.d" ]]; then
-        nginx_conf_dir="/etc/nginx/conf.d"
-    else
-        log_warn "未找到 Nginx 配置目录"
-        return 0
-    fi
-    
-    # 生成 Nginx 配置
-    cat > "${nginx_conf_dir}/nexusarchive.conf" << EOF
-server {
-    listen 80;
-    server_name _;
-    
-    # 前端静态文件
-    location / {
-        root $INSTALL_DIR/frontend;
-        try_files \$uri \$uri/ /index.html;
-    }
-    
-    # API 反向代理
-    location /api/ {
-        proxy_pass http://127.0.0.1:$SERVER_PORT;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        
-        # 文件上传大小限制
-        client_max_body_size 100M;
-    }
-}
-EOF
-    
-    # 如果是 Debian/Ubuntu 风格，创建软链接
-    if [[ -n "$nginx_enabled" ]]; then
-        ln -sf "${nginx_conf_dir}/nexusarchive.conf" "${nginx_enabled}/"
-        rm -f "${nginx_enabled}/default" 2>/dev/null || true
-    fi
-    
-    # 测试配置
-    if nginx -t &>/dev/null; then
-        systemctl reload nginx 2>/dev/null || systemctl restart nginx
-        log_info "Nginx 配置完成"
-    else
-        log_error "Nginx 配置测试失败"
-        nginx -t
-    fi
-}
-
-set_permissions() {
-    log_step "设置目录权限..."
-    
-    chown -R nexus:nexus "$INSTALL_DIR"
-    chown -R nexus:nexus "$DATA_DIR"
-    chown -R nexus:nexus "$DEFAULT_LOG_DIR"
-    
-    chmod 750 "$INSTALL_DIR"
-    chmod 750 "$DATA_DIR"
-    
-    log_info "权限设置完成"
-}
-
-start_service() {
-    log_step "启动服务..."
-    
-    systemctl start nexusarchive
-    
-    # 等待服务启动
-    local max_wait=30
-    local waited=0
-    
-    while [[ $waited -lt $max_wait ]]; do
-        if systemctl is-active --quiet nexusarchive; then
-            log_info "服务启动成功 ✓"
-            return 0
-        fi
-        sleep 1
-        ((waited++))
-        echo -n "."
-    done
-    
+usage() {
+    echo "Usage: $0 [OPTIONS]"
     echo ""
-    log_error "服务启动超时，请检查日志: journalctl -u nexusarchive"
-    return 1
+    echo "Options:"
+    echo "  --check-only    仅执行环境基线检测"
+    echo "  --help          显示此帮助信息"
+    echo ""
+}
+
+# 默认模式
+MODE="install"
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --check-only)
+                MODE="check"
+                shift
+                ;;
+            --help)
+                usage
+                exit 0
+                ;;
+            *)
+                log_error "未知参数: $1"
+                usage
+                exit 1
+                ;;
+        esac
+        shift
+    done
 }
 
 #====================================================================
@@ -586,7 +450,57 @@ show_completion() {
     echo ""
 }
 
+create_env_file() {
+    log_step "生成环境配置..."
+    
+    # 根据数据库类型选择基础 Profile
+    case "$DB_TYPE" in
+        dameng)   BASE_PROFILE="prod-dameng" ;;
+        kingbase) BASE_PROFILE="prod-kingbase" ;;
+        *)        BASE_PROFILE="prod" ;;
+    esac
+
+    # 如果外部已经设置了 SPRING_PROFILES_ACTIVE（例如 demo,prod），则优先保留
+    # 否则使用基础 Profile
+    if [[ -n "$SPRING_PROFILES_ACTIVE" ]]; then
+        FINAL_PROFILE="$SPRING_PROFILES_ACTIVE"
+        log_info "使用自定义 Profile: $FINAL_PROFILE"
+    else
+        FINAL_PROFILE="$BASE_PROFILE"
+    fi
+    
+    cat > "$INSTALL_DIR/.env" << EOF
+# NexusArchive 运行时配置
+# 生成时间: $(date)
+
+SPRING_PROFILES_ACTIVE=$FINAL_PROFILE
+SERVER_PORT=$SERVER_PORT
+
+# 数据库
+DB_HOST=$DB_HOST
+DB_PORT=$DB_PORT
+DB_NAME=$DB_NAME
+DB_USER=$DB_USER
+DB_PASSWORD=$DB_PASSWORD
+
+# JWT
+JWT_SECRET=$JWT_SECRET
+
+# 存储路径
+ARCHIVE_ROOT_PATH=$DATA_DIR/archives
+ARCHIVE_TEMP_PATH=$DATA_DIR/temp
+EOF
+    
+    chmod 600 "$INSTALL_DIR/.env"
+    chown nexus:nexus "$INSTALL_DIR/.env"
+    log_info "环境配置已生成"
+}
+
+
 main() {
+    # 解析参数
+    parse_args "$@"
+
     show_banner
     
     check_root
@@ -594,6 +508,13 @@ main() {
     check_disk_space
     check_java
     
+    # 如果是仅检测模式，在此退出
+    if [[ "$MODE" == "check" ]]; then
+        echo ""
+        log_info "✅ 环境基线检测通过"
+        exit 0
+    fi
+
     run_config_wizard
     
     # 加载配置

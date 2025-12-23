@@ -21,6 +21,14 @@ if [[ ! -d "$INSTALL_DIR" ]]; then
     exit 1
 fi
 
+# 强制备份确认
+echo -e "${YELLOW}⚠️  警告: 升级前请确保已完成数据库备份！${NC}"
+read -rp "您已完成数据库完整备份了吗? [y/N]: " backup_confirm
+if [[ ! "$backup_confirm" =~ ^[Yy]$ ]]; then
+    echo "请先备份数据库，脚本已中止。"
+    exit 1
+fi
+
 echo -e "${GREEN}[1/5]${NC} 备份当前版本..."
 mkdir -p "$BACKUP_DIR"
 cp "$INSTALL_DIR/app.jar" "$BACKUP_DIR/" 2>/dev/null || true
