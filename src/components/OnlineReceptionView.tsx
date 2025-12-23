@@ -36,6 +36,12 @@ export const OnlineReceptionView: React.FC = () => {
     const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
     const [syncChannelId, setSyncChannelId] = useState<number | null>(null);
     const [syncPeriod, setSyncPeriod] = useState({ start: '2024-01', end: '2024-12' });
+    // Multi-org sync: available orgs and selected orgs
+    const availableOrgs = [
+        { code: 'BR01', name: '泊冉集团 (BR01)' },
+        { code: 'BRYS002', name: '用友云 (BRYS002)' },
+    ];
+    const [selectedOrgs, setSelectedOrgs] = useState<string[]>(['BR01']);
     const [syncError, setSyncError] = useState<string | null>(null);
 
     // 加载集成通道数据
@@ -141,8 +147,10 @@ export const OnlineReceptionView: React.FC = () => {
 
         try {
             // 使用统一 client 进行请求，自动处理 token
+            // 支持多组织同步：发送 accbookCodes 数组
             const response = await client.post(channel.apiEndpoint, {
-                accbookCode: channel.accbookCode || 'BR01',
+                accbookCode: selectedOrgs.length > 0 ? selectedOrgs[0] : (channel.accbookCode || 'BR01'),
+                accbookCodes: selectedOrgs.length > 0 ? selectedOrgs : [channel.accbookCode || 'BR01'],
                 periodStart: syncPeriod.start,
                 periodEnd: syncPeriod.end
             });
@@ -479,6 +487,31 @@ export const OnlineReceptionView: React.FC = () => {
                                 <p className="text-sm text-blue-800">
                                     将从用友YonSuite系统同步指定期间的会计凭证数据到本系统。
                                 </p>
+                            </div>
+
+                            {/* Multi-Org Selector */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">选择同步组织</label>
+                                <div className="space-y-2 p-3 border border-slate-200 rounded-lg bg-slate-50">
+                                    {availableOrgs.map(org => (
+                                        <label key={org.code} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedOrgs.includes(org.code)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedOrgs([...selectedOrgs, org.code]);
+                                                    } else {
+                                                        setSelectedOrgs(selectedOrgs.filter(c => c !== org.code));
+                                                    }
+                                                }}
+                                                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-slate-700">{org.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1">可选择多个组织同时同步</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

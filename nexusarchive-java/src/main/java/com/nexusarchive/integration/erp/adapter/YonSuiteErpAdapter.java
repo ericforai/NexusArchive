@@ -132,9 +132,39 @@ public class YonSuiteErpAdapter implements ErpAdapter {
 
     @Override
     public List<VoucherDTO> syncVouchers(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        List<VoucherDTO> allVouchers = new ArrayList<>();
+        
+        // 获取所有组织代码
+        List<String> accbookCodes = config.resolveAllAccbookCodes();
+        if (accbookCodes.isEmpty()) {
+            // 兜底：使用配置中的单个代码
+            accbookCodes = Collections.singletonList(config.getAccbookCode());
+        }
+        
+        // 遍历每个组织代码进行同步
+        for (String accbookCode : accbookCodes) {
+            log.info("同步组织账套: {} (期间: {} - {})", accbookCode, startDate, endDate);
+            try {
+                List<VoucherDTO> vouchers = syncVouchersForSingleOrg(accbookCode, startDate, endDate);
+                allVouchers.addAll(vouchers);
+                log.info("组织 {} 同步完成: {} 条凭证", accbookCode, vouchers.size());
+            } catch (Exception e) {
+                log.error("组织 {} 同步失败: {}", accbookCode, e.getMessage(), e);
+                // 继续处理其他组织，不中断
+            }
+        }
+        
+        log.info("所有组织同步完成，共 {} 条凭证", allVouchers.size());
+        return allVouchers;
+    }
+
+    /**
+     * 同步单个组织的凭证
+     */
+    private List<VoucherDTO> syncVouchersForSingleOrg(String accbookCode, LocalDate startDate, LocalDate endDate) {
         try {
             YonVoucherListRequest request = new YonVoucherListRequest();
-            request.setAccbookCode(config.getAccbookCode());
+            request.setAccbookCode(accbookCode);
             request.setPeriodStart(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM")));
             request.setPeriodEnd(endDate.format(DateTimeFormatter.ofPattern("yyyy-MM")));
 
@@ -147,7 +177,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             YonVoucherListResponse response = yonSuiteClient.queryVouchers(null, request);
 
             if (!"200".equals(response.getCode()) || response.getData() == null) {
-                log.warn("YonSuite 同步凭证失败: {}", response.getMessage());
+                log.warn("YonSuite 同步凭证失败 (组织: {}): {}", accbookCode, response.getMessage());
                 return Collections.emptyList();
             }
 
@@ -165,6 +195,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
                                 .status(header.getVoucherstatus())
                                 .debitTotal(header.getTotalDebitOrg())
                                 .creditTotal(header.getTotalCreditOrg())
+                                .accbookCode(accbookCode) // 记录来源组织
                                 .build();
 
                         if (header.getMaker() != null) {
@@ -185,7 +216,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             return vouchers;
 
         } catch (Exception e) {
-            log.error("YonSuite 同步凭证异常", e);
+            log.error("YonSuite 同步凭证异常 (组织: {})", accbookCode, e);
             return Collections.emptyList();
         }
     }

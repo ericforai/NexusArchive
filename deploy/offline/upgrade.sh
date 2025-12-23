@@ -1,9 +1,4 @@
 #!/bin/bash
-# Input: Shell、mkdir、cp、systemctl
-# Output: 升级流程
-# Pos: 部署脚本
-# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
-
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

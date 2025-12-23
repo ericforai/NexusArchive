@@ -20,9 +20,14 @@ import java.util.Map;
 public class SyncContext {
 
     /**
-     * 账套代码
+     * 账套代码 (单个，向后兼容)
      */
     private String accountBookCode;
+
+    /**
+     * 多账套代码列表 (新增，支持同时同步多个组织)
+     */
+    private java.util.List<String> accountBookCodes;
 
     /**
      * 开始日期

@@ -61,7 +61,7 @@ public class StatsServiceImpl implements StatsService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         QueryWrapper<Archive> todayWrapper = new QueryWrapper<>();
         dataScopeService.applyArchiveScope(todayWrapper, scope);
-        todayWrapper.ge("created_at", startOfDay);
+        todayWrapper.ge("created_time", startOfDay);
         long todayIngest = archiveMapper.selectCount(todayWrapper);
 
         return DashboardStatsDto.builder()
@@ -99,10 +99,10 @@ public class StatsServiceImpl implements StatsService {
         DataScopeContext scope = dataScopeService.resolve();
         QueryWrapper<Archive> trendWrapper = new QueryWrapper<>();
         dataScopeService.applyArchiveScope(trendWrapper, scope);
-        trendWrapper.select("to_char(date(created_at), 'YYYY-MM-DD') AS date", "COUNT(*) AS count");
-        trendWrapper.ge("created_at", LocalDate.now().minusDays(29));
-        trendWrapper.groupBy("date(created_at)");
-        trendWrapper.orderByAsc("date(created_at)");
+        trendWrapper.select("to_char(date(created_time), 'YYYY-MM-DD') AS date", "COUNT(*) AS count");
+        trendWrapper.ge("created_time", LocalDate.now().minusDays(29));
+        trendWrapper.groupBy("date(created_time)");
+        trendWrapper.orderByAsc("date(created_time)");
         List<Map<String, Object>> rows = archiveMapper.selectMaps(trendWrapper);
         for (Map<String, Object> row : rows) {
             String dateStr = String.valueOf(row.get("date"));

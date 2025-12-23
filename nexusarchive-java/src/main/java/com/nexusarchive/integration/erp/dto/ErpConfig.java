@@ -57,9 +57,14 @@ public class ErpConfig {
     private String tenantId;
 
     /**
-     * 账套代码 (如适用)
+     * 账套代码 (如适用) - 单个值，保持向后兼容
      */
     private String accbookCode;
+
+    /**
+     * 多账套代码列表 (可选) - 支持同时同步多个组织
+     */
+    private java.util.List<String> accbookCodes;
 
     /**
      * 额外配置 (JSON 格式)
@@ -70,4 +75,23 @@ public class ErpConfig {
      * 是否启用
      */
     private Boolean enabled;
+    
+    /**
+     * 获取所有账套代码 (合并 accbookCode 和 accbookCodes)
+     * 如果都为空，返回空列表
+     */
+    public java.util.List<String> resolveAllAccbookCodes() {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        
+        // 优先使用 accbookCodes 数组
+        if (accbookCodes != null && !accbookCodes.isEmpty()) {
+            result.addAll(accbookCodes);
+        }
+        // 如果数组为空但有单个值，使用单个值
+        else if (accbookCode != null && !accbookCode.isEmpty()) {
+            result.add(accbookCode);
+        }
+        
+        return result;
+    }
 }

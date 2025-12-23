@@ -128,8 +128,8 @@ public class ArchiveManagementIntegrationTest {
     void createArchive_shouldSucceed() throws Exception {
         String uniqueTitle = "测试档案_" + UUID.randomUUID().toString().substring(0, 8);
         String body = String.format(
-            "{\"title\":\"%s\",\"fondsId\":\"default\",\"categoryCode\":\"AC01\",\"retentionPeriod\":\"30Y\",\"securityLevel\":\"INTERNAL\"}",
-            uniqueTitle
+            "{\"title\":\"%s\",\"fondsNo\":\"default\",\"archiveCode\":\"TEST-%s\",\"orgName\":\"Test Org\",\"categoryCode\":\"AC01\",\"retentionPeriod\":\"30Y\",\"securityLevel\":\"INTERNAL\",\"fiscalYear\":\"2025\",\"periodType\":\"ANNUAL\",\"amount\":\"100.00\",\"currency\":\"CNY\",\"voucherNum\":\"VO-001\"}",
+            uniqueTitle, uniqueTitle
         );
         
         HttpEntity<String> request = new HttpEntity<>(body, createAuthHeaders());
@@ -176,7 +176,11 @@ public class ArchiveManagementIntegrationTest {
     void updateArchive_shouldSucceed() throws Exception {
         Assumptions.assumeTrue(createdArchiveId != null, "需要先创建档案");
         
-        String body = "{\"title\":\"更新后的档案标题\",\"description\":\"这是更新后的描述\"}";
+        String uniqueTitle = "测试档案_UPD_" + UUID.randomUUID().toString().substring(0, 8);
+        String body = String.format(
+            "{\"title\":\"%s\",\"description\":\"这是更新后的描述\",\"fondsNo\":\"default\",\"archiveCode\":\"TEST-%s\",\"orgName\":\"Test Org\",\"categoryCode\":\"AC01\",\"retentionPeriod\":\"30Y\",\"securityLevel\":\"INTERNAL\",\"fiscalYear\":\"2025\",\"periodType\":\"ANNUAL\",\"amount\":\"100.00\",\"currency\":\"CNY\",\"voucherNum\":\"VO-001\"}",
+            uniqueTitle, uniqueTitle
+        );
         HttpEntity<String> request = new HttpEntity<>(body, createAuthHeaders());
         
         ResponseEntity<String> response = restTemplate.exchange(
