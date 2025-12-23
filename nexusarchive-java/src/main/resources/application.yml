@@ -16,7 +16,7 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   
   flyway:
-    enabled: false
+    enabled: true
     baseline-on-migrate: true
     repair-on-migrate: true
     ignore-missing-migrations: true
@@ -141,6 +141,11 @@ virus:
     clamav:
       host: ${VIRUS_SCAN_HOST:localhost}
       port: ${VIRUS_SCAN_PORT:3310}
+
+app:
+  security:
+    cors:
+      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:15175,http://localhost:3000,http://localhost:5173}
 
 ---
 # 开发环境 - PostgreSQL

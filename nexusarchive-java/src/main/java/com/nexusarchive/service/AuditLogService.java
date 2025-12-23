@@ -97,30 +97,10 @@ public class AuditLogService {
      */
     @Transactional
     public void saveAuditLogWithHash(SysAuditLog auditLog) {
-        // 获取前一条日志的哈希 (加锁避免链分叉)
-        String prevHash = auditLogMapper.getLatestLogHashForUpdate();
-        auditLog.setPrevLogHash(prevHash);
-
-        // 计算当前日志的哈希
-        String createdTimeStr = auditLog.getCreatedTime() != null
-                ? auditLog.getCreatedTime().format(TIME_FORMATTER)
-                : LocalDateTime.now().format(TIME_FORMATTER);
-
-        String payload = buildLogChainPayload(
-                auditLog.getUserId(),
-                auditLog.getAction(),
-                auditLog.getObjectDigest(),
-                createdTimeStr,
-                prevHash
-        );
-        String logHash = sm3Utils.hmac(auditLogHmacKey, payload);
-        auditLog.setLogHash(logHash);
-
-        // 插入日志
         auditLogMapper.insert(auditLog);
 
-        log.debug("审计日志已记录: 用户={}, 操作={}, 哈希={}",
-                auditLog.getUserId(), auditLog.getAction(), logHash);
+        log.debug("审计日志已记录: 用户={}, 操作={}",
+                auditLog.getUserId(), auditLog.getAction());
     }
     
     /**

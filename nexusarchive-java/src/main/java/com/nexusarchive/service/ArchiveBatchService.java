@@ -80,7 +80,7 @@ public class ArchiveBatchService {
         
         // 获取所有批次,按创建时间排序
         QueryWrapper<ArchiveBatch> query = new QueryWrapper<>();
-        query.orderByAsc("created_time");
+        query.orderByAsc("created_at");
         var allBatches = archiveBatchMapper.selectList(query);
         
         if (allBatches == null || allBatches.isEmpty()) {
@@ -153,7 +153,7 @@ public class ArchiveBatchService {
      */
     public ArchiveBatch getLatestBatch() {
         QueryWrapper<ArchiveBatch> query = new QueryWrapper<>();
-        query.orderByDesc("created_time").last("LIMIT 1");
+        query.orderByDesc("created_at").last("LIMIT 1");
         return archiveBatchMapper.selectOne(query);
     }
 }

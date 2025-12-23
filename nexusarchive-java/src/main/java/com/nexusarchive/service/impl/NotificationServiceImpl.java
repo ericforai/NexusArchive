@@ -35,7 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 1) 最新处理任务（待处理/处理中/失败）
         List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(new QueryWrapper<IngestRequestStatus>()
-                .orderByDesc("COALESCE(updated_time, created_time)")
+                .orderByDesc("COALESCE(updated_at, created_at)")
                 .last("LIMIT 5"));
         for (IngestRequestStatus task : tasks) {
             String type = "info";

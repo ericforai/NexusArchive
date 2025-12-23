@@ -55,8 +55,32 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Archive,
     permission: 'nav:repository',
     children: [
-      // Level 2
-      { id: '会计凭证', label: '会计凭证', path: '会计凭证' },
+      // Level 2 - 会计凭证（含子菜单）
+      {
+        id: '会计凭证',
+        label: '会计凭证',
+        children: [
+          {
+            id: '原始凭证',
+            label: '原始凭证',
+            path: '原始凭证',
+            children: [
+              { id: '销售订单', label: '销售订单', path: '销售订单' },
+              { id: '出库单', label: '出库单', path: '出库单' },
+              { id: '采购订单', label: '采购订单', path: '采购订单' },
+              { id: '入库单', label: '入库单', path: '入库单' },
+              { id: '付款申请单', label: '付款申请单', path: '付款申请单' },
+              { id: '报销单', label: '报销单', path: '报销单' },
+              { id: '普通发票', label: '普通发票', path: '普通发票' },
+              { id: '增值税专票', label: '增值税专票', path: '增值税专票' },
+              { id: '银行回单', label: '银行回单', path: '银行回单' },
+              { id: '银行对账单', label: '银行对账单', path: '银行对账单' },
+              { id: '合同协议', label: '合同协议', path: '合同协议' }
+            ]
+          },
+          { id: '记账凭证', label: '记账凭证', path: '记账凭证' }
+        ]
+      },
       {
         id: '会计账簿',
         label: '会计账簿',

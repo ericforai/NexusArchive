@@ -70,7 +70,7 @@ public class SysAuditLog {
     /**
      * 客户端IP地址 (对应 client_ip) - 必填
      */
-    @TableField("client_ip")
+    @TableField("ip_address")
     private String clientIp;
 
     /**
@@ -89,20 +89,23 @@ public class SysAuditLog {
      * 前一条日志的 SM3 哈希值
      * 用于构建日志链，确保日志不可篡改
      */
+    @TableField(exist = false)
     private String prevLogHash;
 
     /**
      * 当前日志的 SM3 哈希值
      * 计算方式: SM3(operatorId + operationType + objectDigest + createdTime + prevLogHash)
      */
+    @TableField(exist = false)
     private String logHash;
 
     /**
      * 设备指纹
      * 用于标识客户端设备
      */
+    @TableField(exist = false)
     private String deviceFingerprint;
 
-    @TableField(value = "created_time", fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 }

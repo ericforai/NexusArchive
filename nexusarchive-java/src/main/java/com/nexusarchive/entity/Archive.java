@@ -163,6 +163,7 @@ public class Archive {
      */
     private String volumeId;
 
+    // DB uses created_time/last_modified_time
     @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 

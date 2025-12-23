@@ -40,8 +40,9 @@ export const ROUTE_PATHS = {
     ARCHIVE_OPEN_APPRAISAL: '/system/operations/open-appraisal',
     ARCHIVE_DESTRUCTION: '/system/operations/destruction',
 
-    ARCHIVE_OPEN_APPRAISAL: '/system/operations/open-appraisal',
-    ARCHIVE_DESTRUCTION: '/system/operations/destruction',
+    // 原始凭证和记账凭证
+    ARCHIVE_ORIGINAL_VOUCHERS: '/system/archive/original-vouchers',
+    ARCHIVE_ACCOUNTING_VOUCHERS: '/system/archive/accounting-vouchers',
 
     // New: Archive Utilization (Query + Borrowing)
     ARCHIVE_UTILIZATION: '/system/utilization',
@@ -104,7 +105,6 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
 
     // Level 2: 其他会计资料 -> Level 3
     '银行存款余额调节表': ROUTE_PATHS.ARCHIVE_OTHER + '?type=BANK_RECONCILIATION',
-    '银行对账单': ROUTE_PATHS.ARCHIVE_OTHER + '?type=BANK_STATEMENT',
     '纳税申报表': ROUTE_PATHS.ARCHIVE_OTHER + '?type=TAX_RETURN',
     '会计档案移交清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=HANDOVER_REGISTER',
     '会计档案保管清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=CUSTODY_REGISTER',
@@ -126,13 +126,16 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // 库房管理 - Removed
     // '密集架控制', '温湿度监控' removed
 
-    // 系统设置
-    '基础设置': ROUTE_PATHS.SETTINGS_BASIC,
-    '用户管理': ROUTE_PATHS.SETTINGS_USERS,
-    '角色权限': ROUTE_PATHS.SETTINGS_ROLES,
-    '组织架构': ROUTE_PATHS.SETTINGS_ORG,
-    '全宗管理': ROUTE_PATHS.SETTINGS_FONDS,
-    '安全合规': ROUTE_PATHS.SETTINGS_SECURITY,
-    '集成中心': ROUTE_PATHS.SETTINGS_INTEGRATION,
-    '审计日志': ROUTE_PATHS.SETTINGS_AUDIT,
+    // Level 2: 原始凭证 -> Level 3
+    '销售订单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=SALES_ORDER',
+    '出库单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=DELIVERY_ORDER',
+    '采购订单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=PURCHASE_ORDER',
+    '入库单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=RECEIPT_ORDER',
+    '付款申请单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=PAYMENT_REQ',
+    '报销单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=EXPENSE_REPORT',
+    '普通发票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=GEN_INVOICE',
+    '增值税专票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=VAT_INVOICE',
+    '银行回单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_SLIP',
+    '银行对账单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_STATEMENT',
+    '合同协议': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=CONTRACT',
 };

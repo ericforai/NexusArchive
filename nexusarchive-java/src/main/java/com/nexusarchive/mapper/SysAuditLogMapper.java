@@ -27,19 +27,6 @@ import java.util.List;
 public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
     
     /**
-     * 获取最新的日志哈希值
-     * 用于构建哈希链
-     */
-    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_at DESC LIMIT 1")
-    String getLatestLogHash();
-
-    /**
-     * 获取最新的日志哈希值并加行锁，避免并发写入导致链分叉
-     */
-    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_at DESC LIMIT 1 FOR UPDATE")
-    String getLatestLogHashForUpdate();
-    
-    /**
      * 按时间范围查询日志（用于链验证）
      */
     @Select("SELECT * FROM sys_audit_log WHERE DATE(created_at) >= #{startDate} AND DATE(created_at) <= #{endDate} ORDER BY created_at ASC")

@@ -29,7 +29,7 @@ public interface ArchivalCodeSequenceMapper extends BaseMapper<ArchivalCodeSeque
     /**
      * 增加序列值
      */
-    @Update("UPDATE sys_archival_code_sequence SET current_val = current_val + 1, updated_time = NOW() " +
+    @Update("UPDATE sys_archival_code_sequence SET current_val = current_val + 1, updated_at = NOW() " +
             "WHERE fonds_code = #{fondsCode} AND fiscal_year = #{year} AND category_code = #{category}")
     int incrementVal(@Param("fondsCode") String fondsCode, 
                      @Param("year") String year, 

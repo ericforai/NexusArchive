@@ -44,15 +44,16 @@ public class ArchiveService {
     /**
      * 分页查询档案
      *
-     * @param page 页码
-     * @param limit 每页条数
-     * @param search 搜索关键词
-     * @param status 状态
+     * @param page         页码
+     * @param limit        每页条数
+     * @param search       搜索关键词
+     * @param status       状态
      * @param categoryCode 类别号
-     * @param orgId 部门ID
+     * @param orgId        部门ID
      * @return 分页结果
      */
-    public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode, String orgId, String uniqueBizId, String subType) {
+    public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode,
+            String orgId, String uniqueBizId, String subType) {
         Page<Archive> pageObj = new Page<>(page, limit);
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
 
@@ -77,28 +78,28 @@ public class ArchiveService {
         if (uniqueBizId != null && !uniqueBizId.isEmpty()) {
             wrapper.eq("unique_biz_id", uniqueBizId);
         }
-        
+
         // [FIXED P0-1] Dynamic SubType Filter with SQL Injection Protection
         if (subType != null && !subType.isEmpty()) {
             // 白名单校验，防止 SQL 注入
             if (!isValidSubType(subType, categoryCode)) {
                 throw new BusinessException(400, "Invalid subType parameter: " + subType);
             }
-            
+
             if ("AC02".equals(categoryCode)) {
                 // 使用 PostgreSQL JSONB 包含操作符，参数化查询
-                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
-                    String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
+                        String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
             } else if ("AC03".equals(categoryCode)) {
-                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
-                    String.format("{\"reportType\":\"%s\"}", escapeJson(subType)));
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
+                        String.format("{\"reportType\":\"%s\"}", escapeJson(subType)));
             } else if ("AC04".equals(categoryCode)) {
-                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
-                    String.format("{\"otherType\":\"%s\"}", escapeJson(subType)));
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
+                        String.format("{\"otherType\":\"%s\"}", escapeJson(subType)));
             } else {
                 // Fallback: try to match bookType as default if no category context
-                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb", 
-                    String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
+                wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
+                        String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
             }
         }
 
@@ -137,14 +138,14 @@ public class ArchiveService {
      * </p>
      *
      * @param archive 档案实体
-     * @param userId 创建人ID
+     * @param userId  创建人ID
      * @return 创建后的档案
      */
     @Transactional(rollbackFor = Exception.class)
     public Archive createArchive(Archive archive, String userId) {
         // 如果没有指定档号，尝试自动生成
-        if ((archive.getArchiveCode() == null || archive.getArchiveCode().isEmpty()) 
-                && archive.getFondsNo() != null 
+        if ((archive.getArchiveCode() == null || archive.getArchiveCode().isEmpty())
+                && archive.getFondsNo() != null
                 && archive.getFiscalYear() != null) {
             String code = codeGenerator.generateNextCode(archive);
             archive.setArchiveCode(code);
@@ -161,15 +162,15 @@ public class ArchiveService {
         if (archive.getId() == null) {
             archive.setId(UUID.randomUUID().toString().replace("-", ""));
         }
-        
+
         archive.setCreatedBy(userId);
         if (archive.getStatus() == null) {
             archive.setStatus("draft");
         }
-        
+
         archive.setCreatedTime(LocalDateTime.now());
         archive.setLastModifiedTime(LocalDateTime.now());
-        
+
         try {
             archiveMapper.insert(archive);
         } catch (DuplicateKeyException e) {
@@ -183,7 +184,7 @@ public class ArchiveService {
     /**
      * 更新档案
      *
-     * @param id 档案ID
+     * @param id      档案ID
      * @param archive 更新的数据
      */
     @Transactional(rollbackFor = Exception.class)
@@ -249,20 +250,20 @@ public class ArchiveService {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         }
-        
+
         // [FIXED P1-3] 先应用数据权限过滤，再查询
         DataScopeContext scope = dataScopeService.resolve();
-        
+
         // 如果用户有全部权限，直接查询
         if (scope.isAll()) {
             return archiveMapper.selectBatchIds(ids);
         }
-        
+
         // 否则，构建带权限过滤的查询
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
         wrapper.in("id", ids);
         dataScopeService.applyArchiveScope(wrapper, scope);
-        
+
         return archiveMapper.selectList(wrapper);
     }
 
@@ -299,8 +300,8 @@ public class ArchiveService {
     private boolean isValidSubType(String subType, String categoryCode) {
         if ("AC02".equals(categoryCode)) {
             // 账簿类型白名单
-            return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL", 
-                         "CASH_BOOK", "BANK_BOOK").contains(subType);
+            return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL",
+                    "CASH_BOOK", "BANK_BOOK").contains(subType);
         } else if ("AC03".equals(categoryCode)) {
             // 报表周期白名单
             return Set.of("MONTHLY", "QUARTERLY", "ANNUAL", "SEMI_ANNUAL").contains(subType);
@@ -321,9 +322,9 @@ public class ArchiveService {
             return "";
         }
         return input.replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t");
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

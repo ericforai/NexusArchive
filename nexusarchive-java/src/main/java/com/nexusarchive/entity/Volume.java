@@ -87,10 +87,10 @@ public class Volume {
      */
     private LocalDateTime archivedAt;
 
-    @TableField("created_time")
+    @TableField("created_at")
     private LocalDateTime createdTime;
 
-    @TableField("last_modified_time")
+    @TableField("updated_at")
     private LocalDateTime lastModifiedTime;
 
     /**

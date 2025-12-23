@@ -26,7 +26,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const landingUrl = 'https://www.zhitoujianli.com';
 
     // 使用 AuthStore
     const { login } = useAuthStore();
@@ -87,13 +86,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
         if (onVisitLanding) {
             onVisitLanding();
         }
+        // 产品首页现在在应用内的 '/' 路径
         navigate('/');
-        if (process.env.NODE_ENV === 'test') return;
-        if (typeof window !== 'undefined' && typeof window.open === 'function') {
-            window.open(landingUrl, '_blank', 'noreferrer');
-        } else {
-            window.location.href = landingUrl;
-        }
     };
 
 

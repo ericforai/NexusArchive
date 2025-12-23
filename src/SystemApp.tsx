@@ -24,6 +24,7 @@ import { BorrowingView } from './components/BorrowingView';
 import { ArchivalPanoramaView } from './components/ArchivalPanoramaView';
 import { OnlineReceptionView } from './components/OnlineReceptionView';
 import AbnormalDataView from './components/AbnormalDataView';
+import { OriginalVoucherListView } from './components/OriginalVoucherListView';
 import VolumeManagement from './components/VolumeManagement';
 import { ComplianceReportView } from './components/ComplianceReportView';
 import { ViewState, ModuleConfig } from './types';
@@ -233,6 +234,22 @@ export const SystemApp: React.FC = () => {
 
             // --- Accounting Archives (Repository) ---
             case ViewState.ACCOUNT_ARCHIVES:
+                // 原始凭证及其子分类使用独立组件
+                const ORIGINAL_VOUCHER_TYPES = [
+                    '原始凭证',
+                    '销售订单', '出库单', '采购订单', '入库单',
+                    '付款申请单', '报销单',
+                    '普通发票', '增值税专票',
+                    '银行回单', '银行对账单',
+                    '合同协议'
+                ];
+                if (ORIGINAL_VOUCHER_TYPES.includes(activeSubItem || '')) {
+                    return <OriginalVoucherListView
+                        title="原始凭证"
+                        subTitle={activeSubItem === '原始凭证' ? '原始凭证管理' : activeSubItem}
+                    />;
+                }
+                // 记账凭证和其他子菜单使用通用组件
                 return <ArchiveListView
                     title="会计档案"
                     subTitle={activeSubItem || '档案列表'}

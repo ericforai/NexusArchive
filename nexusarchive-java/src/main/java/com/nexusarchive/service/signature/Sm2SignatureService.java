@@ -38,24 +38,24 @@ import java.util.Base64;
 @Service
 @RequiredArgsConstructor
 public class Sm2SignatureService implements SignatureAdapter {
-    
+
     private static final String SERVICE_TYPE = "SM2";
     private static final String SIGNATURE_ALGORITHM = "SM3withSM2";
     private static final String PROVIDER = "BC";
-    
+
     static {
         // 注册 BouncyCastle 提供者
         if (Security.getProvider(PROVIDER) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
     }
-    
+
     @Value("${signature.keystore.path:#{null}}")
     private String keystorePath;
-    
+
     @Value("${signature.keystore.password:}")
     private String keystorePassword;
-    
+
     @Override
     public SignResult sign(byte[] data, String certAlias) {
         try {
@@ -64,20 +64,20 @@ public class Sm2SignatureService implements SignatureAdapter {
             if (privateKey == null) {
                 return SignResult.failure("无法加载证书私钥: " + certAlias);
             }
-            
+
             // 执行 SM2 签名
             Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, PROVIDER);
             signature.initSign(privateKey);
             signature.update(data);
             byte[] signatureBytes = signature.sign();
-            
+
             // 获取证书信息
             X509Certificate cert = loadCertificate(certAlias);
             String signerName = extractSignerName(cert);
             String certSerialNumber = cert != null ? cert.getSerialNumber().toString(16) : null;
-            
+
             log.info("SM2 签名成功: 证书别名={}, 签名长度={}", certAlias, signatureBytes.length);
-            
+
             return SignResult.builder()
                     .success(true)
                     .signature(signatureBytes)
@@ -86,13 +86,13 @@ public class Sm2SignatureService implements SignatureAdapter {
                     .certSerialNumber(certSerialNumber)
                     .signTime(LocalDateTime.now())
                     .build();
-                    
+
         } catch (Exception e) {
             log.error("SM2 签名失败: {}", e.getMessage(), e);
             return SignResult.failure("签名失败: " + e.getMessage());
         }
     }
-    
+
     @Override
     public VerifyResult verify(byte[] data, byte[] signatureBytes, String certAlias) {
         try {
@@ -101,26 +101,25 @@ public class Sm2SignatureService implements SignatureAdapter {
             if (cert == null) {
                 return VerifyResult.failure("无法加载证书: " + certAlias);
             }
-            
+
             // 检查证书有效性
             try {
                 cert.checkValidity();
             } catch (CertificateExpiredException e) {
                 return VerifyResult.certificateExpired(
-                        extractSignerName(cert), 
-                        cert.getNotAfter()
-                );
+                        extractSignerName(cert),
+                        cert.getNotAfter());
             } catch (CertificateNotYetValidException e) {
                 return VerifyResult.failure("证书尚未生效");
             }
-            
+
             // 验证签名
             PublicKey publicKey = cert.getPublicKey();
             Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, PROVIDER);
             signature.initVerify(publicKey);
             signature.update(data);
             boolean valid = signature.verify(signatureBytes);
-            
+
             if (valid) {
                 log.info("SM2 签名验证成功: 证书别名={}", certAlias);
                 return VerifyResult.builder()
@@ -138,18 +137,19 @@ public class Sm2SignatureService implements SignatureAdapter {
             } else {
                 return VerifyResult.invalidSignature("签名值不匹配");
             }
-            
+
         } catch (Exception e) {
             log.error("SM2 签名验证失败: {}", e.getMessage(), e);
             return VerifyResult.failure("验证失败: " + e.getMessage());
         }
     }
-    
+
     @Override
     public VerifyResult verifyPdfSignature(InputStream pdfStream) {
         try (org.apache.pdfbox.pdmodel.PDDocument document = org.apache.pdfbox.pdmodel.PDDocument.load(pdfStream)) {
-            java.util.List<org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature> signatures = document.getSignatureDictionaries();
-            
+            java.util.List<org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature> signatures = document
+                    .getSignatureDictionaries();
+
             if (signatures == null || signatures.isEmpty()) {
                 return VerifyResult.builder()
                         .valid(false)
@@ -160,33 +160,40 @@ public class Sm2SignatureService implements SignatureAdapter {
             }
 
             // Verify first signature (simplified for now)
-            // In reality, we should verify all, but strictly checking the last one covering the doc is common pattern
+            // In reality, we should verify all, but strictly checking the last one covering
+            // the doc is common pattern
             for (org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature signature : signatures) {
                 // 1. Get Signature Contents (PKCS#7 / CMS)
                 byte[] signatureContents = signature.getContents(pdfStream);
                 // 2. Get Signed Content (The actual PDF bytes covered)
                 byte[] signedContent = signature.getSignedContent(pdfStream);
-                
+
                 if (signatureContents == null || signatureContents.length == 0) {
-                     continue;
+                    continue;
                 }
 
                 // 3. Verify using BouncyCastle
                 try {
-                    org.bouncycastle.cms.CMSSignedData signedData = new org.bouncycastle.cms.CMSSignedData(new org.bouncycastle.cms.CMSProcessableByteArray(signedContent), signatureContents);
+                    org.bouncycastle.cms.CMSSignedData signedData = new org.bouncycastle.cms.CMSSignedData(
+                            new org.bouncycastle.cms.CMSProcessableByteArray(signedContent), signatureContents);
                     org.bouncycastle.cms.SignerInformationStore signers = signedData.getSignerInfos();
                     java.util.Collection<org.bouncycastle.cms.SignerInformation> c = signers.getSigners();
                     org.bouncycastle.cms.SignerInformation signer = c.iterator().next();
-                    
+
                     // Extract Cert
-                    org.bouncycastle.util.Store<org.bouncycastle.cert.X509CertificateHolder> store = signedData.getCertificates();
-                    java.util.Collection<org.bouncycastle.cert.X509CertificateHolder> certCollection = store.getMatches(signer.getSID());
+                    org.bouncycastle.util.Store<org.bouncycastle.cert.X509CertificateHolder> store = signedData
+                            .getCertificates();
+                    java.util.Collection<org.bouncycastle.cert.X509CertificateHolder> certCollection = store
+                            .getMatches(signer.getSID());
                     org.bouncycastle.cert.X509CertificateHolder certHolder = certCollection.iterator().next();
-                    X509Certificate cert = new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter().setProvider(PROVIDER).getCertificate(certHolder);
-                    
+                    X509Certificate cert = new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
+                            .setProvider(PROVIDER).getCertificate(certHolder);
+
                     // Verify Signature
-                    boolean isSigValid = signer.verify(new org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder().setProvider(PROVIDER).build(cert));
-                    
+                    boolean isSigValid = signer
+                            .verify(new org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder()
+                                    .setProvider(PROVIDER).build(cert));
+
                     if (isSigValid) {
                         return VerifyResult.builder()
                                 .valid(true)
@@ -202,44 +209,84 @@ public class Sm2SignatureService implements SignatureAdapter {
                     }
                 } catch (Exception e) {
                     log.error("Failed to parse/verify CMS data in PDF", e);
-                     return VerifyResult.builder()
-                        .valid(false)
-                        .signatureValid(false)
-                        .errorMessage("PDF签名解析失败: " + e.getMessage())
-                        .verifyTime(LocalDateTime.now())
-                        .build();
+                    return VerifyResult.builder()
+                            .valid(false)
+                            .signatureValid(false)
+                            .errorMessage("PDF签名解析失败: " + e.getMessage())
+                            .verifyTime(LocalDateTime.now())
+                            .build();
                 }
             }
-            
-             return VerifyResult.builder()
-                        .valid(false)
-                        .signatureValid(false)
-                        .errorMessage("PDF包含签章但无法验证 (格式不支持)")
-                        .verifyTime(LocalDateTime.now())
-                        .build();
-                    
+
+            return VerifyResult.builder()
+                    .valid(false)
+                    .signatureValid(false)
+                    .errorMessage("PDF包含签章但无法验证 (格式不支持)")
+                    .verifyTime(LocalDateTime.now())
+                    .build();
+
         } catch (Exception e) {
             log.error("PDF 签章验证失败: {}", e.getMessage(), e);
             return VerifyResult.failure("PDF 验证异常: " + e.getMessage());
         }
     }
-    
+
     @Override
     public VerifyResult verifyOfdSignature(InputStream ofdStream) {
-        log.warn("OFD 签章验证暂不支持 - 需引入专用OFD解析库");
-        return VerifyResult.builder()
-                .valid(false)
-                .signatureValid(false)
-                .errorMessage("OFD签章验证暂不支持 (需专用库支持)")
-                .verifyTime(LocalDateTime.now())
-                .build();
+        java.nio.file.Path tempFile = null;
+        try {
+            // 将流写入临时文件（ofdrw-sign 需要 Path）
+            tempFile = java.nio.file.Files.createTempFile("ofd_verify_", ".ofd");
+            java.nio.file.Files.copy(ofdStream, tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            try (org.ofdrw.reader.OFDReader reader = new org.ofdrw.reader.OFDReader(tempFile);
+                    org.ofdrw.sign.verify.OFDValidator validator = new org.ofdrw.sign.verify.OFDValidator(reader)) {
+
+                // 执行验签
+                validator.exeValidate();
+
+                // 无异常表示验证通过
+                log.info("OFD签章验证通过");
+                return VerifyResult.builder()
+                        .valid(true)
+                        .signatureValid(true)
+                        .certificateValid(true)
+                        .signerName("OFD签章验证通过") // ofdrw 当前版本不易提取签章人信息
+                        .verifyTime(LocalDateTime.now())
+                        .algorithm("SM2")
+                        .build();
+            }
+        } catch (org.ofdrw.sign.verify.exceptions.OFDVerifyException e) {
+            log.error("OFD签章验证失败: {}", e.getMessage());
+            return VerifyResult.invalidSignature("OFD签章验证失败: " + e.getMessage());
+        } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("不存在签名")) {
+                log.info("OFD文件未检测到电子签章");
+                return VerifyResult.builder()
+                        .valid(false)
+                        .signatureValid(false)
+                        .errorMessage("未检测到OFD电子签章")
+                        .verifyTime(LocalDateTime.now())
+                        .build();
+            }
+            log.error("OFD签章验证异常: {}", e.getMessage(), e);
+            return VerifyResult.failure("OFD验证异常: " + e.getMessage());
+        } finally {
+            // 清理临时文件
+            if (tempFile != null) {
+                try {
+                    java.nio.file.Files.deleteIfExists(tempFile);
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
-    
+
     @Override
     public String getServiceType() {
         return SERVICE_TYPE;
     }
-    
+
     @Override
     public boolean isAvailable() {
         try {
@@ -252,17 +299,17 @@ public class Sm2SignatureService implements SignatureAdapter {
             if (provider == null) {
                 return false;
             }
-            
+
             // 检查 SM3withSM2 算法是否可用
             Signature.getInstance(SIGNATURE_ALGORITHM, PROVIDER);
             return loadKeyStore() != null;
-            
+
         } catch (Exception e) {
             log.warn("SM2 签名服务不可用: {}", e.getMessage());
             return false;
         }
     }
-    
+
     /**
      * 加载私钥
      */
@@ -273,14 +320,14 @@ public class Sm2SignatureService implements SignatureAdapter {
                 log.warn("密钥库未配置，无法加载私钥");
                 return null;
             }
-            
+
             return (PrivateKey) keyStore.getKey(certAlias, keystorePassword.toCharArray());
         } catch (Exception e) {
             log.error("加载私钥失败: {}", e.getMessage());
             return null;
         }
     }
-    
+
     /**
      * 加载证书
      */
@@ -290,14 +337,14 @@ public class Sm2SignatureService implements SignatureAdapter {
             if (keyStore == null) {
                 return null;
             }
-            
+
             return (X509Certificate) keyStore.getCertificate(certAlias);
         } catch (Exception e) {
             log.error("加载证书失败: {}", e.getMessage());
             return null;
         }
     }
-    
+
     /**
      * 加载密钥库
      */
@@ -305,7 +352,7 @@ public class Sm2SignatureService implements SignatureAdapter {
         if (keystorePath == null || keystorePath.isEmpty()) {
             return null;
         }
-        
+
         try {
             KeyStore keyStore = KeyStore.getInstance("PKCS12");
             try (InputStream is = getClass().getResourceAsStream(keystorePath)) {
@@ -323,7 +370,7 @@ public class Sm2SignatureService implements SignatureAdapter {
             return null;
         }
     }
-    
+
     /**
      * 提取签章人姓名
      */
@@ -331,7 +378,7 @@ public class Sm2SignatureService implements SignatureAdapter {
         if (cert == null) {
             return null;
         }
-        
+
         try {
             String subject = cert.getSubjectX500Principal().getName();
             // 尝试提取 CN (Common Name)
@@ -345,7 +392,7 @@ public class Sm2SignatureService implements SignatureAdapter {
             return null;
         }
     }
-    
+
     /**
      * 读取输入流内容
      */

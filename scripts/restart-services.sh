@@ -15,6 +15,12 @@ echo -e "${YELLOW}=========================================${NC}"
 echo -e "${YELLOW}   NexusArchive Service Restarter        ${NC}"
 echo -e "${YELLOW}=========================================${NC}"
 
+# Load .env variables
+if [ -f .env ]; then
+  echo -e "${YELLOW}Loading environment variables from .env...${NC}"
+  export $(grep -v '^#' .env | xargs)
+fi
+
 # Function to kill process on a specific port
 kill_port() {
     local port=$1
@@ -31,8 +37,8 @@ kill_port() {
 
 # 1. Clean up ports
 echo -e "\n${YELLOW}[1/3] Cleaning up ports...${NC}"
-kill_port 9090
-kill_port 5175
+kill_port 19090
+kill_port 15175
 
 # 2. Start Backend
 echo -e "\n${YELLOW}[2/3] Starting Backend (Port 9090)...${NC}"

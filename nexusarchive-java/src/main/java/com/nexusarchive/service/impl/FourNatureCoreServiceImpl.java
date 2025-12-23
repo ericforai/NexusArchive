@@ -41,9 +41,19 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
     private SignatureAdapter signatureAdapter;
 
     @Override
-    public CheckItem checkSingleFileAuthenticity(InputStream inputStream, String fileName, String expectedHash, String hashAlgo, String fileType) {
+    public CheckItem checkSingleFileAuthenticity(InputStream inputStream, String fileName, String expectedHash,
+            String hashAlgo, String fileType) {
         CheckItem item = CheckItem.pass("Authenticity Check", "Hash verification passed");
         List<String> details = new ArrayList<>();
+
+        // 缓存流内容以支持多次读取（哈希校验 + 签章校验）
+        byte[] content;
+        try {
+            content = readInputStream(inputStream);
+        } catch (Exception e) {
+            item.addError("无法读取文件内容: " + e.getMessage());
+            return item;
+        }
 
         // 1. 哈希校验
         if (expectedHash == null || expectedHash.isEmpty()) {
@@ -51,20 +61,20 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
             details.add("WARNING: No hash provided for " + fileName + ", skipping hash verification");
         } else {
             String algo = (hashAlgo == null || hashAlgo.isEmpty()) ? "SM3" : hashAlgo;
-            
-            try {
+
+            try (ByteArrayInputStream hashStream = new ByteArrayInputStream(content)) {
                 String calculatedHash;
                 if ("SM3".equalsIgnoreCase(algo)) {
-                    calculatedHash = fileHashUtil.calculateSM3(inputStream);
+                    calculatedHash = fileHashUtil.calculateSM3(hashStream);
                 } else if ("SHA-256".equalsIgnoreCase(algo) || "SHA256".equalsIgnoreCase(algo)) {
-                    calculatedHash = fileHashUtil.calculateSHA256(inputStream);
+                    calculatedHash = fileHashUtil.calculateSHA256(hashStream);
                 } else {
                     item.addError("Unsupported hash algorithm: " + algo);
                     return item;
                 }
 
                 if (!calculatedHash.equalsIgnoreCase(expectedHash)) {
-                    item.addError(String.format("Hash mismatch for %s. Expected: %s, Actual: %s", 
+                    item.addError(String.format("Hash mismatch for %s. Expected: %s, Actual: %s",
                             fileName, expectedHash, calculatedHash));
                 } else {
                     details.add(String.format("Hash verified (%s)", algo));
@@ -74,13 +84,107 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
             }
         }
 
-        // 注意: 签章校验在 Ingress 阶段通常针对完整文件流，这里假设 inputStream 如果是不可重复读的，则上层需处理
-        // 实际上 FourNatureCheckServiceImpl 中会使用 BufferedInputStream 或先存临时文件
-        
+        // 2. 签章校验 (PDF/OFD 版式文件)
+        if (isVersionedDocumentType(fileType)) {
+            CheckItem signCheck = checkFileSignature(content, fileName, fileType);
+            mergeSignatureResult(item, signCheck, details);
+        }
+
         if (!details.isEmpty()) {
             item.setMessage(String.join("; ", details));
         }
         return item;
+    }
+
+    /**
+     * 检查文件签章
+     */
+    private CheckItem checkFileSignature(byte[] content, String fileName, String fileType) {
+        if (signatureAdapter == null || !signatureAdapter.isAvailable()) {
+            log.info("签章服务不可用，跳过签章校验: {}", fileName);
+            CheckItem item = CheckItem.pass("Signature Check", "签章服务不可用，跳过校验");
+            item.setStatus(OverallStatus.WARNING);
+            return item;
+        }
+
+        try (ByteArrayInputStream signStream = new ByteArrayInputStream(content)) {
+            VerifyResult result;
+            if ("PDF".equalsIgnoreCase(fileType)) {
+                result = signatureAdapter.verifyPdfSignature(signStream);
+            } else if ("OFD".equalsIgnoreCase(fileType)) {
+                result = signatureAdapter.verifyOfdSignature(signStream);
+            } else {
+                return CheckItem.pass("Signature Check", "非版式文件，无需签章校验");
+            }
+
+            return convertVerifyResultToCheckItem(result, fileType);
+        } catch (Exception e) {
+            log.error("签章校验异常: {}", e.getMessage(), e);
+            CheckItem item = CheckItem.pass("Signature Check", "签章校验异常: " + e.getMessage());
+            item.setStatus(OverallStatus.WARNING);
+            return item;
+        }
+    }
+
+    /**
+     * 将签章验证结果转换为 CheckItem
+     */
+    private CheckItem convertVerifyResultToCheckItem(VerifyResult result, String fileType) {
+        if (result.isValid()) {
+            String message = String.format("%s签章校验通过", fileType);
+            if (result.getSignerName() != null) {
+                message += " (签章人: " + result.getSignerName() + ")";
+            }
+            return CheckItem.pass("Signature Check", message);
+        } else if (result.getErrorMessage() != null && result.getErrorMessage().contains("未检测到")) {
+            // 无签章不视为失败，视为 WARNING
+            CheckItem item = CheckItem.pass("Signature Check", result.getErrorMessage());
+            item.setStatus(OverallStatus.WARNING);
+            return item;
+        } else {
+            CheckItem item = CheckItem.pass("Signature Check", "签章校验失败");
+            item.addError(result.getErrorMessage() != null ? result.getErrorMessage() : "签章无效");
+            return item;
+        }
+    }
+
+    /**
+     * 合并签章校验结果到主检测项
+     */
+    private void mergeSignatureResult(CheckItem target, CheckItem signResult, List<String> details) {
+        if (signResult.getStatus() == OverallStatus.FAIL) {
+            target.setStatus(OverallStatus.FAIL);
+            if (signResult.getErrors() != null) {
+                signResult.getErrors().forEach(target::addError);
+            }
+        } else if (signResult.getStatus() == OverallStatus.WARNING) {
+            if (target.getStatus() != OverallStatus.FAIL) {
+                target.setStatus(OverallStatus.WARNING);
+            }
+            details.add(signResult.getMessage());
+        } else {
+            details.add(signResult.getMessage());
+        }
+    }
+
+    /**
+     * 判断是否为版式文件（需签章校验）
+     */
+    private boolean isVersionedDocumentType(String fileType) {
+        return "PDF".equalsIgnoreCase(fileType) || "OFD".equalsIgnoreCase(fileType);
+    }
+
+    /**
+     * 读取输入流内容
+     */
+    private byte[] readInputStream(InputStream is) throws Exception {
+        java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+        byte[] data = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, bytesRead);
+        }
+        return buffer.toByteArray();
     }
 
     @Override
@@ -90,13 +194,14 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
 
         // 1. Tika Magic Number Check
         try {
-            // Tika detect can take InputStream. It will read ahead and attempt to reset if supported.
+            // Tika detect can take InputStream. It will read ahead and attempt to reset if
+            // supported.
             String detectedType = tika.detect(inputStream);
             boolean typeMatch = checkTypeMatch(declaredType, detectedType);
-            
+
             if (!typeMatch) {
                 item.setStatus(OverallStatus.WARNING);
-                details.add(String.format("WARNING: File type mismatch. Declared: %s, Detected: %s", 
+                details.add(String.format("WARNING: File type mismatch. Declared: %s, Detected: %s",
                         declaredType, detectedType));
             } else {
                 details.add("Format detected: " + detectedType);
@@ -137,16 +242,23 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
     }
 
     private boolean checkTypeMatch(String declared, String detected) {
-        if (declared == null || detected == null) return false;
+        if (declared == null || detected == null)
+            return false;
         declared = declared.toUpperCase();
         detected = detected.toLowerCase();
-        
-        if (declared.equals("PDF") && detected.contains("pdf")) return true;
-        if (declared.equals("OFD") && (detected.contains("xml") || detected.contains("zip") || detected.contains("ofd"))) return true;
-        if (declared.equals("XML") && detected.contains("xml")) return true;
-        if ((declared.equals("JPG") || declared.equals("JPEG")) && detected.contains("jpeg")) return true;
-        if (declared.equals("PNG") && detected.contains("png")) return true;
-        
+
+        if (declared.equals("PDF") && detected.contains("pdf"))
+            return true;
+        if (declared.equals("OFD")
+                && (detected.contains("xml") || detected.contains("zip") || detected.contains("ofd")))
+            return true;
+        if (declared.equals("XML") && detected.contains("xml"))
+            return true;
+        if ((declared.equals("JPG") || declared.equals("JPEG")) && detected.contains("jpeg"))
+            return true;
+        if (declared.equals("PNG") && detected.contains("png"))
+            return true;
+
         return false;
     }
 }

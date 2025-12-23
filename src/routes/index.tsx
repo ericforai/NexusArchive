@@ -17,6 +17,7 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { LoginView } from '../components/LoginView';
+import { ProductWebsite } from '../components/ProductWebsite';
 import { ActivationPage } from './ActivationPage';
 
 // 懒加载各功能模块
@@ -68,8 +69,8 @@ const withSuspense = (Component: React.LazyExoticComponent<any>, props?: any) =>
  * 路由配置
  */
 export const routes: RouteObject[] = [
-    // 根路径重定向到登录页
-    { path: '/', element: <Navigate to="/system/login" replace /> },
+    // 根路径显示产品首页（公开访问）
+    { path: '/', element: <ProductWebsite /> },
 
     // 登录页（独立于 SystemLayout）
     { path: '/system/login', element: <LoginView /> },

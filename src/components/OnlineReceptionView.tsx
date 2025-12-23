@@ -466,9 +466,9 @@ export const OnlineReceptionView: React.FC = () => {
                 </div>
             )}
 
-            {/* Four Nature Report Modal */}
+            {/* Four Nature Report Modal - 需要传入选中文件的 ID */}
             {isReportOpen && (
-                <FourNatureReportView onClose={() => setIsReportOpen(false)} />
+                <FourNatureReportView fileId="" onClose={() => setIsReportOpen(false)} />
             )}
 
             {/* YonSuite Sync Modal */}
