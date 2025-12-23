@@ -1,0 +1,33 @@
+# Input: Spring Boot 环境配置
+# Output: Demo/演示环境专用配置
+# Pos: 后端配置
+# 说明: 此配置用于客户演示环境，启用演示数据加载
+
+# Demo环境配置 - 在生产环境基础上加载演示数据
+spring:
+  config:
+    activate:
+      on-profile: demo
+  
+  # 启用Flyway并加载demo目录的数据
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    out-of-order: true
+    # 同时扫描核心迁移和demo数据
+    locations:
+      - classpath:db/migration
+      - classpath:db/demo
+
+# 演示环境标识
+demo:
+  enabled: true
+  company-name: "泊冉集团"
+  
+# 日志级别调整(演示环境减少日志)
+logging:
+  level:
+    root: INFO
+    com.nexusarchive: INFO
+    org.springframework.security: WARN
