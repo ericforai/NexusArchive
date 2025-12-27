@@ -87,7 +87,7 @@ describe('API Client Interceptors', () => {
 
         try {
             await client.get('/test');
-        } catch (error) {
+        } catch {
             // Error is rethrown, we ignore it
         }
 

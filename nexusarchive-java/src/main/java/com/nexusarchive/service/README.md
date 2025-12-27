@@ -1,6 +1,7 @@
 一旦我所属的文件夹有所变化，请更新我。
 本目录存放业务服务层。
 用于封装核心业务逻辑。
+借阅模块服务已迁移至 `com.nexusarchive.modules.borrowing.app`。
 
 ## 文件清单
 
@@ -24,7 +25,6 @@
 | `AuthService.java` | 服务接口 | AuthService 服务定义 |
 | `AutoAssociationService.java` | 服务接口 | AutoAssociationService 服务定义 |
 | `BasFondsService.java` | 服务接口 | BasFondsService 服务定义 |
-| `BorrowingService.java` | 服务接口 | BorrowingService 服务定义 |
 | `ComplianceCheckService.java` | 服务接口 | ComplianceCheckService 服务定义 |
 | `converter/` | 目录入口 | converter 子目录 |
 | `CustomUserDetailsService.java` | 服务接口 | CustomUserDetailsService 服务定义 |

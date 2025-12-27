@@ -4,8 +4,8 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { Drawer, Button, Tag, Divider } from 'antd';
-import { FileText, X, Maximize2, ExternalLink } from 'lucide-react';
+import { Drawer, Button, Tag } from 'antd';
+import { FileText, X, Maximize2 } from 'lucide-react';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
 import { useNavigate } from 'react-router-dom';

@@ -5,13 +5,13 @@
 
 import React, { useState } from 'react';
 import { DESTRUCTION_CANDIDATES, DESTRUCTION_BATCHES } from '../../constants';
-import { AlertTriangle, FileWarning, ShieldAlert, FileSignature, Flame, CheckCircle2, ArrowRight, History, Trash2, RefreshCw, BrainCircuit, BookOpen } from 'lucide-react';
+import { FileWarning, ShieldAlert, FileSignature, Flame, CheckCircle2, History, Trash2, RefreshCw, BrainCircuit, BookOpen } from 'lucide-react';
 
 import { statsApi, DestructionStats } from '../../api/stats';
 
 export const DestructionView: React.FC = () => {
    const [activeTab, setActiveTab] = useState<'appraisal' | 'workflow'>('appraisal');
-   const [candidates, setCandidates] = useState(DESTRUCTION_CANDIDATES);
+   const [candidates] = useState(DESTRUCTION_CANDIDATES);
    const [selectedRows, setSelectedRows] = useState<string[]>([]);
    const [stats, setStats] = useState<DestructionStats>({
       pendingAppraisal: 0,

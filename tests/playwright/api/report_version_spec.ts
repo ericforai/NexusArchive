@@ -4,12 +4,12 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('报表口径与版本管理', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
@@ -21,7 +21,7 @@ test.describe('报表口径与版本管理', () => {
   });
 
   test('报表口径：汇总与明细一致', async () => {
-    if (!authCtx) test.skip('登录失败，跳过报表口径测试');
+    test.skip(!authCtx, '登录失败，跳过报表口径测试');
     
     // 1. 获取汇总报表
     const summaryRes = await authCtx!.get('/api/stats/summary', {
@@ -29,7 +29,7 @@ test.describe('报表口径与版本管理', () => {
     });
     
     if (!summaryRes.ok()) {
-      test.skip('汇总报表接口不可用');
+      test.skip(true, '汇总报表接口不可用');
     }
     
     const summary = await summaryRes.json();
@@ -40,7 +40,7 @@ test.describe('报表口径与版本管理', () => {
     });
     
     if (!detailRes.ok()) {
-      test.skip('明细报表接口不可用');
+      test.skip(true, '明细报表接口不可用');
     }
     
     const detail = await detailRes.json();
@@ -60,7 +60,7 @@ test.describe('报表口径与版本管理', () => {
 
   test.skip('版本管理：并发编辑冲突', async () => {
     // 预期：有冲突提示，生成新版本
-    if (!authCtx) test.skip('登录失败，跳过版本冲突测试');
+    test.skip(!authCtx, '登录失败，跳过版本冲突测试');
     
     // 1. 用户 A 开始编辑档案
     // 2. 用户 B 同时编辑同一档案
@@ -70,7 +70,7 @@ test.describe('报表口径与版本管理', () => {
 
   test.skip('签章后不可改：已签章版本不可编辑', async () => {
     // 预期：需新版本，旧版留痕
-    if (!authCtx) test.skip('登录失败，跳过签章版本测试');
+    test.skip(!authCtx, '登录失败，跳过签章版本测试');
     
     // 1. 创建档案并签章
     // 2. 尝试编辑已签章版本
@@ -79,7 +79,6 @@ test.describe('报表口径与版本管理', () => {
     // 5. 验证旧版本保留
   });
 });
-
 
 
 

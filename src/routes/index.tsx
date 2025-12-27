@@ -37,7 +37,6 @@ const OpenAppraisalView = lazy(() => import('../pages/operations/OpenAppraisalVi
 const DestructionView = lazy(() => import('../pages/operations/DestructionView'));
 const RelationshipQueryView = lazy(() => import('../pages/utilization/RelationshipQueryView'));
 const BorrowingView = lazy(() => import('../pages/utilization/BorrowingView'));
-const WarehouseView = lazy(() => import('../pages/utilization/WarehouseView'));
 const StatsView = lazy(() => import('../pages/stats/StatsView'));
 const ComplianceReportView = lazy(() => import('../pages/archives/ComplianceReportView'));
 const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
@@ -49,7 +48,6 @@ const UserSettings = lazy(() => import('../pages/settings/UserSettingsPage'));
 const RoleSettings = lazy(() => import('../pages/settings/RoleSettingsPage'));
 const OrgSettings = lazy(() => import('../pages/settings/OrgSettingsPage'));
 const SecuritySettings = lazy(() => import('../pages/settings/SecuritySettingsPage'));
-const FondsManagement = lazy(() => import('../pages/settings/FondsManagementPage'));
 const AuditLogView = lazy(() => import('../pages/settings/AuditLogView'));
 const IntegrationSettings = lazy(() => import('../pages/settings/IntegrationSettingsPage'));
 
@@ -169,7 +167,6 @@ export const routes: RouteObject[] = [
                     { path: 'users', element: withSuspense(UserSettings) },
                     { path: 'roles', element: withSuspense(RoleSettings) },
                     { path: 'org', element: withSuspense(OrgSettings) },
-                    { path: 'fonds', element: withSuspense(FondsManagement) },
                     { path: 'security', element: withSuspense(SecuritySettings) },
                     { path: 'integration', element: withSuspense(IntegrationSettings) },
                     { path: 'audit', element: withSuspense(AuditLogView) },

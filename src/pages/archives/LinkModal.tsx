@@ -17,6 +17,15 @@ interface LinkModalProps {
     linkingRow?: any;
 }
 
+const DEFAULT_SEARCH_FILTERS = {
+    keyword: '',
+    minAmount: '',
+    maxAmount: '',
+    startDate: '',
+    endDate: '',
+    invoiceNumber: ''
+};
+
 /**
  * 高级手动凭证关联模态框
  * 支持按金额、日期、发票号、供应商等维度进行精准搜索
@@ -34,55 +43,17 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     const [showFilters, setShowFilters] = useState(false);
 
     // 搜索表单状态
-    const [searchFilters, setSearchFilters] = useState({
-        keyword: '',
-        minAmount: '',
-        maxAmount: '',
-        startDate: '',
-        endDate: '',
-        invoiceNumber: ''
-    });
+    const [searchFilters, setSearchFilters] = useState(DEFAULT_SEARCH_FILTERS);
 
-    // 自动根据 linkingRow 初始化搜索条件 (智能推荐逻辑)
-    useEffect(() => {
-        if (isOpen && linkingRow) {
-            const rawAmount = typeof linkingRow.amount === 'string'
-                ? parseFloat(linkingRow.amount.replace(/[¥,\s]/g, ''))
-                : linkingRow.amount;
-
-            const rawDate = linkingRow.date ? linkingRow.date.split(' ')[0] : '';
-
-            setSearchFilters(prev => ({
-                ...prev,
-                minAmount: !isNaN(rawAmount) ? (rawAmount - 1).toFixed(2) : '',
-                maxAmount: !isNaN(rawAmount) ? (rawAmount + 1).toFixed(2) : '',
-                startDate: rawDate, // 默认当天或范围
-                endDate: rawDate
-            }));
-
-            // 如果有初始值，自动触发一次搜索
-            handleSearch({
-                ...searchFilters,
-                minAmount: !isNaN(rawAmount) ? (rawAmount - 1).toFixed(2) : '',
-                maxAmount: !isNaN(rawAmount) ? (rawAmount + 1).toFixed(2) : '',
-                startDate: rawDate,
-                endDate: rawDate
-            });
-        } else if (isOpen) {
-            // 没有任何上下文时，加载最近 20 条
-            handleSearch(searchFilters);
-        }
-    }, [isOpen]);
-
-    const handleSearch = async (filters: any) => {
+    const handleSearch = useCallback(async (filters: typeof DEFAULT_SEARCH_FILTERS) => {
         setIsLoading(true);
         // 清理空值，防止后端 Jackson 反序列化失败（特别是日期和金额）
         const sanitizedFilters = Object.keys(filters).reduce((acc: any, key) => {
-            const val = filters[key];
+            const val = filters[key as keyof typeof filters];
             if (val === '' || val === undefined || val === null) {
                 acc[key] = null;
             } else if (key === 'minAmount' || key === 'maxAmount') {
-                const parsed = parseFloat(val);
+                const parsed = parseFloat(val as string);
                 acc[key] = isNaN(parsed) ? null : parsed;
             } else {
                 acc[key] = val;
@@ -98,7 +69,34 @@ export const LinkModal: React.FC<LinkModalProps> = ({
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
+
+    // 自动根据 linkingRow 初始化搜索条件 (智能推荐逻辑)
+    useEffect(() => {
+        if (!isOpen) return;
+        if (linkingRow) {
+            const rawAmount = typeof linkingRow.amount === 'string'
+                ? parseFloat(linkingRow.amount.replace(/[¥,\s]/g, ''))
+                : linkingRow.amount;
+
+            const rawDate = linkingRow.date ? linkingRow.date.split(' ')[0] : '';
+
+            const nextFilters = {
+                ...DEFAULT_SEARCH_FILTERS,
+                minAmount: !isNaN(rawAmount) ? (rawAmount - 1).toFixed(2) : '',
+                maxAmount: !isNaN(rawAmount) ? (rawAmount + 1).toFixed(2) : '',
+                startDate: rawDate, // 默认当天或范围
+                endDate: rawDate
+            };
+
+            setSearchFilters(nextFilters);
+            handleSearch(nextFilters);
+        } else if (isOpen) {
+            // 没有任何上下文时，加载最近 20 条
+            setSearchFilters(DEFAULT_SEARCH_FILTERS);
+            handleSearch(DEFAULT_SEARCH_FILTERS);
+        }
+    }, [isOpen, linkingRow, handleSearch]);
 
     if (!isOpen) return null;
 

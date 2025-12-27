@@ -41,8 +41,13 @@ public class OpenAppraisalServiceImpl implements OpenAppraisalService {
         appraisal.setArchiveCode(archive.getArchiveCode());
         appraisal.setArchiveTitle(archive.getTitle());
         appraisal.setRetentionPeriod(archive.getRetentionPeriod());
-        appraisal.setCurrentSecurityLevel(archive.getSecurityLevel());
+        appraisal.setCurrentSecurityLevel(archive.getSecurityLevel() != null ? archive.getSecurityLevel() : "internal");
         appraisal.setStatus("PENDING");
+
+        // 设置时间戳
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        appraisal.setCreatedTime(now);
+        appraisal.setLastModifiedTime(now);
 
         appraisalMapper.insert(appraisal);
         return appraisal;

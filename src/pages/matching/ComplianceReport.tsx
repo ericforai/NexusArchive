@@ -80,7 +80,7 @@ const ComplianceReport: React.FC = () => {
             window.URL.revokeObjectURL(url);
 
             message.success('导出成功');
-        } catch (err) {
+        } catch {
             message.error('导出失败');
         } finally {
             setExporting(false);
@@ -147,7 +147,7 @@ const ComplianceReport: React.FC = () => {
         {
             title: '操作',
             key: 'action',
-            render: (_, record) => (
+            render: () => (
                 <Button type="link" size="small">补证</Button>
             )
         }

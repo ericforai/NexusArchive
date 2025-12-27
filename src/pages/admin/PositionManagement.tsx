@@ -41,7 +41,7 @@ export const PositionManagement: React.FC = () => {
       } else {
         setError(res.message || '加载岗位数据失败');
       }
-    } catch (e) {
+    } catch {
       setError('加载岗位数据失败');
     } finally {
       setLoading(false);

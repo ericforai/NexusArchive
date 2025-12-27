@@ -1,14 +1,16 @@
-// Input: React、lucide-react 图标、本地模块 api/audit、utils/audit
+// Input: React、lucide-react 图标、settings feature、utils/audit
 // Output: React 组件 AuditLogView
 // Pos: src/pages/settings/AuditLogView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { auditApi, AuditLog } from '../../api/audit';
 import { Filter, Loader2, Search } from 'lucide-react';
 import { subscribeAuditRefresh } from '../../utils/audit';
+import { useAuditSettingsApi } from '../../features/settings';
+import { AuditLog } from '../../types';
 
 export const AuditLogView: React.FC = () => {
+  const { auditApi } = useAuditSettingsApi();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -34,7 +36,7 @@ export const AuditLogView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, filterUser, filterAction, filterResource]);
+  }, [auditApi, page, filterUser, filterAction, filterResource]);
 
   useEffect(() => {
     fetchLogs();

@@ -1,108 +1,49 @@
 ---
-description: Add a new ERP Source Connector (Detailed SOP)
+description: 建立新的 ERP 数据源连接器 (Standard Operating Procedure)
 ---
 
-# Add New ERP Connector Workflow
+# /add-connector: ERP 集成连接器开发规范
 
-This workflow provides a comprehensive guide to adding a new ERP or System connector to NexusArchive using the `ErpAdapter` architecture. It incorporates critical lessons learned regarding data persistence and document generation.
+为了确保集成中心功能的专业性与可复制性，所有新接口的开发必须遵循以下层级命名与配置规范。
 
-## 1. Prerequisites
-- **Source Access**: API keys, Base URL, and documentation.
-- **Data Model**: Understand the source entity (e.g., Voucher, Bill) and how it maps to `VoucherDTO`.
-- **Artifact Strategy**: Decide if you will sync files (PDF/OFD) from source or generate them from data.
+## 1. 架构层级定义
 
-## 2. Define the Adapter Class
-Create a new class in `com.nexusarchive.integration.erp.adapter` implementing `ErpAdapter`.
+| 层级 | 术语 | 命名规范 | 示例 |
+| :--- | :--- | :--- | :--- |
+| **L2** | **实例配置 (Config)** | `[ERP类型] ([环境/部门])` | `用友 YonSuite (财务测试)` |
+| **L3** | **业务场景 (Scenario)** | `[业务对象]获取/同步` | `凭证同步` |
+| **L4** | **子接口 (Sub-Interface)** | `[技术动词][名词]` | `LIST_QUERY` |
 
-```java
-@Component
-@Slf4j
-@RequiredArgsConstructor
-public class NewSystemErpAdapter implements ErpAdapter {
+## 2. 种子数据 (Seed Data) 模板
 
-    private final NewSystemClient client; // Your Feign/Http Client
+在编写 `V{n}__` 迁移脚本时，请使用以下 SQL 模板，避免直接透传技术 ID。
 
-    @Override
-    public String getIdentifier() { return "new_system"; }
+```sql
+-- 1. 创建连接器实例 (L2)
+INSERT INTO sys_erp_config (name, erp_type, config_json, is_active)
+SELECT '新接入ERP (生产环境)', 'GENERIC', '{"baseUrl":"..."}', 1
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = '新接入ERP (生产环境)');
 
-    @Override
-    public String getName() { return "New System ERP"; }
+-- 2. 创建业务场景 (L3)
+INSERT INTO sys_erp_scenario (config_id, scenario_key, name, sync_strategy)
+SELECT c.id, 'VOUCHER_SYNC', '记账凭证获取', 'MANUAL'
+FROM sys_erp_config c WHERE c.name = '新接入ERP (生产环境)';
 
-    // ... other metadata methods
-}
+-- 3. 定义子接口 (L4)
+INSERT INTO sys_erp_sub_interface (scenario_id, interface_key, interface_name)
+SELECT s.id, 'DETAIL_GET', '凭证详情拉取'
+FROM sys_erp_scenario s WHERE s.name = '记账凭证获取';
 ```
 
-## 3. Data Transfer Object (DTO) Strategy
-**CRITICAL**: The standard `VoucherDTO` may not cover all fields needed for document generation (e.g., "Customer Name" or specific line item details).
-If your connector relies on **Data-to-PDF Generation**:
-1.  **Extend VoucherDTO**: Create `NewSystemVoucherDTO extends VoucherDTO` adding a `private Map<String, Object> rawData;` field.
-2.  **Populate Raw Data**: During sync, stick the original JSON or full detail response into this field.
-3.  **Why?**: The `ErpScenarioService` serializes the DTO into the `source_data` database column. If you lose data during DTO mapping, you cannot regenerate the PDF later.
+## 3. 验收标准清单 (DoD)
 
-## 4. Implement Sync Logic
-Implement `syncVouchers` (or specialized method for Collection Bills).
+- [ ] **命名检查**：左侧列表不包含 `_SYNC` 或 `_CONFIG` 等后台标识符。
+- [ ] **标题显示**：右侧详情页上方显示巨大的中文业务名（如“凭证同步”）。
+- [ ] **适配器代码**：在 `com.nexusarchive.integration.erp.adapter` 包下实现对应的 `ErpAdapter`。
+- [ ] **图标注册**：在前端 `ADAPTER_CONFIG` (IntegrationSettings.tsx) 中注册对应的图标颜色。
 
-```java
-@Override
-public List<VoucherDTO> syncVouchers(ErpConfig config, LocalDateTime startDate, LocalDateTime endDate) {
-    // 1. Convert Dates
-    // External APIs often need strings (yyyy-MM-dd HH:mm:ss)
-    
-    // 2. Fetch Data (Handle Pagination!)
-    List<SourceEntity> sourceEntities = client.fetch(startDate, endDate);
-    
-    // 3. Map to DTO
-    return sourceEntities.stream().map(this::convertToDto).toList();
-}
+## 4. 专家审查提示
 
-private VoucherDTO convertToDto(SourceEntity source) {
-    VoucherDTO dto = VoucherDTO.builder()
-        .voucherNo(source.getCode())
-        // ... map standard fields ...
-        .build();
-    
-    // 4. CRITICAL: Persist Raw Data for PDF Generation
-    if (source.hasExtraDetails()) {
-        // Option A: If DTO extended
-        // ((NewSystemVoucherDTO)dto).setRawData(source.getRaw());
-        
-        // Option B: Serialize to a reserved field if available, or rely on DTO holding enough info.
-        // WARNING: Standard VoucherDTO is strict. Ideally ensure source logic is reproducible.
-    }
-    return dto;
-}
-```
-
-## 5. Document Persistence & Path Handling
-The `ErpScenarioService` handles saving the record, but you must ensure paths are correct if you download files manually.
-
-### 5.1 If Downloading Files
-If the ERP provides a PDF URL:
-1.  Download the stream.
-2.  Calculate Hash (SM3).
-3.  Save to disk using **Relative Paths**.
-    ```java
-    // BAD
-    Path p = Paths.get("/data/storage", filename); 
-    
-    // GOOD
-    @Value("${archive.root.path}") String rootPath;
-    Path p = Paths.get(rootPath, "pre-archive", fonds, filename);
-    ```
-
-### 5.2 If Generating Files (On-Demand)
-If you rely on the `VoucherPdfGeneratorService`:
-1.  Ensure `source_data` column is populated (handled by `ErpScenarioService` automatically if DTO is correct).
-2.  Ensure `VoucherPdfGeneratorService` supports your logic (might need to add a method for your specific DTO structure).
-
-## 6. Registration
-Register your adapter in `ErpAdapterFactory` (usually automatic if using Spring Component scanning, otherwise update the factory switch case).
-
-## 7. Verification Checklist
-1.  **Connection Test**: Verify `testConnection()` works.
-2.  **Sync Test**: Run a sync. Check `arc_file_content` table.
-    - `source_data` column must NOT be NULL/Empty.
-    - `storage_path` must be relative (start with `./` or configured root).
-3.  **Preview Test**: Click "Preview" in frontend.
-    - If file missing, backend should auto-generate using `source_data`.
-    - Verify PDF content matches source.
+提交代码前，请确保通过 `/expert-review` 调取专家组进行“合规性与可交付性”审查。
+- **电子会计档案专家**：核对元数据是否满足 DA/T 94 要求。
+- **交付专家**：核对是否支持离线环境下的配置预置。

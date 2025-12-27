@@ -9,16 +9,10 @@ import {
   Layers,
   Archive,
   Search,
-  BookOpenCheck,
-  Warehouse,
   BarChart3,
   Settings,
   FileText,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
   PanelLeft,
-  Flame
 } from 'lucide-react';
 import { NavItem, ViewState, ArchiveStat, Notification, ModuleConfig } from './types';
 

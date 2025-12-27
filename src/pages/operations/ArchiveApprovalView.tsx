@@ -3,7 +3,7 @@
 // Pos: src/pages/operations/ArchiveApprovalView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { archiveApprovalApi, ArchiveApproval } from '../../api/archiveApproval';
 import { CheckCircle2, XCircle, FileText, Clock, User, Calendar, MessageSquare, AlertCircle } from 'lucide-react';
 
@@ -17,11 +17,7 @@ export const ArchiveApprovalView: React.FC = () => {
     const [processing, setProcessing] = useState(false);
     const [statusCounts, setStatusCounts] = useState({ PENDING: 0, APPROVED: 0, REJECTED: 0 });
 
-    useEffect(() => {
-        loadApprovals();
-    }, [statusFilter]);
-
-    const loadApprovals = async () => {
+    const loadApprovals = useCallback(async () => {
         try {
             setLoading(true);
             // 加载当前筛选的数据
@@ -44,7 +40,11 @@ export const ArchiveApprovalView: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [statusFilter]);
+
+    useEffect(() => {
+        loadApprovals();
+    }, [loadApprovals]);
 
     const handleApprove = async () => {
         if (!selectedApproval) return;

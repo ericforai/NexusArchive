@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useRef, useEffect } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertTriangle, X, ScanLine, Loader2, ArrowRight, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info } from 'lucide-react';
 
 interface OCRField {
   name: string;

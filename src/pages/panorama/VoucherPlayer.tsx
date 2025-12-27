@@ -3,11 +3,10 @@
 // Pos: src/pages/panorama/VoucherPlayer.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, ShieldCheck, User } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, X, ShieldCheck } from 'lucide-react';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
-import { archivesApi } from '../../api/archives';
 
 interface VoucherPlayerProps {
     initialVoucherId: string;
@@ -17,24 +16,23 @@ interface VoucherPlayerProps {
 export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, onClose }) => {
     const [currentVoucherId, setCurrentVoucherId] = useState(initialVoucherId);
     const [hoveredField, setHoveredField] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
 
     // Mock list of vouchers for "Flip" navigation
     // In a real app, this would be passed in or fetched based on the current list context
-    const voucherList = ['V-202511-TEST', 'V-202311-001'];
+    const voucherList = useMemo(() => ['V-202511-TEST', 'V-202311-001'], []);
     const currentIndex = voucherList.indexOf(currentVoucherId);
 
-    const handlePrev = () => {
+    const handlePrev = useCallback(() => {
         if (currentIndex > 0) {
             setCurrentVoucherId(voucherList[currentIndex - 1]);
         }
-    };
+    }, [currentIndex, voucherList]);
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         if (currentIndex < voucherList.length - 1) {
             setCurrentVoucherId(voucherList[currentIndex + 1]);
         }
-    };
+    }, [currentIndex, voucherList]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -46,7 +44,7 @@ export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, 
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentVoucherId]);
+    }, [handlePrev, handleNext, onClose]);
 
     return (
         <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col">

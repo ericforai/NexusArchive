@@ -4,12 +4,12 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('检索性能基线与索引一致性', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
@@ -21,7 +21,7 @@ test.describe('检索性能基线与索引一致性', () => {
   });
 
   test('模糊检索性能基线（TP95 < 2s）', async () => {
-    if (!authCtx) test.skip('登录失败，跳过检索性能测试');
+    test.skip(!authCtx, '登录失败，跳过检索性能测试');
     
     const startTime = Date.now();
     const res = await authCtx!.get('/api/search', {
@@ -36,7 +36,7 @@ test.describe('检索性能基线与索引一致性', () => {
   });
 
   test('索引一致性：删除后立即检索不返回幽灵记录', async () => {
-    if (!authCtx) test.skip('登录失败，跳过索引一致性测试');
+    test.skip(!authCtx, '登录失败，跳过索引一致性测试');
     
     // 1. 创建测试档案
     const createRes = await authCtx!.post('/api/archives', {
@@ -53,13 +53,13 @@ test.describe('检索性能基线与索引一致性', () => {
     });
     
     if (!createRes.ok()) {
-      test.skip('创建档案失败，跳过索引一致性测试');
+      test.skip(true, '创建档案失败，跳过索引一致性测试');
     }
     
     const archive = await createRes.json();
     const archiveId = archive.data?.id || archive.id;
     if (!archiveId) {
-      test.skip('无法获取档案 ID，跳过索引一致性测试');
+      test.skip(true, '无法获取档案 ID，跳过索引一致性测试');
     }
     
     // 2. 验证可检索到
@@ -77,7 +77,7 @@ test.describe('检索性能基线与索引一致性', () => {
     const deleteRes = await authCtx!.delete(`/api/archives/${archiveId}`);
     // 如果删除接口不存在或需要权限，跳过后续验证
     if (!deleteRes.ok() && deleteRes.status() !== 404) {
-      test.skip('删除接口不可用，跳过索引一致性验证');
+      test.skip(true, '删除接口不可用，跳过索引一致性验证');
     }
     
     // 4. 立即检索，不应返回已删除的记录
@@ -94,7 +94,7 @@ test.describe('检索性能基线与索引一致性', () => {
   });
 
   test('更新后索引刷新', async () => {
-    if (!authCtx) test.skip('登录失败，跳过索引刷新测试');
+    test.skip(!authCtx, '登录失败，跳过索引刷新测试');
     
     // 创建档案
     const createRes = await authCtx!.post('/api/archives', {
@@ -111,13 +111,13 @@ test.describe('检索性能基线与索引一致性', () => {
     });
     
     if (!createRes.ok()) {
-      test.skip('创建档案失败，跳过索引刷新测试');
+      test.skip(true, '创建档案失败，跳过索引刷新测试');
     }
     
     const archive = await createRes.json();
     const archiveId = archive.data?.id || archive.id;
     if (!archiveId) {
-      test.skip('无法获取档案 ID，跳过索引刷新测试');
+      test.skip(true, '无法获取档案 ID，跳过索引刷新测试');
     }
     
     // 更新标题
@@ -126,7 +126,7 @@ test.describe('检索性能基线与索引一致性', () => {
     });
     
     if (!updateRes.ok() && updateRes.status() !== 404) {
-      test.skip('更新接口不可用，跳过索引刷新验证');
+      test.skip(true, '更新接口不可用，跳过索引刷新验证');
     }
     
     // 等待索引刷新
@@ -144,7 +144,6 @@ test.describe('检索性能基线与索引一致性', () => {
     expect(found).toBeTruthy();
   });
 });
-
 
 
 

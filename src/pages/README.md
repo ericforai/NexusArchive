@@ -10,13 +10,5 @@
 ## 目录定位
 
 - **路由终点**: `src/routes/index.tsx` 中的组件应统一定位于此。
-- **状态注入**: 负责从 Store 或 API 获取初始数据并分发给 Components。
-
-## 迁移计划
-
-> [!NOTE]
-> 当前多为 `src/components/*View.tsx`，后续将逐步重构为本目录下的页面组件。
-
-1. `ArchiveListView.tsx` -> `src/pages/Archives/ArchiveList.tsx`
-2. `LoginView.tsx` -> `src/pages/Auth/Login.tsx`
-3. ...
+- **模块装配**: 页面层只通过 `src/features/<module>/index.ts` 入口引入业务能力。
+- **UI 注入**: 负责把 features 的 application 能力注入到 UI 组件（components）。

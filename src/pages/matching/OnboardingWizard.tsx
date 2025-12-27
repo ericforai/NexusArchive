@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import {
-    Card, Steps, Button, Progress, Table, Tag, Alert,
+    Card, Steps, Button, Progress, Alert,
     Space, Typography, Result, message
 } from 'antd';
 import {
@@ -38,7 +38,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             setSummary(result);
             setCurrentStep(1);
             message.success('扫描完成');
-        } catch (error) {
+        } catch {
             message.error('扫描失败');
         } finally {
             setLoading(false);
@@ -53,7 +53,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             setMappingResult(result);
             setCurrentStep(2);
             message.success('规则应用成功');
-        } catch (error) {
+        } catch {
             message.error('应用失败');
         } finally {
             setLoading(false);
@@ -68,7 +68,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             setCurrentStep(3);
             message.success('配置完成');
             onComplete?.();
-        } catch (error) {
+        } catch {
             message.error('确认失败');
         } finally {
             setLoading(false);

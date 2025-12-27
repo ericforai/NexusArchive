@@ -12,6 +12,9 @@
 | 文件 | 功能 |
 | --- | --- |
 | `routeConfigs.ts` | 强类型路由配置 (ArchiveRouteMode) |
+| `useSmartMatching.ts` | 智能匹配核心逻辑 Hook |
+| `useArchiveListController.ts` | 列表数据加载与状态管理 Hook |
+| `useArchiveActions.ts` | 档案操作（归档、删除、导出等）Hook |
 | `index.ts` | 模块入口导出 |
 
 ## 架构约束

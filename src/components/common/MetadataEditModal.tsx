@@ -3,8 +3,8 @@
 // Pos: 通用复用组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
-import { X, Save, RefreshCw, FileText, AlertCircle, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Save, RefreshCw, FileText, AlertTriangle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 // ✅ 已移除对 api/client 的依赖（遵循架构边界规则 A）
@@ -70,14 +70,7 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
     const [fondsCode, setFondsCode] = useState('');
     const [modifyReason, setModifyReason] = useState('');
 
-    // Load existing metadata when modal opens
-    useEffect(() => {
-        if (isOpen && fileId) {
-            loadFileDetail();
-        }
-    }, [isOpen, fileId]);
-
-    const loadFileDetail = async () => {
+    const loadFileDetail = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -94,7 +87,14 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [fileId, onLoadFileDetail]);
+
+    // Load existing metadata when modal opens
+    useEffect(() => {
+        if (isOpen && fileId) {
+            loadFileDetail();
+        }
+    }, [isOpen, fileId, loadFileDetail]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -3,7 +3,7 @@
 // Pos: src/pages/archives/CreateOriginalVoucherDialog.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Upload, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -41,17 +41,6 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
         queryFn: getOriginalVoucherTypes,
         enabled: isOpen
     });
-
-    // Reset form when opening
-    useEffect(() => {
-        if (isOpen) {
-            setVoucherType(initialType || '');
-            setAmount('');
-            setSummary('');
-            setFile(null);
-            setError('');
-        }
-    }, [isOpen, initialType]);
 
     const createMutation = useMutation({
         mutationFn: async () => {

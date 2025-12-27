@@ -1,4 +1,4 @@
-// Input: React
+// Input: React、IntegrationSettingsApi
 // Output: React 组件 IntegrationSettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -7,22 +7,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import {
     Settings, RefreshCw, Eye, CheckCircle2, XCircle, AlertCircle,
-    Loader2, ChevronRight, ChevronDown, History, Sliders, Calendar,
+    Loader2, ChevronRight, ChevronDown, History, Sliders,
     ToggleLeft, ToggleRight, Clock, Database, Zap, Download, Upload,
-    ArrowUpRight, Activity, ShieldCheck
+    Activity, ShieldCheck, PlusCircle, MoreHorizontal
 } from 'lucide-react';
-import { erpApi, ErpConfig, ErpScenario, ErpSubInterface, SyncHistory } from '../../api/erp';
+import { IntegrationSettingsApi } from './types';
+import { ErpConfig, ErpScenario, ErpSubInterface, IntegrationDiagnosisResult, IntegrationMonitoring, ReconciliationRecord, SyncHistory } from '../../types';
 import { toast } from 'react-hot-toast';
 import { ComplianceRadar, ReconciliationReport } from '../common';
 
-// Adapter type icons & colors
+// Adapter type icons & colors (Refined Monochrome Theme)
 const ADAPTER_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-    yonsuite: { icon: <Database size={16} />, color: 'bg-blue-500', label: '用友 YonSuite' },
-    kingdee: { icon: <Zap size={16} />, color: 'bg-orange-500', label: '金蝶云星空' },
-    weaver: { icon: <Settings size={16} />, color: 'bg-purple-500', label: '泛微 OA' },
-    weavere10: { icon: <Settings size={16} />, color: 'bg-purple-400', label: '泛微 E10' },
-    weaver_e10: { icon: <Settings size={16} />, color: 'bg-purple-400', label: '泛微 E10' }, // 兼容数据库存储格式
-    generic: { icon: <Settings size={16} />, color: 'bg-slate-500', label: '通用 REST' },
+    yonsuite: { icon: <Database size={16} />, color: 'text-blue-600 bg-blue-50', label: '用友 YonSuite' },
+    kingdee: { icon: <Zap size={16} />, color: 'text-blue-600 bg-blue-50', label: '金蝶云星空' },
+    weaver: { icon: <Settings size={16} />, color: 'text-slate-600 bg-slate-50', label: '泛微 OA' },
+    weavere10: { icon: <Settings size={16} />, color: 'text-slate-600 bg-slate-50', label: '泛微 E10' },
+    weaver_e10: { icon: <Settings size={16} />, color: 'text-slate-600 bg-slate-50', label: '泛微 E10' },
+    generic: { icon: <Settings size={16} />, color: 'text-slate-600 bg-slate-50', label: '通用 REST' },
 };
 
 const ERP_TEMPLATES = [
@@ -48,7 +49,11 @@ const cronToHuman = (cron: string | undefined): string => {
     return `定时 (${hour}:${minute})`;
 };
 
-const IntegrationSettings: React.FC = () => {
+interface IntegrationSettingsProps {
+    erpApi: IntegrationSettingsApi;
+}
+
+const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => {
     // State: Configs grouped by adapter type
     const [configs, setConfigs] = useState<ErpConfig[]>([]);
     const [adapterTypes, setAdapterTypes] = useState<string[]>([]);
@@ -63,6 +68,7 @@ const IntegrationSettings: React.FC = () => {
     // State: Sync history
     const [syncHistory, setSyncHistory] = useState<Record<number, SyncHistory[]>>({});
     const [showHistoryFor, setShowHistoryFor] = useState<number | null>(null);
+    const [actionMenuScenario, setActionMenuScenario] = useState<ErpScenario | null>(null);
 
     // State: Params editor
     const [showParamsFor, setShowParamsFor] = useState<number | null>(null);
@@ -91,47 +97,17 @@ const IntegrationSettings: React.FC = () => {
     // Diagnosis State
     const [showDiagnosis, setShowDiagnosis] = useState(false);
     const [diagnosing, setDiagnosing] = useState(false);
-    const [diagnosisResult, setDiagnosisResult] = useState<{
-        status: string;
-        configName: string;
-        erpType: string;
-        steps: Array<{ name: string; status: 'SUCCESS' | 'FAIL' | 'WARNING'; message: string; detail?: string }>
-    } | null>(null);
+    const [diagnosisResult, setDiagnosisResult] = useState<IntegrationDiagnosisResult | null>(null);
 
     // Phase 4: Reconciliation State
     const [showRecon, setShowRecon] = useState(false);
-    const [reconRecord, setReconRecord] = useState<any>(null);
+    const [reconRecord, setReconRecord] = useState<ReconciliationRecord | null>(null);
     const [reconLoading, setReconLoading] = useState(false);
 
     // Monitoring State
-    const [monitoringData, setMonitoringData] = useState<any>(null);
+    const [monitoringData, setMonitoringData] = useState<IntegrationMonitoring | null>(null);
 
-    const loadMonitoring = useCallback(async () => {
-        try {
-            const res = await erpApi.getIntegrationMonitoring();
-            if (res.code === 200) {
-                setMonitoringData(res.data);
-            }
-        } catch (error) {
-            console.error('Failed to load monitoring data', error);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadConfigs();
-        loadMonitoring();
-    }, [loadMonitoring]);
-
-    // Load Scenarios when Config changes
-    useEffect(() => {
-        if (activeConfigId) {
-            loadScenarios(activeConfigId);
-        } else {
-            setScenarios([]);
-        }
-    }, [activeConfigId]);
-
-    const loadConfigs = async () => {
+    const loadConfigs = useCallback(async () => {
         setLoadingConfig(true);
         try {
             const res = await erpApi.getConfigs();
@@ -148,26 +124,26 @@ const IntegrationSettings: React.FC = () => {
                     if (firstOfType) setActiveConfigId(firstOfType.id);
                 }
             }
-        } catch (error) {
+        } catch {
             toast.error('加载配置失败');
         } finally {
             setLoadingConfig(false);
         }
-    };
+    }, [erpApi]);
 
-    const loadScenarios = async (configId: number) => {
+    const loadScenarios = useCallback(async (configId: number) => {
         setLoadingScenarios(true);
         try {
             const res = await erpApi.getScenarios(configId);
             if (res.code === 200) {
                 setScenarios(res.data || []);
             }
-        } catch (error) {
+        } catch {
             toast.error('加载业务场景失败');
         } finally {
             setLoadingScenarios(false);
         }
-    };
+    }, [erpApi]);
 
     const loadSubInterfaces = useCallback(async (scenarioId: number) => {
         try {
@@ -178,7 +154,7 @@ const IntegrationSettings: React.FC = () => {
         } catch (error) {
             console.error('加载子接口失败', error);
         }
-    }, []);
+    }, [erpApi]);
 
     const loadSyncHistory = useCallback(async (scenarioId: number) => {
         try {
@@ -189,7 +165,33 @@ const IntegrationSettings: React.FC = () => {
         } catch (error) {
             console.error('加载同步历史失败', error);
         }
-    }, []);
+    }, [erpApi]);
+
+    const loadMonitoring = useCallback(async () => {
+        try {
+            const res = await erpApi.getIntegrationMonitoring();
+            if (res.code === 200) {
+                setMonitoringData(res.data);
+            }
+        } catch (error) {
+            console.error('Failed to load monitoring data', error);
+        }
+    }, [erpApi]);
+
+    useEffect(() => {
+        loadConfigs();
+        loadMonitoring();
+    }, [loadConfigs, loadMonitoring]);
+
+    // Load Scenarios when Config changes
+    useEffect(() => {
+        if (activeConfigId) {
+            loadScenarios(activeConfigId);
+        } else {
+            setScenarios([]);
+        }
+    }, [activeConfigId, loadScenarios]);
+
 
     const toggleAdapterType = (type: string) => {
         setExpandedTypes(prev => {
@@ -223,7 +225,7 @@ const IntegrationSettings: React.FC = () => {
             const res = await erpApi.updateScenario({ id: scenario.id, isActive: newState });
             if (res.code !== 200) throw new Error(res.message);
             toast.success(newState ? '已启用' : '已禁用');
-        } catch (error) {
+        } catch {
             toast.error('状态更新失败');
             setScenarios(prev => prev.map(s => s.id === scenario.id ? { ...s, isActive: !newState } : s));
         }
@@ -235,7 +237,7 @@ const IntegrationSettings: React.FC = () => {
             // Refresh sub-interfaces
             loadSubInterfaces(scenarioId);
             toast.success('接口状态已更新');
-        } catch (error) {
+        } catch {
             toast.error('更新失败');
         }
     };
@@ -265,7 +267,7 @@ const IntegrationSettings: React.FC = () => {
                 toast.error(res.message || '触发失败');
                 setSyncing(null);
             }
-        } catch (error) {
+        } catch {
             toast.error('触发异常');
             setSyncing(null);
         }
@@ -282,7 +284,7 @@ const IntegrationSettings: React.FC = () => {
             } else {
                 toast.error(res.message || '连接测试失败');
             }
-        } catch (error) {
+        } catch {
             toast.error('连接测试异常');
         } finally {
             setTesting(false);
@@ -312,7 +314,7 @@ const IntegrationSettings: React.FC = () => {
             } else {
                 toast.error(res.message || '核对执行失败');
             }
-        } catch (error) {
+        } catch {
             toast.error('对账任务触发异常');
         } finally {
             setReconLoading(false);
@@ -331,7 +333,7 @@ const IntegrationSettings: React.FC = () => {
             } else {
                 toast.error(res.message || '诊断请求失败');
             }
-        } catch (error) {
+        } catch {
             toast.error('一键诊断异常');
         } finally {
             setDiagnosing(false);
@@ -378,7 +380,7 @@ const IntegrationSettings: React.FC = () => {
             }
 
             if (activeConfigId) loadScenarios(activeConfigId);
-        } catch (error) {
+        } catch {
             toast.error('保存失败');
         }
     };
@@ -466,7 +468,7 @@ const IntegrationSettings: React.FC = () => {
             toast.success(editingConfig ? '配置已更新' : '配置已保存');
             setShowConfigModal(false);
             loadConfigs();
-        } catch (error) {
+        } catch {
             toast.error('保存失败');
         }
     };
@@ -478,7 +480,7 @@ const IntegrationSettings: React.FC = () => {
             toast.success('删除成功');
             if (activeConfigId === id) setActiveConfigId(null);
             loadConfigs();
-        } catch (error) {
+        } catch {
             toast.error('删除失败');
         }
     };
@@ -523,7 +525,7 @@ const IntegrationSettings: React.FC = () => {
                 await erpApi.saveConfig(data);
                 toast.success('配置导入成功');
                 loadConfigs();
-            } catch (err) {
+            } catch {
                 toast.error('导入失败: 格式错误');
             }
         };
@@ -538,45 +540,49 @@ const IntegrationSettings: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full bg-slate-50 gap-6 p-6 overflow-hidden">
-            {/* Phase 4: Monitoring Dashboard (Full Width Top) */}
+            {/* Phase 4: Monitoring Dashboard (Refined Card Layout) */}
             {monitoringData && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-shrink-0 animate-in fade-in slide-in-from-top-2 duration-500">
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="text-xs font-medium text-slate-500 mb-1">系统累计并发量</div>
-                        <div className="text-2xl font-bold text-slate-800">{monitoringData.totalSyncCount}</div>
-                        <div className="mt-2 text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                            <Activity size={12} />
-                            运行状态正常
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5 flex-shrink-0 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:ring-1 hover:ring-blue-100 transition-all">
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">系统累并发量</div>
+                        <div className="flex items-end gap-2">
+                            <div className="text-3xl font-bold text-slate-900 leading-none">{monitoringData.totalSyncCount}</div>
+                            <div className="text-xs text-emerald-500 font-medium mb-1 flex items-center gap-1">
+                                <Activity size={12} />
+                                正常
+                            </div>
                         </div>
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="text-xs font-medium text-slate-500 mb-1">同步成功率</div>
-                        <div className="text-2xl font-bold text-slate-800">{(monitoringData.successRate * 100).toFixed(1)}%</div>
-                        <div className="mt-2 text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                            <CheckCircle2 size={12} />
-                            链路通畅
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:ring-1 hover:ring-blue-100 transition-all">
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">同步成功率</div>
+                        <div className="flex items-end gap-2">
+                            <div className="text-3xl font-bold text-slate-900 leading-none">{(monitoringData.successRate * 100).toFixed(1)}<span className="text-lg">%</span></div>
+                            <div className="text-xs text-emerald-500 font-medium mb-1 flex items-center gap-1">
+                                <ShieldCheck size={12} />
+                                高可靠
+                            </div>
                         </div>
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="text-xs font-medium text-slate-500 mb-1">存证覆盖率</div>
-                        <div className="text-2xl font-bold text-slate-800">{(monitoringData.evidenceCoverage * 100).toFixed(1)}%</div>
-                        <div className="mt-2">
-                            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:ring-1 hover:ring-blue-100 transition-all">
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">存证覆盖率</div>
+                        <div className="flex flex-col gap-2">
+                            <div className="text-3xl font-bold text-slate-900 leading-none">{(monitoringData.evidenceCoverage * 100).toFixed(0)}%</div>
+                            <div className="w-full bg-slate-50 h-1 rounded-full overflow-hidden mt-1">
                                 <div
-                                    className="bg-emerald-500 h-full transition-all duration-1000"
+                                    className="bg-blue-500 h-full transition-all duration-1000"
                                     style={{ width: `${monitoringData.evidenceCoverage * 100}%` }}
                                 ></div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="text-xs font-medium text-slate-500 mb-1">ERP 健康状态</div>
-                        <div className="text-lg font-bold text-emerald-600 flex items-center gap-2">
-                            <ShieldCheck size={18} />
-                            正常 (Healthy)
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:ring-1 hover:ring-blue-100 transition-all">
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">ERP 通讯状态</div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <div className="text-lg font-bold text-slate-800">通讯正常</div>
                         </div>
-                        <div className="mt-2 text-[10px] text-slate-400">
-                            平均时延: 124ms
+                        <div className="mt-2 text-[10px] text-slate-400 font-mono">
+                            网络延迟: 124ms
                         </div>
                     </div>
                 </div>
@@ -669,7 +675,7 @@ const IntegrationSettings: React.FC = () => {
                                             try {
                                                 const data = JSON.parse(latest.fourNatureSummary);
                                                 return <div className="mb-6"><ComplianceRadar data={data} /></div>;
-                                            } catch (e) {
+                                            } catch {
                                                 return null;
                                             }
                                         })()}
@@ -716,23 +722,38 @@ const IntegrationSettings: React.FC = () => {
                             <Settings size={18} />
                             连接器类型
                         </div>
-                        <div className="flex items-center gap-1">
-                            <label className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer transition-colors" title="导入配置">
-                                <Upload size={16} />
-                                <input type="file" className="hidden" accept=".json" onChange={handleImportConfig} />
-                            </label>
-                            <button
-                                onClick={openAddConfig}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                title="新增连接配置"
-                            >
-                                <Zap size={16} />
+                        <div className="group relative">
+                            <button className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all shadow-sm border border-transparent hover:border-blue-100">
+                                <PlusCircle size={18} />
                             </button>
+                            <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50">
+                                <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 p-2 w-56 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
+                                        配置管理
+                                    </div>
+                                    <button
+                                        onClick={openAddConfig}
+                                        className="w-full text-left px-3 py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-xl flex items-center gap-3 transition-colors group/item"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 group-hover/item:scale-110 transition-transform">
+                                            <Zap size={14} />
+                                        </div>
+                                        新增连接配置
+                                    </button>
+                                    <label className="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl flex items-center gap-3 cursor-pointer transition-colors group/item">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover/item:scale-110 group-hover/item:text-slate-600 transition-transform">
+                                            <Upload size={14} />
+                                        </div>
+                                        导入配置文件
+                                        <input type="file" className="hidden" accept=".json" onChange={handleImportConfig} />
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-2">
+                    <div className="flex-1 overflow-y-auto px-2 py-3">
                         {loadingConfig ? (
-                            <div className="flex justify-center p-4"><Loader2 className="animate-spin text-slate-400" /></div>
+                            <div className="flex justify-center p-4"><Loader2 className="animate-spin text-slate-300" /></div>
                         ) : adapterTypes.length === 0 ? (
                             <div className="text-center text-xs text-slate-400 py-4">暂无连接配置</div>
                         ) : (
@@ -740,38 +761,59 @@ const IntegrationSettings: React.FC = () => {
                                 const cfg = ADAPTER_CONFIG[type] || ADAPTER_CONFIG.generic;
                                 const typeConfigs = configsByType[type] || [];
                                 const isExpanded = expandedTypes.has(type);
+                                const isSingle = typeConfigs.length === 1;
+
+                                if (isSingle) {
+                                    const config = typeConfigs[0];
+                                    return (
+                                        <div
+                                            key={config.id}
+                                            onClick={() => setActiveConfigId(config.id)}
+                                            className={`group relative flex items-center gap-3 p-2.5 mb-1 rounded-lg cursor-pointer transition-all ${activeConfigId === config.id
+                                                ? 'bg-blue-50/50 text-blue-700 shadow-sm'
+                                                : 'hover:bg-slate-50 text-slate-600'
+                                                }`}
+                                        >
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeConfigId === config.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-50 text-slate-400 group-hover:text-slate-600'}`}>
+                                                {cfg.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium truncate">{config.name}</div>
+                                                <div className="text-[10px] text-slate-400 uppercase tracking-tight">{cfg.label}</div>
+                                            </div>
+                                            {activeConfigId === config.id && <div className="w-1 absolute left-0 top-2 bottom-2 bg-blue-500 rounded-full" />}
+                                        </div>
+                                    );
+                                }
 
                                 return (
                                     <div key={type} className="mb-2">
                                         {/* Type Header */}
                                         <button
                                             onClick={() => toggleAdapterType(type)}
-                                            className="w-full flex items-center gap-2 p-2 rounded hover:bg-slate-50 transition-colors"
+                                            className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors group"
                                         >
-                                            <div className={`w-6 h-6 rounded flex items-center justify-center text-white ${cfg.color}`}>
+                                            <div className={`w-6 h-6 rounded flex items-center justify-center text-slate-400 group-hover:text-slate-600`}>
                                                 {cfg.icon}
                                             </div>
-                                            <span className="flex-1 text-left font-medium text-slate-700">{cfg.label}</span>
-                                            <span className="text-xs text-slate-400 mr-1">{typeConfigs.length}</span>
-                                            {isExpanded ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
+                                            <span className="flex-1 text-left text-sm font-medium text-slate-600">{cfg.label}</span>
+                                            <span className="text-[10px] text-slate-300 mr-1">{typeConfigs.length}</span>
+                                            {isExpanded ? <ChevronDown size={14} className="text-slate-300" /> : <ChevronRight size={14} className="text-slate-300" />}
                                         </button>
 
                                         {/* Configs under this type */}
                                         {isExpanded && (
-                                            <div className="ml-4 mt-1 space-y-1">
+                                            <div className="ml-8 mt-1 space-y-1">
                                                 {typeConfigs.map(config => (
                                                     <div
                                                         key={config.id}
                                                         onClick={() => setActiveConfigId(config.id)}
-                                                        className={`p-2 pl-4 rounded cursor-pointer border-l-2 transition-all ${activeConfigId === config.id
-                                                            ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                                            : 'border-transparent hover:bg-slate-50 text-slate-600'
+                                                        className={`p-2 pl-3 rounded-md cursor-pointer text-sm transition-all ${activeConfigId === config.id
+                                                            ? 'text-blue-600 font-medium'
+                                                            : 'text-slate-500 hover:text-slate-800'
                                                             }`}
                                                     >
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-medium truncate">{config.name}</span>
-                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" title="已连接" />
-                                                        </div>
+                                                        {config.name}
                                                     </div>
                                                 ))}
                                             </div>
@@ -788,65 +830,112 @@ const IntegrationSettings: React.FC = () => {
                 <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col">
                     {activeConfig ? (
                         <>
-                            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                                <div>
-                                    <h2 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
-                                        {activeConfig.name}
-                                        <span className="text-xs font-normal px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">业务场景配置</span>
-                                    </h2>
-                                    <p className="text-sm text-slate-400 mt-1">配置自动或按需执行的系统对接同步任务</p>
+                            <div className="px-6 py-6 border-b border-slate-100 flex flex-col gap-6 bg-white/50 backdrop-blur-md">
+                                {/* Row 1: Identity and Metadata (Vertical Stack) */}
+                                <div className="flex flex-col items-start gap-5">
+                                    <div className="flex items-center gap-4">
+                                        <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight break-words">
+                                            {activeConfig.name}
+                                        </h2>
+                                        <div className="flex items-center px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider border border-emerald-100/50">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                            已启用
+                                        </div>
+                                    </div>
+
+                                    {/* Metadata Row (Figure 2 style) - Occupying its own line */}
+                                    <div className="flex items-center gap-12">
+                                        <div className="flex items-center gap-3 group/meta">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover/meta:bg-blue-100 transition-colors">
+                                                <Database size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider whitespace-nowrap">系统类型</p>
+                                                <p className="text-sm text-slate-700 font-bold whitespace-nowrap">
+                                                    {ADAPTER_CONFIG[activeConfig.erpType?.toLowerCase() || 'generic']?.label}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 group/meta">
+                                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover/meta:bg-slate-100 transition-colors">
+                                                <Clock size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider whitespace-nowrap">最后更新</p>
+                                                <p className="text-sm text-slate-700 font-bold whitespace-nowrap">
+                                                    {new Date(activeConfig.lastModifiedTime || activeConfig.createdTime || Date.now()).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center p-1 bg-slate-100 rounded-lg">
+
+                                {/* Row 2 Actions - Single Line & Smaller Icons */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex-1 overflow-x-auto min-w-0 flex items-center gap-2.5 pt-1 pb-1 scrollbar-hide pr-4 mask-fade-right">
                                         <button
                                             onClick={() => activeConfig && openEditConfig(activeConfig)}
-                                            className="px-3 py-1.5 text-xs font-medium bg-white shadow-sm border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5"
+                                            className="h-10 px-4 text-xs font-bold bg-white shadow-sm border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-2 shrink-0"
                                         >
-                                            <Settings size={14} />
-                                            编辑配置
+                                            <Settings size={14} className="text-slate-400" />
+                                            配置中心
                                         </button>
+
                                         <button
                                             onClick={handleTestConnection}
                                             disabled={testing}
-                                            className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-blue-600 transition-colors flex items-center gap-1.5"
+                                            className="h-10 px-4 text-xs font-bold bg-white shadow-sm border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50/50 transition-all flex items-center gap-2 shrink-0"
                                         >
-                                            {testing ? <Loader2 className="animate-spin" size={14} /> : <Zap size={14} />}
-                                            连接测试
+                                            {testing ? <Loader2 className="animate-spin" size={14} /> : <Zap size={14} className="text-blue-500" />}
+                                            通联测试
                                         </button>
-                                    </div>
 
-                                    <div className="flex items-center gap-2 border-l border-slate-200 pl-3 ml-1">
+                                        <div className="w-px h-5 bg-slate-200 mx-1 shrink-0" />
+
                                         <button
                                             onClick={handleDiagnose}
-                                            className="px-3 py-1.5 text-xs font-medium bg-amber-50 border border-amber-200 rounded-md text-amber-700 hover:bg-amber-100 transition-all flex items-center gap-1.5"
+                                            className="h-10 px-5 text-xs font-bold bg-slate-900 text-white rounded-xl hover:bg-slate-800 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 shrink-0"
                                         >
-                                            <Activity size={14} className="text-amber-500" />
-                                            诊断
+                                            <Activity size={14} />
+                                            一键诊断
                                         </button>
+
                                         <button
                                             onClick={handleTriggerRecon}
-                                            className="px-3 py-1.5 text-xs font-medium bg-emerald-50 border border-emerald-200 rounded-md text-emerald-700 hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+                                            className="h-10 px-4 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 shrink-0"
+                                            title="数据核对"
                                         >
-                                            <ShieldCheck size={14} className="text-emerald-500" />
+                                            <ShieldCheck size={14} />
                                             数据核对
                                         </button>
-                                    </div>
 
-                                    <div className="flex items-center gap-1 ml-2">
-                                        <button
-                                            onClick={handleExportConfig}
-                                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                            title="导出配置"
-                                        >
-                                            <Download size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => activeConfig && handleDeleteConfig(activeConfig.id)}
-                                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
-                                            title="删除连接器"
-                                        >
-                                            <XCircle size={18} />
-                                        </button>
+                                    </div>
+                                    <div className="shrink-0 pt-1 pb-1 pl-2 border-l border-slate-100/50 relative z-20">
+                                        <div className="group relative">
+                                            <button className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                                                <Sliders size={16} />
+                                            </button>
+                                            <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50">
+                                                <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 p-2 w-56 animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
+                                                        更多操作
+                                                    </div>
+                                                    <button onClick={handleExportConfig} className="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors group/item">
+                                                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover/item:text-slate-600 transition-colors">
+                                                            <Download size={14} />
+                                                        </div>
+                                                        导出配置备份
+                                                    </button>
+                                                    <button onClick={() => activeConfig && handleDeleteConfig(activeConfig.id)} className="w-full text-left px-3 py-2.5 text-xs font-bold text-rose-500 hover:bg-rose-50 rounded-xl flex items-center gap-3 transition-colors group/item">
+                                                        <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 group-hover/item:bg-rose-100 transition-colors">
+                                                            <XCircle size={14} />
+                                                        </div>
+                                                        移除此连接器
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -869,7 +958,7 @@ const IntegrationSettings: React.FC = () => {
                                     return (
                                         <div key={scenario.id} className="border-b border-slate-100">
                                             {/* Scenario Row */}
-                                            <div className="flex items-center p-4 hover:bg-slate-50 group">
+                                            <div className="flex items-center p-5 hover:bg-blue-50/20 group/row transition-all duration-200">
                                                 {/* Expand Toggle */}
                                                 <button
                                                     onClick={() => toggleScenarioExpand(scenario.id)}
@@ -879,10 +968,10 @@ const IntegrationSettings: React.FC = () => {
                                                 </button>
 
                                                 {/* Scenario Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-slate-800">{scenario.scenarioKey}</span>
-                                                        <span className={`px-2 py-0.5 rounded text-xs ${scenario.syncStrategy === 'REALTIME' ? 'bg-purple-100 text-purple-700' :
+                                                <div className="flex-1 min-w-0 pr-4">
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="font-bold text-slate-800 text-base leading-none truncate whitespace-nowrap">{scenario.name}</span>
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${scenario.syncStrategy === 'REALTIME' ? 'bg-purple-100 text-purple-700' :
                                                             scenario.syncStrategy === 'CRON' ? 'bg-blue-100 text-blue-700' :
                                                                 'bg-slate-100 text-slate-600'
                                                             }`}>
@@ -890,84 +979,59 @@ const IntegrationSettings: React.FC = () => {
                                                             {scenario.syncStrategy === 'CRON' && cronToHuman(scenario.cronExpression)}
                                                             {scenario.syncStrategy === 'MANUAL' && '手动'}
                                                         </span>
+
+                                                        {/* Status Clustered */}
+                                                        {scenario.lastSyncStatus === 'SUCCESS' && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold">
+                                                                <CheckCircle2 size={10} /> 正常
+                                                            </span>
+                                                        )}
+                                                        {scenario.lastSyncStatus === 'FAIL' && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold">
+                                                                <AlertCircle size={10} /> 失败
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <div className="text-xs text-slate-500 mt-0.5">{scenario.name}</div>
+                                                    <div className="flex items-center gap-4 mt-1.5 text-slate-400">
+                                                        <div className="text-[10px] font-mono tracking-wider uppercase opacity-80">{scenario.scenarioKey}</div>
+                                                        <div className="flex items-center gap-1.5 text-[11px]">
+                                                            <Clock size={11} className="opacity-60" />
+                                                            <span>{scenario.lastSyncTime ? new Date(scenario.lastSyncTime).toLocaleString() : '从未执行'}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                {/* Last Sync */}
-                                                <div className="text-xs text-slate-500 mr-4 flex items-center gap-1">
-                                                    <Clock size={12} />
-                                                    {scenario.lastSyncTime ? new Date(scenario.lastSyncTime).toLocaleString() : '未同步'}
-                                                </div>
-
-                                                {/* Status */}
-                                                <div className="mr-4">
-                                                    {scenario.lastSyncStatus === 'SUCCESS' && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs">
-                                                            <CheckCircle2 size={12} /> 正常
-                                                        </span>
-                                                    )}
-                                                    {scenario.lastSyncStatus === 'FAIL' && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-xs">
-                                                            <AlertCircle size={12} /> 失败
-                                                        </span>
-                                                    )}
-                                                    {scenario.lastSyncStatus === 'NONE' && (
-                                                        <span className="text-slate-400 text-xs">未同步</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Actions */}
-                                                <div className="flex items-center gap-2">
-                                                    {/* Toggle */}
+                                                {/* Actions (Direct Manifestation) */}
+                                                <div className="flex items-center gap-1.5 opacity-100 transition-all duration-200">
                                                     <button
                                                         onClick={() => handleToggleScenario(scenario)}
-                                                        className="text-slate-400 hover:text-blue-600"
+                                                        className="p-2 hover:bg-blue-50 rounded-lg text-slate-400 hover:text-blue-600 transition-all"
                                                         title={scenario.isActive ? '点击禁用' : '点击启用'}
                                                     >
-                                                        {scenario.isActive ? <ToggleRight size={24} className="text-blue-600" /> : <ToggleLeft size={24} />}
+                                                        {scenario.isActive ? <ToggleRight size={22} className="text-blue-500" /> : <ToggleLeft size={22} />}
                                                     </button>
 
-                                                    <div className="w-px h-4 bg-slate-200" />
-
-                                                    {/* Params */}
-                                                    <button
-                                                        onClick={() => handleShowParams(scenario)}
-                                                        className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 hover:text-blue-600"
-                                                        title="参数配置"
-                                                    >
-                                                        <Sliders size={14} />
-                                                    </button>
-
-                                                    {/* History */}
-                                                    <button
-                                                        onClick={() => handleShowHistory(scenario.id)}
-                                                        className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 hover:text-blue-600"
-                                                        title="同步历史"
-                                                    >
-                                                        <History size={14} />
-                                                    </button>
-
-                                                    {/* Sync */}
                                                     <button
                                                         onClick={() => handleManualSync(scenario.id)}
                                                         disabled={!scenario.isActive || syncing === scenario.id}
-                                                        className={`p-1.5 rounded-full transition-colors ${syncing === scenario.id
-                                                            ? 'bg-blue-50 text-blue-600'
-                                                            : 'hover:bg-slate-100 text-slate-500 hover:text-blue-600 disabled:opacity-50'
+                                                        className={`p-2.5 rounded-xl border transition-all ${syncing === scenario.id
+                                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100'
+                                                            : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:shadow-sm disabled:opacity-30'
                                                             }`}
                                                         title="立即同步"
                                                     >
-                                                        <RefreshCw size={14} className={syncing === scenario.id ? 'animate-spin' : ''} />
+                                                        <div className="flex items-center gap-2">
+                                                            <RefreshCw size={14} className={syncing === scenario.id ? 'animate-spin' : ''} />
+                                                            <span className="text-[10px] font-bold uppercase tracking-tight">立即同步</span>
+                                                        </div>
                                                     </button>
 
-                                                    {/* View Log */}
                                                     <button
-                                                        onClick={() => toast(scenario.lastSyncMsg || '暂无日志', { icon: '📋' })}
-                                                        className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 hover:text-slate-700"
-                                                        title="查看日志"
+                                                        onClick={() => setActionMenuScenario(scenario)}
+                                                        className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-all flex items-center justify-center"
+                                                        title="更多操作"
                                                     >
-                                                        <Eye size={14} />
+                                                        <MoreHorizontal size={16} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -1273,6 +1337,48 @@ const IntegrationSettings: React.FC = () => {
                                     className="px-6 py-2 bg-slate-800 text-white rounded-md text-sm font-medium hover:bg-slate-700"
                                 >
                                     关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Action Menu Modal (List Item Actions) */}
+                {actionMenuScenario && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]" onClick={() => setActionMenuScenario(null)}>
+                        <div className="bg-white rounded-2xl shadow-2xl p-6 w-[320px] animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                            <h3 className="text-lg font-bold text-slate-800 mb-1">{actionMenuScenario.name}</h3>
+                            <p className="text-xs text-slate-400 font-mono mb-6">{actionMenuScenario.scenarioKey}</p>
+
+                            <div className="space-y-2">
+                                <button
+                                    onClick={() => { handleShowParams(actionMenuScenario); setActionMenuScenario(null); }}
+                                    className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-3 transition-colors group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                        <Sliders size={16} />
+                                    </div>
+                                    <span className="font-bold text-slate-600">查看 API 参数</span>
+                                </button>
+
+                                <button
+                                    onClick={() => { handleShowHistory(actionMenuScenario.id); setActionMenuScenario(null); }}
+                                    className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-3 transition-colors group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                                        <History size={16} />
+                                    </div>
+                                    <span className="font-bold text-slate-600">查看同步历史</span>
+                                </button>
+
+                                <button
+                                    onClick={() => { toast(actionMenuScenario.lastSyncMsg || '暂无日志', { icon: '📋' }); setActionMenuScenario(null); }}
+                                    className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-3 transition-colors group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                                        <Eye size={16} />
+                                    </div>
+                                    <span className="font-bold text-slate-600">查看运行日志</span>
                                 </button>
                             </div>
                         </div>

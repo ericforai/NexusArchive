@@ -3,7 +3,7 @@
 // Pos: src/pages/archives/ComplianceReportView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     ShieldCheck,
     ShieldAlert,
@@ -14,12 +14,9 @@ import {
     CheckCircle2,
     AlertTriangle,
     XCircle,
-    Hash,
-    Calendar,
-    Building2,
-    FileDigit
+    Hash
 } from 'lucide-react';
-import { ViewState, ApiResponse } from '../../types';
+import { ApiResponse } from '../../types';
 import { client } from '../../api/client';
 
 interface ComplianceReportViewProps {
@@ -37,25 +34,12 @@ interface ComplianceResult {
     warnings: string[];
 }
 
-interface ArchiveInfo {
-    archiveCode: string;
-    title: string;
-    fondsName: string;
-    year: string;
-    retentionPeriod: string;
-}
-
 export const ComplianceReportView: React.FC<ComplianceReportViewProps> = ({ archiveId, onBack }) => {
     const [loading, setLoading] = useState(true);
     const [result, setResult] = useState<ComplianceResult | null>(null);
-    const [archiveInfo, setArchiveInfo] = useState<ArchiveInfo | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, [archiveId]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             // Fetch compliance result
@@ -77,7 +61,11 @@ export const ComplianceReportView: React.FC<ComplianceReportViewProps> = ({ arch
         } finally {
             setLoading(false);
         }
-    };
+    }, [archiveId]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleExport = async (format: 'xml' | 'json') => {
         try {

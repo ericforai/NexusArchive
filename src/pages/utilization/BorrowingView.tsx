@@ -3,7 +3,7 @@
 // Pos: src/pages/utilization/BorrowingView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { borrowingApi, BorrowingRecord } from '../../api/borrowing';
 import { usePermissions } from '../../hooks/usePermissions';
 import {
@@ -99,11 +99,7 @@ export const BorrowingView: React.FC = () => {
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-    useEffect(() => {
-        fetchBorrowings();
-    }, [statusFilter, page, pageSize, onlyMine]);
-
-    const fetchBorrowings = async () => {
+    const fetchBorrowings = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -129,7 +125,11 @@ export const BorrowingView: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [statusFilter, onlyMine, page, pageSize]);
+
+    useEffect(() => {
+        fetchBorrowings();
+    }, [fetchBorrowings]);
 
     const showToast = (text: string, type: 'success' | 'error' = 'success') => {
         setToast({ text, type });

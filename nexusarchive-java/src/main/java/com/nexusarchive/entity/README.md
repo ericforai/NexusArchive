@@ -1,6 +1,7 @@
 一旦我所属的文件夹有所变化，请更新我。
 本目录存放领域实体。
 用于映射数据库表结构。
+借阅实体已迁移至 `com.nexusarchive.modules.borrowing.domain`。
 
 ## 文件清单
 
@@ -19,7 +20,6 @@
 | `ArcSignatureLog.java` | Java 类 | ArcSignatureLog 类 |
 | `AuditInspectionLog.java` | Java 类 | AuditInspectionLog 类 |
 | `BasFonds.java` | Java 类 | BasFonds 类 |
-| `Borrowing.java` | Java 类 | Borrowing 类 |
 | `ConvertLog.java` | Java 类 | ConvertLog 类 |
 | `Destruction.java` | Java 类 | Destruction 类 |
 | `enums/` | 目录入口 | enums 子目录 |

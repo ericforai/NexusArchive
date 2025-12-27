@@ -33,7 +33,7 @@ const AbnormalDataView: React.FC = () => {
             await retryAbnormal(id);
             alert('重试请求已提交');
             fetchData(); // Refresh list
-        } catch (error) {
+        } catch {
             alert('重试失败');
         }
     };

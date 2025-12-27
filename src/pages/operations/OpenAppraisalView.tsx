@@ -3,7 +3,7 @@
 // Pos: src/pages/operations/OpenAppraisalView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { openAppraisalApi, OpenAppraisal } from '../../api/openAppraisal';
 import { Shield, ShieldCheck, ShieldAlert, Clock, Calendar, FileText, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 
@@ -20,11 +20,7 @@ export const OpenAppraisalView: React.FC = () => {
     });
     const [processing, setProcessing] = useState(false);
 
-    useEffect(() => {
-        loadAppraisals();
-    }, [statusFilter]);
-
-    const loadAppraisals = async () => {
+    const loadAppraisals = useCallback(async () => {
         try {
             setLoading(true);
             const response = await openAppraisalApi.getAppraisalList(1, 50, statusFilter);
@@ -34,7 +30,11 @@ export const OpenAppraisalView: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [statusFilter]);
+
+    useEffect(() => {
+        loadAppraisals();
+    }, [loadAppraisals]);
 
     const handleSubmit = async () => {
         if (!selectedAppraisal) return;

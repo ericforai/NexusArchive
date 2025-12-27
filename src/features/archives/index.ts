@@ -5,4 +5,4 @@
 export * from './routeConfigs';
 export * from './useArchiveActions';
 export * from './useArchiveListController';
-export * from './useArchiveActions';
+export * from './useSmartMatching';

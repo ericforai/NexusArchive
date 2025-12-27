@@ -87,44 +87,44 @@ WHERE NOT EXISTS (SELECT 1 FROM acc_archive_relation WHERE id = 'seed-rel-005')
 -- 3. 插入 ERP 集成通道配置 (sys_erp_config)
 -- YonSuite 凭证同步
 INSERT INTO sys_erp_config (name, erp_type, config_json, is_active, created_time)
-SELECT 'YONSUITE_VOUCHER_SYNC', 'YONSUITE', 
+SELECT '用友 YonSuite (生产环境)', 'YONSUITE', 
        '{"endpoint":"/integration/yonsuite/vouchers/sync","accbookCode":"BR01","frequency":"manual","description":"用友YonSuite会计凭证自动采集接口"}',
        1, NOW()
-WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'YONSUITE_VOUCHER_SYNC');
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = '用友 YonSuite (生产环境)');
 
 -- SAP ERP 凭证同步
 INSERT INTO sys_erp_config (name, erp_type, config_json, is_active, created_time)
-SELECT 'SAP_VOUCHER_SYNC', 'GENERIC',
+SELECT 'SAP ERP (生产环境)', 'GENERIC',
        '{"system":"SAP ERP","frequency":"实时","description":"SAP 财务凭证自动同步接口"}',
        1, NOW()
-WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'SAP_VOUCHER_SYNC');
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'SAP ERP (生产环境)');
 
 -- 金蝶云星空 存货同步
 INSERT INTO sys_erp_config (name, erp_type, config_json, is_active, created_time)
-SELECT 'K3_INVENTORY_SYNC', 'KINGDEE',
+SELECT '金蝶云星空 (生产环境)', 'KINGDEE',
        '{"system":"金蝶云星空","frequency":"每日 23:00","description":"存货核算数据同步"}',
        1, NOW()
-WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'K3_INVENTORY_SYNC');
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = '金蝶云星空 (生产环境)');
 
 -- 泛微OA 报销同步
 INSERT INTO sys_erp_config (name, erp_type, config_json, is_active, created_time)
-SELECT 'OA_EXPENSE_SYNC', 'GENERIC',
+SELECT '泛微 OA (生产环境)', 'GENERIC',
        '{"system":"泛微OA","frequency":"每小时","description":"员工报销单据同步"}',
        1, NOW()
-WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'OA_EXPENSE_SYNC');
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = '泛微 OA (生产环境)');
 
 -- 易快报 差旅同步
 INSERT INTO sys_erp_config (name, erp_type, config_json, is_active, created_time)
-SELECT 'EKB_TRAVEL_SYNC', 'GENERIC',
+SELECT '易快报 (生产环境)', 'GENERIC',
        '{"system":"易快报","frequency":"每小时","description":"差旅费用数据同步"}',
        1, NOW()
-WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'EKB_TRAVEL_SYNC');
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = '易快报 (生产环境)');
 
 -- 汇联易 报销同步
 INSERT INTO sys_erp_config (name, erp_type, config_json, is_active, created_time)
-SELECT 'HLY_REIMBURSE_SYNC', 'GENERIC',
+SELECT '汇联易 (生产环境)', 'GENERIC',
        '{"system":"汇联易","frequency":"每小时","description":"费用报销同步","status":"error"}',
        0, NOW()
-WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = 'HLY_REIMBURSE_SYNC');
+WHERE NOT EXISTS (SELECT 1 FROM sys_erp_config WHERE name = '汇联易 (生产环境)');
 
 -- 完成

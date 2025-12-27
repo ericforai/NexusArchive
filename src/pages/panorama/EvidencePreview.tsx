@@ -3,10 +3,10 @@
 // Pos: src/pages/panorama/EvidencePreview.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react';
-import { FileText, Paperclip, ExternalLink, Download, ZoomIn, ZoomOut, RotateCcw, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { FileText, Paperclip, ExternalLink, Download, AlertCircle } from 'lucide-react';
 import { attachmentsApi, AttachmentFile } from '../../api/attachments';
-import { originalVoucherApi, OriginalVoucherFile } from '../../api/originalVoucher';
+import { originalVoucherApi } from '../../api/originalVoucher';
 import { FileViewer } from '../../components/common/OfdViewer';
 
 interface EvidencePreviewProps {
@@ -54,7 +54,7 @@ const InvoiceOverlay: React.FC<InvoiceOverlayProps> = ({ highlightField, onInter
         return null;
     }
 
-    let regions: Record<string, React.CSSProperties> = {};
+    const regions: Record<string, React.CSSProperties> = {};
 
     try {
         const meta: HighlightMetaData = JSON.parse(highlightMeta);
@@ -114,7 +114,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
     const [error, setError] = useState<string | null>(null);
 
     // 加载附件列表
-    const loadFiles = async () => {
+    const loadFiles = useCallback(async () => {
         if (!voucherId) return;
 
         setLoading(true);
@@ -135,8 +135,6 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                         highlightMeta: (f as any).highlightMeta || null
                     })) as any[];
                     setFiles(converted);
-                    const firstFile = converted.find(f => f.docType === activeTab);
-                    setSelectedFile(firstFile || converted[0] || null);
                 } else {
                     setFiles([]);
                     setSelectedFile(null);
@@ -145,8 +143,6 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                 const attachments = await attachmentsApi.getByArchive(voucherId);
                 if (attachments && attachments.length > 0) {
                     setFiles(attachments);
-                    const firstFile = attachments.find((f: any) => f.docType === activeTab);
-                    setSelectedFile(firstFile || attachments[0] || null);
                 } else if (sourceType === null) {
                     // 降级尝试
                     const ovFiles = await originalVoucherApi.getOriginalVoucherFiles(voucherId);
@@ -160,23 +156,23 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                             docType: (f.fileRole === 'PRIMARY' || f.fileRole === 'ORIGINAL') ? 'invoice' : 'other'
                         })) as any[];
                         setFiles(converted);
-                        setSelectedFile(converted[0]);
+                        setSelectedFile(converted[0] || null);
                     }
                 } else {
                     setFiles([]);
                     setSelectedFile(null);
                 }
             }
-        } catch (err: any) {
+        } catch {
             setError('加载附件失败');
         } finally {
             setLoading(false);
         }
-    };
+    }, [voucherId, sourceType]);
 
     useEffect(() => {
         loadFiles();
-    }, [voucherId]);
+    }, [loadFiles]);
 
     // 切换标签时更新选中文件
     useEffect(() => {

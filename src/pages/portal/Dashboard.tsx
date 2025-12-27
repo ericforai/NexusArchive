@@ -23,7 +23,7 @@ import {
 import { statsApi } from '../../api/stats';
 import { archivesApiEx, Archive } from '../../api/archives';
 import { notificationsApi, NotificationItem } from '../../api/notifications';
-import { ROUTE_PATHS } from '../routes/paths';
+import { ROUTE_PATHS } from '../../routes/paths';
 
 const ComplianceChart: React.FC<{ trend: { date: string; count: number }[] }> = ({ trend }) => (
   <div className="h-full w-full">
@@ -52,7 +52,7 @@ interface DashboardProps {
   onNavigate?: (view: ViewState, subItem?: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+export const Dashboard: React.FC<DashboardProps> = () => {
   const routerNavigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [trend, setTrend] = useState<{ date: string; count: number }[]>([]);
@@ -119,7 +119,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       if (res.code === 200) {
         setNotifications(res.data || []);
       }
-    } catch (e) {
+    } catch {
       // ignore,加载失败时保持现有列表
     } finally {
       setNotifRefreshing(false);
@@ -337,7 +337,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                           if (!Array.isArray(meta) && meta.description) {
                             return meta.description;
                           }
-                        } catch (e) {
+                        } catch {
                           // ignore
                         }
                       }

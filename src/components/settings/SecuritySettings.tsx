@@ -1,18 +1,23 @@
-// Input: React、lucide-react 图标、本地模块 api/admin
+// Input: React、lucide-react 图标、AdminSettingsApi
 // Output: React 组件 SecuritySettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
 import { Save, Loader2, ShieldCheck, FileWarning } from 'lucide-react';
-import { adminApi } from '../../api/admin';
+import { AdminSettingsApi } from './types';
+import { AdminSettingItem, AdminSettingUpdate } from '../../types';
 
 /**
  * 安全与合规设置页面
  * 
  * 包含四性检测开关、水印设置等安全相关配置
  */
-export const SecuritySettings: React.FC = () => {
+interface SecuritySettingsProps {
+    adminApi: AdminSettingsApi;
+}
+
+export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ adminApi }) => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState({
@@ -29,7 +34,7 @@ export const SecuritySettings: React.FC = () => {
                 const res = await adminApi.getSettings();
                 if (res.code === 200 && res.data) {
                     const map: Record<string, string> = {};
-                    (res.data as any[]).forEach((item: any) => {
+                    res.data.forEach((item: AdminSettingItem) => {
                         map[item.configKey] = item.configValue;
                     });
                     setSettings({
@@ -44,12 +49,12 @@ export const SecuritySettings: React.FC = () => {
             }
         };
         loadSettings();
-    }, []);
+    }, [adminApi]);
 
     const handleSave = async () => {
         setSaving(true);
         try {
-            const payload = [
+            const payload: AdminSettingUpdate[] = [
                 { configKey: 'security.fourNatureCheck', configValue: String(settings.fourNatureCheck), category: 'security' },
                 { configKey: 'security.watermarkEnabled', configValue: String(settings.watermarkEnabled), category: 'security' },
                 { configKey: 'security.auditLogRetention', configValue: settings.auditLogRetention, category: 'security' },

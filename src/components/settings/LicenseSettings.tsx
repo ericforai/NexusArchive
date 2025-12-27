@@ -1,24 +1,25 @@
-// Input: React、lucide-react 图标、本地模块 api/license
+// Input: React、lucide-react 图标、LicenseSettingsApi
 // Output: React 组件 LicenseSettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, Upload, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { licenseApi, LicenseInfo } from '../../api/license';
+import { LicenseSettingsApi } from './types';
+import { LicenseInfo } from '../../types';
 
-export const LicenseSettings: React.FC = () => {
+interface LicenseSettingsProps {
+    licenseApi: LicenseSettingsApi;
+}
+
+export const LicenseSettings: React.FC<LicenseSettingsProps> = ({ licenseApi }) => {
     const [license, setLicense] = useState<LicenseInfo | null>(null);
     const [loading, setLoading] = useState(false);
     const [importText, setImportText] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    useEffect(() => {
-        loadLicense();
-    }, []);
-
-    const loadLicense = async () => {
+    const loadLicense = useCallback(async () => {
         try {
             const res = await licenseApi.getCurrent();
             if (res.code === 200 && res.data) {
@@ -27,7 +28,11 @@ export const LicenseSettings: React.FC = () => {
         } catch (e) {
             console.error(e);
         }
-    };
+    }, [licenseApi]);
+
+    useEffect(() => {
+        loadLicense();
+    }, [loadLicense]);
 
     const handleImport = async () => {
         if (!importText.trim()) return;

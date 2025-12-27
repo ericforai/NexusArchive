@@ -4,11 +4,11 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Plus, Server, Clock, Loader2 } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Server, Clock } from 'lucide-react';
 import { FourNatureReportView } from './FourNatureReportView';
-import { statsApi, ErpStats } from '../../api/stats';
-import { integrationApi, IntegrationChannel } from '../../api/erp';
-import { client } from '../../api/client';
+import { statsApi, ErpStats } from '@api/stats';
+import { integrationApi, IntegrationChannel } from '@api/erp';
+import { client } from '@api/client';
 
 // 扩展 IntegrationChannel 以支持本地状态
 interface LocalChannel extends IntegrationChannel {
@@ -17,7 +17,6 @@ interface LocalChannel extends IntegrationChannel {
 
 export const OnlineReceptionView: React.FC = () => {
     const [channels, setChannels] = useState<LocalChannel[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
@@ -60,7 +59,6 @@ export const OnlineReceptionView: React.FC = () => {
     // 加载集成通道数据
     useEffect(() => {
         const loadData = async () => {
-            setLoading(true);
             try {
                 // 加载统计数据
                 const statsRes = await statsApi.getErpStats();
@@ -79,8 +77,6 @@ export const OnlineReceptionView: React.FC = () => {
             } catch (e: any) {
                 console.error("Failed to load integration data", e);
                 setError(e.message || String(e));
-            } finally {
-                setLoading(false);
             }
         };
         loadData();
@@ -123,8 +119,6 @@ export const OnlineReceptionView: React.FC = () => {
 
         try {
             let success = false;
-            let syncedCount = 0;
-
             if (channel.apiEndpoint) {
                 // 有 apiEndpoint：使用统一 client 进行请求
                 const response = await client.post(channel.apiEndpoint, {
@@ -135,11 +129,10 @@ export const OnlineReceptionView: React.FC = () => {
                 });
                 const result = response.data;
                 success = response.status === 200 && result.status === 'SUCCESS';
-                syncedCount = result.synced_count || 0;
                 if (!success) throw new Error(result.message || '同步失败');
             } else {
                 // 无 apiEndpoint：使用通用触发接口
-                const { erpApi } = await import('../api/erp');
+                const { erpApi } = await import('@api/erp');
                 const res = await erpApi.triggerSync(syncChannelId);
                 success = res && res.code === 200;
                 if (!success) throw new Error(res?.message || '触发失败');
@@ -165,13 +158,12 @@ export const OnlineReceptionView: React.FC = () => {
     };
 
     const handleAddChannel = () => {
-        const channel: IntegrationChannel = {
-            id: Date.now().toString() as any, // Temporary ID
+        const channel: LocalChannel = {
+            id: Date.now(),
             name: newChannel.name,
             displayName: newChannel.name, // Added displayName
             configName: newChannel.system, // Added configName
             erpType: 'unknown', // Added erpType
-            system: newChannel.system, // Keep existing if needed or map
             frequency: '每小时',
             lastSync: '-',
             receivedCount: 0,

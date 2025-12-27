@@ -9,11 +9,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.enums.DataScopeType;
 import com.nexusarchive.entity.Archive;
-import com.nexusarchive.entity.Borrowing;
 import com.nexusarchive.entity.Org;
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.entity.User;
-import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.OrgMapper;
 import com.nexusarchive.mapper.RoleMapper;
 import com.nexusarchive.mapper.UserMapper;
@@ -35,8 +33,6 @@ public class DataScopeService {
     private final RoleMapper roleMapper;
     private final OrgMapper orgMapper;
     private final UserMapper userMapper;
-    private final ArchiveMapper archiveMapper;
-
     public DataScopeContext resolve() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
@@ -82,48 +78,6 @@ public class DataScopeService {
 
         if (context.userId() != null) {
             wrapper.eq("created_by", context.userId());
-        } else {
-            wrapper.eq("1", "0");
-        }
-    }
-
-    public void applyBorrowingScope(QueryWrapper<Borrowing> wrapper, DataScopeContext context) {
-        if (context == null || context.isAll()) {
-            return;
-        }
-
-        if (context.isSelf()) {
-            if (context.userId() != null) {
-                wrapper.eq("user_id", context.userId());
-            } else {
-                wrapper.eq("1", "0");
-            }
-            return;
-        }
-
-        Set<String> deptIds = context.departmentIds();
-        if (!deptIds.isEmpty()) {
-            List<String> archiveIds = archiveMapper.selectIdsByDepartmentIds(deptIds);
-            if (archiveIds.isEmpty()) {
-                wrapper.eq("1", "0");
-            } else {
-                wrapper.in("archive_id", archiveIds);
-            }
-            return;
-        }
-
-        if (StringUtils.hasText(context.departmentId())) {
-            List<String> archiveIds = archiveMapper.selectIdsByDepartmentIds(Collections.singleton(context.departmentId()));
-            if (archiveIds.isEmpty()) {
-                wrapper.eq("1", "0");
-            } else {
-                wrapper.in("archive_id", archiveIds);
-            }
-            return;
-        }
-
-        if (context.userId() != null) {
-            wrapper.eq("user_id", context.userId());
         } else {
             wrapper.eq("1", "0");
         }

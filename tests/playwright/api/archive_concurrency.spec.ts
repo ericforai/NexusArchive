@@ -4,17 +4,17 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('归档并发与存储保护', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
     authCtx = auth?.context ?? null;
-    if (!authCtx) test.skip('登录失败，跳过归档用例');
+    test.skip(!authCtx, '登录失败，跳过归档用例');
   });
 
   test.afterAll(async () => {
@@ -108,6 +108,6 @@ test.describe('归档并发与存储保护', () => {
   test.skip('存储耗尽时阻断写入并告警（后端暂无模拟接口）', async () => {
     // 文档路径 /api/admin/storage/simulate 不存在，后端未提供模拟磁盘耗尽接口。
     // 预期：返回 507 状态码，错误码 STORAGE_FULL，无脏数据，无静默失败
-    if (!authCtx) test.skip('登录失败，跳过存储保护测试');
+    test.skip(!authCtx, '登录失败，跳过存储保护测试');
   });
 });

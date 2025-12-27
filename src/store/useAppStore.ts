@@ -58,7 +58,7 @@ const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9
  * 
  * 管理视图导航、侧边栏、全局加载状态和通知
  */
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set) => ({
     // 侧边栏
     sidebarCollapsed: false,
     toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),

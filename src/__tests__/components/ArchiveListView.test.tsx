@@ -8,6 +8,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ArchiveListView } from '@/pages/archives/ArchiveListView';
+import { useArchiveActions, useArchiveListController, ArchiveRouteMode } from '@/features/archives';
 import { archivesApi } from '@/api/archives';
 import { adminApi } from '@/api/admin';
 import { poolApi } from '@/api/pool';
@@ -63,6 +64,18 @@ vi.mock('@/utils/audit', () => ({
  * 
  * @author Agent E - 质量保障工程师
  */
+const ArchiveListViewHarness = ({ routeConfig }: { routeConfig: ArchiveRouteMode }) => {
+    const controller = useArchiveListController({ routeConfig });
+    const actions = useArchiveActions(controller);
+    return (
+        <ArchiveListView
+            routeConfig={routeConfig}
+            controller={controller}
+            actions={actions}
+        />
+    );
+};
+
 describe('ArchiveListView', () => {
     let queryClient: QueryClient;
 
@@ -81,15 +94,11 @@ describe('ArchiveListView', () => {
         });
     });
 
-    const renderArchiveListView = (props = {}) => {
+    const renderArchiveListView = (routeConfig: ArchiveRouteMode = 'voucher') => {
         return render(
             <QueryClientProvider client={queryClient}>
                 <BrowserRouter>
-                    <ArchiveListView
-                        title="档案管理"
-                        subTitle="会计凭证"
-                        {...props}
-                    />
+                    <ArchiveListViewHarness routeConfig={routeConfig} />
                 </BrowserRouter>
             </QueryClientProvider>
         );
@@ -184,13 +193,7 @@ describe('ArchiveListView', () => {
                 data: { records: [], total: 0, size: 10, current: 1 },
             });
 
-            render(
-                <QueryClientProvider client={queryClient}>
-                    <BrowserRouter>
-                        <ArchiveListView routeConfig="voucher" />
-                    </BrowserRouter>
-                </QueryClientProvider>
-            );
+            renderArchiveListView('voucher');
 
             await waitFor(() => {
                 expect(screen.getByText('档案管理')).toBeInTheDocument();
@@ -201,13 +204,7 @@ describe('ArchiveListView', () => {
         it('使用 pool 配置时应调用 poolApi', async () => {
             (poolApi.getList as Mock).mockResolvedValue([]);
 
-            render(
-                <QueryClientProvider client={queryClient}>
-                    <BrowserRouter>
-                        <ArchiveListView routeConfig="pool" />
-                    </BrowserRouter>
-                </QueryClientProvider>
-            );
+            renderArchiveListView('pool');
 
             await waitFor(() => {
                 expect(poolApi.getList).toHaveBeenCalled();

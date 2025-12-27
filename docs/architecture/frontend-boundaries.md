@@ -4,6 +4,9 @@
 > **版本**: 1.0  
 > **状态**: ✅ 强制执行
 
+> **更新说明** (2025-xx-xx): 当前强制规则以 `docs/architecture/module-boundaries.md` 与 `.eslintrc.cjs` 为准；
+> `components` 已收紧为禁止依赖 `features/pages/api/store`，页面仅能从模块入口引入。
+
 ## 一、现状诊断
 
 ### 当前目录结构

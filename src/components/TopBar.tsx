@@ -4,7 +4,6 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { Search } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { GlobalSearchDTO } from '../types';
 

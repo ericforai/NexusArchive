@@ -1,25 +1,41 @@
-// Input: React、lucide-react 图标、本地模块 api/admin、org/Tree
+// Input: React、lucide-react 图标、AdminSettingsApi、org/Tree
 // Output: React 组件 OrgSettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Loader2, Upload } from 'lucide-react';
-import { adminApi } from '../../api/admin';
-import { Tree } from '../org/Tree';
+import { AdminSettingsApi } from './types';
+import { Tree, TreeNode } from '../org/Tree';
+import { OrgImportResult, OrgNode } from '../../types';
 
 /**
  * 组织架构管理页面
  * 
  * 包含组织创建、树结构展示、列表管理、批量导入
  */
-export const OrgSettings: React.FC = () => {
-    const [orgs, setOrgs] = useState<any[]>([]);
-    const [orgTree, setOrgTree] = useState<any[]>([]);
+interface OrgSettingsProps {
+    adminApi: AdminSettingsApi;
+}
+
+export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
+    const [orgs, setOrgs] = useState<OrgNode[]>([]);
+    const [orgTree, setOrgTree] = useState<OrgNode[]>([]);
     const [orgLoading, setOrgLoading] = useState(false);
     const [orgForm, setOrgForm] = useState({ name: '', code: '', parentId: '', type: 'DEPARTMENT', orderNum: 0 });
     const [orgImportText, setOrgImportText] = useState('');
-    const [orgImportResult, setOrgImportResult] = useState<{ successCount: number; failCount: number; errors?: string[] } | null>(null);
+    const [orgImportResult, setOrgImportResult] = useState<OrgImportResult | null>(null);
+
+    const treeData = useMemo<TreeNode[]>(() => {
+        const mapNodes = (nodes: OrgNode[]): TreeNode[] => nodes.map((node) => ({
+            id: node.id,
+            label: node.name,
+            type: node.type,
+            parentId: node.parentId,
+            children: node.children ? mapNodes(node.children) : []
+        }));
+        return mapNodes(orgTree);
+    }, [orgTree]);
 
     useEffect(() => {
         const loadOrgs = async () => {
@@ -33,7 +49,7 @@ export const OrgSettings: React.FC = () => {
             }
         };
         loadOrgs();
-    }, []);
+    }, [adminApi]);
 
     const handleCreateOrg = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,10 +112,11 @@ export const OrgSettings: React.FC = () => {
 
     const handleOrgBulkImport = async () => {
         if (!orgImportText.trim()) return;
-        let payload: any[] = [];
+        let payload: Array<Partial<OrgNode>> = [];
         try {
-            payload = JSON.parse(orgImportText);
-            if (!Array.isArray(payload)) throw new Error();
+            const parsed = JSON.parse(orgImportText) as unknown;
+            if (!Array.isArray(parsed)) throw new Error();
+            payload = parsed as Array<Partial<OrgNode>>;
         } catch {
             alert('请输入合法的 JSON 数组，例如 [{"name":"财务部","code":"FIN"}]');
             return;
@@ -130,7 +147,7 @@ export const OrgSettings: React.FC = () => {
         try {
             const res = await adminApi.importOrg(file);
             if (res.code === 200 && res.data) {
-                setOrgImportResult(res.data as any);
+                setOrgImportResult(res.data);
                 const [listRes, treeRes] = await Promise.all([adminApi.listOrg(), adminApi.getOrgTree()]);
                 if (listRes.code === 200 && listRes.data) setOrgs(listRes.data);
                 if (treeRes.code === 200 && treeRes.data) setOrgTree(treeRes.data);
@@ -223,7 +240,7 @@ export const OrgSettings: React.FC = () => {
                             <Loader2 size={14} className="animate-spin mr-1" /> 加载中...
                         </div>
                     ) : (
-                        <Tree data={orgTree} />
+                        <Tree data={treeData} />
                     )}
                 </div>
 

@@ -9,6 +9,9 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan("com.nexusarchive.mapper")
+@MapperScan({
+        "com.nexusarchive.mapper",
+        "com.nexusarchive.modules.borrowing.infra.mapper"
+})
 public class MybatisConfig {
 }

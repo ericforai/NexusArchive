@@ -12,6 +12,10 @@
 | 文件 | 功能 |
 | --- | --- |
 | `VoucherMatchingPage.tsx` | 凭证匹配页面容器 |
+| `VoucherMatchingView.tsx` | 匹配视图 |
+| `VoucherMatchingView.css` | 匹配视图样式 |
+| `OnboardingWizard.tsx` | 匹配向导 |
+| `ComplianceReport.tsx` | 匹配合规报告 |
 
 ## 架构约束
 

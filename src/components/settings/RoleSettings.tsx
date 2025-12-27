@@ -1,11 +1,12 @@
-// Input: React、lucide-react 图标、本地模块 api/admin
+// Input: React、lucide-react 图标、AdminSettingsApi
 // Output: React 组件 RoleSettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Loader2 } from 'lucide-react';
-import { adminApi, Role } from '../../api/admin';
+import { AdminSettingsApi } from './types';
+import { Role } from '../../types';
 
 interface RoleForm {
     id?: string;
@@ -24,7 +25,11 @@ const EXCLUSIVE_ROLE_CODES = ['system_admin', 'security_admin', 'audit_admin'];
  * 
  * 包含角色 CRUD 和权限分配
  */
-export const RoleSettings: React.FC = () => {
+interface RoleSettingsProps {
+    adminApi: AdminSettingsApi;
+}
+
+export const RoleSettings: React.FC<RoleSettingsProps> = ({ adminApi }) => {
     const [roles, setRoles] = useState<Role[]>([]);
     const [roleLoading, setRoleLoading] = useState(false);
     const [roleSaving, setRoleSaving] = useState(false);
@@ -63,13 +68,13 @@ export const RoleSettings: React.FC = () => {
                     }));
                     setPermissionOptions(mapped);
                 }
-            } catch (e) {
+            } catch {
                 // ignore
             }
         };
         loadRoles();
         loadPerms();
-    }, []);
+    }, [adminApi]);
 
     const togglePermissionSelection = (perm: string) => {
         setRoleForm((prev) => {

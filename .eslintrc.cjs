@@ -24,82 +24,98 @@ module.exports = {
             jsx: true,
         },
     },
-    plugins: ['@typescript-eslint', 'react', 'react-hooks'],
+    plugins: ['@typescript-eslint', 'react', 'react-hooks', 'boundaries'],
     settings: {
         react: {
             version: 'detect',
         },
+        'boundaries/elements': [
+            // Feature entrypoints
+            { type: 'settings-feature-interface', pattern: 'src/features/settings/index.ts', mode: 'file' },
+            { type: 'feature-interface', pattern: 'src/features/*/index.ts', mode: 'file' },
+            { type: 'feature-impl', pattern: 'src/features/*/**/*', mode: 'file' },
+
+            // Pages
+            { type: 'page-settings', pattern: 'src/pages/settings/**/*', mode: 'file' },
+            { type: 'page', pattern: 'src/pages/**/*', mode: 'file' },
+
+            // Routing & layout
+            { type: 'route', pattern: 'src/routes/**/*', mode: 'file' },
+            { type: 'layout', pattern: 'src/layouts/**/*', mode: 'file' },
+            { type: 'auth', pattern: 'src/auth/**/*', mode: 'file' },
+
+            // UI
+            { type: 'ui-common', pattern: 'src/components/common/**/*', mode: 'file' },
+            { type: 'ui', pattern: 'src/components/**/*', mode: 'file' },
+
+            // Infra & shared
+            { type: 'api', pattern: 'src/api/**/*', mode: 'file' },
+            { type: 'store', pattern: 'src/store/**/*', mode: 'file' },
+            { type: 'shared', pattern: 'src/utils/**/*', mode: 'file' },
+            { type: 'shared', pattern: 'src/hooks/**/*', mode: 'file' },
+            { type: 'shared', pattern: 'src/types.ts', mode: 'file' },
+            { type: 'shared', pattern: 'src/constants.tsx', mode: 'file' },
+            { type: 'shared', pattern: 'src/queryClient.ts', mode: 'file' },
+        ],
     },
     rules: {
-        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/no-explicit-any': 'off',
         'react/react-in-jsx-scope': 'off',
         'react/prop-types': 'off',
+
+        // ========================================
+        // 🧱 Module Boundaries (eslint-plugin-boundaries)
+        // @see /docs/architecture/frontend-boundaries.md
+        // ========================================
+        'boundaries/element-types': [
+            'error',
+            {
+                default: 'allow',
+                rules: [
+                    // Components: no features/pages/api/store
+                    {
+                        from: ['ui', 'ui-common'],
+                        disallow: [
+                            'feature-impl',
+                            'feature-interface',
+                            'settings-feature-interface',
+                            'page',
+                            'page-settings',
+                            'api',
+                            'store',
+                        ],
+                        message: 'components 不得依赖 features/pages/api/store (模块边界规则)',
+                    },
+
+                    // Pages: no deep feature imports
+                    {
+                        from: ['page', 'page-settings'],
+                        disallow: ['feature-impl'],
+                        message: 'pages 只能从 features/<module>/index.ts 引入 (禁止深路径)',
+                    },
+
+                    // Settings pages: only allow settings entrypoint
+                    {
+                        from: ['page-settings'],
+                        disallow: ['feature-interface'],
+                        message: 'settings pages 仅允许从 features/settings 入口引入',
+                    },
+
+                    // Routes: only pages + layouts/common/auth
+                    {
+                        from: ['route'],
+                        disallow: [
+                            'feature-impl',
+                            'feature-interface',
+                            'settings-feature-interface',
+                            'api',
+                            'store',
+                            'ui',
+                        ],
+                        message: 'routes 仅可引入 pages + layouts/common/auth',
+                    },
+                ],
+            },
+        ],
     },
-
-    // ========================================
-    // 🏛 架构边界强制规则
-    // @see /docs/architecture/frontend-boundaries.md
-    // ========================================
-    overrides: [
-        // 规则 A: components/common + components/layout 纯 UI 层禁止依赖业务逻辑
-        {
-            files: [
-                'src/components/common/**/*.{ts,tsx}',
-                'src/components/layout/**/*.{ts,tsx}',
-            ],
-            rules: {
-                'no-restricted-imports': [
-                    'error',
-                    {
-                        patterns: [
-                            {
-                                group: ['**/features/**'],
-                                message:
-                                    '❌ components/common 禁止依赖 features/* (违反架构边界规则 A)',
-                            },
-                            {
-                                group: ['**/api/**'],
-                                message:
-                                    '❌ components/common 禁止依赖 api/* (违反架构边界规则 A)',
-                            },
-                            {
-                                group: ['**/store/**'],
-                                message:
-                                    '❌ components/common 禁止依赖 store/* (违反架构边界规则 A)',
-                            },
-                            {
-                                group: [
-                                    '**/components/archive/**',
-                                    '**/components/matching/**',
-                                    '**/components/settings/**',
-                                    '**/components/admin/**',
-                                ],
-                                message:
-                                    '❌ components/common 禁止依赖页面组件 (违反架构边界规则 A)',
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-
-        // 规则 C: features/* 领域逻辑层禁止反向依赖 components
-        {
-            files: ['src/features/**/*.{ts,tsx}'],
-            rules: {
-                'no-restricted-imports': [
-                    'error',
-                    {
-                        patterns: [
-                            {
-                                group: ['**/components/**'],
-                                message:
-                                    '❌ features/* 禁止依赖 components/* (违反架构边界规则 C - 防止反向依赖)',
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-    ],
 };

@@ -1,6 +1,7 @@
 一旦我所属的文件夹有所变化，请更新我。
 本目录存放服务实现类。
 用于实现业务服务逻辑。
+借阅模块服务实现已迁移至 `com.nexusarchive.modules.borrowing.app`。
 
 ## 文件清单
 
@@ -15,7 +16,6 @@
 | `ArchiveSecurityServiceImpl.java` | 服务实现 | ArchiveSecurityServiceImpl 业务实现 |
 | `AttachmentServiceImpl.java` | 服务实现 | AttachmentServiceImpl 业务实现 |
 | `BasFondsServiceImpl.java` | 服务实现 | BasFondsServiceImpl 业务实现 |
-| `BorrowingServiceImpl.java` | 服务实现 | BorrowingServiceImpl 业务实现 |
 | `DestructionServiceImpl.java` | 服务实现 | DestructionServiceImpl 业务实现 |
 | `FileStorageServiceImpl.java` | 服务实现 | FileStorageServiceImpl 业务实现 |
 | `FourNatureCheckServiceImpl.java` | 服务实现 | FourNatureCheckServiceImpl 业务实现 |

@@ -11,7 +11,17 @@
 
 | 文件 | 功能 |
 | --- | --- |
-| `ArchiveListPage.tsx` | 档案列表页面容器，接收 `routeConfig` 并渲染 `ArchiveListView` |
+| `ArchiveListPage.tsx` | 档案列表页面容器 |
+| `ArchiveListView.tsx` | 档案列表视图 |
+| `ArchiveDetailModal.tsx` | 档案详情弹窗 |
+| `AddRecordModal.tsx` | 新增档案弹窗 |
+| `ComplianceModal.tsx` | 合规检查弹窗 |
+| `ComplianceReportView.tsx` | 合规报告页面 |
+| `CreateOriginalVoucherDialog.tsx` | 原始凭证创建弹窗 |
+| `LinkModal.tsx` | 关联凭证弹窗 |
+| `MatchPreviewModal.tsx` | 匹配预览弹窗 |
+| `OriginalVoucherListView.tsx` | 原始凭证列表视图 |
+| `RuleConfigModal.tsx` | 规则配置弹窗 |
 
 ## 架构约束
 

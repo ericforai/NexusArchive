@@ -64,3 +64,5 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExit, children }) =>
         </div>
     );
 };
+
+export default AdminLayout;

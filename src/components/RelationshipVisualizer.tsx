@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { ArrowRight, FileText, Receipt, FileCheck, CreditCard, Building, FileSignature, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { FileText, Receipt, FileCheck, CreditCard, Building, FileSignature, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { GenericRow, LinkedDocument } from '../types';
 
 interface RelationshipVisualizerProps {

@@ -1,6 +1,7 @@
 一旦我所属的文件夹有所变化，请更新我。
 本目录存放数据访问层 Mapper。
 用于数据库读写映射。
+借阅模块 Mapper 已迁移至 `com.nexusarchive.modules.borrowing.infra.mapper`。
 
 ## 文件清单
 
@@ -19,7 +20,6 @@
 | `ArcSignatureLogMapper.java` | Mapper 接口 | ArcSignatureLogMapper 数据访问 |
 | `AuditInspectionLogMapper.java` | Mapper 接口 | AuditInspectionLogMapper 数据访问 |
 | `BasFondsMapper.java` | Mapper 接口 | BasFondsMapper 数据访问 |
-| `BorrowingMapper.java` | Mapper 接口 | BorrowingMapper 数据访问 |
 | `ConvertLogMapper.java` | Mapper 接口 | ConvertLogMapper 数据访问 |
 | `DestructionMapper.java` | Mapper 接口 | DestructionMapper 数据访问 |
 | `ErpConfigMapper.java` | Mapper 接口 | ErpConfigMapper 数据访问 |

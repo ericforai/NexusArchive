@@ -6,7 +6,8 @@
 package com.nexusarchive.service.impl;
 
 import com.nexusarchive.dto.workflow.WorkflowTaskDto;
-import com.nexusarchive.service.BorrowingService;
+import com.nexusarchive.modules.borrowing.api.dto.BorrowingApprovalRequest;
+import com.nexusarchive.modules.borrowing.app.BorrowingFacade;
 import com.nexusarchive.service.DestructionService;
 import com.nexusarchive.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WorkflowServiceImpl implements WorkflowService {
 
-    private final BorrowingService borrowingService;
+    private final BorrowingFacade borrowingFacade;
     private final DestructionService destructionService;
 
     // In-memory mock storage for tasks
@@ -70,7 +71,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         // Callback to business services based on businessType
         if ("BORROWING".equals(task.getBusinessType())) {
-            borrowingService.approveBorrowing(task.getBusinessKey(), approved, comment);
+            BorrowingApprovalRequest approvalRequest = new BorrowingApprovalRequest();
+            approvalRequest.setApproved(approved);
+            approvalRequest.setComment(comment);
+            borrowingFacade.approveBorrowing(task.getBusinessKey(), approvalRequest);
             log.info("Borrowing request {} {}", task.getBusinessKey(), approved ? "APPROVED" : "REJECTED");
         } else if ("DESTRUCTION".equals(task.getBusinessType())) {
             if (approved) {

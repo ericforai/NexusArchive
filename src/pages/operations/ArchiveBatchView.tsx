@@ -6,13 +6,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Card, Table, Button, Space, Tag, Modal, Form, DatePicker,
-    message, Spin, Empty, Descriptions, Progress, Alert, Tabs, Tooltip,
+    message, Spin, Empty, Descriptions, Alert, Tabs, Tooltip,
     Popconfirm, Input, Select, Row, Col, Statistic
 } from 'antd';
 import {
     PlusOutlined, CheckCircleOutlined, CloseCircleOutlined,
     PlayCircleOutlined, EyeOutlined, DeleteOutlined,
-    FileTextOutlined, SafetyCertificateOutlined, ReloadOutlined,
+    SafetyCertificateOutlined, ReloadOutlined,
     PlusCircleOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -22,7 +22,6 @@ import {
     ArchiveBatch,
     ArchiveBatchItem,
     BatchStatus,
-    ValidationReport,
     IntegrityReport
 } from '../../api/archiveBatch';
 
@@ -54,7 +53,6 @@ const ArchiveBatchView: React.FC = () => {
     const [approvalModalVisible, setApprovalModalVisible] = useState(false);
     const [selectedBatch, setSelectedBatch] = useState<ArchiveBatch | null>(null);
     const [batchItems, setBatchItems] = useState<ArchiveBatchItem[]>([]);
-    const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
     const [integrityReport, setIntegrityReport] = useState<IntegrityReport | null>(null);
     const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
     const [approvalComment, setApprovalComment] = useState('');
@@ -80,7 +78,7 @@ const ArchiveBatchView: React.FC = () => {
             const result = await archiveBatchApi.listBatches(page, pageSize, undefined, statusFilter);
             setBatches(result.records);
             setTotal(result.total);
-        } catch (err) {
+        } catch {
             message.error('加载批次列表失败');
         } finally {
             setLoading(false);
@@ -129,11 +127,8 @@ const ArchiveBatchView: React.FC = () => {
             const items = await archiveBatchApi.getItems(batch.id);
             setBatchItems(items);
 
-            if (batch.validationReport) {
-                setValidationReport(batch.validationReport as ValidationReport);
-            }
             if (batch.integrityReport) {
-                setIntegrityReport(batch.integrityReport as IntegrityReport);
+                setIntegrityReport(batch.integrityReport);
             }
         } catch {
             message.error('加载批次详情失败');
@@ -229,7 +224,7 @@ const ArchiveBatchView: React.FC = () => {
             if (data.code === 200) {
                 setAvailableVouchers(data.data?.records || data.data || []);
             }
-        } catch (err) {
+        } catch {
             message.error('加载凭证列表失败');
         } finally {
             setLoadingVouchers(false);

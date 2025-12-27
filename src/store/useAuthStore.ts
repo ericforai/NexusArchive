@@ -183,7 +183,7 @@ export const useAuthStore = create<AuthState>()(
             // 使用 createJSONStorage 包装 safeStorage，处理序列化和类型
             storage: createJSONStorage(() => safeStorage),
             // hydration 完成后设置 _hasHydrated 为 true
-            onRehydrateStorage: (state) => {
+            onRehydrateStorage: () => {
                 console.log('[AuthStore] Starting hydration...');
                 return (hydratedState, error) => {
                     if (error) {
@@ -202,7 +202,7 @@ export const useAuthStore = create<AuthState>()(
 if (typeof window !== 'undefined') {
     // 使用 zustand persist 的 rehydrate 完成时间很短，通常在下一个 tick 就完成
     // 我们使用 setTimeout 0 来确保在 hydration 完成后设置标志
-    const unsubFinishHydration = useAuthStore.persist.onFinishHydration(() => {
+    useAuthStore.persist.onFinishHydration(() => {
         console.log('[AuthStore] onFinishHydration called');
         useAuthStore.setState({ _hasHydrated: true });
     });

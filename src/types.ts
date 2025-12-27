@@ -275,6 +275,39 @@ export interface PageResult<T> {
 }
 
 // Settings & Integration Types
+export interface AdminSettingItem {
+  configKey: string;
+  configValue: string;
+  category?: string;
+}
+
+export interface AdminSettingUpdate {
+  configKey: string;
+  configValue: string;
+  category: string;
+}
+
+export interface OrgNode {
+  id: string;
+  name: string;
+  code?: string;
+  parentId?: string;
+  type?: string;
+  orderNum?: number;
+  children?: OrgNode[];
+}
+
+export interface OrgImportResult {
+  successCount: number;
+  failCount: number;
+  errors?: string[];
+}
+
+export interface OrgTemplateInfo {
+  csvHeader?: string;
+  example?: string;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -356,6 +389,46 @@ export interface LicenseInfo {
   maxUsers: number;
   nodeLimit: number;
   raw?: string;
+}
+
+export interface ConnectionTestResult {
+  success: boolean;
+  adapterName?: string;
+  message: string;
+}
+
+export interface IntegrationMonitoring {
+  totalSyncCount: number;
+  successRate: number;
+  evidenceCoverage: number;
+}
+
+export interface IntegrationDiagnosisStep {
+  name: string;
+  status: 'SUCCESS' | 'FAIL' | 'WARNING';
+  message: string;
+  detail?: string;
+}
+
+export interface IntegrationDiagnosisResult {
+  status: string;
+  configName: string;
+  erpType: string;
+  steps: IntegrationDiagnosisStep[];
+}
+
+export interface ReconciliationRecord {
+  fiscalYear: string;
+  fiscalPeriod: string;
+  subjectName: string;
+  erpDebitTotal: number;
+  erpVoucherCount: number;
+  arcDebitTotal: number;
+  arcVoucherCount: number;
+  attachmentCount: number;
+  attachmentMissingCount: number;
+  reconStatus: 'SUCCESS' | 'DISCREPANCY' | 'ERROR';
+  reconMessage: string;
 }
 
 export interface AuditLog {

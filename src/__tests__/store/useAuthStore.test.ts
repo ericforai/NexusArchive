@@ -3,7 +3,7 @@
 // Pos: 前端单元测试
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuthStore, User } from '@/store/useAuthStore';
 import { act } from '@testing-library/react';
 

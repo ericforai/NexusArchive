@@ -3,7 +3,7 @@
 // Pos: src/pages/archives/ComplianceModal.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { X, ShieldCheck, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { client } from '../../api/client';
 
@@ -40,13 +40,53 @@ export const ComplianceModal: React.FC<ComplianceModalProps> = ({
     const [result, setResult] = useState<CheckResult | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (isOpen) {
-            loadData();
-        }
-    }, [isOpen, batchId]);
+    const mapBatchReportToResult = useCallback((report: any): CheckResult => {
+        // Report keys from ArchiveSubmitBatchServiceImpl: 
+        // We need to parse the map. The map returns keys like "authenticity", "integrity" etc? 
+        // Wait, ArchiveSubmitBatchServiceImpl returns a Map<String, Object> where keys are NOT "authenticity".
+        // It returns a list of results actually? Or a map of "checkType" -> result?
+        // Let's look at ArchiveSubmitBatchServiceImpl again.
+        // It returns Map<String, Object> report = new LinkedHashMap<>();
+        // report.put("authenticity", ...); // No, looking at code:
+        // checks.add(checkAuthenticity(batch)); ... return report; 
+        // Actually the code in Step 40 view showed:
+        // checks.add(...) then report.put("checks", checks)? NO.
+        // Step 40 snippet:
+        // Map<String, Object> report = new LinkedHashMap<>();
+        // ...
+        // checks.add(checkAuthenticity(batch));
+        // ...
+        // report.put("checks", checks);
+        // report.put("overallResult", ...);
 
-    const loadData = async () => {
+        // So we need to parse `report.checks`.
+        const checkList = (report.checks as any[]) || [];
+
+        const findCheck = (type: string) => checkList.find((c: any) => c.checkType === type) || { result: 'PASS', errors: [] };
+
+        const auth = findCheck('AUTHENTICITY');
+        const integ = findCheck('INTEGRITY');
+        const use = findCheck('USABILITY');
+        const sec = findCheck('SECURITY');
+
+        const isPass = (c: any) => c.result === 'PASS';
+        const getScore = (c: any) => isPass(c) ? 100 : (c.result === 'WARNING' ? 90 : 60); // Simplified scoring
+
+        const overallScore = Math.round((getScore(auth) + getScore(integ) + getScore(use) + getScore(sec)) / 4);
+
+        return {
+            overallScore,
+            status: overallScore === 100 ? 'PASS' : (overallScore > 60 ? 'WARNING' : 'FAIL'),
+            details: {
+                authenticity: { score: getScore(auth), status: auth.result, items: auth.errors || (isPass(auth) ? ['哈希校验通过'] : []) },
+                integrity: { score: getScore(integ), status: integ.result, items: integ.errors || (isPass(integ) ? ['元数据完整'] : []) },
+                usability: { score: getScore(use), status: use.result, items: use.errors || (isPass(use) ? ['格式校验通过'] : []) },
+                safety: { score: getScore(sec), status: sec.result, items: sec.errors || (isPass(sec) ? ['无安全威胁'] : []) }
+            }
+        };
+    }, []);
+
+    const loadData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -100,61 +140,13 @@ export const ComplianceModal: React.FC<ComplianceModalProps> = ({
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [batchId, mapBatchReportToResult]);
 
-    const mapBatchReportToResult = (report: any): CheckResult => {
-        // Evaluate overall from the 4 checks
-        const checks = [
-            report.authenticity || { result: 'PASS' }, // Simplified mapping key
-            report.integrity || { result: 'PASS' },
-            report.usability || { result: 'PASS' },
-            report.security || { result: 'PASS' } // Note key difference
-        ];
-
-        // Report keys from ArchiveSubmitBatchServiceImpl: 
-        // We need to parse the map. The map returns keys like "authenticity", "integrity" etc? 
-        // Wait, ArchiveSubmitBatchServiceImpl returns a Map<String, Object> where keys are NOT "authenticity".
-        // It returns a list of results actually? Or a map of "checkType" -> result?
-        // Let's look at ArchiveSubmitBatchServiceImpl again.
-        // It returns Map<String, Object> report = new LinkedHashMap<>();
-        // report.put("authenticity", ...); // No, looking at code:
-        // checks.add(checkAuthenticity(batch)); ... return report; 
-        // Actually the code in Step 40 view showed:
-        // checks.add(...) then report.put("checks", checks)? NO.
-        // Step 40 snippet:
-        // Map<String, Object> report = new LinkedHashMap<>();
-        // ...
-        // checks.add(checkAuthenticity(batch));
-        // ...
-        // report.put("checks", checks);
-        // report.put("overallResult", ...);
-
-        // So we need to parse `report.checks`.
-        const checkList = (report.checks as any[]) || [];
-
-        const findCheck = (type: string) => checkList.find((c: any) => c.checkType === type) || { result: 'PASS', errors: [] };
-
-        const auth = findCheck('AUTHENTICITY');
-        const integ = findCheck('INTEGRITY');
-        const use = findCheck('USABILITY');
-        const sec = findCheck('SECURITY');
-
-        const isPass = (c: any) => c.result === 'PASS';
-        const getScore = (c: any) => isPass(c) ? 100 : (c.result === 'WARNING' ? 90 : 60); // Simplified scoring
-
-        const overallScore = Math.round((getScore(auth) + getScore(integ) + getScore(use) + getScore(sec)) / 4);
-
-        return {
-            overallScore,
-            status: overallScore === 100 ? 'PASS' : (overallScore > 60 ? 'WARNING' : 'FAIL'),
-            details: {
-                authenticity: { score: getScore(auth), status: auth.result, items: auth.errors || (isPass(auth) ? ['哈希校验通过'] : []) },
-                integrity: { score: getScore(integ), status: integ.result, items: integ.errors || (isPass(integ) ? ['元数据完整'] : []) },
-                usability: { score: getScore(use), status: use.result, items: use.errors || (isPass(use) ? ['格式校验通过'] : []) },
-                safety: { score: getScore(sec), status: sec.result, items: sec.errors || (isPass(sec) ? ['无安全威胁'] : []) }
-            }
-        };
-    };
+    useEffect(() => {
+        if (isOpen) {
+            loadData();
+        }
+    }, [isOpen, loadData]);
 
     if (!isOpen) return null;
 

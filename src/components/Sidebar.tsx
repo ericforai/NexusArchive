@@ -3,11 +3,11 @@
 // Pos: 业务页面组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { NAV_ITEMS } from '../constants';
 import { NavItem, ViewState } from '../types';
-import { ChevronRight, ChevronDown, ChevronsLeft, ChevronsRight, Command, FolderOpen, LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronsRight, Command, FolderOpen } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../routes/paths';
 
@@ -66,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { hasPermission } = usePermissions();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
+  const [collapsedTopLevel, setCollapsedTopLevel] = useState<Set<string>>(new Set());
 
   // --- Auto-Expand Logic ---
   // Find which top-level ID matches the current path
@@ -79,14 +80,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return ViewState.PORTAL;
   }, [location.pathname]);
 
-  // Initial expansion of top-level menu
-  useEffect(() => {
-    setExpandedMenus(prev => {
-      const next = new Set(prev);
-      if (activeTopLevelId) next.add(activeTopLevelId);
-      return next;
-    });
-  }, [activeTopLevelId]);
+  const expandedMenusWithAuto = useMemo(() => {
+    const next = new Set(expandedMenus);
+    if (activeTopLevelId && !collapsedTopLevel.has(activeTopLevelId)) {
+      next.add(activeTopLevelId);
+    }
+    return next;
+  }, [expandedMenus, activeTopLevelId, collapsedTopLevel]);
 
   // Filter Nav Items by Permission
   const filteredNav = useMemo(() => {
@@ -98,15 +98,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // --- Accordion Logic ---
   // Toggles an ID while closing its siblings
-  const handleToggle = useCallback((id: string, siblings: string[]) => {
+  const handleToggle = useCallback((id: string, siblings: string[], isTopLevel: boolean) => {
     if (collapsed) {
       onToggle();
       return;
     }
 
+    const isCurrentlyExpanded = expandedMenusWithAuto.has(id);
+
     setExpandedMenus(prev => {
       const next = new Set(prev);
-      const isCurrentlyExpanded = next.has(id);
 
       if (isCurrentlyExpanded) {
         // Just collapse this one
@@ -118,7 +119,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
       return next;
     });
-  }, [collapsed, onToggle]);
+
+    if (isTopLevel && id === activeTopLevelId) {
+      setCollapsedTopLevel(prev => {
+        const next = new Set(prev);
+        if (isCurrentlyExpanded) {
+          next.add(id);
+        } else {
+          next.delete(id);
+        }
+        return next;
+      });
+    }
+  }, [collapsed, onToggle, expandedMenusWithAuto, activeTopLevelId]);
 
   // --- Active Check Logic ---
   const isItemActive = useCallback((item: NavItem) => {
@@ -155,7 +168,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // --- Recursive Render Function ---
   const renderNavNode = (item: NavItem, level: number, siblings: string[]) => {
     const hasChildren = item.children && item.children.length > 0;
-    const isExpanded = expandedMenus.has(item.id);
+    const isExpanded = expandedMenusWithAuto.has(item.id);
     const isActive = isItemActive(item);
 
     // Determine the main link path (if it's a leaf or clickable parent)
@@ -185,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {hasChildren ? (
           // Parent Node: Button to toggle
           <button
-            onClick={() => handleToggle(item.id, siblings)}
+            onClick={() => handleToggle(item.id, siblings, level === 0)}
             className={`${commonClasses} ${isItemActive(item) && collapsed ? activeClasses : filterActiveParent(isActive, isExpanded) ? 'text-white' : inactiveClasses}`}
             title={collapsed ? item.label : ''}
           >
@@ -236,14 +249,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className={`overflow-hidden transition-all duration-300 ${level === 0 ? 'mt-1' : ''}`}>
             {/* Border line for hierarchy */}
             {level === 0 && <div className="ml-7 border-l border-slate-800 space-y-1">
-              {item.children!.map((child) => renderNavNode( // eslint-disable-line
+              {item.children!.map((child) => renderNavNode(
                 child,
                 level + 1,
                 item.children!.map(s => s.id).filter(id => id !== child.id) // Pass siblings logic
               ))}
             </div>}
             {level > 0 && <div className="ml-4 border-l border-slate-800 space-y-1">
-              {item.children!.map((child) => renderNavNode( // eslint-disable-line
+              {item.children!.map((child) => renderNavNode(
                 child,
                 level + 1,
                 item.children!.map(s => s.id).filter(id => id !== child.id)

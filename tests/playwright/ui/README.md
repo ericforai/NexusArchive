@@ -8,3 +8,4 @@
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
 | `search_preview.spec.ts` | 源码/脚本 | search_preview.spec 脚本/模块 |
+| `smoke_core_paths.spec.ts` | 源码/脚本 | Settings/Borrowing/Archive 关键路径冒烟 |

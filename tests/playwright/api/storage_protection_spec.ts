@@ -4,12 +4,12 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('存储空间耗尽保护', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
@@ -22,7 +22,7 @@ test.describe('存储空间耗尽保护', () => {
 
   test.skip('存储耗尽时阻断写入并告警（需要后端模拟接口）', async () => {
     // 预期：返回 507 状态码，错误码 STORAGE_FULL，无脏数据，无静默失败
-    if (!authCtx) test.skip('登录失败，跳过存储保护测试');
+    test.skip(!authCtx, '登录失败，跳过存储保护测试');
     
     // 1. 模拟存储空间 95%+（需要后端提供模拟接口）
     // const simulateRes = await authCtx!.post('/api/admin/storage/simulate', {
@@ -61,13 +61,13 @@ test.describe('存储空间耗尽保护', () => {
   });
 
   test('存储空间查询（如果接口存在）', async () => {
-    if (!authCtx) test.skip('登录失败，跳过存储查询测试');
+    test.skip(!authCtx, '登录失败，跳过存储查询测试');
     
     // 尝试查询存储空间使用情况
     const storageRes = await authCtx!.get('/api/admin/storage/usage');
     
     if (storageRes.status() === 404) {
-      test.skip('后端未提供存储空间查询接口');
+      test.skip(true, '后端未提供存储空间查询接口');
     }
     
     if (storageRes.ok()) {
@@ -83,7 +83,6 @@ test.describe('存储空间耗尽保护', () => {
     }
   });
 });
-
 
 
 

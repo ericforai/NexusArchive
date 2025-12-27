@@ -20,8 +20,8 @@ export interface ArchiveBatch {
     docCount: number;
     fileCount: number;
     totalSizeBytes: number;
-    validationReport?: Record<string, unknown>;
-    integrityReport?: Record<string, unknown>;
+    validationReport?: ValidationReport;
+    integrityReport?: IntegrityReport;
     errorMessage?: string;
     submittedBy?: number;
     submittedAt?: string;

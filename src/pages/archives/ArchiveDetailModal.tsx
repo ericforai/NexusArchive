@@ -9,7 +9,7 @@
  * 档案详情弹窗，包含业务元数据展示、文件预览、附件列表。
  * 从 ArchiveListView 中抽离，减少主组件 280+ 行。
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     FileText, X, Package, Loader2, Layers, Eye, Upload, Receipt
 } from 'lucide-react';
@@ -70,15 +70,6 @@ export const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({
 }) => {
     const [activeDetailTab, setActiveDetailTab] = useState<'main' | 'attachments'>('main');
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // 重置 Tab 当打开新弹窗时
-    useEffect(() => {
-        if (open && row) {
-            setActiveDetailTab('main');
-            // 自动设置主文件预览
-            onPreviewIdChange(mainFileId || row.id || null);
-        }
-    }, [open, row, mainFileId, onPreviewIdChange]);
 
     const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];

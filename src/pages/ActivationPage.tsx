@@ -8,9 +8,11 @@ import { LicenseSettings } from '../components/settings/LicenseSettings';
 import { LogOut } from 'lucide-react';
 import { authApi } from '../api/auth';
 import { useNavigate } from 'react-router-dom';
+import { useLicenseSettingsApi } from '../features/settings';
 
 export const ActivationPage: React.FC = () => {
     const navigate = useNavigate();
+    const { licenseApi } = useLicenseSettingsApi();
 
     const handleLogout = async () => {
         await authApi.logout();
@@ -27,7 +29,7 @@ export const ActivationPage: React.FC = () => {
                         <p className="text-slate-500">请使用管理员账号导入新的 License 证书以继续使用。</p>
                     </div>
 
-                    <LicenseSettings />
+                    <LicenseSettings licenseApi={licenseApi} />
 
                     <div className="mt-8 text-center">
                         <button

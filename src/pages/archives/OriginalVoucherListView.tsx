@@ -3,27 +3,23 @@
 // Pos: src/pages/archives/OriginalVoucherListView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    Search, Filter, Plus, FileText, Eye, Trash2, Link2,
-    CheckCircle2, Clock, AlertCircle, Archive, RefreshCw,
-    ChevronDown, MoreHorizontal
+    Search, Filter, Plus, Eye, Trash2,
+    Archive, RefreshCw, MoreHorizontal
 } from 'lucide-react';
 import {
     getOriginalVouchers,
     getOriginalVoucherTypes,
     deleteOriginalVoucher,
     submitForArchive,
-    confirmArchive,
-    OriginalVoucher,
-    OriginalVoucherType,
     VOUCHER_CATEGORIES,
     ARCHIVE_STATUS
 } from '../../api/originalVoucher';
-import { CreateOriginalVoucherDialog } from './archive/CreateOriginalVoucherDialog';
-import { VoucherPreviewDrawer } from './panorama/VoucherPreviewDrawer';
+import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
+import { VoucherPreviewDrawer } from '../panorama/VoucherPreviewDrawer';
 
 // 状态徽章组件
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -91,7 +87,6 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     subTitle = '原始凭证管理',
     poolMode = false
 }) => {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     const location = useLocation();
@@ -102,29 +97,16 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [search, setSearch] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(typeFromUrl);
-
     // 预览状态
     const [previewVoucherId, setPreviewVoucherId] = useState<string | null>(null);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState('');
-    const [typeFilter, setTypeFilter] = useState(typeFromUrl || '');
+    const typeFilter = typeFromUrl || '';
     const [statusFilter, setStatusFilter] = useState('');
     const [showFilters, setShowFilters] = useState(false);
 
     // 新建弹窗状态
     const [showCreateDialog, setShowCreateDialog] = useState(false);
-
-    // Update filter when URL changes
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const t = params.get('type');
-        if (t) {
-            setTypeFilter(t);
-        } else {
-            setTypeFilter('');
-        }
-    }, [location.search]);
 
     // 选中行
     const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -164,14 +146,6 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     // 提交归档 mutation
     const submitMutation = useMutation({
         mutationFn: submitForArchive,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['originalVouchers'] });
-        }
-    });
-
-    // 确认归档 mutation
-    const confirmMutation = useMutation({
-        mutationFn: confirmArchive,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['originalVouchers'] });
         }
@@ -438,6 +412,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
 
             {/* Dialog */}
             <CreateOriginalVoucherDialog
+                key={`create-voucher-${showCreateDialog ? 'open' : 'closed'}-${typeFilter || 'all'}-${categoryFilter || 'all'}`}
                 isOpen={showCreateDialog}
                 onClose={() => setShowCreateDialog(false)}
                 initialType={typeFilter}

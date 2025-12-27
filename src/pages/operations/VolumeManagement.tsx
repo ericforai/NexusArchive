@@ -3,7 +3,7 @@
 // Pos: src/pages/operations/VolumeManagement.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     FolderPlus,
     FileCheck,
@@ -11,12 +11,12 @@ import {
     CheckCircle,
     XCircle,
     FileText,
-    ChevronRight,
     Calendar,
     Archive,
     RefreshCw,
     Download
 } from 'lucide-react';
+import { client } from '../../api/client';
 
 interface Volume {
     id: string;
@@ -45,8 +45,6 @@ interface VolumeFile {
     status: string;
 }
 
-import { client } from '../../api/client';
-
 // ... (imports)
 
 // Remove API_BASE constant
@@ -62,11 +60,12 @@ export default function VolumeManagement() {
     const [registrationForm, setRegistrationForm] = useState<any>(null);
     const [showFormModal, setShowFormModal] = useState(false);
 
-    useEffect(() => {
-        loadVolumes();
+    const showMessage = useCallback((type: 'success' | 'error', text: string) => {
+        setMessage({ type, text });
+        setTimeout(() => setMessage(null), 3000);
     }, []);
 
-    const loadVolumes = async () => {
+    const loadVolumes = useCallback(async () => {
         setLoading(true);
         console.log('[VolumeManagement] Loading volumes...');
         try {
@@ -81,25 +80,25 @@ export default function VolumeManagement() {
         } catch (error) {
             console.error('[VolumeManagement] API Error:', error);
             showMessage('error', '加载案卷列表失败');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-    };
+    }, [showMessage]);
 
-    const loadVolumeFiles = async (volumeId: string) => {
+    useEffect(() => {
+        loadVolumes();
+    }, [loadVolumes]);
+
+    const loadVolumeFiles = useCallback(async (volumeId: string) => {
         try {
             const res = await client.get(`/volumes/${volumeId}/files`);
             if (res.data.code === 200) {
                 setVolumeFiles(res.data.data || []);
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '加载卷内文件失败');
         }
-    };
-
-    const showMessage = (type: 'success' | 'error', text: string) => {
-        setMessage({ type, text });
-        setTimeout(() => setMessage(null), 3000);
-    };
+    }, [showMessage]);
 
     const handleAssemble = async () => {
         if (!fiscalPeriod) {
@@ -117,7 +116,7 @@ export default function VolumeManagement() {
             } else {
                 showMessage('error', res.data.message || '组卷失败');
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '组卷请求失败');
         }
         setLoading(false);
@@ -133,7 +132,7 @@ export default function VolumeManagement() {
             } else {
                 showMessage('error', res.data.message || '提交失败');
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '提交审核失败');
         }
         setLoading(false);
@@ -152,7 +151,7 @@ export default function VolumeManagement() {
             } else {
                 showMessage('error', res.data.message || '归档失败');
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '归档请求失败');
         }
         setLoading(false);
@@ -171,7 +170,7 @@ export default function VolumeManagement() {
             } else {
                 showMessage('error', res.data.message || '驳回失败');
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '驳回请求失败');
         }
         setLoading(false);
@@ -184,7 +183,7 @@ export default function VolumeManagement() {
                 setRegistrationForm(res.data.data);
                 setShowFormModal(true);
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '获取归档登记表失败');
         }
     };
@@ -220,7 +219,7 @@ export default function VolumeManagement() {
             } else {
                 showMessage('error', '导出 AIP 包失败');
             }
-        } catch (error) {
+        } catch {
             showMessage('error', '导出请求失败');
         }
     };
@@ -294,7 +293,7 @@ export default function VolumeManagement() {
 
                     {volumes.length === 0 && !loading && (
                         <div className="text-center py-8 text-gray-400">
-                            暂无案卷，点击"按月组卷"创建
+                            暂无案卷，点击&quot;按月组卷&quot;创建
                         </div>
                     )}
 

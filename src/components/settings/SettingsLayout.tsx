@@ -10,7 +10,6 @@ import {
     Users,
     Shield,
     Building2,
-    FolderTree,
     Lock,
     FileSearch,
     Link
@@ -21,7 +20,6 @@ const SETTINGS_TABS = [
     { key: 'users', label: '用户管理', path: '/system/settings/users', icon: Users },
     { key: 'roles', label: '角色权限', path: '/system/settings/roles', icon: Shield },
     { key: 'org', label: '组织架构', path: '/system/settings/org', icon: Building2 },
-    { key: 'fonds', label: '全宗管理', path: '/system/settings/fonds', icon: FolderTree },
     { key: 'security', label: '安全合规', path: '/system/settings/security', icon: Lock },
     { key: 'integration', label: '集成中心', path: '/system/settings/integration', icon: Link },
     { key: 'audit', label: '审计日志', path: '/system/settings/audit', icon: FileSearch },

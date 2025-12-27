@@ -4,12 +4,12 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('存储空间耗尽保护与特殊字符归档', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
@@ -23,7 +23,7 @@ test.describe('存储空间耗尽保护与特殊字符归档', () => {
   test.skip('存储耗尽时阻断写入并告警（后端暂无模拟接口）', async () => {
     // 文档路径 /api/admin/storage/simulate 不存在，后端未提供模拟磁盘耗尽接口
     // 预期：返回 507 状态码，错误码 STORAGE_FULL
-    if (!authCtx) test.skip('登录失败，跳过存储保护测试');
+    test.skip(!authCtx, '登录失败，跳过存储保护测试');
     
     // 模拟存储空间 95%+
     // await authCtx!.post('/api/admin/storage/simulate', { data: { usage: 0.97 } });
@@ -33,7 +33,7 @@ test.describe('存储空间耗尽保护与特殊字符归档', () => {
   });
 
   test('特殊字符文件名归档（中文、空格、特殊符号）', async () => {
-    if (!authCtx) test.skip('登录失败，跳过特殊字符测试');
+    test.skip(!authCtx, '登录失败，跳过特殊字符测试');
     
     const specialChars = [
       { title: '测试#%+文件名.pdf', uniqueBizId: 'SPECIAL-001' },
@@ -67,7 +67,6 @@ test.describe('存储空间耗尽保护与特殊字符归档', () => {
     }
   });
 });
-
 
 
 

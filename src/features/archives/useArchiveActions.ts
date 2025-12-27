@@ -35,7 +35,7 @@ interface UseArchiveActionsResult {
 }
 
 export function useArchiveActions(controller: ArchiveListController): UseArchiveActionsResult {
-    const { ui, data, selection, actions, pool, mode } = controller;
+    const { ui, selection, actions, pool, mode } = controller;
 
     const [isUploading, setIsUploading] = useState(false);
     const [isArchiving, setIsArchiving] = useState(false);

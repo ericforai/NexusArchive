@@ -79,6 +79,18 @@ npm install && npm run dev
 
 ---
 
+## ✅ 测试
+
+### UI 冒烟（Playwright）
+
+```bash
+BASE_URL=http://localhost:15175 PW_USER=zhangsan PW_PASS=admin123 npm run test:smoke
+```
+
+- 默认 headless 运行
+- 如需系统 Chrome：设置 `PW_CHANNEL=chrome`
+- 如需可视化：设置 `PW_HEADLESS=false`
+
 ## ✨ 核心功能
 
 | 功能 | 说明 |
@@ -115,13 +127,13 @@ npm install && npm run dev
 
 | 分类 | 文档 |
 |------|------|
-| **入门** | [启动指南](docs/deployment/启动指南.md) · [用户手册](docs/guides/用户使用手册.md) |
+| **入门** | [启动指南](docs/deployment/启动指南.md) · [用户手册](docs/guides/用户使用手册.md) · [新人接手指南](docs/guides/新人接手指南.md) |
 | **部署** | [部署指南](docs/guides/系统部署手册.md) · [故障排除](docs/guides/系统部署手册.md#5-故障排除) |
 | **功能** | [功能模块](docs/guides/功能模块.md) · [权限管理](docs/guides/权限管理.md) |
 | **安全** | [安全指南](docs/guides/安全指南.md) · [审计日志](docs/guides/安全指南.md#审计日志防篡改) |
 | **集成** | [用友集成](docs/guides/用友集成.md) · [API 速查](docs/api/接口速查.md) |
 | **数据库** | [数据库设计](docs/database/数据库设计.md) · [DDL 脚本](docs/database/) |
-| **规划** | [优化计划](docs/planning/优化计划.md) · [更新日志](docs/CHANGELOG.md) |
+| **规划** | [优化计划](docs/planning/优化计划.md) · [更新日志](docs/CHANGELOG.md) · [模块边界试点成果](docs/implementation/2025-12-27-module-boundary-pilot.md) |
 
 👉 完整文档目录请参阅 [docs/README.md](docs/README.md)
 

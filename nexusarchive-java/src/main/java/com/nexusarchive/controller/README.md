@@ -1,6 +1,7 @@
 一旦我所属的文件夹有所变化，请更新我。
 本目录存放后端控制器。
 用于提供 REST API 接口。
+借阅模块控制器已迁移至 `com.nexusarchive.modules.borrowing.api`。
 
 ## 文件清单
 
@@ -21,7 +22,6 @@
 | `AuthController.java` | 控制器类 | AuthController 接口控制器 |
 | `BankReceiptController.java` | 控制器类 | BankReceiptController 接口控制器 |
 | `BasFondsController.java` | 控制器类 | BasFondsController 接口控制器 |
-| `BorrowingController.java` | 控制器类 | BorrowingController 接口控制器 |
 | `CertificateController.java` | 控制器类 | CertificateController 接口控制器 |
 | `ComplianceController.java` | 控制器类 | ComplianceController 接口控制器 |
 | `DestructionController.java` | 控制器类 | DestructionController 接口控制器 |

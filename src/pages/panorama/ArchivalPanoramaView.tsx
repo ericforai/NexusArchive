@@ -15,8 +15,8 @@ interface ArchivalPanoramaViewProps {
     initialVoucherId?: string;
 }
 
-import { archivesApi, Archive } from '../../api/archives';
-import { originalVoucherApi, OriginalVoucher } from '../../api/originalVoucher';
+import { archivesApi } from '../../api/archives';
+import { originalVoucherApi } from '../../api/originalVoucher';
 
 export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ initialVoucherId }) => {
     const { id } = useParams<{ id: string }>();

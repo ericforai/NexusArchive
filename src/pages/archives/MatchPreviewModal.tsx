@@ -7,12 +7,13 @@ import React from 'react';
 import { X, CheckCircle2, Zap, Receipt, AlertTriangle } from 'lucide-react';
 
 interface MatchPreviewRow {
+    voucherId?: string;
     voucherNo?: string;
     date?: string;
     amount?: string;
     matchScore?: number;
     _previewStatus?: 'high' | 'medium';
-    _proposedLinks?: Array<{ code: string }>;
+    _proposedLinks?: Array<{ code: string; docId: string; evidenceRole: string; linkType: string }>;
 }
 
 interface MatchPreviewModalProps {

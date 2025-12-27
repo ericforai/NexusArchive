@@ -37,6 +37,13 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        '@api': path.resolve(__dirname, './src/api'),
+        '@components': path.resolve(__dirname, './src/components'),
+        '@features': path.resolve(__dirname, './src/features'),
+        '@pages': path.resolve(__dirname, './src/pages'),
+        '@hooks': path.resolve(__dirname, './src/hooks'),
+        '@store': path.resolve(__dirname, './src/store'),
+        '@utils': path.resolve(__dirname, './src/utils'),
       },
       // 强制使用单一版本的 React，解决 "Cannot read properties of null (reading 'useCallback')" 问题
       dedupe: ['react', 'react-dom'],

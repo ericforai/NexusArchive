@@ -40,11 +40,10 @@ export const authApi = {
     logout: async () => {
         try {
             await client.post('/auth/logout');
-        } catch (e) {
+        } catch {
             // 忽略登出时的异常
         }
         // 使用 AuthStore 清除登录状态
         useAuthStore.getState().logout();
     }
 };
-

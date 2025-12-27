@@ -5,8 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import './ProductWebsite.css';
-import { ViewState } from '../types';
-import { Shield, Lock, Server, Search, Activity, ChevronRight, Check, Database, FileText, Cpu, Layers, Key, TrendingUp, Clock, AlertTriangle, XCircle, CheckCircle2, Zap, Globe } from 'lucide-react';
+import { Shield, Lock, Server, Search, Activity, ChevronRight, Check, Database, FileText, Cpu, Layers, Key, TrendingUp, AlertTriangle, XCircle, CheckCircle2, Zap, Globe } from 'lucide-react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -471,7 +470,7 @@ export const ProductWebsite: React.FC = () => {
                                         最终形态
                                     </div>
                                     <h3 className="text-3xl font-bold text-white mb-3">归档信息包 (AIP Package)</h3>
-                                    <p className="text-slate-400">一个合规的电子档案不是散乱的文件,而是结构化的"包"</p>
+                                    <p className="text-slate-400">一个合规的电子档案不是散乱的文件,而是结构化的&quot;包&quot;</p>
                                 </div>
 
                                 <div className="grid md:grid-cols-3 gap-6">

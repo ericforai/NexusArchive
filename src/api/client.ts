@@ -23,7 +23,7 @@ client.interceptors.request.use(
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
-        } catch (e) {
+        } catch {
             // Silently fail to add token
         }
         return config;

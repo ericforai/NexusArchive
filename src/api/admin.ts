@@ -164,7 +164,17 @@ export const adminApi = {
 
     // Workflow Management (暂未实现后端接口)
     getWorkflows: () => Promise.resolve({ data: [] }), // client.get('/admin/workflows'),
-    createWorkflow: (data: any) => Promise.resolve({ data: {} }), // client.post('/admin/workflows', data),
-    updateWorkflow: (id: string, data: any) => Promise.resolve({ data: {} }), // client.put(`/admin/workflows/${id}`, data),
-    deleteWorkflow: (id: string) => Promise.resolve({ data: {} }), // client.delete(`/admin/workflows/${id}`),
+    createWorkflow: (data: any) => {
+        void data;
+        return Promise.resolve({ data: {} });
+    }, // client.post('/admin/workflows', data),
+    updateWorkflow: (id: string, data: any) => {
+        void id;
+        void data;
+        return Promise.resolve({ data: {} });
+    }, // client.put(`/admin/workflows/${id}`, data),
+    deleteWorkflow: (id: string) => {
+        void id;
+        return Promise.resolve({ data: {} });
+    }, // client.delete(`/admin/workflows/${id}`),
 };

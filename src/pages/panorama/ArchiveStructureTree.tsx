@@ -3,7 +3,7 @@
 // Pos: src/pages/panorama/ArchiveStructureTree.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ChevronRight, ChevronDown, Folder, FileText, Calendar } from 'lucide-react';
 import { archivesApi, Archive } from '../../api/archives';
 
@@ -27,7 +27,7 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const buildTreeFromArchives = (archives: Archive[]): TreeNode[] => {
+    const buildTreeFromArchives = useCallback((archives: Archive[]): TreeNode[] => {
         const yearMap = new Map<string, TreeNode>();
 
         archives.forEach((archive) => {
@@ -78,9 +78,9 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         });
 
         return tree;
-    };
+    }, []);
 
-    const loadTree = async () => {
+    const loadTree = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -107,11 +107,11 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         } finally {
             setLoading(false);
         }
-    };
+    }, [buildTreeFromArchives]);
 
     useEffect(() => {
         loadTree();
-    }, []);
+    }, [loadTree]);
 
     const toggleNode = (nodeId: string) => {
         if (expandedNodes.includes(nodeId)) {

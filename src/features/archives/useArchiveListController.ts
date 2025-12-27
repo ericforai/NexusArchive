@@ -18,7 +18,7 @@ import {
     RouteConfigMeta
 } from './routeConfigs';
 import { ModuleConfig, GenericRow } from '../../types';
-import { poolApi, PoolItem } from '../../api/pool';
+import { poolApi } from '../../api/pool';
 import { archivesApi } from '../../api/archives';
 import { adminApi } from '../../api/admin';
 import { client } from '../../api/client';
@@ -283,6 +283,8 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
     const resolveCategoryCode = useCallback((): 'AC01' | 'AC02' | 'AC03' | 'AC04' | undefined => {
         switch (subTitle) {
             case '会计凭证':
+            case '原始凭证':
+            case '记账凭证':
             case '凭证关联':
                 return 'AC01';
             case '会计账簿':
@@ -342,7 +344,7 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
                         }))
                     );
                 }
-            } catch (e) {
+            } catch {
                 // ignore
             }
         };
@@ -461,7 +463,7 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
         setSelectedIds([]);
         try {
             const poolItems = await poolApi.getList();
-            let filtered = poolItems.filter((item) => {
+            const filtered = poolItems.filter((item) => {
                 const itemStatus = (item as any).status || 'PENDING_CHECK';
                 if (poolStatusFilter && poolStatusFilter !== 'all') {
                     if (itemStatus !== poolStatusFilter) return false;

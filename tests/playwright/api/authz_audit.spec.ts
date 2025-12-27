@@ -4,12 +4,12 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect, request } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('权限与审计', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
@@ -27,13 +27,13 @@ test.describe('权限与审计', () => {
   });
 
   test('已认证可以查询审计日志列表', async () => {
-    if (!authCtx) test.skip('登录失败，跳过审计查询');
+    test.skip(!authCtx, '登录失败，跳过审计查询');
     const audit = await authCtx!.get('/api/audit-logs');
     expect(audit.ok()).toBeTruthy();
   });
 
   test('IDOR 越权阻断且审计留痕', async () => {
-    if (!authCtx) test.skip('登录失败，跳过越权测试');
+    test.skip(!authCtx, '登录失败，跳过越权测试');
     
     // 尝试访问其他用户的资源（假设 ID 为 99999 的档案不属于当前用户）
     const res = await authCtx!.get('/api/archives/99999');
@@ -51,7 +51,7 @@ test.describe('权限与审计', () => {
 
   test.skip('审计日志不可删除', async () => {
     // 预期：阻断，防篡改校验通过
-    if (!authCtx) test.skip('登录失败，跳过审计删除测试');
+    test.skip(!authCtx, '登录失败，跳过审计删除测试');
     
     // 尝试删除审计日志
     const del = await authCtx!.delete('/api/audit-logs/123');
@@ -60,7 +60,7 @@ test.describe('权限与审计', () => {
   });
 
   test('失败操作记录：用无权角色执行敏感操作', async () => {
-    if (!authCtx) test.skip('登录失败，跳过失败操作记录测试');
+    test.skip(!authCtx, '登录失败，跳过失败操作记录测试');
     
     // 尝试执行需要管理员权限的操作（如删除用户）
     const res = await authCtx!.delete('/api/admin/users/1');

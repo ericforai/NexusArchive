@@ -5,13 +5,14 @@
 
 # 档案组件 (Archive Components)
 
-本目录包含档案管理相关的 UI 组件。
+本目录历史上包含档案管理相关的 UI 组件。
+现已迁移至 `src/pages/archives`。
 
 ## 文件清单
 
 | 文件 | 功能 |
 | --- | --- |
-| `ArchiveDetailModal.tsx` | 档案详情弹窗（业务元数据 + 文件预览 + 附件列表）|
+| _暂无_ | 组件已迁移至 `src/pages/archives` |
 
 ## 架构约束
 

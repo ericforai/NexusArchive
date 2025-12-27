@@ -9,8 +9,8 @@
 
 ## 目录结构
 
-- `common/`: 高复用原子组件（按钮、输入框、模态框等），**禁止依赖 api/store/features**。
-- `layout/`: 页面布局组件（Sidebar, Header, Footer 等），**禁止依赖 api/store/features**。
+- `common/`: 高复用原子组件（按钮、输入框、模态框等），**禁止依赖 api/store/features/pages**。
+- `layout/`: 页面布局组件（Sidebar, Header, Footer 等），**禁止依赖 api/store/features/pages**。
 - `archive/`: 档案管理模块相关的业务组件。
 - `matching/`: 凭证匹配模块相关的业务组件。
 - `settings/`: 系统设置模块相关的业务组件。
@@ -20,5 +20,5 @@
 ## 架构约束
 
 1. **原子性**: `common/` 目录下的组件应保持无状态或仅持有 UI 状态。
-2. **单向依赖**: 严禁 `common` 和 `layout` 引入业务领域逻辑（features）或状态中心（store）。
-3. **View 迁移**: 当前目录下的 `*View.tsx` 属于"页面级组件"，未来计划迁移至 `src/pages/`。
+2. **单向依赖**: `components` 下组件不得引入 `features/pages/api/store`，仅通过 props 注入业务能力。
+3. **页面容器**: 页面级容器统一放在 `src/pages/`，routes 只引用 pages。

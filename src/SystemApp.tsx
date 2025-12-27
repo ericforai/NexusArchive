@@ -9,17 +9,13 @@ import { TopBar } from './components/TopBar';
 import { Dashboard } from './pages/portal/Dashboard';
 import { LoginView } from './pages/Auth/LoginView';
 import { AdminLayout } from './pages/admin/AdminLayout';
-import { ArchiveListView } from './pages/archives/ArchiveListView';
+import { ArchiveListPage } from './pages/archives/ArchiveListPage';
 import { StatsView } from './pages/stats/StatsView';
 import { RelationshipQueryView } from './pages/utilization/RelationshipQueryView';
 import { OCRProcessingView } from './pages/pre-archive/OCRProcessingView';
-import { WarehouseView } from './pages/utilization/WarehouseView';
 import { DestructionView } from './pages/operations/DestructionView';
 import { ArchiveApprovalView } from './pages/operations/ArchiveApprovalView';
-import { RelationshipView } from './components/RelationshipView';
 import { OpenAppraisalView } from './pages/operations/OpenAppraisalView';
-import { OpenInventoryView } from './components/OpenInventoryView';
-import { DestructionRepositoryView } from './components/DestructionRepositoryView';
 import { BorrowingView } from './pages/utilization/BorrowingView';
 import { ArchivalPanoramaView } from './pages/panorama/ArchivalPanoramaView';
 import { OnlineReceptionView } from './pages/collection/OnlineReceptionView';
@@ -28,29 +24,10 @@ import { OriginalVoucherListView } from './pages/archives/OriginalVoucherListVie
 import VolumeManagement from './pages/operations/VolumeManagement';
 import { ComplianceReportView } from './pages/archives/ComplianceReportView';
 import VoucherMatchingView from './pages/matching/VoucherMatchingView';
-import OnboardingWizard from './pages/matching/OnboardingWizard';
-import ComplianceReport from './pages/matching/ComplianceReport';
-import { ViewState, ModuleConfig } from './types';
+import { ViewState } from './types';
+import type { ArchiveRouteMode } from './features/archives';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from './api/auth';
-import {
-    PRE_ARCHIVE_POOL_CONFIG,
-    PRE_ARCHIVE_LINK_CONFIG,
-    COLLECTION_ONLINE_CONFIG,
-    COLLECTION_SCAN_CONFIG,
-    COLLECTION_CONFIG,
-    ARCHIVE_VIEW_CONFIG,
-    ARCHIVE_BOX_CONFIG,
-    ACCOUNTING_VOUCHER_CONFIG,
-    ACCOUNTING_LEDGER_CONFIG,
-    FINANCIAL_REPORT_CONFIG,
-    OTHER_ACCOUNTING_MATERIALS_CONFIG,
-    BORROWING_CONFIG,
-    QUERY_CONFIG,
-    GENERIC_CONFIG,
-    WAREHOUSE_RACK_CONFIG,
-    WAREHOUSE_ENV_CONFIG
-} from './constants';
 import { triggerAuditRefresh } from './utils/audit';
 
 // 使用 Zustand Store
@@ -93,7 +70,6 @@ export const SystemApp: React.FC = () => {
         sidebarCollapsed,
         navigate: appNavigate,
         setActiveView,
-        setActiveSubItem,
         toggleSidebar,
     } = useAppStore();
 
@@ -215,53 +191,27 @@ export const SystemApp: React.FC = () => {
         return <AdminLayout onExit={() => setActiveView(ViewState.PORTAL)} />;
     }
 
-    const getModuleConfig = (): ModuleConfig => {
-        // Pre-Archive
+    const resolveArchiveRouteMode = (): ArchiveRouteMode => {
         if (activeView === ViewState.PRE_ARCHIVE) {
-            if (activeSubItem === '凭证关联') return PRE_ARCHIVE_LINK_CONFIG;
-            return PRE_ARCHIVE_POOL_CONFIG;
+            return activeSubItem === '凭证关联' ? 'link' : 'pool';
         }
-
-        // Collection
         if (activeView === ViewState.COLLECTION) {
-            if (activeSubItem === '在线接收') return COLLECTION_ONLINE_CONFIG;
-            if (activeSubItem === '扫描集成') return COLLECTION_SCAN_CONFIG;
-            return COLLECTION_CONFIG;
+            return activeSubItem === '扫描集成' ? 'scan' : 'collection';
         }
-
-        // Archive Repository Configs
         if (activeView === ViewState.ACCOUNT_ARCHIVES) {
-            if (activeSubItem === '会计凭证') return ACCOUNTING_VOUCHER_CONFIG;
-            if (activeSubItem === '会计账簿') return ACCOUNTING_LEDGER_CONFIG;
-            if (activeSubItem === '财务报告') return FINANCIAL_REPORT_CONFIG;
-            if (activeSubItem === '其他会计资料') return OTHER_ACCOUNTING_MATERIALS_CONFIG;
-            return ARCHIVE_VIEW_CONFIG;
+            if (activeSubItem === '会计凭证') return 'voucher';
+            if (activeSubItem === '会计账簿') return 'ledger';
+            if (activeSubItem === '财务报告') return 'report';
+            if (activeSubItem === '其他会计资料') return 'other';
+            return 'view';
         }
-
-        // Archive Operations Configs
         if (activeView === ViewState.ARCHIVE_OPS) {
-            if (activeSubItem === '档案装盒') return ARCHIVE_BOX_CONFIG;
-            return GENERIC_CONFIG;
+            return activeSubItem === '档案装盒' ? 'box' : 'view';
         }
-
-
-        // Query
-        if (activeView === ViewState.QUERY) {
-            return QUERY_CONFIG;
+        if (activeView === ViewState.ARCHIVE_UTILIZATION || activeView === ViewState.QUERY || activeView === ViewState.BORROWING) {
+            return 'query';
         }
-
-        // Borrowing
-        if (activeView === ViewState.BORROWING) {
-            return BORROWING_CONFIG;
-        }
-
-        // Warehouse fallback
-        if (activeView === ViewState.WAREHOUSE) {
-            if (activeSubItem === '温湿度监控') return WAREHOUSE_ENV_CONFIG;
-            return WAREHOUSE_RACK_CONFIG;
-        }
-
-        return GENERIC_CONFIG;
+        return 'view';
     };
 
     const renderContent = () => {
@@ -272,7 +222,7 @@ export const SystemApp: React.FC = () => {
             case ViewState.PANORAMA:
                 return <ArchivalPanoramaView initialVoucherId={activeResourceId} />;
 
-            case ViewState.PRE_ARCHIVE:
+            case ViewState.PRE_ARCHIVE: {
                 if (activeSubItem === 'OCR识别') return <OCRProcessingView />;
                 if (activeSubItem === '异常数据') return <AbnormalDataView />;
                 // 单据池及其子分类使用 OriginalVoucherListView (Pool Mode)
@@ -300,14 +250,15 @@ export const SystemApp: React.FC = () => {
                         poolMode={true}
                     />;
                 }
-                return <ArchiveListView title="预归档库" subTitle={activeSubItem || '电子凭证池'} config={getModuleConfig()} onNavigate={handleNavigate} />;
+                return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
+            }
 
             case ViewState.COLLECTION:
                 if (activeSubItem === '在线接收') return <OnlineReceptionView />;
-                return <ArchiveListView title="资料收集" subTitle={activeSubItem || '概览'} config={getModuleConfig()} onNavigate={handleNavigate} />;
+                return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
 
             // --- Accounting Archives (Repository) ---
-            case ViewState.ACCOUNT_ARCHIVES:
+            case ViewState.ACCOUNT_ARCHIVES: {
                 // 原始凭证及其子分类使用独立组件
                 const ORIGINAL_VOUCHER_TYPES = [
                     '原始凭证',
@@ -324,12 +275,8 @@ export const SystemApp: React.FC = () => {
                     />;
                 }
                 // 记账凭证和其他子菜单使用通用组件
-                return <ArchiveListView
-                    title="会计档案"
-                    subTitle={activeSubItem || '档案列表'}
-                    config={getModuleConfig()}
-                    onNavigate={handleNavigate}
-                />;
+                return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
+            }
 
             // --- Archive Operations ---
             case ViewState.ARCHIVE_OPS:
@@ -337,17 +284,17 @@ export const SystemApp: React.FC = () => {
                 if (activeSubItem === '档案组卷') return <VolumeManagement />;
                 if (activeSubItem === '开放鉴定') return <OpenAppraisalView />;
                 if (activeSubItem === '销毁鉴定') return <DestructionView />;
-                if (activeSubItem === '档案装盒') return <ArchiveListView title="档案装盒" subTitle="装盒作业" config={getModuleConfig()} onNavigate={handleNavigate} />;
+                if (activeSubItem === '档案装盒') return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
 
-                return <ArchiveListView title="档案作业" subTitle={activeSubItem} config={getModuleConfig()} onNavigate={handleNavigate} />;
+                return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
 
             case ViewState.ARCHIVE_MGMT: // Backward compatibility fallback
-                return <ArchiveListView title="档案管理" subTitle={activeSubItem} config={getModuleConfig()} onNavigate={handleNavigate} />;
+                return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
 
             case ViewState.ARCHIVE_UTILIZATION:
                 if (activeSubItem === '穿透联查') return <RelationshipQueryView />;
                 if (activeSubItem === '借阅申请') return <BorrowingView />;
-                return <ArchiveListView title="档案利用" subTitle={activeSubItem || '全文检索'} config={QUERY_CONFIG} onNavigate={handleNavigate} />;
+                return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
 
             // case ViewState.WAREHOUSE: return <WarehouseView />; // Removed
 

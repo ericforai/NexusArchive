@@ -3,7 +3,7 @@
 // Pos: src/pages/utilization/WarehouseView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Warehouse, Thermometer, Droplets, Lock, Unlock, Wind, AlertCircle, Battery, Signal, ChevronRight, Loader2 } from 'lucide-react';
 import { warehouseApi, Shelf, WarehouseEnvironment } from '../../api/warehouse';
 
@@ -26,7 +26,7 @@ export const WarehouseView: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const mapShelvesToRacks = (shelves: Shelf[], env?: WarehouseEnvironment): Rack[] => {
+  const mapShelvesToRacks = useCallback((shelves: Shelf[], env?: WarehouseEnvironment): Rack[] => {
     return shelves.map((shelf, i) => {
       const usage = shelf.capacity && shelf.capacity > 0
         ? Math.min(100, Math.round(((shelf.usedCount || 0) / shelf.capacity) * 100))
@@ -57,9 +57,9 @@ export const WarehouseView: React.FC = () => {
         humidity: env?.humidity || 45
       };
     });
-  };
+  }, []);
 
-  const loadEnvironment = async () => {
+  const loadEnvironment = useCallback(async () => {
     try {
       const res = await warehouseApi.getEnvironment();
       if (res.code === 200 && res.data) {
@@ -72,9 +72,9 @@ export const WarehouseView: React.FC = () => {
     // API 无数据时返回 null，界面显示空状态
     setEnvironment(null);
     return null;
-  };
+  }, []);
 
-  const loadShelves = async () => {
+  const loadShelves = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -97,11 +97,11 @@ export const WarehouseView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadEnvironment, mapShelvesToRacks]);
 
   useEffect(() => {
     loadShelves();
-  }, []);
+  }, [loadShelves]);
 
   const toggleLock = async (id: string) => {
     setError(null);

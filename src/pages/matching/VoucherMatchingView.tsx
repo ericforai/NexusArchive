@@ -29,7 +29,6 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
     const [loading, setLoading] = useState(false);
     const [matching, setMatching] = useState(false);
     const [result, setResult] = useState<MatchResult | null>(null);
-    const [activeTab, setActiveTab] = useState<string>('');
     const [candidateModal, setCandidateModal] = useState<{
         visible: boolean;
         link: LinkResult | null;
@@ -66,9 +65,6 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
             if (!mountedRef.current) return;
             if (existingResult) {
                 setResult(existingResult);
-                if (existingResult.links?.length > 0) {
-                    setActiveTab(existingResult.links[0].evidenceRole);
-                }
             }
         } catch (error) {
             console.error('Failed to load match result:', error);
@@ -123,9 +119,6 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                     if (taskResult.status === 'COMPLETED') {
                         if (taskResult.result) {
                             setResult(taskResult.result);
-                            if (taskResult.result.links?.length) {
-                                setActiveTab(taskResult.result.links[0].evidenceRole);
-                            }
                             onMatchComplete?.(taskResult.result);
                         }
                         message.success('匹配完成');
@@ -137,7 +130,7 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                         // 继续轮询
                         pollingTimeoutRef.current = setTimeout(pollResult, 1000);
                     }
-                } catch (error) {
+                } catch {
                     if (mountedRef.current) {
                         message.error('查询任务状态失败');
                         setMatching(false);
@@ -146,11 +139,11 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
             };
 
             pollingTimeoutRef.current = setTimeout(pollResult, 500);
-        } catch (error) {
+        } catch {
             message.error('执行匹配失败');
             setMatching(false);
         }
-    }, [voucherId, onMatchComplete, clearPollingTimeout]);
+    }, [voucherId, onMatchComplete, clearPollingTimeout, loadExistingResult]);
 
     // 确认关联
     const handleConfirm = useCallback(async (link: LinkResult, candidate: ScoredCandidate) => {
@@ -164,7 +157,7 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
             message.success('关联确认成功');
             setCandidateModal({ visible: false, link: null });
             loadExistingResult();
-        } catch (error) {
+        } catch {
             message.error('确认失败');
         }
     }, [voucherId, loadExistingResult]);

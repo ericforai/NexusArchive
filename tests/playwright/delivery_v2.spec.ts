@@ -5,6 +5,7 @@
 
 
 import { test, expect, request } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 
@@ -13,15 +14,18 @@ const USERS = {
     admin: { username: 'admin', password: 'admin123', roleId: 'super_admin' },
     auditor: { username: 'auditor', password: 'auditor123', roleId: 'role_auditor' },
     user: { username: 'user', password: 'user123', roleId: 'role_user' }
-};
+} as const;
+
+type UserKey = keyof typeof USERS;
+type UserCredential = (typeof USERS)[UserKey];
 
 let adminToken = '';
 let auditorToken = '';
 let userToken = '';
 
 // Helper to get token
-async function getToken(request, user) {
-    const res = await request.post(`${BASE_URL}/api/auth/login`, {
+async function getToken(apiRequest: APIRequestContext, user: UserCredential) {
+    const res = await apiRequest.post(`${BASE_URL}/api/auth/login`, {
         data: { username: user.username, password: user.password }
     });
     const body = await res.json();
@@ -36,7 +40,8 @@ test.describe('Delivery Acceptance v2 (Smoke + SoD)', () => {
         expect(adminToken).toBeTruthy();
 
         // 2. Ensure Users Exist (Create if missing)
-        for (const key of ['auditor', 'user']) {
+        const userKeys: UserKey[] = ['auditor', 'user'];
+        for (const key of userKeys) {
             const u = USERS[key];
             // Check existence logic skipped, just try create and ignore 409/Error or delete first?
             // Better: Try login. If fail, create.
@@ -64,7 +69,7 @@ test.describe('Delivery Acceptance v2 (Smoke + SoD)', () => {
     // --- 1. Login Smoke ---
     test('1. Login Success/Failure', async ({ request }) => {
         // Success
-        for (const u of Object.values(USERS)) {
+        for (const u of Object.values(USERS) as UserCredential[]) {
             const res = await request.post(`${BASE_URL}/api/auth/login`, {
                 data: { username: u.username, password: u.password }
             });
@@ -156,7 +161,8 @@ test.describe('Delivery Acceptance v2 (Smoke + SoD)', () => {
                 headers: { Authorization: `Bearer ${userToken}` }
             });
             const body = await res.json();
-            return body.data.records.some(r => r.id === archiveId);
+            const records = (body.data?.records ?? []) as Array<{ id?: string }>;
+            return records.some((record) => record.id === archiveId);
         }).toBeTruthy();
     });
 
@@ -183,8 +189,9 @@ test.describe('Delivery Acceptance v2 (Smoke + SoD)', () => {
                 headers: { Authorization: `Bearer ${auditorToken}` }
             });
             const body = await res.json();
+            const records = (body.data?.records ?? []) as Array<{ operationType?: string; resourceId?: string }>;
             // Look for DELETE operation on our resource
-            return body.data.records.some(log => log.operationType === 'DELETE' && log.resourceId === archiveId); // Checking general match
+            return records.some((log) => log.operationType === 'DELETE' && log.resourceId === archiveId);
         }).toBeTruthy();
     });
 

@@ -4,12 +4,12 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { test, expect } from '@playwright/test';
-import { createAuthContext } from '../utils/auth';
+import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('借阅/销毁审批流与日志校验', () => {
-  let authCtx: Awaited<ReturnType<typeof createAuthContext>>['context'] | null = null;
+  let authCtx: AuthContext['context'] | null = null;
 
   test.beforeAll(async () => {
     const auth = await createAuthContext(BASE_URL);
@@ -21,7 +21,7 @@ test.describe('借阅/销毁审批流与日志校验', () => {
   });
 
   test('借阅审批流程：多级审批通过/拒绝/撤回', async () => {
-    if (!authCtx) test.skip('登录失败，跳过借阅审批测试');
+    test.skip(!authCtx, '登录失败，跳过借阅审批测试');
     
     // 1. 创建借阅申请
     const borrowRes = await authCtx!.post('/api/borrowing', {
@@ -34,7 +34,7 @@ test.describe('借阅/销毁审批流与日志校验', () => {
     });
     
     if (!borrowRes.ok()) {
-      test.skip('创建借阅申请失败，可能需要预置档案数据');
+      test.skip(true, '创建借阅申请失败，可能需要预置档案数据');
     }
     
     const borrow = await borrowRes.json();
@@ -52,7 +52,7 @@ test.describe('借阅/销毁审批流与日志校验', () => {
   });
 
   test('销毁流程：销毁需审批+不可恢复提示', async () => {
-    if (!authCtx) test.skip('登录失败，跳过销毁流程测试');
+    test.skip(!authCtx, '登录失败，跳过销毁流程测试');
     
     // 1. 创建销毁申请
     const destroyRes = await authCtx!.post('/api/destruction', {
@@ -64,7 +64,7 @@ test.describe('借阅/销毁审批流与日志校验', () => {
     });
     
     if (!destroyRes.ok()) {
-      test.skip('创建销毁申请失败，可能需要预置档案数据或权限');
+      test.skip(true, '创建销毁申请失败，可能需要预置档案数据或权限');
     }
     
     const destroy = await destroyRes.json();
@@ -81,7 +81,6 @@ test.describe('借阅/销毁审批流与日志校验', () => {
     expect(auditRes.ok()).toBeTruthy();
   });
 });
-
 
 
 

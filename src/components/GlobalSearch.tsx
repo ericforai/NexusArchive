@@ -49,7 +49,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [query]);
+    }, [query, search]);
 
     // Keyboard shortcut (Cmd/Ctrl + K)
     useEffect(() => {

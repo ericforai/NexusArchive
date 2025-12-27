@@ -4,7 +4,6 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react'
-import { safeStorage } from '../../utils/storage'
 import { useAuthStore } from '../../store'
 
 interface FileViewerProps {
@@ -23,6 +22,7 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
 
     useEffect(() => {
         let mounted = true
+        let objectUrl: string | null = null
         setLoading(true)
         setError(null)
 
@@ -43,6 +43,7 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
                 const contentType = response.headers.get('content-type') || ''
                 const blob = await response.blob()
                 const url = URL.createObjectURL(blob)
+                objectUrl = url
 
                 // Detect file type from content-type or file extension
                 let type = ''
@@ -92,8 +93,8 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
 
         return () => {
             mounted = false
-            if (blobUrl) {
-                URL.revokeObjectURL(blobUrl)
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl)
             }
         }
     }, [fileUrl, fileType, fileName])

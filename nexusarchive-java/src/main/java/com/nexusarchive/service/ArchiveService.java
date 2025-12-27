@@ -284,6 +284,17 @@ public class ArchiveService {
     }
 
     /**
+     * 根据部门ID列表获取档案ID列表
+     * [Sec] 用于跨模块权限校验
+     */
+    public List<String> getArchiveIdsByDepartmentIds(java.util.Collection<String> departmentIds) {
+        if (departmentIds == null || departmentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return archiveMapper.selectIdsByDepartmentIds(departmentIds);
+    }
+
+    /**
      * 获取档案关联的文件列表
      * @param archiveId 档案ID
      * @return 文件列表
@@ -358,7 +369,21 @@ public class ArchiveService {
      * 防止 SQL 注入攻击
      */
     private boolean isValidSubType(String subType, String categoryCode) {
-        if ("AC02".equals(categoryCode)) {
+        if (categoryCode == null || categoryCode.isEmpty()) {
+            // 如果类别代码为空，暂不强制校验子类型（或者可以根据业务需要决定是否拒绝）
+            return true;
+        }
+
+        if ("AC01".equals(categoryCode)) {
+            // 会计凭证子类型白名单
+            return Set.of(
+                "ACCOUNTING_VOUCHER", "ORIGINAL_VOUCHER",
+                // 原始凭证細分类型
+                "SALES_ORDER", "DELIVERY_ORDER", "PURCHASE_ORDER", "RECEIPT_ORDER",
+                "PAYMENT_REQ", "EXPENSE_REPORT", "GEN_INVOICE", "VAT_INVOICE",
+                "BANK_SLIP", "BANK_STATEMENT", "CONTRACT"
+            ).contains(subType);
+        } else if ("AC02".equals(categoryCode)) {
             // 账簿类型白名单 (Updated V71+)
             return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL",
                     "CASH_BOOK", "BANK_BOOK",

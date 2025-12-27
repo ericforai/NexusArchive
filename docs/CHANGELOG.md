@@ -4,6 +4,55 @@
 
 ---
 
+## [2025-12-27] 模块化试点文档补齐与新人接手指南
+
+### 核心变更
+- **新增新人接手指南**：提供系统阅读顺序、代码结构与边界规则的入门路径。
+- **新增试点成果记录**：完整记录 SYS(Settings) + Borrowing 模块化试点成果与验证结果。
+- **Borrowing DTO 契约统一**：对外 DTO 统一到 `api.dto`，并同步 ArchUnit 规则。
+- **新增自审材料**：补齐模块清单、数据主权、契约与变体登记，形成可执行自审基线。
+- **新增端到端测试流程**：补齐凭证归档主链路 12 步 SOP 与证据清单。
+- **SQL 字段校准**：对照数据库设计与迁移脚本，统一 RUN_ID 落点字段与 SQL 模板。
+- **文档导航同步**：更新根 README 与文档目录索引，补齐新文档入口。
+
+### 质量门槛补充
+- **新增 `typecheck` 脚本**：统一 TypeScript 类型校验入口，覆盖 `src` + `tests`。
+- **类型错误清理**：修复 ArchiveListView 新接口适配、OrgTree 类型缺失、IntegrationSettings 导出不一致、ArchiveBatch/OnlineReception 类型不匹配等问题。
+- **Playwright 冒烟固化**：新增关键路径冒烟脚本与 `test:smoke`，完善 headless 配置与运行说明。
+
+### 修改文件
+| 文件 | 变更 |
+|------|------|
+| `docs/guides/新人接手指南.md` | [NEW] 新人接手阅读路径与代码导览 |
+| `docs/implementation/2025-12-27-module-boundary-pilot.md` | [NEW] 模块边界试点开发成果记录 |
+| `docs/architecture/self-review-sop.md` | [NEW] 模块化自我审查清单 |
+| `docs/architecture/module-manifest.md` | [NEW] 模块清单 |
+| `docs/architecture/data-ownership-map.md` | [NEW] 数据主权清单 |
+| `docs/architecture/contract-catalog.md` | [NEW] 对外契约清单 |
+| `docs/architecture/variability-registry.md` | [NEW] 变体登记表 |
+| `docs/guides/端到端测试流程.md` | [NEW] 端到端测试流程 |
+| `docs/guides/README.md` | 新增文档入口 |
+| `docs/implementation/README.md` | 新增文档入口 |
+| `docs/architecture/README.md` | 新增文档入口 |
+| `docs/architecture/module-boundaries.md` | 补充自审材料入口 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/api/dto/*.java` | DTO 契约统一到 api.dto |
+| `nexusarchive-java/src/test/java/com/nexusarchive/architecture/ModuleBoundaryTest.java` | 更新 Borrowing 边界规则 |
+| `README.md` | 补充导航链接 |
+| `package.json` | 新增 `test:smoke` 与 `typecheck` 脚本 |
+| `playwright.config.ts` | 默认 headless 配置与环境变量开关 |
+| `tests/playwright/ui/smoke_core_paths.spec.ts` | [NEW] Settings/Borrowing/Archive 冒烟测试 |
+| `tests/playwright/ui/README.md` | 更新 UI 冒烟文件清单 |
+| `src/SystemApp.tsx` | ArchiveListView 迁移到 ArchiveListPage + routeConfig |
+| `src/__tests__/components/ArchiveListView.test.tsx` | 适配新 props 与 controller/actions |
+| `tests/playwright/api/*.spec.ts` | AuthContext nullability 与 skip 语义修复 |
+| `tests/playwright/delivery_v2.spec.ts` | 隐式 any 与索引签名修复 |
+| `src/components/index.ts` | IntegrationSettings 默认导出聚合 |
+| `src/components/settings/OrgSettings.tsx` | OrgNode → TreeNode 映射 |
+| `src/api/archiveBatch.ts` | IntegrityReport/ValidationReport 类型收敛 |
+| `src/pages/collection/OnlineReceptionView.tsx` | IntegrationChannel 类型对齐 |
+
+---
+
 ## [2025-12-25] 凭证关联增强与文档规范化
  
  ### 核心变更

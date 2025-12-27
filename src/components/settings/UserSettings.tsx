@@ -1,11 +1,12 @@
-// Input: React、lucide-react 图标、本地模块 api/admin
+// Input: React、lucide-react 图标、AdminSettingsApi
 // Output: React 组件 UserSettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Plus, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { adminApi, User, Role } from '../../api/admin';
+import { AdminSettingsApi } from './types';
+import { User, Role } from '../../types';
 
 type UserStatus = 'active' | 'disabled' | 'locked';
 
@@ -25,7 +26,11 @@ const EXCLUSIVE_ROLE_CODES = ['system_admin', 'security_admin', 'audit_admin'];
  * 
  * 包含用户创建和用户列表管理
  */
-export const UserSettings: React.FC = () => {
+interface UserSettingsProps {
+    adminApi: AdminSettingsApi;
+}
+
+export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [page, setPage] = useState(1);
     const [pageSize] = useState(10);
@@ -63,7 +68,7 @@ export const UserSettings: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize]);
+    }, [adminApi, page, pageSize]);
 
     useEffect(() => {
         loadUsers();
@@ -82,7 +87,7 @@ export const UserSettings: React.FC = () => {
             }
         };
         loadRoles();
-    }, []);
+    }, [adminApi]);
 
     const handleResetPassword = async (id: string) => {
         const hint = '密码要求：至少8位，必须包含大写字母、小写字母、数字和特殊字符';
@@ -174,7 +179,7 @@ export const UserSettings: React.FC = () => {
                 phone: createForm.phone,
                 roleIds: createForm.roleIds,
                 status: 'active'
-            } as any);
+            });
             if (res.code === 200) {
                 setCreateSuccess(true);
                 setCreateForm({ username: '', password: '', fullName: '', email: '', phone: '', roleIds: [] });

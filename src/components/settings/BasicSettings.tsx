@@ -1,18 +1,23 @@
-// Input: React、lucide-react 图标、本地模块 api/admin
+// Input: React、lucide-react 图标、AdminSettingsApi
 // Output: React 组件 BasicSettings
 // Pos: 系统设置组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react';
 import { Save, Loader2 } from 'lucide-react';
-import { adminApi } from '../../api/admin';
+import { AdminSettingsApi } from './types';
+import { AdminSettingItem, AdminSettingUpdate } from '../../types';
 
 /**
  * 基础设置页面
  * 
  * 包含系统名称、存储配置、默认保管期限等基础参数
  */
-export const BasicSettings: React.FC = () => {
+interface BasicSettingsProps {
+    adminApi: AdminSettingsApi;
+}
+
+export const BasicSettings: React.FC<BasicSettingsProps> = ({ adminApi }) => {
     const [settings, setSettings] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -24,7 +29,7 @@ export const BasicSettings: React.FC = () => {
                 const res = await adminApi.getSettings();
                 if (res.code === 200 && res.data) {
                     const map: Record<string, string> = {};
-                    (res.data as any[]).forEach((item: any) => {
+                    res.data.forEach((item: AdminSettingItem) => {
                         map[item.configKey] = item.configValue;
                     });
                     setSettings(map);
@@ -34,12 +39,12 @@ export const BasicSettings: React.FC = () => {
             }
         };
         loadSettings();
-    }, []);
+    }, [adminApi]);
 
     const handleSave = async () => {
         setSaving(true);
         try {
-            const payload = [
+            const payload: AdminSettingUpdate[] = [
                 { configKey: 'system.name', configValue: settings['system.name'], category: 'system' },
                 { configKey: 'archive.prefix', configValue: settings['archive.prefix'], category: 'archive' },
                 { configKey: 'storage.type', configValue: settings['storage.type'], category: 'storage' },

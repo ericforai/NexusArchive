@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit3, Trash2, Loader2, Save } from 'lucide-react';
+import { Plus, Edit3, Trash2, Loader2 } from 'lucide-react';
 import { fondsApi, BasFonds } from '../../api/fonds';
 
 interface FondsForm {
@@ -78,7 +78,7 @@ export const FondsManagement: React.FC = () => {
             }
             setShowModal(false);
             loadData();
-        } catch (error) {
+        } catch {
             alert('保存失败，请检查全宗号是否重复');
         } finally {
             setSaving(false);
