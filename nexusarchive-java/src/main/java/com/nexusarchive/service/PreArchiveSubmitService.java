@@ -88,9 +88,42 @@ public class PreArchiveSubmitService {
             throw new RuntimeException("文件状态不允许提交归档，当前状态: " + status);
         }
 
-        // 2. 创建正式档案记录
-        Archive archive = createArchiveFromPoolFile(file);
-        archiveMapper.insert(archive);
+        // 2. 检查是否存在 ERP 同步创建的 acc_archive 记录（ID 相同）
+        Archive existingArchive = archiveMapper.selectById(fileId);
+        Archive archive;
+
+        if (existingArchive != null) {
+            // 存在 ERP 同步创建的记录，更新而非新建
+            log.info("发现 ERP 同步创建的档案记录，执行更新: existingId={}, oldCode={}",
+                    existingArchive.getId(), existingArchive.getArchiveCode());
+
+            archive = existingArchive;
+
+            // 生成正式档号（替换临时档号）
+            String newArchiveCode = generateArchiveCode(file);
+
+            // 使用 UpdateWrapper 强制更新 archive_code（绕过 FieldStrategy.NEVER）
+            com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Archive> updateWrapper =
+                    new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+            updateWrapper.eq("id", archive.getId())
+                    .set("archive_code", newArchiveCode)
+                    .set("status", "PENDING")
+                    .set("retention_period", "30Y")
+                    .set("last_modified_time", LocalDateTime.now());
+            if (file.getFiscalYear() != null) {
+                updateWrapper.set("fiscal_year", file.getFiscalYear());
+            }
+            archiveMapper.update(null, updateWrapper);
+
+            // 更新内存对象以供后续使用
+            archive.setArchiveCode(newArchiveCode);
+            archive.setStatus("PENDING");
+            log.info("档案记录已更新: newCode={}", newArchiveCode);
+        } else {
+            // 不存在，创建新记录
+            archive = createArchiveFromPoolFile(file);
+            archiveMapper.insert(archive);
+        }
 
         // 3. 更新文件的正式档号和状态
         file.setArchivalCode(archive.getArchiveCode());

@@ -294,6 +294,17 @@ public class ErpScenarioService {
                     arcFileContentMapper.insert(fileContent);
                     savedCount++;
 
+                    // ===== 生成 PDF 文件，确保四性检测能通过 =====
+                    try {
+                        String voucherJson = fileContent.getSourceData();
+                        if (voucherJson != null && !voucherJson.isEmpty()) {
+                            pdfGeneratorService.generatePdfForPreArchive(fileContent.getId(), voucherJson);
+                            log.info("PDF 生成成功: {}", fileContent.getErpVoucherNo());
+                        }
+                    } catch (Exception pdfEx) {
+                        log.warn("PDF 生成失败，不影响同步: {}", pdfEx.getMessage());
+                    }
+
                     // ===== 同时创建 acc_archive 记录，使凭证关联页面可见 =====
                     Archive archive = createArchiveFromVoucher(dto, fileContent, entityConfig.getName());
                     archiveMapper.insert(archive);
@@ -365,13 +376,11 @@ public class ErpScenarioService {
 
 
     private boolean isVoucherExist(String voucherNo, Long configId) {
-        // 简单查重：基于文件名（通常包含单号）或备注
-        // 实际应有 dedicated source_id column
-        // 这里暂时通过 FileName LIKE voucherNo 来模糊判断，或者假设 voucherNo 唯一
-        // 为了演示，暂时认为如果文件名包含 voucherNo 则已存在
+        // 精确查重：基于 erp_voucher_no 字段进行精确匹配
+        // 避免 LIKE 模糊匹配导致 "记-1" 错误匹配 "记-10", "记-11" 等
         return arcFileContentMapper.selectCount(
                 new LambdaQueryWrapper<com.nexusarchive.entity.ArcFileContent>()
-                        .like(com.nexusarchive.entity.ArcFileContent::getFileName, voucherNo)) > 0;
+                        .eq(com.nexusarchive.entity.ArcFileContent::getErpVoucherNo, voucherNo)) > 0;
     }
 
     // 内部类或外部类：Mapper
