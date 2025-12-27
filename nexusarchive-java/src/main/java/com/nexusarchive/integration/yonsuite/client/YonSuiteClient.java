@@ -50,6 +50,16 @@ public class YonSuiteClient {
     }
 
     /**
+     * 使用指定的 appKey/appSecret 获取 token
+     * @param appKey 应用 Key
+     * @param appSecret 应用密钥
+     * @return access_token
+     */
+    public String getTokenWithCredentials(String appKey, String appSecret) {
+        return yonAuthService.getAccessToken(appKey, appSecret);
+    }
+
+    /**
      * 凭证列表查询
      * POST /yonbip/fi/ficloud/openapi/voucher/queryVouchers
      */

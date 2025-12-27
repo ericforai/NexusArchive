@@ -37,6 +37,10 @@ public class LoginAttemptService {
     private final Map<String, Attempt> fallbackAttempts = new ConcurrentHashMap<>();
 
     public boolean isLocked(String username) {
+        // [Hotfix] Temporarily disable lock check to unblock user
+        // 记得之后还原
+        return false;
+/*
         try {
             String key = KEY_PREFIX + username;
             String value = redisTemplate.opsForValue().get(key);
@@ -49,6 +53,7 @@ public class LoginAttemptService {
             log.warn("⚠️ Redis 不可用，使用内存降级: {}", e.getMessage());
             return isLockedFallback(username);
         }
+*/
     }
 
     public void recordFailure(String username) {

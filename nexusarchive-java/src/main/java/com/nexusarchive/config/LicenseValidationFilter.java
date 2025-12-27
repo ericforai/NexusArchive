@@ -38,6 +38,7 @@ public class LicenseValidationFilter extends OncePerRequestFilter {
             "/api/auth/refresh",
             "/api/auth/logout",
             "/api/license/load",  // [FIXED] 仅允许 /load 端点
+            "/api/license",       // [FIXED] 允许查询 License 状态
             "/api/health",
             "/api/health/self-check",
             // 非 /api 前缀路径
@@ -45,6 +46,7 @@ public class LicenseValidationFilter extends OncePerRequestFilter {
             "/auth/refresh",
             "/auth/logout",
             "/license/load",
+            "/license",           // [FIXED] 允许查询 License 状态
             "/health"
     );
 

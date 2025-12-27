@@ -124,9 +124,17 @@ public class YonPaymentFileService {
         // 映射业务字段
         content.setFondsCode(detail.getFinanceOrg());
 
-        // FIX: ArcFileContent 实体缺少 amount, voucherDate, fiscalPeriod 等字段。
-        // DA/T 94 要求这些元数据，但 Entities 定义可能仅包含核心字段。
-        // 关键数据存储在 sourceData JSON 中供后续使用。
+        // 映射显示字段（凭证字号、摘要、业务日期）
+        content.setVoucherWord(detail.getCode()); // 单据编号作为凭证字号
+        content.setDocDate(parseDate(detail.getBillDate())); // 单据日期
+        
+        // 生成摘要：供应商名称 + 付款
+        String summary = detail.getSupplierName() != null 
+            ? "付款-" + detail.getSupplierName() 
+            : "付款单";
+        content.setSummary(summary);
+        
+        // 保存原始业务数据 JSON（供审计追溯）
         try {
             content.setSourceData(objectMapper.writeValueAsString(detail));
         } catch (Exception e) {

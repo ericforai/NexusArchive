@@ -18,6 +18,7 @@ export const ROUTE_PATHS = {
 
     PRE_ARCHIVE: '/system/pre-archive',
     PRE_ARCHIVE_POOL: '/system/pre-archive/pool',
+    PRE_ARCHIVE_DOC_POOL: '/system/pre-archive/doc-pool',
     PRE_ARCHIVE_OCR: '/system/pre-archive/ocr',
     PRE_ARCHIVE_LINK: '/system/pre-archive/link',
     PRE_ARCHIVE_ABNORMAL: '/system/pre-archive/abnormal',
@@ -64,6 +65,12 @@ export const ROUTE_PATHS = {
     SETTINGS_AUDIT: '/system/settings/audit',
     ADMIN: '/system/admin',
 
+
+    MATCHING: '/system/matching',
+    MATCHING_AUTO: '/system/matching/auto',
+    MATCHING_WIZARD: '/system/matching/wizard',
+    MATCHING_REPORT: '/system/matching/report',
+
     // Debug Routes
     TEST_PAYMENT_FILE: '/debug/payment-file',
 } as const;
@@ -75,9 +82,32 @@ export const ROUTE_PATHS = {
 export const SUBITEM_TO_PATH: Record<string, string> = {
     // 预归档库
     '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL,
+    '单据池': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL,
     'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR,
     '凭证关联': ROUTE_PATHS.PRE_ARCHIVE_LINK,
     '异常数据': ROUTE_PATHS.PRE_ARCHIVE_ABNORMAL,
+
+    // 单据池 - 15 个分类子菜单（与数据库 sys_original_voucher_type 一致）
+    // 发票类 (INVOICE)
+    '单据池:纸质发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_PAPER',
+    '单据池:增值税电子发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_VAT_E',
+    '单据池:数电发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_DIGITAL',
+    '单据池:数电票（铁路）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_RAIL',
+    '单据池:数电票（航空）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_AIR',
+    '单据池:数电票（财政）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_GOV',
+    // 银行类 (BANK)
+    '单据池:银行回单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=BANK_RECEIPT',
+    '单据池:银行对账单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=BANK_STATEMENT',
+    // 单据类 (DOCUMENT)
+    '单据池:付款单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=DOC_PAYMENT',
+    '单据池:收款单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=DOC_RECEIPT',
+    '单据池:收款单据（收据）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=DOC_RECEIPT_VOUCHER',
+    '单据池:工资单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=DOC_PAYROLL',
+    // 合同类 (CONTRACT)
+    '单据池:合同': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=CONTRACT',
+    '单据池:协议': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=AGREEMENT',
+    // 其他类 (OTHER)
+    '单据池:其他': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=OTHER',
 
     // 资料收集
     '在线接收': ROUTE_PATHS.COLLECTION_ONLINE,
@@ -87,6 +117,9 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // --- 会计档案 (Level 1: ACCOUNT_ARCHIVES) ---
     // Level 2: 会计凭证
     '会计凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
+    // Level 3: 原始凭证、记账凭证
+    '原始凭证': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS,
+    '记账凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
 
     // Level 2: 会计账簿 -> Level 3
     '总账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=GENERAL_LEDGER',
@@ -114,7 +147,8 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // --- 档案作业 (Level 1: ARCHIVE_OPS) ---
     '档案装盒': ROUTE_PATHS.ARCHIVE_BOXING,
     '档案组卷': ROUTE_PATHS.ARCHIVE_VOLUME,
-    '归档审批': ROUTE_PATHS.ARCHIVE_APPROVAL,
+    '归档审批': ROUTE_PATHS.ARCHIVE_APPROVAL,  // 单条归档审批
+    '归档批次': '/system/operations/batch',     // 批次归档管理
     '开放鉴定': ROUTE_PATHS.ARCHIVE_OPEN_APPRAISAL,
     '销毁鉴定': ROUTE_PATHS.ARCHIVE_DESTRUCTION,
 
@@ -138,4 +172,16 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '银行回单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_SLIP',
     '银行对账单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_STATEMENT',
     '合同协议': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=CONTRACT',
+
+    // --- 系统设置 ---
+    '基础设置': ROUTE_PATHS.SETTINGS_BASIC,
+    '用户管理': ROUTE_PATHS.SETTINGS_USERS,
+    '角色权限': ROUTE_PATHS.SETTINGS_ROLES,
+    '组织架构': ROUTE_PATHS.SETTINGS_ORG,
+    '全宗管理': ROUTE_PATHS.SETTINGS_FONDS,
+    '安全合规': ROUTE_PATHS.SETTINGS_SECURITY,
+    '集成中心': ROUTE_PATHS.SETTINGS_INTEGRATION,
+    '审计日志': ROUTE_PATHS.SETTINGS_AUDIT,
+
+
 };

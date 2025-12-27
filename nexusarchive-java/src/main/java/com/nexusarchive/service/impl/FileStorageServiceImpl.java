@@ -83,4 +83,18 @@ public class FileStorageServiceImpl implements FileStorageService {
             return false;
         }
     }
+
+    @Override
+    public java.io.File getFile(String relativePath) {
+        try {
+            Path path = resolvePath(relativePath);
+            if (Files.exists(path)) {
+                return path.toFile();
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("Failed to get file: {}", relativePath, e);
+            return null;
+        }
+    }
 }

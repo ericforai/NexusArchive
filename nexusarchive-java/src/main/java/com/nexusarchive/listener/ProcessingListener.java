@@ -110,9 +110,8 @@ public class ProcessingListener {
             archive.setFiscalYear(header.getAccountPeriod().substring(0, 4));
             archive.setFiscalPeriod(header.getAccountPeriod());
             archive.setRetentionPeriod("10Y"); // Mock
-            archive.setOrgName(header.getIssuer()); // Mock
             archive.setCreator(header.getIssuer());
-            archive.setStatus("ARCHIVED");
+            archive.setStatus("MATCH_PENDING");
             archive.setSecurityLevel("INTERNAL");
             
             // Set uniqueBizId for idempotency

@@ -6,29 +6,32 @@
 import React, { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
-import { Dashboard } from './components/Dashboard';
-import { LoginView } from './components/LoginView';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { ArchiveListView } from './components/ArchiveListView';
-import { StatsView } from './components/StatsView';
-import { RelationshipQueryView } from './components/RelationshipQueryView';
-import { OCRProcessingView } from './components/OCRProcessingView';
-import { WarehouseView } from './components/WarehouseView';
-import { DestructionView } from './components/DestructionView';
-import { ArchiveApprovalView } from './components/ArchiveApprovalView';
+import { Dashboard } from './pages/portal/Dashboard';
+import { LoginView } from './pages/Auth/LoginView';
+import { AdminLayout } from './pages/admin/AdminLayout';
+import { ArchiveListView } from './pages/archives/ArchiveListView';
+import { StatsView } from './pages/stats/StatsView';
+import { RelationshipQueryView } from './pages/utilization/RelationshipQueryView';
+import { OCRProcessingView } from './pages/pre-archive/OCRProcessingView';
+import { WarehouseView } from './pages/utilization/WarehouseView';
+import { DestructionView } from './pages/operations/DestructionView';
+import { ArchiveApprovalView } from './pages/operations/ArchiveApprovalView';
 import { RelationshipView } from './components/RelationshipView';
-import { OpenAppraisalView } from './components/OpenAppraisalView';
+import { OpenAppraisalView } from './pages/operations/OpenAppraisalView';
 import { OpenInventoryView } from './components/OpenInventoryView';
 import { DestructionRepositoryView } from './components/DestructionRepositoryView';
-import { BorrowingView } from './components/BorrowingView';
-import { ArchivalPanoramaView } from './components/ArchivalPanoramaView';
-import { OnlineReceptionView } from './components/OnlineReceptionView';
-import AbnormalDataView from './components/AbnormalDataView';
-import { OriginalVoucherListView } from './components/OriginalVoucherListView';
-import VolumeManagement from './components/VolumeManagement';
-import { ComplianceReportView } from './components/ComplianceReportView';
+import { BorrowingView } from './pages/utilization/BorrowingView';
+import { ArchivalPanoramaView } from './pages/panorama/ArchivalPanoramaView';
+import { OnlineReceptionView } from './pages/collection/OnlineReceptionView';
+import AbnormalDataView from './pages/pre-archive/AbnormalDataView';
+import { OriginalVoucherListView } from './pages/archives/OriginalVoucherListView';
+import VolumeManagement from './pages/operations/VolumeManagement';
+import { ComplianceReportView } from './pages/archives/ComplianceReportView';
+import VoucherMatchingView from './pages/matching/VoucherMatchingView';
+import OnboardingWizard from './pages/matching/OnboardingWizard';
+import ComplianceReport from './pages/matching/ComplianceReport';
 import { ViewState, ModuleConfig } from './types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from './api/auth';
 import {
     PRE_ARCHIVE_POOL_CONFIG,
@@ -53,8 +56,25 @@ import { triggerAuditRefresh } from './utils/audit';
 // 使用 Zustand Store
 import { useAuthStore, useAppStore } from './store';
 
+// URL 到 ViewState 的映射
+const PATH_TO_VIEW: Record<string, ViewState> = {
+
+    '/system/pre-archive': ViewState.PRE_ARCHIVE,
+    '/system/collection': ViewState.COLLECTION,
+    '/system/archive': ViewState.ACCOUNT_ARCHIVES,
+    '/system/operations': ViewState.ARCHIVE_OPS,
+    '/system/utilization': ViewState.ARCHIVE_UTILIZATION,
+    '/system/stats': ViewState.STATS,
+    '/system/settings': ViewState.SETTINGS,
+    '/system/panorama': ViewState.PANORAMA,
+};
+
+// 子菜单路径到 subItem 的映射
+const PATH_TO_SUBITEM: Record<string, string> = {};
+
 export const SystemApp: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     // 从 AuthStore 获取认证状态
     const {
@@ -120,6 +140,35 @@ export const SystemApp: React.FC = () => {
 
         verifyAuth();
     }, [login, authLogout, setCheckingAuth]);
+
+    // 监听 URL 变化，同步到 AppStore
+    useEffect(() => {
+        const path = location.pathname;
+
+        // 精确匹配子菜单
+        if (PATH_TO_SUBITEM[path]) {
+            const subItem = PATH_TO_SUBITEM[path];
+            // 找到父级 ViewState
+            for (const [prefix, view] of Object.entries(PATH_TO_VIEW)) {
+                if (path.startsWith(prefix)) {
+                    if (activeView !== view || activeSubItem !== subItem) {
+                        appNavigate(view, subItem, '');
+                    }
+                    return;
+                }
+            }
+        }
+
+        // 匹配顶级路由
+        for (const [prefix, view] of Object.entries(PATH_TO_VIEW)) {
+            if (path.startsWith(prefix)) {
+                if (activeView !== view) {
+                    appNavigate(view, '', '');
+                }
+                return;
+            }
+        }
+    }, [location.pathname, activeView, activeSubItem, appNavigate]);
 
     const handleLoginSuccess = (user: any) => {
         console.log('[SystemApp] Login success, setting authenticated');
@@ -226,6 +275,31 @@ export const SystemApp: React.FC = () => {
             case ViewState.PRE_ARCHIVE:
                 if (activeSubItem === 'OCR识别') return <OCRProcessingView />;
                 if (activeSubItem === '异常数据') return <AbnormalDataView />;
+                // 单据池及其子分类使用 OriginalVoucherListView (Pool Mode)
+                // 与数据库 sys_original_voucher_type 保持同步
+                const DOC_POOL_TYPES = [
+                    '单据池',
+                    // 发票类
+                    '单据池:纸质发票', '单据池:增值税电子发票', '单据池:数电发票',
+                    '单据池:数电票（铁路）', '单据池:数电票（航空）', '单据池:数电票（财政）',
+                    // 银行类
+                    '单据池:银行回单', '单据池:银行对账单',
+                    // 单据类
+                    '单据池:付款单', '单据池:收款单', '单据池:收款单据（收据）', '单据池:工资单',
+                    // 合同类
+                    '单据池:合同', '单据池:协议',
+                    // 其他类
+                    '单据池:其他'
+                ];
+                if (DOC_POOL_TYPES.includes(activeSubItem || '')) {
+                    // 提取分类类型（如果有）
+                    const voucherType = activeSubItem?.includes(':') ? activeSubItem.split(':')[1] : undefined;
+                    return <OriginalVoucherListView
+                        title="单据池"
+                        subTitle={voucherType || '全部单据'}
+                        poolMode={true}
+                    />;
+                }
                 return <ArchiveListView title="预归档库" subTitle={activeSubItem || '电子凭证池'} config={getModuleConfig()} onNavigate={handleNavigate} />;
 
             case ViewState.COLLECTION:
@@ -295,6 +369,11 @@ export const SystemApp: React.FC = () => {
                         onBack={() => handleNavigate(ViewState.ARCHIVE_MGMT, activeSubItem)}
                     />
                 );
+
+            case ViewState.MATCHING:
+                return <VoucherMatchingView voucherId={activeResourceId || ''} voucherNo={activeSubItem} />;
+
+
 
             default:
                 return <Dashboard onNavigate={handleNavigate} />;

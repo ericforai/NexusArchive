@@ -1,30 +1,20 @@
-一旦我所属的文件夹有所变化，请更新我。
-本目录集中管理前端 API 请求模块。
-用于对接后端各业务域的接口。
+// Input: API 客户端定义
+// Output: 极简架构说明
+// Pos: src/api/README.md
+// 一旦我所属的文件夹有所变化，请更新我。
 
-## 文件清单
+# API 调用层 (API)
 
-| 文件 | 地位 | 功能 |
-| --- | --- | --- |
-| `abnormal.ts` | API 模块 | 异常数据相关接口 |
-| `admin.ts` | API 模块 | 后台管理相关接口 |
-| `archiveApproval.ts` | API 模块 | 归档审批流程接口 |
-| `archives.ts` | API 模块 | 档案查询与管理接口 |
-| `attachments.ts` | API 模块 | 附件上传/下载接口 |
-| `audit.ts` | API 模块 | 审计日志与追踪接口 |
-| `auth.ts` | API 模块 | 登录鉴权与用户信息接口 |
-| `autoAssociation.ts` | API 模块 | 自动关联/匹配接口 |
-| `borrowing.ts` | API 模块 | 借阅流程接口 |
-| `client.ts` | 核心封装 | 统一请求客户端与拦截器 |
-| `destruction.ts` | API 模块 | 档案销毁接口 |
-| `erp.ts` | API 模块 | ERP 对接与同步接口 |
-| `fonds.ts` | API 模块 | 全宗/机构档案接口 |
-| `license.ts` | API 模块 | 授权与许可接口 |
-| `nav.ts` | API 模块 | 菜单与导航数据接口 |
-| `notifications.ts` | API 模块 | 通知与消息接口 |
-| `openAppraisal.ts` | API 模块 | 开放鉴定相关接口 |
-| `pool.ts` | API 模块 | 预归档池管理接口 |
-| `search.ts` | API 模块 | 检索与搜索接口 |
-| `stats.ts` | API 模块 | 统计报表接口 |
-| `warehouse.ts` | API 模块 | 库房与库位管理接口 |
-| `workflow.ts` | API 模块 | 工作流与流程接口 |
+本目录封装了所有与后端交互的 HTTP 请求。
+
+## 目录结构
+
+- `axios.ts`: Axios 实例配置（拦截器、Token 处理）。
+- `archives.ts`: 档案操作接口。
+- `system.ts`: 系统配置、日志接口。
+- `auth.ts`: 登录与权限接口。
+
+## 规范
+
+1. **强类型**: 每个 API 调用都必须定义请求参数和响应数据的 TypeScript 类型。
+2. **无副作用**: API 层仅负责请求发送，不应包含业务逻辑或 UI 弹窗处理。

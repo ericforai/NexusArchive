@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Input: Crypto libraries, License templates
+# Output: Signed license.json
+# Pos: DevOps/Scripts - License Generation
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import base64
 import json

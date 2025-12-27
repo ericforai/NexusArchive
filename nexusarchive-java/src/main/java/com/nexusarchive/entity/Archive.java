@@ -185,6 +185,16 @@ public class Archive {
      */
     private String holdReason;
 
+    /**
+     * 智能匹配得分 (0-100)
+     */
+    private Integer matchScore;
+
+    /**
+     * 关联方式
+     */
+    private String matchMethod;
+
     @TableLogic
     private Integer deleted;
 }

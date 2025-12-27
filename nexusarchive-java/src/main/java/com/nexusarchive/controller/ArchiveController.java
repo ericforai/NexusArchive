@@ -68,6 +68,13 @@ public class ArchiveController {
         return Result.success(archiveService.getArchiveById(id));
     }
 
+    @GetMapping("/{id}/files")
+    @Operation(summary = "获取档案关联文件", description = "获取档案关联的所有文件列表")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    public Result<List<com.nexusarchive.entity.ArcFileContent>> getArchiveFiles(@PathVariable String id) {
+        return Result.success(archiveService.getFilesByArchiveId(id));
+    }
+
     @GetMapping("/recent")
     @Operation(summary = "获取最近档案", description = "获取最近创建的档案列表")
     @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")

@@ -1,3 +1,8 @@
+// Input: Java Crypto API
+// Output: LicenseGenerator class
+// Pos: Tools Layer - Security Implementation
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

@@ -102,20 +102,32 @@ main() {
     echo ""
     
     # 0. 预检依赖服务
-    log_info "步骤 0/3: 检查依赖服务..."
+    log_info "步骤 0/3: 检查依赖服务 (Docker Deps)..."
     
-    # 数据库 (默认 5432)
+    # 启动/检查 Docker 依赖 (DB:54321, Redis:16379)
+    # 使用 docker-compose.deps.yml
+    if [ -f "$ROOT/docker-compose.deps.yml" ]; then
+        log_info "确保 Docker 依赖正在运行..."
+        docker compose -f "$ROOT/docker-compose.deps.yml" up -d
+    else
+        log_warn "未找到 docker-compose.deps.yml，跳过自动启动依赖"
+    fi
+
+    # 数据库 (Host Port 54321)
     DB_HOST=${DB_HOST:-localhost}
-    DB_PORT=${DB_PORT:-5432}
-    if ! check_service_connection "$DB_HOST" "$DB_PORT" "PostgreSQL"; then
+    DB_PORT=${DB_PORT:-54321}
+    log_info "检查数据库: $DB_HOST:$DB_PORT"
+    if ! check_service_connection "$DB_HOST" "$DB_PORT" "PostgreSQL (Docker)"; then
         log_warn "继续启动，但后端可能会因无法连接数据库而失败..."
+        log_warn "提示: 请检查 'docker compose -f docker-compose.deps.yml ps'"
         sleep 2
     fi
 
-    # Redis (默认 6379)
+    # Redis (Host Port 16379)
     REDIS_HOST=${REDIS_HOST:-localhost}
-    REDIS_PORT=${REDIS_PORT:-6379}
-    if ! check_service_connection "$REDIS_HOST" "$REDIS_PORT" "Redis"; then
+    REDIS_PORT=${REDIS_PORT:-16379}
+    log_info "检查 Redis: $REDIS_HOST:$REDIS_PORT"
+    if ! check_service_connection "$REDIS_HOST" "$REDIS_PORT" "Redis (Docker)"; then
         log_warn "继续启动，但后端可能会因无法连接Redis而失败..."
         sleep 2
     fi
@@ -143,6 +155,7 @@ main() {
     # 步骤1：启动后端
     log_info "步骤 1/3: 启动后端服务..."
     cd "$BACKEND_DIR"
+    export MAVEN_OPTS="-Xmx2048m"
     mvn spring-boot:run -Dmaven.test.skip=true > "$ROOT/logs/backend.log" 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > "$ROOT/logs/backend.pid"

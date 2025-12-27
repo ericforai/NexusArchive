@@ -1,17 +1,19 @@
-// Input: React、lucide-react 图标、本地模块 api/search
+// Input: React、lucide-react 图标、本地模块 hooks/useGlobalSearchApi
 // Output: React 组件 GlobalSearch
 // Pos: 业务页面组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, FileText, FileCode, Loader2, ArrowRight } from 'lucide-react';
-import { searchApi, GlobalSearchDTO } from '../api/search';
+import { useGlobalSearchApi } from '../hooks/useGlobalSearchApi';
+import { GlobalSearchDTO } from '../types';
 
 interface GlobalSearchProps {
     onNavigate?: (item: GlobalSearchDTO) => void;
 }
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
+    const { search } = useGlobalSearchApi();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<GlobalSearchDTO[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +34,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
             if (query.trim().length > 1) {
                 setIsLoading(true);
                 try {
-                    const data = await searchApi.search(query);
+                    const data = await search(query);
                     setResults(data);
                     setIsOpen(true);
                 } catch (error) {

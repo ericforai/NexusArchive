@@ -24,6 +24,7 @@ export enum ViewState {
   DESTRUCTION = 'DESTRUCTION',
   ABNORMAL = 'ABNORMAL',
   COMPLIANCE_REPORT = 'COMPLIANCE_REPORT',
+  MATCHING = 'MATCHING', // New: 智能匹配
 }
 
 
@@ -54,7 +55,7 @@ export interface Notification {
 }
 
 // Dynamic Table Configuration Types
-export type ColumnType = 'text' | 'status' | 'progress' | 'money' | 'date' | 'action';
+export type ColumnType = 'text' | 'status' | 'progress' | 'money' | 'date' | 'datetime' | 'tag' | 'action';
 
 export interface TableColumn {
   key: string;
@@ -271,4 +272,111 @@ export interface PageResult<T> {
   size: number;
   current: number;
   pages: number;
+}
+
+// Settings & Integration Types
+export interface User {
+  id: string;
+  username: string;
+  fullName: string;
+  email?: string;
+  phone?: string;
+  departmentId?: string;
+  status: string;
+  roleIds?: string[];
+  createdAt?: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  code: string;
+  roleCategory: string;
+  isExclusive: boolean;
+  description?: string;
+  permissions?: string;
+  dataScope?: string;
+  type: string;
+  createdAt?: string;
+}
+
+export interface ErpConfig {
+  id: number;
+  name: string;
+  erpType: string;
+  configJson: string;
+  isActive: number;
+  status?: string;
+  createdTime?: string;
+  lastModifiedTime?: string;
+}
+
+export interface ErpScenario {
+  id: number;
+  configId: number;
+  scenarioKey: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  syncStrategy: 'REALTIME' | 'CRON' | 'MANUAL';
+  cronExpression?: string;
+  lastSyncTime?: string;
+  lastSyncStatus: string;
+  lastSyncMsg?: string;
+  paramsJson?: string;
+}
+
+export interface ErpSubInterface {
+  id: number;
+  scenarioId: number;
+  interfaceKey: string;
+  interfaceName: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+  configJson?: string;
+}
+
+export interface SyncHistory {
+  id: number;
+  scenarioId: number;
+  syncStartTime: string;
+  syncEndTime?: string;
+  status: 'RUNNING' | 'SUCCESS' | 'FAIL';
+  totalCount: number;
+  successCount: number;
+  failCount: number;
+  errorMessage?: string;
+  syncParams?: string;
+  fourNatureSummary?: string;
+}
+
+export interface LicenseInfo {
+  expireAt: string;
+  maxUsers: number;
+  nodeLimit: number;
+  raw?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  username: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string;
+  operationResult?: string;
+  riskLevel?: string;
+  details?: string;
+  clientIp?: string;
+  createdAt?: string;
+}
+
+export interface GlobalSearchDTO {
+  id: string;
+  archiveCode: string;
+  title: string;
+  matchType: 'ARCHIVE' | 'METADATA';
+  matchDetail: string;
+  score?: number;
 }

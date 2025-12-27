@@ -38,51 +38,23 @@ services:
 
   # Java 后端
   nexus-backend:
+    image: nexusarchive-backend:${TAG:-latest}
     build:
       context: ./nexusarchive-java
       dockerfile: Dockerfile
     container_name: nexus-backend
     restart: always
-    ports:
-      - "19090:19090"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://nexus-db:5432/nexusarchive
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-your_secure_password_here}
-      - SPRING_DATA_REDIS_HOST=nexus-redis
-      - SERVER_PORT=19090
-      - APP_SECURITY_CORS_ALLOWED_ORIGINS=https://www.digivoucher.cn,https://digivoucher.cn
-      - JWT_PUBLIC_KEY_LOCATION=file:/app/keystore/jwt_public.pem
-      - JWT_PRIVATE_KEY_LOCATION=file:/app/keystore/jwt_private.pem
-      - SM4_KEY=${SM4_KEY:-a1b2c3d4e5f67890a1b2c3d4e5f67890}
-    depends_on:
-      nexus-db:
-        condition: service_healthy
-      nexus-redis:
-        condition: service_healthy
-    volumes:
-      - ./nexusarchive-java/data:/app/data
-      - ./nexusarchive-java/keystore:/app/keystore
-      - ./nexusarchive-java/logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:19090/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
+# ... (middle content omitted)
 
   # 前端 (Nginx 托管静态文件)
   nexus-frontend:
+    image: nexusarchive-web:${TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile.frontend.prod
     container_name: nexus-frontend
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - nexus-backend
     volumes:
       - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL 证书目录
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro

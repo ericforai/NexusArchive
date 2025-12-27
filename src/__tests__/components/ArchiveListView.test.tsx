@@ -1,4 +1,4 @@
-// Input: vitest、@testing-library/react、react-router-dom 路由、React Query、@/components/ArchiveListView、@/api/archives、@/api/admin、@/api/pool
+// Input: vitest、@testing-library/react、react-router-dom 路由、React Query、@/pages/archives/ArchiveListView、@/api/archives、@/api/admin、@/api/pool
 // Output: 测试用例与断言
 // Pos: 前端单元测试
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ArchiveListView } from '@/components/ArchiveListView';
+import { ArchiveListView } from '@/pages/archives/ArchiveListView';
 import { archivesApi } from '@/api/archives';
 import { adminApi } from '@/api/admin';
 import { poolApi } from '@/api/pool';

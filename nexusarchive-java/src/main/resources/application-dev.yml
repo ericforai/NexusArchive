@@ -13,6 +13,11 @@ signature:
   auto-sign: ${SIGNATURE_AUTO_SIGN:true}  # 开发环境默认启用自动签章
   default-cert-alias: ${SIGNATURE_CERT_ALIAS:signing-cert}
 
+# License 配置 (开发环境显式指定)
+license:
+  file-path: ./data/license.json
+
+
 # 时间戳服务配置（开发环境）
 timestamp:
   enabled: ${TIMESTAMP_ENABLED:false}  # 开发环境默认禁用（需要配置TSA URL）
@@ -28,8 +33,13 @@ timestamp:
 
 
 
+# Schema Validation（开发环境禁用，避免启动阻塞）
+schema:
+  validation:
+    enabled: false
 
-
-
-
+# 文件存储根路径（开发环境使用项目根目录下的 data/archives）
+archive:
+  root:
+    path: ./data/archives
 

@@ -27,7 +27,6 @@ public class LicenseController {
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public Result<LicenseService.LicenseInfo> current() {
         return Result.success(licenseService.current());
     }

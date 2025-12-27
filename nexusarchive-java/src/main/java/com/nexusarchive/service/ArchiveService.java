@@ -10,6 +10,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.mapper.ArcFileContentMapper;
+import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -38,8 +41,10 @@ import java.util.UUID;
 public class ArchiveService {
 
     private final ArchiveMapper archiveMapper;
+    private final ArcFileContentMapper arcFileContentMapper;
     private final com.nexusarchive.service.strategy.ArchivalCodeGenerator codeGenerator;
     private final DataScopeService dataScopeService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     /**
      * 分页查询档案
@@ -65,11 +70,22 @@ public class ArchiveService {
         }
 
         if (status != null && !status.isEmpty()) {
-            wrapper.eq("status", status);
+            if (status.contains(",")) {
+                wrapper.in("status", Arrays.asList(status.split(",")));
+            } else {
+                wrapper.eq("status", status);
+            }
         }
 
         if (categoryCode != null && !categoryCode.isEmpty()) {
             wrapper.eq("category_code", categoryCode);
+
+            // [FIX P0-CRIT] Accounting Archives Compliance (DA/T 94-2022)
+            // If querying an Accounting Category (AC01-AC04) and no status is specified,
+            // FORCE strictly 'archived' status. Drafts/Pending items must NOT appear in the Repository.
+            if ((status == null || status.isEmpty()) && isAccountingCategory(categoryCode)) {
+                wrapper.eq("status", "archived");
+            }
         }
 
         if (orgId != null && !orgId.isEmpty()) {
@@ -268,6 +284,50 @@ public class ArchiveService {
     }
 
     /**
+     * 获取档案关联的文件列表
+     * @param archiveId 档案ID
+     * @return 文件列表
+     */
+    public List<ArcFileContent> getFilesByArchiveId(String archiveId) {
+        // Check existence and permission
+        getArchiveById(archiveId); // This performs checks
+
+        List<ArcFileContent> result = new java.util.ArrayList<>();
+        
+        // 1. 原有逻辑：从 arc_file_content 获取直接关联的文件
+        QueryWrapper<ArcFileContent> wrapper = new QueryWrapper<>();
+        wrapper.eq("item_id", archiveId);
+        wrapper.orderByAsc("created_time");
+        result.addAll(arcFileContentMapper.selectList(wrapper));
+        
+        // 2. 新增逻辑：从 acc_archive_attachment 获取智能匹配关联的文件
+        try {
+            String sql = """
+                SELECT ovf.id, ovf.file_name, ovf.storage_path, ovf.file_size, ovf.file_type, aa.attachment_type
+                FROM acc_archive_attachment aa
+                JOIN arc_original_voucher_file ovf ON aa.file_id = ovf.id
+                WHERE aa.archive_id = ? AND ovf.deleted = 0
+                """;
+            List<java.util.Map<String, Object>> attachments = jdbcTemplate.queryForList(sql, archiveId);
+            
+            for (java.util.Map<String, Object> row : attachments) {
+                ArcFileContent file = new ArcFileContent();
+                file.setId((String) row.get("id"));
+                file.setFileName((String) row.get("file_name"));
+                file.setStoragePath((String) row.get("storage_path"));
+                file.setFileSize(row.get("file_size") != null ? ((Number) row.get("file_size")).longValue() : 0);
+                file.setFileType((String) row.get("file_type"));
+                file.setVoucherType((String) row.get("attachment_type")); // 用于标识来源
+                result.add(file);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to query attachments from acc_archive_attachment: {}", e.getMessage());
+        }
+        
+        return result;
+    }
+
+    /**
      * Helper to check uniqueness
      */
     private void checkArchiveCodeUnique(String code, String excludeId) {
@@ -299,15 +359,23 @@ public class ArchiveService {
      */
     private boolean isValidSubType(String subType, String categoryCode) {
         if ("AC02".equals(categoryCode)) {
-            // 账簿类型白名单
+            // 账簿类型白名单 (Updated V71+)
             return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL",
-                    "CASH_BOOK", "BANK_BOOK").contains(subType);
+                    "CASH_BOOK", "BANK_BOOK",
+                    // Added from frontend paths
+                    "CASH_JOURNAL", "BANK_JOURNAL", "FIXED_ASSETS_CARD", "OTHER_BOOKS"
+            ).contains(subType);
         } else if ("AC03".equals(categoryCode)) {
             // 报表周期白名单
-            return Set.of("MONTHLY", "QUARTERLY", "ANNUAL", "SEMI_ANNUAL").contains(subType);
+            return Set.of("MONTHLY", "QUARTERLY", "ANNUAL", "SEMI_ANNUAL", "SPECIAL").contains(subType);
         } else if ("AC04".equals(categoryCode)) {
             // 其他类型白名单
-            return Set.of("CONTRACT", "INVOICE", "RECEIPT", "OTHER").contains(subType);
+            return Set.of("CONTRACT", "INVOICE", "RECEIPT", "OTHER",
+                    // Added from frontend paths
+                    "BANK_RECONCILIATION", "TAX_RETURN",
+                    "HANDOVER_REGISTER", "CUSTODY_REGISTER", "DESTRUCTION_REGISTER",
+                    "APPRAISAL_OPINION"
+            ).contains(subType);
         }
         // 未知分类，拒绝
         return false;
@@ -326,5 +394,12 @@ public class ArchiveService {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
+    }
+
+    /**
+     * Helper to check if category is one of the standard Accounting Archive categories
+     */
+    private boolean isAccountingCategory(String code) {
+        return "AC01".equals(code) || "AC02".equals(code) || "AC03".equals(code) || "AC04".equals(code);
     }
 }

@@ -34,7 +34,7 @@ Started NexusArchiveApplication in X.XXX seconds
 ```
 或检查健康端点：
 ```bash
-curl -s http://localhost:8080/api/auth/login -X POST 2>/dev/null && echo "Backend ready!"
+curl -s http://localhost:19090/api/auth/login -X POST 2>/dev/null && echo "Backend ready!"
 ```
 
 3. **启动前端**（终端2）：
@@ -45,7 +45,7 @@ npm run dev
 
 4. **访问应用**：
 ```
-http://localhost:5173
+http://localhost:15175
 ```
 
 ## 常见问题
@@ -53,25 +53,25 @@ http://localhost:5173
 ### 前端报500错误
 **原因**：后端未启动或未完全就绪
 **解决**：
-1. 检查后端是否运行：`lsof -i :8080`
+1. 检查后端是否运行：`lsof -i :19090`
 2. 如果未运行，先启动后端
 3. 刷新前端页面
 
 ### 端口被占用
 ```bash
-# 释放8080端口
-lsof -ti :8080 | xargs kill -9
+# 释放19090端口
+lsof -ti :19090 | xargs kill -9
 
-# 释放5173端口
-lsof -ti :5173 | xargs kill -9
+# 释放15175端口
+lsof -ti :15175 | xargs kill -9
 ```
 
 ## 验证服务状态
 
 ```bash
 # 检查后端
-curl -s http://localhost:8080/api/auth/login -X POST -w "\nHTTP: %{http_code}" 2>/dev/null
+curl -s http://localhost:19090/api/auth/login -X POST -w "\nHTTP: %{http_code}" 2>/dev/null
 
 # 检查前端代理
-curl -s http://localhost:5173/api/auth/login -X POST -w "\nHTTP: %{http_code}" 2>/dev/null
+curl -s http://localhost:15175/api/auth/login -X POST -w "\nHTTP: %{http_code}" 2>/dev/null
 ```

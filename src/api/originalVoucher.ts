@@ -1,5 +1,7 @@
-// 原始凭证 API 模块
-// 用于与后端 /original-vouchers 端点交互
+// Input: API Client
+// Output: OriginalVoucher API Methods & Types
+// Pos: 原始凭证数据交互层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { client as apiClient } from './client';
 
@@ -93,9 +95,11 @@ export async function getOriginalVouchers(params: {
     status?: string;
     fondsCode?: string;
     fiscalYear?: string;
+    /** 单据池状态过滤 (ENTRY,PARSED,PARSE_FAILED,MATCHED,ARCHIVED) */
+    poolStatus?: string;
 }): Promise<PageResult<OriginalVoucher>> {
     const { data } = await apiClient.get('/original-vouchers', { params });
-    return data;
+    return data?.data || data;
 }
 
 /**
@@ -103,7 +107,7 @@ export async function getOriginalVouchers(params: {
  */
 export async function getOriginalVoucher(id: string): Promise<OriginalVoucher> {
     const { data } = await apiClient.get(`/original-vouchers/${id}`);
-    return data;
+    return data?.data || data;
 }
 
 /**
@@ -111,7 +115,7 @@ export async function getOriginalVoucher(id: string): Promise<OriginalVoucher> {
  */
 export async function getOriginalVoucherFiles(id: string): Promise<OriginalVoucherFile[]> {
     const { data } = await apiClient.get(`/original-vouchers/${id}/files`);
-    return data;
+    return data?.data || data || [];
 }
 
 /**
@@ -119,7 +123,7 @@ export async function getOriginalVoucherFiles(id: string): Promise<OriginalVouch
  */
 export async function getVersionHistory(id: string): Promise<OriginalVoucher[]> {
     const { data } = await apiClient.get(`/original-vouchers/${id}/versions`);
-    return data;
+    return data?.data || data || [];
 }
 
 /**
@@ -127,7 +131,7 @@ export async function getVersionHistory(id: string): Promise<OriginalVoucher[]> 
  */
 export async function getVoucherRelations(id: string): Promise<VoucherRelation[]> {
     const { data } = await apiClient.get(`/original-vouchers/${id}/relations`);
-    return data;
+    return data?.data || data || [];
 }
 
 /**
@@ -135,7 +139,7 @@ export async function getVoucherRelations(id: string): Promise<VoucherRelation[]
  */
 export async function createOriginalVoucher(voucher: Partial<OriginalVoucher>): Promise<OriginalVoucher> {
     const { data } = await apiClient.post('/original-vouchers', voucher);
-    return data;
+    return data?.data || data;
 }
 
 /**
@@ -147,7 +151,7 @@ export async function updateOriginalVoucher(
     reason?: string
 ): Promise<OriginalVoucher> {
     const { data } = await apiClient.put(`/original-vouchers/${id}`, { voucher, reason });
-    return data;
+    return data?.data || data;
 }
 
 /**
@@ -169,7 +173,7 @@ export async function createVoucherRelation(
         accountingVoucherId,
         description
     });
-    return data;
+    return data?.data || data;
 }
 
 /**
@@ -198,7 +202,8 @@ export async function confirmArchive(id: string): Promise<void> {
  */
 export async function getOriginalVoucherTypes(): Promise<OriginalVoucherType[]> {
     const { data } = await apiClient.get('/original-vouchers/types');
-    return data;
+    // API 返回 Result<List<T>> 格式 { code, data, msg }，需要解包
+    return data?.data || data || [];
 }
 
 /**
@@ -209,7 +214,7 @@ export async function getOriginalVoucherStats(params?: {
     fiscalYear?: string;
 }): Promise<OriginalVoucherStats> {
     const { data } = await apiClient.get('/original-vouchers/stats', { params });
-    return data;
+    return data?.data || data;
 }
 
 /**
@@ -230,7 +235,7 @@ export async function addOriginalVoucherFile(
             'Content-Type': 'multipart/form-data'
         }
     });
-    return data;
+    return data?.data || data;
 }
 
 // 类型常量
@@ -248,3 +253,22 @@ export const ARCHIVE_STATUS = [
     { code: 'ARCHIVED', name: '已归档', color: 'green' },
     { code: 'FROZEN', name: '已冻结', color: 'red' }
 ];
+
+// 统一导出 API 对象以支持全景视图的双路获取逻辑
+export const originalVoucherApi = {
+    getOriginalVouchers,
+    getOriginalVoucher,
+    getOriginalVoucherFiles,
+    getVersionHistory,
+    getVoucherRelations,
+    createOriginalVoucher,
+    updateOriginalVoucher,
+    deleteOriginalVoucher,
+    createVoucherRelation,
+    deleteVoucherRelation,
+    submitForArchive,
+    confirmArchive,
+    getOriginalVoucherTypes,
+    getOriginalVoucherStats,
+    addOriginalVoucherFile
+};

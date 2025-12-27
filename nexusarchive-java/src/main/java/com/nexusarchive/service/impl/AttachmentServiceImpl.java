@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +44,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final ArcFileContentMapper fileContentMapper;
     private final FileStorageService fileStorageService;
     private final com.nexusarchive.mapper.ArchiveMapper archiveMapper;
+    private final List<com.nexusarchive.service.parser.InvoiceParserService> invoiceParsers;
 
     @Override
     public List<ArcFileContent> getAttachmentsByArchive(String archiveId) {
@@ -109,6 +111,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             }
         }
 
+        File tempFile = null;
         try {
             String originalFilename = file.getOriginalFilename();
             String fileId = UUID.randomUUID().toString().replace("-", "");
@@ -138,6 +141,28 @@ public class AttachmentServiceImpl implements AttachmentService {
             fileContent.setStoragePath(relativePath);
             fileContent.setCreatedTime(LocalDateTime.now());
 
+            // 尝试解析元数据 (Native Invoice Parsing)
+            // 需要创建临时文件供 Parser 读取
+            String extWithoutDot = extension.replace(".", "");
+            for (com.nexusarchive.service.parser.InvoiceParserService parser : invoiceParsers) {
+                if (parser.supports(extWithoutDot)) {
+                    try {
+                        tempFile = File.createTempFile("parser_", extension);
+                        file.transferTo(tempFile);
+                        java.util.Map<String, Object> meta = parser.parse(tempFile);
+                        if (meta != null && !meta.isEmpty()) {
+                            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                            fileContent.setHighlightMeta(mapper.writeValueAsString(meta));
+                            log.info("成功提取高亮元数据: fileId={}", fileId);
+                        }
+                        break; // 找到支持的解析器并处理后退出
+                    } catch (Exception e) {
+                        log.warn("元数据解析失败: fileId={}, parser={}", fileId, parser.getClass().getSimpleName(), e);
+                        // 解析失败不影响文件上传
+                    }
+                }
+            }
+
             fileContentMapper.insert(fileContent);
 
             // 创建关联
@@ -149,6 +174,10 @@ public class AttachmentServiceImpl implements AttachmentService {
         } catch (IOException e) {
             log.error("附件上传失败", e);
             throw new BusinessException("附件上传失败: " + e.getMessage());
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
     }
 

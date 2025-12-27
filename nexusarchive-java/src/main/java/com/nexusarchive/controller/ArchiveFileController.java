@@ -43,7 +43,7 @@ public class ArchiveFileController {
 
     @GetMapping("/{id}/content")
     @Operation(summary = "获取档案文件内容（支持 PDF/OFD 等）")
-    @PreAuthorize("hasAuthority('archive:query')")
+    @PreAuthorize("hasAuthority('archive:read')")
     public ResponseEntity<Resource> getFileContent(@PathVariable String id) {
         // 1. Query file content record by item_id
         ArcFileContent content = fileContentMapper.selectOne(
@@ -68,9 +68,17 @@ public class ArchiveFileController {
         Resource resource = new org.springframework.core.io.FileSystemResource(filePath.toFile());
         
         String contentType = determineContentType(content.getFileType(), content.getFileName());
+        
+        // [FIXED] 使用 RFC 5987 编码处理中文文件名
+        String encodedFileName;
+        try {
+            encodedFileName = java.net.URLEncoder.encode(content.getFileName(), "UTF-8").replace("+", "%20");
+        } catch (java.io.UnsupportedEncodingException e) {
+            encodedFileName = content.getFileName().replaceAll("[^a-zA-Z0-9._-]", "_");
+        }
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
                 .contentType(MediaType.parseMediaType(contentType))
                 .contentLength(content.getFileSize())  // [ADDED] 设置 Content-Length
                 .body(resource);
@@ -82,7 +90,7 @@ public class ArchiveFileController {
      */
     @GetMapping("/files/download/{fileId}")
     @Operation(summary = "通过文件ID下载文件")
-    @PreAuthorize("hasAuthority('archive:query')")
+    @PreAuthorize("hasAuthority('archive:read')")
     public ResponseEntity<Resource> downloadByFileId(@PathVariable String fileId) {
         // 直接通过文件 ID 查询
         ArcFileContent content = fileContentMapper.selectById(fileId);
@@ -102,9 +110,17 @@ public class ArchiveFileController {
         Resource resource = new org.springframework.core.io.FileSystemResource(filePath.toFile());
         
         String contentType = determineContentType(content.getFileType(), content.getFileName());
+        
+        // [FIXED] 使用 RFC 5987 编码处理中文文件名
+        String encodedFileName;
+        try {
+            encodedFileName = java.net.URLEncoder.encode(content.getFileName(), "UTF-8").replace("+", "%20");
+        } catch (java.io.UnsupportedEncodingException e) {
+            encodedFileName = content.getFileName().replaceAll("[^a-zA-Z0-9._-]", "_");
+        }
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + content.getFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
                 .contentType(MediaType.parseMediaType(contentType))
                 .contentLength(content.getFileSize())  // [ADDED] 设置 Content-Length
                 .body(resource);
@@ -140,13 +156,21 @@ public class ArchiveFileController {
             throw new BusinessException("File not bound to an archive");
         }
 
-        Archive archive = archiveMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive>()
-                        .eq("archive_code", archivalCode)
-                        .last("LIMIT 1")
-        );
+        // 兼容两种数据格式：
+        // 1. archival_code 存储的是 acc_archive.id (如 UUID格式)
+        // 2. archival_code 存储的是 acc_archive.archive_code (如 BR-GROUP-2024-30Y-FIN-AC01-0002)
+        Archive archive = archiveMapper.selectById(archivalCode);
         if (archive == null) {
-            throw new BusinessException("Archive not found for code: " + archivalCode);
+            // 尝试按 archive_code 查找
+            archive = archiveMapper.selectOne(
+                    new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive>()
+                            .eq("archive_code", archivalCode)
+                            .last("LIMIT 1")
+            );
+        }
+        
+        if (archive == null) {
+            throw new BusinessException("Archive not found: " + archivalCode);
         }
 
         DataScopeService.DataScopeContext scope = dataScopeService.resolve();

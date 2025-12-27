@@ -47,19 +47,19 @@ export const ReconciliationReport: React.FC<Props> = ({ record, loading }) => {
 
                 <Row gutter={24}>
                     <Col span={8}>
-                        <Card size="small" title="财务账 (ERP)" bordered={false} style={{ background: '#f0f5ff' }}>
+                        <Card size="small" title="财务账（ERP）" bordered={false} style={{ background: '#f0f5ff' }}>
                             <Statistic title="本期合计" value={record.erpDebitTotal} precision={2} prefix="¥" />
                             <Statistic title="凭证总数" value={record.erpVoucherCount} suffix="笔" valueStyle={{ fontSize: 16 }} />
                         </Card>
                     </Col>
                     <Col span={8}>
-                        <Card size="small" title="归档凭证 (Archive)" bordered={false} style={{ background: '#f6ffed' }}>
+                        <Card size="small" title="归档凭证" bordered={false} style={{ background: '#f6ffed' }}>
                             <Statistic title="入库合计" value={record.arcDebitTotal} precision={2} prefix="¥" />
                             <Statistic title="存档总数" value={record.arcVoucherCount} suffix="笔" valueStyle={{ fontSize: 16 }} />
                         </Card>
                     </Col>
                     <Col span={8}>
-                        <Card size="small" title="原始证据 (Evidence)" bordered={false} style={{ background: '#fff7e6' }}>
+                        <Card size="small" title="原始证据" bordered={false} style={{ background: '#fff7e6' }}>
                             <Statistic title="附件总计" value={record.attachmentCount} suffix="个" />
                             <div style={{ marginTop: 8 }}>
                                 <span style={{ fontSize: 12, color: '#8c8c8c' }}>证据覆盖率</span>
@@ -79,8 +79,8 @@ export const ReconciliationReport: React.FC<Props> = ({ record, loading }) => {
                     ]}
                     columns={[
                         { title: '对账项目', dataIndex: 'item', key: 'item' },
-                        { title: 'ERP 数据 (账)', dataIndex: 'erp', key: 'erp' },
-                        { title: '系统归档 (凭/证)', dataIndex: 'arc', key: 'arc' },
+                        { title: 'ERP数据（账）', dataIndex: 'erp', key: 'erp' },
+                        { title: '系统归档（凭证）', dataIndex: 'arc', key: 'arc' },
                         {
                             title: '结果',
                             dataIndex: 'status',

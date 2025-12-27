@@ -16,7 +16,12 @@ import lombok.Getter;
 public enum PreArchiveStatus {
     
     /**
-     * 待检测 - 文件刚上传，等待四性检测
+     * 草稿 - 刚从ERP同步或手动录入，尚未开始处理
+     */
+    DRAFT("DRAFT", "草稿"),
+
+    /**
+     * 待检测 - 等待进行四性检测
      */
     PENDING_CHECK("PENDING_CHECK", "待检测"),
     
@@ -31,9 +36,19 @@ public enum PreArchiveStatus {
     PENDING_METADATA("PENDING_METADATA", "待补录"),
     
     /**
-     * 待归档 - 检测通过，等待审批归档
+     * 待匹配 - 检测通过，等待智能匹配原始凭证
      */
-    PENDING_ARCHIVE("PENDING_ARCHIVE", "待归档"),
+    MATCH_PENDING("MATCH_PENDING", "待匹配"),
+
+    /**
+     * 匹配成功 - 已自动关联到必要的原始凭证
+     */
+    MATCHED("MATCHED", "匹配成功"),
+
+    /**
+     * 准备归档 - 匹配完成且审核通过，等待提交归档
+     */
+    PENDING_ARCHIVE("PENDING_ARCHIVE", "准备归档"),
     
     /**
      * 归档审批中 - 已提交申请，等待审批
@@ -41,7 +56,7 @@ public enum PreArchiveStatus {
     PENDING_APPROVAL("PENDING_APPROVAL", "归档审批中"),
     
     /**
-     * 归档处理中 - 异步任务正在执行（哈希计算、存证挂接等）
+     * 归档处理中 - 异步任务正在执行
      */
     ARCHIVING("ARCHIVING", "归档处理中"),
     

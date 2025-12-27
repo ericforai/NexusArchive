@@ -49,6 +49,10 @@ export const archivesApi = {
         const response = await client.get<ApiResponse<Archive>>(`/archives/${id}`);
         return response.data;
     },
+    getArchiveFiles: async (id: string) => {
+        const response = await client.get<ApiResponse<any[]>>(`/archives/${id}/files`);
+        return response.data; // Returns specific file list
+    },
     updateArchive: async (id: string, data: Partial<Archive>) => {
         const response = await client.put<ApiResponse<void>>(`/archives/${id}`, data);
         return response.data;

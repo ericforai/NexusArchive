@@ -20,6 +20,7 @@ export interface AttachmentFile {
     storagePath: string;
     docType?: string; // invoice, contract, bank_slip, other
     createdTime?: string;
+    highlightMeta?: string; // JSON string containing coordinate data
 }
 
 export interface AttachmentLink {

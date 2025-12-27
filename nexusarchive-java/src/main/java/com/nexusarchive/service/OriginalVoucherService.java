@@ -22,10 +22,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 /**
  * 原始凭证服务
@@ -44,6 +52,8 @@ public class OriginalVoucherService {
     private final OriginalVoucherFileMapper fileMapper;
     private final VoucherRelationMapper relationMapper;
     private final OriginalVoucherTypeMapper typeMapper;
+    private final FileStorageService fileStorageService;
+    private final com.nexusarchive.service.parser.PdfInvoiceParser pdfInvoiceParser;
 
     // ===== 查询接口 =====
 
@@ -104,6 +114,61 @@ public class OriginalVoucherService {
     }
 
     /**
+     * 根据 ID 获取文件详情
+     */
+    public OriginalVoucherFile getFileById(String fileId) {
+        return fileMapper.selectById(fileId);
+    }
+
+    /**
+     * 下载原始凭证文件内容
+     */
+    public ResponseEntity<Resource> downloadFile(String fileId) {
+        OriginalVoucherFile fileInfo = getFileById(fileId);
+        if (fileInfo == null || !StringUtils.hasText(fileInfo.getStoragePath())) {
+            throw new BusinessException("文件不存在: " + fileId);
+        }
+
+        Path filePath = fileStorageService.resolvePath(fileInfo.getStoragePath());
+        if (!fileStorageService.exists(fileInfo.getStoragePath())) {
+            throw new BusinessException("物理文件不存在: " + fileInfo.getStoragePath());
+        }
+
+        Resource resource = new FileSystemResource(filePath.toFile());
+        String contentType = determineContentType(fileInfo.getFileType(), fileInfo.getFileName());
+
+        // 使用 RFC 5987 标准编码处理中文文件名
+        String encodedFileName = URLEncoder.encode(fileInfo.getFileName(), StandardCharsets.UTF_8)
+                .replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
+    }
+
+    private String determineContentType(String fileType, String fileName) {
+        if (StringUtils.hasText(fileType)) {
+            switch (fileType.toLowerCase()) {
+                case "ofd": return "application/ofd";
+                case "pdf": return "application/pdf";
+                case "jpg":
+                case "jpeg": return "image/jpeg";
+                case "png": return "image/png";
+                case "xml": return "application/xml";
+            }
+        }
+        if (fileName != null) {
+            String lowerName = fileName.toLowerCase();
+            if (lowerName.endsWith(".ofd")) return "application/ofd";
+            if (lowerName.endsWith(".pdf")) return "application/pdf";
+            if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
+            if (lowerName.endsWith(".png")) return "image/png";
+        }
+        return "application/octet-stream";
+    }
+
+    /**
      * 获取版本历史
      */
     public List<OriginalVoucher> getVersionHistory(String id) {
@@ -139,6 +204,10 @@ public class OriginalVoucherService {
         // 3. 设置默认值
         if (voucher.getId() == null) {
             voucher.setId(UUID.randomUUID().toString());
+        }
+        // 设置默认业务日期（如果未提供）
+        if (voucher.getBusinessDate() == null) {
+            voucher.setBusinessDate(java.time.LocalDate.now());
         }
         voucher.setVersion(1);
         voucher.setIsLatest(true);
@@ -314,26 +383,115 @@ public class OriginalVoucherService {
     // ===== 文件管理 =====
 
     /**
-     * 添加文件到原始凭证
+     * 添加文件到原始凭证 (MultipartFile 版本)
      */
     @Transactional
-    public OriginalVoucherFile addFile(String voucherId, OriginalVoucherFile file, String userId) {
+    public OriginalVoucherFile addFile(String voucherId, org.springframework.web.multipart.MultipartFile file, String fileRole, String userId) {
         // 校验凭证存在
         getById(voucherId);
 
-        file.setId(UUID.randomUUID().toString());
-        file.setVoucherId(voucherId);
-        file.setCreatedBy(userId);
-        file.setCreatedTime(LocalDateTime.now());
+        if (file.isEmpty()) {
+            throw new BusinessException("上传文件为空");
+        }
 
-        // 设置序号
-        List<OriginalVoucherFile> existingFiles = getFiles(voucherId);
-        file.setSequenceNo(existingFiles.size() + 1);
+        try {
+            String originalFilename = file.getOriginalFilename();
+            String fileId = UUID.randomUUID().toString();
+            String extension = "";
+            
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String fileType = extension.replace(".", "").toUpperCase();
 
-        fileMapper.insert(file);
-        log.info("Added file {} to voucher: {}", file.getFileName(), voucherId);
-        return file;
+            // 存储文件 (使用 FileStorageService 标准化流程)
+            // 注意：relativePath 不能以 ./ 或 / 开头
+            String relativePath = "original-vouchers/" + voucherId + "/" + fileId + extension;
+            fileStorageService.saveFile(file.getInputStream(), relativePath);
+
+            // 计算哈希
+            byte[] content = file.getBytes();
+            String fileHash = calculateHash(content);
+
+            // 设置序号
+            List<OriginalVoucherFile> existingFiles = getFiles(voucherId);
+            int sequenceNo = existingFiles.size() + 1;
+
+            // 构建文件记录
+            OriginalVoucherFile voucherFile = OriginalVoucherFile.builder()
+                    .id(fileId)
+                    .voucherId(voucherId)
+                    .fileName(originalFilename)
+                    .fileType(fileType)
+                    .fileSize(file.getSize())
+                    .storagePath(relativePath)
+                    .fileHash(fileHash)
+                    .hashAlgorithm("SM3")
+                    .fileRole(fileRole != null ? fileRole : "PRIMARY")
+                    .sequenceNo(sequenceNo)
+                    .createdBy(userId)
+                    .createdTime(LocalDateTime.now())
+                    .build();
+
+            fileMapper.insert(voucherFile);
+
+            // 解析发票逻辑 (自动识别金额)
+            if ("PDF".equals(fileType) && ("PRIMARY".equals(voucherFile.getFileRole()) || "ORIGINAL".equals(voucherFile.getFileRole()))) {
+                try {
+                    java.util.Map<String, Object> parseResult = pdfInvoiceParser.parse(fileStorageService.resolvePath(relativePath).toFile());
+                    if (parseResult.containsKey("total_amount_value")) {
+                        String amountStr = (String) parseResult.get("total_amount_value");
+                        log.info("OCR Identified amount string: {}", amountStr);
+                        try {
+                            java.math.BigDecimal amount = new java.math.BigDecimal(amountStr);
+                            OriginalVoucher voucher = getById(voucherId);
+                            // 修正：即使凭证为 0 也更新，除非已经有人工输入了大于 0 的值
+                            if (voucher.getAmount() == null || voucher.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0) {
+                                voucher.setAmount(amount);
+                                voucherMapper.updateById(voucher);
+                                log.info("Automatically filled amount {} for voucher {}", amount, voucherId);
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to convert amount: {}", amountStr);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Parsing failed", e);
+                }
+            }
+
+            log.info("Added file {} to original voucher: {}", originalFilename, voucherId);
+            return voucherFile;
+
+        } catch (java.io.IOException e) {
+            log.error("文件上传失败", e);
+            throw new BusinessException("文件上传失败: " + e.getMessage());
+        }
     }
+
+    /**
+     * 计算文件哈希 (SM3 或 SHA-256)
+     */
+    private String calculateHash(byte[] content) {
+        try {
+            java.security.MessageDigest md;
+            try {
+                md = java.security.MessageDigest.getInstance("SM3");
+            } catch (Exception e) {
+                md = java.security.MessageDigest.getInstance("SHA-256");
+            }
+            byte[] digest = md.digest(content);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.error("Hash calculation failed", e);
+            return UUID.randomUUID().toString();
+        }
+    }
+
 
     // ===== 关联管理 =====
 

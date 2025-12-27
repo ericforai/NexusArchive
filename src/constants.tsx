@@ -32,6 +32,33 @@ export const NAV_ITEMS: NavItem[] = [
     permission: 'nav:pre_archive',
     children: [
       { id: '电子凭证池', label: '电子凭证池', path: '电子凭证池' },
+      {
+        id: '单据池',
+        label: '单据池',
+        path: '单据池',
+        children: [
+          // 发票类 (INVOICE)
+          { id: '单据池:纸质发票', label: '纸质发票', path: '单据池:纸质发票' },
+          { id: '单据池:增值税电子发票', label: '增值税电子发票', path: '单据池:增值税电子发票' },
+          { id: '单据池:数电发票', label: '数电发票', path: '单据池:数电发票' },
+          { id: '单据池:数电票（铁路）', label: '数电票（铁路）', path: '单据池:数电票（铁路）' },
+          { id: '单据池:数电票（航空）', label: '数电票（航空）', path: '单据池:数电票（航空）' },
+          { id: '单据池:数电票（财政）', label: '数电票（财政）', path: '单据池:数电票（财政）' },
+          // 银行类 (BANK)
+          { id: '单据池:银行回单', label: '银行回单', path: '单据池:银行回单' },
+          { id: '单据池:银行对账单', label: '银行对账单', path: '单据池:银行对账单' },
+          // 单据类 (DOCUMENT)
+          { id: '单据池:付款单', label: '付款单', path: '单据池:付款单' },
+          { id: '单据池:收款单', label: '收款单', path: '单据池:收款单' },
+          { id: '单据池:收款单据（收据）', label: '收款单据（收据）', path: '单据池:收款单据（收据）' },
+          { id: '单据池:工资单', label: '工资单', path: '单据池:工资单' },
+          // 合同类 (CONTRACT)
+          { id: '单据池:合同', label: '合同', path: '单据池:合同' },
+          { id: '单据池:协议', label: '协议', path: '单据池:协议' },
+          // 其他类 (OTHER)
+          { id: '单据池:其他', label: '其他', path: '单据池:其他' }
+        ]
+      },
       { id: 'OCR识别', label: 'OCR识别', path: 'OCR识别' },
       { id: '凭证关联', label: '凭证关联', path: '凭证关联' },
       { id: '异常数据', label: '异常数据', path: '异常数据' }
@@ -131,6 +158,7 @@ export const NAV_ITEMS: NavItem[] = [
       { id: '档案装盒', label: '档案装盒', path: '档案装盒' },
       { id: '档案组卷', label: '档案组卷', path: '档案组卷' },
       { id: '归档审批', label: '归档审批', path: '归档审批' },
+      { id: '归档批次', label: '归档批次', path: '归档批次' },
       { id: '开放鉴定', label: '开放鉴定', path: '开放鉴定' },
       { id: '销毁鉴定', label: '销毁鉴定', path: '销毁鉴定' }
     ]
@@ -148,22 +176,13 @@ export const NAV_ITEMS: NavItem[] = [
   },
   // DESTRUCTION removed as per user request (redundant with Operations)
   // WAREHOUSE removed as per expert review (Out of Scope)
+  // MATCHING removed as per user request (integrated into Pre-Archive > Voucher Link)
   { id: ViewState.STATS, label: '数据统计', icon: BarChart3, permission: 'nav:stats' },
   {
     id: ViewState.SETTINGS,
     label: '系统设置',
     icon: Settings,
     permission: 'nav:settings',
-    children: [
-      { id: '基础设置', label: '基础设置', path: '基础设置' },
-      { id: '用户管理', label: '用户管理', path: '用户管理' },
-      { id: '角色权限', label: '角色权限', path: '角色权限' },
-      { id: '组织架构', label: '组织架构', path: '组织架构' },
-      { id: '全宗管理', label: '全宗管理', path: '全宗管理' },
-      { id: '安全合规', label: '安全合规', path: '安全合规' },
-      { id: '集成中心', label: '集成中心', path: '集成中心' },
-      { id: '审计日志', label: '审计日志', path: '审计日志' }
-    ]
   },
 ];
 
@@ -199,16 +218,17 @@ export const DESTRUCTION_BATCHES = [
 
 // --- 1. PRE_ARCHIVE SUB-CONFIGS ---
 
-// 1.1 电子凭证池
+// 1.1 电子凭证池 - 优化列配置（专业财务视角）
 export const PRE_ARCHIVE_POOL_CONFIG: ModuleConfig = {
   columns: [
-    { key: 'businessDocNo', header: '来源标识', type: 'text' },
-    { key: 'erpVoucherNo', header: 'ERP凭证号', type: 'text' },
-    { key: 'source', header: '来源系统', type: 'text' },
-    { key: 'type', header: '单据类型', type: 'text' },
+    { key: 'voucherWord', header: '凭证字号', type: 'text' },      // 新增：如"记-1"
+    { key: 'summary', header: '摘要', type: 'text' },              // 新增：业务摘要
+    { key: 'source', header: '来源系统', type: 'tag' },            // 改为tag类型
+    { key: 'type', header: '单据类型', type: 'tag' },              // 改为tag类型
     { key: 'amount', header: '金额', type: 'money' },
-    { key: 'date', header: '入池时间', type: 'date' },
-    { key: 'status', header: '解析状态', type: 'status' },
+    { key: 'docDate', header: '业务日期', type: 'date' },          // 新增：业务发生日期
+    { key: 'date', header: '入池时间', type: 'datetime' },         // 改为datetime类型
+    { key: 'status', header: '状态', type: 'status' },
   ],
   data: [
     { id: '1', businessDocNo: 'JZ-202311-0051', code: 'POOL-20231101-001', source: 'SAP ERP', type: '记账凭证', amount: '¥ 12,000.00', date: '2023-11-01 09:00', status: '待处理' },

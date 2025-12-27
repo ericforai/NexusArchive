@@ -135,7 +135,7 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
                 <iframe
                     src={blobUrl}
                     className="w-full h-full min-h-[500px] border-0"
-                    title="PDF Preview"
+                    title="PDF文件预览"
                 />
             </div>
         )

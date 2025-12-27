@@ -1,14 +1,20 @@
-一旦我所属的文件夹有所变化，请更新我。
-本目录存放归档流程相关组件。
-用于弹窗配置、匹配预览与规则管理。
+// Input: archive 组件目录
+// Output: 极简架构说明
+// Pos: src/components/archive/README.md
+// 一旦我所属的文件夹有所变化，请更新我。
+
+# 档案组件 (Archive Components)
+
+本目录包含档案管理相关的 UI 组件。
 
 ## 文件清单
 
-| 文件 | 地位 | 功能 |
-| --- | --- | --- |
-| `AddRecordModal.tsx` | 弹窗组件 | 新增档案记录弹窗 |
-| `ComplianceModal.tsx` | 弹窗组件 | 合规校验详情弹窗 |
-| `LinkModal.tsx` | 弹窗组件 | 关联/链接操作弹窗 |
-| `MatchPreviewModal.tsx` | 弹窗组件 | 匹配结果预览弹窗 |
-| `RuleConfigModal.tsx` | 弹窗组件 | 规则配置弹窗 |
-| `index.ts` | 聚合入口 | 归档组件导出 |
+| 文件 | 功能 |
+| --- | --- |
+| `ArchiveDetailModal.tsx` | 档案详情弹窗（业务元数据 + 文件预览 + 附件列表）|
+
+## 架构约束
+
+- 组件应为**纯展示组件**，通过 Props 接收数据和回调
+- 禁止直接调用 API
+- 复用 `components/common/*` 中的原子组件

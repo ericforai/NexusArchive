@@ -1,7 +1,7 @@
 // Input: Java 标准库
 // Output: FileMagicValidator 类
 // Pos: 工具模块
-// [ADDED P1-8] 文件 Magic Number 验证器
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.util;
 

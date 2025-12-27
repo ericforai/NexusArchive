@@ -65,6 +65,8 @@ public class PoolController {
     private final com.nexusarchive.service.PreArchiveSubmitService preArchiveSubmitService;
     private final com.nexusarchive.service.AuditLogService auditLogService;
     private final com.nexusarchive.service.AttachmentService attachmentService;
+    private final com.nexusarchive.service.PoolService poolService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -75,13 +77,33 @@ public class PoolController {
     // ===== 元数据补录 API =====
 
     /**
+     * 搜索可关联的候选凭证
+     * 
+     * @param request 搜索请求
+     * @return 候选凭证列表
+     */
+    @PostMapping("/candidates/search")
+    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    public Result<List<PoolItemDto>> searchCandidates(@RequestBody com.nexusarchive.dto.search.CandidateSearchRequest request) {
+        log.info("API 搜索候选凭证: {}", request);
+        try {
+            List<PoolItemDto> results = poolService.searchCandidates(request);
+            log.info("API 搜索成功, 结果条数: {}", results.size());
+            return Result.success(results);
+        } catch (Exception e) {
+            log.error("API 搜索候选凭证失败: {}", e.getMessage(), e);
+            return Result.error("搜索失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 获取文件详情 (包含元数据)
      * 
      * @param id 文件ID
      * @return 文件详情
      */
     @GetMapping("/detail/{id}")
-    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<PoolItemDetailDto> getFileDetail(@PathVariable String id) {
         log.info("获取文件详情: {}", id);
 
@@ -239,7 +261,7 @@ public class PoolController {
      * @return 凭证池列表
      */
     @GetMapping("/list")
-    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<PoolItemDto>> listPoolItems() {
         log.info("查询电子凭证池列表");
 
@@ -271,7 +293,7 @@ public class PoolController {
      * @return 文件列表
      */
     @GetMapping("/list/status/{status}")
-    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<PoolItemDto>> listByStatus(@PathVariable String status) {
         log.info("按状态查询预归档文件: {}", status);
 
@@ -296,7 +318,7 @@ public class PoolController {
      * @return 各状态计数
      */
     @GetMapping("/stats/status")
-    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.Map<String, Long>> getStatusStats() {
         log.info("统计预归档各状态数量");
 
@@ -500,23 +522,47 @@ public class PoolController {
      * @return 文件流
      */
     @GetMapping("/preview/{id}")
-    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<Resource> previewFile(@PathVariable String id) {
         log.info("请求预览文件: {}", id);
 
+        String storagePath = null;
+        String fileName = null;
+        
+        // 1. 先查 arc_file_content
         ArcFileContent fileContent = arcFileContentMapper.selectById(id);
-        if (fileContent == null) {
-            log.error("文件不存在: {}", id);
-            return ResponseEntity.notFound().build();
+        if (fileContent != null) {
+            storagePath = fileContent.getStoragePath();
+            fileName = fileContent.getFileName();
+        } else {
+            // 2. 如果找不到，查 arc_original_voucher_file (智能匹配关联的文件)
+            log.debug("arc_file_content 未找到 {}, 尝试查询 arc_original_voucher_file", id);
+            try {
+                String sql = "SELECT storage_path, file_name FROM arc_original_voucher_file WHERE id = ? AND deleted = 0";
+                java.util.List<java.util.Map<String, Object>> rows = jdbcTemplate.queryForList(sql, id);
+                
+                if (!rows.isEmpty()) {
+                    storagePath = (String) rows.get(0).get("storage_path");
+                    fileName = (String) rows.get(0).get("file_name");
+                    log.info("从 arc_original_voucher_file 找到文件: {} -> {}", id, storagePath);
+                }
+            } catch (Exception e) {
+                log.debug("查询 arc_original_voucher_file 失败: {}", e.getMessage());
+            }
+            
+            if (storagePath == null) {
+                log.error("文件不存在: {}", id);
+                return ResponseEntity.notFound().build();
+            }
         }
 
         try {
-            Path filePath = Paths.get(fileContent.getStoragePath());
+            Path filePath = Paths.get(storagePath);
             Resource resource = new UrlResource(filePath.toUri());
 
             // 如果文件不存在，但在 arc_file_content 表记录存在，且是 PDF，则尝试实时生成
-            if (!resource.exists()) {
-                if (fileContent.getFileName().toLowerCase().endsWith(".pdf")) {
+            if (!resource.exists() && fileContent != null) {
+                if (fileName.toLowerCase().endsWith(".pdf")) {
                     log.info("PDF 文件未找到，尝试实时生成: {}", filePath);
                     try {
                         // 优先使用数据库中保存的原始JSON数据
@@ -534,23 +580,23 @@ public class PoolController {
 
             if (resource.exists() || resource.isReadable()) {
                 String contentType = "application/octet-stream";
-                String fileName = fileContent.getFileName().toLowerCase();
-                if (fileName.endsWith(".pdf")) {
+                String fileNameLower = fileName.toLowerCase();
+                if (fileNameLower.endsWith(".pdf")) {
                     contentType = "application/pdf";
-                } else if (fileName.endsWith(".ofd")) {
+                } else if (fileNameLower.endsWith(".ofd")) {
                     contentType = "application/ofd";
-                } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+                } else if (fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".jpeg")) {
                     contentType = "image/jpeg";
-                } else if (fileName.endsWith(".png")) {
+                } else if (fileNameLower.endsWith(".png")) {
                     contentType = "image/png";
-                } else if (fileName.endsWith(".xml")) {
+                } else if (fileNameLower.endsWith(".xml")) {
                     contentType = "text/xml";
                 }
 
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(contentType))
                         .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                                "inline; filename=\"" + fileContent.getFileName() + "\"")
+                                "inline; filename=\"" + fileName + "\"")
                         .body(resource);
             } else {
                 log.error("文件无法读取: {}", filePath);
@@ -659,10 +705,11 @@ public class PoolController {
                 ? fileContent.getArchivalCode().replace("TEMP-", "")
                 : "PENDING";
 
-        // 查询元数据获取金额
+        // 查询元数据获取金额 (使用 selectList 并取第一条以防重复数据导致 selectOne 报错)
         String amountStr = "-";
-        ArcFileMetadataIndex metadata = arcFileMetadataIndexMapper.selectOne(
-                new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileContent.getId()));
+        List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
+                new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileContent.getId()).last("LIMIT 1"));
+        ArcFileMetadataIndex metadata = metas.isEmpty() ? null : metas.get(0);
 
         if (metadata != null && metadata.getTotalAmount() != null) {
             amountStr = metadata.getTotalAmount().toString();
@@ -701,10 +748,13 @@ public class PoolController {
                 .source(source)
                 .type(fileContent.getFileType())
                 .amount(amountStr)
-                .date(fileContent.getCreatedTime().format(FORMATTER))
+                .date(fileContent.getCreatedTime() != null ? fileContent.getCreatedTime().format(FORMATTER) : "-")
                 .status(fileContent.getPreArchiveStatus() != null ? fileContent.getPreArchiveStatus() : "PENDING_CHECK")
                 .sourceSystem(sourceSystem)
                 .fileName(fileContent.getFileName())
+                .summary(fileContent.getSummary())
+                .voucherWord(fileContent.getVoucherWord())
+                .docDate(fileContent.getDocDate() != null ? fileContent.getDocDate().toString() : "-")
                 .build();
     }
 }

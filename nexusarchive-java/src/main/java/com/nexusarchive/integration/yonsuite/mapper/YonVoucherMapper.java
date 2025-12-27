@@ -8,7 +8,6 @@ package com.nexusarchive.integration.yonsuite.mapper;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.enums.PreArchiveStatus;
-import com.nexusarchive.integration.core.model.UnifiedDocumentDTO;
 import com.nexusarchive.integration.yonsuite.dto.YonVoucherDetailResponse;
 import com.nexusarchive.integration.yonsuite.dto.YonVoucherListResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +17,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 用友凭证到 Canonical 模型的映射器
@@ -202,7 +199,7 @@ public class YonVoucherMapper {
     /**
      * 将凭证详情映射到预归档文件表 (ArcFileContent)
      * 用于 ERP 同步进入预归档库的场景
-     * 
+     *
      * @param detail       凭证详情
      * @param sourceSystem 来源系统标识
      * @return ArcFileContent 预归档文件记录
@@ -289,6 +286,25 @@ public class YonVoucherMapper {
         // 临时存储路径 (PDF 生成后会更新为实际路径)
         String tempStoragePath = "pending/" + sourceSystem + "/" + businessDocNo + ".json";
 
+        // 解析凭证日期
+        LocalDate docDate = LocalDate.now();
+        if (header.getMaketime() != null) {
+            try {
+                docDate = LocalDate.parse(header.getMaketime(), DATE_FORMATTER);
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
+        // 生成摘要 (从分录描述中取第一条)
+        String summary = "会计凭证";
+        if (record.getBody() != null && !record.getBody().isEmpty()) {
+            String firstDesc = record.getBody().get(0).getDescription();
+            if (firstDesc != null && !firstDesc.isEmpty()) {
+                summary = firstDesc;
+            }
+        }
+
         return ArcFileContent.builder()
                 .archivalCode(archivalCode)
                 .fileName("会计凭证-" + displayName + ".json")
@@ -306,114 +322,10 @@ public class YonVoucherMapper {
                 .creator(header.getMaker() != null ? header.getMaker().getName() : null)
                 .fondsCode(header.getAccbook() != null ? header.getAccbook().getCode() : null)
                 .createdTime(LocalDateTime.now())
-                .build();
-    }
-
-    /**
-     * 将列表记录转换为统一文档模型
-     */
-    public UnifiedDocumentDTO toUnifiedDocument(YonVoucherListResponse.VoucherRecord record) {
-        if (record == null || record.getHeader() == null) {
-            return null;
-        }
-
-        YonVoucherListResponse.VoucherHeader header = record.getHeader();
-
-        // 解析金额
-        BigDecimal amount = header.getTotalDebitOrg() != null ? header.getTotalDebitOrg() : BigDecimal.ZERO;
-
-        // 解析日期
-        LocalDate docDate = LocalDate.now();
-        if (header.getMaketime() != null) {
-            try {
-                docDate = LocalDate.parse(header.getMaketime(), DATE_FORMATTER);
-            } catch (Exception e) {
-                // ignore
-            }
-        }
-
-        // 元数据 Map
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("maker", header.getMaker() != null ? header.getMaker().getName() : null);
-        metadata.put("auditor", header.getAuditor() != null ? header.getAuditor().getName() : null);
-        metadata.put("bookkeeper", header.getTallyman() != null ? header.getTallyman().getName() : null);
-        metadata.put("voucherType", header.getVouchertype() != null ? header.getVouchertype().getName() : "记账凭证");
-        if (header.getAccbook() != null) {
-            metadata.put("accbookCode", header.getAccbook().getCode());
-            metadata.put("accbookName", header.getAccbook().getName());
-        }
-
-        // 原始 JSON
-        String json = "";
-        try {
-            json = objectMapper.writeValueAsString(record);
-        } catch (Exception e) {
-            // ignore
-        }
-
-        return UnifiedDocumentDTO.builder()
-                .sourceId(header.getId())
-                .businessCode(header.getDisplayname() != null ? header.getDisplayname() : header.getId())
-                .period(header.getPeriod())
-                .docDate(docDate)
-                .amount(amount)
-                .type(UnifiedDocumentDTO.DocumentType.VOUCHER)
-                .originalJson(json)
-                .metadata(metadata)
-                .build();
-    }
-
-    /**
-     * 将详情记录转换为统一文档模型
-     */
-    public UnifiedDocumentDTO toUnifiedDocument(YonVoucherDetailResponse.VoucherDetail detail) {
-        if (detail == null) {
-            return null;
-        }
-
-        // 解析金额
-        BigDecimal amount = detail.getTotalDebitOrg() != null ? detail.getTotalDebitOrg() : BigDecimal.ZERO;
-
-        // 解析日期
-        LocalDate docDate = LocalDate.now();
-        if (detail.getMakeTime() != null) {
-            try {
-                docDate = LocalDate.parse(detail.getMakeTime(), DATE_FORMATTER);
-            } catch (Exception e) {
-                // ignore
-            }
-        }
-
-        // 元数据 Map
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("maker", detail.getMakerObj() != null ? detail.getMakerObj().getName() : null);
-        // detail might not have auditor info directly or structure varies, omit for
-        // simplicity or add if available
-        String voucherTypeName = detail.getVoucherTypeObj() != null ? detail.getVoucherTypeObj().getName()
-                : (detail.getVoucherType() != null ? detail.getVoucherType() : "记账凭证");
-        metadata.put("voucherType", voucherTypeName);
-        if (detail.getAccBookObj() != null) {
-            metadata.put("accbookCode", detail.getAccBookObj().getCode());
-            metadata.put("accbookName", detail.getAccBookObj().getName());
-        }
-
-        // 原始 JSON
-        String json = "";
-        try {
-            json = objectMapper.writeValueAsString(detail);
-        } catch (Exception e) {
-            // ignore
-        }
-
-        return UnifiedDocumentDTO.builder()
-                .sourceId(detail.getId())
-                .businessCode(detail.getDisplayName() != null ? detail.getDisplayName() : detail.getId())
-                .period(detail.getPeriodUnion())
-                .docDate(docDate)
-                .amount(amount)
-                .type(UnifiedDocumentDTO.DocumentType.VOUCHER)
-                .originalJson(json)
-                .metadata(metadata)
+                // 新增: 显示字段
+                .voucherWord(displayName)  // 凭证字号
+                .summary(summary)          // 摘要
+                .docDate(docDate)          // 业务日期
                 .build();
     }
 

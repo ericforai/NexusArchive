@@ -1,6 +1,6 @@
-// Input: Lombok、Spring Framework、Spring Security、Java 标准库
-// Output: SecurityConfig 类
-// Pos: 配置层
+// Input: Spring Security、JWT、OAuth2、CustomUserDetailsService
+// Output: SecurityConfig 类 (Security Filter Chain)
+// Pos: 系统安全配置层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.config;
@@ -69,12 +69,15 @@ public class SecurityConfig {
                                                                 "/auth/login",
                                                                 "/auth/refresh",
                                                                 "/auth/logout",
-                                                                "/license/**", // License 导入需要在未授权时可访问
+                                                                "/license/**", // License 查询和导入需要在未授权时可访问
                                                                 "/health",
-                                                                "/health/**",
-                                                                "/actuator/health",
-                                                                "/ws/**",
-                                                                "/error")
+                                                                "/public/**",
+
+                                                                "/actuator/**",
+                                                                "/v3/api-docs/**",
+                                                                "/swagger-ui/**",
+                                                                "/error",
+                                                                "/swagger-ui.html")
                                                 .permitAll()
                                                 // 允许所有 OPTIONS 请求 (CORS 预检)
                                                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")

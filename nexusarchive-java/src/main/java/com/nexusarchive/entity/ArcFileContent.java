@@ -149,6 +149,41 @@ public class ArcFileContent {
      */
     private Integer sequenceInBatch;
 
+    private String summary;
+
+    private String voucherWord;
+
+    private java.time.LocalDate docDate;
+
+    /**
+     * 文件高亮元数据(坐标信息)
+     */
+    @com.baomidou.mybatisplus.annotation.TableField(value = "highlight_meta", typeHandler = com.nexusarchive.config.PostgresJsonTypeHandler.class)
+    private String highlightMeta;
+
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private java.util.Map<String, Object> highlightMetaMap;
+
+    public void setHighlightMeta(String highlightMeta) {
+        this.highlightMeta = highlightMeta;
+    }
+
+    public String getHighlightMeta() {
+        return highlightMeta;
+    }
+
+    public java.util.Map<String, Object> getHighlightMetaMap() {
+        if (highlightMetaMap == null && highlightMeta != null) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                highlightMetaMap = mapper.readValue(highlightMeta, java.util.Map.class);
+            } catch (Exception e) {
+                // Ignore parse error
+            }
+        }
+        return highlightMetaMap;
+    }
+
     private LocalDateTime createdTime;
 
     public ArcFileContent() {
@@ -406,6 +441,30 @@ public class ArcFileContent {
         this.sequenceInBatch = sequenceInBatch;
     }
 
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getVoucherWord() {
+        return voucherWord;
+    }
+
+    public void setVoucherWord(String voucherWord) {
+        this.voucherWord = voucherWord;
+    }
+
+    public java.time.LocalDate getDocDate() {
+        return docDate;
+    }
+
+    public void setDocDate(java.time.LocalDate docDate) {
+        this.docDate = docDate;
+    }
+
     public static ArcFileContentBuilder builder() {
         return new ArcFileContentBuilder();
     }
@@ -550,6 +609,21 @@ public class ArcFileContent {
 
         public ArcFileContentBuilder sequenceInBatch(Integer sequenceInBatch) {
             entity.setSequenceInBatch(sequenceInBatch);
+            return this;
+        }
+
+        public ArcFileContentBuilder summary(String summary) {
+            entity.setSummary(summary);
+            return this;
+        }
+
+        public ArcFileContentBuilder voucherWord(String voucherWord) {
+            entity.setVoucherWord(voucherWord);
+            return this;
+        }
+
+        public ArcFileContentBuilder docDate(java.time.LocalDate docDate) {
+            entity.setDocDate(docDate);
             return this;
         }
 

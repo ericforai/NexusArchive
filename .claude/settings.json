@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "project": {
+    "name": "NexusArchive",
+    "type": "fullstack",
+    "backend": "spring-boot",
+    "frontend": "react-vite"
+  },
+  "guidelines": {
+    "preferSmallDiffs": true,
+    "explainBeforeChange": true,
+    "noMassRefactor": true,
+    "preserveExistingPatterns": true
+  },
+  "cautionFiles": [
+    "nexusarchive-java/src/main/resources/application*.yml",
+    "nexusarchive-java/src/main/resources/db/migration/*.sql",
+    "nexusarchive-java/pom.xml",
+    ".env*"
+  ],
+  "neverRun": [
+    "rm -rf",
+    "DROP DATABASE",
+    "DROP TABLE",
+    "TRUNCATE",
+    "mvn clean install -DskipTests && mvn deploy",
+    "git push --force"
+  ],
+  "testCommands": {
+    "backend": "cd nexusarchive-java && mvn test",
+    "frontend": "npm run test:run",
+    "all": "cd nexusarchive-java && mvn test && cd .. && npm run test:run"
+  }
+}

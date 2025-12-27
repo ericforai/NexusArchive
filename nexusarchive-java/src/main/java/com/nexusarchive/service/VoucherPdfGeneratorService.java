@@ -990,6 +990,8 @@ public class VoucherPdfGeneratorService {
                 "/usr/share/fonts/noto-cjk/NotoSansSC-Regular.otf",
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
                 "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+                // Docker Container
+                "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf",
                 // Windows
                 "C:/Windows/Fonts/msyh.ttc",
                 "C:/Windows/Fonts/simsun.ttc",

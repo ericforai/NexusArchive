@@ -1,3 +1,4 @@
+一旦我所属的文件夹有所变化，请更新我。
 # NexusArchive 电子会计档案系统
 
 > **DA/T 94-2022 标准合规 · 电子会计档案全生命周期管理**
@@ -70,11 +71,11 @@ java -jar target/nexusarchive-backend-2.0.0.jar
 npm install && npm run dev
 ```
 
-- 后端: http://localhost:8080/api
-- 前端: http://localhost:5173
-- API 文档: http://localhost:8080/api/swagger-ui.html
+- 后端: http://localhost:19090/api
+- 前端: http://localhost:15175
+- API 文档: http://localhost:19090/api/swagger-ui.html
 
-👉 详细指南请参阅 [启动指南](/docs/deployment/启动指南.md)
+👉 详细指南请参阅 [启动指南](docs/deployment/启动指南.md)
 
 ---
 
@@ -86,10 +87,14 @@ npm install && npm run dev
 | **审计防篡改** | SM3 哈希链保证日志不可篡改 |
 | **AIP 导出** | 符合 GB/T 39674 标准的归档信息包 |
 | **信创适配** | 支持SM2/SM3/SM4 国密 |
-| **用友集成** | YonSuite 凭证自动同步 |
+| **用友集成** | YonSuite 凭证自动同步与分录映射 |
+| **凭证关联** | 支持按金额、日期、发票号进行多维度精准手动关联 |
+| **原始凭证** | 独立的原始凭证（发票/单据）采集与版本管理 |
 | **安全加固** | XSS防护/登录限流/密码策略/路径安全 |
+| **License** | 基于非对称加密的授权控制与节点限制 |
 
-👉 完整功能请参阅 [功能模块说明](/docs/guides/功能模块.md)
+
+👉 完整功能请参阅 [功能模块说明](docs/guides/功能模块.md)
 
 ---
 
@@ -102,7 +107,7 @@ npm install && npm run dev
 | **数据库** | PostgreSQL /
 | **安全** | Spring Security / Argon2 / SM3 / ClamAV (防病毒) |
 
-👉 详细技术说明请参阅 [技术栈](/docs/references/技术栈.md)
+👉 详细技术说明请参阅 [技术栈](docs/references/技术栈.md)
 
 ---
 
@@ -110,24 +115,24 @@ npm install && npm run dev
 
 | 分类 | 文档 |
 |------|------|
-| **入门** | [启动指南](/docs/deployment/启动指南.md) · [用户手册](/docs/guides/用户使用手册.md) |
-| **部署** | [部署指南](/docs/deployment/部署指南.md) · [故障排除](/docs/deployment/故障排除指南.md) |
-| **功能** | [功能模块](/docs/guides/功能模块.md) · [权限管理](/docs/guides/权限管理.md) |
-| **安全** | [安全指南](/docs/guides/安全指南.md) · [审计日志](/docs/guides/安全指南.md#审计日志防篡改) |
-| **集成** | [用友集成](/docs/guides/用友集成.md) · [API 速查](/docs/api/接口速查.md) |
-| **数据库** | [数据库设计](/docs/database/数据库设计.md) · [DDL 脚本](/docs/database/) |
-| **规划** | [优化计划](/docs/planning/优化计划.md) · [更新日志](/docs/CHANGELOG.md) |
+| **入门** | [启动指南](docs/deployment/启动指南.md) · [用户手册](docs/guides/用户使用手册.md) |
+| **部署** | [部署指南](docs/guides/系统部署手册.md) · [故障排除](docs/guides/系统部署手册.md#5-故障排除) |
+| **功能** | [功能模块](docs/guides/功能模块.md) · [权限管理](docs/guides/权限管理.md) |
+| **安全** | [安全指南](docs/guides/安全指南.md) · [审计日志](docs/guides/安全指南.md#审计日志防篡改) |
+| **集成** | [用友集成](docs/guides/用友集成.md) · [API 速查](docs/api/接口速查.md) |
+| **数据库** | [数据库设计](docs/database/数据库设计.md) · [DDL 脚本](docs/database/) |
+| **规划** | [优化计划](docs/planning/优化计划.md) · [更新日志](docs/CHANGELOG.md) |
 
-👉 完整文档目录请参阅 [docs/README.md](/docs/README.md)
+👉 完整文档目录请参阅 [docs/README.md](docs/README.md)
 
 ---
 
 ## 🔗 快速链接
 
-- 📄 [更新日志](/docs/CHANGELOG.md)
-- 🔒 [安全指南](/docs/guides/安全指南.md)
-- 🐛 [故障排除](/docs/deployment/故障排除指南.md)
-- 📖 [API 文档](/docs/api/)
-- 📋 [合规标准](/docs/references/)
+- 📄 [更新日志](docs/CHANGELOG.md)
+- 🔒 [安全指南](docs/guides/安全指南.md)
+- 🐛 [故障排除](docs/guides/系统部署手册.md#5-故障排除)
+- 📖 [API 文档](docs/api/)
+- 📋 [合规标准](docs/references/)
 
 ---

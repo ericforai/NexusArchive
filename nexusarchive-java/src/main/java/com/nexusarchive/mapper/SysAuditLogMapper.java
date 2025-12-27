@@ -38,4 +38,10 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
      */
     @Select("SELECT * FROM sys_audit_log WHERE user_id = #{userId} ORDER BY created_at DESC")
     List<SysAuditLog> findByUserId(@Param("userId") String userId);
+    
+    /**
+     * 获取最新日志的哈希值（用于哈希链）
+     */
+    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_at DESC LIMIT 1")
+    String getLatestLogHash();
 }

@@ -83,6 +83,14 @@ public class OriginalVoucherController {
         return Result.success(voucherService.getVersionHistory(id));
     }
 
+    @GetMapping("/files/download/{fileId}")
+    @Operation(summary = "下载原始凭证文件内容")
+    @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadFile(
+            @PathVariable String fileId) {
+        return voucherService.downloadFile(fileId);
+    }
+
     @GetMapping("/{id}/relations")
     @Operation(summary = "获取关联的记账凭证")
     @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
@@ -137,11 +145,13 @@ public class OriginalVoucherController {
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<OriginalVoucherFile> addFile(
             @PathVariable String id,
-            @Valid @RequestBody OriginalVoucherFile file,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "fileRole", defaultValue = "PRIMARY") String fileRole,
             HttpServletRequest request) {
         String userId = (String) request.getAttribute("userId");
-        return Result.success(voucherService.addFile(id, file, userId));
+        return Result.success(voucherService.addFile(id, file, fileRole, userId));
     }
+
 
     // ===== 关联管理 =====
 

@@ -35,4 +35,11 @@ public interface FileStorageService {
      * @return true if exists
      */
     boolean exists(String relativePath);
+
+    /**
+     * 获取文件对象
+     * @param relativePath 相对路径
+     * @return File对象，不存在时返回null
+     */
+    java.io.File getFile(String relativePath);
 }

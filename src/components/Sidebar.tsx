@@ -36,6 +36,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   [ViewState.LANDING]: '/',
   [ViewState.ABNORMAL]: ROUTE_PATHS.PRE_ARCHIVE_ABNORMAL,
   [ViewState.COMPLIANCE_REPORT]: ROUTE_PATHS.ARCHIVE,
+  [ViewState.MATCHING]: '/system/matching',
 };
 
 // Map Path Prefixes to IDs for auto-expansion
@@ -54,6 +55,7 @@ const PATH_PREFIX_TO_VIEW: Record<string, string> = {
   '/system/admin': ViewState.ADMIN,
   '/system/destruction': ViewState.DESTRUCTION,
   '/system/panorama': ViewState.PANORAMA,
+  '/system/matching': ViewState.MATCHING,
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({

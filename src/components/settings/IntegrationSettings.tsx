@@ -66,6 +66,7 @@ const IntegrationSettings: React.FC = () => {
 
     // State: Params editor
     const [showParamsFor, setShowParamsFor] = useState<number | null>(null);
+    const [pendingSyncId, setPendingSyncId] = useState<number | null>(null); // 待同步的场景ID
     const [paramsForm, setParamsForm] = useState<{ startDate: string; endDate: string; pageSize: number }>({
         startDate: '', endDate: '', pageSize: 100
     });
@@ -239,7 +240,18 @@ const IntegrationSettings: React.FC = () => {
         }
     };
 
+    // 同步前先弹出日期选择弹窗
     const handleManualSync = async (id: number) => {
+        const scenario = scenarios.find(s => s.id === id);
+        if (scenario) {
+            // 设置待同步场景ID并弹出参数配置窗口
+            setPendingSyncId(id);
+            handleShowParams(scenario);
+        }
+    };
+
+    // 实际执行同步的内部函数
+    const executeSync = async (id: number) => {
         setSyncing(id);
         try {
             const res = await erpApi.triggerSync(id);
@@ -348,12 +360,23 @@ const IntegrationSettings: React.FC = () => {
         }
     };
 
-    const handleSaveParams = async () => {
+    const handleSaveParams = async (triggerSync: boolean = false) => {
         if (!showParamsFor) return;
         try {
             await erpApi.updateScenarioParams(showParamsFor, paramsForm);
             toast.success('参数已保存');
+
+            const scenarioId = showParamsFor;
             setShowParamsFor(null);
+
+            // 如果是从同步按钮触发的，保存后自动执行同步
+            if (triggerSync && pendingSyncId === scenarioId) {
+                setPendingSyncId(null);
+                executeSync(scenarioId);
+            } else {
+                setPendingSyncId(null);
+            }
+
             if (activeConfigId) loadScenarios(activeConfigId);
         } catch (error) {
             toast.error('保存失败');
@@ -605,12 +628,17 @@ const IntegrationSettings: React.FC = () => {
                                 </div>
                             </div>
                             <div className="p-4 border-t border-slate-100 flex justify-end gap-2">
-                                <button onClick={() => setShowParamsFor(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">
+                                <button onClick={() => { setPendingSyncId(null); setShowParamsFor(null); }} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">
                                     取消
                                 </button>
-                                <button onClick={handleSaveParams} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                                    保存
+                                <button onClick={() => handleSaveParams(false)} className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300">
+                                    仅保存
                                 </button>
+                                {pendingSyncId && (
+                                    <button onClick={() => handleSaveParams(true)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                        保存并同步
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

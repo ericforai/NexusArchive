@@ -13,13 +13,13 @@ export * from './layout';
 // 通用组件
 export * from './common';
 
-// 视图组件 - 按需导入
-export { Dashboard } from './Dashboard';
-export { LoginView } from './LoginView';
-export { ArchiveListView } from './ArchiveListView';
-export { StatsView } from './StatsView';
-export { SettingsView } from './SettingsView';
-export { BorrowingView } from './BorrowingView';
-export { WarehouseView } from './WarehouseView';
-export { DestructionView } from './DestructionView';
-export { ComplianceReportView } from './ComplianceReportView';
+// 业务组件 - 按需导入（仅保留展示组件）
+export { LoginCard } from './auth/LoginCard';
+export { SettingsLayout } from './settings/SettingsLayout';
+export { BasicSettings } from './settings/BasicSettings';
+export { UserSettings } from './settings/UserSettings';
+export { RoleSettings } from './settings/RoleSettings';
+export { OrgSettings } from './settings/OrgSettings';
+export { SecuritySettings } from './settings/SecuritySettings';
+export { IntegrationSettings } from './settings/IntegrationSettings';
+export { LicenseSettings } from './settings/LicenseSettings';

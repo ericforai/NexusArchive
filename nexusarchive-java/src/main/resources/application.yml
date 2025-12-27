@@ -128,6 +128,7 @@ schema:
 # License 配置
 license:
   public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMrI4RYBcukhqboFUKZlIMIANgPyt5HK6m4DK6V5bt6CVSPD2V1vKBQ3dpYo4vBZKAk6zOv3Uyq2fEPijKFozQwBo/YNu05LV6bJHu696lPaevK9Y04Grrkj2oOIH8aBqMNfotrBAPFso2IbVlnoEiS6K8AYgQ1GrfvIYoEpfeqDF3rhvw1gauWVez3nxHbGUvnvRxik77PNoBnnuO7YpgQTK6XxdxtsV1EYn0/GSL1EdwadgdxwJHwoQL4vI07lNkbI/dBiF9RRamTX8u+7kFDuw0J0e6nlD9C9vcMX/e6HnCETK9AIb1axqi1cjE1A+5xJ07ONoVYo4xTPbFVCOQIDAQAB
+  file-path: ${LICENSE_FILE_PATH:} # Optional: Verify specific license file path
 
 # 审计日志哈希链 HMAC 密钥
 audit:

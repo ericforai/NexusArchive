@@ -1,4 +1,4 @@
-// Input: vitest、@testing-library/react、@testing-library/user-event、react-router-dom 路由、@/components/LoginView、@/store/useAuthStore、@/api/auth
+// Input: vitest、@testing-library/react、@testing-library/user-event、react-router-dom 路由、@/pages/Auth/LoginView、@/store/useAuthStore、@/api/auth
 // Output: 测试用例与断言
 // Pos: 前端单元测试
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import { LoginView } from '@/components/LoginView';
+import { LoginView } from '@/pages/Auth/LoginView';
 import { useAuthStore } from '@/store/useAuthStore';
 import { authApi } from '@/api/auth';
 

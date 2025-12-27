@@ -1,10 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Input: PEM key files
+# Output: Key match verification results
+# Pos: DevOps/Scripts - Security Utility
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import base64
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 
 # Configured Public Key from application.yml
-PUB_KEY_B64 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMrI4RYBcukhqboFUKZlIMIANgPyt5HK6m4DK6V5bt6CVSPD2V1vKBQ3dpYo4vBZKAk6zOv3Uyq2fEPijKFozQwBo/YNu05LV6bJHu696lPaevK9Y04Grrkj2oOIH8aBqMNfotrBAPFso2IbVlnoEiS6K8AYgQ1GrfvIYoEpfeqDF3rhvw1gauWVez3nxHbGUvnvRxik77PNoBnnuO7YpgQTK6XxdxtsV1EYn0/GSL1EdwadgdxwJHwoQL4vI07lNkbI/dBiF9RRamTX8u+7kFDuw0J0e6nlD9C9vcMX/e6HnCETK9AIb1axqi1cjE1A+5xJ07ONoVYo4xTPbFVCOQIDAQAB"
+PUB_KEY_B64 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMrI4RYBcukhqboFUKZlIMIANgPyt5HK6m4DK6V5bt6CVSPD2V1vKBQ3dpYo4vBZKAk6zOv3Uyq2fEPijKFozQwBo/YNu05LV6bJHu696lPaevK9Y04Grrkj2oOIH8aBqMNfotrBAPFso2IbVlnoEiS6K8AYgQ1GrfvIYoEpfeqDF3rhvwMgauWVez3nxHbGUvnvRxik77PNoBnnuO7YpgQTK6XxdxtsV1EYn0/GSL1EdwadgdxwJHwoQL4vI07lNkbI/dBiF9RRamTX8u+7kFDuw0J0e6nlD9C9vcMX/e6HnCETK9AIb1axqi1cjE1A+5xJ07ONoVYo4xTPbFVCOQIDAQAB"
 
 CANDIDATES = [
     "/Users/user/nexusarchive/nexusarchive-java/keystore/private_key.pem",

@@ -1,0 +1,385 @@
+src/components/matching/ComplianceReport.tsx(166,25): error TS2322: Type '(dates: [Dayjs, Dayjs] | null) => void' is not assignable to type '(dates: NoUndefinedRangeValueType<Dayjs> | null, dateStrings: [string, string]) => void'.
+  Types of parameters 'dates' and 'dates' are incompatible.
+    Type 'NoUndefinedRangeValueType<Dayjs> | null' is not assignable to type '[Dayjs, Dayjs] | null'.
+      Type 'NoUndefinedRangeValueType<Dayjs>' is not assignable to type '[Dayjs, Dayjs]'.
+        Type at position 0 in source is not compatible with type at position 0 in target.
+          Type 'Dayjs | null' is not assignable to type 'Dayjs'.
+            Type 'null' is not assignable to type 'Dayjs'.
+src/components/OnlineReceptionView.tsx(189,13): error TS2353: Object literal may only specify known properties, and 'system' does not exist in type 'IntegrationChannel'.
+src/components/OnlineReceptionView.tsx(327,57): error TS2304: Cannot find name 'toggleSelection'.
+tests/playwright/api/archive_concurrency.spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/archive_concurrency.spec.ts(17,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/archive_concurrency.spec.ts(111,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/authz_audit.spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/authz_audit.spec.ts(30,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/authz_audit.spec.ts(36,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/authz_audit.spec.ts(54,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/authz_audit.spec.ts(63,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_full_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/backup_restore_full_spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_full_spec.ts(54,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_full_spec.ts(65,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_full_spec.ts(75,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_full_spec.ts(98,15): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/backup_restore_spec.ts(26,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_spec.ts(45,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/backup_restore_spec.ts(56,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/batch_import_export_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/batch_import_export_spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/batch_import_export_spec.ts(35,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/batch_import_export_spec.ts(44,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/erp_sync.spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/erp_sync.spec.ts(24,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/erp_sync.spec.ts(32,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/erp_sync.spec.ts(37,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/erp_sync.spec.ts(45,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/erp_sync.spec.ts(54,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/four_integrities.spec.ts(16,26): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(44,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(65,19): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(73,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(90,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(100,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/four_integrities.spec.ts(118,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/ocr_metadata_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/ocr_metadata_spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/ocr_metadata_spec.ts(35,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/report_version_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/report_version_spec.ts(24,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/report_version_spec.ts(32,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/report_version_spec.ts(43,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/report_version_spec.ts(63,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/report_version_spec.ts(73,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/search_index_spec.ts(24,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(39,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(56,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(62,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(80,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(97,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(114,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(120,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/search_index_spec.ts(129,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/sign_timestamp_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/sign_timestamp_spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/sign_timestamp_spec.ts(35,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/sign_timestamp_spec.ts(45,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/signature_timestamp_full_spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(54,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(63,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(80,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(88,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(99,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(105,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(110,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(118,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(137,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(142,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(149,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/signature_timestamp_full_spec.ts(154,15): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/storage_protection_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/storage_protection_spec.ts(25,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/storage_protection_spec.ts(64,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/storage_protection_spec.ts(70,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/storage_quota_guard_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/storage_quota_guard_spec.ts(26,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/storage_quota_guard_spec.ts(36,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/workflow_borrow_destroy_spec.ts(12,62): error TS2339: Property 'context' does not exist on type 'AuthContext | null'.
+tests/playwright/api/workflow_borrow_destroy_spec.ts(24,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/workflow_borrow_destroy_spec.ts(37,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/workflow_borrow_destroy_spec.ts(55,29): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/api/workflow_borrow_destroy_spec.ts(67,17): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(condition: boolean, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'boolean'.
+  Overload 2 of 5, '(callback: ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>, description?: string | undefined): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'ConditionBody<PlaywrightTestArgs & PlaywrightTestOptions & PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+tests/playwright/delivery_v2.spec.ts(23,25): error TS7006: Parameter 'request' implicitly has an 'any' type.
+tests/playwright/delivery_v2.spec.ts(23,34): error TS7006: Parameter 'user' implicitly has an 'any' type.
+tests/playwright/delivery_v2.spec.ts(40,23): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ admin: { username: string; password: string; roleId: string; }; auditor: { username: string; password: string; roleId: string; }; user: { username: string; password: string; roleId: string; }; }'.
+  No index signature with a parameter of type 'string' was found on type '{ admin: { username: string; password: string; roleId: string; }; auditor: { username: string; password: string; roleId: string; }; user: { username: string; password: string; roleId: string; }; }'.
+tests/playwright/delivery_v2.spec.ts(159,43): error TS7006: Parameter 'r' implicitly has an 'any' type.
+tests/playwright/delivery_v2.spec.ts(187,43): error TS7006: Parameter 'log' implicitly has an 'any' type.

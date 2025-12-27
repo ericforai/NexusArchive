@@ -4,9 +4,9 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { Search, Bell, HelpCircle, Grid } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
-import { GlobalSearchDTO } from '../api/search';
+import { GlobalSearchDTO } from '../types';
 
 interface TopBarProps {
   onLogout?: () => void;
@@ -33,18 +33,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
       {/* Right Actions */}
       <div className="flex items-center space-x-4 ml-4">
 
-        <button onClick={() => handleClick('应用网格')} className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative active:scale-95">
-          <Grid size={20} />
-        </button>
 
-        <button onClick={() => handleClick('消息通知中心')} className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative active:scale-95">
-          <Bell size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-        </button>
-
-        <button onClick={() => handleClick('帮助中心')} className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95">
-          <HelpCircle size={20} />
-        </button>
 
         <div className="h-6 w-px bg-slate-200 mx-2"></div>
 

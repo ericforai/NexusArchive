@@ -27,11 +27,14 @@ export const SystemLayout: React.FC = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogout = async () => {
-        await authApi.logout();
-        safeStorage.removeItem('token');
-        safeStorage.removeItem('user');
-        navigate('/system/login');
+    const handleLogout = () => {
+        // Fire and forget logout request - don't let network hang stop the user
+        authApi.logout().catch(e => console.warn('Logout signal failed', e));
+
+        // Immediate local cleanup
+        safeStorage.clear();
+        // Force hard reload to login page
+        window.location.href = '/system/login';
     };
 
     const handleVisitLanding = () => {

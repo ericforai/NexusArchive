@@ -15,42 +15,52 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 // 布局组件（非懒加载，因为是框架级别）
 import { SystemLayout } from '../layouts/SystemLayout';
-import { ProtectedRoute } from '../components/auth/ProtectedRoute';
-import { LoginView } from '../components/LoginView';
-import { ProductWebsite } from '../components/ProductWebsite';
-import { ActivationPage } from './ActivationPage';
+import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { ProductWebsite } from '../pages/ProductWebsite';
+import { ActivationPage } from '../pages/ActivationPage';
 
-// 懒加载各功能模块
-const Dashboard = lazy(() => import('../components/Dashboard'));
-const ArchivalPanoramaView = lazy(() => import('../components/ArchivalPanoramaView'));
-const ArchiveListView = lazy(() => import('../components/ArchiveListView'));
-const OCRProcessingView = lazy(() => import('../components/OCRProcessingView'));
-const AbnormalDataView = lazy(() => import('../components/AbnormalDataView'));
-const OriginalVoucherListView = lazy(() => import('../components/OriginalVoucherListView'));
-const OnlineReceptionView = lazy(() => import('../components/OnlineReceptionView'));
-const VolumeManagement = lazy(() => import('../components/VolumeManagement'));
-const ArchiveApprovalView = lazy(() => import('../components/ArchiveApprovalView'));
-const OpenAppraisalView = lazy(() => import('../components/OpenAppraisalView'));
-const DestructionView = lazy(() => import('../components/DestructionView'));
-const RelationshipQueryView = lazy(() => import('../components/RelationshipQueryView'));
-const BorrowingView = lazy(() => import('../components/BorrowingView'));
-const WarehouseView = lazy(() => import('../components/WarehouseView'));
-const StatsView = lazy(() => import('../components/StatsView'));
-const ComplianceReportView = lazy(() => import('../components/ComplianceReportView'));
-const AdminLayout = lazy(() => import('../components/admin/AdminLayout').then(module => ({ default: module.AdminLayout })));
+// 页面容器（Page 层）- 封装懒加载和业务组件
+import LoginPage from '../pages/Auth/Login';
+import { ArchiveListPage } from '../pages/archives/ArchiveListPage';
+import { VoucherMatchingPage } from '../pages/matching/VoucherMatchingPage';
+
+// 懒加载各功能模块（Page 层）
+const Dashboard = lazy(() => import('../pages/portal/Dashboard'));
+const ArchivalPanoramaView = lazy(() => import('../pages/panorama/ArchivalPanoramaView'));
+const OCRProcessingView = lazy(() => import('../pages/pre-archive/OCRProcessingView'));
+const AbnormalDataView = lazy(() => import('../pages/pre-archive/AbnormalDataView'));
+const OriginalVoucherListView = lazy(() => import('../pages/archives/OriginalVoucherListView'));
+const OnlineReceptionView = lazy(() => import('../pages/collection/OnlineReceptionView'));
+const VolumeManagement = lazy(() => import('../pages/operations/VolumeManagement'));
+const ArchiveApprovalView = lazy(() => import('../pages/operations/ArchiveApprovalView'));
+const OpenAppraisalView = lazy(() => import('../pages/operations/OpenAppraisalView'));
+const DestructionView = lazy(() => import('../pages/operations/DestructionView'));
+const RelationshipQueryView = lazy(() => import('../pages/utilization/RelationshipQueryView'));
+const BorrowingView = lazy(() => import('../pages/utilization/BorrowingView'));
+const WarehouseView = lazy(() => import('../pages/utilization/WarehouseView'));
+const StatsView = lazy(() => import('../pages/stats/StatsView'));
+const ComplianceReportView = lazy(() => import('../pages/archives/ComplianceReportView'));
+const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
 
 // 系统设置模块（Tab 拆分子路由）
-const SettingsLayout = lazy(() => import('../components/settings/SettingsLayout'));
-const BasicSettings = lazy(() => import('../components/settings/BasicSettings'));
-const UserSettings = lazy(() => import('../components/settings/UserSettings'));
-const RoleSettings = lazy(() => import('../components/settings/RoleSettings'));
-const OrgSettings = lazy(() => import('../components/settings/OrgSettings'));
-const SecuritySettings = lazy(() => import('../components/settings/SecuritySettings'));
-const FondsManagement = lazy(() => import('../components/admin/FondsManagement'));
-const AuditLogView = lazy(() => import('../components/AuditLogView'));
-const IntegrationSettings = lazy(() => import('../components/settings/IntegrationSettings'));
+const SettingsLayout = lazy(() => import('../pages/settings/SettingsLayoutPage'));
+const BasicSettings = lazy(() => import('../pages/settings/BasicSettingsPage'));
+const UserSettings = lazy(() => import('../pages/settings/UserSettingsPage'));
+const RoleSettings = lazy(() => import('../pages/settings/RoleSettingsPage'));
+const OrgSettings = lazy(() => import('../pages/settings/OrgSettingsPage'));
+const SecuritySettings = lazy(() => import('../pages/settings/SecuritySettingsPage'));
+const FondsManagement = lazy(() => import('../pages/settings/FondsManagementPage'));
+const AuditLogView = lazy(() => import('../pages/settings/AuditLogView'));
+const IntegrationSettings = lazy(() => import('../pages/settings/IntegrationSettingsPage'));
 
-const PaymentFileTestView = lazy(() => import('../components/debug/PaymentFileTestView'));
+const PaymentFileTestView = lazy(() => import('../pages/debug/PaymentFileTestView'));
+
+// 匹配向导模块（OnboardingWizard 和 ComplianceReport 仍用 withSuspense）
+const OnboardingWizard = lazy(() => import('../pages/matching/OnboardingWizard'));
+const ComplianceReport = lazy(() => import('../pages/matching/ComplianceReport'));
+
+// 归档批次模块
+const ArchiveBatchView = lazy(() => import('../pages/operations/ArchiveBatchView'));
 
 // 加载占位符
 const LoadingFallback = () => (
@@ -59,12 +69,17 @@ const LoadingFallback = () => (
     </div>
 );
 
-// 包装懒加载组件
-const withSuspense = (Component: React.LazyExoticComponent<any>, props?: any) => (
-    <Suspense fallback={<LoadingFallback />}>
-        <Component {...props} />
-    </Suspense>
-);
+// 包装懒加载组件（泛型版本，提供类型安全）
+function withSuspense<P extends object>(
+    Component: React.LazyExoticComponent<React.ComponentType<P>>,
+    props?: P
+): React.ReactElement {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <Component {...(props as P)} />
+        </Suspense>
+    );
+}
 
 /**
  * 路由配置
@@ -73,8 +88,8 @@ export const routes: RouteObject[] = [
     // 根路径显示产品首页（公开访问）
     { path: '/', element: <ProductWebsite /> },
 
-    // 登录页（独立于 SystemLayout）
-    { path: '/system/login', element: <LoginView /> },
+    // 登录页（独立于 SystemLayout，使用 Page 层）
+    { path: '/system/login', element: <LoginPage /> },
 
     // 激活页（独立于 SystemLayout，但需要基础环境）
     { path: '/system/activation', element: <ActivationPage /> },
@@ -98,38 +113,40 @@ export const routes: RouteObject[] = [
             { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView) },
 
             // ========== 预归档库 ==========
-            { path: 'pre-archive', element: withSuspense(ArchiveListView, { routeConfig: 'pool' }) },
-            { path: 'pre-archive/pool', element: withSuspense(ArchiveListView, { routeConfig: 'pool' }) },
+            { path: 'pre-archive', element: <ArchiveListPage routeConfig="pool" /> },
+            { path: 'pre-archive/pool', element: <ArchiveListPage routeConfig="pool" /> },
+            { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }) },
             { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView) },
-            { path: 'pre-archive/link', element: withSuspense(ArchiveListView, { routeConfig: 'link' }) },
+            { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" /> },
             { path: 'pre-archive/abnormal', element: withSuspense(AbnormalDataView) },
 
             // ========== 资料收集 ==========
-            { path: 'collection', element: withSuspense(ArchiveListView, { routeConfig: 'collection' }) },
+            { path: 'collection', element: <ArchiveListPage routeConfig="collection" /> },
             { path: 'collection/online', element: withSuspense(OnlineReceptionView) },
-            { path: 'collection/scan', element: withSuspense(ArchiveListView, { routeConfig: 'scan' }) },
-            { path: 'collection/upload', element: withSuspense(ArchiveListView, { routeConfig: 'collection' }) },
+            { path: 'collection/scan', element: <ArchiveListPage routeConfig="scan" /> },
+            { path: 'collection/upload', element: <ArchiveListPage routeConfig="collection" /> },
 
             // ========== 档案管理 (Repository) ==========
-            { path: 'archive', element: withSuspense(ArchiveListView, { routeConfig: 'view' }) },
-            { path: 'archive/vouchers', element: withSuspense(ArchiveListView, { routeConfig: 'voucher' }) },
-            { path: 'archive/ledgers', element: withSuspense(ArchiveListView, { routeConfig: 'ledger' }) },
+            { path: 'archive', element: <ArchiveListPage routeConfig="view" /> },
+            { path: 'archive/vouchers', element: <ArchiveListPage routeConfig="voucher" /> },
+            { path: 'archive/ledgers', element: <ArchiveListPage routeConfig="ledger" /> },
             { path: 'archive/original-vouchers', element: withSuspense(OriginalVoucherListView) },
-            { path: 'archive/reports', element: withSuspense(ArchiveListView, { routeConfig: 'report' }) },
-            { path: 'archive/other', element: withSuspense(ArchiveListView, { routeConfig: 'other' }) },
+            { path: 'archive/reports', element: <ArchiveListPage routeConfig="report" /> },
+            { path: 'archive/other', element: <ArchiveListPage routeConfig="other" /> },
             { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView) },
 
             // ========== 档案作业 (Operations) ==========
-            { path: 'operations', element: withSuspense(ArchiveListView, { routeConfig: 'view' }) }, // Fallback/Default
-            { path: 'operations/boxing', element: withSuspense(ArchiveListView, { routeConfig: 'box' }) },
+            { path: 'operations', element: <ArchiveListPage routeConfig="view" /> }, // Fallback/Default
+            { path: 'operations/boxing', element: <ArchiveListPage routeConfig="box" /> },
             { path: 'operations/volume', element: withSuspense(VolumeManagement) },
             { path: 'operations/approval', element: withSuspense(ArchiveApprovalView) },
+            { path: 'operations/batch', element: withSuspense(ArchiveBatchView) },  // 归档批次
             { path: 'operations/open-appraisal', element: withSuspense(OpenAppraisalView) },
             { path: 'operations/destruction', element: withSuspense(DestructionView) },
 
             // ========== 档案利用 (Utilization) ==========
-            { path: 'utilization', element: withSuspense(ArchiveListView, { routeConfig: 'query' }) }, // Fallback
-            { path: 'utilization/query', element: withSuspense(ArchiveListView, { routeConfig: 'query' }) },
+            { path: 'utilization', element: <ArchiveListPage routeConfig="query" /> }, // Fallback
+            { path: 'utilization/query', element: <ArchiveListPage routeConfig="query" /> },
             { path: 'utilization/relationship', element: withSuspense(RelationshipQueryView) },
             { path: 'utilization/borrowing', element: withSuspense(BorrowingView) },
 
@@ -164,6 +181,12 @@ export const routes: RouteObject[] = [
 
             // ========== Debug ==========
             { path: 'debug/payment-file', element: withSuspense(PaymentFileTestView) },
+
+            // ========== 匹配引擎 ==========
+            { path: 'matching', element: <VoucherMatchingPage /> },
+            { path: 'matching/auto', element: <VoucherMatchingPage /> },
+            { path: 'matching/wizard', element: withSuspense(OnboardingWizard, { companyId: 1 }) },
+            { path: 'matching/report', element: withSuspense(ComplianceReport) },
         ],
     },
 

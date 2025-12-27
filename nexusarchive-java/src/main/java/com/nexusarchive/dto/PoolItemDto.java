@@ -69,4 +69,19 @@ public class PoolItemDto {
      * 文件名称
      */
     private String fileName;
+
+    /**
+     * 摘要 / 业务备注 (如供应商名称)
+     */
+    private String summary;
+
+    /**
+     * 凭证字号 (如 记-1)
+     */
+    private String voucherWord;
+
+    /**
+     * 业务日期 (单据日期)
+     */
+    private String docDate;
 }

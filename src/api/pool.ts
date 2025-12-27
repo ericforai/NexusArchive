@@ -21,6 +21,12 @@ export interface PoolItem {
   sourceSystem?: string;
   /** 文件名 */
   fileName?: string;
+  /** 凭证字号 (如"记-1") */
+  voucherWord?: string;
+  /** 摘要 (业务描述) */
+  summary?: string;
+  /** 业务日期 */
+  docDate?: string;
 }
 
 /**
@@ -90,6 +96,32 @@ export const poolApi = {
 
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '归档失败');
+    }
+  },
+
+  /**
+   * 搜索候选凭证
+   */
+  searchCandidates: async (params: any): Promise<PoolItem[]> => {
+    try {
+      const response = await client.post<ApiResponse<PoolItem[]>>('/pool/candidates/search', params);
+      if (response.data.code === 200) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error searching candidates:', error);
+      return [];
+    }
+  },
+
+  /**
+   * 删除电子凭证池记录
+   */
+  delete: async (id: string): Promise<void> => {
+    const response = await client.post<ApiResponse<any>>(`/pool/delete/${id}`);
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '删除失败');
     }
   }
 };

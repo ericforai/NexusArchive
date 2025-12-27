@@ -1,0 +1,115 @@
+# Input: GitHub Actions、ESLint、前端代码
+# Output: GitHub Actions 工作流配置（前端代码质量检查）
+# Pos: CI/CD 配置文件
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+name: 前端代码质量检查
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+      - '.eslintrc.cjs'
+      - 'package.json'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+      - '.eslintrc.cjs'
+      - 'package.json'
+
+jobs:
+  lint:
+    name: ESLint 检查
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行 ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: 架构边界验证
+        run: |
+          echo "=========================================="
+          echo "验证前端架构边界规则"
+          echo "=========================================="
+          echo "规则 A: components/common 不得依赖 features/api/store"
+          echo "规则 C: features 不得反向依赖 components"
+          echo "=========================================="
+          
+          # 验证 components/common 无违规依赖
+          COMMON_VIOLATIONS=$(grep -r "from.*features\|from.*api\|from.*store" src/components/common --include="*.ts" --include="*.tsx" || true)
+          if [ -n "$COMMON_VIOLATIONS" ]; then
+            echo "❌ 发现 components/common 违规依赖:"
+            echo "$COMMON_VIOLATIONS"
+            exit 1
+          fi
+          
+          # 验证 features 无反向依赖
+          FEATURES_VIOLATIONS=$(grep -r "from.*components" src/features --include="*.ts" --include="*.tsx" || true)
+          if [ -n "$FEATURES_VIOLATIONS" ]; then
+            echo "❌ 发现 features 反向依赖 components:"
+            echo "$FEATURES_VIOLATIONS"
+            exit 1
+          fi
+          
+          echo "✅ 架构边界验证通过"
+
+  type-check:
+    name: TypeScript 类型检查
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: TypeScript 编译检查
+        run: npx tsc --noEmit
+
+  summary:
+    name: 代码质量检查汇总
+    runs-on: ubuntu-latest
+    needs: [lint, type-check]
+    if: always()
+    
+    steps:
+      - name: 检查结果汇总
+        run: |
+          echo "=========================================="
+          echo "前端代码质量检查完成"
+          echo "=========================================="
+          echo "ESLint 检查: ${{ needs.lint.result }}"
+          echo "TypeScript 类型检查: ${{ needs.type-check.result }}"
+          echo "=========================================="
+          
+          if [ "${{ needs.lint.result }}" != "success" ] || [ "${{ needs.type-check.result }}" != "success" ]; then
+            echo "❌ 代码质量检查失败"
+            exit 1
+          fi
+          
+          echo "✅ 所有检查通过"

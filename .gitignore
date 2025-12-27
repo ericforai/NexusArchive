@@ -68,18 +68,24 @@ test_upload.pdf
 # ----------------
 # 项目特定：数据文件（如果太大或包含测试数据）
 # ----------------
-# 档案存储目录（如果包含大量测试文件）
-# nexusarchive-java/data/
+# 档案存储目录（严禁同步业务数据）
+nexusarchive-java/data/
+uploads/
+nexusarchive-java/uploads/
 
 # 临时审批数据（如果需要同步则注释掉）
 # pending_list.json
 # temp_approvals.json
 
 # 密钥与证书文件（严禁同步到公共仓库）
-nexusarchive-java/keystore/*.pem
-nexusarchive-java/keystore/*.p12
-nexusarchive-java/keystore/*.jks
+nexusarchive-java/keystore/
 *.pem
+*.p12
+*.jks
+
+# 敏感/大体积 Demo 数据
+docs/demo数据/
+
 
 # ----------------
 # 需要同步的重要文件（确保没有被忽略）

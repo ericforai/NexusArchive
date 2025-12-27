@@ -133,19 +133,36 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     @Override
     public List<VoucherDTO> syncVouchers(ErpConfig config, LocalDate startDate, LocalDate endDate) {
         List<VoucherDTO> allVouchers = new ArrayList<>();
-        
+
         // 获取所有组织代码
         List<String> accbookCodes = config.resolveAllAccbookCodes();
         if (accbookCodes.isEmpty()) {
             // 兜底：使用配置中的单个代码
             accbookCodes = Collections.singletonList(config.getAccbookCode());
         }
-        
+
+        log.info("凭证同步: 共 {} 个组织待处理", accbookCodes.size());
+
+        // 从配置中获取认证信息
+        String appKey = config.getAppKey();
+        String appSecret = config.getAppSecret();
+        String accessToken = null;
+
+        // 如果配置中有 appKey/appSecret，先获取 token
+        if (appKey != null && !appKey.isEmpty() && appSecret != null && !appSecret.isEmpty()) {
+            try {
+                accessToken = yonSuiteClient.getTokenWithCredentials(appKey, appSecret);
+                log.info("使用配置中的 appKey 获取 token 成功");
+            } catch (Exception e) {
+                log.warn("使用配置中的 appKey 获取 token 失败，将使用默认配置: {}", e.getMessage());
+            }
+        }
+
         // 遍历每个组织代码进行同步
         for (String accbookCode : accbookCodes) {
             log.info("同步组织账套: {} (期间: {} - {})", accbookCode, startDate, endDate);
             try {
-                List<VoucherDTO> vouchers = syncVouchersForSingleOrg(accbookCode, startDate, endDate);
+                List<VoucherDTO> vouchers = syncVouchersForSingleOrg(accessToken, accbookCode, startDate, endDate);
                 allVouchers.addAll(vouchers);
                 log.info("组织 {} 同步完成: {} 条凭证", accbookCode, vouchers.size());
             } catch (Exception e) {
@@ -153,7 +170,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
                 // 继续处理其他组织，不中断
             }
         }
-        
+
         log.info("所有组织同步完成，共 {} 条凭证", allVouchers.size());
         return allVouchers;
     }
@@ -161,7 +178,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     /**
      * 同步单个组织的凭证
      */
-    private List<VoucherDTO> syncVouchersForSingleOrg(String accbookCode, LocalDate startDate, LocalDate endDate) {
+    private List<VoucherDTO> syncVouchersForSingleOrg(String accessToken, String accbookCode, LocalDate startDate, LocalDate endDate) {
         try {
             YonVoucherListRequest request = new YonVoucherListRequest();
             request.setAccbookCode(accbookCode);
@@ -174,7 +191,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             pager.setPageSize(100);
             request.setPager(pager);
 
-            YonVoucherListResponse response = yonSuiteClient.queryVouchers(null, request);
+            YonVoucherListResponse response = yonSuiteClient.queryVouchers(accessToken, request);
 
             if (!"200".equals(response.getCode()) || response.getData() == null) {
                 log.warn("YonSuite 同步凭证失败 (组织: {}): {}", accbookCode, response.getMessage());
@@ -187,11 +204,45 @@ public class YonSuiteErpAdapter implements ErpAdapter {
                 for (var record : response.getData().getRecordList()) {
                     if (record.getHeader() != null) {
                         var header = record.getHeader();
+                        
+                        // 解析凭证日期
+                        LocalDate voucherDate = null;
+                        if (header.getMaketime() != null && !header.getMaketime().isEmpty()) {
+                            try {
+                                voucherDate = LocalDate.parse(header.getMaketime(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                            } catch (Exception e) {
+                                // ignore parse error
+                            }
+                        }
+                        
+                        // 获取凭证号 (优先使用 displayname，如 "记-001")
+                        String voucherNo = header.getDisplayname();
+                        if (voucherNo == null || voucherNo.isEmpty()) {
+                            voucherNo = header.getDisplaybillcode();
+                        }
+                        
+                        // 凭证字 (从凭证类型获取)
+                        String voucherWord = null;
+                        if (header.getVouchertype() != null) {
+                            voucherWord = header.getVouchertype().getVoucherstr(); // 如 "记"
+                            if (voucherWord == null) {
+                                voucherWord = header.getVouchertype().getName();
+                            }
+                        }
+                        
+                        // 摘要 (优先使用分录描述)
+                        String summary = header.getDescription();
+                        if ((summary == null || summary.isEmpty()) && record.getBody() != null && !record.getBody().isEmpty()) {
+                            summary = record.getBody().get(0).getDescription();
+                        }
+                        
                         VoucherDTO dto = VoucherDTO.builder()
                                 .voucherId(header.getId())
-                                .voucherNo(header.getDisplaybillcode())
+                                .voucherNo(voucherNo)
+                                .voucherWord(voucherWord)
+                                .voucherDate(voucherDate)
                                 .accountPeriod(header.getPeriod())
-                                .summary(header.getDescription())
+                                .summary(summary)
                                 .status(header.getVoucherstatus())
                                 .debitTotal(header.getTotalDebitOrg())
                                 .creditTotal(header.getTotalCreditOrg())
@@ -285,100 +336,138 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     }
 
     public List<VoucherDTO> syncCollectionFiles(ErpConfig config, LocalDate startDate, LocalDate endDate) {
-        // 1. 查询收款单列表获取单据ID
+        List<VoucherDTO> allResults = new ArrayList<>();
+
+        // 获取所有组织代码 (与 syncVouchers 保持一致)
+        List<String> accbookCodes = config.resolveAllAccbookCodes();
+        if (accbookCodes.isEmpty()) {
+            accbookCodes = Collections.singletonList(config.getAccbookCode());
+        }
+
+        log.info("收款单同步: 共 {} 个组织待处理", accbookCodes.size());
+
+        // 从配置中获取认证信息
+        String appKey = config.getAppKey();
+        String appSecret = config.getAppSecret();
+        String accessToken = null;
+
+        // 如果配置中有 appKey/appSecret，先获取 token
+        if (appKey != null && !appKey.isEmpty() && appSecret != null && !appSecret.isEmpty()) {
+            try {
+                accessToken = yonSuiteClient.getTokenWithCredentials(appKey, appSecret);
+                log.info("使用配置中的 appKey 获取 token 成功");
+            } catch (Exception e) {
+                log.warn("使用配置中的 appKey 获取 token 失败，将使用默认配置: {}", e.getMessage());
+            }
+        }
+
+        // 遍历每个组织代码进行同步
+        for (String accbookCode : accbookCodes) {
+            try {
+                List<VoucherDTO> orgResults = syncCollectionFilesForSingleOrg(accessToken, accbookCode, startDate, endDate);
+                allResults.addAll(orgResults);
+                log.info("组织 {} 收款单同步完成: {} 条", accbookCode, orgResults.size());
+            } catch (Exception e) {
+                log.error("组织 {} 收款单同步失败: {}", accbookCode, e.getMessage(), e);
+                // 继续处理其他组织，不中断
+            }
+        }
+
+        log.info("所有组织收款单同步完成，共 {} 条", allResults.size());
+        return allResults;
+    }
+
+    /**
+     * 同步单个组织的收款单
+     */
+    private List<VoucherDTO> syncCollectionFilesForSingleOrg(String accessToken, String accbookCode, LocalDate startDate, LocalDate endDate) {
         try {
             YonCollectionBillRequest billReq = new YonCollectionBillRequest();
             billReq.setPageIndex(1);
-            billReq.setPageSize(100); // 暂时限制100条
+            billReq.setPageSize(100);
 
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             billReq.setOpen_billDate_begin(startDate.atStartOfDay().format(fmt));
             billReq.setOpen_billDate_end(endDate.atTime(23, 59, 59).format(fmt));
 
-            // 默认查询已审批(2)的单据。为Debug暂时注释掉，查所有状态
-            // billReq.setVerifyState(Collections.singletonList("2"));
-
-            // 处理组织参数: 文档称 financeOrg 是必填 (通常指ID)
-            // 但如果只有 Code (BRYS002), 传给 financeOrg (ID字段) 会导致查询为空
-            // 尝试: 不传 financeOrg (null), 仅传 simple.financeOrg.code
-            // 如果接口强校验 financeOrg 不为 null, 这里可能会报错, 需观察
-            // 最终修正: financeOrg 设为 null (配合 Jackson NON_NULL 不发送该字段)
+            // financeOrg 设为 null，使用 simple.financeOrg.code 传递组织编码
             billReq.setFinanceOrg(null);
 
             Map<String, Object> simple = new HashMap<>();
-            simple.put("financeOrg.code", config.getAccbookCode());
+            simple.put("financeOrg.code", accbookCode);
             billReq.setSimple(simple);
 
-            log.info("YonSuite Sync Request: Date=[{} to {}], OrgCode=[{}], VerifyState=[ALL (null)]",
-                    billReq.getOpen_billDate_begin(), billReq.getOpen_billDate_end(), config.getAccbookCode());
+            log.info("YonSuite 收款单查询: 组织=[{}], 期间=[{} to {}]",
+                    accbookCode, billReq.getOpen_billDate_begin(), billReq.getOpen_billDate_end());
 
-            YonCollectionBillResponse billResp = yonSuiteClient.queryCollectionBills(null, billReq);
-            log.info("Query Collection Bills Result Count: {}",
-                    (billResp != null && billResp.getData() != null) ? billResp.getData().getRecordCount() : "null");
+            // 使用传入的 accessToken（来自配置中的 appKey/appSecret）
+            YonCollectionBillResponse billResp = yonSuiteClient.queryCollectionBills(accessToken, billReq);
+            log.info("组织 {} 收款单查询结果: {} 条",
+                    accbookCode,
+                    (billResp != null && billResp.getData() != null) ? billResp.getData().getRecordCount() : 0);
 
             if (billResp == null || !"200".equals(billResp.getCode()) || billResp.getData() == null
                     || billResp.getData().getRecordList() == null || billResp.getData().getRecordList().isEmpty()) {
-                log.info("No collection bills found or API error: {}",
-                        (billResp != null ? billResp.getMessage() : "null response"));
+                log.info("组织 {} 无收款单数据或API错误: {}",
+                        accbookCode, (billResp != null ? billResp.getMessage() : "null response"));
                 return Collections.emptyList();
             }
 
-            List<String> ids = new ArrayList<>();
-            // Map billCode to ID for reference if needed
-            for (YonCollectionBillResponse.Record record : billResp.getData().getRecordList()) {
-                ids.add(record.getId());
-            }
-
-            // 2. 使用官方 API 获取每个收款单的详情
-            // 官方接口: GET /yonbip/EFI/collection/detail
-            // 文档: docs/api/收款单详情查询.md
+            // 获取每个收款单的详情
             List<VoucherDTO> result = new ArrayList<>();
 
             for (YonCollectionBillResponse.Record record : billResp.getData().getRecordList()) {
                 String billId = record.getId();
                 try {
-                    // 调用官方详情查询接口
-                    var detailResp = yonSuiteClient.queryCollectionDetail(null, billId);
+                    // 使用传入的 accessToken
+                    var detailResp = yonSuiteClient.queryCollectionDetail(accessToken, billId);
 
                     if (detailResp != null && "200".equals(detailResp.getCode()) && detailResp.getData() != null) {
                         var detail = detailResp.getData();
 
-                        // 映射收款单详情到 VoucherDTO
+                        // 解析单据日期
+                        LocalDate voucherDate = null;
+                        if (detail.getBillDate() != null && !detail.getBillDate().isEmpty()) {
+                            try {
+                                voucherDate = LocalDate.parse(detail.getBillDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                            } catch (Exception e) {
+                                // ignore parse error
+                            }
+                        }
+
                         VoucherDTO dto = VoucherDTO.builder()
                                 .voucherId(detail.getId())
-                                .voucherNo(detail.getCode()) // 单据编号
+                                .voucherNo(detail.getCode())
+                                .voucherWord(detail.getCode()) // 收款单号作为凭证字号
+                                .voucherDate(voucherDate)      // 单据日期
                                 .status("COLLECTION_BILL")
                                 .summary(String.format("收款单: %s, 客户: %s, 金额: %.2f CNY",
                                         detail.getCode(),
                                         detail.getCustomerName() != null ? detail.getCustomerName() : "N/A",
-                                        detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount()
-                                                : 0.0))
+                                        detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount() : 0.0))
                                 .accountPeriod(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM")))
                                 .debitTotal(new BigDecimal(
-                                        detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount()
-                                                : 0.0))
+                                        detail.getOriTaxIncludedAmount() != null ? detail.getOriTaxIncludedAmount() : 0.0))
+                                .accbookCode(accbookCode) // 记录来源组织
                                 .build();
 
-                        // 设置额外信息
                         dto.setCreator(detail.getCreatorUserName());
-
                         result.add(dto);
-                        log.debug("Synced Collection Bill: {} - {}", detail.getCode(), detail.getCustomerName());
+                        log.debug("同步收款单: {} - {} (组织: {})", detail.getCode(), detail.getCustomerName(), accbookCode);
                     } else {
-                        log.warn("Failed to fetch detail for collection bill id={}, code={}: {}",
+                        log.warn("获取收款单详情失败: id={}, code={}, 错误: {}",
                                 billId, record.getCode(),
                                 detailResp != null ? detailResp.getMessage() : "null response");
                     }
                 } catch (Exception e) {
-                    log.warn("Error fetching detail for collection bill id={}", billId, e);
+                    log.warn("获取收款单详情异常: id={}", billId, e);
                 }
             }
 
-            log.info("Sync Collection Files completed: {} items", result.size());
             return result;
 
         } catch (Exception e) {
-            log.error("Sync Collection Files error", e);
+            log.error("组织 {} 收款单同步异常", accbookCode, e);
             return Collections.emptyList();
         }
     }

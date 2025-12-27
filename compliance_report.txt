@@ -1,0 +1,35 @@
+🔍 Starting compliance check in: /Users/user/nexusarchive
+============================================================
+
+❌ Found 27 compliance issues:
+
+[DIR]  .: Missing declaration in first line: '一旦我所属的文件夹有所变化，请更新我。'
+[FILE] generate_license.py: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[FILE] check_key_match.py: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[DIR]  tools: Missing README.md
+[FILE] tools/LicenseGenerator.java: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[DIR]  deploy/offline/frontend/assets: Missing README.md
+[DIR]  deploy/offline/bin: Missing README.md
+[DIR]  deploy/offline/deps: Missing declaration in first line: '一旦我所属的文件夹有所变化，请更新我。'
+[DIR]  docs/product: Missing README.md
+[DIR]  docs/demo数据: Missing README.md
+[DIR]  nexusarchive-java/keystore: Missing README.md
+[DIR]  nexusarchive-java/lib: Missing README.md
+[FILE] nexusarchive-java/src/test/java/com/nexusarchive/service/LicenseServiceTest.java: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[DIR]  nexusarchive-java/src/main/resources/certs: Missing README.md
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/dto/search/CandidateSearchRequest.java: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/util/FileMagicValidator.java: Missing ['一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/mapper/OriginalVoucherTypeMapper.java: Missing ['一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/mapper/VoucherRelationMapper.java: Missing ['一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/mapper/OriginalVoucherMapper.java: Missing ['一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/mapper/OriginalVoucherFileMapper.java: Missing ['一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/service/PoolService.java: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[FILE] nexusarchive-java/src/main/java/com/nexusarchive/service/impl/PoolServiceImpl.java: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[DIR]  perf: Missing README.md
+[FILE] src/components/OriginalVoucherListView.tsx: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[FILE] src/components/archive/CreateOriginalVoucherDialog.tsx: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[FILE] src/components/archive/LinkModal.tsx: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+[FILE] src/api/originalVoucher.ts: Missing ['Input:', 'Output:', 'Pos:', '一旦我被更新']
+
+============================================================
+Note: Please follow the 'Document Self-Consistency Rules' in .agent/rules/general.md

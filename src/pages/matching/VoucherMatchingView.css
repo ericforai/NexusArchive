@@ -1,0 +1,51 @@
+/* VoucherMatchingView 样式 */
+
+.voucher-matching-view {
+    padding: 16px;
+}
+
+.match-summary {
+    padding: 12px 16px;
+    background: var(--bg-secondary, #f5f5f5);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.link-results {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.link-matched {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.matched-doc {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #333);
+}
+
+.match-score {
+    max-width: 200px;
+}
+
+.match-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .match-summary {
+        background: #1f1f1f;
+    }
+    
+    .matched-doc {
+        color: #e0e0e0;
+    }
+}

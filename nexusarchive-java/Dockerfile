@@ -12,6 +12,9 @@ RUN mkdir -p /app/keystore /app/data /app/logs
 
 # 复制 JAR (假设已经 mvn package)
 COPY target/nexusarchive-backend-2.0.0.jar app.jar
+# 复制 中文字体 (解决 PDF 乱码问题)
+RUN mkdir -p /usr/share/fonts/truetype/noto
+COPY src/main/resources/fonts/NotoSansSC-Regular.ttf /usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf
 # 复制 keystore (如果存在，否则依赖 volume 挂载)
 COPY keystore/* /app/keystore/
 

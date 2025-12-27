@@ -4,7 +4,25 @@
 
 ---
 
-## [2025-12-07] 文档重构
+## [2025-12-25] 凭证关联增强与文档规范化
+ 
+ ### 核心变更
+ - **凭证手动关联逻辑升级**: 移除了前端 `LinkModal` 组件中的演示数据硬编码提示，开始转向真实 API 驱动。
+ - **后端精准匹配规划**: 新增 `CandidateSearchRequest` 搜索模型，支持按金额（±0.01 误差）、日期范围、发票号码、供应商等多维度搜索。
+ - **文档一致性维护**: 按照项目“文档自洽规则”，同步更新了根目录 README、CHANGELOG 及组件目录子文档。
+ 
+ ### 修改文件
+ | 文件 | 变更 |
+ |------|------|
+ | `src/components/archive/LinkModal.tsx` | 删除硬编码的演示模式提示，清理依赖 |
+ | `src/components/ArchiveListView.tsx` | 重构关联逻辑，使用标准的 `LinkModal` 组件并优化档案文件加载状态机 |
+ | `nexusarchive-java/.../CandidateSearchRequest.java` | [NEW] 新增候选凭证搜索 DTO |
+ | `nexusarchive-java/.../PoolService.java` | [NEW] 新增凭证池业务接口 |
+ 
+ ---
+ 
+ ## [2025-12-07] 文档重构
+
 
 ### 变更
 - 重构 `docs/` 目录结构，按类型分类文档

@@ -24,11 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import com.nexusarchive.mapper.ArcFileContentMapper;
+import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class ErpScenarioService {
     private final ArcFileContentMapper arcFileContentMapper;
     private final ArcFileMetadataIndexMapper arcFileMetadataIndexMapper;
     private final SyncHistoryMapper syncHistoryMapper;
+    private final ArchiveMapper archiveMapper;
     private final VoucherPdfGeneratorService pdfGeneratorService;
     private final ObjectMapper objectMapper;
     private final AuditLogService auditLogService;
@@ -178,7 +182,7 @@ public class ErpScenarioService {
                     appKey = json.getStr("clientId");
                 }
                 dtoConfig.setAppKey(appKey);
-                
+
                 String appSecret = json.getStr("appSecret");
                 if (appSecret == null || appSecret.isEmpty()) {
                     appSecret = json.getStr("clientSecret");
@@ -186,6 +190,17 @@ public class ErpScenarioService {
                 // 使用 SM4 解密 (如果是明文则原样返回)
                 dtoConfig.setAppSecret(com.nexusarchive.util.SM4Utils.decrypt(appSecret));
                 dtoConfig.setAccbookCode(json.getStr("accbookCode"));
+
+                // 解析多组织代码列表
+                cn.hutool.json.JSONArray accbookCodesArray = json.getJSONArray("accbookCodes");
+                if (accbookCodesArray != null && !accbookCodesArray.isEmpty()) {
+                    java.util.List<String> codes = new java.util.ArrayList<>();
+                    for (int i = 0; i < accbookCodesArray.size(); i++) {
+                        codes.add(accbookCodesArray.getStr(i));
+                    }
+                    dtoConfig.setAccbookCodes(codes);
+                }
+
                 dtoConfig.setExtraConfig(entityConfig.getConfigJson());
             }
 
@@ -253,7 +268,9 @@ public class ErpScenarioService {
                         fileContent = mapper.toArcFileContent(dto);
                     }
                     
-                    fileContent.setSourceSystem(entityConfig.getName());
+                    // 使用适配器的用户友好名称，而非配置名称
+                    String sourceSystemName = adapter.getName();
+                    fileContent.setSourceSystem(sourceSystemName);
 
                     if (fileContent.getStoragePath() == null || fileContent.getStoragePath().isEmpty()) {
                         String fondsCode = fileContent.getFondsCode() != null ? fileContent.getFondsCode() : "DEFAULT";
@@ -276,6 +293,11 @@ public class ErpScenarioService {
 
                     arcFileContentMapper.insert(fileContent);
                     savedCount++;
+
+                    // ===== 同时创建 acc_archive 记录，使凭证关联页面可见 =====
+                    Archive archive = createArchiveFromVoucher(dto, fileContent, entityConfig.getName());
+                    archiveMapper.insert(archive);
+                    log.info("创建档案记录: archiveCode={}, title={}", archive.getArchiveCode(), archive.getTitle());
 
                     // 保存元数据索引
                     java.math.BigDecimal amount = dto.getDebitTotal() != null ? dto.getDebitTotal() : dto.getCreditTotal();
@@ -373,6 +395,19 @@ public class ErpScenarioService {
             // 设置来源系统
             content.setSourceSystem("用友YonSuite");
 
+            // ===== 新增: 填充显示字段 (凭证字号、摘要、业务日期) =====
+            content.setVoucherWord(dto.getVoucherNo()); // 凭证字号 = 单据编号
+            content.setDocDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : java.time.LocalDate.now()); // 业务日期
+            
+            // 生成摘要: 单据类型 + 供应商/客户
+            String summary = dto.getSummary();
+            if (summary == null || summary.isEmpty()) {
+                String typeLabel = dto.getStatus() != null ? dto.getStatus() : "单据";
+                summary = typeLabel + "-" + (dto.getVoucherNo() != null ? dto.getVoucherNo() : "");
+            }
+            content.setSummary(summary);
+            // ===== END 新增 =====
+
             // 生成临时档号 (YS-年月日-UUID前8位)
             String tempArchivalCode = "YS-"
                     + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
@@ -385,6 +420,82 @@ public class ErpScenarioService {
 
             return content;
         }
+    }
+
+    /**
+     * 从 ERP 凭证 DTO 创建 acc_archive 记录
+     * 使凭证在"凭证关联"页面可见，进入智能匹配流程
+     */
+    private Archive createArchiveFromVoucher(com.nexusarchive.integration.erp.dto.VoucherDTO dto,
+                                              ArcFileContent fileContent, String sourceSystem) {
+        Archive archive = new Archive();
+        archive.setId(fileContent.getId()); // 使用相同 ID 便于关联
+
+        // 档号
+        archive.setArchiveCode(fileContent.getArchivalCode());
+
+        // 题名
+        String title = "会计凭证-" + dto.getVoucherNo();
+        if (dto.getSummary() != null && !dto.getSummary().isEmpty()) {
+            title = dto.getSummary();
+        }
+        archive.setTitle(title);
+
+        // 摘要
+        archive.setSummary(dto.getSummary());
+
+        // 分类号 (AC01 = 会计凭证)
+        archive.setCategoryCode("AC01");
+
+        // 年度
+        String fiscalYear = fileContent.getFiscalYear();
+        if (fiscalYear == null && dto.getVoucherDate() != null) {
+            fiscalYear = String.valueOf(dto.getVoucherDate().getYear());
+        }
+        if (fiscalYear == null) {
+            fiscalYear = String.valueOf(LocalDate.now().getYear());
+        }
+        archive.setFiscalYear(fiscalYear);
+
+        // 会计期间
+        if (dto.getAccountPeriod() != null) {
+            archive.setFiscalPeriod(dto.getAccountPeriod());
+        }
+
+        // 保管期限 (默认30年)
+        archive.setRetentionPeriod("30Y");
+
+        // 全宗号
+        archive.setFondsNo(fileContent.getFondsCode() != null ? fileContent.getFondsCode() : "DEFAULT");
+
+        // 立档单位
+        archive.setOrgName(sourceSystem);
+
+        // 金额
+        java.math.BigDecimal amount = dto.getDebitTotal() != null ? dto.getDebitTotal() : dto.getCreditTotal();
+        archive.setAmount(amount);
+
+        // 凭证日期
+        archive.setDocDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : LocalDate.now());
+
+        // 制单人
+        archive.setCreator(dto.getCreator());
+
+        // 状态: draft (待匹配)
+        archive.setStatus("draft");
+
+        // 唯一业务 ID (防重)
+        archive.setUniqueBizId(sourceSystem + "_" + dto.getVoucherId());
+
+        // 存储凭证分录到 customMetadata (供匹配引擎识别业务场景)
+        try {
+            String entriesJson = objectMapper.writeValueAsString(dto);
+            archive.setCustomMetadata(entriesJson);
+        } catch (Exception e) {
+            log.warn("序列化凭证分录失败: {}", e.getMessage());
+        }
+
+        return archive;
     }
 
     /**
@@ -450,7 +561,17 @@ public class ErpScenarioService {
             return 0;
         }
         try {
-            // 格式: 同步成功: 获取 X 条，其中心增 Y 条
+            // 优先解析"新增 X 条"（实际入库数量）
+            // 格式: 同步成功: 获取 32 条，其中新增 4 条
+            if (msg.contains("新增")) {
+                int start = msg.indexOf("新增") + 2;
+                int end = msg.indexOf("条", start);
+                if (start > 0 && end > start) {
+                    String numStr = msg.substring(start, end).trim();
+                    return Integer.parseInt(numStr);
+                }
+            }
+            // 回退到"获取"（数据总量）
             if (msg.contains("获取")) {
                 int start = msg.indexOf("获取") + 2;
                 int end = msg.indexOf("条", start);
@@ -510,10 +631,9 @@ public class ErpScenarioService {
     }
 
     private String getApiEndpointForType(String erpType, String scenarioKey) {
-        if ("yonsuite".equalsIgnoreCase(erpType) && "VOUCHER_SYNC".equals(scenarioKey)) {
-            return "/integration/yonsuite/vouchers/sync";
-        }
-        // 其他类型暂不支持实时 API 同步
+        // 所有场景统一使用 /api/erp/scenario/{id}/sync 端点
+        // 该端点会从数据库配置中正确获取 appKey/appSecret
+        // 不再使用 /integration/yonsuite/vouchers/sync（它依赖环境变量配置）
         return null;
     }
 

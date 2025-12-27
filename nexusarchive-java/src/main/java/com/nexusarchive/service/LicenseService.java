@@ -36,6 +36,9 @@ public class LicenseService {
     @Value("${archive.root.path:./data/archives}")
     private String archiveRootPath;
 
+    @Value("${license.file-path:}")
+    private String licenseFilePath;
+
     private volatile LicenseInfo cached;
 
     private static final String LICENSE_FILENAME = "license.json";
@@ -64,13 +67,36 @@ public class LicenseService {
 
     /**
      * 获取 License 文件存储路径
+     * 优先级:
+     * 1. 配置项 license.file-path
+     * 2. archive.root.path 的父目录 (标准结构)
+     * 3. 兜底路径 ./data/license.json (开发/以及非标准部署兼容)
      */
     private Path getLicensePath() {
+        // 1. 显式配置
+        if (licenseFilePath != null && !licenseFilePath.isBlank()) {
+            return Paths.get(licenseFilePath);
+        }
+
+        // 2. 基于归档根路径推导
         Path dataDir = Paths.get(archiveRootPath).getParent();
         if (dataDir == null) {
             dataDir = Paths.get("./data");
         }
-        return dataDir.resolve(LICENSE_FILENAME);
+        Path derivedPath = dataDir.resolve(LICENSE_FILENAME);
+        if (Files.exists(derivedPath)) {
+            return derivedPath;
+        }
+
+        // 3. 兜底路径 (如果推导路径不存在，尝试标准数据目录)
+        Path fallbackPath = Paths.get("./data", LICENSE_FILENAME);
+        if (Files.exists(fallbackPath)) {
+            log.info("[License] 推导路径 {} 不存在，使用兜底路径: {}", derivedPath, fallbackPath);
+            return fallbackPath;
+        }
+
+        // 默认返回推导路径，让上层 logic 处理"文件不存在"的情况
+        return derivedPath;
     }
 
     /**

@@ -1,12 +1,14 @@
-// Input: React、lucide-react 图标、react-dom、本地模块 api/client
-// Output: React 组件 MetadataEditModal
+// Input: React、lucide-react 图标、react-dom
+// Output: React 组件 MetadataEditModal（纯 UI 层）
 // Pos: 通用复用组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
 import { X, Save, RefreshCw, FileText, AlertCircle, AlertTriangle } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { client as apiClient } from '../../api/client';
+
+// ✅ 已移除对 api/client 的依赖（遵循架构边界规则 A）
+// API 调用现在通过 props 传入
 
 
 // 单据类型选项 (《会计档案管理办法》财政部79号令 第6条)
@@ -16,14 +18,6 @@ const VOUCHER_TYPE_OPTIONS = [
     { code: 'AC03', label: '财务会计报告', desc: '月度/季度/半年度/年度报告' },
     { code: 'AC04', label: '其他会计资料', desc: '银行对账单、纳税申报表、会计档案鉴定意见书等' },
 ];
-
-interface MetadataEditModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    fileId: string;
-    fileName: string;
-    onSuccess?: () => void;
-}
 
 interface FileDetail {
     id: string;
@@ -36,12 +30,34 @@ interface FileDetail {
     fondsCode?: string;
 }
 
+interface MetadataUpdatePayload {
+    id: string;
+    fiscalYear: string;
+    voucherType: string;
+    creator: string;
+    fondsCode?: string;
+    modifyReason: string;
+}
+
+interface MetadataEditModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    fileId: string;
+    fileName: string;
+    onSuccess?: () => void;
+    // ✅ 新增：通过 props 传入 API 操作（遵循架构边界规则 A）
+    onLoadFileDetail: (fileId: string) => Promise<FileDetail | null>;
+    onUpdateMetadata: (payload: MetadataUpdatePayload) => Promise<{ success: boolean; message?: string }>;
+}
+
 export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
     isOpen,
     onClose,
     fileId,
     fileName,
-    onSuccess
+    onSuccess,
+    onLoadFileDetail,
+    onUpdateMetadata,
 }) => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -65,9 +81,9 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
         setLoading(true);
         setError(null);
         try {
-            const response = await apiClient.get<{ data: FileDetail }>(`/pool/detail/${fileId}`);
-            if (response.data?.data) {
-                const detail = response.data.data;
+            // ✅ 使用 props 传入的回调，而非直接调用 API
+            const detail = await onLoadFileDetail(fileId);
+            if (detail) {
                 if (detail.fiscalYear) setFiscalYear(detail.fiscalYear);
                 if (detail.voucherType) setVoucherType(detail.voucherType);
                 if (detail.creator) setCreator(detail.creator);
@@ -93,7 +109,8 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
         setError(null);
 
         try {
-            const response = await apiClient.post('/pool/metadata/update', {
+            // ✅ 使用 props 传入的回调，而非直接调用 API
+            const result = await onUpdateMetadata({
                 id: fileId,
                 fiscalYear,
                 voucherType,
@@ -102,15 +119,15 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
                 modifyReason
             });
 
-            if (response.data?.code === 200) {
+            if (result.success) {
                 onSuccess?.();
                 onClose();
             } else {
-                setError(response.data?.message || '更新失败');
+                setError(result.message || '更新失败');
             }
         } catch (err: any) {
             console.error('Failed to update metadata:', err);
-            setError(err.response?.data?.message || '更新失败，请重试');
+            setError(err.message || '更新失败，请重试');
         } finally {
             setSaving(false);
         }
