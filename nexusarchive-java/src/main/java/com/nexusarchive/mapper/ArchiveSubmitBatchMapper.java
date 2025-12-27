@@ -67,12 +67,13 @@ public interface ArchiveSubmitBatchMapper extends BaseMapper<ArchiveSubmitBatch>
 
     /**
      * 检查期间是否有未完成的批次
+     * periodStart/periodEnd 格式: "YYYY-MM" (如 "2025-01")
      */
     @Select("""
         SELECT COUNT(*) FROM archive_batch
         WHERE fonds_id = #{fondsId}
-        AND period_start <= #{periodEnd}
-        AND period_end >= #{periodStart}
+        AND period_start <= CAST(#{periodEnd} || '-01' AS DATE)
+        AND period_end >= CAST(#{periodStart} || '-01' AS DATE)
         AND status NOT IN ('ARCHIVED', 'REJECTED', 'FAILED')
     """)
     int countPendingBatchesInPeriod(
