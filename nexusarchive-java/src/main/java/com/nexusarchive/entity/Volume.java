@@ -70,6 +70,7 @@ public class Volume {
     /**
      * 状态: draft(草稿), pending(待审核), archived(已归档)
      */
+    @TableField("volume_status")
     private String status;
 
     /**
