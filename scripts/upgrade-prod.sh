@@ -3,7 +3,7 @@
 # 生产服务器升级脚本 (Production Server Upgrade Script)
 # 用途：拉取最新代码、重新构建镜像、重启服务（保留现有配置）
 # 使用：./scripts/upgrade-prod.sh
-# 版本：v1.0
+# 版本：v2.0 - 修复环境变量和镜像构建问题
 # ============================================================
 
 set -e
@@ -20,7 +20,7 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo -e "${BLUE}============================================================${NC}"
-echo -e "${BLUE}   NexusArchive 生产服务器升级脚本 v1.0${NC}"
+echo -e "${BLUE}   NexusArchive 生产服务器升级脚本 v2.0${NC}"
 echo -e "${BLUE}============================================================${NC}"
 echo ""
 
@@ -33,18 +33,35 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# 检查 Maven
+if ! command -v mvn &> /dev/null; then
+    echo -e "${RED}❌ Maven 未安装${NC}"
+    echo "请安装 Maven: yum install maven 或 apt install maven"
+    exit 1
+fi
+
 # 检查 .env.prod 是否存在
 if [ ! -f "$PROJECT_ROOT/.env.prod" ]; then
     echo -e "${RED}❌ .env.prod 文件不存在${NC}"
-    echo -e "${YELLOW}请先创建 .env.prod 配置文件，参考模板：${NC}"
-    echo ""
-    echo "TAG=latest"
-    echo "DB_HOST=nexus-db"
-    echo "DB_PORT=5432"
-    echo "DB_PASSWORD=your_password"
-    echo "SM4_KEY=your_sm4_key"
-    echo "SPRING_PROFILES_ACTIVE=prod"
-    exit 1
+    echo -e "${YELLOW}正在从模板创建...${NC}"
+    if [ -f "$PROJECT_ROOT/.env.prod.template" ]; then
+        cp "$PROJECT_ROOT/.env.prod.template" "$PROJECT_ROOT/.env.prod"
+        echo -e "${YELLOW}⚠️ 已创建 .env.prod，请修改其中的密码和密钥！${NC}"
+        echo "  nano .env.prod"
+        exit 1
+    else
+        echo "请手动创建 .env.prod 文件"
+        exit 1
+    fi
+fi
+
+# 检查 JWT 密钥
+if [ ! -f "$PROJECT_ROOT/nexusarchive-java/keystore/jwt_private.pem" ]; then
+    echo -e "${YELLOW}JWT 密钥不存在，正在生成...${NC}"
+    mkdir -p "$PROJECT_ROOT/nexusarchive-java/keystore"
+    openssl genrsa -out "$PROJECT_ROOT/nexusarchive-java/keystore/jwt_private.pem" 2048
+    openssl rsa -in "$PROJECT_ROOT/nexusarchive-java/keystore/jwt_private.pem" -pubout -out "$PROJECT_ROOT/nexusarchive-java/keystore/jwt_public.pem"
+    echo -e "${GREEN}✅ JWT 密钥已生成${NC}"
 fi
 
 echo -e "${GREEN}✅ 前置条件检查通过${NC}"
@@ -98,9 +115,9 @@ echo -e "${YELLOW}[5/7] 构建 Docker 镜像...${NC}"
 NEW_TAG=$(git rev-parse --short HEAD)
 echo "  新版本 TAG: $NEW_TAG"
 
-# 构建后端镜像
+# 构建后端镜像（不使用缓存确保最新代码）
 echo "  构建后端镜像..."
-docker build -t nexusarchive-backend:$NEW_TAG -f nexusarchive-java/Dockerfile nexusarchive-java
+docker build --no-cache -t nexusarchive-backend:$NEW_TAG -f nexusarchive-java/Dockerfile nexusarchive-java
 
 # 构建前端镜像
 echo "  构建前端镜像..."
@@ -116,6 +133,9 @@ echo -e "${YELLOW}[6/7] 更新配置并重启服务...${NC}"
 sed -i.bak "s/^TAG=.*/TAG=$NEW_TAG/" .env.prod
 echo "  已更新 .env.prod 中的 TAG 为 $NEW_TAG"
 
+# 停止旧容器并清理冲突
+docker compose -f docker-compose.prod.yml down 2>/dev/null || true
+
 # 重启服务
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
@@ -126,15 +146,15 @@ echo ""
 echo -e "${YELLOW}[7/7] 验证服务...${NC}"
 
 echo "  等待服务启动..."
-MAX_WAIT=90
+MAX_WAIT=120
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-    # 检查前端
-    if curl -fsS http://localhost/ > /dev/null 2>&1; then
-        # 检查后端
+    # 检查后端健康状态
+    if docker compose -f docker-compose.prod.yml ps | grep -q "nexus-backend.*healthy"; then
+        echo -e "${GREEN}✅ 后端已启动${NC}"
+        # 检查 API
         if curl -fsS http://localhost/api/health > /dev/null 2>&1; then
-            echo -e "${GREEN}✅ 前端正常${NC}"
-            echo -e "${GREEN}✅ 后端 API 正常${NC}"
+            echo -e "${GREEN}✅ API 响应正常${NC}"
             break
         fi
     fi
@@ -144,12 +164,15 @@ while [ $WAITED -lt $MAX_WAIT ]; do
 done
 
 if [ $WAITED -ge $MAX_WAIT ]; then
-    echo -e "${RED}❌ 服务启动超时，可能需要检查日志${NC}"
-    echo -e "${YELLOW}查看日志: docker compose -f docker-compose.prod.yml logs -f${NC}"
+    echo -e "${RED}❌ 服务启动超时${NC}"
     echo ""
-    echo -e "${YELLOW}如需回滚，执行：${NC}"
-    echo "  sed -i.bak 's/^TAG=.*/TAG=$CURRENT_TAG/' .env.prod"
-    echo "  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d"
+    echo -e "${YELLOW}排查步骤：${NC}"
+    echo "  1. 查看后端日志: docker logs nexus-backend --tail 50"
+    echo "  2. 查看前端日志: docker logs nexus-frontend --tail 20"
+    echo "  3. 检查服务状态: docker compose -f docker-compose.prod.yml ps"
+    echo ""
+    echo -e "${YELLOW}如需回滚：${NC}"
+    echo "  ./scripts/rollback-prod.sh"
     exit 1
 fi
 
@@ -167,4 +190,3 @@ echo -e "  新版本: $NEW_TAG"
 echo ""
 echo -e "${YELLOW}如需回滚：${NC}"
 echo "  ./scripts/rollback-prod.sh"
-echo "  或手动: sed -i.bak 's/^TAG=.*/TAG=$CURRENT_TAG/' .env.prod && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d"
