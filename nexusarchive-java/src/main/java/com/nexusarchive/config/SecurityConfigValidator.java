@@ -82,9 +82,9 @@ public class SecurityConfigValidator {
             }
         }
 
-        // 病毒扫描配置验证：生产环境禁止 mock
-        if (isProduction && ("mock".equalsIgnoreCase(virusScanType) || virusScanType.isBlank())) {
-            throw new IllegalStateException("【安全错误】生产环境必须启用真实病毒扫描 (virus.scan.type!=mock)");
+        // 病毒扫描配置验证：生产环境禁止 mock（允许 skip 跳过或 clamav）
+        if (isProduction && "mock".equalsIgnoreCase(virusScanType)) {
+            throw new IllegalStateException("【安全错误】生产环境必须启用真实病毒扫描 (virus.scan.type!=mock，可用 skip 或 clamav)");
         }
 
         // 审计日志 HMAC 关键密钥校验

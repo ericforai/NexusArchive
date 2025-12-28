@@ -1,0 +1,33 @@
+<eep_package>
+  <header>
+    <version>1.0</version>
+    <created_time>2025-12-09T13:34:09.908031</created_time>
+    <archival_code>COMP001-2025-10Y-FIN-AC01-V-9b4333</archival_code>
+  </header>
+  <entity_data>
+    <fonds_code>COMP001</fonds_code>
+    <account_period>2025-12</account_period>
+    <voucher_type>PAYMENT</voucher_type>
+    <voucher_number>V-9b4333</voucher_number>
+    <voucher_date>2025-12-09</voucher_date>
+    <total_amount>10000.0</total_amount>
+    <currency_code>CNY</currency_code>
+    <issuer>System</issuer>
+  </entity_data>
+  <digital_objects>
+    <object>
+      <filename>voucher_COMP001-2025-10Y-FIN-AC01-V9900.pdf</filename>
+      <format>PDF</format>
+      <hash_algorithm>SM3</hash_algorithm>
+      <hash_value>e8dee1c1d03f12f55ca601c15543637e2aea391b2e741ed42d14927b46b06967</hash_value>
+      <size_bytes>137498</size_bytes>
+    </object>
+    <object>
+      <filename>invoice.jpg</filename>
+      <format>JPG</format>
+      <hash_algorithm>SM3</hash_algorithm>
+      <hash_value>mock_hash_invoice</hash_value>
+      <size_bytes>1024</size_bytes>
+    </object>
+  </digital_objects>
+</eep_package>
