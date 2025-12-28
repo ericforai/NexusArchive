@@ -35,8 +35,9 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-if ! docker compose -f docker-compose.deps.yml ps | grep -q "nexus-db.*running"; then
-    echo -e "${RED}❌ 数据库容器未运行，请先启动: docker compose -f docker-compose.deps.yml up -d${NC}"
+# 尝试连接数据库来确认它在运行
+if ! docker compose -f docker-compose.deps.yml exec -T nexus-db psql -U postgres -c "SELECT 1;" > /dev/null 2>&1; then
+    echo -e "${RED}❌ 数据库容器未运行或无法连接，请先启动: docker compose -f docker-compose.deps.yml up -d${NC}"
     exit 1
 fi
 echo -e "${GREEN}✅ Docker 和数据库正常${NC}"
