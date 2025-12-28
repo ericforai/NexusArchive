@@ -55,6 +55,27 @@ if [ ! -f "$PROJECT_ROOT/.env.prod" ]; then
     fi
 fi
 
+# 验证关键环境变量
+echo "验证环境变量..."
+source "$PROJECT_ROOT/.env.prod"
+VALIDATION_FAILED=false
+
+if [[ "$DB_PASSWORD" == *"改成"* ]] || [[ "$DB_PASSWORD" == *"your"* ]] || [ -z "$DB_PASSWORD" ]; then
+    echo -e "${RED}❌ DB_PASSWORD 未配置或仍是占位符${NC}"
+    VALIDATION_FAILED=true
+fi
+
+if [[ "$AUDIT_LOG_HMAC_KEY" == *"改成"* ]] || [ -z "$AUDIT_LOG_HMAC_KEY" ]; then
+    echo -e "${RED}❌ AUDIT_LOG_HMAC_KEY 未配置或仍是占位符${NC}"
+    VALIDATION_FAILED=true
+fi
+
+if [ "$VALIDATION_FAILED" = true ]; then
+    echo -e "${YELLOW}请编辑 .env.prod 修改占位符:${NC}"
+    echo "  nano .env.prod"
+    exit 1
+fi
+
 # 检查 JWT 密钥
 if [ ! -f "$PROJECT_ROOT/nexusarchive-java/keystore/jwt_private.pem" ]; then
     echo -e "${YELLOW}JWT 密钥不存在，正在生成...${NC}"
