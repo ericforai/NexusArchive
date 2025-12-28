@@ -7,6 +7,39 @@
 
 ---
 
+## 🚀 Quick Start：一键升级脚本
+
+> **推荐方式**：使用 `scripts/upgrade-dev.sh` 自动完成开发环境升级。
+
+### 首次安装（新机器）
+
+```bash
+git clone git@github.com:ericforai/NexusArchive.git
+cd NexusArchive
+./scripts/upgrade-dev.sh
+```
+
+### 日常升级（已有环境）
+
+```bash
+cd NexusArchive
+./scripts/upgrade-dev.sh
+```
+
+### 脚本功能
+
+| 步骤 | 功能 | 说明 |
+|-----|------|-----|
+| 0 | 检查 Docker | 确保 Docker Desktop 已启动 |
+| 1 | `git pull` | 拉取最新代码 |
+| 2 | 智能 npm install | 仅当 `package.json` 有变化时才执行 |
+| 3 | 启动 Docker 依赖 | 确保数据库和 Redis 运行 |
+| 4 | 提示/自动启动 | 询问是否自动启动后端和前端 |
+
+> 如需手动操作，请参考下方详细步骤。
+
+---
+
 ## Part A｜开发环境 SOP（Host Dev + Docker 依赖）
 
 ### A1. 拉取代码（Pull）
