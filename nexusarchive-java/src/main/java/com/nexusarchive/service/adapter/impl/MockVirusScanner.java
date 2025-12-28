@@ -13,7 +13,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Mock 病毒扫描器
- * 目前默认返回安全，预留 ClamAV 集成接口
+ * 用于开发环境 (mock) 或生产环境跳过扫描 (skip)
+ * 预留 ClamAV 集成接口
  */
 @Slf4j
 @Component
