@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
@@ -81,22 +82,22 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     public Page<Position> list(int page, int limit, String search, String status) {
-        QueryWrapper<Position> wrapper = new QueryWrapper<>();
-        wrapper.eq("deleted", 0);
+        LambdaQueryWrapper<Position> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Position::getDeleted, 0);
         if (StringUtils.hasText(search)) {
-            wrapper.and(w -> w.like("name", search).or().like("code", search));
+            wrapper.and(w -> w.like(Position::getName, search).or().like(Position::getCode, search));
         }
         if (StringUtils.hasText(status)) {
-            wrapper.eq("status", status);
+            wrapper.eq(Position::getStatus, status);
         }
-        wrapper.orderByDesc("created_at");
+        wrapper.orderByDesc(Position::getCreatedAt);
         Page<Position> pageObj = new Page<>(page, limit);
         return positionMapper.selectPage(pageObj, wrapper);
     }
 
     private boolean existsByCode(String code) {
-        return positionMapper.selectCount(new QueryWrapper<Position>()
-                .eq("code", code)
-                .eq("deleted", 0)) > 0;
+        return positionMapper.selectCount(new LambdaQueryWrapper<Position>()
+                .eq(Position::getCode, code)
+                .eq(Position::getDeleted, 0)) > 0;
     }
 }
