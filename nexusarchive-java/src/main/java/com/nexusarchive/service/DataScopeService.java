@@ -83,6 +83,38 @@ public class DataScopeService {
         }
     }
 
+    public void applyArchiveScope(LambdaQueryWrapper<Archive> wrapper, DataScopeContext context) {
+        if (context == null || context.isAll()) {
+            return;
+        }
+
+        if (context.isSelf()) {
+            if (context.userId() != null) {
+                wrapper.eq(Archive::getCreatedBy, context.userId());
+            } else {
+                wrapper.apply("1 = 0");
+            }
+            return;
+        }
+
+        Set<String> deptIds = context.departmentIds();
+        if (!deptIds.isEmpty()) {
+            wrapper.in(Archive::getDepartmentId, deptIds);
+            return;
+        }
+
+        if (StringUtils.hasText(context.departmentId())) {
+            wrapper.eq(Archive::getDepartmentId, context.departmentId());
+            return;
+        }
+
+        if (context.userId() != null) {
+            wrapper.eq(Archive::getCreatedBy, context.userId());
+        } else {
+            wrapper.apply("1 = 0");
+        }
+    }
+
     public boolean canAccessArchive(Archive archive, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return true;

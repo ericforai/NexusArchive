@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
@@ -60,39 +61,39 @@ public class ArchiveService {
     public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode,
             String orgId, String uniqueBizId, String subType) {
         Page<Archive> pageObj = new Page<>(page, limit);
-        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
 
         if (search != null && !search.isEmpty()) {
-            wrapper.and(w -> w.like("title", search)
-                    .or().like("archive_code", search)
-                    .or().like("fonds_no", search)
-                    .or().like("org_name", search));
+            wrapper.and(w -> w.like(Archive::getTitle, search)
+                    .or().like(Archive::getArchiveCode, search)
+                    .or().like(Archive::getFondsNo, search)
+                    .or().like(Archive::getOrgName, search));
         }
 
         if (status != null && !status.isEmpty()) {
             if (status.contains(",")) {
-                wrapper.in("status", Arrays.asList(status.split(",")));
+                wrapper.in(Archive::getStatus, Arrays.asList(status.split(",")));
             } else {
-                wrapper.eq("status", status);
+                wrapper.eq(Archive::getStatus, status);
             }
         }
 
         if (categoryCode != null && !categoryCode.isEmpty()) {
-            wrapper.eq("category_code", categoryCode);
+            wrapper.eq(Archive::getCategoryCode, categoryCode);
 
             // [FIX P0-CRIT] Accounting Archives Compliance (DA/T 94-2022)
             // If querying an Accounting Category (AC01-AC04) and no status is specified,
             // FORCE strictly 'archived' status. Drafts/Pending items must NOT appear in the Repository.
             if ((status == null || status.isEmpty()) && isAccountingCategory(categoryCode)) {
-                wrapper.eq("status", "archived");
+                wrapper.eq(Archive::getStatus, "archived");
             }
         }
 
         if (orgId != null && !orgId.isEmpty()) {
-            wrapper.eq("department_id", orgId);
+            wrapper.eq(Archive::getDepartmentId, orgId);
         }
         if (uniqueBizId != null && !uniqueBizId.isEmpty()) {
-            wrapper.eq("unique_biz_id", uniqueBizId);
+            wrapper.eq(Archive::getUniqueBizId, uniqueBizId);
         }
 
         // [FIXED P0-1] Dynamic SubType Filter with SQL Injection Protection
@@ -123,7 +124,7 @@ public class ArchiveService {
         dataScopeService.applyArchiveScope(wrapper, scope);
 
         // Optimize: Use index-friendly sorting
-        wrapper.orderByDesc("created_time");
+        wrapper.orderByDesc(Archive::getCreatedTime);
 
         return archiveMapper.selectPage(pageObj, wrapper);
     }
@@ -242,8 +243,8 @@ public class ArchiveService {
      * 根据唯一业务ID获取档案
      */
     public Archive getByUniqueBizId(String uniqueBizId) {
-        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-        wrapper.eq("unique_biz_id", uniqueBizId);
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Archive::getUniqueBizId, uniqueBizId);
         return archiveMapper.selectOne(wrapper);
     }
 
@@ -251,10 +252,10 @@ public class ArchiveService {
      * 获取最近创建的档案
      */
     public List<Archive> getRecentArchives(int limit) {
-        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
         DataScopeContext scope = dataScopeService.resolve();
         dataScopeService.applyArchiveScope(wrapper, scope);
-        wrapper.orderByDesc("created_time").last("LIMIT " + limit);
+        wrapper.orderByDesc(Archive::getCreatedTime).last("LIMIT " + limit);
         return archiveMapper.selectList(wrapper);
     }
 
@@ -276,8 +277,8 @@ public class ArchiveService {
         }
 
         // 否则，构建带权限过滤的查询
-        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-        wrapper.in("id", ids);
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Archive::getId, ids);
         dataScopeService.applyArchiveScope(wrapper, scope);
 
         return archiveMapper.selectList(wrapper);
@@ -306,9 +307,9 @@ public class ArchiveService {
         List<ArcFileContent> result = new java.util.ArrayList<>();
         
         // 1. 原有逻辑：从 arc_file_content 获取直接关联的文件
-        QueryWrapper<ArcFileContent> wrapper = new QueryWrapper<>();
-        wrapper.eq("item_id", archiveId);
-        wrapper.orderByAsc("created_time");
+        LambdaQueryWrapper<ArcFileContent> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ArcFileContent::getItemId, archiveId);
+        wrapper.orderByAsc(ArcFileContent::getCreatedTime);
         result.addAll(arcFileContentMapper.selectList(wrapper));
         
         // 2. 新增逻辑：从 acc_archive_attachment 获取智能匹配关联的文件
@@ -342,10 +343,10 @@ public class ArchiveService {
      * Helper to check uniqueness
      */
     private void checkArchiveCodeUnique(String code, String excludeId) {
-        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-        wrapper.eq("archive_code", code);
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Archive::getArchiveCode, code);
         if (excludeId != null) {
-            wrapper.ne("id", excludeId);
+            wrapper.ne(Archive::getId, excludeId);
         }
         if (archiveMapper.selectCount(wrapper) > 0) {
             throw new BusinessException("档号已存在: " + code);
@@ -353,11 +354,11 @@ public class ArchiveService {
     }
 
     private void checkUniqueBizId(String uniqueBizId, String excludeId) {
-        QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-        wrapper.eq("unique_biz_id", uniqueBizId);
-        wrapper.eq("deleted", 0);
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Archive::getUniqueBizId, uniqueBizId);
+        wrapper.eq(Archive::getDeleted, 0);
         if (excludeId != null) {
-            wrapper.ne("id", excludeId);
+            wrapper.ne(Archive::getId, excludeId);
         }
         if (archiveMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(409, "唯一业务ID已存在: " + uniqueBizId);
