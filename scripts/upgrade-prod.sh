@@ -70,6 +70,11 @@ if [[ "$AUDIT_LOG_HMAC_KEY" == *"改成"* ]] || [ -z "$AUDIT_LOG_HMAC_KEY" ]; th
     VALIDATION_FAILED=true
 fi
 
+if [ -z "$VIRUS_SCAN_TYPE" ]; then
+    echo -e "${YELLOW}⚠️ VIRUS_SCAN_TYPE 未配置，将使用默认值 skip${NC}"
+    echo "VIRUS_SCAN_TYPE=skip" >> .env.prod
+fi
+
 if [ "$VALIDATION_FAILED" = true ]; then
     echo -e "${YELLOW}请编辑 .env.prod 修改占位符:${NC}"
     echo "  nano .env.prod"
