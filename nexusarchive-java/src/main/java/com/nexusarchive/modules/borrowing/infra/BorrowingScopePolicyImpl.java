@@ -5,6 +5,7 @@
 
 package com.nexusarchive.modules.borrowing.infra;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.modules.borrowing.app.BorrowingScopePolicy;
 import com.nexusarchive.modules.borrowing.domain.Borrowing;
@@ -63,6 +64,48 @@ public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
             wrapper.eq("user_id", context.userId());
         } else {
             wrapper.eq("1", "0");
+        }
+    }
+
+    public void apply(LambdaQueryWrapper<Borrowing> wrapper, DataScopeContext context) {
+        if (context == null || context.isAll()) {
+            return;
+        }
+
+        if (context.isSelf()) {
+            if (context.userId() != null) {
+                wrapper.eq(Borrowing::getUserId, context.userId());
+            } else {
+                wrapper.apply("1 = 0");
+            }
+            return;
+        }
+
+        Set<String> deptIds = context.departmentIds();
+        if (!deptIds.isEmpty()) {
+            List<String> archiveIds = archiveService.getArchiveIdsByDepartmentIds(deptIds);
+            if (archiveIds.isEmpty()) {
+                wrapper.apply("1 = 0");
+            } else {
+                wrapper.in(Borrowing::getArchiveId, archiveIds);
+            }
+            return;
+        }
+
+        if (StringUtils.hasText(context.departmentId())) {
+            List<String> archiveIds = archiveService.getArchiveIdsByDepartmentIds(Collections.singleton(context.departmentId()));
+            if (archiveIds.isEmpty()) {
+                wrapper.apply("1 = 0");
+            } else {
+                wrapper.in(Borrowing::getArchiveId, archiveIds);
+            }
+            return;
+        }
+
+        if (context.userId() != null) {
+            wrapper.eq(Borrowing::getUserId, context.userId());
+        } else {
+            wrapper.apply("1 = 0");
         }
     }
 }
