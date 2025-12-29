@@ -15,9 +15,9 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=nexusarchive
-      - DB_USER=nexus
-      - DB_PASSWORD=nexus
-      - JWT_SECRET=change-me-please
+      - DB_USER=${DB_USER:-nexus}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
       - LICENSE_PATH=/data/license.lic
     ports:
       - "8080:8080"
@@ -44,8 +44,8 @@ services:
     restart: unless-stopped
     environment:
       - POSTGRES_DB=nexusarchive
-      - POSTGRES_USER=nexus
-      - POSTGRES_PASSWORD=nexus
+      - POSTGRES_USER=${DB_USER:-nexus}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:

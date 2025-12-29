@@ -59,6 +59,32 @@ lerna-debug.log*
 nexusarchive-release.*
 
 # ----------------
+# 项目特定：备份文件和数据库备份（严禁同步）
+# ----------------
+# 备份目录和文件
+backup*/
+backup_*
+backups/
+*.backup
+*.bak
+# macOS 资源分叉文件
+._backup*
+
+# 数据库备份文件（但保留脚本目录中的 SQL 脚本）
+*.dump
+backup*.sql
+*_backup.sql
+*_prod_*.sql
+*_backup_*.sql
+# 根目录下的 SQL 文件（通常是备份）
+/*.sql
+# 但允许脚本目录中的 SQL 文件
+!scripts/*.sql
+!deploy/**/*.sql
+!nexusarchive-java/src/main/resources/**/*.sql
+!data/init_*.sql
+
+# ----------------
 # 项目特定：测试/临时文件
 # ----------------
 test_aip*/
@@ -86,14 +112,27 @@ nexusarchive-java/keystore/
 # 敏感/大体积 Demo 数据
 docs/demo数据/
 
+# ----------------
+# 环境变量配置文件（严禁同步真实配置）
+# ----------------
+# 忽略所有 .env 文件（包含敏感信息）
+.env
+.env.local
+.env.prod
+.env.prod.bak
+.env.host.dev
+# 但允许模板文件同步
+!.env.example
+!.env.template
+!.env.prod.example
+!.env.prod.template
 
 # ----------------
 # 需要同步的重要文件（确保没有被忽略）
 # ----------------
-# .env                 ← 已移除忽略，会同步
-# .env.local           ← 已移除忽略，会同步
 # .env.example         ← 会同步（模板）
 # .env.template        ← 会同步（模板）
+# .env.prod.example    ← 会同步（生产环境模板）
 # .idea/               ← 已移除忽略，会同步 IDE 配置
 # .vscode/             ← 已移除忽略，会同步 IDE 配置
 # scripts/             ← 会同步所有脚本
