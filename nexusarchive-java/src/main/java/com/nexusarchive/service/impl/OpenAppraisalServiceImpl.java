@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.Archive;
@@ -104,13 +105,13 @@ public class OpenAppraisalServiceImpl implements OpenAppraisalService {
     @Override
     public Page<OpenAppraisal> getAppraisalList(int page, int limit, String status) {
         Page<OpenAppraisal> pageParam = new Page<>(page, limit);
-        QueryWrapper<OpenAppraisal> queryWrapper = new QueryWrapper<>();
-        
+        LambdaQueryWrapper<OpenAppraisal> queryWrapper = new LambdaQueryWrapper<>();
+
         if (status != null && !status.isEmpty()) {
-            queryWrapper.eq("status", status);
+            queryWrapper.eq(OpenAppraisal::getStatus, status);
         }
-        
-        queryWrapper.orderByDesc("created_at");
+
+        queryWrapper.orderByDesc(OpenAppraisal::getCreatedTime);
         return appraisalMapper.selectPage(pageParam, queryWrapper);
     }
 
