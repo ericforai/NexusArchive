@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.entity.ArchiveBatch;
 import com.nexusarchive.mapper.ArchiveBatchMapper;
@@ -38,7 +39,7 @@ public class ArchiveBatchService {
      */
     public boolean verifyChain(String batchNo) {
         ArchiveBatch batch = archiveBatchMapper.selectOne(
-            new QueryWrapper<ArchiveBatch>().eq("batch_no", batchNo));
+            new LambdaQueryWrapper<ArchiveBatch>().eq(ArchiveBatch::getBatchNo, batchNo));
         
         if (batch == null) {
             log.warn("批次不存在: batchNo={}", batchNo);
@@ -71,7 +72,7 @@ public class ArchiveBatchService {
      */
     public boolean verifyChainFromBeginning(String batchNo) {
         ArchiveBatch targetBatch = archiveBatchMapper.selectOne(
-            new QueryWrapper<ArchiveBatch>().eq("batch_no", batchNo));
+            new LambdaQueryWrapper<ArchiveBatch>().eq(ArchiveBatch::getBatchNo, batchNo));
         
         if (targetBatch == null) {
             log.warn("目标批次不存在: batchNo={}", batchNo);
@@ -79,8 +80,8 @@ public class ArchiveBatchService {
         }
         
         // 获取所有批次,按创建时间排序
-        QueryWrapper<ArchiveBatch> query = new QueryWrapper<>();
-        query.orderByAsc("created_at");
+        LambdaQueryWrapper<ArchiveBatch> query = new LambdaQueryWrapper<>();
+        query.orderByAsc(ArchiveBatch::getCreatedTime);
         var allBatches = archiveBatchMapper.selectList(query);
         
         if (allBatches == null || allBatches.isEmpty()) {
@@ -143,7 +144,7 @@ public class ArchiveBatchService {
      */
     public ArchiveBatch getBatch(String batchNo) {
         return archiveBatchMapper.selectOne(
-            new QueryWrapper<ArchiveBatch>().eq("batch_no", batchNo));
+            new LambdaQueryWrapper<ArchiveBatch>().eq(ArchiveBatch::getBatchNo, batchNo));
     }
     
     /**
@@ -152,8 +153,8 @@ public class ArchiveBatchService {
      * @return 最新批次
      */
     public ArchiveBatch getLatestBatch() {
-        QueryWrapper<ArchiveBatch> query = new QueryWrapper<>();
-        query.orderByDesc("created_at").last("LIMIT 1");
+        LambdaQueryWrapper<ArchiveBatch> query = new LambdaQueryWrapper<>();
+        query.orderByDesc(ArchiveBatch::getCreatedTime).last("LIMIT 1");
         return archiveBatchMapper.selectOne(query);
     }
 }
