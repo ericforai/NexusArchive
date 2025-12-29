@@ -5,6 +5,7 @@
 
 package com.nexusarchive.modules.borrowing.app;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
@@ -75,21 +76,21 @@ public class BorrowingApplicationService implements BorrowingFacade {
     @Override
     public Page<BorrowingDto> getBorrowings(int page, int limit, String status, String userId) {
         Page<Borrowing> pageParam = new Page<>(page, limit);
-        QueryWrapper<Borrowing> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Borrowing> queryWrapper = new LambdaQueryWrapper<>();
         List<String> statuses = parseStatuses(status);
         if (!statuses.isEmpty()) {
             if (statuses.size() == 1) {
-                queryWrapper.eq("status", statuses.get(0));
+                queryWrapper.eq(Borrowing::getStatus, statuses.get(0));
             } else {
-                queryWrapper.in("status", statuses);
+                queryWrapper.in(Borrowing::getStatus, statuses);
             }
         }
         if (userId != null && !userId.isEmpty()) {
-            queryWrapper.eq("user_id", userId);
+            queryWrapper.eq(Borrowing::getUserId, userId);
         }
         DataScopeContext scope = dataScopeService.resolve();
         borrowingScopePolicy.apply(queryWrapper, scope);
-        queryWrapper.orderByDesc("created_at");
+        queryWrapper.orderByDesc(Borrowing::getCreatedTime);
 
         Page<Borrowing> result = borrowingMapper.selectPage(pageParam, queryWrapper);
         return mapPage(result);
