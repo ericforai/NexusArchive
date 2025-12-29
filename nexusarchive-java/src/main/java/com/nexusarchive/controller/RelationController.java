@@ -5,6 +5,7 @@
 
 package com.nexusarchive.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.dto.relation.ComplianceStatusDto;
@@ -85,10 +86,10 @@ public class RelationController {
     public Result<RelationGraphDto> getRelationGraph(@PathVariable String archiveId) {
         Archive center = archiveService.getArchiveById(archiveId);
 
-        List<ArchiveRelation> relations = archiveRelationService.list(new QueryWrapper<ArchiveRelation>()
-                .eq("source_id", archiveId)
+        List<ArchiveRelation> relations = archiveRelationService.list(new LambdaQueryWrapper<ArchiveRelation>()
+                .eq(ArchiveRelation::getSourceId, archiveId)
                 .or()
-                .eq("target_id", archiveId));
+                .eq(ArchiveRelation::getTargetId, archiveId));
 
         Set<String> relatedIds = relations.stream()
                 .flatMap(r -> java.util.stream.Stream.of(r.getSourceId(), r.getTargetId()))
