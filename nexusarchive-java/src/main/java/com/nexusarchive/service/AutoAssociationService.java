@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.dto.parser.ParsedInvoice;
@@ -42,9 +43,9 @@ public class AutoAssociationService implements IAutoAssociationService {
     public void runNightlyJob() {
         log.info("Starting nightly auto-association job...");
         // 获取所有未归档/草稿状态的凭证
-        List<Archive> vouchers = archiveMapper.selectList(new QueryWrapper<Archive>()
-                .eq("category_code", "AC01")
-                .ne("status", "ASSOCIATED")); // 假设 ASSOCIATED 是一个终态或中间态
+        List<Archive> vouchers = archiveMapper.selectList(new LambdaQueryWrapper<Archive>()
+                .eq(Archive::getCategoryCode, "AC01")
+                .ne(Archive::getStatus, "ASSOCIATED")); // 假设 ASSOCIATED 是一个终态或中间态
 
         for (Archive voucher : vouchers) {
             triggerAssociation(voucher.getId());
@@ -63,18 +64,18 @@ public class AutoAssociationService implements IAutoAssociationService {
         }
 
         // 获取同全宗、同年度的候选文件 (AC04 - 其他/发票)
-        List<Archive> candidates = archiveMapper.selectList(new QueryWrapper<Archive>()
-                .eq("category_code", "AC04")
-                .eq("fonds_no", voucher.getFondsNo())
-                .eq("fiscal_year", voucher.getFiscalYear()));
+        List<Archive> candidates = archiveMapper.selectList(new LambdaQueryWrapper<Archive>()
+                .eq(Archive::getCategoryCode, "AC04")
+                .eq(Archive::getFondsNo, voucher.getFondsNo())
+                .eq(Archive::getFiscalYear, voucher.getFiscalYear()));
 
         boolean newMatchFound = false;
 
         for (Archive candidate : candidates) {
             // 检查是否已经关联
-            long count = archiveRelationService.count(new QueryWrapper<ArchiveRelation>()
-                    .eq("source_id", voucherId)
-                    .eq("target_id", candidate.getId()));
+            long count = archiveRelationService.count(new LambdaQueryWrapper<ArchiveRelation>()
+                    .eq(ArchiveRelation::getSourceId, voucherId)
+                    .eq(ArchiveRelation::getTargetId, candidate.getId()));
             if (count > 0) {
                 continue;
             }
@@ -110,8 +111,8 @@ public class AutoAssociationService implements IAutoAssociationService {
     private void checkAndUpdateVoucherStatus(Archive voucher) {
         try {
             // 计算已关联发票的总金额
-            List<ArchiveRelation> relations = archiveRelationService.list(new QueryWrapper<ArchiveRelation>()
-                    .eq("source_id", voucher.getId()));
+            List<ArchiveRelation> relations = archiveRelationService.list(new LambdaQueryWrapper<ArchiveRelation>()
+                    .eq(ArchiveRelation::getSourceId, voucher.getId()));
             
             BigDecimal totalLinkedAmount = BigDecimal.ZERO;
             
@@ -143,8 +144,8 @@ public class AutoAssociationService implements IAutoAssociationService {
     }
     @Override
     public List<com.nexusarchive.dto.relation.LinkedFileDto> getLinkedFiles(String voucherId) {
-        List<ArchiveRelation> relations = archiveRelationService.list(new QueryWrapper<ArchiveRelation>()
-                .eq("source_id", voucherId));
+        List<ArchiveRelation> relations = archiveRelationService.list(new LambdaQueryWrapper<ArchiveRelation>()
+                .eq(ArchiveRelation::getSourceId, voucherId));
         
         List<com.nexusarchive.dto.relation.LinkedFileDto> result = new java.util.ArrayList<>();
         
