@@ -54,14 +54,15 @@
 
 ## ⚡ 快速开始
 
-### 一键启动（推荐）
+### 开发环境
 
+#### 一键升级（推荐）
 ```bash
-./scripts/restart-services.sh
+./scripts/upgrade-dev.sh
 ```
+自动完成：拉取代码 → 安装依赖 → 数据库迁移 → 启动服务
 
-### 手动启动
-
+#### 手动启动
 ```bash
 # 后端
 cd nexusarchive-java && mvn clean package -DskipTests
@@ -75,7 +76,17 @@ npm install && npm run dev
 - 前端: http://localhost:15175
 - API 文档: http://localhost:19090/api/swagger-ui.html
 
-👉 详细指南请参阅 [启动指南](docs/deployment/启动指南.md)
+### 生产环境
+
+```bash
+# SSH 登录服务器后
+cd /root/nexusarchive
+./scripts/upgrade-prod.sh  # 5-10 分钟完成
+```
+
+👉 详细指南：
+- 开发环境：[启动指南](docs/deployment/启动指南.md)
+- 生产升级：[生产升级 SOP](docs/guides/production-upgrade-sop.md)
 
 ---
 
