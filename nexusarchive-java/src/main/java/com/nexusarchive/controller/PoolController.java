@@ -5,6 +5,7 @@
 
 package com.nexusarchive.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.result.BatchOperationResult;
 import com.nexusarchive.common.result.Result;
@@ -151,9 +152,9 @@ public class PoolController {
         // 2. 通过命名约定查询 (旧逻辑兼容)
         String businessDocNo = mainFile.getBusinessDocNo();
         if (businessDocNo != null && !businessDocNo.isEmpty()) {
-            QueryWrapper<ArcFileContent> query = new QueryWrapper<>();
-            query.likeRight("business_doc_no", businessDocNo + "_ATT_")
-                    .orderByAsc("business_doc_no");
+            LambdaQueryWrapper<ArcFileContent> query = new LambdaQueryWrapper<>();
+            query.likeRight(ArcFileContent::getBusinessDocNo, businessDocNo + "_ATT_")
+                    .orderByAsc(ArcFileContent::getBusinessDocNo);
             List<ArcFileContent> legacyAttachments = arcFileContentMapper.selectList(query);
 
             // 合并并去重
@@ -267,12 +268,12 @@ public class PoolController {
 
         // 查询所有临时档号开头的记录
         // 查询所有预归档相关记录 (临时档号 或 已有预归档状态的正式档号)
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.and(w -> w.likeRight("archival_code", "TEMP-POOL-")
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.and(w -> w.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
                 .or()
-                .isNotNull("pre_archive_status"))
-                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"))
-                .orderByDesc("created_time");
+                .isNotNull(ArcFileContent::getPreArchiveStatus))
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
+                .orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
 
@@ -297,10 +298,10 @@ public class PoolController {
     public Result<List<PoolItemDto>> listByStatus(@PathVariable String status) {
         log.info("按状态查询预归档文件: {}", status);
 
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("pre_archive_status", status)
-                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"))
-                .orderByDesc("created_time");
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, status)
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
+                .orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
 
@@ -327,18 +328,18 @@ public class PoolController {
                 "PENDING_APPROVAL", "ARCHIVED" };
 
         for (String status : statuses) {
-            QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("pre_archive_status", status)
-                    .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
+            LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ArcFileContent::getPreArchiveStatus, status)
+                    .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"));
             Long count = arcFileContentMapper.selectCount(queryWrapper);
             stats.put(status, count);
         }
 
         // 统计无状态的记录（旧数据）
-        QueryWrapper<ArcFileContent> nullStatusQuery = new QueryWrapper<>();
-        nullStatusQuery.likeRight("archival_code", "TEMP-POOL-")
-                .isNull("pre_archive_status")
-                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
+        LambdaQueryWrapper<ArcFileContent> nullStatusQuery = new LambdaQueryWrapper<>();
+        nullStatusQuery.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
+                .isNull(ArcFileContent::getPreArchiveStatus)
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"));
         Long nullCount = arcFileContentMapper.selectCount(nullStatusQuery);
         stats.put("NO_STATUS", nullCount);
 
@@ -413,12 +414,12 @@ public class PoolController {
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.List<FourNatureReport>> checkAllPendingFiles() {
         log.info("检测所有待检测文件");
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.likeRight("archival_code", "TEMP-POOL-")
-                .and(w -> w.isNull("pre_archive_status")
-                        .or().eq("pre_archive_status", "PENDING_CHECK")
-                        .or().eq("pre_archive_status", "draft")
-                        .or().eq("pre_archive_status", "DRAFT"));
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
+                .and(w -> w.isNull(ArcFileContent::getPreArchiveStatus)
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "PENDING_CHECK")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "draft")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "DRAFT"));
 
         java.util.List<ArcFileContent> pendingFiles = arcFileContentMapper.selectList(queryWrapper);
         java.util.List<String> fileIds = pendingFiles.stream()
@@ -627,14 +628,14 @@ public class PoolController {
             String dateStr = LocalDateTime.now().format(dateFormatter);
 
             // 1. 清理旧的演示数据
-            QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-            queryWrapper.likeRight("file_hash", "DEMO_HASH_");
+            LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.likeRight(ArcFileContent::getFileHash, "DEMO_HASH_");
             List<ArcFileContent> oldFiles = arcFileContentMapper.selectList(queryWrapper);
 
             // 删除元数据
             if (!oldFiles.isEmpty()) {
                 List<String> oldFileIds = oldFiles.stream().map(ArcFileContent::getId).collect(Collectors.toList());
-                arcFileMetadataIndexMapper.delete(new QueryWrapper<ArcFileMetadataIndex>().in("file_id", oldFileIds));
+                arcFileMetadataIndexMapper.delete(new LambdaQueryWrapper<ArcFileMetadataIndex>().in(ArcFileMetadataIndex::getFileId, oldFileIds));
             }
 
             int deletedCount = arcFileContentMapper.delete(queryWrapper);
@@ -708,7 +709,7 @@ public class PoolController {
         // 查询元数据获取金额 (使用 selectList 并取第一条以防重复数据导致 selectOne 报错)
         String amountStr = "-";
         List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
-                new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileContent.getId()).last("LIMIT 1"));
+                new LambdaQueryWrapper<ArcFileMetadataIndex>().eq(ArcFileMetadataIndex::getFileId, fileContent.getId()).last("LIMIT 1"));
         ArcFileMetadataIndex metadata = metas.isEmpty() ? null : metas.get(0);
 
         if (metadata != null && metadata.getTotalAmount() != null) {
