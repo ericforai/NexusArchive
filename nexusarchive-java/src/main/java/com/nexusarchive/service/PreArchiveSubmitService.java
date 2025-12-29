@@ -5,7 +5,9 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.nexusarchive.common.result.BatchOperationResult;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ArcFileContent;
@@ -103,15 +105,14 @@ public class PreArchiveSubmitService {
             String newArchiveCode = generateArchiveCode(file);
 
             // 使用 UpdateWrapper 强制更新 archive_code（绕过 FieldStrategy.NEVER）
-            com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Archive> updateWrapper =
-                    new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
-            updateWrapper.eq("id", archive.getId())
-                    .set("archive_code", newArchiveCode)
-                    .set("status", "PENDING")
-                    .set("retention_period", "30Y")
-                    .set("last_modified_time", LocalDateTime.now());
+            LambdaUpdateWrapper<Archive> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Archive::getId, archive.getId())
+                    .set(Archive::getArchiveCode, newArchiveCode)
+                    .set(Archive::getStatus, "PENDING")
+                    .set(Archive::getRetentionPeriod, "30Y")
+                    .set(Archive::getLastModifiedTime, LocalDateTime.now());
             if (file.getFiscalYear() != null) {
-                updateWrapper.set("fiscal_year", file.getFiscalYear());
+                updateWrapper.set(Archive::getFiscalYear, file.getFiscalYear());
             }
             archiveMapper.update(null, updateWrapper);
 
@@ -179,18 +180,17 @@ public class PreArchiveSubmitService {
         }
 
         // 防重锁：仅允许非 ARCHIVED 状态转 ARCHIVED
-        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Archive> wrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
-        wrapper.eq("id", archiveId).ne("status", "ARCHIVED")
-                .set("status", "ARCHIVED");
+        LambdaUpdateWrapper<Archive> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Archive::getId, archiveId).ne(Archive::getStatus, "ARCHIVED")
+                .set(Archive::getStatus, "ARCHIVED");
         int updated = archiveMapper.update(null, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "归档已完成或状态不允许重复完成");
         }
 
         // 锁定关联的文件
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("archival_code", archive.getArchiveCode());
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ArcFileContent::getArchivalCode, archive.getArchiveCode());
         List<ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
 
         for (ArcFileContent file : files) {
