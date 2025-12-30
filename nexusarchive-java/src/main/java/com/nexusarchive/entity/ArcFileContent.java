@@ -184,6 +184,7 @@ public class ArcFileContent {
         return highlightMetaMap;
     }
 
+    @com.baomidou.mybatisplus.annotation.TableField(value = "created_time", fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdTime;
 
     public ArcFileContent() {

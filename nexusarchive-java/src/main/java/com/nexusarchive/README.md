@@ -20,7 +20,7 @@
 | `listener/` | 目录入口 | listener 子目录 |
 | `mapper/` | 目录入口 | mapper 子目录 |
 | `modules/` | 目录入口 | 模块化业务子目录 |
-| `NexusArchiveApplication.java` | Java 类 | NexusArchiveApplication 类 |
+| `NexusArchiveApplication.java` | Java 类 | NexusArchiveApplication 类（技术栈版本以 pom.xml 为准） |
 | `repository/` | 目录入口 | repository 子目录 |
 | `security/` | 目录入口 | security 子目录 |
 | `service/` | 目录入口 | service 子目录 |

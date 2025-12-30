@@ -36,13 +36,13 @@ public class RoleService {
      */
     public Page<Role> getRoles(int page, int limit, String search) {
         Page<Role> pageObj = new Page<>(page, limit);
-        QueryWrapper<Role> wrapper = new QueryWrapper<>();
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Role> wrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         
         if (search != null && !search.isEmpty()) {
-            wrapper.and(w -> w.like("name", search).or().like("code", search));
+            wrapper.and(w -> w.like(Role::getName, search).or().like(Role::getCode, search));
         }
         
-        wrapper.orderByDesc("created_at");
+        wrapper.orderByDesc(Role::getCreatedTime);
         
         return roleMapper.selectPage(pageObj, wrapper);
     }

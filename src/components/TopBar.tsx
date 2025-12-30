@@ -1,4 +1,4 @@
-// Input: React、lucide-react 图标、本地模块 GlobalSearch、api/search
+// Input: React、lucide-react 图标、本地模块 GlobalSearch、api/search、FondsSwitcher
 // Output: React 组件 TopBar
 // Pos: 业务页面组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -6,6 +6,7 @@
 import React from 'react';
 import { GlobalSearch } from './GlobalSearch';
 import { GlobalSearchDTO } from '../types';
+import { FondsSwitcher } from './common/FondsSwitcher';
 
 interface TopBarProps {
   onLogout?: () => void;
@@ -24,8 +25,13 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
   return (
     <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
 
-      {/* Global Search */}
-      <div className="flex-1 max-w-2xl">
+      {/* Left: Fonds Switcher */}
+      <div className="flex items-center gap-4">
+        <FondsSwitcher />
+      </div>
+
+      {/* Center: Global Search */}
+      <div className="flex-1 max-w-2xl mx-4">
         <GlobalSearch onNavigate={onNavigate} />
       </div>
 
@@ -59,3 +65,4 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
     </header>
   );
 };
+

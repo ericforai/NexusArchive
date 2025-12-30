@@ -104,13 +104,13 @@ public class OpenAppraisalServiceImpl implements OpenAppraisalService {
     @Override
     public Page<OpenAppraisal> getAppraisalList(int page, int limit, String status) {
         Page<OpenAppraisal> pageParam = new Page<>(page, limit);
-        QueryWrapper<OpenAppraisal> queryWrapper = new QueryWrapper<>();
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<OpenAppraisal> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         
         if (status != null && !status.isEmpty()) {
-            queryWrapper.eq("status", status);
+            queryWrapper.eq(OpenAppraisal::getStatus, status);
         }
         
-        queryWrapper.orderByDesc("created_at");
+        queryWrapper.orderByDesc(OpenAppraisal::getCreatedTime);
         return appraisalMapper.selectPage(pageParam, queryWrapper);
     }
 

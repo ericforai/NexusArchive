@@ -1,77 +1,81 @@
 ---
-description: 开发环境启动流程 - 确保后端先于前端启动
+description: 开发环境启动流程 - Docker 优先，本地备选
 ---
 
 # 开发环境启动工作流
 
-## ⚠️ 重要：启动顺序
+## 启动方式对比
 
-**后端必须先于前端完全启动！** 否则前端API请求将因 `ECONNREFUSED` 而失败，返回500错误。
+| 方式 | 命令 | 适用场景 |
+|------|------|---------|
+| **Docker 全栈** | `./scripts/dev-start.sh` | 网络稳定，无需本地环境 |
+| **本地一键** | `./scripts/dev-local.sh` | 网络不稳定，已有 JDK/Node |
 
-## 启动步骤
+---
 
-### 方式一：使用启动脚本（推荐）
+## 方式一：Docker 全栈（推荐）
+
 // turbo
 ```bash
-cd /Users/user/nexusarchive
 ./scripts/dev-start.sh
-
-# 或使用 restart-services.sh
-./scripts/restart-services.sh
 ```
 
-### 方式二：手动启动
+自动完成：构建镜像 → 启动全部服务 → 健康检查
 
-1. **启动后端**（终端1）：
+> ⚠️ 首次需拉取 Docker 镜像，网络不稳定时可能失败
+
+---
+
+## 方式二：本地一键启动
+
+// turbo
 ```bash
-cd nexusarchive-java
-mvn spring-boot:run
+./scripts/dev-local.sh
 ```
 
-2. **等待后端就绪** - 确认看到以下日志：
-```
-Started NexusArchiveApplication in X.XXX seconds
-```
-或检查健康端点：
+自动完成：
+1. 启动数据库和 Redis（Docker）
+2. 启动后端（本地 Maven）
+3. 启动前端（本地 npm）
+4. 健康检查
+
+**停止服务**：
 ```bash
-curl -s http://localhost:19090/api/auth/login -X POST 2>/dev/null && echo "Backend ready!"
+./scripts/dev-local-stop.sh
 ```
 
-3. **启动前端**（终端2）：
-```bash
-cd /Users/user/nexusarchive
-npm run dev
-```
+---
 
-4. **访问应用**：
-```
-http://localhost:15175
-```
+## 访问地址
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | http://localhost:15175 |
+| 后端 API | http://localhost:19090/api |
+| 数据库 | localhost:54321 |
+| Redis | localhost:16379 |
+
+---
 
 ## 常见问题
 
-### 前端报500错误
-**原因**：后端未启动或未完全就绪
-**解决**：
-1. 检查后端是否运行：`lsof -i :19090`
-2. 如果未运行，先启动后端
-3. 刷新前端页面
+### Docker 启动失败（网络超时）
+
+改用本地方式：
+```bash
+./scripts/dev-local.sh
+```
 
 ### 端口被占用
-```bash
-# 释放19090端口
-lsof -ti :19090 | xargs kill -9
 
-# 释放15175端口
+```bash
+lsof -ti :19090 | xargs kill -9
 lsof -ti :15175 | xargs kill -9
 ```
 
-## 验证服务状态
+### 前端报 500 错误
 
+后端未启动。检查：
 ```bash
-# 检查后端
-curl -s http://localhost:19090/api/auth/login -X POST -w "\nHTTP: %{http_code}" 2>/dev/null
-
-# 检查前端代理
-curl -s http://localhost:15175/api/auth/login -X POST -w "\nHTTP: %{http_code}" 2>/dev/null
+curl -s http://localhost:19090/api/health
 ```

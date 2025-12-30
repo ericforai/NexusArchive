@@ -44,31 +44,31 @@ public class PoolServiceImpl implements PoolService {
         log.info("开始搜索候选凭证: {}", request);
 
         // 1. 构建元数据查询 (针对金额、发票号、销售方、日期等)
-        QueryWrapper<ArcFileMetadataIndex> metaQuery = new QueryWrapper<>();
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileMetadataIndex> metaQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         
         if (request.getMinAmount() != null) {
-            metaQuery.ge("total_amount", request.getMinAmount());
+            metaQuery.ge(ArcFileMetadataIndex::getTotalAmount, request.getMinAmount());
         }
         if (request.getMaxAmount() != null) {
-            metaQuery.le("total_amount", request.getMaxAmount());
+            metaQuery.le(ArcFileMetadataIndex::getTotalAmount, request.getMaxAmount());
         }
         if (request.getStartDate() != null) {
-            metaQuery.ge("issue_date", request.getStartDate());
+            metaQuery.ge(ArcFileMetadataIndex::getIssueDate, request.getStartDate());
         }
         if (request.getEndDate() != null) {
-            metaQuery.le("issue_date", request.getEndDate());
+            metaQuery.le(ArcFileMetadataIndex::getIssueDate, request.getEndDate());
         }
         if (request.getInvoiceNumber() != null && !request.getInvoiceNumber().isEmpty()) {
-            metaQuery.eq("invoice_number", request.getInvoiceNumber());
+            metaQuery.eq(ArcFileMetadataIndex::getInvoiceNumber, request.getInvoiceNumber());
         }
         if (request.getInvoiceCode() != null && !request.getInvoiceCode().isEmpty()) {
-            metaQuery.eq("invoice_code", request.getInvoiceCode());
+            metaQuery.eq(ArcFileMetadataIndex::getInvoiceCode, request.getInvoiceCode());
         }
         
         // 关键字模糊匹配 (发票号或销售方)
         if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
-            metaQuery.and(w -> w.like("invoice_number", request.getKeyword())
-                    .or().like("seller_name", request.getKeyword()));
+            metaQuery.and(w -> w.like(ArcFileMetadataIndex::getInvoiceNumber, request.getKeyword())
+                    .or().like(ArcFileMetadataIndex::getSellerName, request.getKeyword()));
         }
 
         List<ArcFileMetadataIndex> metaResults = arcFileMetadataIndexMapper.selectList(metaQuery);
@@ -77,28 +77,28 @@ public class PoolServiceImpl implements PoolService {
                 .collect(Collectors.toMap(ArcFileMetadataIndex::getFileId, m -> m, (m1, m2) -> m1));
 
         // 2. 构建主表查询
-        QueryWrapper<ArcFileContent> contentQuery = new QueryWrapper<>();
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> contentQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         
         // 排除已归档
-        contentQuery.ne("pre_archive_status", "ARCHIVED");
+        contentQuery.ne(ArcFileContent::getPreArchiveStatus, "ARCHIVED");
         
         // 如果有元数据过滤，则限制 ID 范围
-        if (!metaQuery.isEmptyOfNormal()) {
+        if (!metaMap.isEmpty()) {
             Set<String> fileIds = metaMap.keySet();
             if (fileIds.isEmpty()) {
                 return new ArrayList<>(); // 元数据过滤无结果，直接返回空
             }
-            contentQuery.in("id", fileIds);
+            contentQuery.in(ArcFileContent::getId, fileIds);
         }
 
         // 关键字模糊匹配主表字段 (文件名)
         if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
-            contentQuery.like("file_name", request.getKeyword());
+            contentQuery.like(ArcFileContent::getFileName, request.getKeyword());
         }
 
         // 限制结果数量
         contentQuery.last("LIMIT 50");
-        contentQuery.orderByDesc("created_time");
+        contentQuery.orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> contents = arcFileContentMapper.selectList(contentQuery);
 
@@ -108,7 +108,8 @@ public class PoolServiceImpl implements PoolService {
             if (meta == null) {
                 // 如果是没走元数据索引的简单查询，补查一下 (使用 selectList 并取第一条以防重复数据导致 selectOne 报错)
                 List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
-                        new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", c.getId()).last("LIMIT 1"));
+                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileMetadataIndex>()
+                                .eq(ArcFileMetadataIndex::getFileId, c.getId()).last("LIMIT 1"));
                 meta = metas.isEmpty() ? null : metas.get(0);
             }
             return convertToPoolItemDto(c, meta);

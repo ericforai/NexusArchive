@@ -549,6 +549,7 @@ public class ErpScenarioService {
                             .description(scenario.getDescription())
                             .apiEndpoint(getApiEndpointForType(config.getErpType(), scenario.getScenarioKey()))
                             .accbookCode(extractAccbookCode(config.getConfigJson()))
+                            .accbookCodes(extractAccbookCodes(config.getConfigJson()))
                             .lastSyncMsg(scenario.getLastSyncMsg())
                             .build();
 
@@ -677,6 +678,28 @@ public class ErpScenarioService {
         } catch (Exception e) {
             log.error("序列化场景参数失败", e);
             throw new RuntimeException("参数格式错误: " + e.getMessage());
+        }
+    }
+
+    private java.util.List<String> extractAccbookCodes(String configJson) {
+        if (configJson == null || configJson.isEmpty()) {
+            return java.util.Collections.singletonList("BR01");
+        }
+        try {
+            cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(configJson);
+            cn.hutool.json.JSONArray codesArray = json.getJSONArray("accbookCodes");
+            if (codesArray != null && !codesArray.isEmpty()) {
+                java.util.List<String> codes = new java.util.ArrayList<>();
+                for (int i = 0; i < codesArray.size(); i++) {
+                    codes.add(codesArray.getStr(i));
+                }
+                return codes;
+            }
+            String singleCode = json.getStr("accbookCode");
+            return singleCode != null ? java.util.Collections.singletonList(singleCode)
+                    : java.util.Collections.singletonList("BR01");
+        } catch (Exception e) {
+            return java.util.Collections.singletonList("BR01");
         }
     }
 }

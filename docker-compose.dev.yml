@@ -1,0 +1,121 @@
+# 开发环境全栈 Docker Compose 配置
+# 用法: docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+# 
+# 包含服务: PostgreSQL + Redis + Backend + Frontend (热重载)
+# 端口: DB:54321, Redis:16379, Backend:19090, Frontend:15175
+
+services:
+  # PostgreSQL 数据库 (开发专用 Volume)
+  nexus-db:
+    image: postgres:14-alpine
+    container_name: nexus-db-dev
+    environment:
+      POSTGRES_DB: ${DB_NAME:-nexusarchive}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "54321:5432"
+    volumes:
+      - nexus-db-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  nexus-redis:
+    image: redis:7-alpine
+    container_name: nexus-redis-dev
+    ports:
+      - "16379:6379"
+    volumes:
+      - nexus-redis-dev-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Java 后端 (开发模式)
+  nexus-backend:
+    image: nexusarchive-backend:dev
+    build:
+      context: ./nexusarchive-java
+      dockerfile: Dockerfile
+    container_name: nexus-backend-dev
+    restart: unless-stopped
+    depends_on:
+      nexus-db:
+        condition: service_healthy
+      nexus-redis:
+        condition: service_healthy
+    environment:
+      # 数据库配置 (使用 Docker 内部网络)
+      DB_HOST: nexus-db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-nexusarchive}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Redis 配置
+      REDIS_HOST: nexus-redis
+      REDIS_PORT: 6379
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: dev
+      # 安全配置
+      SM4_KEY: ${SM4_KEY:-a1b2c3d4e5f67890a1b2c3d4e5f67890}
+      AUDIT_LOG_HMAC_KEY: ${AUDIT_LOG_HMAC_KEY:-dev_hmac_key_for_development_only}
+      JWT_PUBLIC_KEY_LOCATION: file:/app/keystore/jwt_public.pem
+      JWT_PRIVATE_KEY_LOCATION: file:/app/keystore/jwt_private.pem
+      # 开发配置
+      VIRUS_SCAN_TYPE: mock
+      TIMESTAMP_FALLBACK: "true"
+      SCHEMA_VALIDATION_ENABLED: "false"
+      # CORS (前端开发服务器)
+      APP_SECURITY_CORS_ALLOWED_ORIGINS: http://localhost:15175,http://127.0.0.1:15175
+      # YonSuite (可选)
+      YONSUITE_APP_KEY: ${YONSUITE_APP_KEY:-}
+      YONSUITE_APP_SECRET: ${YONSUITE_APP_SECRET:-}
+    ports:
+      - "19090:19090"
+    volumes:
+      - ./nexusarchive-java/data:/app/data
+      - ./nexusarchive-java/keystore:/app/keystore
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19090/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # 前端 (Vite 开发服务器, 热重载)
+  nexus-frontend:
+    image: nexusarchive-web:dev
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: nexus-frontend-dev
+    restart: unless-stopped
+    depends_on:
+      - nexus-backend
+    environment:
+      - VITE_API_BASE_URL=http://nexus-backend:19090/api
+    ports:
+      - "15175:15175"
+    volumes:
+      # 挂载源码实现热重载
+      - ./src:/app/src:ro
+      - ./public:/app/public:ro
+      - ./index.html:/app/index.html:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:15175"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# 开发专用 Volume (与生产隔离)
+volumes:
+  nexus-db-dev-data:
+    name: nexusarchive-db-dev
+  nexus-redis-dev-data:
+    name: nexusarchive-redis-dev

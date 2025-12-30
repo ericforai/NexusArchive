@@ -165,6 +165,7 @@ export interface IntegrationChannel {
     description: string;
     apiEndpoint: string | null;
     accbookCode: string | null;
+    accbookCodes: string[] | null;
     lastSyncMsg: string | null;
 }
 

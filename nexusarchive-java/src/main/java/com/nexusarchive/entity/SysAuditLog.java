@@ -68,9 +68,9 @@ public class SysAuditLog {
     private String sessionId;
 
     /**
-     * 客户端IP地址 (对应 client_ip) - 必填
+     * 客户端IP地址 (对应 ip_address) - 必填
      */
-    @TableField("client_ip")
+    @TableField("ip_address")
     private String clientIp;
 
     /**
@@ -106,6 +106,6 @@ public class SysAuditLog {
     @TableField("device_fingerprint")
     private String deviceFingerprint;
 
-    @TableField(value = "created_time", fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 }

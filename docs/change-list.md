@@ -12,7 +12,7 @@
 | `.github/workflows/permission-tests.yml` | 修改 | 补齐配置文件头注释 | 否 |
 | `.gitignore` | 修改 | 补齐配置文件头注释 | 否 |
 | `Dockerfile.frontend` | 修改 | 补齐 Dockerfile 头注释 | 否 |
-| `README.md` | 修改 | 更新文档自洽规则/忽略白名单/链接修正 | 否 |
+| `README.md` | 修改 | 更新文档自洽规则/忽略白名单/链接修正/补充 PRD 导航 | 否 |
 | `data/init_collection_scenario.sql` | 修改 | 补齐 SQL 文件头注释 | 否 |
 | `deploy/build.sh` | 修改 | 补齐脚本头注释 | 否 |
 | `deploy/build_incremental.sh` | 修改 | 补齐脚本头注释 | 否 |
@@ -75,7 +75,13 @@
 | `deploy/tools/GenLicense.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `deploy/tools/LicenseGenerator.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `docker-compose.dev.yml` | 修改 | 补齐配置文件头注释 | 否 |
-| `docs/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单 | 否 |
+| `docs/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单/增加产品文档入口/补充预览接口 | 否 |
+| `docs/CHANGELOG.md` | 修改 | 记录 PRD 对齐/部门数据域说明/版本对齐 | 否 |
+| `docs/database/数据库设计.md` | 修改 | fonds/entity 术语对齐 | 否 |
+| `docs/product/README.md` | 修改 | 补齐产品目录清单/更新 PRD 描述 | 否 |
+| `docs/product/architecture.md` | 修改 | 术语对齐说明 | 否 |
+| `docs/product/prd-v1.0.md` | 修改 | PRD v1.0 文档（现状对齐说明） | 否 |
+| `docs/product/功能清单.md` | 修改 | 组织维度表述对齐 | 否 |
 | `docs/agents/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单 | 否 |
 | `docs/ai-brain/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单 | 否 |
 | `docs/database/auth_schema.sql` | 修改 | 补齐 SQL 文件头注释 | 否 |
@@ -88,7 +94,7 @@
 | `mock_data_attachments.sql` | 修改 | 补齐 SQL 文件头注释 | 否 |
 | `nexusarchive-java/.dockerignore` | 修改 | 补齐文件头注释 | 否 |
 | `nexusarchive-java/Dockerfile` | 修改 | 补齐 Dockerfile 头注释 | 否 |
-| `nexusarchive-java/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单 | 否 |
+| `nexusarchive-java/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单/更新 Spring Boot 版本 | 否 |
 | `nexusarchive-java/pom.xml` | 修改 | 补齐 HTML/XML 头注释 | 否 |
 | `nexusarchive-java/scripts/generate_jwt_keys.sh` | 修改 | 补齐脚本头注释 | 否 |
 | `nexusarchive-java/scripts/generate_keystore.sh` | 修改 | 补齐脚本头注释 | 否 |
@@ -98,7 +104,7 @@
 | `nexusarchive-java/scripts/insert_demo_data.sh` | 修改 | 补齐脚本头注释 | 否 |
 | `nexusarchive-java/setup.sh` | 修改 | 补齐脚本头注释 | 否 |
 | `nexusarchive-java/simulate_webhook.py` | 修改 | 补齐脚本头注释 | 否 |
-| `nexusarchive-java/src/main/java/com/nexusarchive/NexusArchiveApplication.java` | 修改 | 补齐 Java 文件头注释 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/NexusArchiveApplication.java` | 修改 | 补齐 Java 文件头注释/对齐 Spring Boot 版本 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/annotation/ArchivalAudit.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/aspect/ArchivalAuditAspect.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/common/Result.java` | 修改 | 补齐 Java 文件头注释 | 否 |
@@ -757,7 +763,7 @@
 | `deploy/tools/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/api/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/architecture/README.md` | 新增 | 目录 MD 缺失 | 否 |
-| `docs/change-list.md` | 新增 | 新增变更清单输出 | 否 |
+| `docs/change-list.md` | 修改 | 记录 PRD 文档对齐/版本对齐变更 | 否 |
 | `docs/database/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/deployment/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/guides/README.md` | 新增 | 目录 MD 缺失 | 否 |
@@ -771,7 +777,7 @@
 | `nexusarchive-java/src/main/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `nexusarchive-java/src/main/java/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `nexusarchive-java/src/main/java/com/README.md` | 新增 | 目录 MD 缺失 | 否 |
-| `nexusarchive-java/src/main/java/com/nexusarchive/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/README.md` | 修改 | 目录说明补充版本对齐信息 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/annotation/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/aspect/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/common/README.md` | 新增 | 目录 MD 缺失 | 否 |

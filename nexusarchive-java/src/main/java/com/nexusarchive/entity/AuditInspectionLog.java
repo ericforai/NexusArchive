@@ -59,7 +59,7 @@ public class AuditInspectionLog {
     @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
     private Object detailReport;
 
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
     /**

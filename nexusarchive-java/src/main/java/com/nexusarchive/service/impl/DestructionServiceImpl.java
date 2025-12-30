@@ -58,7 +58,7 @@ public class DestructionServiceImpl implements DestructionService {
         if (status != null && !status.isEmpty()) {
             queryWrapper.eq("status", status);
         }
-        queryWrapper.orderByDesc("created_at");
+        queryWrapper.orderByDesc("created_time");
         return destructionMapper.selectPage(pageParam, queryWrapper);
     }
 

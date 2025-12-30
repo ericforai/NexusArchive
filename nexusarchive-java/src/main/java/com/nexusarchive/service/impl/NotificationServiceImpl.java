@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.dto.notification.NotificationDto;
 import com.nexusarchive.entity.Archive;
@@ -35,7 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 1) 最新处理任务（待处理/处理中/失败）
         List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(new QueryWrapper<IngestRequestStatus>()
-                .orderByDesc("COALESCE(updated_at, created_at)")
+                .orderByDesc("COALESCE(updated_time, created_time)")
                 .last("LIMIT 5"));
         for (IngestRequestStatus task : tasks) {
             String type = "info";
@@ -53,8 +54,8 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         // 2) 最新归档记录
-        List<Archive> archives = archiveMapper.selectList(new QueryWrapper<Archive>()
-                .orderByDesc("created_time")
+        List<Archive> archives = archiveMapper.selectList(new LambdaQueryWrapper<Archive>()
+                .orderByDesc(Archive::getCreatedTime)
                 .last("LIMIT 3"));
         for (Archive archive : archives) {
             items.add(NotificationDto.builder()

@@ -28,6 +28,16 @@ export const fondsApi = {
         return response.data;
     },
 
+    /**
+     * 检查全宗号是否可以修改
+     * @param id 全宗ID
+     * @returns true = 可修改，false = 存在归档档案不可修改
+     */
+    canModify: async (id: string) => {
+        const response = await client.get<ApiResponse<boolean>>(`/bas/fonds/${id}/can-modify`);
+        return response.data;
+    },
+
     save: async (data: Partial<BasFonds>) => {
         const response = await client.post<ApiResponse<boolean>>('/bas/fonds', data);
         return response.data;
@@ -43,3 +53,4 @@ export const fondsApi = {
         return response.data;
     }
 };
+

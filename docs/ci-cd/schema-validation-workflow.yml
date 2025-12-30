@@ -1,0 +1,85 @@
+# Schema验证CI/CD集成示例
+# 将此工作流添加到 .github/workflows/schema-validation.yml
+
+name: Schema Validation
+
+on:
+  pull_request:
+    paths:
+      - 'nexusarchive-java/src/main/java/com/nexusarchive/entity/**'
+      - 'nexusarchive-java/src/main/resources/db/migration/**'
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_DB: nexusarchive
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 54321:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Run Flyway migrations
+        working-directory: nexusarchive-java
+        env:
+          DB_HOST: localhost
+          DB_PORT: 54321
+          DB_NAME: nexusarchive
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: |
+          mvn flyway:migrate \
+            -Dflyway.url=jdbc:postgresql://localhost:54321/nexusarchive \
+            -Dflyway.user=postgres \
+            -Dflyway.password=postgres
+      
+      - name: Validate Entity-Schema consistency
+        env:
+          DB_HOST: localhost
+          DB_PORT: 54321
+          DB_NAME: nexusarchive
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: |
+          chmod +x scripts/validate-schema.sh
+          ./scripts/validate-schema.sh
+      
+      - name: Check for uncommitted migrations
+        run: |
+          # 检查是否有Entity变更但没有对应的迁移脚本
+          if git diff --name-only origin/main...HEAD | grep -q 'entity/.*\.java$'; then
+            echo "检测到Entity变更，验证是否有对应的迁移脚本..."
+            
+            # 检查是否有新的迁移脚本
+            if ! git diff --name-only origin/main...HEAD | grep -q 'db/migration/V.*\.sql$'; then
+              echo "❌ 错误: Entity有变更但未创建迁移脚本！"
+              echo "请创建Flyway迁移脚本以保持Schema同步"
+              exit 1
+            else
+              echo "✅ 检测到对应的迁移脚本"
+            fi
+          fi

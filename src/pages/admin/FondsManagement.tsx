@@ -1,11 +1,19 @@
-// Input: React、lucide-react 图标、本地模块 api/fonds
+// Input: React、lucide-react 图标、本地模块 api/fonds、api/admin
 // Output: React 组件 FondsManagement
 // Pos: src/pages/admin/FondsManagement.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit3, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, Loader2, Building2, Lock } from 'lucide-react';
 import { fondsApi, BasFonds } from '../../api/fonds';
+import { adminApi } from '../../api/admin';
+
+interface Org {
+    id: string;
+    name: string;
+    code: string;
+    type: string;
+}
 
 interface FondsForm {
     id?: string;
@@ -13,13 +21,16 @@ interface FondsForm {
     fondsName: string;
     companyName: string;
     description: string;
+    orgId?: string;
 }
 
 export const FondsManagement: React.FC = () => {
     const [fondsList, setFondsList] = useState<BasFonds[]>([]);
+    const [orgList, setOrgList] = useState<Org[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [canModifyFondsCode, setCanModifyFondsCode] = useState(true);
 
     // Form State
     const [form, setForm] = useState<FondsForm>({
@@ -32,9 +43,16 @@ export const FondsManagement: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await fondsApi.list();
-            if (res.code === 200 && res.data) {
-                setFondsList(res.data);
+            const [fondsRes, orgRes] = await Promise.all([
+                fondsApi.list(),
+                adminApi.listOrg()
+            ]);
+            if (fondsRes.code === 200 && fondsRes.data) {
+                setFondsList(fondsRes.data);
+            }
+            if (orgRes.code === 200 && orgRes.data) {
+                // 过滤只保留公司级别 (COMPANY)
+                setOrgList(orgRes.data.filter((o: Org) => o.type === 'COMPANY' || !o.type));
             }
         } finally {
             setLoading(false);
@@ -45,7 +63,15 @@ export const FondsManagement: React.FC = () => {
         loadData();
     }, []);
 
-    const handleEdit = (item: BasFonds) => {
+    const handleEdit = async (item: BasFonds) => {
+        // 检查是否可以修改全宗号
+        try {
+            const canModifyRes = await fondsApi.canModify(item.id);
+            setCanModifyFondsCode(canModifyRes.code === 200 && canModifyRes.data === true);
+        } catch {
+            setCanModifyFondsCode(false);
+        }
+
         setForm({
             id: item.id,
             fondsCode: item.fondsCode,
@@ -87,7 +113,22 @@ export const FondsManagement: React.FC = () => {
 
     const openCreate = () => {
         setForm({ fondsCode: '', fondsName: '', companyName: '', description: '' });
+        setCanModifyFondsCode(true); // 新建时可以编辑全宗号
         setShowModal(true);
+    };
+
+    // 选择组织时自动填充全宗号和名称
+    const handleOrgChange = (orgId: string) => {
+        const org = orgList.find(o => o.id === orgId);
+        if (org) {
+            setForm(prev => ({
+                ...prev,
+                orgId: orgId,
+                fondsCode: prev.fondsCode || org.code || '', // 只有为空时才填充
+                fondsName: prev.fondsName || org.name || '',
+                companyName: org.name || ''
+            }));
+        }
     };
 
     return (
@@ -169,13 +210,45 @@ export const FondsManagement: React.FC = () => {
                             <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            {/* 组织选择器 */}
+                            {!form.id && orgList.length > 0 && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        <Building2 size={14} className="inline mr-1" />
+                                        从组织快速创建
+                                    </label>
+                                    <select
+                                        className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                        value={form.orgId || ''}
+                                        onChange={e => handleOrgChange(e.target.value)}
+                                    >
+                                        <option value="">-- 选择组织自动填充 --</option>
+                                        {orgList.map(org => (
+                                            <option key={org.id} value={org.id}>
+                                                {org.name} ({org.code || '无编码'})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-slate-400 mt-1">选择后自动填充全宗号和名称</p>
+                                </div>
+                            )}
+
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">全宗号 *</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    全宗号 *
+                                    {!canModifyFondsCode && form.id && (
+                                        <span className="ml-2 text-xs text-amber-600">
+                                            <Lock size={12} className="inline" /> 已有归档档案，不可修改
+                                        </span>
+                                    )}
+                                </label>
                                 <input
-                                    className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                    className={`w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none ${!canModifyFondsCode && form.id ? 'bg-slate-100 cursor-not-allowed' : ''
+                                        }`}
                                     placeholder="例如: Z001"
                                     value={form.fondsCode}
                                     onChange={e => setForm({ ...form, fondsCode: e.target.value })}
+                                    disabled={!canModifyFondsCode && !!form.id}
                                     required
                                 />
                                 <p className="text-xs text-slate-400 mt-1">全局唯一，用于生成档号前缀。</p>
@@ -235,3 +308,4 @@ export const FondsManagement: React.FC = () => {
 };
 
 export default FondsManagement;
+

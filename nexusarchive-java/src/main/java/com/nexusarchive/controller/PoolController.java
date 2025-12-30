@@ -267,12 +267,12 @@ public class PoolController {
 
         // 查询所有临时档号开头的记录
         // 查询所有预归档相关记录 (临时档号 或 已有预归档状态的正式档号)
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.and(w -> w.likeRight("archival_code", "TEMP-POOL-")
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.and(w -> w.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
                 .or()
-                .isNotNull("pre_archive_status"))
-                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"))
-                .orderByDesc("created_time");
+                .isNotNull(ArcFileContent::getPreArchiveStatus))
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
+                .orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
 
@@ -297,10 +297,10 @@ public class PoolController {
     public Result<List<PoolItemDto>> listByStatus(@PathVariable String status) {
         log.info("按状态查询预归档文件: {}", status);
 
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("pre_archive_status", status)
-                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"))
-                .orderByDesc("created_time");
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, status)
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
+                .orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
 
@@ -413,12 +413,12 @@ public class PoolController {
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.List<FourNatureReport>> checkAllPendingFiles() {
         log.info("检测所有待检测文件");
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.likeRight("archival_code", "TEMP-POOL-")
-                .and(w -> w.isNull("pre_archive_status")
-                        .or().eq("pre_archive_status", "PENDING_CHECK")
-                        .or().eq("pre_archive_status", "draft")
-                        .or().eq("pre_archive_status", "DRAFT"));
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
+                .and(w -> w.isNull(ArcFileContent::getPreArchiveStatus)
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "PENDING_CHECK")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "draft")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "DRAFT"));
 
         java.util.List<ArcFileContent> pendingFiles = arcFileContentMapper.selectList(queryWrapper);
         java.util.List<String> fileIds = pendingFiles.stream()

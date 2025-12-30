@@ -164,12 +164,12 @@ public class OriginalVoucher {
 
     private String createdBy;
 
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
     private String lastModifiedBy;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "last_modified_time", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime lastModifiedTime;
 
     @TableLogic

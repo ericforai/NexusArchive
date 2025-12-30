@@ -22,12 +22,12 @@ import java.util.Map;
 public interface ArchiveMapper extends BaseMapper<Archive> {
 
     @Select("""
-            SELECT to_char(date(created_at), 'YYYY-MM-DD') AS date,
+            SELECT to_char(date(created_time), 'YYYY-MM-DD') AS date,
                    COUNT(*) AS count
             FROM acc_archive
-            WHERE created_at >= CURRENT_DATE - INTERVAL '29 days'
-            GROUP BY date(created_at)
-            ORDER BY date(created_at)
+            WHERE created_time >= CURRENT_DATE - INTERVAL '29 days'
+            GROUP BY date(created_time)
+            ORDER BY date(created_time)
             """)
     List<Map<String, Object>> selectRecentTrend();
 

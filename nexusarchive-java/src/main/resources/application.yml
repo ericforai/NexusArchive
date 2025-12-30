@@ -38,7 +38,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT:16379}
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DB:0}
       timeout: 3000ms
@@ -157,7 +157,7 @@ spring:
   
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54321}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     
@@ -169,52 +169,6 @@ spring:
       initialization-fail-timeout: 0
       idle-timeout: 600000
       max-lifetime: 1800000
-
----
-# 生产环境 - 达梦数据库
-spring:
-  config:
-    activate:
-      on-profile: prod-dameng
-  
-  datasource:
-    driver-class-name: dm.jdbc.driver.DmDriver
-    url: jdbc:dm://${DB_HOST:localhost}:${DB_PORT:5236}/${DB_NAME:NEXUSARCHIVE}?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=utf-8
-    username: ${DB_USER:SYSDBA}
-    password: ${DB_PASSWORD:SYSDBA}
-    
-    hikari:
-      minimum-idle: 10
-      maximum-pool-size: 50
-      connection-timeout: 30000
-  
-  # 生产环境存储路径
-  archive:
-    root:
-      path: /opt/nexusarchive/data/archives
-
----
-# 生产环境 - 人大金仓
-spring:
-  config:
-    activate:
-      on-profile: prod-kingbase
-  
-  datasource:
-    driver-class-name: com.kingbase8.Driver
-    url: jdbc:kingbase8://${DB_HOST:localhost}:${DB_PORT:54321}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf-8
-    username: ${DB_USER:system}
-    password: ${DB_PASSWORD:system}
-    
-    hikari:
-      minimum-idle: 10
-      maximum-pool-size: 50
-      connection-timeout: 30000
-
-  # 生产环境存储路径
-  archive:
-    root:
-      path: /opt/nexusarchive/data/archives
 
 ---
 # 生产环境 - PostgreSQL
@@ -242,3 +196,4 @@ archive:
     path: ${ARCHIVE_TEMP_PATH:/opt/nexusarchive/data/temp}
   root:
     path: /opt/nexusarchive/data/archives
+

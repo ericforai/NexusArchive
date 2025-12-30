@@ -24,13 +24,13 @@ public interface ArcSignatureLogMapper extends BaseMapper<ArcSignatureLog> {
     /**
      * 根据档案ID查询签章日志
      */
-    @Select("SELECT * FROM arc_signature_log WHERE archive_id = #{archiveId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM arc_signature_log WHERE archive_id = #{archiveId} ORDER BY created_time DESC")
     List<ArcSignatureLog> findByArchiveId(@Param("archiveId") String archiveId);
     
     /**
      * 根据文件ID查询签章日志
      */
-    @Select("SELECT * FROM arc_signature_log WHERE file_id = #{fileId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM arc_signature_log WHERE file_id = #{fileId} ORDER BY created_time DESC")
     List<ArcSignatureLog> findByFileId(@Param("fileId") String fileId);
     
     /**

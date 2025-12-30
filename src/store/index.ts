@@ -15,3 +15,6 @@ export type { AppNotification } from './useAppStore';
 
 export { useThemeStore } from './useThemeStore';
 export type { Theme } from './useThemeStore';
+
+export { useFondsStore } from './useFondsStore';
+

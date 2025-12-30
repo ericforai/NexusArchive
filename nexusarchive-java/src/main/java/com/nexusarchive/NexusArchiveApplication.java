@@ -1,4 +1,4 @@
-// Input: MyBatis、Spring Framework、Java 标准库
+// Input: MyBatis、Spring Boot 3.1.6、Spring Framework、Java 标准库
 // Output: NexusArchiveApplication 类
 // Pos: 应用启动入口
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * NexusArchive 电子会计档案管理系统
  * 
  * 技术栈:
- * - Spring Boot 3.2
+ * - Spring Boot 3.1.6
  * - MyBatis-Plus 3.5
  * - PostgreSQL / 达梦 / 人大金仓
  * 

@@ -49,11 +49,8 @@ export const OnlineReceptionView: React.FC = () => {
     const [syncChannelId, setSyncChannelId] = useState<number | null>(null);
     const [syncPeriod, setSyncPeriod] = useState({ start: '2024-01', end: '2024-12' });
     // Multi-org sync: available orgs and selected orgs
-    const availableOrgs = [
-        { code: 'BR01', name: '泊冉集团 (BR01)' },
-        { code: 'BRYS002', name: '用友云 (BRYS002)' },
-    ];
-    const [selectedOrgs, setSelectedOrgs] = useState<string[]>(['BR01']);
+    const [availableOrgs, setAvailableOrgs] = useState<{ code: string, name: string }[]>([]);
+    const [selectedOrgs, setSelectedOrgs] = useState<string[]>([]);
     const [syncError, setSyncError] = useState<string | null>(null);
 
     // 加载集成通道数据
@@ -66,6 +63,15 @@ export const OnlineReceptionView: React.FC = () => {
                     setStats(statsRes.data);
                 }
 
+                // 加载组织/全宗数据用于映射名称
+                const fondsRes = await client.get('/bas/fonds/list');
+                const fondsMap: Record<string, string> = {};
+                if (fondsRes.data.code === 200 && fondsRes.data.data) {
+                    fondsRes.data.data.forEach((f: any) => {
+                        fondsMap[f.fondsCode] = f.fondsName;
+                    });
+                }
+
                 // 加载集成通道列表
                 const channelsRes = await integrationApi.getChannels();
                 if (channelsRes.code === 200 && channelsRes.data) {
@@ -74,6 +80,9 @@ export const OnlineReceptionView: React.FC = () => {
                         localStatus: ch.status
                     })));
                 }
+
+                // 导出 fondsMap 供后续弹窗使用
+                (window as any)._fondsMap = fondsMap;
             } catch (e: any) {
                 console.error("Failed to load integration data", e);
                 setError(e.message || String(e));
@@ -99,7 +108,17 @@ export const OnlineReceptionView: React.FC = () => {
         const channel = channels.find(c => c.id === id);
         if (!channel) return;
 
-        // 所有同步操作都先弹出日期选择弹窗
+        // 根据后端返回的多组织代码，动态构建弹窗选项
+        const codes = channel.accbookCodes || (channel.accbookCode ? [channel.accbookCode] : []);
+        const fondsMap = (window as any)._fondsMap || {};
+
+        const orgs = codes.map(code => ({
+            code,
+            name: fondsMap[code] ? `${fondsMap[code]} (${code})` : `组织 (${code})`
+        }));
+
+        setAvailableOrgs(orgs);
+        setSelectedOrgs(codes.length > 0 ? [codes[0]] : []);
         setSyncChannelId(id);
         setIsSyncModalOpen(true);
         setSyncError(null);

@@ -156,7 +156,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             queryWrapper.eq("status", status);
         }
         
-        queryWrapper.orderByDesc("created_at");
+        queryWrapper.orderByDesc("created_time");
         return approvalMapper.selectPage(pageParam, queryWrapper);
     }
 

@@ -81,6 +81,11 @@ public class IntegrationChannelDTO {
     private String accbookCode;
 
     /**
+     * 账簿编码列表 (用于多组织同步)
+     */
+    private java.util.List<String> accbookCodes;
+
+    /**
      * 最后一次同步的详细日志消息
      */
     private String lastSyncMsg;

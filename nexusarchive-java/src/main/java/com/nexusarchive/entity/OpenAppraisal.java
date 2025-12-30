@@ -82,10 +82,10 @@ public class OpenAppraisal {
      */
     private String status;
 
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "last_modified_time", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime lastModifiedTime;
 
     @TableLogic

@@ -29,19 +29,19 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
     /**
      * 按时间范围查询日志（用于链验证）
      */
-    @Select("SELECT * FROM sys_audit_log WHERE DATE(created_at) >= #{startDate} AND DATE(created_at) <= #{endDate} ORDER BY created_at ASC")
+    @Select("SELECT * FROM sys_audit_log WHERE DATE(created_time) >= #{startDate} AND DATE(created_time) <= #{endDate} ORDER BY created_time ASC")
     List<SysAuditLog> findByDateRange(@Param("startDate") LocalDate startDate, 
                                       @Param("endDate") LocalDate endDate);
     
     /**
      * 按用户ID查询日志
      */
-    @Select("SELECT * FROM sys_audit_log WHERE user_id = #{userId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM sys_audit_log WHERE user_id = #{userId} ORDER BY created_time DESC")
     List<SysAuditLog> findByUserId(@Param("userId") String userId);
     
     /**
      * 获取最新日志的哈希值（用于哈希链）
      */
-    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_at DESC LIMIT 1")
+    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_time DESC LIMIT 1")
     String getLatestLogHash();
 }

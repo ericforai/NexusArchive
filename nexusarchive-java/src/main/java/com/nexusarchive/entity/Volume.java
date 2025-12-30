@@ -91,7 +91,7 @@ public class Volume {
     @TableField("created_time")
     private LocalDateTime createdTime;
 
-    @TableField("last_modified_time")
+    @TableField("updated_time")
     private LocalDateTime lastModifiedTime;
 
     /**

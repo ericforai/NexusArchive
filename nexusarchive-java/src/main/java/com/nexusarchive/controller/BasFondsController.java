@@ -33,6 +33,20 @@ public class BasFondsController {
         return Result.success(basFondsService.list());
     }
 
+    /**
+     * 检查全宗号是否可以修改
+     * @param id 全宗ID
+     * @return canModify = true 表示可修改
+     */
+    @GetMapping("/{id}/can-modify")
+    public Result<Boolean> canModify(@PathVariable String id) {
+        BasFonds fonds = basFondsService.getById(id);
+        if (fonds == null) {
+            return Result.error("全宗不存在");
+        }
+        return Result.success(basFondsService.canModifyFondsCode(fonds.getFondsCode()));
+    }
+
     @PostMapping
     public Result<Boolean> save(@RequestBody BasFonds fonds) {
         if (fonds.getFondsCode() == null || fonds.getFondsName() == null) {
@@ -43,7 +57,8 @@ public class BasFondsController {
 
     @PutMapping
     public Result<Boolean> update(@RequestBody BasFonds fonds) {
-        return Result.success(basFondsService.updateById(fonds));
+        // 使用带约束的更新方法
+        return Result.success(basFondsService.updateFonds(fonds));
     }
 
     @DeleteMapping("/{id}")
@@ -51,3 +66,4 @@ public class BasFondsController {
         return Result.success(basFondsService.removeById(id));
     }
 }
+

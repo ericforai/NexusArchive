@@ -56,37 +56,57 @@
 
 ### 开发环境
 
-#### 一键升级（推荐）
-```bash
-./scripts/upgrade-dev.sh
-```
-自动完成：拉取代码 → 安装依赖 → 数据库迁移 → 启动服务
+#### 方式一：Docker 全栈（推荐）
 
-#### 手动启动
+```bash
+./scripts/dev-start.sh
+```
+
+自动完成：构建镜像 → 启动数据库/Redis/后端/前端 → 健康检查
+
+访问地址：
+- 前端: http://localhost:15175
+- 后端: http://localhost:19090/api
+- 数据库: localhost:54321
+- Redis: localhost:16379
+
+停止服务：
+```bash
+./scripts/dev-stop.sh
+```
+
+#### 方式二：手动启动（需本地安装 JDK+Maven+Node）
+
 ```bash
 # 后端
-cd nexusarchive-java && mvn clean package -DskipTests
-java -jar target/nexusarchive-backend-2.0.0.jar
+cd nexusarchive-java && mvn spring-boot:run
 
-# 前端
+# 前端（另开终端）
 npm install && npm run dev
 ```
 
-- 后端: http://localhost:19090/api
-- 前端: http://localhost:15175
-- API 文档: http://localhost:19090/api/swagger-ui.html
-
 ### 生产环境
 
+#### 方式一：Docker 部署（推荐）
+
 ```bash
-# SSH 登录服务器后
-cd /root/nexusarchive
-./scripts/upgrade-prod.sh  # 5-10 分钟完成
+# 上传配置到服务器
+scp docker-compose.prod.yml .env.prod server:~/nexusarchive/
+
+# SSH 登录后启动
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### 方式二：离线安装包
+
+```bash
+cd deploy/offline && ./install.sh
 ```
 
 👉 详细指南：
-- 开发环境：[启动指南](docs/deployment/启动指南.md)
-- 生产升级：[生产升级 SOP](docs/guides/production-upgrade-sop.md)
+- 开发环境：[Docker 开发指南](docs/deployment/docker-development.md)
+- 生产部署：[Docker 生产部署](docs/deployment/docker-production.md)
+- 离线部署：[离线部署手册](docs/guides/离线部署简易手册.md)
 
 ---
 
@@ -141,6 +161,7 @@ BASE_URL=http://localhost:15175 PW_USER=zhangsan PW_PASS=admin123 npm run test:s
 | **入门** | [启动指南](docs/deployment/启动指南.md) · [用户手册](docs/guides/用户使用手册.md) · [新人接手指南](docs/guides/新人接手指南.md) |
 | **部署** | [部署指南](docs/guides/系统部署手册.md) · [故障排除](docs/guides/系统部署手册.md#5-故障排除) |
 | **功能** | [功能模块](docs/guides/功能模块.md) · [权限管理](docs/guides/权限管理.md) |
+| **产品** | [PRD v1.0](docs/product/prd-v1.0.md) · [产品架构](docs/product/architecture.md) |
 | **安全** | [安全指南](docs/guides/安全指南.md) · [审计日志](docs/guides/安全指南.md#审计日志防篡改) |
 | **集成** | [用友集成](docs/guides/用友集成.md) · [API 速查](docs/api/接口速查.md) |
 | **数据库** | [数据库设计](docs/database/数据库设计.md) · [DDL 脚本](docs/database/) |

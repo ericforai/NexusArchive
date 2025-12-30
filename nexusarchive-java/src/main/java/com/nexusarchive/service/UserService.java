@@ -139,7 +139,7 @@ public class UserService {
         if (StringUtils.hasText(status)) {
             wrapper.eq("status", status);
         }
-        wrapper.orderByDesc("created_at");
+        wrapper.orderByDesc("created_time");
 
         Page<User> pageObj = new Page<>(page, limit);
         Page<User> userPage = userMapper.selectPage(pageObj, wrapper);

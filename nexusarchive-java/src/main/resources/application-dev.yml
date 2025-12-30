@@ -33,10 +33,11 @@ timestamp:
 
 
 
-# Schema Validation（开发环境禁用，避免启动阻塞）
+# Schema Validation（开发环境必须启用，提前发现问题）
 schema:
   validation:
-    enabled: false
+    enabled: true
+    fail-on-error: true  # 发现不一致立即阻止启动
 
 # 文件存储根路径（开发环境使用项目根目录下的 data/archives）
 archive:

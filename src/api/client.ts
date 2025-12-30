@@ -1,10 +1,10 @@
-// Input: axios、auth store 与浏览器 location
+// Input: axios、auth store、fonds store 与浏览器 location
 // Output: 带拦截器的 HTTP client 实例
 // Pos: 前端 API 请求基础封装
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import axios from 'axios';
-import { useAuthStore } from '../store';
+import { useAuthStore, useFondsStore } from '../store';
 
 const API_URL = '/api';
 
@@ -15,16 +15,23 @@ export const client = axios.create({
     },
 });
 
-// Request interceptor to add token
+// Request interceptor to add token and fonds code
 client.interceptors.request.use(
     (config) => {
         try {
+            // 添加认证 Token
             const token = useAuthStore.getState().token;
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
+
+            // 添加当前全宗号（用于数据过滤）
+            const fondsCode = useFondsStore.getState().getCurrentFondsCode();
+            if (fondsCode) {
+                config.headers['X-Fonds-Code'] = fondsCode;
+            }
         } catch {
-            // Silently fail to add token
+            // Silently fail to add headers
         }
         return config;
     },
@@ -32,6 +39,7 @@ client.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
 
 // Response interceptor to handle errors
 client.interceptors.response.use(

@@ -4,6 +4,32 @@
 
 ---
 
+## [2025-12-30] PRD 对齐与文档索引补齐
+
+### 核心变更
+- **PRD 对齐**：补齐法人/全宗术语映射、预览接口兼容说明与复合分区示例。
+- **代码/DDL 对齐**：补充部门数据域在现有实现中的使用说明。
+- **文档导航更新**：根 README 与 docs/README 增加产品文档入口。
+- **产品文档修订**：功能清单、产品架构、数据库设计中的组织维度表述对齐。
+- **版本一致性**：Spring Boot 版本统一为 3.1.6（后端 README/启动类注释）。
+
+### 修改文件
+| 文件 | 变更 |
+|------|------|
+| `README.md` | 增加 PRD 导航入口 |
+| `docs/README.md` | 增加产品文档入口 |
+| `docs/product/prd-v1.0.md` | 术语/数据域/接口/分区说明对齐 |
+| `docs/product/README.md` | 补齐目录文件清单/更新 PRD 描述 |
+| `docs/product/architecture.md` | 术语对齐说明 |
+| `docs/product/功能清单.md` | 组织维度表述对齐 |
+| `docs/database/数据库设计.md` | fonds/entity 术语对齐 |
+| `nexusarchive-java/README.md` | Spring Boot 版本对齐 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/NexusArchiveApplication.java` | 启动类技术栈版本对齐 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/README.md` | 目录说明补充版本对齐说明 |
+| `docs/CHANGELOG.md` | 记录本次文档变更 |
+
+---
+
 ## [2025-12-27] 模块化试点文档补齐与新人接手指南
 
 ### 核心变更

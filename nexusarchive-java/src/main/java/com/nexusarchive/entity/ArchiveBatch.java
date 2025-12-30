@@ -42,6 +42,7 @@ public class ArchiveBatch {
     private String operatorId;
 
     // [ADDED P0-4] 批次序列号，用于防止并发竞态
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
     private Long batchSequence;
 
     private LocalDateTime createdTime;

@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
@@ -40,8 +41,8 @@ public class PositionServiceImpl implements PositionService {
         pos.setDepartmentId(request.getDepartmentId());
         pos.setDescription(request.getDescription());
         pos.setStatus(request.getStatus() == null ? "active" : request.getStatus());
-        pos.setCreatedAt(LocalDateTime.now());
-        pos.setUpdatedAt(LocalDateTime.now());
+        pos.setCreatedTime(LocalDateTime.now());
+        pos.setLastModifiedTime(LocalDateTime.now());
         pos.setDeleted(0);
         positionMapper.insert(pos);
         return pos;
@@ -62,7 +63,7 @@ public class PositionServiceImpl implements PositionService {
         existing.setDepartmentId(request.getDepartmentId());
         existing.setDescription(request.getDescription());
         existing.setStatus(request.getStatus() == null ? existing.getStatus() : request.getStatus());
-        existing.setUpdatedAt(LocalDateTime.now());
+        existing.setLastModifiedTime(LocalDateTime.now());
         positionMapper.updateById(existing);
         return existing;
     }
@@ -75,28 +76,28 @@ public class PositionServiceImpl implements PositionService {
             throw new BusinessException("岗位不存在");
         }
         existing.setDeleted(1);
-        existing.setUpdatedAt(LocalDateTime.now());
+        existing.setLastModifiedTime(LocalDateTime.now());
         positionMapper.updateById(existing);
     }
 
     @Override
     public Page<Position> list(int page, int limit, String search, String status) {
-        QueryWrapper<Position> wrapper = new QueryWrapper<>();
-        wrapper.eq("deleted", 0);
+        LambdaQueryWrapper<Position> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Position::getDeleted, 0);
         if (StringUtils.hasText(search)) {
-            wrapper.and(w -> w.like("name", search).or().like("code", search));
+            wrapper.and(w -> w.like(Position::getName, search).or().like(Position::getCode, search));
         }
         if (StringUtils.hasText(status)) {
-            wrapper.eq("status", status);
+            wrapper.eq(Position::getStatus, status);
         }
-        wrapper.orderByDesc("created_at");
+        wrapper.orderByDesc(Position::getCreatedTime);
         Page<Position> pageObj = new Page<>(page, limit);
         return positionMapper.selectPage(pageObj, wrapper);
     }
 
     private boolean existsByCode(String code) {
-        return positionMapper.selectCount(new QueryWrapper<Position>()
-                .eq("code", code)
-                .eq("deleted", 0)) > 0;
+        return positionMapper.selectCount(new LambdaQueryWrapper<Position>()
+                .eq(Position::getCode, code)
+                .eq(Position::getDeleted, 0)) > 0;
     }
 }
