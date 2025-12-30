@@ -317,7 +317,7 @@ export interface User {
   departmentId?: string;
   status: string;
   roleIds?: string[];
-  createdAt?: string;
+  createdTime?: string;
 }
 
 export interface Role {
@@ -330,7 +330,7 @@ export interface Role {
   permissions?: string;
   dataScope?: string;
   type: string;
-  createdAt?: string;
+  createdTime?: string;
 }
 
 export interface ErpConfig {
@@ -442,7 +442,7 @@ export interface AuditLog {
   riskLevel?: string;
   details?: string;
   clientIp?: string;
-  createdAt?: string;
+  createdTime?: string;
 }
 
 export interface GlobalSearchDTO {

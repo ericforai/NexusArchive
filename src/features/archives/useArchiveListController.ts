@@ -153,7 +153,7 @@ const getSafeDisplayValue = (text: string | undefined | null) => {
 
 const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
     const categoryLabel = resolveCategoryLabel(archive?.categoryCode);
-    const baseDate = archive?.docDate || archive?.createdAt || archive?.createdTime || '';
+    const baseDate = archive?.docDate || archive?.createdTime || '';
     const date = baseDate ? String(baseDate).split('T')[0] : '';
     const statusText = formatStatus(archive?.status);
 

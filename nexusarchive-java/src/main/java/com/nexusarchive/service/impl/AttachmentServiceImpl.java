@@ -85,7 +85,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .fileId(fileId)
                 .attachmentType(attachmentType)
                 .createdBy(userId)
-                .createdAt(LocalDateTime.now())
+                .createdTime(LocalDateTime.now())
                 .build();
 
         attachmentMapper.insert(attachment);

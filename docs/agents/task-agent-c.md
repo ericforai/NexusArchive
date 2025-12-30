@@ -1,7 +1,7 @@
 # Agent C: 前端架构师任务书
 
 > **角色**: 前端架构师
-> **技术栈**: React 18, TypeScript, Zustand, React Query, Vite
+> **技术栈**: React 19, TypeScript, Zustand, React Query, Vite
 > **负责阶段**: 第三阶段 - 前端架构优化
 > **前置依赖**: 可与 Agent A 并行开始，但需等待 Agent A 完成登录相关 API 改动
 

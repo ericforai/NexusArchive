@@ -20,7 +20,7 @@
 
 ### 1. 架构精简
 - **移除**: Eureka (注册中心), Spring Cloud Config (配置中心), Seata (分布式事务), Zipkin (调用链追踪)。
-- **保留**: Spring Boot 3.1, MyBatis-Plus, Spring Security。
+- **保留**: Spring Boot 3.1.6, MyBatis-Plus, Spring Security。
 - **收益**: 
     - 内存占用降低 60%
     - 部署复杂度降低 80% (无需维护复杂的中间件集群)

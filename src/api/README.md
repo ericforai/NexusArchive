@@ -9,10 +9,31 @@
 
 ## 目录结构
 
-- `axios.ts`: Axios 实例配置（拦截器、Token 处理）。
-- `archives.ts`: 档案操作接口。
-- `system.ts`: 系统配置、日志接口。
-- `auth.ts`: 登录与权限接口。
+- `admin.ts`: 系统管理接口（用户、角色、组织等）。
+- `archives.ts`: 核心档案操作接口。
+- `archiveBatch.ts`: 归档批次管理接口。
+- `archiveApproval.ts`: 归档审批流程接口。
+- `abnormal.ts`: 异常档案处理接口。
+- `attachments.ts`: 附件管理接口。
+- `audit.ts`: 审计日志接口。
+- `auth.ts`: 认证与登录接口。
+- `autoAssociation.ts`: 自动关联规则接口。
+- `borrowing.ts`: 借阅管理接口。
+- `client.ts`: Axios 实例配置（拦截器、Token 处理）。
+- `destruction.ts`: 档案销毁接口。
+- `erp.ts`: ERP 集成配置接口。
+- `fonds.ts`: 全宗管理接口。
+- `license.ts`: 系统授权接口。
+- `matching.ts`: 智能匹配接口。
+- `nav.ts`: 导航菜单接口。
+- `notifications.ts`: 通知消息接口。
+- `openAppraisal.ts`: 开放鉴定接口。
+- `originalVoucher.ts`: 原始凭证接口。
+- `pool.ts`: 归档池接口。
+- `search.ts`: 全文检索接口。
+- `stats.ts`: 统计分析接口。
+- `warehouse.ts`: 库房管理接口。
+- `workflow.ts`: 工作流引擎接口。
 
 ## 规范
 

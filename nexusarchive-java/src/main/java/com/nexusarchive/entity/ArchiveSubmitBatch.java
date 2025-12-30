@@ -150,14 +150,14 @@ public class ArchiveSubmitBatch {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    @TableField(value = "created_time", fill = FieldFill.INSERT)
+    private LocalDateTime createdTime;
 
     /**
      * 更新时间
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    @TableField(value = "last_modified_time", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime lastModifiedTime;
 
     // ========== 状态常量 ==========
 

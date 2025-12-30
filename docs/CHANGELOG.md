@@ -8,18 +8,21 @@
 
 ### 核心变更
 - **PRD 对齐**：补齐法人/全宗术语映射、预览接口兼容说明与复合分区示例。
+- **PRD 补强**：补齐分区主键/语法约束、Auth Ticket、冻结/保全、销毁在借校验、服务端水印模式、实物结构化盘点与盲盘，并加入迁移注意事项。
+- **PRD 重构**：切换为全宗隔离、去 PG 化、四性检测细化、实物生命周期补齐。
+- **评审报告新增**：新增首席架构师终极评审报告并补齐评审索引（含评估与专家评审）。
 - **代码/DDL 对齐**：补充部门数据域在现有实现中的使用说明。
 - **文档导航更新**：根 README 与 docs/README 增加产品文档入口。
 - **产品文档修订**：功能清单、产品架构、数据库设计中的组织维度表述对齐。
-- **版本一致性**：Spring Boot 版本统一为 3.1.6（后端 README/启动类注释）。
+- **版本一致性**：Spring Boot 版本统一为 3.1.6，技术栈表述同步为 React 19。
 
 ### 修改文件
 | 文件 | 变更 |
 |------|------|
 | `README.md` | 增加 PRD 导航入口 |
 | `docs/README.md` | 增加产品文档入口 |
-| `docs/product/prd-v1.0.md` | 术语/数据域/接口/分区说明对齐 |
-| `docs/product/README.md` | 补齐目录文件清单/更新 PRD 描述 |
+| `docs/product/prd-v1.0.md` | 术语/接口/分区/销毁/票据/水印/盘点补强 |
+| `docs/product/README.md` | 补齐目录文件清单/更新评审文档索引 |
 | `docs/product/architecture.md` | 术语对齐说明 |
 | `docs/product/功能清单.md` | 组织维度表述对齐 |
 | `docs/database/数据库设计.md` | fonds/entity 术语对齐 |
@@ -27,6 +30,18 @@
 | `nexusarchive-java/src/main/java/com/nexusarchive/NexusArchiveApplication.java` | 启动类技术栈版本对齐 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/README.md` | 目录说明补充版本对齐说明 |
 | `docs/CHANGELOG.md` | 记录本次文档变更 |
+| `docs/README.md` | 技术栈表述对齐 |
+| `docs/ai-brain/walkthrough.md` | 技术栈表述对齐 |
+| `docs/agents/README.md` | 技术栈表述对齐 |
+| `docs/agents/task-agent-a.md` | 技术栈表述对齐 |
+| `docs/agents/task-agent-b.md` | 技术栈表述对齐 |
+| `docs/agents/task-agent-c.md` | 技术栈表述对齐 |
+| `docs/planning/phase2-implementation-summary.md` | Spring Boot 版本对齐 |
+| `docs/planning/ai_integration_strategy_20251217.md` | Spring Boot 版本对齐 |
+| `docs/plans/README.md` | 评审目录清单补齐 |
+| `docs/plans/2025-12-30-prd-v1-evaluation.md` | [NEW] PRD v1.0 多法人架构评估报告 |
+| `docs/plans/2025-12-30-prd-v1-chief-architect-review.md` | [NEW] 首席架构师终极评审报告 |
+| `docs/product/prd-review-v1.0-expert.md` | [NEW] PRD v1.0 专家评审记录 |
 
 ---
 

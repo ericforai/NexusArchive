@@ -31,8 +31,8 @@ export interface ArchiveBatch {
     archivedAt?: string;
     archivedBy?: number;
     createdBy?: number;
-    createdAt: string;
-    updatedAt: string;
+    createdTime: string;
+    lastModifiedTime: string;
 }
 
 export type BatchStatus =
@@ -52,7 +52,7 @@ export interface ArchiveBatchItem {
     status: 'PENDING' | 'VALIDATED' | 'ARCHIVED' | 'FAILED';
     validationResult?: Record<string, unknown>;
     hashSm3?: string;
-    createdAt: string;
+    createdTime: string;
 }
 
 export interface CreateBatchRequest {

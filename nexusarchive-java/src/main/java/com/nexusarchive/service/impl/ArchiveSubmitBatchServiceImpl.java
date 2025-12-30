@@ -80,8 +80,8 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
                 .fileCount(0)
                 .totalSizeBytes(0L)
                 .createdBy(createdBy)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdTime(LocalDateTime.now())
+                .lastModifiedTime(LocalDateTime.now())
                 .build();
 
         batchMapper.insert(batch);
@@ -160,7 +160,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
                     .refId(voucherId)
                     .refNo(voucher.getErpVoucherNo())
                     .status(ArchiveBatchItem.STATUS_PENDING)
-                    .createdAt(LocalDateTime.now())
+                    .createdTime(LocalDateTime.now())
                     .build();
 
             itemMapper.insert(item);
@@ -170,7 +170,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         // 更新批次统计
         if (added > 0) {
             batch.setVoucherCount(batch.getVoucherCount() + added);
-            batch.setUpdatedAt(LocalDateTime.now());
+            batch.setLastModifiedTime(LocalDateTime.now());
             batchMapper.updateById(batch);
         }
 
@@ -204,7 +204,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
                     .refId(docId)
                     .refNo(doc.getVoucherNo())
                     .status(ArchiveBatchItem.STATUS_PENDING)
-                    .createdAt(LocalDateTime.now())
+                    .createdTime(LocalDateTime.now())
                     .build();
 
             itemMapper.insert(item);
@@ -214,7 +214,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         // 更新批次统计
         if (added > 0) {
             batch.setDocCount(batch.getDocCount() + added);
-            batch.setUpdatedAt(LocalDateTime.now());
+            batch.setLastModifiedTime(LocalDateTime.now());
             batchMapper.updateById(batch);
         }
 
@@ -246,7 +246,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         } else {
             batch.setDocCount(Math.max(0, batch.getDocCount() - 1));
         }
-        batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLastModifiedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
     }
 
@@ -282,7 +282,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         batch.setStatus(ArchiveSubmitBatch.STATUS_VALIDATING);
         batch.setSubmittedBy(submittedBy);
         batch.setSubmittedAt(LocalDateTime.now());
-        batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLastModifiedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
 
         log.info("提交归档批次: {} (提交人: {})", batch.getBatchNo(), submittedBy);
@@ -340,7 +340,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
         // 更新批次
         batch.setValidationReport(report);
-        batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLastModifiedTime(LocalDateTime.now());
 
         if (!errors.isEmpty()) {
             batch.setStatus(ArchiveSubmitBatch.STATUS_FAILED);
@@ -416,7 +416,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         batch.setApprovedBy(approvedBy);
         batch.setApprovedAt(LocalDateTime.now());
         batch.setApprovalComment(comment);
-        batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLastModifiedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
 
         log.info("审批通过归档批次: {} (审批人: {})", batch.getBatchNo(), approvedBy);
@@ -439,7 +439,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         batch.setApprovedBy(rejectedBy);
         batch.setApprovedAt(LocalDateTime.now());
         batch.setApprovalComment(comment);
-        batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLastModifiedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
 
         log.info("驳回归档批次: {} (原因: {})", batch.getBatchNo(), comment);
@@ -495,7 +495,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
         batch.setStatus(ArchiveSubmitBatch.STATUS_ARCHIVED);
         batch.setArchivedBy(archivedBy);
         batch.setArchivedAt(LocalDateTime.now());
-        batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLastModifiedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
 
         log.info("归档批次执行完成: {} ({} 凭证, {} 单据)",

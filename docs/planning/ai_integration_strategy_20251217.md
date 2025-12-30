@@ -1458,7 +1458,7 @@ You are a senior Java developer specializing in ERP integration. Generate produc
 ```
 
 ## Input 2: Project Context
-- Framework: Spring Boot 3.x
+- Framework: Spring Boot 3.1.6
 - HTTP Client: RestTemplate (or specify WebClient)
 - JSON Library: Jackson
 - Auth Service: Inject existing `{ErpType}AuthService` for token management

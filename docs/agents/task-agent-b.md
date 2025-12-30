@@ -1,7 +1,7 @@
 # Agent B: 合规开发工程师任务书
 
 > **角色**: 合规开发工程师
-> **技术栈**: Java 17, Spring Boot 3.x, 国密算法 (SM2/SM3), BouncyCastle
+> **技术栈**: Java 17, Spring Boot 3.1.6, 国密算法 (SM2/SM3), BouncyCastle
 > **负责阶段**: 第二阶段 - 合规补齐（核心部分）
 > **前置依赖**: ⚠️ 需等待 Agent A 完成第一阶段基础安全加固
 

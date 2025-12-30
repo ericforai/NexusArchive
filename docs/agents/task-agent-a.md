@@ -1,7 +1,7 @@
 # Agent A: 后端安全工程师任务书
 
 > **角色**: 后端安全工程师
-> **技术栈**: Java 17, Spring Boot 3.x, Spring Security
+> **技术栈**: Java 17, Spring Boot 3.1.6, Spring Security
 > **负责阶段**: 第一阶段 - 安全加固
 > **优先级**: ⚠️ 紧急（其他 Agent 依赖此阶段完成）
 

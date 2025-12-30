@@ -124,7 +124,7 @@ export const AuditLogView: React.FC = () => {
             ) : (
               logs.map(log => (
                 <tr key={log.id}>
-                  <td className="px-4 py-2 text-slate-600">{log.createdAt || ''}</td>
+                  <td className="px-4 py-2 text-slate-600">{log.createdTime || ''}</td>
                   <td className="px-4 py-2 text-slate-800">{log.username || log.userId}</td>
                   <td className="px-4 py-2 text-slate-800">{log.action}</td>
                   <td className="px-4 py-2 text-slate-600">{log.resourceType}</td>

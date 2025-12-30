@@ -75,15 +75,23 @@
 | `deploy/tools/GenLicense.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `deploy/tools/LicenseGenerator.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `docker-compose.dev.yml` | 修改 | 补齐配置文件头注释 | 否 |
-| `docs/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单/增加产品文档入口/补充预览接口 | 否 |
-| `docs/CHANGELOG.md` | 修改 | 记录 PRD 对齐/部门数据域说明/版本对齐 | 否 |
+| `docs/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单/增加产品文档入口/补充预览接口/技术栈对齐 | 否 |
+| `docs/CHANGELOG.md` | 修改 | 记录 PRD 对齐/技术栈对齐/评审报告新增 | 否 |
 | `docs/database/数据库设计.md` | 修改 | fonds/entity 术语对齐 | 否 |
-| `docs/product/README.md` | 修改 | 补齐产品目录清单/更新 PRD 描述 | 否 |
+| `docs/product/README.md` | 修改 | 补齐产品目录清单/纳入评审文档索引 | 否 |
 | `docs/product/architecture.md` | 修改 | 术语对齐说明 | 否 |
-| `docs/product/prd-v1.0.md` | 修改 | PRD v1.0 文档（现状对齐说明） | 否 |
+| `docs/product/prd-v1.0.md` | 修改 | PRD v1.0 文档（全宗隔离/去PG化/四性细化/实物生命周期补齐） | 否 |
 | `docs/product/功能清单.md` | 修改 | 组织维度表述对齐 | 否 |
-| `docs/agents/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单 | 否 |
+| `docs/product/prd-review-v1.0-expert.md` | 新增 | PRD v1.0 专家评审记录 | 否 |
+| `docs/plans/README.md` | 新增 | 评审目录文件清单补齐 | 否 |
+| `docs/plans/2025-12-30-prd-v1-evaluation.md` | 新增 | PRD v1.0 多法人架构评估报告 | 否 |
+| `docs/plans/2025-12-30-prd-v1-chief-architect-review.md` | 新增 | 首席架构师终极评审报告 | 否 |
+| `docs/agents/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单/技术栈对齐 | 否 |
+| `docs/agents/task-agent-a.md` | 修改 | 技术栈版本对齐 | 否 |
+| `docs/agents/task-agent-b.md` | 修改 | 技术栈版本对齐 | 否 |
+| `docs/agents/task-agent-c.md` | 修改 | 技术栈版本对齐 | 否 |
 | `docs/ai-brain/README.md` | 修改 | 补齐目录 MD 头部声明与文件清单 | 否 |
+| `docs/ai-brain/walkthrough.md` | 修改 | 技术栈表述对齐 | 否 |
 | `docs/database/auth_schema.sql` | 修改 | 补齐 SQL 文件头注释 | 否 |
 | `docs/database/auth_schema_dameng.sql` | 修改 | 补齐 SQL 文件头注释 | 否 |
 | `docs/database/auth_schema_kingbase.sql` | 修改 | 补齐 SQL 文件头注释 | 否 |
@@ -240,8 +248,10 @@
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchivalCodeSequence.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/Archive.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveApproval.java` | 修改 | 补齐 Java 文件头注释 | 否 |
-| `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveAttachment.java` | 修改 | 补齐 Java 文件头注释 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveAttachment.java` | 修改 | 时间字段映射对齐 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveBatch.java` | 修改 | 补齐 Java 文件头注释 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveBatchItem.java` | 修改 | 时间字段映射对齐 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveSubmitBatch.java` | 修改 | 时间字段映射对齐 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/ArchiveRelation.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/AuditInspectionLog.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/entity/BasFonds.java` | 修改 | 补齐 Java 文件头注释 | 否 |
@@ -426,7 +436,8 @@
 | `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ArchiveExportServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ArchiveSearchServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ArchiveSecurityServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
-| `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/AttachmentServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/AttachmentServiceImpl.java` | 修改 | 时间字段写入对齐 | 否 |
+| `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ArchiveSubmitBatchServiceImpl.java` | 修改 | 时间字段写入对齐 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/BasFondsServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/BorrowingServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
 | `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/DestructionServiceImpl.java` | 修改 | 补齐 Java 文件头注释 | 否 |
@@ -609,6 +620,7 @@
 | `src/api/abnormal.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/api/admin.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/api/archiveApproval.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
+| `src/api/archiveBatch.ts` | 修改 | 时间字段命名对齐 | 否 |
 | `src/api/archives.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/api/attachments.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/api/audit.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
@@ -710,7 +722,7 @@
 | `src/store/useAppStore.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/store/useAuthStore.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/store/useThemeStore.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
-| `src/types.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
+| `src/types.ts` | 修改 | 时间字段命名对齐 | 否 |
 | `src/utils/audit.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/utils/notificationService.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/utils/storage.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
@@ -770,6 +782,8 @@
 | `docs/images/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/implementation/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/planning/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `docs/planning/phase2-implementation-summary.md` | 修改 | Spring Boot 版本对齐 | 否 |
+| `docs/planning/ai_integration_strategy_20251217.md` | 修改 | Spring Boot 版本对齐 | 否 |
 | `docs/references/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `docs/troubleshooting/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `nexusarchive-java/scripts/README.md` | 新增 | 目录 MD 缺失 | 否 |

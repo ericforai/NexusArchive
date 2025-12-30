@@ -298,8 +298,8 @@ const ArchiveBatchView: React.FC = () => {
         },
         {
             title: '创建时间',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
+            dataIndex: 'createdTime',
+            key: 'createdTime',
             width: 160,
             render: (text) => dayjs(text).format('YYYY-MM-DD HH:mm'),
         },
@@ -566,7 +566,7 @@ const ArchiveBatchView: React.FC = () => {
                                             {selectedBatch.docCount}
                                         </Descriptions.Item>
                                         <Descriptions.Item label="创建时间" span={2}>
-                                            {dayjs(selectedBatch.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+                                            {dayjs(selectedBatch.createdTime).format('YYYY-MM-DD HH:mm:ss')}
                                         </Descriptions.Item>
                                         {selectedBatch.archivedAt && (
                                             <Descriptions.Item label="归档时间" span={2}>

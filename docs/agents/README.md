@@ -80,8 +80,8 @@ gantt
 
 ## 项目背景
 - 架构：模块化单体（非微服务）
-- 后端：Java 17 + Spring Boot 3.x
-- 前端：React 18 + TypeScript + Vite
+- 后端：Java 17 + Spring Boot 3.1.6
+- 前端：React 19 + TypeScript + Vite
 - 数据库：PostgreSQL（支持达梦等国产数据库）
 - 合规：必须符合 DA/T 94-2022、DA/T 92-2022
 

@@ -301,8 +301,8 @@ src/components/
 
 | 层级 | 技术 |
 |------|------|
-| 前端 | React 18 + TypeScript + Vite + Zustand + React Query |
-| 后端 | Spring Boot 3 + MyBatis Plus |
+| 前端 | React 19 + TypeScript + Vite + Zustand + React Query |
+| 后端 | Spring Boot 3.1.6 + MyBatis Plus |
 | 数据库 | PostgreSQL (信创: 达梦/人大金仓) |
 | 安全 | SM2/SM3/SM4 国密算法 + Spring Security + JWT |
 | 搜索 | Elasticsearch |
