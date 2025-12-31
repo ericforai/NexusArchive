@@ -10,13 +10,14 @@ const DEFAULT_PASSWORD = process.env.PW_PASS ?? 'admin123';
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:15175';
 
 /**
- * 登录辅助函数 - 优化版本，增加重试和更长的等待时间
+ * 登录辅助函数 - 优化版本，增加重试机制和更智能的等待策略
  */
 export async function login(page: Page, username = DEFAULT_USERNAME, password = DEFAULT_PASSWORD): Promise<void> {
-  await page.goto(`${BASE_URL}/system/login`);
+  await page.goto(`${BASE_URL}/system/login`, { waitUntil: 'domcontentloaded' });
   
-  // 等待登录页面加载完成
-  await page.waitForLoadState('networkidle');
+  // 等待登录表单可见
+  await page.waitForSelector('[data-testid=login-username]', { timeout: 15000, state: 'visible' });
+  await page.waitForSelector('[data-testid=login-password]', { timeout: 15000, state: 'visible' });
   
   // 填写登录表单
   await page.fill('[data-testid=login-username]', username);
@@ -25,39 +26,47 @@ export async function login(page: Page, username = DEFAULT_USERNAME, password = 
   // 点击登录按钮
   await page.click('[data-testid=login-submit]');
   
-  // 等待导航完成，使用更灵活的策略
+  // 使用更智能的等待策略
   try {
-    // 首先等待URL变化（主要等待条件）
-    await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+    // 等待URL变化，使用较长的超时时间
+    await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 25000, waitUntil: 'domcontentloaded' });
     
-    // 等待网络空闲，确保页面完全加载
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
-      // 如果网络空闲超时，继续执行（可能是页面已经加载完成）
-    });
-    
-    // 额外等待确保页面完全加载
+    // URL变化后，等待一小段时间确保页面开始加载
     await page.waitForTimeout(500);
     
     // 验证登录是否成功（检查是否还在登录页）
     const currentUrl = page.url();
-    if (currentUrl.includes('/system/login')) {
-      // 检查是否有错误消息
-      const errorElement = page.locator('[data-testid=login-error], .error, .alert-error').first();
-      if (await errorElement.count() > 0) {
-        const errorText = await errorElement.textContent().catch(() => '未知错误');
-        throw new Error(`登录失败: ${errorText}`);
-      }
-      // 如果还在登录页但没有错误消息，可能是页面加载慢，再等待一下
-      await page.waitForTimeout(2000);
-      const finalUrl = page.url();
-      if (finalUrl.includes('/system/login')) {
-        throw new Error('登录超时：仍在登录页面');
-      }
+    if (!currentUrl.includes('/system/login')) {
+      // 登录成功，等待页面基本加载
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {});
+      return; // 登录成功，退出函数
     }
-  } catch (error) {
+    
+    // 如果还在登录页，检查是否有错误消息
+    const errorElement = page.locator('[data-testid=login-error], .error, .alert-error').first();
+    if (await errorElement.count() > 0) {
+      const errorText = await errorElement.textContent().catch(() => '未知错误');
+      throw new Error(`登录失败: ${errorText}`);
+    }
+    
+    // 没有错误但仍在登录页，可能是响应慢，再等待一下
+    await page.waitForTimeout(3000);
+    const finalUrl = page.url();
+    if (!finalUrl.includes('/system/login')) {
+      return; // 登录成功
+    }
+    
+    throw new Error('登录超时：仍在登录页面');
+  } catch (error: any) {
+    // 检查当前URL，可能实际上已经登录成功
+    const currentUrl = page.url();
+    if (!currentUrl.includes('/system/login')) {
+      return; // 实际上已经登录成功
+    }
+    
     // 如果是超时错误，提供更详细的错误信息
-    if (error instanceof Error && error.message.includes('Timeout')) {
-      throw new Error(`登录超时：30秒内未能完成登录，当前URL: ${page.url()}`);
+    if (error.message && error.message.includes('Timeout')) {
+      throw new Error(`登录超时：25秒内未能完成登录，当前URL: ${currentUrl}`);
     }
     throw error;
   }
