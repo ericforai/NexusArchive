@@ -24,6 +24,9 @@ export const AuthTicketListPage: React.FC = () => {
     const [tickets, setTickets] = useState<AuthTicketDetail[]>([]);
     const [loading, setLoading] = useState(false);
     const [filterStatus, setFilterStatus] = useState<string>('all');
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const pageSize = 20;
     const [selectedTicket, setSelectedTicket] = useState<AuthTicketDetail | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -35,24 +38,38 @@ export const AuthTicketListPage: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // 模拟数据（实际应该从API获取）
+    // 加载授权票据列表
+    const loadTickets = async () => {
+        setLoading(true);
+        try {
+            const params: any = {
+                page,
+                size: pageSize,
+            };
+            if (filterStatus !== 'all') {
+                params.status = filterStatus;
+            }
+            if (currentFonds?.fondsNo) {
+                params.sourceFonds = currentFonds.fondsNo;
+            }
+            const res = await authTicketApi.list(params);
+            if (res.code === 200 && res.data) {
+                setTickets(res.data.records || []);
+                setTotal(res.data.total || 0);
+            } else {
+                setMessage({ type: 'error', text: res.message || '加载列表失败' });
+            }
+        } catch (error: any) {
+            console.error('加载授权票据列表失败', error);
+            setMessage({ type: 'error', text: error?.response?.data?.message || '加载列表失败' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        // TODO: 实现获取授权票据列表的API
-        // const loadTickets = async () => {
-        //     setLoading(true);
-        //     try {
-        //         const res = await authTicketApi.list({ status: filterStatus });
-        //         if (res.code === 200 && res.data) {
-        //             setTickets(res.data);
-        //         }
-        //     } catch (error) {
-        //         console.error('加载授权票据列表失败', error);
-        //     } finally {
-        //         setLoading(false);
-        //     }
-        // };
-        // loadTickets();
-    }, [filterStatus]);
+        loadTickets();
+    }, [page, filterStatus, currentFonds]);
 
     const handleViewDetail = async (ticketId: string) => {
         setLoading(true);
@@ -90,6 +107,7 @@ export const AuthTicketListPage: React.FC = () => {
                 setMessage({ type: 'success', text: '审批成功' });
                 setShowApprovalModal(false);
                 // 重新加载列表
+                loadTickets();
             } else {
                 setMessage({ type: 'error', text: res.message || '审批失败' });
             }
@@ -110,6 +128,7 @@ export const AuthTicketListPage: React.FC = () => {
             if (res.code === 200) {
                 setMessage({ type: 'success', text: '撤销成功' });
                 // 重新加载列表
+                loadTickets();
             } else {
                 setMessage({ type: 'error', text: res.message || '撤销失败' });
             }
@@ -335,6 +354,31 @@ export const AuthTicketListPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Pagination */}
+                {tickets.length > 0 && (
+                    <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+                        <div className="text-sm text-slate-600">
+                            共 {total} 条，第 {page} / {Math.ceil(total / pageSize)} 页
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page <= 1 || loading}
+                                className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                上一页
+                            </button>
+                            <button
+                                onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))}
+                                disabled={page >= Math.ceil(total / pageSize) || loading}
+                                className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                下一页
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Detail Modal */}

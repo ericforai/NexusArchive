@@ -5,7 +5,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:15175';
 const USERNAME = process.env.PW_USER ?? 'admin';
 const PASSWORD = process.env.PW_PASS ?? 'admin123';
 

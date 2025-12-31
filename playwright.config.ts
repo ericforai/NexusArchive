@@ -5,7 +5,7 @@
 
 import { defineConfig } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:15175';
 const CHANNEL = process.env.PW_CHANNEL;
 const HEADLESS = process.env.PW_HEADLESS ? process.env.PW_HEADLESS !== 'false' : true;
 

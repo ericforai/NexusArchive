@@ -72,7 +72,40 @@ export interface ApprovalRequest {
     approved: boolean;
 }
 
+/**
+ * 授权票据列表查询参数
+ */
+export interface AuthTicketListParams {
+    page?: number;
+    size?: number;
+    status?: string;
+    sourceFonds?: string;
+    targetFonds?: string;
+    applicantId?: string;
+}
+
 export const authTicketApi = {
+    /**
+     * 查询授权票据列表
+     */
+    list: async (params?: AuthTicketListParams): Promise<ApiResponse<{
+        records: AuthTicketDetail[];
+        total: number;
+        page: number;
+        size: number;
+    }>> => {
+        const response = await client.get<ApiResponse<{
+            records: AuthTicketDetail[];
+            total: number;
+            page: number;
+            size: number;
+        }>>(
+            '/auth-ticket/list',
+            { params }
+        );
+        return response.data;
+    },
+
     /**
      * 创建授权票据申请
      */

@@ -73,9 +73,30 @@ const EnterpriseArchitecturePage = lazy(() => import('../pages/admin/EnterpriseA
 // 历史数据导入模块
 const LegacyImportPage = lazy(() => import('../pages/admin/LegacyImportPage'));
 
+// 用户生命周期管理模块
+const UserLifecyclePage = lazy(() => import('../pages/admin/UserLifecyclePage'));
+const AccessReviewPage = lazy(() => import('../pages/admin/AccessReviewPage'));
+
+// MFA设置模块
+const MfaSettingsPage = lazy(() => import('../pages/settings/MfaSettingsPage'));
+
+// 冻结/保全管理模块
+const FreezeHoldPage = lazy(() => import('../pages/operations/FreezeHoldPage'));
+const FreezeHoldDetailPage = lazy(() => import('../pages/operations/FreezeHoldDetailPage'));
+
 // 跨全宗访问授权票据模块
 const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
 const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPage'));
+
+// 审计验真模块
+const AuditVerificationPage = lazy(() => import('../pages/audit/AuditVerificationPage'));
+const AuditEvidencePackagePage = lazy(() => import('../pages/audit/AuditEvidencePackagePage'));
+
+// 档案销毁流程模块
+const ExpiredArchivesPage = lazy(() => import('../pages/operations/ExpiredArchivesPage'));
+const AppraisalListPage = lazy(() => import('../pages/operations/AppraisalListPage'));
+const DestructionApprovalPage = lazy(() => import('../pages/operations/DestructionApprovalPage'));
+const DestructionExecutionPage = lazy(() => import('../pages/operations/DestructionExecutionPage'));
 
 // 加载占位符
 const LoadingFallback = () => (
@@ -158,6 +179,10 @@ export const routes: RouteObject[] = [
             { path: 'operations/batch', element: withSuspense(ArchiveBatchView) },  // 归档批次
             { path: 'operations/open-appraisal', element: withSuspense(OpenAppraisalView) },
             { path: 'operations/destruction', element: withSuspense(DestructionView) },
+            { path: 'operations/expired-archives', element: withSuspense(ExpiredArchivesPage) },
+            { path: 'operations/appraisal-list', element: withSuspense(AppraisalListPage) },
+            { path: 'operations/destruction-approval', element: withSuspense(DestructionApprovalPage) },
+            { path: 'operations/destruction-execution', element: withSuspense(DestructionExecutionPage) },
 
             // ========== 档案利用 (Utilization) ==========
             { path: 'utilization', element: <ArchiveListPage routeConfig="query" /> }, // Fallback
@@ -187,6 +212,7 @@ export const routes: RouteObject[] = [
                     { path: 'security', element: withSuspense(SecuritySettings) },
                     { path: 'integration', element: withSuspense(IntegrationSettings) },
                     { path: 'audit', element: withSuspense(AuditLogView) },
+                    { path: 'mfa', element: withSuspense(MfaSettingsPage) },
                 ],
             },
 
@@ -205,6 +231,19 @@ export const routes: RouteObject[] = [
             // ========== 跨全宗访问授权票据 ==========
             { path: 'security/auth-ticket/apply', element: withSuspense(AuthTicketApplyPage) },
             { path: 'security/auth-ticket', element: withSuspense(AuthTicketListPage) },
+            { path: 'security/auth-ticket/list', element: withSuspense(AuthTicketListPage) },
+            
+            // ========== 用户生命周期管理 ==========
+            { path: 'admin/user-lifecycle', element: withSuspense(UserLifecyclePage) },
+            { path: 'admin/access-review', element: withSuspense(AccessReviewPage) },
+            
+            // ========== 冻结/保全管理 ==========
+            { path: 'operations/freeze-hold', element: withSuspense(FreezeHoldPage) },
+            { path: 'operations/freeze-hold/:id', element: withSuspense(FreezeHoldDetailPage) },
+            
+            // ========== 审计验真 ==========
+            { path: 'audit/verification', element: withSuspense(AuditVerificationPage) },
+            { path: 'audit/evidence-package', element: withSuspense(AuditEvidencePackagePage) },
             
             // ========== 后台管理 ==========
             { path: 'admin/*', element: withSuspense(AdminLayout) },

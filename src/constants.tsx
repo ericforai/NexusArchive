@@ -14,6 +14,7 @@ import {
   FileText,
   PanelLeft,
   Upload,
+  Shield,
 } from 'lucide-react';
 import { NavItem, ViewState, ArchiveStat, Notification, ModuleConfig } from './types';
 
@@ -178,6 +179,16 @@ export const NAV_ITEMS: NavItem[] = [
     label: '系统设置',
     icon: Settings,
     permission: 'nav:settings',
+  },
+  {
+    id: ViewState.AUDIT,
+    label: '审计验真',
+    icon: Shield,
+    permission: 'nav:audit',
+    children: [
+      { id: '审计证据链验真', label: '审计证据链验真', path: '审计证据链验真' },
+      { id: '审计证据包导出', label: '审计证据包导出', path: '审计证据包导出' },
+    ],
   },
   {
     id: ViewState.ADMIN,
