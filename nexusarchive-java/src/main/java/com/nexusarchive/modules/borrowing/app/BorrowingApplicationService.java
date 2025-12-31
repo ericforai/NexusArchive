@@ -122,14 +122,52 @@ public class BorrowingApplicationService implements BorrowingFacade {
         borrowingMapper.updateById(borrowing);
         return toDto(borrowing);
     }
+    
+    /**
+     * 确认借出（从 APPROVED 状态转换为 BORROWED）
+     */
+    @Transactional
+    public BorrowingDto confirmBorrowed(String id) {
+        Borrowing borrowing = getExistingBorrowing(id);
+        assertStatus(borrowing, BorrowingStatus.APPROVED);
+        borrowing.setStatus(BorrowingStatus.BORROWED.getCode());
+        if (borrowing.getBorrowDate() == null) {
+            borrowing.setBorrowDate(LocalDate.now());
+        }
+        borrowingMapper.updateById(borrowing);
+        return toDto(borrowing);
+    }
 
     @Override
     @Transactional
     public void returnArchive(String id) {
         Borrowing borrowing = getExistingBorrowing(id);
-        assertStatus(borrowing, BorrowingStatus.APPROVED);
+        // 允许从 BORROWED 或 OVERDUE 状态归还
+        assertStatus(borrowing, BorrowingStatus.BORROWED, BorrowingStatus.OVERDUE);
         borrowing.setStatus(BorrowingStatus.RETURNED.getCode());
         borrowing.setActualReturnDate(LocalDate.now());
+        borrowingMapper.updateById(borrowing);
+    }
+    
+    /**
+     * 标记逾期
+     */
+    @Transactional
+    public void markOverdue(String id) {
+        Borrowing borrowing = getExistingBorrowing(id);
+        assertStatus(borrowing, BorrowingStatus.BORROWED);
+        borrowing.setStatus(BorrowingStatus.OVERDUE.getCode());
+        borrowingMapper.updateById(borrowing);
+    }
+    
+    /**
+     * 标记丢失
+     */
+    @Transactional
+    public void markLost(String id) {
+        Borrowing borrowing = getExistingBorrowing(id);
+        assertStatus(borrowing, BorrowingStatus.BORROWED, BorrowingStatus.OVERDUE);
+        borrowing.setStatus(BorrowingStatus.LOST.getCode());
         borrowingMapper.updateById(borrowing);
     }
 
@@ -137,7 +175,8 @@ public class BorrowingApplicationService implements BorrowingFacade {
     @Transactional
     public void cancelBorrowing(String id) {
         Borrowing borrowing = getExistingBorrowing(id);
-        assertStatus(borrowing, BorrowingStatus.PENDING);
+        // 允许从 PENDING 或 APPROVED 状态取消
+        assertStatus(borrowing, BorrowingStatus.PENDING, BorrowingStatus.APPROVED);
         borrowing.setStatus(BorrowingStatus.CANCELLED.getCode());
         borrowingMapper.updateById(borrowing);
     }

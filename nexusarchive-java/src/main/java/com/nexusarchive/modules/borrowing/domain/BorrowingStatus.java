@@ -9,13 +9,23 @@ import java.util.Arrays;
 
 /**
  * 借阅流程状态机
+ * 
+ * 状态转换规则:
+ * - PENDING -> APPROVED/REJECTED/CANCELLED
+ * - APPROVED -> BORROWED/CANCELLED
+ * - BORROWED -> RETURNED/OVERDUE/LOST/CANCELLED
+ * - OVERDUE -> RETURNED/LOST
+ * - REJECTED, RETURNED, LOST, CANCELLED (终态)
  */
 public enum BorrowingStatus {
-    PENDING,
-    APPROVED,
-    REJECTED,
-    RETURNED,
-    CANCELLED;
+    PENDING,        // 待审批
+    APPROVED,       // 已批准（待借出）
+    REJECTED,       // 已拒绝
+    BORROWED,       // 已借出
+    RETURNED,       // 已归还
+    OVERDUE,        // 逾期
+    LOST,           // 丢失
+    CANCELLED;      // 已取消
 
     public String getCode() {
         return name();
@@ -36,6 +46,13 @@ public enum BorrowingStatus {
      * 用于判断档案是否可以销毁
      */
     public static java.util.List<String> borrowedCodes() {
-        return java.util.List.of(APPROVED.name());
+        return java.util.List.of(BORROWED.name(), OVERDUE.name());
+    }
+    
+    /**
+     * 判断是否为终态（不能再次转换的状态）
+     */
+    public boolean isTerminal() {
+        return this == REJECTED || this == RETURNED || this == LOST || this == CANCELLED;
     }
 }

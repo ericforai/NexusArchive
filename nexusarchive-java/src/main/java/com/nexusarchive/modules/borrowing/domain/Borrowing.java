@@ -63,7 +63,10 @@ public class Borrowing {
     private LocalDate actualReturnDate;
 
     /**
-     * 状态: PENDING(待审批), APPROVED(已通过/借阅中), REJECTED(已拒绝), RETURNED(已归还), CANCELLED(已取消)
+     * 状态: 
+     * PENDING(待审批), APPROVED(已批准/待借出), REJECTED(已拒绝), 
+     * BORROWED(已借出), RETURNED(已归还), OVERDUE(逾期), 
+     * LOST(丢失), CANCELLED(已取消)
      */
     private String status;
 

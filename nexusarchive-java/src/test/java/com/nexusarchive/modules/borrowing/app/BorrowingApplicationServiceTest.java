@@ -275,6 +275,42 @@ class BorrowingApplicationServiceTest {
         }
     }
 
+    // ========== 确认借出测试 ==========
+
+    @Nested
+    @DisplayName("确认借出")
+    class ConfirmBorrowedTests {
+
+        @Test
+        @DisplayName("确认借出成功")
+        void confirmBorrowed_Success() {
+            // Arrange
+            Borrowing approvedBorrowing = createBorrowingWithStatus(BorrowingStatus.APPROVED);
+            when(borrowingMapper.selectById("bor-001")).thenReturn(approvedBorrowing);
+            when(borrowingMapper.updateById(any(Borrowing.class))).thenReturn(1);
+
+            // Act
+            BorrowingDto result = borrowingService.confirmBorrowed("bor-001");
+
+            // Assert
+            assertThat(result.getStatus()).isEqualTo(BorrowingStatus.BORROWED.getCode());
+            verify(borrowingMapper).updateById(any(Borrowing.class));
+        }
+
+        @Test
+        @DisplayName("非已批准状态无法确认借出 - 抛出异常")
+        void confirmBorrowed_WrongStatus_ThrowsException() {
+            // Arrange
+            Borrowing pendingBorrowing = createBorrowingWithStatus(BorrowingStatus.PENDING);
+            when(borrowingMapper.selectById("bor-001")).thenReturn(pendingBorrowing);
+
+            // Act & Assert
+            assertThatThrownBy(() -> borrowingService.confirmBorrowed("bor-001"))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("当前状态不允许执行此操作");
+        }
+    }
+
     // ========== 归还档案测试 ==========
 
     @Nested
@@ -285,8 +321,9 @@ class BorrowingApplicationServiceTest {
         @DisplayName("归还成功")
         void returnArchive_Success() {
             // Arrange
-            Borrowing approvedBorrowing = createBorrowingWithStatus(BorrowingStatus.APPROVED);
-            when(borrowingMapper.selectById("bor-001")).thenReturn(approvedBorrowing);
+            // 必须是已借出状态才能归还
+            Borrowing borrowedBorrowing = createBorrowingWithStatus(BorrowingStatus.BORROWED);
+            when(borrowingMapper.selectById("bor-001")).thenReturn(borrowedBorrowing);
             when(borrowingMapper.updateById(any(Borrowing.class))).thenReturn(1);
 
             // Act
@@ -302,7 +339,7 @@ class BorrowingApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("非已批准状态无法归还 - 抛出异常")
+        @DisplayName("非借出状态无法归还 - 抛出异常")
         void returnArchive_WrongStatus_ThrowsException() {
             // Arrange
             Borrowing pendingBorrowing = createBorrowingWithStatus(BorrowingStatus.PENDING);
@@ -352,11 +389,12 @@ class BorrowingApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("非待审批状态无法取消 - 抛出异常")
+        @DisplayName("非待审批/已批准状态无法取消 - 抛出异常")
         void cancelBorrowing_WrongStatus_ThrowsException() {
             // Arrange
-            Borrowing approvedBorrowing = createBorrowingWithStatus(BorrowingStatus.APPROVED);
-            when(borrowingMapper.selectById("bor-001")).thenReturn(approvedBorrowing);
+            // 改为使用 BORROWED 状态，它是无法取消的
+            Borrowing borrowedBorrowing = createBorrowingWithStatus(BorrowingStatus.BORROWED);
+            when(borrowingMapper.selectById("bor-001")).thenReturn(borrowedBorrowing);
 
             // Act & Assert
             assertThatThrownBy(() -> borrowingService.cancelBorrowing("bor-001"))
