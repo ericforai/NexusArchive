@@ -92,7 +92,7 @@ class AuthServiceTest {
         testUser.setFullName("管理员");
         testUser.setEmail("admin@example.com");
         testUser.setStatus("active");
-        testUser.setDepartmentId("dept-001");
+        testUser.setOrganizationId("dept-001");
 
         // 创建登录请求
         loginRequest = new LoginRequest();
