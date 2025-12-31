@@ -73,7 +73,7 @@ export const EnterpriseArchitecturePage: React.FC = () => {
                         <Building2 className="w-6 h-6 text-primary-600" />
                         <h1 className="text-xl font-semibold text-slate-900">集团架构树视图</h1>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">直观展示"法人 -> 全宗 -> 档案"的层级关系和统计信息</p>
+                    <p className="text-sm text-slate-500 mt-1">直观展示&quot;法人 &rarr; 全宗 &rarr; 档案&quot;的层级关系和统计信息</p>
                 </div>
 
                 {/* Tree Content */}

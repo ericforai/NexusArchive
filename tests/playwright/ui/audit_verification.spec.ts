@@ -50,13 +50,16 @@ test.describe('审计证据链验真 @P0', () => {
 
   test('应该显示验证结果', async ({ page }) => {
     await page.goto(`${BASE_URL}/system/audit/verification`);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
     
-    await page.waitForTimeout(1000);
-    
-    // 验证结果区域可能通过不同的方式显示
-    // 这里主要验证页面结构正常
+    // 验证页面基本结构存在（页面已加载）
     const pageContent = await page.content();
     expect(pageContent.length).toBeGreaterThan(0);
+    
+    // 至少页面应该加载完成
+    const body = page.locator('body');
+    await expect(body).toBeVisible({ timeout: 3000 });
   });
 });
 

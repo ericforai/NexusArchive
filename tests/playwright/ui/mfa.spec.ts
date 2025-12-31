@@ -16,7 +16,9 @@ test.describe('MFA多因素认证 @P1', () => {
 
   test('应该能够访问MFA设置页面', async ({ page }) => {
     await page.goto(`${BASE_URL}/system/settings/mfa`);
-    await expect(page.getByRole('heading', { name: /多因素认证|MFA/i })).toBeVisible({ timeout: 10000 });
+    await page.waitForLoadState('domcontentloaded');
+    // 使用first()解决strict mode violation
+    await expect(page.getByRole('heading', { name: /多因素认证|MFA/i }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('应该显示MFA状态', async ({ page }) => {
