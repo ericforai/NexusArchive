@@ -100,6 +100,11 @@ const WatermarkOverlay: React.FC<WatermarkOverlayProps> = ({
     return (
         <div
             ref={containerRef}
+            data-testid="watermark-overlay"
+            data-watermark-text={text}
+            data-watermark-subtext={subText ?? ''}
+            data-watermark-opacity={opacity}
+            data-watermark-rotate={rotate}
             style={{
                 position: 'fixed',
                 top: 0,

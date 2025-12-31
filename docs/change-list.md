@@ -716,7 +716,7 @@
 | `src/layouts/SystemLayout.tsx` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/queryClient.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/routes/ActivationPage.tsx` | 修改 | 补齐脚本/源码头注释 | 否 |
-| `src/routes/index.tsx` | 修改 | 补齐脚本/源码头注释 | 否 |
+| `src/routes/index.tsx` | 修改 | 补齐脚本/源码头注释/新增预览水印验证调试路由 | 否 |
 | `src/routes/paths.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/store/index.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
 | `src/store/useAppStore.ts` | 修改 | 补齐脚本/源码头注释 | 否 |
@@ -893,11 +893,17 @@
 | `src/__tests__/components/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/permissions/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/store/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `src/api/authTicket.ts` | 新增 | 跨全宗授权票据 API | 否 |
+| `src/api/fondsHistory.ts` | 新增 | 全宗沿革 API | 否 |
+| `src/api/entity.ts` | 新增 | 法人管理 API | 否 |
 | `src/api/preview.ts` | 新增 | 预览/水印 API | 否 |
 | `src/api/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/components/WatermarkOverlay.tsx` | 新增 | 水印组件统一入口 | 否 |
-| `src/components/watermark/WatermarkOverlay.tsx` | 新增 | 动态水印覆盖层组件 | 否 |
+| `src/components/watermark/WatermarkOverlay.tsx` | 新增 | 动态水印覆盖层组件（含测试属性） | 否 |
 | `src/components/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `src/pages/security/` | 新增 | 授权票据相关页面 | 否 |
+| `src/pages/admin/` | 新增 | 全宗沿革与法人管理页面 | 否 |
+| `src/pages/preview/` | 新增 | 预览弹窗页面 | 否 |
 | `src/components/admin/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/components/archive/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/components/auth/README.md` | 新增 | 目录 MD 缺失 | 否 |
@@ -921,5 +927,8 @@
 | `tests/fixtures/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `tests/playwright/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `tests/playwright/api/README.md` | 新增 | 目录 MD 缺失 | 否 |
-| `tests/playwright/ui/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `tests/playwright/utils/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `src/pages/debug/PreviewWatermarkTestView.tsx` | 新增 | 预览水印链路验证页面 | 否 |
+| `src/pages/debug/README.md` | 新增 | Debug 页面索引 | 否 |
+| `tests/playwright/ui/preview_watermark.spec.ts` | 新增 | 预览水印端到端验证 | 否 |
+| `tests/playwright/ui/README.md` | 修改 | 补齐预览水印测试索引 | 否 |

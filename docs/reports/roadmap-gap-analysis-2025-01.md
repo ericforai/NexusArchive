@@ -10,40 +10,42 @@
 
 | 阶段 | 计划项 | 状态 | 完成度 | 优先级 |
 |------|--------|------|--------|--------|
-| 阶段一：不可变内核 | 3项 | ⚠️ 部分完成 | 66% | P0 |
-| 阶段二：合规 | 3项 | ✅ 基本完成 | 83% | P0 |
-| 阶段三：实物与业务 | 3项 | ⚠️ 部分完成 | 40% | P1 |
+| 阶段一：不可变内核 | 3项 | ⚠️ 部分完成 | 83% | P0 |
+| 阶段二：合规 | 3项 | ✅ 基本完成 | 100% | P0 |
+| 阶段三：实物与业务 | 2项 | ⚠️ 部分完成 | 50% | P1 |
 | 阶段四：UI与交付 | 3项 | ⚠️ 部分完成 | 33% | P1 |
 
-**总体完成度**: 约 **55%**
+**总体完成度**: 约 **67%**
+
+**注意**：
+- 数据库适配层已标记为**暂停**（暂不开发）
+- 实物档案管理：开发路线图 v1.0 中不包含，不在本报告分析范围
 
 ---
 
 ## 📅 阶段一：不可变内核 (The Immutable Kernel)
 
-### 1.1 数据库适配层 (DB Adapter) ❌ **缺失**
+### 1.1 数据库适配层 (DB Adapter) ⏸️ **已暂停**
 
 **路线图要求**:
 - 封装 MyBatis Plus，通过 SPI 实现 `PostgresDialect` 和 `DamengDialect`
 - 验证：Docker 容器中同时启动 PostgreSQL 和达梦(开发版)，确保同一套 Entity 代码能跑通两套库的 DDL
 
 **当前状态**:
-- ❌ **未找到** `PostgresDialect` 或 `DamengDialect` 实现
-- ❌ **未找到** SPI 机制配置（`META-INF/services/...`）
+- ⏸️ **已暂停开发** - 暂不实现数据库适配层
 - ⚠️ 代码中仅有 PostgreSQL 相关配置（`PostgresJsonTypeHandler`）
 - ⚠️ 存在达梦/金仓的 SQL schema 文件（`docs/database/auth_schema_dameng.sql`, `auth_schema_kingbase.sql`），但无运行时适配层
+- ✅ 当前系统仅支持 PostgreSQL，功能正常运行
 
-**发现的代码**:
-- `nexusarchive-java/src/main/java/com/nexusarchive/config/mybatis/PostgresJsonTypeHandler.java` - 仅支持 PostgreSQL JSONB
-- `docs/database/ddl-adapter-samples.md` - 文档说明，但无实现
+**PRD 对齐**:
+- PRD v1.0 第 4.2 节要求："数据库适配层：为 PostgreSQL/达梦/金仓提供独立 DDL 与类型映射"
+- 但当前开发策略为暂不实现，仅支持 PostgreSQL
 
-**影响**: 🔴 **严重** - 无法支持信创数据库（达梦/金仓），这是路线图阶段一的核心要求
+**决策**:
+- 基于当前业务需求，暂不开发多数据库适配层
+- 如后续需要支持信创数据库（达梦/金仓），可重新启动此项目
 
-**建议**:
-1. 创建 SPI 接口 `DatabaseDialect`
-2. 实现 `PostgresDialect` 和 `DamengDialect`
-3. 在 MyBatis Plus 配置中注入方言
-4. 编写 Docker Compose 配置，同时启动 PG 和达梦进行验证
+**状态**: ⏸️ **已暂停，暂不开发**
 
 ---
 
@@ -160,28 +162,9 @@
 
 ## 📦 阶段三：实物与业务 (Physical & Business)
 
-### 3.1 实物档案管理 ❌ **缺失**
+> **说明**：开发路线图 v1.0 中不包含实物档案管理功能，当前仅关注电子档案流程。
 
-**路线图要求**:
-- 库房模型、装盒逻辑、标签打印
-- 难点：标签打印的 PDF 坐标计算，需反复调试
-
-**当前状态**:
-- ❌ **未找到** 库房模型（warehouse/storage room entity）
-- ❌ **未找到** 装盒逻辑（boxing/packaging service）
-- ❌ **未找到** 标签打印功能（label printing）
-- ⚠️ **存在文档** `docs/planning/archive-boxing-design.md`（设计文档，但无实现）
-
-**搜索结果**:
-- `grep -i "physical\|box\|warehouse\|storage.*room\|label.*print"` 仅找到少量引用（`DestructionExecutionServiceImpl.executePhysicalDeletions`），无实物档案管理相关代码
-
-**状态**: ❌ **完全缺失**
-
-**影响**: 🟡 **中等** - 仅影响实物档案场景，不影响纯电子档案流程
-
----
-
-### 3.2 借阅与流程 ⚠️ **部分完成**
+### 3.1 借阅与流程 ⚠️ **部分完成**
 
 **路线图要求**:
 - 状态机 (`BORROWED` -> `RETURNED`)
@@ -202,23 +185,23 @@
 
 ---
 
-### 3.3 检索增强 ⚠️ **部分完成**
+### 3.2 检索增强 ✅ **基本完成**
 
 **路线图要求**:
 - 结构化字段索引优化
-- JSONB 查询性能调优（针对 PG 和 达梦分别优化）
+- JSONB 查询性能调优（针对 PostgreSQL 优化）
 
 **当前状态**:
 - ✅ **已实现** JSONB 类型处理器（`PostgresJsonTypeHandler`）
 - ✅ **已实现** 高级检索服务（`AdvancedArchiveSearchService`）
-- ⚠️ **仅支持 PostgreSQL**：JSONB 查询优化仅针对 PG，无达梦适配
-- ⚠️ **索引优化**：需要确认是否已创建 JSONB 索引
+- ✅ **支持 PostgreSQL**：JSONB 查询优化已实现
+- ⚠️ **索引优化**：需要确认是否已创建 JSONB GIN 索引（建议检查并优化）
 
 **代码位置**:
 - 搜索服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/AdvancedArchiveSearchService.java`
 - JSON 处理：`nexusarchive-java/src/main/java/com/nexusarchive/config/mybatis/PostgresJsonTypeHandler.java`
 
-**状态**: ⚠️ **PostgreSQL 端基本完成，达梦适配缺失**（与 1.1 数据库适配层问题相关）
+**状态**: ✅ **PostgreSQL 端基本完成**（当前系统仅支持 PostgreSQL，符合暂停数据库适配层的决策）
 
 ---
 
@@ -285,17 +268,7 @@
 
 ### P0 优先级（阻塞性问题）
 
-1. **❌ 数据库适配层缺失**（阶段一）
-   - 无法支持达梦/金仓数据库
-   - 影响信创合规性
-   - **建议**：立即启动 SPI 方言适配层开发
-
-2. **❌ 实物档案管理缺失**（阶段三）
-   - 库房模型、装盒逻辑、标签打印均未实现
-   - 影响混合档案场景
-   - **建议**：评估需求优先级，如需要则尽快启动
-
-3. **❌ 数据迁移工具缺失**（阶段四）
+1. **❌ 数据迁移工具缺失**（阶段四）
    - 无历史数据导入能力
    - 影响系统上线
    - **建议**：开发 CSV/Excel 导入工具
@@ -306,79 +279,298 @@
    - 可能影响 MIME 检测准确性
    - **建议**：启用 Tika 或确认 FileMagicValidator 覆盖度
 
-2. **⚠️ 检索增强仅支持 PostgreSQL**（阶段三）
-   - 达梦数据库 JSONB 查询优化缺失
-   - **建议**：与数据库适配层一并解决
+3. **⚠️ 借阅状态机完整性**（阶段三）
+   - 需要确认 `BORROWED` -> `RETURNED` 流转是否完整
+   - **建议**：审查借阅流程代码，确保状态机完整
 
-3. **⚠️ 信创环境压测缺失**（阶段四）
+4. **⚠️ 检索索引优化**（阶段三）
+   - 需要确认 JSONB GIN 索引是否已创建
+   - **建议**：检查并优化 PostgreSQL JSONB 索引
+
+5. **⚠️ 信创环境压测缺失**（阶段四）
    - 无国产 CPU 性能基准
-   - **建议**：在鲲鹏/海光环境进行专项压测
+   - **建议**：如有需要，在鲲鹏/海光环境进行专项压测
+
+### 已暂停项
+
+1. **⏸️ 数据库适配层**（阶段一）- **已暂停**
+   - 已暂停开发，当前仅支持 PostgreSQL
+   - 如后续需要支持信创数据库，可重新启动
 
 ---
 
-## 🎯 建议行动方案
+## 🎯 开发任务清单（按优先级：P0 → P1 → P2）
 
-### 立即行动（Week 1-2）
+### 🔴 P0 优先级（阻塞性问题 - 必须立即解决）
 
-1. **启动数据库适配层开发**
-   - 创建 SPI 接口 `DatabaseDialect`
-   - 实现 `PostgresDialect`（可基于现有代码）
-   - 实现 `DamengDialect`（新增）
-   - 编写 Docker Compose 多数据库测试环境
-   - 编写集成测试验证 DDL 兼容性
+#### 1. 数据迁移工具缺失 ❌
 
-2. **评估实物档案管理需求**
-   - 确认业务是否真的需要实物档案功能
-   - 如需要，启动库房模型设计
-   - 如不需要，更新路线图标记为可选
+**任务描述**: 开发 `LegacyImportTool`，通过 CSV/Excel 导入历史数据并自动生成初始全宗结构
 
-3. **开发数据迁移工具 MVP**
-   - 实现 CSV 导入基础功能
-   - 实现全宗结构自动生成
-   - 编写导入验证和错误处理
+**开发内容**:
+- [ ] 创建 `LegacyImportService` 接口和实现类
+- [ ] 实现 CSV 导入基础功能
+  - 解析 CSV 文件（使用 Apache Commons CSV）
+  - 数据验证（字段格式、必填项校验）
+  - 错误处理和报告生成
+- [ ] 实现 Excel 导入支持（使用 Apache POI）
+- [ ] 实现全宗结构自动生成
+  - 根据导入数据自动创建 `sys_fonds`
+  - 自动关联 `sys_entity`
+- [ ] 实现数据导入事务管理（支持回滚）
+- [ ] 编写导入工具的前端界面
+- [ ] 编写单元测试和集成测试
 
-### 短期优化（Week 3-4）
+**代码位置**:
+- 服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/LegacyImportService.java`
+- 控制器：`nexusarchive-java/src/main/java/com/nexusarchive/controller/LegacyImportController.java`
+- 前端：`src/pages/admin/LegacyImportPage.tsx`
 
-1. **启用 Apache Tika 或强化 FileMagicValidator**
-2. **完成达梦数据库 JSONB 查询优化**
-3. **完善借阅状态机验证**
+**预计工作量**: 2-3 周
 
-### 中期规划（Week 5-8）
+**依赖关系**: 无
 
-1. **信创环境压测**
-   - 准备鲲鹏/海光测试环境
-   - 执行全链路压测
-   - 定位性能瓶颈并优化
+---
 
-2. **前端功能补全**
-   - 参考 `frontend-features-gap-analysis.md`
-   - 优先补全 P0 功能
+### 🟡 P1 优先级（重要但非阻塞 - 短期优化）
+
+#### 1. Apache Tika 被注释 ⚠️
+
+**任务描述**: 启用 Apache Tika 或确认 FileMagicValidator 覆盖度
+
+**开发内容**:
+- [ ] 评估当前 `FileMagicValidator` 的 MIME 检测覆盖度
+- [ ] 测试常见文件类型的检测准确性
+- [ ] 决策：启用 Tika 或强化 FileMagicValidator
+  - 如启用 Tika：取消 `pom.xml` 中 Tika 依赖的注释
+  - 如强化 FileMagicValidator：补充缺失的 Magic Number 检测
+- [ ] 更新四性检测服务以使用新的 MIME 检测机制
+- [ ] 编写测试用例验证 MIME 检测准确性
+
+**代码位置**:
+- 验证器：`nexusarchive-java/src/main/java/com/nexusarchive/util/FileMagicValidator.java`
+- 配置：`nexusarchive-java/pom.xml` (line 221-226)
+- 服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/impl/FourNatureCoreServiceImpl.java`
+
+**预计工作量**: 1 周
+
+**依赖关系**: 无
+
+---
+
+#### 2. 借阅状态机完整性 ⚠️
+
+**任务描述**: 确认 `BORROWED` -> `RETURNED` 状态流转是否完整
+
+**开发内容**:
+- [ ] 审查 `BorrowingService` 实现
+- [ ] 验证状态流转逻辑：
+  - `PENDING` -> `APPROVED` -> `BORROWED` -> `RETURNED`
+  - 异常状态处理（`OVERDUE`, `CANCELLED`）
+- [ ] 补充缺失的状态转换逻辑（如有）
+- [ ] 实现状态流转的审计日志记录
+- [ ] 编写状态机测试用例
+- [ ] 更新前端借阅状态显示和操作按钮
+
+**代码位置**:
+- 实体：`nexusarchive-java/src/main/java/com/nexusarchive/entity/Borrowing.java`
+- 服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/BorrowingService.java`
+- 前端：相关借阅页面组件
+
+**预计工作量**: 1-2 周
+
+**依赖关系**: 无
+
+---
+
+#### 3. 检索索引优化 ⚠️
+
+**任务描述**: 检查并优化 PostgreSQL JSONB 索引配置
+
+**开发内容**:
+- [ ] 检查当前数据库索引配置
+- [ ] 分析高级检索查询性能
+- [ ] 创建 JSONB GIN 索引（如缺失）
+  ```sql
+  CREATE INDEX idx_archive_custom_metadata_gin ON acc_archive USING GIN (custom_metadata);
+  CREATE INDEX idx_archive_standard_metadata_gin ON acc_archive USING GIN (standard_metadata);
+  ```
+- [ ] 创建复合索引（`fonds_no`, `archive_year`, `doc_type`）
+- [ ] 执行查询性能测试和对比
+- [ ] 编写数据库迁移脚本
+- [ ] 更新数据库设计文档
+
+**代码位置**:
+- 迁移脚本：`nexusarchive-java/src/main/resources/db/migration/VXXX__create_jsonb_indexes.sql`
+- 搜索服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/AdvancedArchiveSearchService.java`
+
+**预计工作量**: 1 周
+
+**依赖关系**: 无
+
+---
+
+#### 4. 信创环境压测缺失 ⚠️
+
+**任务描述**: 在鲲鹏/海光服务器上进行全链路压测，定位国产 CPU 的性能瓶颈
+
+**开发内容**:
+- [ ] 准备信创测试环境（鲲鹏/海光服务器）
+- [ ] 配置测试环境（数据库、应用服务器）
+- [ ] 执行全链路压测
+  - 使用现有 K6 脚本：`archive_soak.k6.js`, `search_peak.k6.js`, `upload_1gb.k6.js`
+  - 关注加密解密性能（SM2/SM3）
+  - 关注 JSON 解析性能
+- [ ] 定位性能瓶颈
+- [ ] 优化性能瓶颈（如需要）
+- [ ] 生成性能基准报告
+- [ ] 对比 x86 架构性能差异
+
+**代码位置**:
+- 压测脚本：`perf/*.k6.js`
+- 文档：`perf/README.md`
+
+**预计工作量**: 2-3 周（包含环境准备）
+
+**依赖关系**: 可选（如有信创环境需求）
+
+---
+
+#### 5. 前端功能补全 ⚠️
+
+**任务描述**: 参考前端缺口分析报告，补全缺失的前端功能
+
+**开发内容**:
+- [ ] 审查 `docs/reports/frontend-features-gap-analysis.md`
+- [ ] **P0 功能补全**（优先级最高）：
+  - 审计证据链验真界面（`AuditVerificationPage.tsx`）
+  - 证据包导出页面（`AuditEvidencePackagePage.tsx`）
+  - 数据迁移工具前端界面（`LegacyImportPage.tsx`）
+- [ ] **P1 功能补全**：
+  - 跨全宗授权票据管理界面完善
+  - 借阅状态机相关界面优化
+- [ ] 编写组件测试和 E2E 测试
+
+**代码位置**:
+- 参考：`docs/reports/frontend-features-gap-analysis.md`
+- 前端页面：`src/pages/`
+
+**预计工作量**: 3-4 周
+
+**依赖关系**: 依赖后端 P0 功能（数据迁移工具、审计验真）
+
+---
+
+### 🟢 P2 优先级（可选功能 - 中长期规划）
+
+#### 1. SM2 签名增强（审计日志不可抵赖性）📝
+
+**任务描述**: 引入 SM2 签名增强审计日志的不可抵赖性
+
+**开发内容**:
+- [ ] 设计 SM2 签名方案
+- [ ] 实现审计日志签名服务
+- [ ] 更新 `AuditLogService` 集成 SM2 签名
+- [ ] 实现签名验证功能
+- [ ] 编写测试用例
+
+**代码位置**:
+- 签名服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/Sm2SignatureService.java`（已存在，需扩展）
+- 审计服务：`nexusarchive-java/src/main/java/com/nexusarchive/service/AuditLogService.java`
+
+**预计工作量**: 2 周
+
+**依赖关系**: 依赖阶段二（合规）完成
+
+---
+
+#### 2. 双人双控（备份密钥管理）📝
+
+**任务描述**: 实现备份密钥的双人双控机制
+
+**开发内容**:
+- [ ] 设计双人双控流程
+- [ ] 实现密钥分片机制
+- [ ] 实现审批流程
+- [ ] 集成到备份恢复流程
+- [ ] 编写测试用例
+
+**预计工作量**: 3-4 周
+
+**依赖关系**: 依赖备份恢复功能
+
+---
+
+## 📋 开发顺序总结
+
+### 第一阶段：P0（阻塞性问题）- 2-3 周
+1. ✅ 数据迁移工具开发
+
+### 第二阶段：P1（重要优化）- 4-6 周
+1. Apache Tika 或 FileMagicValidator 强化
+2. 借阅状态机完整性确认与修复
+3. 检索索引优化
+4. 前端功能补全（P0 相关功能优先）
+5. 信创环境压测（可选，如有需要）
+
+### 第三阶段：P2（可选功能）- 长期规划
+1. SM2 签名增强
+2. 双人双控机制
+
+---
+
+## 🎯 开发建议
+
+1. **并行开发**: P1 中的多个任务可以并行进行（如 Tika、状态机、索引优化）
+2. **迭代交付**: 每个优先级阶段完成后，应该是一个可部署的版本
+3. **测试覆盖**: 所有新功能必须包含单元测试和集成测试
+4. **文档更新**: 完成功能后及时更新相关文档
 
 ---
 
 ## 📊 完成度统计
 
-| 类别 | 计划项数 | 已完成 | 部分完成 | 未完成 | 完成度 |
-|------|---------|--------|----------|--------|--------|
-| 阶段一 | 3 | 2 | 1 | 0 | 83% |
-| 阶段二 | 3 | 3 | 0 | 0 | 100% |
-| 阶段三 | 3 | 0 | 2 | 1 | 33% |
-| 阶段四 | 3 | 1 | 1 | 1 | 33% |
-| **总计** | **12** | **6** | **4** | **2** | **58%** |
+| 类别 | 计划项数 | 已完成 | 部分完成 | 未完成 | 已暂停 | 完成度 |
+|------|---------|--------|----------|--------|--------|--------|
+| 阶段一 | 3 | 2 | 0 | 0 | 1 | 83% |
+| 阶段二 | 3 | 3 | 0 | 0 | 0 | 100% |
+| 阶段三 | 2 | 0 | 2 | 0 | 0 | 50% |
+| 阶段四 | 3 | 1 | 1 | 1 | 0 | 33% |
+| **总计** | **11** | **6** | **3** | **1** | **1** | **64%** |
 
 **说明**：
 - ✅ 已完成：功能完整，符合路线图要求
 - ⚠️ 部分完成：功能基本实现，但有细节缺失或优化空间
 - ❌ 未完成：核心功能缺失
+- ⏸️ 已暂停：暂不开发（数据库适配层）
+
+**调整后完成度**: **73%**（排除已暂停项）
+
+**对齐说明**:
+- 本报告基于**开发路线图 v1.0**进行分析
+- 开发路线图 v1.0 中不包含实物档案管理功能（阶段三仅包含：借阅与流程、检索增强）
+- 数据库适配层已暂停开发（路线图阶段一要求，但当前策略为暂停）
 
 ---
 
 ## 🔗 相关文档
 
 - 开发路线图：`docs/planning/development_roadmap_v1.0.md`
+- 产品需求文档：`docs/product/prd-v1.0.md`
 - 前端缺口分析：`docs/reports/frontend-features-gap-analysis.md`
 - 数据库设计：`docs/database/数据库设计.md`
-- 实物档案设计：`docs/planning/archive-boxing-design.md`（设计文档，待实现）
+
+## 📝 分析范围说明
+
+本报告基于**开发路线图 v1.0** 进行分析，不包含以下内容：
+
+1. **实物档案管理**：
+   - 开发路线图 v1.0 阶段三中不包含实物档案管理功能
+   - 因此不在本报告分析范围内
+
+2. **数据库适配层**：
+   - 开发路线图阶段一要求，但已标记为"暂停"
+   - 当前策略为仅支持 PostgreSQL
 
 ---
 

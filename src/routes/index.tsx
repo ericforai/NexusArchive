@@ -52,6 +52,7 @@ const AuditLogView = lazy(() => import('../pages/settings/AuditLogView'));
 const IntegrationSettings = lazy(() => import('../pages/settings/IntegrationSettingsPage'));
 
 const PaymentFileTestView = lazy(() => import('../pages/debug/PaymentFileTestView'));
+const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWatermarkTestView'));
 
 // 匹配向导模块（OnboardingWizard 和 ComplianceReport 仍用 withSuspense）
 const OnboardingWizard = lazy(() => import('../pages/matching/OnboardingWizard'));
@@ -204,6 +205,7 @@ export const routes: RouteObject[] = [
 
             // ========== Debug ==========
             { path: 'debug/payment-file', element: withSuspense(PaymentFileTestView) },
+            { path: 'debug/preview-watermark', element: withSuspense(PreviewWatermarkTestView) },
 
             // ========== 匹配引擎 ==========
             { path: 'matching', element: <VoucherMatchingPage /> },

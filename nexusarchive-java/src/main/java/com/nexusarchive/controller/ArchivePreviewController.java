@@ -5,6 +5,7 @@
 
 package com.nexusarchive.controller;
 
+import com.nexusarchive.common.Result;
 import com.nexusarchive.dto.PreviewResponse;
 import com.nexusarchive.service.StreamingPreviewService;
 import io.swagger.v3.oas.annotations.Operation;
