@@ -22,7 +22,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
     const [orgs, setOrgs] = useState<OrgNode[]>([]);
     const [orgTree, setOrgTree] = useState<OrgNode[]>([]);
     const [orgLoading, setOrgLoading] = useState(false);
-    const [orgForm, setOrgForm] = useState({ name: '', code: '', parentId: '', type: 'DEPARTMENT', orderNum: 0 });
+    const [orgForm, setOrgForm] = useState({ name: '', code: '', parentId: '', type: 'COMPANY', orderNum: 0 });
     const [orgImportText, setOrgImportText] = useState('');
     const [orgImportResult, setOrgImportResult] = useState<OrgImportResult | null>(null);
 
@@ -63,11 +63,11 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                 name: orgForm.name,
                 code: orgForm.code,
                 parentId: orgForm.parentId || undefined,
-                type: orgForm.type,
+                type: 'COMPANY', // 强制为 COMPANY
                 orderNum: orgForm.orderNum
             });
             if (res.code === 200) {
-                setOrgForm({ name: '', code: '', parentId: '', type: 'DEPARTMENT', orderNum: 0 });
+                setOrgForm({ name: '', code: '', parentId: '', type: 'COMPANY', orderNum: 0 });
                 const [listRes, treeRes] = await Promise.all([adminApi.listOrg(), adminApi.getOrgTree()]);
                 if (listRes.code === 200 && listRes.data) setOrgs(listRes.data);
                 if (treeRes.code === 200 && treeRes.data) setOrgTree(treeRes.data);
@@ -82,7 +82,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
     };
 
     const handleDeleteOrg = async (id: string) => {
-        if (!window.confirm('确认删除该组织/部门吗？')) return;
+        if (!window.confirm('确认删除子公司吗？')) return;
         setOrgLoading(true);
         try {
             await adminApi.deleteOrg(id);
@@ -165,10 +165,10 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
         <div className="space-y-6">
             {/* 创建组织 */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-center mb-4">
                     <div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-1">组织/部门</h3>
-                        <p className="text-xs text-slate-500">创建、查看组织树</p>
+                        <h3 className="text-lg font-bold text-slate-800 mb-1">公司管理</h3>
+                        <p className="text-xs text-slate-500">创建、查看公司层级</p>
                     </div>
                 </div>
                 <form className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" onSubmit={handleCreateOrg}>
@@ -198,17 +198,8 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                             placeholder="留空为顶级"
                         />
                     </div>
-                    <div className="flex flex-col">
-                        <label className="text-sm font-medium text-slate-700 mb-1">类型</label>
-                        <select
-                            className="border border-slate-300 rounded-lg p-2 text-sm"
-                            value={orgForm.type}
-                            onChange={(e) => setOrgForm({ ...orgForm, type: e.target.value })}
-                        >
-                            <option value="COMPANY">公司</option>
-                            <option value="DEPARTMENT">部门</option>
-                        </select>
-                    </div>
+                    {/* 类型固定为 COMPANY，隐藏选择框 */}
+                    <input type="hidden" value="COMPANY" />
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-slate-700 mb-1">排序</label>
                         <input
@@ -225,16 +216,15 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                             className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 disabled:opacity-60"
                         >
                             <Plus size={16} className="mr-2" />
-                            {orgLoading ? '保存中...' : '创建组织/部门'}
+                            {orgLoading ? '保存中...' : '创建公司'}
                         </button>
                     </div>
                 </form>
             </div>
 
-            {/* 组织树和列表 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h4 className="text-sm font-semibold text-slate-800 mb-3">组织树</h4>
+                    <h4 className="text-sm font-semibold text-slate-800 mb-3">公司架构树</h4>
                     {orgLoading ? (
                         <div className="text-xs text-slate-500 flex items-center">
                             <Loader2 size={14} className="animate-spin mr-1" /> 加载中...
@@ -245,7 +235,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h4 className="text-sm font-semibold text-slate-800 mb-3">组织列表</h4>
+                    <h4 className="text-sm font-semibold text-slate-800 mb-3">公司列表</h4>
                     <div className="max-h-64 overflow-y-auto text-sm">
                         {orgs.map((org) => (
                             <div key={org.id} className="flex items-center justify-between py-2 border-b last:border-0">
@@ -303,7 +293,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                         <textarea
                             className="w-full border border-slate-200 rounded p-2 text-xs"
                             rows={3}
-                            placeholder='例如: [{"name":"财务部","code":"FIN"},{"name":"人力资源部","code":"HR","parentId":"<上级ID>"}]'
+                            placeholder='例如: [{"name":"子公司A","code":"SUB_A"},{"name":"子公司B","code":"SUB_B","parentId":"<上级ID>"}]'
                             value={orgImportText}
                             onChange={(e) => setOrgImportText(e.target.value)}
                         />
