@@ -9,6 +9,7 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.AuditInspectionLog;
 import com.nexusarchive.mapper.AuditInspectionLogMapper;
+import com.nexusarchive.service.compliance.ComplianceCheckFacade;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,11 @@ import java.util.List;
 
 /**
  * 会计档案管理办法符合性检查服务
+ * <p>
+ * 向后兼容层，委托给 ComplianceCheckFacade
+ * </p>
  */
+@Deprecated
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,14 +34,36 @@ public class ComplianceCheckService {
 
     private final DigitalSignatureService digitalSignatureService;
     private final AuditInspectionLogMapper auditInspectionLogMapper;
-    
+    private final ComplianceCheckFacade facade;
+
     /**
      * 检查档案是否符合《会计档案管理办法》要求
+     * @deprecated 使用 {@link ComplianceCheckFacade#checkCompliance(Archive, List)} 代替
+     */
+    @Deprecated
+    public ComplianceResult checkCompliance(Archive archive, List<ArcFileContent> files) {
+        // 委托给 Facade 并转换为旧的格式
+        com.nexusarchive.service.compliance.ComplianceResult newResult = facade.checkCompliance(archive, files);
+        return convertToLegacyResult(newResult);
+    }
+
+    /**
+     * 将新的 ComplianceResult 转换为旧的内部类格式
+     */
+    private ComplianceResult convertToLegacyResult(com.nexusarchive.service.compliance.ComplianceResult newResult) {
+        ComplianceResult legacyResult = new ComplianceResult();
+        newResult.getViolations().forEach(legacyResult::addViolation);
+        newResult.getWarnings().forEach(legacyResult::addWarning);
+        return legacyResult;
+    }
+
+    /**
+     * 检查档案是否符合《会计档案管理办法》要求（内部实现）
      * @param archive 待检查档案
      * @param files 关联文件列表
-     * @return 检查结果
+     * @return 检查结果（内部类格式）
      */
-    public ComplianceResult checkCompliance(Archive archive, List<ArcFileContent> files) {
+    private ComplianceResult checkComplianceLegacy(Archive archive, List<ArcFileContent> files) {
         log.info("开始检查档案 {} 的合规性", archive.getArchiveCode());
         
         ComplianceResult result = new ComplianceResult();
