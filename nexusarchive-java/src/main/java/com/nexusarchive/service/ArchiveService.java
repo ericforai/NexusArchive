@@ -99,8 +99,8 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
 
         // [FIXED P0-1] Dynamic SubType Filter with SQL Injection Protection
         if (subType != null && !subType.isEmpty()) {
-            // 白名单校验，防止 SQL 注入
-            if (!isValidSubType(subType, categoryCode)) {
+            // 白名单校验，防止 SQL 注入 (委托给策略类)
+            if (!com.nexusarchive.service.strategy.ArchiveValidationPolicy.isValidSubType(subType, categoryCode)) {
                 throw new BusinessException(400, "Invalid subType parameter: " + subType);
             }
 
@@ -315,37 +315,21 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
         getArchiveById(archiveId); // This performs checks
 
         List<ArcFileContent> result = new java.util.ArrayList<>();
-        
+
         // 1. 原有逻辑：从 arc_file_content 获取直接关联的文件
         QueryWrapper<ArcFileContent> wrapper = new QueryWrapper<>();
         wrapper.eq("item_id", archiveId);
         wrapper.orderByAsc("created_time");
         result.addAll(arcFileContentMapper.selectList(wrapper));
-        
-        // 2. 新增逻辑：从 acc_archive_attachment 获取智能匹配关联的文件
+
+        // 2. 新增逻辑：从 acc_archive_attachment 获取智能匹配关联的文件 (使用强类型 Mapper)
         try {
-            String sql = """
-                SELECT ovf.id, ovf.file_name, ovf.storage_path, ovf.file_size, ovf.file_type, aa.attachment_type
-                FROM acc_archive_attachment aa
-                JOIN arc_original_voucher_file ovf ON aa.file_id = ovf.id
-                WHERE aa.archive_id = ? AND ovf.deleted = 0
-                """;
-            List<java.util.Map<String, Object>> attachments = jdbcTemplate.queryForList(sql, archiveId);
-            
-            for (java.util.Map<String, Object> row : attachments) {
-                ArcFileContent file = new ArcFileContent();
-                file.setId((String) row.get("id"));
-                file.setFileName((String) row.get("file_name"));
-                file.setStoragePath((String) row.get("storage_path"));
-                file.setFileSize(row.get("file_size") != null ? ((Number) row.get("file_size")).longValue() : 0);
-                file.setFileType((String) row.get("file_type"));
-                file.setVoucherType((String) row.get("attachment_type")); // 用于标识来源
-                result.add(file);
-            }
+            List<ArcFileContent> attachments = arcFileContentMapper.selectAttachmentsByArchiveId(archiveId);
+            result.addAll(attachments);
         } catch (Exception e) {
             log.warn("Failed to query attachments from acc_archive_attachment: {}", e.getMessage());
         }
-        
+
         return result;
     }
 
@@ -375,47 +359,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
         }
     }
 
-    /**
-     * [ADDED P0-1] 白名单校验 SubType 参数
-     * 防止 SQL 注入攻击
-     */
-    private boolean isValidSubType(String subType, String categoryCode) {
-        if (categoryCode == null || categoryCode.isEmpty()) {
-            // 如果类别代码为空，暂不强制校验子类型（或者可以根据业务需要决定是否拒绝）
-            return true;
-        }
-
-        if ("AC01".equals(categoryCode)) {
-            // 会计凭证子类型白名单
-            return Set.of(
-                "ACCOUNTING_VOUCHER", "ORIGINAL_VOUCHER",
-                // 原始凭证細分类型
-                "SALES_ORDER", "DELIVERY_ORDER", "PURCHASE_ORDER", "RECEIPT_ORDER",
-                "PAYMENT_REQ", "EXPENSE_REPORT", "GEN_INVOICE", "VAT_INVOICE",
-                "BANK_SLIP", "BANK_STATEMENT", "CONTRACT"
-            ).contains(subType);
-        } else if ("AC02".equals(categoryCode)) {
-            // 账簿类型白名单 (Updated V71+)
-            return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL",
-                    "CASH_BOOK", "BANK_BOOK",
-                    // Added from frontend paths
-                    "CASH_JOURNAL", "BANK_JOURNAL", "FIXED_ASSETS_CARD", "OTHER_BOOKS"
-            ).contains(subType);
-        } else if ("AC03".equals(categoryCode)) {
-            // 报表周期白名单
-            return Set.of("MONTHLY", "QUARTERLY", "ANNUAL", "SEMI_ANNUAL", "SPECIAL").contains(subType);
-        } else if ("AC04".equals(categoryCode)) {
-            // 其他类型白名单
-            return Set.of("CONTRACT", "INVOICE", "RECEIPT", "OTHER",
-                    // Added from frontend paths
-                    "BANK_RECONCILIATION", "TAX_RETURN",
-                    "HANDOVER_REGISTER", "CUSTODY_REGISTER", "DESTRUCTION_REGISTER",
-                    "APPRAISAL_OPINION"
-            ).contains(subType);
-        }
-        // 未知分类，拒绝
-        return false;
-    }
+    // [REFACTORED] isValidSubType 方法已迁移至 ArchiveValidationPolicy 策略类
 
     /**
      * [ADDED P0-1] JSON 字符串转义
