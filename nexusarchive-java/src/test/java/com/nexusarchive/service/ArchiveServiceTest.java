@@ -128,4 +128,30 @@ class ArchiveServiceTest {
         // Fix ambiguous reference by specifying the class
         verify(archiveMapper, never()).updateById(any(Archive.class));
     }
+
+    @Test
+    @DisplayName("Create Archive - Verify New Fields (destructionStatus, retentionStartDate)")
+    void createArchive_WithNewFields() {
+        // Arrange
+        sampleArchive.setDestructionStatus("NORMAL");
+        sampleArchive.setRetentionStartDate(java.time.LocalDate.now());
+
+        when(codeGenerator.generateNextCode(any())).thenReturn("A-2023-002");
+        when(archiveMapper.selectCount(any())).thenReturn(0L);
+        when(archiveMapper.insert(any(Archive.class))).thenAnswer(invocation -> {
+            Archive arg = invocation.getArgument(0);
+            assertEquals("NORMAL", arg.getDestructionStatus());
+            assertNotNull(arg.getRetentionStartDate());
+            arg.setId("generated-id");
+            return 1;
+        });
+
+        // Act
+        Archive result = archiveService.createArchive(sampleArchive, "user-1");
+
+        // Assert
+        assertEquals("NORMAL", result.getDestructionStatus());
+        assertNotNull(result.getRetentionStartDate());
+        verify(archiveMapper).insert(any(Archive.class));
+    }
 }

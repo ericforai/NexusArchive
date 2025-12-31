@@ -62,6 +62,15 @@ public class BorrowingApplicationService implements BorrowingFacade {
         borrowing.setUserId(userId);
         borrowing.setUserName(userName);
         borrowing.setArchiveTitle(archive.getTitle());
+        // 填充新增字段 - 2025-12-31 schema update
+        borrowing.setFondsNo(archive.getFondsNo());
+        if (archive.getFiscalYear() != null) {
+            try {
+                borrowing.setArchiveYear(Integer.parseInt(archive.getFiscalYear()));
+            } catch (NumberFormatException e) {
+                // Ignore invalid year format
+            }
+        }
         borrowing.setStatus(BorrowingStatus.PENDING.getCode());
         if (borrowing.getBorrowDate() == null) {
             borrowing.setBorrowDate(LocalDate.now());

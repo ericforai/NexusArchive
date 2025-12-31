@@ -75,6 +75,8 @@ class BorrowingApplicationServiceTest {
         testArchive.setId("arc-001");
         testArchive.setTitle("测试档案");
         testArchive.setArchiveCode("ARC-2023-001");
+        testArchive.setFondsNo("FONDS-001");
+        testArchive.setFiscalYear("2023");
 
         // 创建有效的借阅申请
         validRequest = new BorrowingCreateRequest();
@@ -107,6 +109,26 @@ class BorrowingApplicationServiceTest {
             assertThat(result.getBorrowDate()).isNotNull();
             assertThat(result.getExpectedReturnDate()).isNotNull();
 
+            verify(borrowingMapper).insert(any(Borrowing.class));
+        }
+
+        @Test
+        @DisplayName("验证新字段填充 (fondsNo, archiveYear)")
+        void createBorrowing_PopulatesNewFields() {
+            // Arrange
+            when(archiveService.getArchiveById("arc-001")).thenReturn(testArchive);
+            when(borrowingMapper.insert(any(Borrowing.class))).thenAnswer(invocation -> {
+                Borrowing b = invocation.getArgument(0);
+                assertThat(b.getFondsNo()).isEqualTo("FONDS-001");
+                assertThat(b.getArchiveYear()).isEqualTo(2023);
+                return 1;
+            });
+
+            // Act
+            BorrowingDto result = borrowingService.createBorrowing(validRequest, "user-001", "张三");
+
+            // Assert
+            assertThat(result).isNotNull();
             verify(borrowingMapper).insert(any(Borrowing.class));
         }
 
