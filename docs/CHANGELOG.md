@@ -4,6 +4,27 @@
 
 ---
 
+## [2025-12-31] 后端核心实体与接口合规性补全
+
+### 核心变更
+- **实体增强**：`Archive`/`Borrowing`/`Destruction` 补全了销毁、保管期限、审批快照等关键合规字段。
+- **审计追踪**：`SysAuditLog` 新增 `traceId`，支持跨操作链路追踪；新增跨全宗访问审计接口。
+- **存储管理**：`FileStorageService` 补全软/硬删除与文件信息获取能力。
+- **导入修复**：修复历史数据导入服务的 Map 初始化限制与审计参数错误。
+- **策略重构**：`ArchiveService` 验证逻辑剥离至 `ArchiveValidationPolicy`，增强可维护性。
+
+### 修改文件
+| 文件 | 变更 |
+|------|------|
+| `nexusarchive-java/.../entity/Archive.java` | [UPDATE] 新增 destructionStatus, retentionStartDate |
+| `nexusarchive-java/.../entity/Borrowing.java` | [UPDATE] 新增 fondsNo, archiveYear |
+| `nexusarchive-java/.../entity/Destruction.java` | [UPDATE] 新增 approvalSnapshot |
+| `nexusarchive-java/.../entity/SysAuditLog.java` | [UPDATE] 新增 traceId |
+| `nexusarchive-java/.../service/AuditLogService.java` | [NEW] logCrossFondsAccess 接口 |
+| `nexusarchive-java/.../service/FileStorageService.java` | [NEW] softDelete/hardDelete/getFileInfo 接口 |
+| `nexusarchive-java/.../service/impl/LegacyImportServiceImpl.java` | [FIX] 修复导入逻辑与审计调用 |
+| `docs/announcements/2025-12-31-schema-updates.md` | [NEW] 详细变更通知 |
+
 ## [2025-12-31] 预览链路验证与水印头消费
 
 ### 核心变更
