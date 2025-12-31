@@ -893,7 +893,10 @@
 | `src/__tests__/components/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/permissions/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/store/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `src/api/preview.ts` | 新增 | 预览/水印 API | 否 |
 | `src/api/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `src/components/WatermarkOverlay.tsx` | 新增 | 水印组件统一入口 | 否 |
+| `src/components/watermark/WatermarkOverlay.tsx` | 新增 | 动态水印覆盖层组件 | 否 |
 | `src/components/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/components/admin/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/components/archive/README.md` | 新增 | 目录 MD 缺失 | 否 |
