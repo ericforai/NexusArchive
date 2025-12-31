@@ -72,6 +72,12 @@ public class Destruction {
     private LocalDateTime approvalTime;
 
     /**
+     * 审批链快照 (JSON)
+     * 存储审批流程中的所有审批记录
+     */
+    private String approvalSnapshot;
+
+    /**
      * 执行时间
      */
     private LocalDateTime executionTime;

@@ -106,6 +106,13 @@ public class SysAuditLog {
     @TableField("device_fingerprint")
     private String deviceFingerprint;
 
+    /**
+     * 追踪ID
+     * 用于关联同一业务操作的多条日志
+     */
+    @TableField("trace_id")
+    private String traceId;
+
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 }

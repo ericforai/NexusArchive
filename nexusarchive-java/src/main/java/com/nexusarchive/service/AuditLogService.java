@@ -86,6 +86,45 @@ public class AuditLogService {
         
         saveAuditLogWithHash(auditLog);
     }
+
+    /**
+     * 记录跨全宗访问审计日志
+     * 
+     * @param userId 操作者ID
+     * @param username 操作者姓名
+     * @param sourceFonds 源全宗号
+     * @param targetFonds 目标全宗号
+     * @param ticketId 授权票据ID
+     * @param action 操作类型
+     * @param resourceId 资源ID
+     * @param result 操作结果 (SUCCESS/FAILURE)
+     * @param clientIp 客户端IP
+     * @param traceId 追踪ID
+     * @param message 详细信息
+     */
+    @Async
+    public void logCrossFondsAccess(String userId, String username, String sourceFonds, 
+                                     String targetFonds, String ticketId, String action,
+                                     String resourceId, String result, String clientIp,
+                                     String traceId, String message) {
+        SysAuditLog auditLog = new SysAuditLog();
+        auditLog.setId(UUID.randomUUID().toString().replace("-", ""));
+        auditLog.setUserId(userId);
+        auditLog.setUsername(username);
+        auditLog.setAction(action);
+        auditLog.setResourceType("CROSS_FONDS");
+        auditLog.setResourceId(resourceId);
+        auditLog.setOperationResult(result);
+        auditLog.setDetails(String.format("源全宗: %s, 目标全宗: %s, 授权票据: %s, 信息: %s",
+                sourceFonds, targetFonds, ticketId, message));
+        auditLog.setClientIp(clientIp);
+        auditLog.setMacAddress("UNKNOWN");
+        auditLog.setTraceId(traceId);
+        auditLog.setCreatedTime(LocalDateTime.now());
+        auditLog.setRiskLevel("medium");
+        
+        saveAuditLogWithHash(auditLog);
+    }
     
     /**
      * 保存审计日志并计算哈希链

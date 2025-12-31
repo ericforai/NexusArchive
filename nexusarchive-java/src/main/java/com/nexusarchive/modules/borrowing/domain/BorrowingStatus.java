@@ -30,4 +30,12 @@ public enum BorrowingStatus {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("未知借阅状态: " + code));
     }
+
+    /**
+     * 返回表示"在借中"的状态代码列表
+     * 用于判断档案是否可以销毁
+     */
+    public static java.util.List<String> borrowedCodes() {
+        return java.util.List.of(APPROVED.name());
+    }
 }

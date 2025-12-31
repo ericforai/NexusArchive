@@ -72,6 +72,16 @@ public class Borrowing {
      */
     private String approvalComment;
 
+    /**
+     * 全宗号 (冗余字段，方便查询)
+     */
+    private String fondsNo;
+
+    /**
+     * 档案年度 (冗余字段，方便查询)
+     */
+    private Integer archiveYear;
+
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 

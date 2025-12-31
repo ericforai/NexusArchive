@@ -42,4 +42,55 @@ public interface FileStorageService {
      * @return File对象，不存在时返回null
      */
     java.io.File getFile(String relativePath);
+
+    /**
+     * 获取文件信息
+     * @param relativePath 相对路径
+     * @return 文件信息，不存在时返回null
+     */
+    default FileInfo getFileInfo(String relativePath) {
+        java.io.File file = getFile(relativePath);
+        if (file == null || !file.exists()) {
+            return null;
+        }
+        return new FileInfo(file.getName(), file.length(), file.lastModified());
+    }
+
+    /**
+     * 软删除文件（移动到回收站或标记删除）
+     * @param relativePath 相对路径
+     * @return true if success
+     */
+    default boolean softDelete(String relativePath) {
+        // 默认实现：移动到 .trash 目录
+        java.io.File file = getFile(relativePath);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        java.io.File trashDir = new java.io.File(file.getParent(), ".trash");
+        if (!trashDir.exists()) {
+            trashDir.mkdirs();
+        }
+        return file.renameTo(new java.io.File(trashDir, file.getName() + "." + System.currentTimeMillis()));
+    }
+
+    /**
+     * 硬删除文件（物理删除）
+     * @param relativePath 相对路径
+     * @return true if success
+     */
+    default boolean hardDelete(String relativePath) {
+        java.io.File file = getFile(relativePath);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        return file.delete();
+    }
+
+    /**
+     * 文件信息
+     */
+    record FileInfo(String name, long size, long lastModified) {
+        public long getSize() { return size; }
+    }
 }

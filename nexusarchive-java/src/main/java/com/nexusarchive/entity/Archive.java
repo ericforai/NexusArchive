@@ -75,6 +75,12 @@ public class Archive {
     private String retentionPeriod;
 
     /**
+     * 保管期限起算日期
+     */
+    @TableField("retention_start_date")
+    private java.time.LocalDate retentionStartDate;
+
+    /**
      * 立档单位名称 (M6)
      */
     @NotBlank(message = "立档单位名称不能为空")
@@ -189,6 +195,11 @@ public class Archive {
      * 智能匹配得分 (0-100)
      */
     private Integer matchScore;
+
+    /**
+     * 销毁状态: PENDING, APPROVED, FROZEN, HOLD, DESTROYED
+     */
+    private String destructionStatus;
 
     /**
      * 关联方式
