@@ -4,8 +4,9 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Save, RefreshCw, FileText, AlertTriangle } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import { X, Save, FileText } from 'lucide-react';
+import { FormModal } from '../modals/FormModal';
+import { MetadataForm, MetadataFormData, MetadataFormConfig } from './MetadataForm';
 
 // ✅ 已移除对 api/client 的依赖（遵循架构边界规则 A）
 // API 调用现在通过 props 传入
@@ -17,6 +18,49 @@ const VOUCHER_TYPE_OPTIONS = [
     { code: 'AC02', label: '会计账簿', desc: '总账、明细账、日记账、固定资产卡片' },
     { code: 'AC03', label: '财务会计报告', desc: '月度/季度/半年度/年度报告' },
     { code: 'AC04', label: '其他会计资料', desc: '银行对账单、纳税申报表、会计档案鉴定意见书等' },
+];
+
+// 默认字段配置
+const DEFAULT_FIELDS: MetadataFormConfig[] = [
+    {
+        name: 'fiscalYear',
+        label: '会计年度',
+        required: true,
+        type: 'text',
+        placeholder: '例：2025',
+        pattern: '\\d{4}',
+    },
+    {
+        name: 'voucherType',
+        label: '单据类型',
+        required: true,
+        type: 'select',
+        options: VOUCHER_TYPE_OPTIONS,
+    },
+    {
+        name: 'creator',
+        label: '责任者',
+        required: true,
+        type: 'text',
+        placeholder: '例：财务部 张三',
+    },
+    {
+        name: 'fondsCode',
+        label: '全宗号',
+        required: false,
+        type: 'text',
+        placeholder: '例：COMP001',
+        helperText: '可选',
+    },
+    {
+        name: 'modifyReason',
+        label: '修改原因',
+        required: true,
+        type: 'textarea',
+        placeholder: '例：补充上传发票的分类信息',
+        rows: 2,
+        helperText: '合规要求',
+    },
 ];
 
 interface FileDetail {
@@ -48,6 +92,8 @@ interface MetadataEditModalProps {
     // ✅ 新增：通过 props 传入 API 操作（遵循架构边界规则 A）
     onLoadFileDetail: (fileId: string) => Promise<FileDetail | null>;
     onUpdateMetadata: (payload: MetadataUpdatePayload) => Promise<{ success: boolean; message?: string }>;
+    /** 自定义字段配置 */
+    fieldConfig?: MetadataFormConfig[];
 }
 
 export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
@@ -58,29 +104,34 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
     onSuccess,
     onLoadFileDetail,
     onUpdateMetadata,
+    fieldConfig = DEFAULT_FIELDS,
 }) => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Form state
-    const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
-    const [voucherType, setVoucherType] = useState('AC01');
-    const [creator, setCreator] = useState('');
-    const [fondsCode, setFondsCode] = useState('');
-    const [modifyReason, setModifyReason] = useState('');
+    // Form state using unified MetadataFormData
+    const [formData, setFormData] = useState<MetadataFormData>({
+        fiscalYear: new Date().getFullYear().toString(),
+        voucherType: 'AC01',
+        creator: '',
+        fondsCode: '',
+        modifyReason: '',
+    });
 
     const loadFileDetail = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // ✅ 使用 props 传入的回调，而非直接调用 API
             const detail = await onLoadFileDetail(fileId);
             if (detail) {
-                if (detail.fiscalYear) setFiscalYear(detail.fiscalYear);
-                if (detail.voucherType) setVoucherType(detail.voucherType);
-                if (detail.creator) setCreator(detail.creator);
-                if (detail.fondsCode) setFondsCode(detail.fondsCode);
+                setFormData({
+                    fiscalYear: detail.fiscalYear || new Date().getFullYear().toString(),
+                    voucherType: detail.voucherType || 'AC01',
+                    creator: detail.creator || '',
+                    fondsCode: detail.fondsCode || '',
+                    modifyReason: '',
+                });
             }
         } catch (err) {
             console.error('Failed to load file detail:', err);
@@ -100,23 +151,25 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
         e.preventDefault();
 
         // Validation
-        if (!fiscalYear || !voucherType || !creator || !modifyReason) {
-            setError('请填写所有必填字段');
-            return;
+        const requiredFields = fieldConfig.filter(f => f.required);
+        for (const field of requiredFields) {
+            if (!formData[field.name as keyof MetadataFormData]) {
+                setError(`请填写${field.label}`);
+                return;
+            }
         }
 
         setSaving(true);
         setError(null);
 
         try {
-            // ✅ 使用 props 传入的回调，而非直接调用 API
             const result = await onUpdateMetadata({
                 id: fileId,
-                fiscalYear,
-                voucherType,
-                creator,
-                fondsCode: fondsCode || undefined,
-                modifyReason
+                fiscalYear: formData.fiscalYear,
+                voucherType: formData.voucherType,
+                creator: formData.creator,
+                fondsCode: formData.fondsCode || undefined,
+                modifyReason: formData.modifyReason,
             });
 
             if (result.success) {
@@ -133,165 +186,37 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
         }
     };
 
-    if (!isOpen) return null;
-
-    return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={onClose}
-            />
-
-            {/* Modal */}
-            <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95 duration-200">
-                {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                            <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">元数据补录</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[280px]">{fileName}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-5 space-y-4">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
-                        </div>
-                    ) : (
-                        <>
-                            {/* Fiscal Year */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    会计年度 <span className="text-rose-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={fiscalYear}
-                                    onChange={(e) => setFiscalYear(e.target.value)}
-                                    placeholder="例：2025"
-                                    pattern="\d{4}"
-                                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                />
-                            </div>
-
-                            {/* Voucher Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    单据类型 <span className="text-rose-500">*</span>
-                                </label>
-                                <select
-                                    value={voucherType}
-                                    onChange={(e) => setVoucherType(e.target.value)}
-                                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                >
-                                    {VOUCHER_TYPE_OPTIONS.map((opt) => (
-                                        <option key={opt.code} value={opt.code}>
-                                            {opt.code} - {opt.label}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                    {VOUCHER_TYPE_OPTIONS.find(o => o.code === voucherType)?.desc}
-                                </p>
-                            </div>
-
-                            {/* Creator */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    责任者 <span className="text-rose-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={creator}
-                                    onChange={(e) => setCreator(e.target.value)}
-                                    placeholder="例：财务部 张三"
-                                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                />
-                            </div>
-
-                            {/* Fonds Code */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    全宗号 <span className="text-slate-400">(可选)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={fondsCode}
-                                    onChange={(e) => setFondsCode(e.target.value)}
-                                    placeholder="例：COMP001"
-                                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                />
-                            </div>
-
-                            {/* Modify Reason */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    修改原因 <span className="text-rose-500">*</span>
-                                    <span className="ml-2 text-xs text-slate-400">(合规要求)</span>
-                                </label>
-                                <textarea
-                                    value={modifyReason}
-                                    onChange={(e) => setModifyReason(e.target.value)}
-                                    placeholder="例：补充上传发票的分类信息"
-                                    rows={2}
-                                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                                />
-                            </div>
-
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-xl text-sm">
-                                    <AlertTriangle size={16} />
-                                    {error}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </form>
-
-                {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-                    >
-                        取消
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={saving || loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {saving ? (
-                            <>
-                                <RefreshCw size={16} className="animate-spin" />
-                                保存中...
-                            </>
-                        ) : (
-                            <>
-                                <Save size={16} />
-                                保存并重新检测
-                            </>
-                        )}
-                    </button>
-                </div>
+    const header = (
+        <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-        </div>,
-        document.body
+            <div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">元数据补录</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[280px]">{fileName}</p>
+            </div>
+        </div>
+    );
+
+    return (
+        <FormModal
+            isOpen={isOpen}
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            isSubmitting={saving}
+            error={error}
+            title="元数据补录"
+            header={header}
+            submitText="保存并重新检测"
+        >
+            <MetadataForm
+                data={formData}
+                onChange={setFormData}
+                fields={fieldConfig}
+                loading={loading}
+                error={error}
+            />
+        </FormModal>
     );
 };
 
