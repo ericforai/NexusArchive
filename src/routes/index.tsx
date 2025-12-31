@@ -70,6 +70,9 @@ const EntityManagementPage = lazy(() => import('../pages/admin/EntityManagementP
 const EntityConfigPage = lazy(() => import('../pages/admin/EntityConfigPage'));
 const EnterpriseArchitecturePage = lazy(() => import('../pages/admin/EnterpriseArchitecturePage'));
 
+// 历史数据导入模块
+const LegacyImportPage = lazy(() => import('../pages/admin/LegacyImportPage'));
+
 // 跨全宗访问授权票据模块
 const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
 const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPage'));
@@ -195,6 +198,9 @@ export const routes: RouteObject[] = [
             // ========== 全宗沿革管理 ==========
             { path: 'admin/fonds-history', element: withSuspense(FondsHistoryPage) },
             { path: 'admin/fonds-history/list', element: withSuspense(FondsHistoryListPage) },
+            
+            // ========== 历史数据导入 ==========
+            { path: 'admin/legacy-import', element: withSuspense(LegacyImportPage) },
             
             // ========== 跨全宗访问授权票据 ==========
             { path: 'security/auth-ticket/apply', element: withSuspense(AuthTicketApplyPage) },

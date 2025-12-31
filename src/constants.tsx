@@ -13,6 +13,7 @@ import {
   Settings,
   FileText,
   PanelLeft,
+  Upload,
 } from 'lucide-react';
 import { NavItem, ViewState, ArchiveStat, Notification, ModuleConfig } from './types';
 
@@ -177,6 +178,15 @@ export const NAV_ITEMS: NavItem[] = [
     label: '系统设置',
     icon: Settings,
     permission: 'nav:settings',
+  },
+  {
+    id: ViewState.ADMIN,
+    label: '后台管理',
+    icon: Upload,
+    permission: 'nav:admin',
+    children: [
+      { id: '历史数据导入', label: '历史数据导入', path: '历史数据导入' },
+    ],
   },
 ];
 

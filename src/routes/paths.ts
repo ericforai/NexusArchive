@@ -64,6 +64,7 @@ export const ROUTE_PATHS = {
     SETTINGS_INTEGRATION: '/system/settings/integration',
     SETTINGS_AUDIT: '/system/settings/audit',
     ADMIN: '/system/admin',
+    ADMIN_LEGACY_IMPORT: '/system/admin/legacy-import',
 
 
     MATCHING: '/system/matching',
@@ -183,5 +184,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '集成中心': ROUTE_PATHS.SETTINGS_INTEGRATION,
     '审计日志': ROUTE_PATHS.SETTINGS_AUDIT,
 
+    // 后台管理
+    '历史数据导入': ROUTE_PATHS.ADMIN_LEGACY_IMPORT,
 
 };
