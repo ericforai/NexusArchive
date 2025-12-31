@@ -1,0 +1,82 @@
+version: '3.8'
+services:
+  nexus-db:
+    image: postgres:15-alpine
+    container_name: nexus-db
+    restart: always
+    environment:
+      POSTGRES_DB: nexusarchive
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nexus_secure_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - nexus-db-data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nexus-redis:
+    image: redis:alpine
+    container_name: nexus-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - nexus-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nexus-backend:
+    image: nexus-core:latest
+    container_name: nexus-backend
+    restart: always
+    depends_on:
+      nexus-db:
+        condition: service_healthy
+      nexus-redis:
+        condition: service_healthy
+    environment:
+      DB_HOST: nexus-db
+      DB_PORT: 5432
+      DB_NAME: nexusarchive
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-nexus_secure_pass}
+      REDIS_HOST: nexus-redis
+      REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "19090:19090"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19090/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  nexus-frontend:
+    image: nexus-ui:latest
+    container_name: nexus-frontend
+    restart: always
+    depends_on:
+      - nexus-backend
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  nexus-db-data:
+  nexus-redis-data:

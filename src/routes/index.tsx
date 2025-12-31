@@ -60,6 +60,19 @@ const ComplianceReport = lazy(() => import('../pages/matching/ComplianceReport')
 // 归档批次模块
 const ArchiveBatchView = lazy(() => import('../pages/operations/ArchiveBatchView'));
 
+// 全宗沿革管理模块
+const FondsHistoryPage = lazy(() => import('../pages/admin/FondsHistoryPage'));
+const FondsHistoryListPage = lazy(() => import('../pages/admin/FondsHistoryListPage'));
+
+// 法人管理模块
+const EntityManagementPage = lazy(() => import('../pages/admin/EntityManagementPage'));
+const EntityConfigPage = lazy(() => import('../pages/admin/EntityConfigPage'));
+const EnterpriseArchitecturePage = lazy(() => import('../pages/admin/EnterpriseArchitecturePage'));
+
+// 跨全宗访问授权票据模块
+const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
+const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPage'));
+
 // 加载占位符
 const LoadingFallback = () => (
     <div className="flex items-center justify-center h-full text-slate-600">
@@ -173,6 +186,19 @@ export const routes: RouteObject[] = [
                 ],
             },
 
+            // ========== 法人管理 ==========
+            { path: 'admin/entity', element: withSuspense(EntityManagementPage) },
+            { path: 'admin/entity/config', element: withSuspense(EntityConfigPage) },
+            { path: 'admin/enterprise-architecture', element: withSuspense(EnterpriseArchitecturePage) },
+            
+            // ========== 全宗沿革管理 ==========
+            { path: 'admin/fonds-history', element: withSuspense(FondsHistoryPage) },
+            { path: 'admin/fonds-history/list', element: withSuspense(FondsHistoryListPage) },
+            
+            // ========== 跨全宗访问授权票据 ==========
+            { path: 'security/auth-ticket/apply', element: withSuspense(AuthTicketApplyPage) },
+            { path: 'security/auth-ticket', element: withSuspense(AuthTicketListPage) },
+            
             // ========== 后台管理 ==========
             { path: 'admin/*', element: withSuspense(AdminLayout) },
 

@@ -1,0 +1,38 @@
+# Input: ShardingSphere YAML 配置（库级路由 + 全宗隔离）
+# Output: 全宗隔离分片 POC（单库单表落点）
+# Pos: NexusCore Sharding POC
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+dataSources:
+  ds_0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: org.h2.Driver
+    jdbcUrl: jdbc:h2:mem:shard0;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: org.h2.Driver
+    jdbcUrl: jdbc:h2:mem:shard1;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+
+rules:
+  - !SHARDING
+    tables:
+      arc_account_item:
+        actualDataNodes: ds_${0..1}.arc_account_item
+        databaseStrategy:
+          complex:
+            shardingColumns: fonds_no, fiscal_year
+            shardingAlgorithmName: fonds_year_strict
+        tableStrategy:
+          complex:
+            shardingColumns: fonds_no, fiscal_year
+            shardingAlgorithmName: fonds_year_strict
+    shardingAlgorithms:
+      fonds_year_strict:
+        type: FONDS_YEAR_STRICT
+
+props:
+  sql-show: true

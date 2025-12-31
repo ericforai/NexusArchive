@@ -64,4 +64,10 @@ public class BasFonds {
      * 关联组织ID (Company Level)
      */
     private String orgId;
+
+    /**
+     * 所属法人ID (Entity ID)
+     * PRD 说明: entity_id 仅用于治理、统计与合规台账，不作为数据隔离键
+     */
+    private String entityId;
 }

@@ -1,0 +1,78 @@
+import { client } from './client';
+
+export interface PreviewRequest {
+    archiveId: string;
+    fileId?: string;
+    mode?: 'stream' | 'presigned' | 'rendered';
+}
+
+export interface WatermarkMetadata {
+    text?: string;
+    subText?: string;
+    opacity?: number;
+    rotate?: number;
+}
+
+export interface PreviewStreamResult {
+    mode: 'stream' | 'rendered';
+    blob: Blob;
+    traceId?: string;
+    watermark?: WatermarkMetadata;
+}
+
+export interface PreviewPresignedResult {
+    mode: 'presigned';
+    presignedUrl?: string;
+    expiresAt?: string;
+    traceId?: string;
+    watermark?: WatermarkMetadata;
+}
+
+export type PreviewResult = PreviewStreamResult | PreviewPresignedResult;
+
+export const previewApi = {
+    getPreview: async (params: PreviewRequest): Promise<PreviewResult> => {
+        const mode = params.mode || 'stream';
+        if (mode === 'presigned') {
+            const response = await client.post('/archive/preview/presigned', null, {
+                params: {
+                    archiveId: params.archiveId,
+                },
+            });
+            const data = response.data?.data || response.data;
+            return {
+                mode: 'presigned',
+                presignedUrl: data?.presignedUrl || data?.presigned_url,
+                expiresAt: data?.expiresAt || data?.expires_at,
+                traceId: data?.traceId,
+                watermark: data?.watermark,
+            };
+        }
+
+        const response = await client.post('/archive/preview', null, {
+            params: {
+                archiveId: params.archiveId,
+                mode,
+            },
+            responseType: 'blob',
+        });
+
+        const headers = response.headers || {};
+        const traceId = headers['x-trace-id'];
+        const opacity = headers['x-watermark-opacity'];
+        const rotate = headers['x-watermark-rotate'];
+        const watermark: WatermarkMetadata = {
+            text: headers['x-watermark-text'],
+            subText: headers['x-watermark-subtext'],
+            opacity: opacity ? Number(opacity) : undefined,
+            rotate: rotate ? Number(rotate) : undefined,
+        };
+
+        return {
+            mode: mode === 'rendered' ? 'rendered' : 'stream',
+            blob: response.data,
+            traceId,
+            watermark,
+        };
+    },
+};

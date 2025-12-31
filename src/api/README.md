@@ -23,6 +23,11 @@
 - `destruction.ts`: 档案销毁接口。
 - `erp.ts`: ERP 集成配置接口。
 - `fonds.ts`: 全宗管理接口。
+- `fondsHistory.ts`: 全宗沿革管理接口（迁移、合并、分立、重命名）。
+- `entity.ts`: 法人实体管理接口（CRUD、法人与全宗关联）。
+- `entityConfig.ts`: 法人配置管理接口（为每个法人设置独立配置）。
+- `enterpriseArchitecture.ts`: 集团架构树视图接口（获取"法人 -> 全宗 -> 档案"层级数据）。
+- `authTicket.ts`: 跨全宗访问授权票据接口（申请、审批、撤销）。
 - `license.ts`: 系统授权接口。
 - `matching.ts`: 智能匹配接口。
 - `nav.ts`: 导航菜单接口。

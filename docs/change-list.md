@@ -888,7 +888,8 @@
 | `scripts/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/README.md` | 新增 | 目录 MD 缺失 | 否 |
-| `src/__tests__/api/README.md` | 新增 | 目录 MD 缺失 | 否 |
+| `src/__tests__/api/preview.test.ts` | 新增 | 预览水印元数据解析测试 | 否 |
+| `src/__tests__/api/README.md` | 修改 | 补齐预览测试索引 | 否 |
 | `src/__tests__/components/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/permissions/README.md` | 新增 | 目录 MD 缺失 | 否 |
 | `src/__tests__/store/README.md` | 新增 | 目录 MD 缺失 | 否 |

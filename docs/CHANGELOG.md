@@ -4,6 +4,27 @@
 
 ---
 
+## [2025-12-31] 预览链路验证与水印头消费
+
+### 核心变更
+- **预览链路对齐**：前端改为解析 `X-Watermark-*` 响应头并回填水印参数。
+- **水印组件统一**：水印组件合并为单一入口，加入防篡改监听与白屏锁定策略。
+- **全宗请求头对齐**：统一使用 `X-Fonds-No`/`X-FondsNo`。
+- **验证补充**：新增预览水印元数据解析单测。
+
+### 修改文件
+| 文件 | 变更 |
+|------|------|
+| `src/api/preview.ts` | 解析水印元数据与预览模式返回 |
+| `src/pages/preview/ArchivePreviewModal.tsx` | 预览水印兜底与 TraceID 绑定 |
+| `src/components/watermark/WatermarkOverlay.tsx` | Canvas 水印平铺与防篡改监听 |
+| `src/components/WatermarkOverlay.tsx` | 统一水印组件入口 |
+| `src/api/client.ts` | 统一全宗请求头 |
+| `src/__tests__/api/preview.test.ts` | [NEW] 预览水印元数据解析测试 |
+| `src/__tests__/api/README.md` | 更新测试清单 |
+
+---
+
 ## [2025-12-30] PRD 对齐与文档索引补齐
 
 ### 核心变更

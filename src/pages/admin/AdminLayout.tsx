@@ -8,6 +8,9 @@ import { Sidebar } from '../../components/Sidebar';
 import { TopBar } from '../../components/TopBar';
 import { FondsManagement } from './FondsManagement';
 import { PositionManagement } from './PositionManagement';
+import { EntityManagementPage } from './EntityManagementPage';
+import { EntityConfigPage } from './EntityConfigPage';
+import { EnterpriseArchitecturePage } from './EnterpriseArchitecturePage';
 
 interface AdminLayoutProps {
     onExit: () => void;
@@ -15,11 +18,14 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExit, children }) => {
-    const [activeTab, setActiveTab] = useState<'fonds' | 'positions' | 'custom'>('custom');
+    const [activeTab, setActiveTab] = useState<'entity' | 'entity-config' | 'architecture' | 'fonds' | 'positions' | 'custom'>('custom');
     const [collapsed, setCollapsed] = useState(false);
 
     const renderContent = () => {
         if (children) return children;
+        if (activeTab === 'entity') return <EntityManagementPage />;
+        if (activeTab === 'entity-config') return <EntityConfigPage />;
+        if (activeTab === 'architecture') return <EnterpriseArchitecturePage />;
         if (activeTab === 'fonds') return <FondsManagement />;
         if (activeTab === 'positions') return <PositionManagement />;
         return null;
@@ -34,12 +40,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExit, children }) =>
             />
             <div className="flex-1 flex flex-col">
                 <TopBar />
-                <div className="px-4 pt-4 flex gap-2">
+                <div className="px-4 pt-4 flex gap-2 flex-wrap">
                     <button
-                        onClick={() => setActiveTab('custom')}
-                        className={`px-3 py-2 text-sm rounded-lg border ${activeTab === 'custom' ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600'}`}
+                        onClick={() => setActiveTab('entity')}
+                        className={`px-3 py-2 text-sm rounded-lg border ${activeTab === 'entity' ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600'}`}
                     >
-                        自定义内容
+                        法人管理
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('entity-config')}
+                        className={`px-3 py-2 text-sm rounded-lg border ${activeTab === 'entity-config' ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600'}`}
+                    >
+                        法人配置
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('architecture')}
+                        className={`px-3 py-2 text-sm rounded-lg border ${activeTab === 'architecture' ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600'}`}
+                    >
+                        集团架构
                     </button>
                     <button
                         onClick={() => setActiveTab('fonds')}
@@ -52,6 +70,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onExit, children }) =>
                         className={`px-3 py-2 text-sm rounded-lg border ${activeTab === 'positions' ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600'}`}
                     >
                         岗位管理
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('custom')}
+                        className={`px-3 py-2 text-sm rounded-lg border ${activeTab === 'custom' ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600'}`}
+                    >
+                        自定义内容
                     </button>
                 </div>
                 <main className="flex-1 overflow-y-auto p-4">

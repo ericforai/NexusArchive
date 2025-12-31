@@ -153,6 +153,7 @@ export const FondsManagement: React.FC = () => {
                         <tr>
                             <th className="px-4 py-3 rounded-l-lg">全宗号</th>
                             <th className="px-4 py-3">全宗名称</th>
+                            <th className="px-4 py-3">所属法人</th>
                             <th className="px-4 py-3">立档单位</th>
                             <th className="px-4 py-3">描述</th>
                             <th className="px-4 py-3 rounded-r-lg text-right">操作</th>
@@ -161,7 +162,7 @@ export const FondsManagement: React.FC = () => {
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
                             <tr>
-                                <td colSpan={5} className="py-8 text-center text-slate-500">
+                                <td colSpan={6} className="py-8 text-center text-slate-500">
                                     <div className="flex items-center justify-center">
                                         <Loader2 size={20} className="animate-spin mr-2" /> 加载中...
                                     </div>
@@ -169,13 +170,22 @@ export const FondsManagement: React.FC = () => {
                             </tr>
                         ) : fondsList.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="py-8 text-center text-slate-400">暂无全宗数据，请新建。</td>
+                                <td colSpan={6} className="py-8 text-center text-slate-400">暂无全宗数据，请新建。</td>
                             </tr>
                         ) : (
-                            fondsList.map((item) => (
+                            fondsList.map((item) => {
+                                const entity = entityList.find(e => e.id === (item as any).entityId);
+                                return (
                                 <tr key={item.id} className="hover:bg-slate-50 group transition-colors">
                                     <td className="px-4 py-3 font-mono text-primary-600 font-medium">{item.fondsCode}</td>
                                     <td className="px-4 py-3 font-medium text-slate-800">{item.fondsName}</td>
+                                    <td className="px-4 py-3 text-slate-600">
+                                        {entity ? (
+                                            <span className="font-medium">{entity.name}</span>
+                                        ) : (
+                                            <span className="text-slate-400">-</span>
+                                        )}
+                                    </td>
                                     <td className="px-4 py-3 text-slate-600">{item.companyName || '-'}</td>
                                     <td className="px-4 py-3 text-slate-500 truncate max-w-xs">{item.description || '-'}</td>
                                     <td className="px-4 py-3 text-right space-x-2">
@@ -195,7 +205,8 @@ export const FondsManagement: React.FC = () => {
                                         </button>
                                     </td>
                                 </tr>
-                            ))
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
