@@ -39,7 +39,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ArchiveService {
+public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
 
     private final ArchiveMapper archiveMapper;
     private final ArcFileContentMapper arcFileContentMapper;
@@ -58,6 +58,7 @@ public class ArchiveService {
      * @param orgId        部门ID
      * @return 分页结果
      */
+    @Override
     public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode,
             String orgId, String uniqueBizId, String subType) {
         Page<Archive> pageObj = new Page<>(page, limit);
@@ -136,6 +137,7 @@ public class ArchiveService {
      * @return 档案详情
      * @throws BusinessException if not found or access denied
      */
+    @Override
     public Archive getArchiveById(String id) {
         Archive archive = archiveMapper.selectById(id);
         if (archive == null) {
@@ -158,6 +160,7 @@ public class ArchiveService {
      * @param userId  创建人ID
      * @return 创建后的档案
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Archive createArchive(Archive archive, String userId) {
         // 如果没有指定档号，尝试自动生成
@@ -204,6 +207,7 @@ public class ArchiveService {
      * @param id      档案ID
      * @param archive 更新的数据
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateArchive(String id, Archive archive) {
         Archive existing = getArchiveById(id);
@@ -232,6 +236,7 @@ public class ArchiveService {
      *
      * @param id 档案ID
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteArchive(String id) {
         Archive archive = getArchiveById(id);
@@ -242,6 +247,7 @@ public class ArchiveService {
     /**
      * 根据唯一业务ID获取档案
      */
+    @Override
     public Archive getByUniqueBizId(String uniqueBizId) {
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
         wrapper.eq("unique_biz_id", uniqueBizId);
@@ -251,6 +257,7 @@ public class ArchiveService {
     /**
      * 获取最近创建的档案
      */
+    @Override
     public List<Archive> getRecentArchives(int limit) {
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
         DataScopeContext scope = dataScopeService.resolve();
@@ -263,6 +270,7 @@ public class ArchiveService {
      * 批量获取档案 (受控)
      * [FIXED P1-3] 在 SQL 层面应用数据权限过滤，避免无效查询
      */
+    @Override
     public List<Archive> getArchivesByIds(Set<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
@@ -288,6 +296,7 @@ public class ArchiveService {
      * 根据部门ID列表获取档案ID列表
      * [Sec] 用于跨模块权限校验
      */
+    @Override
     public List<String> getArchiveIdsByDepartmentIds(java.util.Collection<String> departmentIds) {
         if (departmentIds == null || departmentIds.isEmpty()) {
             return Collections.emptyList();
@@ -300,6 +309,7 @@ public class ArchiveService {
      * @param archiveId 档案ID
      * @return 文件列表
      */
+    @Override
     public List<ArcFileContent> getFilesByArchiveId(String archiveId) {
         // Check existence and permission
         getArchiveById(archiveId); // This performs checks

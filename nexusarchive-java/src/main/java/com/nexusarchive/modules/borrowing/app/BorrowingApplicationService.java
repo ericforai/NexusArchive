@@ -14,6 +14,7 @@ import com.nexusarchive.modules.borrowing.api.dto.BorrowingDto;
 import com.nexusarchive.modules.borrowing.domain.Borrowing;
 import com.nexusarchive.modules.borrowing.domain.BorrowingStatus;
 import com.nexusarchive.modules.borrowing.infra.mapper.BorrowingMapper;
+import com.nexusarchive.service.ArchiveReadService;
 import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public class BorrowingApplicationService implements BorrowingFacade {
 
     private final BorrowingMapper borrowingMapper;
-    private final com.nexusarchive.service.ArchiveService archiveService;
+    private final ArchiveReadService archiveService;
     private final DataScopeService dataScopeService;
     private final BorrowingScopePolicy borrowingScopePolicy;
 
