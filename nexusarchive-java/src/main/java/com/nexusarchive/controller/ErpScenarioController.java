@@ -5,13 +5,10 @@
 
 package com.nexusarchive.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.ErpSubInterface;
 import com.nexusarchive.entity.SyncHistory;
-import com.nexusarchive.mapper.ErpSubInterfaceMapper;
-import com.nexusarchive.mapper.SyncHistoryMapper;
 import com.nexusarchive.service.ErpScenarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,8 +25,6 @@ import java.util.Map;
 public class ErpScenarioController {
 
     private final ErpScenarioService erpScenarioService;
-    private final ErpSubInterfaceMapper subInterfaceMapper;
-    private final SyncHistoryMapper syncHistoryMapper;
 
     @GetMapping("/list/{configId}")
     @Operation(summary = "获取指定ERP配置的场景列表")
@@ -92,31 +87,26 @@ public class ErpScenarioController {
     @GetMapping("/{scenarioId}/interfaces")
     @Operation(summary = "获取场景的子接口列表")
     public Result<List<ErpSubInterface>> listSubInterfaces(@PathVariable Long scenarioId) {
-        List<ErpSubInterface> interfaces = subInterfaceMapper.selectList(
-            new LambdaQueryWrapper<ErpSubInterface>()
-                .eq(ErpSubInterface::getScenarioId, scenarioId)
-                .orderByAsc(ErpSubInterface::getSortOrder)
-        );
-        return Result.success(interfaces);
+        return Result.success(erpScenarioService.listSubInterfaces(scenarioId));
     }
 
     @PutMapping("/interface")
     @Operation(summary = "更新子接口配置")
-    public Result<Void> updateSubInterface(@RequestBody ErpSubInterface subInterface) {
-        subInterface.setLastModifiedTime(java.time.LocalDateTime.now());
-        subInterfaceMapper.updateById(subInterface);
+    public Result<Void> updateSubInterface(@RequestBody ErpSubInterface subInterface,
+                                            jakarta.servlet.http.HttpServletRequest request) {
+        String operatorId = resolveUserId(request);
+        String clientIp = getClientIp(request);
+        erpScenarioService.updateSubInterface(subInterface, operatorId, clientIp);
         return Result.success();
     }
 
     @PutMapping("/interface/toggle/{id}")
     @Operation(summary = "切换子接口启用状态")
-    public Result<Void> toggleSubInterface(@PathVariable Long id) {
-        ErpSubInterface sub = subInterfaceMapper.selectById(id);
-        if (sub != null) {
-            sub.setIsActive(!sub.getIsActive());
-            sub.setLastModifiedTime(java.time.LocalDateTime.now());
-            subInterfaceMapper.updateById(sub);
-        }
+    public Result<Void> toggleSubInterface(@PathVariable Long id,
+                                           jakarta.servlet.http.HttpServletRequest request) {
+        String operatorId = resolveUserId(request);
+        String clientIp = getClientIp(request);
+        erpScenarioService.toggleSubInterface(id, operatorId, clientIp);
         return Result.success();
     }
 
@@ -125,13 +115,7 @@ public class ErpScenarioController {
     @GetMapping("/{scenarioId}/history")
     @Operation(summary = "获取场景的同步历史 (最近10条)")
     public Result<List<SyncHistory>> getSyncHistory(@PathVariable Long scenarioId) {
-        List<SyncHistory> history = syncHistoryMapper.selectList(
-            new LambdaQueryWrapper<SyncHistory>()
-                .eq(SyncHistory::getScenarioId, scenarioId)
-                .orderByDesc(SyncHistory::getSyncStartTime)
-                .last("LIMIT 10")
-        );
-        return Result.success(history);
+        return Result.success(erpScenarioService.getSyncHistory(scenarioId));
     }
 
     // ============ 场景参数配置 API ============

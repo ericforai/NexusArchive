@@ -10,8 +10,7 @@ import com.nexusarchive.common.Result;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.AuditInspectionLog;
-import com.nexusarchive.mapper.ArcFileContentMapper;
-import com.nexusarchive.mapper.AuditInspectionLogMapper;
+import com.nexusarchive.service.ArchiveFileContentService;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.ComplianceCheckService;
 
@@ -36,8 +35,7 @@ public class ComplianceController {
 
     private final ComplianceCheckService complianceCheckService;
     private final ArchiveService archiveService;
-    private final ArcFileContentMapper arcFileContentMapper;
-    private final AuditInspectionLogMapper auditInspectionLogMapper;
+    private final ArchiveFileContentService archiveFileContentService;
 
     /**
      * 检查单个档案的符合性
@@ -54,9 +52,7 @@ public class ComplianceController {
             }
 
             // 获取关联文件
-            List<ArcFileContent> files = arcFileContentMapper.selectList(
-                    new LambdaQueryWrapper<ArcFileContent>()
-                            .eq(ArcFileContent::getItemId, archiveId));
+            List<ArcFileContent> files = archiveFileContentService.getFilesByItemId(archiveId, null);
 
             // 执行符合性检查
             ComplianceCheckService.ComplianceResult result = complianceCheckService.checkCompliance(archive, files);
@@ -88,9 +84,7 @@ public class ComplianceController {
                     }
 
                     // 获取关联文件
-                    List<ArcFileContent> files = arcFileContentMapper.selectList(
-                            new LambdaQueryWrapper<ArcFileContent>()
-                                    .eq(ArcFileContent::getItemId, archiveId));
+                    List<ArcFileContent> files = archiveFileContentService.getFilesByItemId(archiveId, null);
 
                     // 执行符合性检查
                     ComplianceCheckService.ComplianceResult result = complianceCheckService.checkCompliance(archive,
@@ -124,9 +118,7 @@ public class ComplianceController {
             }
 
             // 获取关联文件
-            List<ArcFileContent> files = arcFileContentMapper.selectList(
-                    new LambdaQueryWrapper<ArcFileContent>()
-                            .eq(ArcFileContent::getItemId, archiveId));
+            List<ArcFileContent> files = archiveFileContentService.getFilesByItemId(archiveId, null);
 
             // 执行符合性检查 (In real world, we might want to fetch the PERSISTED report, but
             // generating fresh is OK for on-demand)
@@ -154,68 +146,9 @@ public class ComplianceController {
      */
     @GetMapping("/statistics")
     @Operation(summary = "获取符合性统计数据", description = "获取系统内所有档案的符合性统计")
-    public Result<ComplianceStatistics> getComplianceStatistics() {
+    public Result<ComplianceCheckService.ComplianceStatistics> getComplianceStatistics() {
         try {
-            ComplianceStatistics stats = new ComplianceStatistics();
-
-            // 统计总数 (From audit logs or archive table? Better from AuditInspectionLog where
-            // is_compliant is set)
-            // NOTE: Only counting latest inspection per archive is ideal, but for
-            // performance we might just count all latest logs
-            // Here we do a simple aggregation on AuditInspectionLog where
-            // inspection_stage='patrol'
-
-            // Total archives checked
-            Long totalChecked = auditInspectionLogMapper.selectCount(new LambdaQueryWrapper<AuditInspectionLog>()
-                    .isNotNull(AuditInspectionLog::getIsCompliant));
-
-            if (totalChecked == 0) {
-                return Result.success(stats);
-            }
-
-            stats.setTotalArchives(totalChecked.intValue());
-
-            // Compliant
-            Long compliant = auditInspectionLogMapper.selectCount(new LambdaQueryWrapper<AuditInspectionLog>()
-                    .isNotNull(AuditInspectionLog::getIsCompliant)
-                    .eq(AuditInspectionLog::getIsCompliant, true));
-            stats.setFullyCompliant(compliant.intValue());
-
-            // Non-compliant
-            Long nonCompliant = auditInspectionLogMapper.selectCount(new LambdaQueryWrapper<AuditInspectionLog>()
-                    .isNotNull(AuditInspectionLog::getIsCompliant)
-                    .eq(AuditInspectionLog::getIsCompliant, false));
-
-            // Warnings (Assuming non-compliant means strict violation, but warnings are
-            // tricky if isCompliant=true but has warnings)
-            // The current DB schema has 'compliance_warnings' text field.
-            // Let's refine:
-            // 1. Fully Compliant: is_compliant=true AND (compliance_warnings IS NULL OR
-            // empty)
-            // 2. Compliant with Warnings: is_compliant=true AND compliance_warnings IS NOT
-            // NULL
-            // 3. Non Compliant: is_compliant=false
-
-            Long strictCompliant = auditInspectionLogMapper.selectCount(new LambdaQueryWrapper<AuditInspectionLog>()
-                    .eq(AuditInspectionLog::getIsCompliant, true)
-                    .and(w -> w.isNull(AuditInspectionLog::getComplianceWarnings).or()
-                            .eq(AuditInspectionLog::getComplianceWarnings, "[]")));
-
-            Long compliantWithWarn = auditInspectionLogMapper.selectCount(new LambdaQueryWrapper<AuditInspectionLog>()
-                    .eq(AuditInspectionLog::getIsCompliant, true)
-                    .isNotNull(AuditInspectionLog::getComplianceWarnings)
-                    .ne(AuditInspectionLog::getComplianceWarnings, "[]"));
-
-            stats.setFullyCompliant(strictCompliant.intValue());
-            stats.setCompliantWithWarnings(compliantWithWarn.intValue());
-            stats.setNonCompliant(nonCompliant.intValue());
-
-            double rate = (totalChecked > 0)
-                    ? (strictCompliant.doubleValue() + compliantWithWarn.doubleValue()) / totalChecked * 100
-                    : 0;
-            stats.setComplianceRate(Math.round(rate * 100.0) / 100.0);
-
-            return Result.success(stats);
+            return Result.success(complianceCheckService.getStatistics());
         } catch (Exception e) {
             log.error("获取符合性统计数据失败", e);
             return Result.fail("获取符合性统计数据失败: " + e.getMessage());
@@ -356,58 +289,6 @@ public class ComplianceController {
             public void setResult(ComplianceCheckService.ComplianceResult result) {
                 this.result = result;
             }
-        }
-    }
-
-    /**
-     * 符合性统计数据
-     */
-    public static class ComplianceStatistics {
-        private int totalArchives;
-        private int fullyCompliant;
-        private int compliantWithWarnings;
-        private int nonCompliant;
-        private double complianceRate;
-
-        // Getters and Setters
-        public int getTotalArchives() {
-            return totalArchives;
-        }
-
-        public void setTotalArchives(int totalArchives) {
-            this.totalArchives = totalArchives;
-        }
-
-        public int getFullyCompliant() {
-            return fullyCompliant;
-        }
-
-        public void setFullyCompliant(int fullyCompliant) {
-            this.fullyCompliant = fullyCompliant;
-        }
-
-        public int getCompliantWithWarnings() {
-            return compliantWithWarnings;
-        }
-
-        public void setCompliantWithWarnings(int compliantWithWarnings) {
-            this.compliantWithWarnings = compliantWithWarnings;
-        }
-
-        public int getNonCompliant() {
-            return nonCompliant;
-        }
-
-        public void setNonCompliant(int nonCompliant) {
-            this.nonCompliant = nonCompliant;
-        }
-
-        public double getComplianceRate() {
-            return complianceRate;
-        }
-
-        public void setComplianceRate(double complianceRate) {
-            this.complianceRate = complianceRate;
         }
     }
 }

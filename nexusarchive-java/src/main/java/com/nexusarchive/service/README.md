@@ -32,7 +32,9 @@
 | `DestructionService.java` | 服务接口 | DestructionService 服务定义 |
 | `DigitalSignatureService.java` | 服务接口 | DigitalSignatureService 服务定义 |
 | `ErpDiagnosisService.java` | 服务接口 | ErpDiagnosisService 服务定义 |
-| `ErpScenarioService.java` | 服务接口 | ErpScenarioService 服务定义 |
+| `ErpScenarioService.java` | 服务接口 | ERP 场景管理服务（委托协调） |
+| `ErpSubInterfaceService.java` | 服务接口 | ERP 子接口管理服务 |
+| `erp/` | 目录入口 | ERP 业务服务子目录 |
 | `FileStorageService.java` | 服务接口 | FileStorageService 服务定义 |
 | `FourNatureCheckService.java` | 服务接口 | FourNatureCheckService 服务定义 |
 | `FourNatureCoreService.java` | 服务接口 | FourNatureCoreService 服务定义 |

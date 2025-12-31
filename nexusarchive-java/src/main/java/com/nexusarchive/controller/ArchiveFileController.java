@@ -9,8 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
-import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.service.ArchiveFileContentService;
 import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ import java.nio.file.Path;
 @Tag(name = "档案文件内容")
 public class ArchiveFileController {
 
-    private final ArcFileContentMapper fileContentMapper;
+    private final ArchiveFileContentService archiveFileContentService;
     private final ArchiveMapper archiveMapper;
     private final FileStorageService fileStorageService;
     private final DataScopeService dataScopeService;
@@ -44,14 +44,12 @@ public class ArchiveFileController {
     @GetMapping("/{id}/content")
     @Operation(summary = "获取档案文件内容（支持 PDF/OFD 等）")
     @PreAuthorize("hasAuthority('archive:read')")
-    public ResponseEntity<Resource> getFileContent(@PathVariable String id) {
+    public ResponseEntity<Resource> getFileContent(@PathVariable String id,
+                                                   jakarta.servlet.http.HttpServletRequest request) {
+        String operatorId = resolveUserId(request);
+
         // 1. Query file content record by item_id
-        ArcFileContent content = fileContentMapper.selectOne(
-                new LambdaQueryWrapper<ArcFileContent>()
-                        .eq(ArcFileContent::getItemId, id)
-                        .orderByDesc(ArcFileContent::getCreatedTime)
-                        .last("LIMIT 1")
-        );
+        ArcFileContent content = archiveFileContentService.getFileContentByItemId(id, operatorId);
 
         if (content == null || content.getStoragePath() == null) {
             throw new BusinessException("File not found for archive: " + id);
@@ -91,9 +89,12 @@ public class ArchiveFileController {
     @GetMapping("/files/download/{fileId}")
     @Operation(summary = "通过文件ID下载文件")
     @PreAuthorize("hasAuthority('archive:read')")
-    public ResponseEntity<Resource> downloadByFileId(@PathVariable String fileId) {
+    public ResponseEntity<Resource> downloadByFileId(@PathVariable String fileId,
+                                                     jakarta.servlet.http.HttpServletRequest request) {
+        String operatorId = resolveUserId(request);
+
         // 直接通过文件 ID 查询
-        ArcFileContent content = fileContentMapper.selectById(fileId);
+        ArcFileContent content = archiveFileContentService.getFileContentById(fileId, operatorId);
 
         if (content == null || content.getStoragePath() == null) {
             throw new BusinessException("File not found: " + fileId);
@@ -177,5 +178,18 @@ public class ArchiveFileController {
         if (!dataScopeService.canAccessArchive(archive, scope)) {
             throw new BusinessException("无权访问该档案文件");
         }
+    }
+
+    private String resolveUserId(jakarta.servlet.http.HttpServletRequest request) {
+        Object userIdAttr = request.getAttribute("userId");
+        if (userIdAttr != null) {
+            return userIdAttr.toString();
+        }
+        org.springframework.security.core.Authentication authentication =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof com.nexusarchive.security.CustomUserDetails details) {
+            return details.getId();
+        }
+        return null;
     }
 }

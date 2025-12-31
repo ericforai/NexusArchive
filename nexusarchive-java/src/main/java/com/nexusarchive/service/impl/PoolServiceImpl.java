@@ -16,9 +16,12 @@ import com.nexusarchive.service.PoolService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -145,5 +148,142 @@ public class PoolServiceImpl implements PoolService {
                 .voucherWord(fileContent.getVoucherWord())
                 .docDate(fileContent.getDocDate() != null ? fileContent.getDocDate().toString() : "-")
                 .build();
+    }
+
+    @Override
+    public ArcFileContent getFileById(String id) {
+        return arcFileContentMapper.selectById(id);
+    }
+
+    @Override
+    public List<PoolItemDto> listPoolItems() {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.and(w -> w.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
+                .or()
+                .isNotNull(ArcFileContent::getPreArchiveStatus))
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
+                .orderByDesc(ArcFileContent::getCreatedTime);
+
+        List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
+        return fileContents.stream()
+                .map(this::convertToPoolItemDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PoolItemDto> listByStatus(String status) {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, status)
+                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
+                .orderByDesc(ArcFileContent::getCreatedTime);
+
+        List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
+        return fileContents.stream()
+                .map(this::convertToPoolItemDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<String, Long> getStatusStats() {
+        Map<String, Long> stats = new HashMap<>();
+        String[] statuses = { "PENDING_CHECK", "CHECK_FAILED", "PENDING_METADATA", "PENDING_ARCHIVE",
+                "PENDING_APPROVAL", "ARCHIVED" };
+
+        for (String status : statuses) {
+            QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("pre_archive_status", status)
+                    .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
+            Long count = arcFileContentMapper.selectCount(queryWrapper);
+            stats.put(status, count);
+        }
+
+        // 统计无状态的记录（旧数据）
+        QueryWrapper<ArcFileContent> nullStatusQuery = new QueryWrapper<>();
+        nullStatusQuery.likeRight("archival_code", "TEMP-POOL-")
+                .isNull("pre_archive_status")
+                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
+        Long nullCount = arcFileContentMapper.selectCount(nullStatusQuery);
+        stats.put("NO_STATUS", nullCount);
+
+        return stats;
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(String id, String status) {
+        ArcFileContent fileContent = arcFileContentMapper.selectById(id);
+        if (fileContent == null) {
+            throw new RuntimeException("文件不存在: " + id);
+        }
+
+        fileContent.setPreArchiveStatus(status);
+
+        // 记录状态变更时间
+        if ("ARCHIVED".equals(status)) {
+            fileContent.setArchivedTime(LocalDateTime.now());
+        }
+
+        arcFileContentMapper.updateById(fileContent);
+    }
+
+    @Override
+    public List<ArcFileContent> listPendingCheckFiles() {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        queryWrapper.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
+                .and(w -> w.isNull(ArcFileContent::getPreArchiveStatus)
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "PENDING_CHECK")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "draft")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, "DRAFT"));
+
+        return arcFileContentMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public List<ArcFileContent> getLegacyAttachments(String businessDocNo) {
+        QueryWrapper<ArcFileContent> query = new QueryWrapper<>();
+        query.likeRight("business_doc_no", businessDocNo + "_ATT_")
+                .orderByAsc("business_doc_no");
+        return arcFileContentMapper.selectList(query);
+    }
+
+    @Override
+    public ArcFileMetadataIndex getMetadataByFileId(String fileId) {
+        List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
+                new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileId).last("LIMIT 1"));
+        return metas.isEmpty() ? null : metas.get(0);
+    }
+
+    @Override
+    public PoolItemDto convertToPoolItemDto(ArcFileContent fileContent) {
+        ArcFileMetadataIndex metadata = getMetadataByFileId(fileContent.getId());
+        return convertToPoolItemDto(fileContent, metadata);
+    }
+
+    @Override
+    @Transactional
+    public int cleanupDemoData() {
+        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
+        queryWrapper.likeRight("file_hash", "DEMO_HASH_");
+        List<ArcFileContent> oldFiles = arcFileContentMapper.selectList(queryWrapper);
+
+        if (!oldFiles.isEmpty()) {
+            List<String> oldFileIds = oldFiles.stream().map(ArcFileContent::getId).collect(Collectors.toList());
+            arcFileMetadataIndexMapper.delete(new QueryWrapper<ArcFileMetadataIndex>().in("file_id", oldFileIds));
+        }
+
+        int deletedCount = arcFileContentMapper.delete(queryWrapper);
+        return deletedCount;
+    }
+
+    @Override
+    @Transactional
+    public void insertDemoFile(ArcFileContent content) {
+        arcFileContentMapper.insert(content);
+    }
+
+    @Override
+    @Transactional
+    public void insertDemoMetadata(ArcFileMetadataIndex metadata) {
+        arcFileMetadataIndexMapper.insert(metadata);
     }
 }

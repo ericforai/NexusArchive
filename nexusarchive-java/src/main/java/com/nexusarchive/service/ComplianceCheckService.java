@@ -7,6 +7,9 @@ package com.nexusarchive.service;
 
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.entity.AuditInspectionLog;
+import com.nexusarchive.mapper.AuditInspectionLogMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,8 +26,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ComplianceCheckService {
-    
+
     private final DigitalSignatureService digitalSignatureService;
+    private final AuditInspectionLogMapper auditInspectionLogMapper;
     
     /**
      * 检查档案是否符合《会计档案管理办法》要求
@@ -325,7 +329,121 @@ public class ComplianceCheckService {
                "AC04".equals(categoryCode) ||  // 其他财务资料
                "AC05".equals(categoryCode);    // 税务资料
     }
-    
+
+    /**
+     * 获取符合性统计数据
+     */
+    public ComplianceStatistics getStatistics() {
+        ComplianceStatistics stats = new ComplianceStatistics();
+
+        // Total archives checked
+        Long totalChecked = auditInspectionLogMapper.selectCount(
+            new LambdaQueryWrapper<AuditInspectionLog>()
+                .isNotNull(AuditInspectionLog::getIsCompliant)
+        );
+
+        if (totalChecked == 0) {
+            return stats;
+        }
+
+        stats.setTotalArchives(totalChecked.intValue());
+
+        // Compliant
+        Long compliant = auditInspectionLogMapper.selectCount(
+            new LambdaQueryWrapper<AuditInspectionLog>()
+                .isNotNull(AuditInspectionLog::getIsCompliant)
+                .eq(AuditInspectionLog::getIsCompliant, true)
+        );
+        stats.setFullyCompliant(compliant.intValue());
+
+        // Non-compliant
+        Long nonCompliant = auditInspectionLogMapper.selectCount(
+            new LambdaQueryWrapper<AuditInspectionLog>()
+                .isNotNull(AuditInspectionLog::getIsCompliant)
+                .eq(AuditInspectionLog::getIsCompliant, false)
+        );
+
+        // Fully compliant (no warnings)
+        Long strictCompliant = auditInspectionLogMapper.selectCount(
+            new LambdaQueryWrapper<AuditInspectionLog>()
+                .eq(AuditInspectionLog::getIsCompliant, true)
+                .and(w -> w.isNull(AuditInspectionLog::getComplianceWarnings)
+                    .or()
+                    .eq(AuditInspectionLog::getComplianceWarnings, "[]"))
+        );
+
+        // Compliant with warnings
+        Long compliantWithWarn = auditInspectionLogMapper.selectCount(
+            new LambdaQueryWrapper<AuditInspectionLog>()
+                .eq(AuditInspectionLog::getIsCompliant, true)
+                .isNotNull(AuditInspectionLog::getComplianceWarnings)
+                .ne(AuditInspectionLog::getComplianceWarnings, "[]")
+        );
+
+        stats.setFullyCompliant(strictCompliant.intValue());
+        stats.setCompliantWithWarnings(compliantWithWarn.intValue());
+        stats.setNonCompliant(nonCompliant.intValue());
+
+        double rate = (totalChecked > 0)
+            ? (strictCompliant.doubleValue() + compliantWithWarn.doubleValue()) / totalChecked * 100
+            : 0;
+        stats.setComplianceRate(Math.round(rate * 100.0) / 100.0);
+
+        return stats;
+    }
+
+    /**
+     * 符合性统计数据
+     */
+    public static class ComplianceStatistics {
+        private int totalArchives;
+        private int fullyCompliant;
+        private int compliantWithWarnings;
+        private int nonCompliant;
+        private double complianceRate;
+
+        // Getters and Setters
+        public int getTotalArchives() {
+            return totalArchives;
+        }
+
+        public void setTotalArchives(int totalArchives) {
+            this.totalArchives = totalArchives;
+        }
+
+        public int getFullyCompliant() {
+            return fullyCompliant;
+        }
+
+        public void setFullyCompliant(int fullyCompliant) {
+            this.fullyCompliant = fullyCompliant;
+        }
+
+        public int getCompliantWithWarnings() {
+            return compliantWithWarnings;
+        }
+
+        public void setCompliantWithWarnings(int compliantWithWarnings) {
+            this.compliantWithWarnings = compliantWithWarnings;
+        }
+
+        public int getNonCompliant() {
+            return nonCompliant;
+        }
+
+        public void setNonCompliant(int nonCompliant) {
+            this.nonCompliant = nonCompliant;
+        }
+
+        public double getComplianceRate() {
+            return complianceRate;
+        }
+
+        public void setComplianceRate(double complianceRate) {
+            this.complianceRate = complianceRate;
+        }
+    }
+
     /**
      * 合规性检查结果
      */
