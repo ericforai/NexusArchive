@@ -194,3 +194,10 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
 });
 
 VoucherPreviewCanvas.displayName = 'VoucherPreviewCanvas';
+
+// 自定义比较函数，只在 voucherId 变化时重新渲染
+export default React.memo(VoucherPreviewCanvas, (prevProps, nextProps) => {
+  return prevProps.data.voucherId === nextProps.data.voucherId &&
+         prevProps.compact === nextProps.compact &&
+         prevProps.showSignature === nextProps.showSignature;
+});
