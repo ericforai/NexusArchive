@@ -44,7 +44,7 @@ interface VoucherMetadataProps {
 }
 
 // 默认显示字段配置
-const DEFAULT_FIELDS: (keyof VoucherDTO | 'custom')[] = [
+const DEFAULT_FIELDS: string[] = [
   'voucherNo',
   'debitTotal',
   'voucherDate',

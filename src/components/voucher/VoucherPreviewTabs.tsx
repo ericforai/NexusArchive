@@ -4,7 +4,7 @@ import { Tabs } from 'antd';
 import { VoucherPreviewCanvas } from './VoucherPreviewCanvas';
 import { OriginalDocumentPreview } from './OriginalDocumentPreview';
 
-interface VoucherEntryDTO {
+export interface VoucherEntryDTO {
   lineNo?: number;
   summary?: string;
   accountCode?: string;
@@ -13,7 +13,7 @@ interface VoucherEntryDTO {
   credit?: number | string;
 }
 
-interface AttachmentDTO {
+export interface AttachmentDTO {
   id: string;
   fileName?: string;
   name?: string;
@@ -21,7 +21,7 @@ interface AttachmentDTO {
   type?: string;
 }
 
-interface VoucherDTO {
+export interface VoucherDTO {
   voucherId: string;
   voucherNo: string;
   voucherWord?: string;

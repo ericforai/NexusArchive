@@ -2,41 +2,8 @@
 import React from 'react';
 import { VoucherMetadata } from './VoucherMetadata';
 import { VoucherPreviewTabs } from './VoucherPreviewTabs';
-
-interface VoucherEntryDTO {
-  lineNo?: number;
-  summary?: string;
-  accountCode?: string;
-  accountName?: string;
-  debit?: number | string;
-  credit?: number | string;
-}
-
-interface AttachmentDTO {
-  id: string;
-  fileName?: string;
-  name?: string;
-  fileUrl?: string;
-  type?: string;
-}
-
-interface VoucherDTO {
-  id: string;
-  voucherId?: string;
-  voucherNo: string;
-  voucherWord?: string;
-  voucherDate?: string;
-  orgName?: string;
-  summary?: string;
-  debitTotal?: number | string;
-  creditTotal?: number | string;
-  createdTime?: string;
-  creator?: string;
-  auditor?: string;
-  poster?: string;
-  entries?: VoucherEntryDTO[];
-  attachments?: AttachmentDTO[];
-}
+import type { VoucherDTO } from './VoucherPreviewTabs';
+import type { AttachmentDTO } from './VoucherPreviewTabs';
 
 type LayoutType = 'horizontal' | 'vertical';
 type SizeType = 'compact' | 'normal' | 'large';
