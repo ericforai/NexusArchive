@@ -1,4 +1,9 @@
 // src/components/voucher/styles.ts
+// Input: React 类型定义
+// Output: 凭证表格样式常量和格式化工具函数
+// Pos: 凭证预览共享样式
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import { CSSProperties } from 'react';
 
 // 凭证表格样式
