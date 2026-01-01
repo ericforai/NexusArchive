@@ -351,7 +351,21 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                   </td>
                   <td className="p-4 text-slate-600 font-mono">{formatAmount(doc.amount)}</td>
                   <td className="p-4 text-slate-500">{doc.docDate || '--'}</td>
-                  <td className="p-4 text-slate-500">{(doc.createdTime || doc.createdAt || '').split('T')[0] || '--'}</td>
+                  <td className="p-4 text-slate-500">{(() => {
+                    const time = doc.createdTime || doc.createdAt;
+                    if (!time) return '--';
+                    let timeStr: string;
+                    if (typeof time === 'string') {
+                      timeStr = time;
+                    } else if (typeof time === 'number') {
+                      timeStr = new Date(time).toISOString();
+                    } else if (time instanceof Date) {
+                      timeStr = time.toISOString();
+                    } else {
+                      timeStr = String(time);
+                    }
+                    return timeStr.split('T')[0] || '--';
+                  })()}</td>
                   <td className="p-4">{renderStatusTag(doc.status)}</td>
                   <td className="p-4 text-right">
                     <button

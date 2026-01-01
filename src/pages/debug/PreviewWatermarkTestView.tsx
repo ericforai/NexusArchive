@@ -1,10 +1,10 @@
-// Input: React、ArchivePreviewModal
+// Input: React、FilePreviewModal
 // Output: PreviewWatermarkTestView 页面
 // Pos: src/pages/debug/PreviewWatermarkTestView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState } from 'react';
-import ArchivePreviewModal from '../preview/ArchivePreviewModal';
+import { FilePreviewModal } from '@/components/preview';
 
 const PreviewWatermarkTestView: React.FC = () => {
     const [open, setOpen] = useState(true);
@@ -29,9 +29,9 @@ const PreviewWatermarkTestView: React.FC = () => {
                 </button>
             </div>
 
-            <ArchivePreviewModal
-                visible={open}
-                onCancel={() => setOpen(false)}
+            <FilePreviewModal
+                isOpen={open}
+                onClose={() => setOpen(false)}
                 archiveId="ARCH-TEST-001"
                 fileId="FILE-TEST-001"
                 fileName="preview.pdf"

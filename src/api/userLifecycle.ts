@@ -12,6 +12,7 @@ import { ApiResponse, PageResult } from '../types';
 export interface OnboardRequest {
     employeeId: string;
     roleIds: string[];
+    organizationId?: string; // 组织ID（集团型架构必需）
 }
 
 /**
@@ -29,6 +30,7 @@ export interface TransferRequest {
     employeeId: string;
     newRoleIds: string[];
     reason?: string;
+    toOrganizationId?: string; // 目标组织ID（集团型架构必需）
 }
 
 /**

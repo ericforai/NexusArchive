@@ -18,6 +18,9 @@ import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ReconciliationRecordMapper;
+import com.nexusarchive.service.impl.reconciliation.ArchiveAggregator;
+import com.nexusarchive.service.impl.reconciliation.ErpDataFetcher;
+import com.nexusarchive.service.impl.reconciliation.EvidenceVerifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,6 +59,12 @@ class ReconciliationServiceImplTest {
     private ReconciliationRecordMapper reconciliationRecordMapper;
     @Mock
     private ErpAdapter erpAdapter;
+    @Mock
+    private ErpDataFetcher erpDataFetcher;
+    @Mock
+    private ArchiveAggregator archiveAggregator;
+    @Mock
+    private EvidenceVerifier evidenceVerifier;
 
     private ExecutorService executorService;
     private ReconciliationServiceImpl reconciliationService;
@@ -66,11 +75,12 @@ class ReconciliationServiceImplTest {
         reconciliationService = new ReconciliationServiceImpl(
                 erpConfigMapper,
                 erpAdapterFactory,
-                archiveMapper,
-                arcFileContentMapper,
                 reconciliationRecordMapper,
                 executorService,
-                new ObjectMapper());
+                new ObjectMapper(),
+                erpDataFetcher,
+                archiveAggregator,
+                evidenceVerifier);
     }
 
     @AfterEach

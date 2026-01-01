@@ -64,9 +64,9 @@ public class User implements Serializable {
     private String avatar;
     
     /**
-     * 主部门ID
+     * 组织ID（已替换 departmentId）
      */
-    private String departmentId;
+    private String organizationId;
     
     /**
      * 状态 (active/disabled/locked)

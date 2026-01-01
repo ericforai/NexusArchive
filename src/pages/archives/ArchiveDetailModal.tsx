@@ -13,7 +13,7 @@ import React, { useState, useRef } from 'react';
 import {
     FileText, X, Package, Loader2, Layers, Eye, Upload, Receipt
 } from 'lucide-react';
-import { OfdViewer } from '../../components/common/OfdViewer';
+import { SmartFilePreview } from '../../components/preview';
 import { ModuleConfig, GenericRow } from '../../types';
 import { PoolItem } from '../../api/pool';
 
@@ -44,7 +44,6 @@ interface ArchiveDetailModalProps {
     renderCell: (row: GenericRow, col: any) => React.ReactNode;
     formatStatus: (status?: string) => string;
     resolveDocumentTypeLabel: (type?: string) => string;
-    getPreviewUrl: (fileId: string, isPoolMode: boolean) => string;
 }
 
 // ============ 组件实现 ============
@@ -66,7 +65,6 @@ export const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({
     renderCell,
     formatStatus,
     resolveDocumentTypeLabel,
-    getPreviewUrl,
 }) => {
     const [activeDetailTab, setActiveDetailTab] = useState<'main' | 'attachments'>('main');
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -292,7 +290,7 @@ export const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({
                         )}
 
                         {/* Preview Area */}
-                        <div className="flex-1 bg-slate-200 overflow-hidden relative">
+                        <div className="flex-1 bg-slate-100 overflow-hidden relative">
                             {activePreviewId ? (
                                 (() => {
                                     // 若在附件标签页下，且当前预览的是主文件，则显示提示
@@ -307,6 +305,7 @@ export const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({
                                         );
                                     }
 
+                                    // 获取文件名
                                     let fileName = '';
                                     if (isMainFile) {
                                         fileName = row?.title || (row?.code ? row.code + '.pdf' : 'unknown.pdf');
@@ -317,26 +316,25 @@ export const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({
 
                                     if (!fileName) return null;
 
-                                    const isImage = fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
-                                    if (isImage) {
-                                        return (
-                                            <div className="w-full h-full flex items-center justify-center bg-slate-800 overflow-auto p-4">
-                                                <img
-                                                    src={getPreviewUrl(activePreviewId, isPoolView)}
-                                                    alt="Preview"
-                                                    className="max-w-full max-h-full object-contain shadow-2xl"
-                                                />
-                                            </div>
-                                        );
-                                    }
+                                    // 构建文件列表（用于多文件切换）
+                                    const allFiles = [
+                                        ...(mainFileId ? [{ id: mainFileId, fileName: row?.title || '主文件' }] : []),
+                                        ...relatedFiles.map(f => ({ id: f.id, fileName: f.fileName })),
+                                    ];
 
-                                    const type = fileName.toLowerCase().endsWith('.ofd') ? 'ofd' : 'pdf';
+                                    // 获取 archiveId
+                                    const archiveId = row?.archiveId || row?.id || '';
+
                                     return (
-                                        <OfdViewer
-                                            fileUrl={getPreviewUrl(activePreviewId, isPoolView)}
+                                        <SmartFilePreview
+                                            archiveId={archiveId}
+                                            fileId={activePreviewId}
                                             fileName={fileName}
-                                            fileType={type}
-                                            className="w-full h-full"
+                                            files={allFiles}
+                                            currentFileId={activePreviewId}
+                                            onFileChange={onPreviewIdChange}
+                                            showToolbar={true}
+                                            showFileNav={true}
                                         />
                                     );
                                 })()

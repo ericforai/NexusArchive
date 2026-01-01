@@ -1,0 +1,36 @@
+#!/bin/sh
+# husky pre-commit hook
+# 架构检查：阻止违反依赖规则的代码提交
+
+set -e
+
+echo "🔍 Running architecture checks..."
+
+# 前端架构检查
+if [ -f "package.json" ]; then
+  echo "  → Checking frontend dependencies..."
+  npm run check:arch --silent || {
+    echo ""
+    echo "❌ Frontend architecture check failed!"
+    echo "   Run 'npm run check:arch' to see the violations."
+    echo "   Fix the violations or update .dependency-cruiser.cjs if needed."
+    exit 1
+  }
+  echo "  ✅ Frontend architecture check passed"
+fi
+
+# 后端架构检查（如果在 Java 项目目录中）
+if [ -f "pom.xml" ]; then
+  echo "  → Checking backend architecture..."
+  mvn test -Dtest=ArchitectureTest -q || {
+    echo ""
+    echo "❌ Backend architecture check failed!"
+    echo "   Run 'mvn test -Dtest=ArchitectureTest' to see the violations."
+    echo "   Fix the violations or update ArchitectureTest.java if needed."
+    exit 1
+  }
+  echo "  ✅ Backend architecture check passed"
+fi
+
+echo ""
+echo "✅ All architecture checks passed!"

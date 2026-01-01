@@ -180,25 +180,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     permission: 'nav:settings',
   },
-  {
-    id: ViewState.AUDIT,
-    label: '审计验真',
-    icon: Shield,
-    permission: 'nav:audit',
-    children: [
-      { id: '审计证据链验真', label: '审计证据链验真', path: '审计证据链验真' },
-      { id: '审计证据包导出', label: '审计证据包导出', path: '审计证据包导出' },
-    ],
-  },
-  {
-    id: ViewState.ADMIN,
-    label: '后台管理',
-    icon: Upload,
-    permission: 'nav:admin',
-    children: [
-      { id: '历史数据导入', label: '历史数据导入', path: '历史数据导入' },
-    ],
-  },
 ];
 
 // MOCK_STATS 已移除 - 统计数据通过 /api/stats/dashboard 获取真实数据

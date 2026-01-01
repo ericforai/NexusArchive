@@ -121,3 +121,21 @@ if (typeof window !== 'undefined') {
         useFondsStore.setState({ _hasHydrated: true });
     }
 }
+
+// ==============================================================================
+// 注册 HTTP 客户端全宗状态提供器
+// 用于解耦 client.ts 和 store，避免循环依赖
+// ==============================================================================
+import { registerFondsProvider } from '../api/client.types';
+
+// 在模块初始化时注册状态提供器
+if (typeof window !== 'undefined') {
+    registerFondsProvider({
+        getState: () => {
+            const { currentFonds } = useFondsStore.getState();
+            return {
+                fondsCode: currentFonds?.fondsCode || null,
+            };
+        },
+    });
+}

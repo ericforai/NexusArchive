@@ -7,6 +7,8 @@ package com.nexusarchive.service;
 
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.mapper.AuditInspectionLogMapper;
+import com.nexusarchive.service.compliance.ComplianceCheckFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,19 +29,26 @@ import static org.mockito.Mockito.lenient;
 
 /**
  * 合规性检查服务测试
+ * <p>
+ * 注意：此服务已标记为 @Deprecated，新代码应使用 ComplianceCheckFacade
+ * </p>
  */
 @ExtendWith(MockitoExtension.class)
 public class ComplianceCheckServiceTest {
-    
+
     @Mock
     private DigitalSignatureService digitalSignatureService;
-    
+    @Mock
+    private AuditInspectionLogMapper auditInspectionLogMapper;
+    @Mock
+    private ComplianceCheckFacade complianceCheckFacade;
+
     private ComplianceCheckService complianceCheckService;
-    
+
     @BeforeEach
     void setUp() {
-        complianceCheckService = new ComplianceCheckService(digitalSignatureService);
-        
+        complianceCheckService = new ComplianceCheckService(digitalSignatureService, auditInspectionLogMapper, complianceCheckFacade);
+
         // Mock digital signature verification to return valid result for all files
         lenient().when(digitalSignatureService.verifySignature(any(ArcFileContent.class)))
             .thenReturn(new DigitalSignatureService.VerificationResult(
@@ -50,8 +59,14 @@ public class ComplianceCheckServiceTest {
                 "CN=Test Subject",
                 new Date(System.currentTimeMillis() + 86400000L) // expires tomorrow
             ));
+
+        // Mock facade to return compliant result
+        com.nexusarchive.service.compliance.ComplianceResult mockResult =
+            new com.nexusarchive.service.compliance.ComplianceResult();
+        lenient().when(complianceCheckFacade.checkCompliance(any(), any()))
+            .thenReturn(mockResult);
     }
-    
+
     @Test
     @DisplayName("会计凭证30年保存期限符合性测试")
     void testAccountingVoucherRetentionPeriodCompliance() {

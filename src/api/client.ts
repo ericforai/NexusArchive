@@ -1,10 +1,9 @@
-// Input: axios、auth store、fonds store 与浏览器 location
+// Input: axios 与浏览器 location
 // Output: 带拦截器的 HTTP client 实例
 // Pos: 前端 API 请求基础封装
-// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import axios from 'axios';
-import { useAuthStore, useFondsStore } from '../store';
+import { getHttpClientState, performLogout } from './client.types';
 
 const API_URL = '/api';
 
@@ -19,14 +18,13 @@ export const client = axios.create({
 client.interceptors.request.use(
     (config) => {
         try {
-            // 添加认证 Token
-            const token = useAuthStore.getState().token;
+            // 通过延迟绑定的接口获取状态，避免循环依赖
+            const { token, fondsCode } = getHttpClientState();
+
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
 
-            // 添加当前全宗号（用于数据过滤）
-            const fondsCode = useFondsStore.getState().getCurrentFondsCode();
             if (fondsCode) {
                 config.headers['X-Fonds-Code'] = fondsCode;
             }
@@ -39,7 +37,6 @@ client.interceptors.request.use(
         return Promise.reject(error);
     }
 );
-
 
 // Response interceptor to handle errors
 client.interceptors.response.use(
@@ -54,9 +51,9 @@ client.interceptors.response.use(
             const isForbidden = status === 403 && !url.includes('/auth/login');
 
             if (isAuthError || isForbidden) {
-                const { token, logout } = useAuthStore.getState();
+                const { token } = getHttpClientState();
                 if (token) {
-                    logout();
+                    performLogout();
                 }
 
                 if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/activation')) {

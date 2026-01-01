@@ -12,7 +12,8 @@ import {
     Building2,
     Lock,
     FileSearch,
-    Link
+    Link,
+    Upload
 } from 'lucide-react';
 
 const SETTINGS_TABS = [
@@ -23,6 +24,7 @@ const SETTINGS_TABS = [
     { key: 'security', label: '安全合规', path: '/system/settings/security', icon: Lock },
     { key: 'integration', label: '集成中心', path: '/system/settings/integration', icon: Link },
     { key: 'audit', label: '审计日志', path: '/system/settings/audit', icon: FileSearch },
+    { key: 'data-import', label: '数据导入', path: '/system/settings/data-import', icon: Upload },
 ];
 
 /**

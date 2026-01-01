@@ -212,6 +212,7 @@ export const routes: RouteObject[] = [
                     { path: 'security', element: withSuspense(SecuritySettings) },
                     { path: 'integration', element: withSuspense(IntegrationSettings) },
                     { path: 'audit', element: withSuspense(AuditLogView) },
+                    { path: 'data-import', element: withSuspense(() => import('../pages/settings/DataImportPage')) },
                     { path: 'mfa', element: withSuspense(MfaSettingsPage) },
                 ],
             },
@@ -225,25 +226,14 @@ export const routes: RouteObject[] = [
             { path: 'admin/fonds-history', element: withSuspense(FondsHistoryPage) },
             { path: 'admin/fonds-history/list', element: withSuspense(FondsHistoryListPage) },
             
-            // ========== 历史数据导入 ==========
-            { path: 'admin/legacy-import', element: withSuspense(LegacyImportPage) },
-            
             // ========== 跨全宗访问授权票据 ==========
             { path: 'security/auth-ticket/apply', element: withSuspense(AuthTicketApplyPage) },
             { path: 'security/auth-ticket', element: withSuspense(AuthTicketListPage) },
             { path: 'security/auth-ticket/list', element: withSuspense(AuthTicketListPage) },
             
-            // ========== 用户生命周期管理 ==========
-            { path: 'admin/user-lifecycle', element: withSuspense(UserLifecyclePage) },
-            { path: 'admin/access-review', element: withSuspense(AccessReviewPage) },
-            
             // ========== 冻结/保全管理 ==========
             { path: 'operations/freeze-hold', element: withSuspense(FreezeHoldPage) },
             { path: 'operations/freeze-hold/:id', element: withSuspense(FreezeHoldDetailPage) },
-            
-            // ========== 审计验真 ==========
-            { path: 'audit/verification', element: withSuspense(AuditVerificationPage) },
-            { path: 'audit/evidence-package', element: withSuspense(AuditEvidencePackagePage) },
             
             // ========== 后台管理 ==========
             { path: 'admin/*', element: withSuspense(AdminLayout) },

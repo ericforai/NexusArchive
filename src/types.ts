@@ -19,7 +19,6 @@ export enum ViewState {
   STATS = 'STATS',
   SETTINGS = 'SETTINGS',
   ADMIN = 'ADMIN',
-  AUDIT = 'AUDIT', // 审计验真与证据包导出
   PANORAMA = 'PANORAMA',
   LANDING = 'LANDING',
   DESTRUCTION = 'DESTRUCTION',

@@ -213,3 +213,22 @@ if (typeof window !== 'undefined') {
         useAuthStore.setState({ _hasHydrated: true });
     }
 }
+
+// ==============================================================================
+// 注册 HTTP 客户端状态提供器
+// 用于解耦 client.ts 和 store，避免循环依赖
+// ==============================================================================
+import { registerAuthProvider } from '../api/client.types';
+
+// 在模块初始化时注册状态提供器
+if (typeof window !== 'undefined') {
+    registerAuthProvider({
+        getState: () => {
+            const { token } = useAuthStore.getState();
+            return { token };
+        },
+        logout: () => {
+            useAuthStore.getState().logout();
+        },
+    });
+}

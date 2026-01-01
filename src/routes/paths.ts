@@ -67,12 +67,8 @@ export const ROUTE_PATHS = {
     SETTINGS_SECURITY: '/system/settings/security',
     SETTINGS_INTEGRATION: '/system/settings/integration',
     SETTINGS_AUDIT: '/system/settings/audit',
-    AUDIT_VERIFICATION: '/system/audit/verification',
-    AUDIT_EVIDENCE_PACKAGE: '/system/audit/evidence-package',
     ADMIN: '/system/admin',
-    ADMIN_LEGACY_IMPORT: '/system/admin/legacy-import',
-    ADMIN_USER_LIFECYCLE: '/system/admin/user-lifecycle',
-    ADMIN_ACCESS_REVIEW: '/system/admin/access-review',
+    SETTINGS_DATA_IMPORT: '/system/settings/data-import',
     SETTINGS_MFA: '/system/settings/mfa',
     FREEZE_HOLD: '/system/operations/freeze-hold',
     FREEZE_HOLD_DETAIL: '/system/operations/freeze-hold',
@@ -194,12 +190,6 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '安全合规': ROUTE_PATHS.SETTINGS_SECURITY,
     '集成中心': ROUTE_PATHS.SETTINGS_INTEGRATION,
     '审计日志': ROUTE_PATHS.SETTINGS_AUDIT,
-
-    // 审计验真
-    '审计证据链验真': ROUTE_PATHS.AUDIT_VERIFICATION,
-    '审计证据包导出': ROUTE_PATHS.AUDIT_EVIDENCE_PACKAGE,
-
-    // 后台管理
-    '历史数据导入': ROUTE_PATHS.ADMIN_LEGACY_IMPORT,
+    '数据导入': ROUTE_PATHS.SETTINGS_DATA_IMPORT,
 
 };

@@ -14,7 +14,9 @@
     "test:smoke": "PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=mac15-arm64 npx playwright test tests/playwright/ui/smoke_core_paths.spec.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix"
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "check:arch": "depcruise src/",
+    "check:arch:graph": "depcruise src/ --output-type dot | dot -T svg > arch-dependencies.svg"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
@@ -26,6 +28,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
+    "react-pdf": "^9.2.1",
     "react-router-dom": "^7.9.6",
     "recharts": "^3.4.1",
     "zustand": "^5.0.9"
@@ -42,6 +45,7 @@
     "@typescript-eslint/parser": "^8.50.1",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.0.16",
+    "dependency-cruiser": "^17.3.5",
     "eslint": "^9.39.2",
     "eslint-plugin-boundaries": "^4.2.0",
     "eslint-plugin-react": "^7.37.5",

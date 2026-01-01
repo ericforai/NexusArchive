@@ -19,7 +19,7 @@ public class UserResponse {
     private String email;
     private String phone;
     private String avatar;
-    private String departmentId;
+    private String organizationId; // 组织ID（已替换 departmentId）
     private String status;
     private List<String> roleIds;
 }

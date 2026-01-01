@@ -370,6 +370,12 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
                         {col.header}
                       </th>
                     ))}
+                    {/* Actions column for pool view */}
+                    {mode.isPoolView && (
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 w-20">
+                        操作
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -398,6 +404,27 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
                             {renderCell(row, col)}
                           </td>
                         ))}
+                        {/* Actions column for pool view */}
+                        {mode.isPoolView && (
+                          <td className="p-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openViewModal(row); }}
+                                className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                title="预览"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); archiveActions.handleDelete(row.id); }}
+                                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                title="删除"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
@@ -456,7 +483,6 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
         renderCell={renderCell}
         formatStatus={(s) => s || '-'}
         resolveDocumentTypeLabel={(t) => t || '文档'}
-        getPreviewUrl={(id) => `/api/pool/preview/${id}`}
         onAipExport={archiveActions.handleAipExport}
         isExporting={archiveActions.isExporting}
         onUploadAttachment={archiveActions.handleUpload}

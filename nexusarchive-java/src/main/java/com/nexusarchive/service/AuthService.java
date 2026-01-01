@@ -175,7 +175,7 @@ public class AuthService {
         userInfo.setFullName(user.getFullName());
         userInfo.setEmail(user.getEmail());
         userInfo.setAvatar(user.getAvatar());
-        userInfo.setDepartmentId(user.getDepartmentId());
+        userInfo.setDepartmentId(user.getOrganizationId()); // 使用 organizationId（已替换 departmentId）
         userInfo.setRoles(roleCodes);
         userInfo.setPermissions(new ArrayList<>(permissions));
         userInfo.setStatus(user.getStatus());

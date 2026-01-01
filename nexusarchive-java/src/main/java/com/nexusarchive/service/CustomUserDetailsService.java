@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.entity.User;
 import com.nexusarchive.mapper.RoleMapper;
+import com.nexusarchive.mapper.SysUserFondsScopeMapper;
 import com.nexusarchive.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -30,6 +31,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+    private final SysUserFondsScopeMapper userFondsScopeMapper;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -72,6 +74,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         boolean locked = "locked".equalsIgnoreCase(user.getStatus());
         boolean disabled = "disabled".equalsIgnoreCase(user.getStatus());
 
+        // 获取用户允许访问的全宗列表
+        List<String> allowedFonds = userFondsScopeMapper.findFondsNoByUserId(user.getId());
+
         return new com.nexusarchive.security.CustomUserDetails(
                 user.getUsername(),
                 user.getPasswordHash(),
@@ -79,7 +84,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getId(),
                 user.getFullName(),
                 user.getOrgCode(),
-                user.getDepartmentId(),
+                user.getOrganizationId(), // 组织ID（用于用户归属，不参与数据隔离）
+                allowedFonds, // 允许访问的全宗列表（数据隔离键）
                 true,
                 !locked,
                 true,

@@ -1,0 +1,389 @@
+
+Running 24 tests using 4 workers
+
+(node:66705) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66706) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66704) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66706) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66704) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66705) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 tests/playwright/ui/destruction_workflow.spec.ts:17:3 › 档案销毁流程 @P0 › 应该能够访问到期档案识别页面 (6.3s)
+  ✓   2 tests/playwright/ui/audit_verification.spec.ts:17:3 › 审计证据链验真 @P0 › 应该能够访问审计证据链验真页面 (6.2s)
+  ✓   1 tests/playwright/ui/auth_ticket.spec.ts:17:3 › 跨全宗访问授权票据 @P0 › 应该能够访问授权票据列表页面 (7.3s)
+  ✓   3 tests/playwright/ui/audit_evidence_package.spec.ts:17:3 › 审计证据包导出 @P0 › 应该能够访问审计证据包导出页面 (7.5s)
+  ✓   5 tests/playwright/ui/destruction_workflow.spec.ts:22:3 › 档案销毁流程 @P0 › 应该能够访问鉴定清单页面 (5.1s)
+  ✓   6 tests/playwright/ui/audit_verification.spec.ts:22:3 › 审计证据链验真 @P0 › 应该显示单条验证、批量验证、链式验证等选项 (5.7s)
+  ✓   8 tests/playwright/ui/audit_evidence_package.spec.ts:24:3 › 审计证据包导出 @P0 › 应该显示导出条件选择（日期范围、全宗） (5.4s)
+  ✓   7 tests/playwright/ui/auth_ticket.spec.ts:24:3 › 跨全宗访问授权票据 @P0 › 应该能够访问授权票据申请页面 (6.0s)
+  ✓   9 tests/playwright/ui/destruction_workflow.spec.ts:27:3 › 档案销毁流程 @P0 › 应该能够访问销毁审批页面 (3.8s)
+  ✓  10 tests/playwright/ui/audit_verification.spec.ts:35:3 › 审计证据链验真 @P0 › 应该能够执行单条审计日志验证 (4.5s)
+  ✘  11 tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 (30.0s)
+(node:66850) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  12 tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 (30.0s)
+(node:66850) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66851) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66851) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  13 tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 (30.0s)
+(node:66868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  14 tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 (30.0s)
+(node:66878) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66878) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  15 tests/playwright/ui/audit_evidence_package.spec.ts:51:3 › 审计证据包导出 @P0 › 应该显示导出按钮 (30.0s)
+  ✘  16 tests/playwright/ui/auth_ticket.spec.ts:57:3 › 跨全宗访问授权票据 @P0 › 应该能够筛选授权票据 (30.0s)
+(node:66968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  17 tests/playwright/ui/destruction_workflow.spec.ts:37:3 › 档案销毁流程 @P0 › 到期档案页面应该显示筛选选项 (30.0s)
+(node:66982) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66982) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  18 tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 (30.0s)
+(node:66989) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66989) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  19 tests/playwright/ui/auth_ticket.spec.ts:72:3 › 跨全宗访问授权票据 @P0 › 应该能够查看授权票据详情 (4.3s)
+  ✓  20 tests/playwright/ui/destruction_workflow.spec.ts:49:3 › 档案销毁流程 @P0 › 鉴定清单页面应该显示列表 (4.9s)
+  ✓  21 tests/playwright/ui/legacy_import.spec.ts:24:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 (6.4s)
+  ✘  22 tests/playwright/ui/legacy_import.spec.ts:41:3 › 历史数据导入 @P0 › 应该能够上传CSV文件 (30.0s)
+(node:67083) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:67083) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  23 tests/playwright/ui/legacy_import.spec.ts:65:3 › 历史数据导入 @P0 › 应该能够查看导入历史列表 (30.0s)
+(node:69360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:69360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  24 tests/playwright/ui/legacy_import.spec.ts:81:3 › 历史数据导入 @P0 › 应该显示字段映射配置选项 (4.6s)
+
+
+  1) tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 ────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('审计证据包导出 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-audit_-5652a-ckage-审计证据包导出-P0-应该能够查看导出历史/error-context.md
+
+  2) tests/playwright/ui/audit_evidence_package.spec.ts:51:3 › 审计证据包导出 @P0 › 应该显示导出按钮 ──────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('审计证据包导出 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-audit_-2e849-package-审计证据包导出-P0-应该显示导出按钮/error-context.md
+
+  3) tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 ──────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('审计证据链验真 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-audit_verification-审计证据链验真-P0-应该显示验证结果/error-context.md
+
+  4) tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 ─────────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('跨全宗访问授权票据 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-auth_ticket-跨全宗访问授权票据-P0-应该显示授权票据列表/error-context.md
+
+  5) tests/playwright/ui/auth_ticket.spec.ts:57:3 › 跨全宗访问授权票据 @P0 › 应该能够筛选授权票据 ─────────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('跨全宗访问授权票据 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-auth_ticket-跨全宗访问授权票据-P0-应该能够筛选授权票据/error-context.md
+
+  6) tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 ─────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('档案销毁流程 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-destru-b0c6d-flow-档案销毁流程-P0-应该能够访问销毁执行页面/error-context.md
+
+  7) tests/playwright/ui/destruction_workflow.spec.ts:37:3 › 档案销毁流程 @P0 › 到期档案页面应该显示筛选选项 ───────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('档案销毁流程 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-destru-175c4-ow-档案销毁流程-P0-到期档案页面应该显示筛选选项/error-context.md
+
+  8) tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 ──────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('历史数据导入 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:12:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at tests/playwright/utils/page-helpers.ts:31
+
+      29 |   try {
+      30 |     // 首先等待URL变化（主要等待条件）
+    > 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });
+         |                ^
+      32 |     
+      33 |     // 等待网络空闲，确保页面完全加载
+      34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够访问历史数据导入页面/error-context.md
+
+  9) tests/playwright/ui/legacy_import.spec.ts:41:3 › 历史数据导入 @P0 › 应该能够上传CSV文件 ─────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('tab', { name: /导入/i })[22m
+
+
+      43 |     
+      44 |     // 切换到导入标签页
+    > 45 |     await page.getByRole('tab', { name: /导入/i }).click();
+         |                                                  ^
+      46 |     
+      47 |     // 查找文件上传输入框（可能使用不同的选择器）
+      48 |     const fileInput = page.locator('input[type="file"]').first();
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:45:50
+
+    Error Context: test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够上传CSV文件/error-context.md
+
+  10) tests/playwright/ui/legacy_import.spec.ts:65:3 › 历史数据导入 @P0 › 应该能够查看导入历史列表 ───────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('tab', { name: /历史/i })[22m
+
+
+      67 |     
+      68 |     // 切换到历史标签页
+    > 69 |     await page.getByRole('tab', { name: /历史/i }).click();
+         |                                                  ^
+      70 |     
+      71 |     // 等待列表加载
+      72 |     await page.waitForTimeout(1000);
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:69:50
+
+    Error Context: test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够查看导入历史列表/error-context.md
+
+  10 failed
+    tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 ─────────────
+    tests/playwright/ui/audit_evidence_package.spec.ts:51:3 › 审计证据包导出 @P0 › 应该显示导出按钮 ───────────────
+    tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 ───────────────────
+    tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 ──────────────────────
+    tests/playwright/ui/auth_ticket.spec.ts:57:3 › 跨全宗访问授权票据 @P0 › 应该能够筛选授权票据 ──────────────────────
+    tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 ──────────────
+    tests/playwright/ui/destruction_workflow.spec.ts:37:3 › 档案销毁流程 @P0 › 到期档案页面应该显示筛选选项 ────────────
+    tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 ───────────────────
+    tests/playwright/ui/legacy_import.spec.ts:41:3 › 历史数据导入 @P0 › 应该能够上传CSV文件 ──────────────────────
+    tests/playwright/ui/legacy_import.spec.ts:65:3 › 历史数据导入 @P0 › 应该能够查看导入历史列表 ─────────────────────
+  14 passed (2.5m)

@@ -5,16 +5,11 @@
 
 package com.nexusarchive.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.enums.DataScopeType;
 import com.nexusarchive.entity.Archive;
-import com.nexusarchive.entity.Org;
 import com.nexusarchive.entity.Role;
-import com.nexusarchive.entity.User;
-import com.nexusarchive.mapper.OrgMapper;
 import com.nexusarchive.mapper.RoleMapper;
-import com.nexusarchive.mapper.UserMapper;
 import com.nexusarchive.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -24,15 +19,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class DataScopeService {
 
     private final RoleMapper roleMapper;
-    private final OrgMapper orgMapper;
-    private final UserMapper userMapper;
+    /**
+     * 解析数据权限上下文
+     * 
+     * 数据隔离策略：
+     * 1. 系统管理员/拥有 nav:all 权限的用户：可以访问所有数据
+     * 2. 普通用户：只能访问 allowed_fonds 列表中的全宗数据
+     * 
+     * 注意：数据隔离基于 fonds_no（全宗号），而非 organization_id（组织ID）
+     */
     public DataScopeContext resolve() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
@@ -45,12 +46,22 @@ public class DataScopeService {
 
         String userId = userDetails.getId();
         DataScopeType scopeType = determineScope(userId);
-        String departmentId = resolveDepartmentId(userDetails);
-        Set<String> departmentIds = computeDepartmentSet(scopeType, departmentId);
-
-        return new DataScopeContext(scopeType, userId, departmentIds, departmentId);
+        // 获取用户允许访问的全宗列表（数据隔离键）
+        List<String> allowedFonds = userDetails.getAllowedFonds();
+        
+        return new DataScopeContext(scopeType, userId, allowedFonds != null ? new LinkedHashSet<>(allowedFonds) : Collections.emptySet());
     }
 
+    /**
+     * 应用档案数据权限过滤
+     * 
+     * 数据隔离基于 fonds_no（全宗号）：
+     * 1. 如果 context 为 all，不添加过滤条件（可访问所有数据）
+     * 2. 如果 context 为 self，只返回当前用户创建的数据
+     * 3. 否则，只返回 allowedFonds 列表中的全宗数据
+     * 
+     * 注意：不再使用 department_id 进行数据隔离（违反档案法规要求）
+     */
     public void applyArchiveScope(QueryWrapper<Archive> wrapper, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return;
@@ -65,24 +76,24 @@ public class DataScopeService {
             return;
         }
 
-        Set<String> deptIds = context.departmentIds();
-        if (!deptIds.isEmpty()) {
-            wrapper.in("department_id", deptIds);
-            return;
-        }
-
-        if (StringUtils.hasText(context.departmentId())) {
-            wrapper.eq("department_id", context.departmentId());
-            return;
-        }
-
-        if (context.userId() != null) {
-            wrapper.eq("created_by", context.userId());
+        // 基于 fonds_no（全宗号）进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            wrapper.in("fonds_no", allowedFonds);
         } else {
+            // 如果没有允许访问的全宗，则不允许访问任何数据
             wrapper.eq("1", "0");
         }
     }
 
+    /**
+     * 检查是否可以访问指定档案
+     * 
+     * 数据隔离基于 fonds_no（全宗号）：
+     * 1. 如果 context 为 all，可以访问
+     * 2. 如果 context 为 self，只能访问自己创建的数据
+     * 3. 否则，检查档案的 fonds_no 是否在 allowedFonds 列表中
+     */
     public boolean canAccessArchive(Archive archive, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return true;
@@ -90,11 +101,15 @@ public class DataScopeService {
         if (context.isSelf()) {
             return context.userId() != null && context.userId().equals(archive.getCreatedBy());
         }
-        String departmentId = archive.getDepartmentId();
-        if (StringUtils.hasText(departmentId) && context.departmentIds().contains(departmentId)) {
+        
+        // 基于 fonds_no（全宗号）进行数据隔离
+        String fondsNo = archive.getFondsNo();
+        if (StringUtils.hasText(fondsNo) && context.allowedFonds().contains(fondsNo)) {
             return true;
         }
-        return context.userId() != null && context.userId().equals(archive.getCreatedBy());
+        
+        // 如果没有匹配的全宗，则不允许访问
+        return false;
     }
 
     private boolean isSystemAdmin(Authentication auth) {
@@ -131,60 +146,18 @@ public class DataScopeService {
         return max;
     }
 
-    private String resolveDepartmentId(CustomUserDetails details) {
-        if (StringUtils.hasText(details.getDepartmentId())) {
-            return details.getDepartmentId();
-        }
-        User user = userMapper.selectById(details.getId());
-        if (user != null && StringUtils.hasText(user.getDepartmentId())) {
-            return user.getDepartmentId();
-        }
-        return details.getDepartmentId();
-    }
-
-    private Set<String> computeDepartmentSet(DataScopeType scopeType, String departmentId) {
-        if (!StringUtils.hasText(departmentId)) {
-            return Collections.emptySet();
-        }
-        if (scopeType == DataScopeType.DEPARTMENT_AND_CHILD) {
-            return collectDepartmentIds(departmentId, true);
-        }
-        if (scopeType == DataScopeType.DEPARTMENT) {
-            return Collections.unmodifiableSet(new LinkedHashSet<>(Collections.singletonList(departmentId)));
-        }
-        return Collections.emptySet();
-    }
-
-    private Set<String> collectDepartmentIds(String rootId, boolean includeChildren) {
-        if (!StringUtils.hasText(rootId)) {
-            return Collections.emptySet();
-        }
-        List<Org> allOrgs = orgMapper.selectList(new LambdaQueryWrapper<Org>().eq(Org::getDeleted, 0));
-        Map<String, List<Org>> parentMap = allOrgs.stream()
-                .collect(Collectors.groupingBy(org -> org.getParentId()));
-        Set<String> ids = new LinkedHashSet<>();
-        ids.add(rootId);
-        if (includeChildren) {
-            collectChildren(rootId, parentMap, ids);
-        }
-        return Collections.unmodifiableSet(ids);
-    }
-
-    private void collectChildren(String parentId, Map<String, List<Org>> parentMap, Set<String> bucket) {
-        List<Org> children = parentMap.get(parentId);
-        if (children == null) {
-            return;
-        }
-        for (Org child : children) {
-            if (bucket.add(child.getId())) {
-                collectChildren(child.getId(), parentMap, bucket);
-            }
-        }
-    }
-
-    public record DataScopeContext(DataScopeType type, String userId, Set<String> departmentIds, String departmentId) {
+    /**
+     * 数据权限上下文
+     * 
+     * 数据隔离基于 fonds_no（全宗号），而非 department_id（部门ID）
+     * 
+     * @param type 数据权限类型（ALL/SELF/DEPARTMENT等）
+     * @param userId 用户ID
+     * @param allowedFonds 允许访问的全宗号列表（数据隔离键）
+     */
+    public record DataScopeContext(DataScopeType type, String userId, Set<String> allowedFonds) {
         public static DataScopeContext all() {
-            return new DataScopeContext(DataScopeType.ALL, null, Collections.emptySet(), null);
+            return new DataScopeContext(DataScopeType.ALL, null, Collections.emptySet());
         }
 
         public boolean isAll() {

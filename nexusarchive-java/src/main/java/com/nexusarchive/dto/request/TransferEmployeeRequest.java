@@ -32,14 +32,9 @@ public class TransferEmployeeRequest {
     private LocalDate transferDate;
     
     /**
-     * 原部门ID
+     * 目标组织ID（集团型架构必需）
      */
-    private String previousDeptId;
-    
-    /**
-     * 新部门ID
-     */
-    private String newDeptId;
+    private String toOrganizationId;
     
     /**
      * 原角色ID列表

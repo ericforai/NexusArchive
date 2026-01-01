@@ -11,17 +11,12 @@ import com.nexusarchive.modules.borrowing.domain.Borrowing;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
 
-    private final com.nexusarchive.service.ArchiveService archiveService;
 
     @Override
     public void apply(QueryWrapper<Borrowing> wrapper, DataScopeContext context) {
@@ -38,31 +33,15 @@ public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
             return;
         }
 
-        Set<String> deptIds = context.departmentIds();
-        if (!deptIds.isEmpty()) {
-            List<String> archiveIds = archiveService.getArchiveIdsByDepartmentIds(deptIds);
-            if (archiveIds.isEmpty()) {
-                wrapper.eq("1", "0");
-            } else {
-                wrapper.in("archive_id", archiveIds);
-            }
+        // 基于 fonds_no（全宗号）进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            // 根据允许的全宗号列表过滤借阅记录
+            wrapper.in("fonds_no", allowedFonds);
             return;
         }
 
-        if (StringUtils.hasText(context.departmentId())) {
-            List<String> archiveIds = archiveService.getArchiveIdsByDepartmentIds(Collections.singleton(context.departmentId()));
-            if (archiveIds.isEmpty()) {
-                wrapper.eq("1", "0");
-            } else {
-                wrapper.in("archive_id", archiveIds);
-            }
-            return;
-        }
-
-        if (context.userId() != null) {
-            wrapper.eq("user_id", context.userId());
-        } else {
-            wrapper.eq("1", "0");
-        }
+        // 如果没有允许访问的全宗，则不允许访问任何数据
+        wrapper.eq("1", "0");
     }
 }

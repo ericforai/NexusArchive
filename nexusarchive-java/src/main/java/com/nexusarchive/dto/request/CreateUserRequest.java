@@ -19,7 +19,7 @@ public class CreateUserRequest {
     private String email;
     private String phone;
     private String avatar;
-    private String departmentId;
+    private String organizationId; // 组织ID（已替换 departmentId）
     private List<String> roleIds;
 
     public String getUsername() { return username; }
@@ -28,6 +28,6 @@ public class CreateUserRequest {
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
     public String getAvatar() { return avatar; }
-    public String getDepartmentId() { return departmentId; }
+    public String getOrganizationId() { return organizationId; }
     public List<String> getRoleIds() { return roleIds; }
 }

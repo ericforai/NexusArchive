@@ -87,7 +87,7 @@ public class CounterpartyMatchStrategy implements MatchingStrategy {
         try {
             if (file.getStandardMetadata() != null) {
                 ParsedInvoice invoice = objectMapper.readValue(file.getStandardMetadata(), ParsedInvoice.class);
-                return invoice.getBuyerName(); // 或 sellerName，根据发票类型
+                return invoice.getSellerName();
             }
         } catch (Exception e) {
             log.warn("解析发票元数据失败: fileId={}", file.getId(), e);

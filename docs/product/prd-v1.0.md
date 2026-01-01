@@ -16,7 +16,7 @@
 *   **三员分立**：`SysAdmin`（系统管理员）、`SecAdmin`（安全管理员）、`AuditAdmin`（审计管理员）权限严格互斥。
 
 ### 1.2 术语与字段对齐
-*   **全宗 (Fonds)**：`sys_fonds` 为最高档案容器，`fonds_no` 为逻辑隔离键；一个法人可对应多个全宗。
+*   **全宗 (Fonds)**：`sys_fonds` 为最高档案容器，`fonds_no` 为逻辑隔离键；全宗通常对应一个立档单位。在集团型架构的业务实践中，一个法人实体可能因合并、分立、历史沿革等原因管理多个全宗。
 *   **法人 (Entity)**：`sys_entity` 为管理维度，关联全宗但不作为隔离键。
 *   **`archive_year` = `fiscal_year`**：存量实现以 `fiscal_year`（VARCHAR）表示归档年度，PRD 统一使用 `archive_year`（INT）。
 *   **全宗号展示字段**：`fonds_no` 用于盒脊标签、清册等对外展示。

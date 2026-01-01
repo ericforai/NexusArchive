@@ -26,7 +26,16 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error('Uncaught error:', error, errorInfo);
+        // 安全地记录错误信息，避免对象转换错误
+        try {
+            console.error('Uncaught error:', error?.message || error, errorInfo?.componentStack || errorInfo);
+        } catch (e) {
+            // 如果记录错误本身失败，使用更安全的方式
+            console.error('Error occurred:', String(error?.message || 'Unknown error'));
+            if (errorInfo?.componentStack) {
+                console.error('Component stack:', errorInfo.componentStack);
+            }
+        }
     }
 
     private handleReload = () => {
@@ -55,7 +64,13 @@ export class ErrorBoundary extends Component<Props, State> {
                                 : '应用程序遇到意外错误，我们正在努力修复。'}
                             {process.env.NODE_ENV === 'development' && this.state.error && (
                                 <code className="block mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded-lg text-xs text-left overflow-auto max-h-32 text-rose-600">
-                                    {this.state.error.toString()}
+                                    {(() => {
+                                        try {
+                                            return this.state.error?.message || String(this.state.error || 'Unknown error');
+                                        } catch {
+                                            return 'Error details unavailable';
+                                        }
+                                    })()}
                                 </code>
                             )}
                         </p>

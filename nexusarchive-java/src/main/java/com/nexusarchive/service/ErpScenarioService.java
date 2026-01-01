@@ -16,8 +16,8 @@ import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ErpScenarioMapper;
 import com.nexusarchive.mapper.ErpSubInterfaceMapper;
 import com.nexusarchive.mapper.SyncHistoryMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * </p>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ErpScenarioService {
 
@@ -47,7 +46,29 @@ public class ErpScenarioService {
     private final ObjectMapper objectMapper;
     private final ErpSubInterfaceService erpSubInterfaceService;
     private final com.nexusarchive.service.erp.ErpSyncService erpSyncService;
+    @Lazy
     private final com.nexusarchive.service.erp.ErpChannelService erpChannelService;
+
+    public ErpScenarioService(
+            ErpScenarioMapper erpScenarioMapper,
+            ErpConfigMapper erpConfigMapper,
+            ErpAdapterFactory erpAdapterFactory,
+            SyncHistoryMapper syncHistoryMapper,
+            ErpSubInterfaceMapper erpSubInterfaceMapper,
+            ObjectMapper objectMapper,
+            ErpSubInterfaceService erpSubInterfaceService,
+            com.nexusarchive.service.erp.ErpSyncService erpSyncService,
+            @Lazy com.nexusarchive.service.erp.ErpChannelService erpChannelService) {
+        this.erpScenarioMapper = erpScenarioMapper;
+        this.erpConfigMapper = erpConfigMapper;
+        this.erpAdapterFactory = erpAdapterFactory;
+        this.syncHistoryMapper = syncHistoryMapper;
+        this.erpSubInterfaceMapper = erpSubInterfaceMapper;
+        this.objectMapper = objectMapper;
+        this.erpSubInterfaceService = erpSubInterfaceService;
+        this.erpSyncService = erpSyncService;
+        this.erpChannelService = erpChannelService;
+    }
 
     /**
      * 获取指定配置的所有业务场景

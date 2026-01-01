@@ -13,8 +13,13 @@ import com.nexusarchive.dto.request.ImportPreviewResult;
 import com.nexusarchive.dto.request.ImportResult;
 import com.nexusarchive.entity.LegacyImportTask;
 import com.nexusarchive.service.LegacyImportService;
+import com.nexusarchive.service.LegacyImportTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class LegacyImportController {
     
     private final LegacyImportService legacyImportService;
+    private final LegacyImportTemplateService legacyImportTemplateService;
     private final ObjectMapper objectMapper;
     
     /**
@@ -134,6 +140,42 @@ public class LegacyImportController {
     }
     
     /**
+     * 下载CSV导入模板
+     */
+    @GetMapping("/template/csv")
+    @PreAuthorize("hasAnyAuthority('admin:import', 'archive:import') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<Resource> downloadCsvTemplate() {
+        try {
+            Resource resource = legacyImportTemplateService.generateCsvTemplate();
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=legacy-import-template.csv")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(resource);
+        } catch (Exception e) {
+            log.error("下载CSV模板失败: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * 下载Excel导入模板
+     */
+    @GetMapping("/template/excel")
+    @PreAuthorize("hasAnyAuthority('admin:import', 'archive:import') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<Resource> downloadExcelTemplate() {
+        try {
+            Resource resource = legacyImportTemplateService.generateExcelTemplate();
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=legacy-import-template.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(resource);
+        } catch (Exception e) {
+            log.error("下载Excel模板失败: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
      * 获取当前用户ID
      */
     private String getCurrentUserId() {
@@ -160,7 +202,7 @@ public class LegacyImportController {
             org.springframework.web.context.request.RequestAttributes requestAttributes = 
                 org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
             if (requestAttributes instanceof org.springframework.web.context.request.ServletRequestAttributes) {
-                javax.servlet.http.HttpServletRequest request = 
+                jakarta.servlet.http.HttpServletRequest request = 
                     ((org.springframework.web.context.request.ServletRequestAttributes) requestAttributes).getRequest();
                 String fondsNo = request.getHeader("X-Fonds-No");
                 if (fondsNo != null && !fondsNo.isEmpty()) {

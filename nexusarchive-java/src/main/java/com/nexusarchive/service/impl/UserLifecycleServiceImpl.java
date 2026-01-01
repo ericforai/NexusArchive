@@ -51,7 +51,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         event.setEmployeeName(request.getEmployeeName());
         event.setEventType("ONBOARD");
         event.setEventDate(request.getOnboardDate());
-        event.setNewDeptId(request.getDepartmentId());
+        event.setOrganizationId(request.getOrganizationId());
         event.setProcessed(false);
         event.setCreatedAt(LocalDateTime.now());
         event.setDeleted(0);
@@ -73,7 +73,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         createUserRequest.setFullName(request.getEmployeeName());
         createUserRequest.setEmail(request.getEmail());
         createUserRequest.setPhone(request.getPhone());
-        createUserRequest.setDepartmentId(request.getDepartmentId());
+        createUserRequest.setOrganizationId(request.getOrganizationId());
         createUserRequest.setRoleIds(request.getRoleIds());
         createUserRequest.setPassword(request.getInitialPassword() != null ? 
             request.getInitialPassword() : generateTemporaryPassword());
@@ -176,8 +176,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         event.setEmployeeName(request.getEmployeeName());
         event.setEventType("TRANSFER");
         event.setEventDate(request.getTransferDate());
-        event.setPreviousDeptId(request.getPreviousDeptId());
-        event.setNewDeptId(request.getNewDeptId());
+        event.setToOrganizationId(request.getToOrganizationId());
         event.setReason(request.getReason());
         event.setProcessed(false);
         event.setCreatedAt(LocalDateTime.now());
@@ -196,9 +195,9 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         
         eventMapper.insert(event);
         
-        // 3. 更新用户部门和角色
-        // TODO: 需要 UserService 提供更新部门和角色的方法
-        // userService.updateUserDepartment(userId, request.getNewDeptId());
+        // 3. 更新用户组织和角色
+        // TODO: 需要 UserService 提供更新组织和角色的方法
+        // userService.updateUserOrganization(userId, request.getToOrganizationId());
         // userService.updateUserRoles(userId, request.getNewRoleIds());
         
         // 4. 标记事件已处理
@@ -211,8 +210,8 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         auditLogService.log(
             "SYSTEM", "SYSTEM", "USER_TRANSFER",
             "USER", userId, "SUCCESS",
-            String.format("调岗处理: employeeId=%s, fromDept=%s, toDept=%s", 
-                request.getEmployeeId(), request.getPreviousDeptId(), request.getNewDeptId()),
+            String.format("调岗处理: employeeId=%s, toOrganizationId=%s", 
+                request.getEmployeeId(), request.getToOrganizationId()),
             "SYSTEM"
         );
         
@@ -253,8 +252,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
                         transferRequest.setEmployeeId(event.getEmployeeId());
                         transferRequest.setEmployeeName(event.getEmployeeName());
                         transferRequest.setTransferDate(event.getEventDate());
-                        transferRequest.setPreviousDeptId(event.getPreviousDeptId());
-                        transferRequest.setNewDeptId(event.getNewDeptId());
+                        transferRequest.setToOrganizationId(event.getToOrganizationId());
                         transferRequest.setReason(event.getReason());
                         
                         try {

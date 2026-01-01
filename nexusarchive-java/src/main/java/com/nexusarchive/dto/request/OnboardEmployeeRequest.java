@@ -32,9 +32,9 @@ public class OnboardEmployeeRequest {
     private LocalDate onboardDate;
     
     /**
-     * 部门ID
+     * 组织ID（集团型架构必需）
      */
-    private String departmentId;
+    private String organizationId;
     
     /**
      * 角色ID列表

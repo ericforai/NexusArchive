@@ -1,16 +1,21 @@
-// Input: React、lucide-react 图标、settings feature、utils/audit
-// Output: React 组件 AuditLogView
+// Input: React、lucide-react 图标、settings feature、utils/audit、audit pages
+// Output: React 组件 AuditLogView（集成日志查看、验真、导出功能）
 // Pos: src/pages/settings/AuditLogView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Filter, Loader2, Search } from 'lucide-react';
+import { Filter, Loader2, Search, Copy, Check, Shield, FileArchive } from 'lucide-react';
 import { subscribeAuditRefresh } from '../../utils/audit';
 import { useAuditSettingsApi } from '../../features/settings';
 import { AuditLog } from '../../types';
+import { AuditVerificationPage } from '../audit/AuditVerificationPage';
+import { AuditEvidencePackagePage } from '../audit/AuditEvidencePackagePage';
+
+type AuditTab = 'logs' | 'verification' | 'export';
 
 export const AuditLogView: React.FC = () => {
   const { auditApi } = useAuditSettingsApi();
+  const [activeTab, setActiveTab] = useState<AuditTab>('logs');
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -18,6 +23,7 @@ export const AuditLogView: React.FC = () => {
   const [filterUser, setFilterUser] = useState('');
   const [filterAction, setFilterAction] = useState('');
   const [filterResource, setFilterResource] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -50,14 +56,50 @@ export const AuditLogView: React.FC = () => {
     return unsubscribe;
   }, [fetchLogs]);
 
+  const copyLogId = async (logId: string) => {
+    try {
+      await navigator.clipboard.writeText(logId);
+      setCopiedId(logId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / 20));
 
-  return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+  const tabs = [
+    { key: 'logs' as AuditTab, label: '日志查看', icon: Search },
+    { key: 'verification' as AuditTab, label: '证据链验真', icon: Shield },
+    { key: 'export' as AuditTab, label: '证据包导出', icon: FileArchive },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'verification':
+        return (
+          <div className="-m-6">
+            <AuditVerificationPage />
+          </div>
+        );
+      case 'export':
+        return (
+          <div className="-m-6">
+            <AuditEvidencePackagePage />
+          </div>
+        );
+      case 'logs':
+      default:
+        return renderLogsView();
+    }
+  };
+
+  const renderLogsView = () => (
+    <>
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">审计日志</h2>
-          <p className="text-slate-500 text-sm">查看关键操作的审计留痕（用户、角色、设置等）。</p>
+          <h3 className="text-lg font-semibold text-slate-800">审计日志列表</h3>
+          <p className="text-slate-500 text-sm mt-1">查看关键操作的审计留痕（用户、角色、设置等）。</p>
         </div>
         <button
           onClick={fetchLogs}
@@ -107,6 +149,7 @@ export const AuditLogView: React.FC = () => {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500 border-b">
             <tr>
+              <th className="px-4 py-2">日志ID</th>
               <th className="px-4 py-2">时间</th>
               <th className="px-4 py-2">用户</th>
               <th className="px-4 py-2">操作</th>
@@ -118,12 +161,31 @@ export const AuditLogView: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <tr><td colSpan={7} className="py-6 text-center text-slate-400"><Loader2 className="animate-spin inline-block mr-1" size={16} />加载中...</td></tr>
+              <tr><td colSpan={8} className="py-6 text-center text-slate-400"><Loader2 className="animate-spin inline-block mr-1" size={16} />加载中...</td></tr>
             ) : logs.length === 0 ? (
-              <tr><td colSpan={7} className="py-6 text-center text-slate-400">暂无数据</td></tr>
+              <tr><td colSpan={8} className="py-6 text-center text-slate-400">暂无数据</td></tr>
             ) : (
               logs.map(log => (
                 <tr key={log.id}>
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-2 group">
+                      <span className="font-mono text-xs text-slate-600">{log.id}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyLogId(log.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded"
+                        title="复制日志ID"
+                      >
+                        {copiedId === log.id ? (
+                          <Check size={14} className="text-green-600" />
+                        ) : (
+                          <Copy size={14} className="text-slate-400 hover:text-primary-600" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
                   <td className="px-4 py-2 text-slate-600">{log.createdTime || ''}</td>
                   <td className="px-4 py-2 text-slate-800">{log.username || log.userId}</td>
                   <td className="px-4 py-2 text-slate-800">{log.action}</td>
@@ -152,6 +214,49 @@ export const AuditLogView: React.FC = () => {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           >下一页</button>
         </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">审计日志</h2>
+          <p className="text-slate-500 text-sm">查看关键操作的审计留痕（用户、角色、设置等）。</p>
+        </div>
+      </div>
+
+      {/* Tab 导航 */}
+      <div className="bg-white border-b border-slate-200">
+        <nav className="flex space-x-1" aria-label="审计功能导航">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`
+                  flex items-center px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap
+                  transition-colors duration-200
+                  ${isActive
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                  }
+                `}
+              >
+                <Icon size={16} className="mr-2" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Tab 内容 */}
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {renderContent()}
       </div>
     </div>
   );

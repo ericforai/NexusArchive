@@ -43,14 +43,14 @@ public class EmployeeLifecycleEvent {
     private LocalDate eventDate;
 
     /**
-     * 原部门ID（调岗时使用）
+     * 组织ID（入职/调岗时使用）
      */
-    private String previousDeptId;
+    private String organizationId;
 
     /**
-     * 新部门ID
+     * 目标组织ID（调岗时使用）
      */
-    private String newDeptId;
+    private String toOrganizationId;
 
     /**
      * 原角色ID列表（JSON格式）

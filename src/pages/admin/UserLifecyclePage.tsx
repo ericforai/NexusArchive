@@ -3,9 +3,12 @@
 // Pos: 用户生命周期管理页面
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Loader2, CheckCircle2, XCircle, UserPlus, UserMinus, UserCog, AlertCircle } from 'lucide-react';
 import { userLifecycleApi, OnboardRequest, OffboardRequest, TransferRequest } from '../../api/userLifecycle';
+import { OrgSelector } from '../../components/org/OrgSelector';
+import { OrgNode } from '../../types';
+import { useAdminSettingsApi } from '../../features/settings';
 
 /**
  * 用户生命周期管理页面
@@ -18,14 +21,20 @@ import { userLifecycleApi, OnboardRequest, OffboardRequest, TransferRequest } fr
  * PRD 来源: Section 4.2 - 用户生命周期管理
  */
 export const UserLifecyclePage: React.FC = () => {
+    const { adminApi } = useAdminSettingsApi();
     const [activeTab, setActiveTab] = useState<'onboard' | 'offboard' | 'transfer'>('onboard');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    
+    // 组织架构数据
+    const [orgTree, setOrgTree] = useState<OrgNode[]>([]);
+    const [orgLoading, setOrgLoading] = useState(false);
 
     // 入职表单
     const [onboardForm, setOnboardForm] = useState<OnboardRequest>({
         employeeId: '',
         roleIds: [],
+        organizationId: '', // 新增：组织ID
     });
 
     // 离职表单
@@ -39,7 +48,26 @@ export const UserLifecyclePage: React.FC = () => {
         employeeId: '',
         newRoleIds: [],
         reason: '',
+        toOrganizationId: '', // 新增：目标组织ID
     });
+
+    // 加载组织架构数据
+    useEffect(() => {
+        const loadOrgTree = async () => {
+            setOrgLoading(true);
+            try {
+                const res = await adminApi.getOrgTree();
+                if (res.code === 200 && res.data) {
+                    setOrgTree(res.data);
+                }
+            } catch (error) {
+                console.error('加载组织架构失败', error);
+            } finally {
+                setOrgLoading(false);
+            }
+        };
+        loadOrgTree();
+    }, [adminApi]);
 
     // 注意：这里需要集成员工选择器和角色选择器
     // 由于没有现成的API，这里使用模拟数据
@@ -60,13 +88,18 @@ export const UserLifecyclePage: React.FC = () => {
             setMessage({ type: 'error', text: '请选择员工和至少一个角色' });
             return;
         }
+        
+        if (!onboardForm.organizationId) {
+            setMessage({ type: 'error', text: '请选择目标组织' });
+            return;
+        }
 
         setLoading(true);
         try {
             const res = await userLifecycleApi.onboard(onboardForm);
             if (res.code === 200) {
                 setMessage({ type: 'success', text: `账号创建成功：${res.data?.username || ''}` });
-                setOnboardForm({ employeeId: '', roleIds: [] });
+                setOnboardForm({ employeeId: '', roleIds: [], organizationId: '' });
             } else {
                 setMessage({ type: 'error', text: res.message || '入职处理失败' });
             }
@@ -108,13 +141,18 @@ export const UserLifecyclePage: React.FC = () => {
             setMessage({ type: 'error', text: '请选择员工和至少一个角色' });
             return;
         }
+        
+        if (!transferForm.toOrganizationId) {
+            setMessage({ type: 'error', text: '请选择目标组织' });
+            return;
+        }
 
         setLoading(true);
         try {
             const res = await userLifecycleApi.transfer(transferForm);
             if (res.code === 200) {
                 setMessage({ type: 'success', text: '调岗处理成功' });
-                setTransferForm({ employeeId: '', newRoleIds: [], reason: '' });
+                setTransferForm({ employeeId: '', newRoleIds: [], reason: '', toOrganizationId: '' });
             } else {
                 setMessage({ type: 'error', text: res.message || '调岗处理失败' });
             }
@@ -232,6 +270,26 @@ export const UserLifecyclePage: React.FC = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    选择组织 <span className="text-red-500">*</span>
+                                </label>
+                                {orgLoading ? (
+                                    <div className="flex items-center justify-center py-8 text-slate-500">
+                                        <Loader2 className="animate-spin mr-2" size={16} />
+                                        加载组织架构...
+                                    </div>
+                                ) : (
+                                    <OrgSelector
+                                        orgTree={orgTree}
+                                        value={onboardForm.organizationId}
+                                        onChange={(value) => setOnboardForm({ ...onboardForm, organizationId: value as string })}
+                                        multiple={false}
+                                        placeholder="请选择目标组织"
+                                        className="mb-4"
+                                    />
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     分配角色 <span className="text-red-500">*</span>
                                 </label>
                                 <div className="space-y-2">
@@ -333,6 +391,26 @@ export const UserLifecyclePage: React.FC = () => {
                                         <option key={emp.id} value={emp.id}>{emp.name}</option>
                                     ))}
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    选择目标组织 <span className="text-red-500">*</span>
+                                </label>
+                                {orgLoading ? (
+                                    <div className="flex items-center justify-center py-8 text-slate-500">
+                                        <Loader2 className="animate-spin mr-2" size={16} />
+                                        加载组织架构...
+                                    </div>
+                                ) : (
+                                    <OrgSelector
+                                        orgTree={orgTree}
+                                        value={transferForm.toOrganizationId}
+                                        onChange={(value) => setTransferForm({ ...transferForm, toOrganizationId: value as string })}
+                                        multiple={false}
+                                        placeholder="请选择目标组织"
+                                        className="mb-4"
+                                    />
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">

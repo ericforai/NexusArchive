@@ -150,5 +150,25 @@ export const legacyImportApi = {
         });
         return response.data;
     },
+
+    /**
+     * 下载CSV导入模板
+     */
+    downloadCsvTemplate: async () => {
+        const response = await client.get('/legacy-import/template/csv', {
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+
+    /**
+     * 下载Excel导入模板
+     */
+    downloadExcelTemplate: async () => {
+        const response = await client.get('/legacy-import/template/excel', {
+            responseType: 'blob',
+        });
+        return response.data;
+    },
 };
 

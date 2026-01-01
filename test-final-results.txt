@@ -1,0 +1,398 @@
+
+Running 38 tests using 4 workers
+
+(node:73071) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73074) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73071) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73074) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   3 tests/playwright/ui/destruction_workflow.spec.ts:17:3 › 档案销毁流程 @P0 › 应该能够访问到期档案识别页面 (4.1s)
+  ✓   4 tests/playwright/ui/audit_verification.spec.ts:17:3 › 审计证据链验真 @P0 › 应该能够访问审计证据链验真页面 (4.1s)
+  ✓   1 tests/playwright/ui/audit_evidence_package.spec.ts:17:3 › 审计证据包导出 @P0 › 应该能够访问审计证据包导出页面 (6.0s)
+  ✓   2 tests/playwright/ui/auth_ticket.spec.ts:17:3 › 跨全宗访问授权票据 @P0 › 应该能够访问授权票据列表页面 (6.0s)
+  ✓   5 tests/playwright/ui/destruction_workflow.spec.ts:22:3 › 档案销毁流程 @P0 › 应该能够访问鉴定清单页面 (3.6s)
+  ✓   6 tests/playwright/ui/audit_verification.spec.ts:22:3 › 审计证据链验真 @P0 › 应该显示单条验证、批量验证、链式验证等选项 (4.2s)
+  ✓   7 tests/playwright/ui/audit_evidence_package.spec.ts:24:3 › 审计证据包导出 @P0 › 应该显示导出条件选择（日期范围、全宗） (3.8s)
+  ✓   8 tests/playwright/ui/auth_ticket.spec.ts:24:3 › 跨全宗访问授权票据 @P0 › 应该能够访问授权票据申请页面 (4.3s)
+  ✓   9 tests/playwright/ui/destruction_workflow.spec.ts:27:3 › 档案销毁流程 @P0 › 应该能够访问销毁审批页面 (2.8s)
+  ✓  10 tests/playwright/ui/audit_verification.spec.ts:35:3 › 审计证据链验真 @P0 › 应该能够执行单条审计日志验证 (3.4s)
+  ✘  11 tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 (30.0s)
+(node:73196) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73196) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  12 tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 (30.0s)
+(node:73200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  13 tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 (30.0s)
+(node:73200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73205) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73205) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  14 tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 (30.0s)
+(node:73219) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73219) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 tests/playwright/ui/audit_evidence_package.spec.ts:51:3 › 审计证据包导出 @P0 › 应该显示导出按钮 (24.8s)
+  ✓  16 tests/playwright/ui/auth_ticket.spec.ts:61:3 › 跨全宗访问授权票据 @P0 › 应该能够筛选授权票据 (24.8s)
+  ✓  17 tests/playwright/ui/destruction_workflow.spec.ts:39:3 › 档案销毁流程 @P0 › 到期档案页面应该显示筛选选项 (25.9s)
+  ✓  18 tests/playwright/ui/freeze_hold.spec.ts:17:3 › 冻结/保全管理 @P1 › 应该能够访问冻结/保全管理页面 (26.1s)
+  ✓  20 tests/playwright/ui/auth_ticket.spec.ts:76:3 › 跨全宗访问授权票据 @P0 › 应该能够查看授权票据详情 (4.0s)
+  ✓  21 tests/playwright/ui/destruction_workflow.spec.ts:79:3 › 档案销毁流程 @P0 › 鉴定清单页面应该显示列表 (5.1s)
+  ✓  22 tests/playwright/ui/freeze_hold.spec.ts:24:3 › 冻结/保全管理 @P1 › 应该显示冻结/保全列表 (4.1s)
+  ✘  23 tests/playwright/ui/mfa.spec.ts:17:3 › MFA多因素认证 @P1 › 应该能够访问MFA设置页面 (3.5s)
+(node:73313) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73313) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  24 tests/playwright/ui/user_lifecycle.spec.ts:17:3 › 用户生命周期管理 @P1 › 应该能够访问用户生命周期管理页面 (5.1s)
+  ✘  19 tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 (19.8s)
+(node:73331) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73331) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  25 tests/playwright/ui/freeze_hold.spec.ts:35:3 › 冻结/保全管理 @P1 › 应该显示申请冻结/保全按钮 (30.0s)
+(node:73354) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73354) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  26 tests/playwright/ui/mfa.spec.ts:22:3 › MFA多因素认证 @P1 › 应该显示MFA状态 (30.0s)
+(node:73360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  27 tests/playwright/ui/user_lifecycle.spec.ts:24:3 › 用户生命周期管理 @P1 › 应该显示入职、离职、调岗三个标签页 (30.0s)
+(node:73372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  28 tests/playwright/ui/legacy_import.spec.ts:24:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 (30.0s)
+(node:73387) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73387) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  29 tests/playwright/ui/freeze_hold.spec.ts:46:3 › 冻结/保全管理 @P1 › 应该显示类型和状态筛选 (26.5s)
+  ✓  30 tests/playwright/ui/mfa.spec.ts:59:3 › MFA多因素认证 @P1 › 应该显示启用MFA按钮（如果未启用） (26.3s)
+  -  33 tests/playwright/ui/freeze_hold.spec.ts:86:3 › 冻结/保全管理 @P1 › 应该能够访问冻结/保全详情页面
+  ✓  31 tests/playwright/ui/user_lifecycle.spec.ts:36:3 › 用户生命周期管理 @P1 › 应该能够访问权限定期复核页面 (26.9s)
+  ✓  34 tests/playwright/ui/mfa.spec.ts:95:3 › MFA多因素认证 @P1 › 应该显示二维码（如果正在设置） (7.2s)
+  ✓  35 tests/playwright/ui/user_lifecycle.spec.ts:43:3 › 用户生命周期管理 @P1 › 权限复核页面应该显示任务列表 (5.1s)
+  -  32 tests/playwright/ui/legacy_import.spec.ts:76:3 › 历史数据导入 @P0 › 应该能够上传CSV文件
+  ✓  36 tests/playwright/ui/user_lifecycle.spec.ts:82:3 › 用户生命周期管理 @P1 › 权限复核页面应该显示状态筛选 (5.0s)
+  ✓  37 tests/playwright/ui/legacy_import.spec.ts:123:3 › 历史数据导入 @P0 › 应该能够查看导入历史列表 (7.1s)
+  ✓  38 tests/playwright/ui/legacy_import.spec.ts:173:3 › 历史数据导入 @P0 › 应该显示字段映射配置选项 (3.7s)
+
+
+  1) tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 ────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('审计证据包导出 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Protocol error (Storage.getCookies): Failed to find browser context for id 9D11074F0B50C2AD5C5789B2B6219F37
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-audit_-5652a-ckage-审计证据包导出-P0-应该能够查看导出历史/error-context.md
+
+  2) tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 ──────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('审计证据链验真 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Protocol error (Storage.getCookies): Failed to find browser context for id 7ED9E2C0162E74272826DE0275B986A7
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-audit_verification-审计证据链验真-P0-应该显示验证结果/error-context.md
+
+  3) tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 ─────────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('跨全宗访问授权票据 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Protocol error (Storage.getCookies): Failed to find browser context for id 7D21657BB8C5BABF9EE4D56B253245BA
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-auth_ticket-跨全宗访问授权票据-P0-应该显示授权票据列表/error-context.md
+
+  4) tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 ─────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('档案销毁流程 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Protocol error (Storage.getCookies): Failed to find browser context for id 329CA569607B3E5ED8736D4A65AEF4BC
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-destru-b0c6d-flow-档案销毁流程-P0-应该能够访问销毁执行页面/error-context.md
+
+  5) tests/playwright/ui/freeze_hold.spec.ts:35:3 › 冻结/保全管理 @P1 › 应该显示申请冻结/保全按钮 ────────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('冻结/保全管理 @P1', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Protocol error (Storage.getCookies): Failed to find browser context for id F9D5029BC5E659163D3963D69B3E7264
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-freeze_hold-冻结-保全管理-P1-应该显示申请冻结-保全按钮/error-context.md
+
+  6) tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 ──────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: /历史数据导入/i }).first()
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /历史数据导入/i }).first()[22m
+
+
+       at tests/playwright/utils/page-helpers.ts:126
+
+      124 |   // 如果所有选择器都失败，使用更通用的方法
+      125 |   const heading = page.getByRole('heading', { name: titleText });
+    > 126 |   await expect(heading.first()).toBeVisible({ timeout });
+          |                                 ^
+      127 | }
+      128 |
+      129 | /**
+        at waitForPageTitle (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:126:33)
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:21:5
+
+    Error Context: test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够访问历史数据导入页面/error-context.md
+
+  7) tests/playwright/ui/legacy_import.spec.ts:24:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 ──────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('历史数据导入 @P0', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Target page, context or browser has been closed
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该显示导入和历史两个标签页/error-context.md
+
+  8) tests/playwright/ui/mfa.spec.ts:17:3 › MFA多因素认证 @P1 › 应该能够访问MFA设置页面 ───────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: /多因素认证|MFA/i })
+    Expected: visible
+    Error: strict mode violation: getByRole('heading', { name: /多因素认证|MFA/i }) resolved to 2 elements:
+        1) <h2 class="text-2xl font-bold text-slate-800 flex items-center">…</h2> aka getByRole('heading', { name: '多因素认证 (MFA)' })
+        2) <h3 class="text-lg font-semibold">MFA状态</h3> aka getByRole('heading', { name: 'MFA状态' })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /多因素认证|MFA/i })[22m
+
+
+      17 |   test('应该能够访问MFA设置页面', async ({ page }) => {
+      18 |     await page.goto(`${BASE_URL}/system/settings/mfa`);
+    > 19 |     await expect(page.getByRole('heading', { name: /多因素认证|MFA/i })).toBeVisible({ timeout: 10000 });
+         |                                                                     ^
+      20 |   });
+      21 |
+      22 |   test('应该显示MFA状态', async ({ page }) => {
+        at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:19:69
+
+    Error Context: test-results/tests-playwright-ui-mfa-MFA多因素认证-P1-应该能够访问MFA设置页面/error-context.md
+
+  9) tests/playwright/ui/mfa.spec.ts:22:3 › MFA多因素认证 @P1 › 应该显示MFA状态 ───────────────────────────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('MFA多因素认证 @P1', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Target page, context or browser has been closed
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-mfa-MFA多因素认证-P1-应该显示MFA状态/error-context.md
+
+  10) tests/playwright/ui/user_lifecycle.spec.ts:24:3 › 用户生命周期管理 @P1 › 应该显示入职、离职、调岗三个标签页 ───────────
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      10 |
+      11 | test.describe('用户生命周期管理 @P1', () => {
+    > 12 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      13 |     // 使用优化的登录函数
+      14 |     await login(page);
+      15 |   });
+        at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:12:8
+
+    Error: browserContext.clearCookies: Protocol error (Storage.getCookies): Failed to find browser context for id 60AF48B06C9137A1BFD23F1BCB4812D3
+
+       at tests/playwright/utils/page-helpers.ts:20
+
+      18 |       // 每次重试前清空cookies和storage，确保干净状态
+      19 |       if (attempt > 0) {
+    > 20 |         await page.context().clearCookies();
+         |                              ^
+      21 |         await page.evaluate(() => {
+      22 |           localStorage.clear();
+      23 |           sessionStorage.clear();
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:20:30)
+        at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-user_l-c55b8-生命周期管理-P1-应该显示入职、离职、调岗三个标签页/error-context.md
+
+  10 failed
+    tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 ─────────────
+    tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 ───────────────────
+    tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 ──────────────────────
+    tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 ──────────────
+    tests/playwright/ui/freeze_hold.spec.ts:35:3 › 冻结/保全管理 @P1 › 应该显示申请冻结/保全按钮 ─────────────────────
+    tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 ───────────────────
+    tests/playwright/ui/legacy_import.spec.ts:24:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 ───────────────────
+    tests/playwright/ui/mfa.spec.ts:17:3 › MFA多因素认证 @P1 › 应该能够访问MFA设置页面 ────────────────────────────
+    tests/playwright/ui/mfa.spec.ts:22:3 › MFA多因素认证 @P1 › 应该显示MFA状态 ────────────────────────────────
+    tests/playwright/ui/user_lifecycle.spec.ts:24:3 › 用户生命周期管理 @P1 › 应该显示入职、离职、调岗三个标签页 ─────────────
+  2 skipped
+  26 passed (2.6m)

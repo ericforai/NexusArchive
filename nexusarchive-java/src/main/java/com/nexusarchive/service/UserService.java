@@ -62,7 +62,7 @@ public class UserService {
         user.setEmail(com.nexusarchive.util.XssFilter.clean(request.getEmail())); // XSS 过滤
         user.setPhone(com.nexusarchive.util.XssFilter.clean(request.getPhone())); // XSS 过滤
         user.setAvatar(request.getAvatar());
-        user.setDepartmentId(request.getDepartmentId());
+        user.setOrganizationId(request.getOrganizationId());
         user.setStatus("active");
         user.setCreatedTime(LocalDateTime.now());
         user.setLastModifiedTime(LocalDateTime.now());
@@ -91,7 +91,7 @@ public class UserService {
         existing.setEmail(com.nexusarchive.util.XssFilter.clean(request.getEmail()));
         existing.setPhone(com.nexusarchive.util.XssFilter.clean(request.getPhone()));
         existing.setAvatar(request.getAvatar());
-        existing.setDepartmentId(request.getDepartmentId());
+        existing.setOrganizationId(request.getOrganizationId());
         existing.setLastModifiedTime(LocalDateTime.now());
         userMapper.updateById(existing);
         // 更新角色关联
@@ -158,7 +158,7 @@ public class UserService {
         resp.setEmail(user.getEmail());
         resp.setPhone(user.getPhone());
         resp.setAvatar(user.getAvatar());
-        resp.setDepartmentId(user.getDepartmentId());
+        resp.setOrganizationId(user.getOrganizationId());
         resp.setStatus(user.getStatus());
         // 角色列表
         List<String> roleIds = userMapper.selectRoleIdsByUserId(user.getId());
