@@ -5,6 +5,7 @@
 
 package com.nexusarchive.integration.erp.adapter;
 
+import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
 import com.nexusarchive.integration.erp.dto.*;
 import com.nexusarchive.integration.yonsuite.client.YonSuiteClient;
 import com.nexusarchive.integration.yonsuite.dto.*;
@@ -21,9 +22,19 @@ import java.util.*;
 /**
  * YonSuite (用友) ERP 适配器
  * 将现有 YonSuite 集成封装为标准适配器接口
- * 
+ *
  * @author Agent D (基础设施工程师)
  */
+@ErpAdapterAnnotation(
+    identifier = "yonsuite",
+    name = "用友YonSuite",
+    description = "用友新一代企业云服务平台，支持凭证、附件同步和 Webhook 推送",
+    version = "1.0.0",
+    erpType = "YONSUITE",
+    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "WEBHOOK"},
+    supportsWebhook = true,
+    priority = 10
+)
 @Service("yonsuite")
 @RequiredArgsConstructor
 @Slf4j

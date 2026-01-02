@@ -11,6 +11,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.nexusarchive.entity.ErpScenario;
+import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
 import com.nexusarchive.integration.erp.dto.AttachmentDTO;
 import com.nexusarchive.integration.erp.dto.ConnectionTestResult;
 import com.nexusarchive.integration.erp.dto.ErpConfig;
@@ -30,6 +31,16 @@ import java.util.Map;
  * 泛微 E10 (e-teams / Weaver 10) 适配器
  * 实现基于 OAuth2 的费控凭证同步
  */
+@ErpAdapterAnnotation(
+    identifier = "weaver_e10",
+    name = "泛微E10",
+    description = "泛微新一代 E10 开放平台，支持 OAuth2.0 认证",
+    version = "1.0.0",
+    erpType = "WEAVER_E10",
+    supportedScenarios = {"VOUCHER_SYNC"},
+    supportsWebhook = false,
+    priority = 40
+)
 @Slf4j
 @Service("weaver_e10")
 public class WeaverE10Adapter implements ErpAdapter {

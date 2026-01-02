@@ -5,6 +5,7 @@
 
 package com.nexusarchive.integration.erp.adapter;
 
+import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
 import com.nexusarchive.integration.erp.dto.*;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONObject;
@@ -21,9 +22,19 @@ import java.util.List;
 /**
  * 金蝶云星空 ERP 适配器
  * 对接金蝶 K3Cloud API
- * 
+ *
  * @author Agent D (基础设施工程师)
  */
+@ErpAdapterAnnotation(
+    identifier = "kingdee",
+    name = "金蝶云星空",
+    description = "金蝶云星空 ERP 系统，支持凭证和附件同步",
+    version = "1.0.0",
+    erpType = "KINGDEE",
+    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC"},
+    supportsWebhook = false,
+    priority = 20
+)
 @Service("kingdee")
 @Slf4j
 public class KingdeeAdapter implements ErpAdapter {
