@@ -113,7 +113,7 @@ return <iframe src={blobUrl} />;
 
 ## 迁移指南
 
-### 从 ArchiveDetailModal 的 OfdViewer 迁移
+### 从 ArchiveDetailDrawer 的 OfdViewer 迁移
 
 **之前（有问题）：**
 ```tsx

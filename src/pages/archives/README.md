@@ -13,7 +13,7 @@
 | --- | --- |
 | `ArchiveListPage.tsx` | 档案列表页面容器 |
 | `ArchiveListView.tsx` | 档案列表视图 |
-| `ArchiveDetailModal.tsx` | 档案详情弹窗 |
+| `ArchiveDetailDrawer.tsx` | 档案详情抽屉（2026-01-02: 替代 ArchiveDetailModal）|
 | `AddRecordModal.tsx` | 新增档案弹窗 |
 | `ComplianceModal.tsx` | 合规检查弹窗 |
 | `ComplianceReportView.tsx` | 合规报告页面 |
