@@ -27,6 +27,9 @@ build
 # 运行时 PID 文件（每次启动重新生成）
 .run/
 
+# Git Worktrees（隔离工作目录，每台电脑不同）
+.worktrees/
+
 # 日志文件（运行时生成）
 logs/
 *.log
