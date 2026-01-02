@@ -14,6 +14,10 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+// 强制刷新标识 - 2026-01-02 15:30
+console.log('%c[APP] NexusArchive Frontend v2.0.3 - BUILD 20260102-1530', 'color: #0ea5e9; font-weight: bold; font-size: 14px;');
+console.log('%c[APP] ArchiveDetailDrawer should have 3 tabs: 档案详情 | 关联附件 | 凭证预览', 'color: #10b981; font-weight: bold;');
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
