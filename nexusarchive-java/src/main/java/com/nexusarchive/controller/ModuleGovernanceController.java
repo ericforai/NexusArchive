@@ -48,6 +48,15 @@ public class ModuleGovernanceController {
     }
 
     /**
+     * 发现前端模块
+     */
+    @Operation(summary = "发现前端模块", description = "通过 Node.js 脚本扫描前端代码，返回前端模块信息")
+    @GetMapping("/modules/frontend")
+    public Result<List<FrontendModuleInfo>> discoverFrontendModules() {
+        return Result.success(moduleGovernanceService.discoverFrontendModules());
+    }
+
+    /**
      * 验证模块清单
      */
     @Operation(summary = "验证模块清单", description = "检查 module-manifest.md 与实际代码的一致性")

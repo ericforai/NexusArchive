@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +28,7 @@ public class ModuleGovernanceService {
 
     private static final String BASE_PATH = "src/main/java/com/nexusarchive";
     private static final String DOCS_PATH = "docs/architecture";
+    private static final String FRONTEND_DISCOVERY_SCRIPT = "node scripts/discover-frontend-modules.js --discover";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -145,6 +147,106 @@ public class ModuleGovernanceService {
             return "模块化目录，请扫描子模块";
         }
         return "建议：1. 评估是否应独立为模块 2. 添加到 module-manifest.md 3. 补充架构测试规则";
+    }
+
+    /**
+     * 发现前端模块
+     * <p>
+     * 通过调用 Node.js 脚本扫描前端代码，返回前端模块信息
+     * </p>
+     */
+    public List<FrontendModuleInfo> discoverFrontendModules() {
+        List<FrontendModuleInfo> modules = new ArrayList<>();
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(FRONTEND_DISCOVERY_SCRIPT.split(" "));
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                log.warn("Frontend module discovery script exited with code {}: {}", exitCode, output);
+                return modules;
+            }
+
+            // 解析输出（简单的文本解析）
+            modules = parseFrontendModuleOutput(output.toString());
+
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to discover frontend modules", e);
+            Thread.currentThread().interrupt();
+        }
+
+        return modules;
+    }
+
+    /**
+     * 解析前端模块发现脚本的输出
+     */
+    private List<FrontendModuleInfo> parseFrontendModuleOutput(String output) {
+        List<FrontendModuleInfo> modules = new ArrayList<>();
+        String[] lines = output.split("\n");
+
+        String currentModuleId = null;
+        String currentModuleName = null;
+        String currentPath = null;
+        int currentFileCount = 0;
+        List<String> currentSubModules = new ArrayList<>();
+
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+
+            if (line.contains(":") && !line.startsWith(" ")) {
+                // 新模块开始
+                if (currentModuleId != null) {
+                    modules.add(FrontendModuleInfo.builder()
+                        .moduleId(currentModuleId)
+                        .name(currentModuleName)
+                        .path(currentPath)
+                        .fileCount(currentFileCount)
+                        .subModules(new ArrayList<>(currentSubModules))
+                        .build());
+                }
+                String[] parts = line.split(":");
+                currentModuleId = parts[0].trim();
+                currentModuleName = parts.length > 1 ? parts[1].trim() : currentModuleId;
+                currentPath = null;
+                currentFileCount = 0;
+                currentSubModules.clear();
+            } else if (line.contains("范围:") || line.contains("Scope:")) {
+                currentPath = line.split(":")[1].trim();
+            } else if (line.contains("文件:") || line.contains("Files:")) {
+                try {
+                    currentFileCount = Integer.parseInt(line.split(":")[1].trim());
+                } catch (NumberFormatException e) {
+                    currentFileCount = 0;
+                }
+            } else if (line.trim().startsWith("-")) {
+                currentSubModules.add(line.trim().substring(1).trim());
+            }
+        }
+
+        // 添加最后一个模块
+        if (currentModuleId != null) {
+            modules.add(FrontendModuleInfo.builder()
+                .moduleId(currentModuleId)
+                .name(currentModuleName)
+                .path(currentPath)
+                .fileCount(currentFileCount)
+                .subModules(new ArrayList<>(currentSubModules))
+                .build());
+        }
+
+        return modules;
     }
 
     /**
