@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Plus, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { User, Role } from '../../types';
+import { toast } from '../utils/notificationService';
 
 type UserStatus = 'active' | 'disabled' | 'locked';
 
@@ -96,23 +97,23 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
 
         // 前端验证密码策略
         if (newPwd.length < 8) {
-            alert('密码至少需要8位');
+            toast.warning('密码至少需要8位');
             return;
         }
         if (!/[A-Z]/.test(newPwd)) {
-            alert('密码需包含大写字母');
+            toast.warning('密码需包含大写字母');
             return;
         }
         if (!/[a-z]/.test(newPwd)) {
-            alert('密码需包含小写字母');
+            toast.warning('密码需包含小写字母');
             return;
         }
         if (!/\d/.test(newPwd)) {
-            alert('密码需包含数字');
+            toast.warning('密码需包含数字');
             return;
         }
         if (!/[^A-Za-z0-9]/.test(newPwd)) {
-            alert('密码需包含特殊字符（如 !@#$%^&*）');
+            toast.warning('密码需包含特殊字符（如 !@#$%^&*）');
             return;
         }
 
@@ -120,12 +121,12 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         try {
             const res = await adminApi.resetPassword(id, newPwd);
             if (res.code === 200) {
-                alert('密码已重置');
+                toast.success('密码已重置');
             } else {
-                alert(res.message || '重置失败');
+                toast.error(res.message || '重置失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '重置失败');
+            toast.error(e?.response?.data?.message || '重置失败');
         } finally {
             setActionLoading(null);
         }
@@ -138,10 +139,10 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
             if (res.code === 200) {
                 setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
             } else {
-                alert(res.message || '状态更新失败');
+                toast.error(res.message || '状态更新失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '状态更新失败');
+            toast.error(e?.response?.data?.message || '状态更新失败');
         } finally {
             setActionLoading(null);
         }
@@ -159,7 +160,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!createForm.username || !createForm.password) {
-            alert('用户名和密码必填');
+            toast.warning('用户名和密码必填');
             return;
         }
         const selectedRoles = roles.filter(r => createForm.roleIds.includes(r.id));
@@ -185,10 +186,10 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                 setCreateForm({ username: '', password: '', fullName: '', email: '', phone: '', roleIds: [] });
                 loadUsers();
             } else {
-                alert(res.message || '创建失败');
+                toast.error(res.message || '创建失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '创建失败');
+            toast.error(e?.response?.data?.message || '创建失败');
         } finally {
             setCreateLoading(false);
         }
@@ -200,7 +201,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
             const nextRoles = exists ? prev.roleIds.filter((id) => id !== roleId) : [...prev.roleIds, roleId];
             const selectedExclusive = roles.filter(r => nextRoles.includes(r.id) && EXCLUSIVE_ROLE_CODES.includes(r.code));
             if (selectedExclusive.length > 1) {
-                alert('三员互斥：系统/安全/审计角色不可同时分配给同一用户');
+                toast.warning('三员互斥：系统/安全/审计角色不可同时分配给同一用户');
                 return prev;
             }
             return { ...prev, roleIds: nextRoles };

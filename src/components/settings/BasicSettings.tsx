@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { AdminSettingItem, AdminSettingUpdate } from '../../types';
+import { toast } from '../utils/notificationService';
 
 /**
  * 基础设置页面
@@ -53,12 +54,12 @@ export const BasicSettings: React.FC<BasicSettingsProps> = ({ adminApi }) => {
             ];
             const res = await adminApi.updateSettings(payload);
             if (res.code === 200) {
-                alert('保存成功');
+                toast.success('保存成功');
             } else {
-                alert(res.message || '保存失败');
+                toast.error(res.message || '保存失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '保存失败');
+            toast.error(e?.response?.data?.message || '保存失败');
         } finally {
             setSaving(false);
         }

@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Loader2 } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { Role } from '../../types';
+import { toast } from '../utils/notificationService';
 
 interface RoleForm {
     id?: string;
@@ -86,11 +87,11 @@ export const RoleSettings: React.FC<RoleSettingsProps> = ({ adminApi }) => {
     const handleRoleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!roleForm.name || !roleForm.code) {
-            alert('角色名称和编码必填');
+            toast.warning('角色名称和编码必填');
             return;
         }
         if (EXCLUSIVE_ROLE_CODES.includes(roleForm.code) && roleForm.roleCategory !== 'system_admin' && roleForm.roleCategory !== 'security_admin' && roleForm.roleCategory !== 'audit_admin') {
-            alert('三员互斥：系统/安全/审计角色的类别应与其编码一致');
+            toast.warning('三员互斥：系统/安全/审计角色的类别应与其编码一致');
             return;
         }
         setRoleSaving(true);
@@ -120,10 +121,10 @@ export const RoleSettings: React.FC<RoleSettingsProps> = ({ adminApi }) => {
                 const reload = await adminApi.getRoles({ page: 1, limit: 100 });
                 if (reload.code === 200 && reload.data) setRoles(reload.data.records || []);
             } else {
-                alert(res.message || '保存失败');
+                toast.error(res.message || '保存失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '保存失败');
+            toast.error(e?.response?.data?.message || '保存失败');
         } finally {
             setRoleSaving(false);
         }
@@ -141,7 +142,7 @@ export const RoleSettings: React.FC<RoleSettingsProps> = ({ adminApi }) => {
         }
 
         if (EXCLUSIVE_ROLE_CODES.includes(role.code)) {
-            alert('提示：系统/安全/审计三员角色互斥，请勿同时分配给同一用户。');
+            toast.info('提示：系统/安全/审计三员角色互斥，请勿同时分配给同一用户。');
         }
 
         setRoleForm({
@@ -164,10 +165,10 @@ export const RoleSettings: React.FC<RoleSettingsProps> = ({ adminApi }) => {
                 const reload = await adminApi.getRoles({ page: 1, limit: 100 });
                 if (reload.code === 200 && reload.data) setRoles(reload.data.records || []);
             } else {
-                alert(res.message || '删除失败');
+                toast.error(res.message || '删除失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '删除失败');
+            toast.error(e?.response?.data?.message || '删除失败');
         } finally {
             setRoleSaving(false);
         }

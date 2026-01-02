@@ -8,6 +8,7 @@ import { Plus, Loader2, Upload } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { Tree, TreeNode } from '../org/Tree';
 import { OrgImportResult, OrgNode } from '../../types';
+import { toast } from '../utils/notificationService';
 
 /**
  * 组织架构管理页面
@@ -54,7 +55,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
     const handleCreateOrg = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!orgForm.name) {
-            alert('组织名称必填');
+            toast.warning('组织名称必填');
             return;
         }
         setOrgLoading(true);
@@ -72,10 +73,10 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                 if (listRes.code === 200 && listRes.data) setOrgs(listRes.data);
                 if (treeRes.code === 200 && treeRes.data) setOrgTree(treeRes.data);
             } else {
-                alert(res.message || '创建失败');
+                toast.error(res.message || '创建失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '创建失败');
+            toast.error(e?.response?.data?.message || '创建失败');
         } finally {
             setOrgLoading(false);
         }
@@ -118,7 +119,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
             if (!Array.isArray(parsed)) throw new Error();
             payload = parsed as Array<Partial<OrgNode>>;
         } catch {
-            alert('请输入合法的 JSON 数组，例如 [{"name":"财务部","code":"FIN"}]');
+            toast.warning('请输入合法的 JSON 数组，例如 [{"name":"财务部","code":"FIN"}]');
             return;
         }
         setOrgLoading(true);
@@ -131,10 +132,10 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                 if (listRes.code === 200 && listRes.data) setOrgs(listRes.data);
                 if (treeRes.code === 200 && treeRes.data) setOrgTree(treeRes.data);
             } else {
-                alert(res.message || '导入失败');
+                toast.error(res.message || '导入失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '导入失败');
+            toast.error(e?.response?.data?.message || '导入失败');
         } finally {
             setOrgLoading(false);
         }
@@ -152,10 +153,10 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                 if (listRes.code === 200 && listRes.data) setOrgs(listRes.data);
                 if (treeRes.code === 200 && treeRes.data) setOrgTree(treeRes.data);
             } else {
-                alert(res.message || '导入失败');
+                toast.error(res.message || '导入失败');
             }
         } catch (e: any) {
-            alert(e?.response?.data?.message || '导入失败');
+            toast.error(e?.response?.data?.message || '导入失败');
         } finally {
             setOrgLoading(false);
         }
@@ -326,7 +327,7 @@ export const OrgSettings: React.FC<OrgSettingsProps> = ({ adminApi }) => {
                                 className="text-xs text-blue-600 hover:underline"
                                 onClick={async () => {
                                     const tpl = await adminApi.downloadOrgTemplate();
-                                    alert(`模板示例：\n${tpl.data?.csvHeader}\n${tpl.data?.example}`);
+                                    toast.info(`模板示例：\n${tpl.data?.csvHeader}\n${tpl.data?.example}`);
                                 }}
                                 type="button"
                             >
