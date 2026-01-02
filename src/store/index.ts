@@ -18,3 +18,6 @@ export type { Theme } from './useThemeStore';
 
 export { useFondsStore } from './useFondsStore';
 
+export { useDrawerStore } from './useDrawerStore';
+export type { DrawerTab } from './useDrawerStore';
+
