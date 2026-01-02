@@ -108,15 +108,3 @@ if (typeof window !== 'undefined') {
         }
     });
 }
-
-// 监听系统主题变化
-if (typeof window !== 'undefined') {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        const state = useThemeStore.getState();
-        if (state.theme === 'system') {
-            const resolvedTheme = e.matches ? 'dark' : 'light';
-            applyTheme(resolvedTheme);
-            useThemeStore.setState({ resolvedTheme });
-        }
-    });
-}
