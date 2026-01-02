@@ -56,10 +56,10 @@ public class BusinessSemanticMapper {
     private ApiIntent understandIntent(OpenApiDefinition definition) {
         // MVP: 使用基于规则的关键词匹配
 
-        String path = definition.getPath().toLowerCase();
+        String path = definition.getPath() != null ? definition.getPath().toLowerCase() : "";
         String operationId = definition.getOperationId() != null ? definition.getOperationId().toLowerCase() : "";
         String summary = definition.getSummary() != null ? definition.getSummary().toLowerCase() : "";
-        String tags = String.join(" ", definition.getTags()).toLowerCase();
+        String tags = definition.getTags() != null ? String.join(" ", definition.getTags()).toLowerCase() : "";
 
         // 识别操作类型
         ApiIntent.OperationType operationType = detectOperationType(operationId, summary);
