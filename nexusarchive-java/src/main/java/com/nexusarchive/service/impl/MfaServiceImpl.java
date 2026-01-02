@@ -29,8 +29,21 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * MFA Service Implementation
+ *
+ * SECURITY WARNING: This implementation contains TODO items that must be completed
+ * before production use. See docs/security/MFA_STATUS.md for details.
+ *
+ * Critical unimplemented features:
+ * - Password verification before MFA setup (line 132)
+ * - TOTP code generation/validation (line 274) - currently returns hardcoded "000000"
+ * - Backup code encryption (lines 309, 317, 326, 339) - stored in plain text
+ *
+ * DO NOT DEPLOY TO PRODUCTION without addressing these issues.
+ */
+/**
  * MFA 服务实现
- * 
+ *
  * 使用 TOTP（Time-based One-Time Password）算法
  * 参考 RFC 6238
  */
