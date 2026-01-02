@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, Loader2, ArrowLeft, Calendar, User, FileText, AlertCircle, Clock, Unlock } from 'lucide-react';
 import { freezeHoldApi, FreezeHoldRecord } from '../../api/freezeHold';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 冻结/保全详情页面
@@ -51,7 +52,7 @@ export const FreezeHoldDetailPage: React.FC = () => {
     const handleRelease = async () => {
         if (!record) return;
         if (!releaseReason.trim()) {
-            alert('请填写解除原因');
+            toast.warning('请填写解除原因');
             return;
         }
 
@@ -59,13 +60,13 @@ export const FreezeHoldDetailPage: React.FC = () => {
         try {
             const res = await freezeHoldApi.release({ id: record.id, reason: releaseReason });
             if (res.code === 200) {
-                alert('解除成功');
+                toast.success('解除成功');
                 navigate(-1);
             } else {
-                alert(res.message || '解除失败');
+                toast.error(res.message || '解除失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '解除失败');
+            toast.error(error?.response?.data?.message || '解除失败');
         } finally {
             setReleasing(false);
         }

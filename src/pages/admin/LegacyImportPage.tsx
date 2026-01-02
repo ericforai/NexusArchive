@@ -29,6 +29,7 @@ import {
     LegacyImportTask,
     ImportError,
 } from '../../api/legacyImport';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 历史数据导入页面
@@ -86,7 +87,7 @@ export const LegacyImportPage: React.FC = () => {
             // 文件大小检查（100MB = 100 * 1024 * 1024 bytes）
             const maxSize = 100 * 1024 * 1024;
             if (selectedFile.size > maxSize) {
-                alert(`文件大小超过限制！最大允许 100MB，当前文件：${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`);
+                toast.warning(`文件大小超过限制！最大允许 100MB，当前文件：${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`);
                 e.target.value = '';
                 return;
             }
@@ -104,7 +105,7 @@ export const LegacyImportPage: React.FC = () => {
             // 文件大小检查（100MB = 100 * 1024 * 1024 bytes）
             const maxSize = 100 * 1024 * 1024;
             if (droppedFile.size > maxSize) {
-                alert(`文件大小超过限制！最大允许 100MB，当前文件：${(droppedFile.size / 1024 / 1024).toFixed(2)} MB`);
+                toast.warning(`文件大小超过限制！最大允许 100MB，当前文件：${(droppedFile.size / 1024 / 1024).toFixed(2)} MB`);
                 return;
             }
             setFile(droppedFile);
@@ -120,7 +121,7 @@ export const LegacyImportPage: React.FC = () => {
     // 预览导入数据
     const handlePreview = async () => {
         if (!file) {
-            alert('请先选择文件');
+            toast.warning('请先选择文件');
             return;
         }
 
@@ -129,11 +130,12 @@ export const LegacyImportPage: React.FC = () => {
             const res = await legacyImportApi.preview(file);
             if (res.code === 200 && res.data) {
                 setPreviewResult(res.data);
+                toast.success('预览成功');
             } else {
-                alert(res.message || '预览失败');
+                toast.error(res.message || '预览失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '预览失败');
+            toast.error(error?.response?.data?.message || '预览失败');
         } finally {
             setLoading(false);
         }
@@ -142,12 +144,12 @@ export const LegacyImportPage: React.FC = () => {
     // 执行导入
     const handleImport = async () => {
         if (!file) {
-            alert('请先选择文件');
+            toast.warning('请先选择文件');
             return;
         }
 
         if (!previewResult) {
-            alert('请先预览数据');
+            toast.warning('请先预览数据');
             return;
         }
 
@@ -160,15 +162,16 @@ export const LegacyImportPage: React.FC = () => {
             const res = await legacyImportApi.import(file);
             if (res.code === 200 && res.data) {
                 setImportResult(res.data);
+                toast.success('导入成功');
                 // 导入成功后，刷新历史列表
                 if (activeTab === 'history') {
                     loadHistory();
                 }
             } else {
-                alert(res.message || '导入失败');
+                toast.error(res.message || '导入失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '导入失败');
+            toast.error(error?.response?.data?.message || '导入失败');
         } finally {
             setImporting(false);
         }
@@ -186,8 +189,9 @@ export const LegacyImportPage: React.FC = () => {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            toast.success('错误报告下载成功');
         } catch (error) {
-            alert('下载错误报告失败');
+            toast.error('下载错误报告失败');
         }
     };
 
@@ -203,8 +207,9 @@ export const LegacyImportPage: React.FC = () => {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            toast.success('CSV模板下载成功');
         } catch (error) {
-            alert('下载CSV模板失败');
+            toast.error('下载CSV模板失败');
         }
     };
 
@@ -220,8 +225,9 @@ export const LegacyImportPage: React.FC = () => {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            toast.success('Excel模板下载成功');
         } catch (error) {
-            alert('下载Excel模板失败');
+            toast.error('下载Excel模板失败');
         }
     };
 

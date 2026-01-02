@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Loader2, Download, Eye, Calendar, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { destructionApi, AppraisalList } from '../../api/destruction';
 import { useFondsStore } from '../../store';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 鉴定清单生成页面
@@ -63,7 +64,7 @@ export const AppraisalListPage: React.FC = () => {
             }
         } catch (error) {
             console.error('加载详情失败', error);
-            alert('加载详情失败');
+            toast.error('加载详情失败');
         }
     };
 
@@ -80,7 +81,7 @@ export const AppraisalListPage: React.FC = () => {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('导出失败', error);
-            alert('导出失败');
+            toast.error('导出失败');
         }
     };
 

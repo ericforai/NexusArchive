@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { openAppraisalApi, OpenAppraisal } from '../../api/openAppraisal';
 import { Shield, ShieldCheck, ShieldAlert, Clock, Calendar, FileText, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { toast } from '../../utils/notificationService';
 
 export const OpenAppraisalView: React.FC = () => {
     const [appraisals, setAppraisals] = useState<OpenAppraisal[]>([]);
@@ -40,7 +41,7 @@ export const OpenAppraisalView: React.FC = () => {
         if (!selectedAppraisal) return;
 
         if (!formData.reason.trim()) {
-            alert('请填写鉴定理由');
+            toast.warning('请填写鉴定理由');
             return;
         }
 
@@ -59,7 +60,7 @@ export const OpenAppraisalView: React.FC = () => {
             loadAppraisals();
         } catch (error) {
             console.error('Failed to submit appraisal:', error);
-            alert('提交失败，请重试');
+            toast.error('提交失败，请重试');
         } finally {
             setProcessing(false);
         }

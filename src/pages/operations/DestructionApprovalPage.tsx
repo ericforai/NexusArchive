@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Loader2, CheckCircle2, XCircle, Eye, Clock, User, MessageSquare } from 'lucide-react';
 import { destructionApi, Destruction, DestructionApprovalRequest } from '../../api/destruction';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 销毁审批页面
@@ -69,14 +70,14 @@ export const DestructionApprovalPage: React.FC = () => {
         try {
             const res = await destructionApi.approveDestruction(selectedDestruction.id, approvalForm);
             if (res.code === 200) {
-                alert('审批成功');
+                toast.success('审批成功');
                 setShowApprovalModal(false);
                 loadDestructions();
             } else {
-                alert(res.message || '审批失败');
+                toast.error(res.message || '审批失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '审批失败');
+            toast.error(error?.response?.data?.message || '审批失败');
         } finally {
             setSubmitting(false);
         }

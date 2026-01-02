@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { DESTRUCTION_CANDIDATES, DESTRUCTION_BATCHES } from '../../constants';
 import { FileWarning, ShieldAlert, FileSignature, Flame, CheckCircle2, History, Trash2, RefreshCw, BrainCircuit, BookOpen } from 'lucide-react';
+import { toast } from '../../utils/notificationService';
 
 import { statsApi, DestructionStats } from '../../api/stats';
 
@@ -39,7 +40,7 @@ export const DestructionView: React.FC = () => {
    };
 
    const handleAction = (action: string) => {
-      alert(`执行操作: ${action} - 选中 ${selectedRows.length} 项`);
+      toast.info(`执行操作: ${action} - 选中 ${selectedRows.length} 项`);
       setSelectedRows([]);
    };
 

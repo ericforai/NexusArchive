@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Loader2, Building2, Lock } from 'lucide-react';
 import { fondsApi, BasFonds } from '../../api/fonds';
 import { adminApi } from '../../api/admin';
+import { toast } from '../../utils/notificationService';
 
 interface Org {
     id: string;
@@ -99,13 +100,15 @@ export const FondsManagement: React.FC = () => {
         try {
             if (form.id) {
                 await fondsApi.update(form);
+                toast.success('全宗更新成功');
             } else {
                 await fondsApi.save(form);
+                toast.success('全宗创建成功');
             }
             setShowModal(false);
             loadData();
         } catch {
-            alert('保存失败，请检查全宗号是否重复');
+            toast.error('保存失败，请检查全宗号是否重复');
         } finally {
             setSaving(false);
         }

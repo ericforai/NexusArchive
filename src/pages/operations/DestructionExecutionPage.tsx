@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flame, Loader2, CheckCircle2, AlertTriangle, Play, RefreshCw } from 'lucide-react';
 import { destructionApi, Destruction } from '../../api/destruction';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 销毁执行页面
@@ -57,13 +58,13 @@ export const DestructionExecutionPage: React.FC = () => {
         try {
             const res = await destructionApi.executeDestruction(id);
             if (res.code === 200) {
-                alert('销毁执行成功');
+                toast.success('销毁执行成功');
                 loadDestructions();
             } else {
-                alert(res.message || '执行失败');
+                toast.error(res.message || '执行失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '执行失败');
+            toast.error(error?.response?.data?.message || '执行失败');
         } finally {
             setExecuting(null);
         }

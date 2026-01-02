@@ -8,6 +8,7 @@ import { Lock, Loader2, CheckCircle2, XCircle, Plus, Eye, Unlock, AlertCircle, F
 import { freezeHoldApi, FreezeHoldRecord, ApplyFreezeHoldRequest, FreezeHoldType, FreezeHoldStatus } from '../../api/freezeHold';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_PATHS } from '../../routes/paths';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 冻结/保全管理页面
@@ -68,11 +69,11 @@ export const FreezeHoldPage: React.FC = () => {
 
     const handleApply = async () => {
         if (applyForm.archiveIds.length === 0) {
-            alert('请选择至少一个档案');
+            toast.warning('请选择至少一个档案');
             return;
         }
         if (!applyForm.reason.trim()) {
-            alert('请填写申请原因');
+            toast.warning('请填写申请原因');
             return;
         }
 
@@ -80,16 +81,16 @@ export const FreezeHoldPage: React.FC = () => {
         try {
             const res = await freezeHoldApi.apply(applyForm);
             if (res.code === 200) {
-                alert('申请成功');
+                toast.success('申请成功');
                 setShowApplyModal(false);
                 setApplyForm({ archiveIds: [], type: 'FREEZE', reason: '', endDate: '' });
                 setSelectedArchiveCodes([]);
                 loadRecords();
             } else {
-                alert(res.message || '申请失败');
+                toast.error(res.message || '申请失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '申请失败');
+            toast.error(error?.response?.data?.message || '申请失败');
         } finally {
             setSubmitting(false);
         }
@@ -98,7 +99,7 @@ export const FreezeHoldPage: React.FC = () => {
     const handleRelease = async () => {
         if (!releaseRecord) return;
         if (!releaseReason.trim()) {
-            alert('请填写解除原因');
+            toast.warning('请填写解除原因');
             return;
         }
 
@@ -106,16 +107,16 @@ export const FreezeHoldPage: React.FC = () => {
         try {
             const res = await freezeHoldApi.release({ id: releaseRecord.id, reason: releaseReason });
             if (res.code === 200) {
-                alert('解除成功');
+                toast.success('解除成功');
                 setShowReleaseModal(false);
                 setReleaseRecord(null);
                 setReleaseReason('');
                 loadRecords();
             } else {
-                alert(res.message || '解除失败');
+                toast.error(res.message || '解除失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '解除失败');
+            toast.error(error?.response?.data?.message || '解除失败');
         } finally {
             setSubmitting(false);
         }

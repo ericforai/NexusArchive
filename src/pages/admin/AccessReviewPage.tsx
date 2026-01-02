@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Loader2, CheckCircle2, XCircle, Eye, Clock, User, MessageSquare } from 'lucide-react';
 import { userLifecycleApi, AccessReviewTask, ExecuteReviewRequest } from '../../api/userLifecycle';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 定期复核（Access Review）页面
@@ -74,14 +75,14 @@ export const AccessReviewPage: React.FC = () => {
         try {
             const res = await userLifecycleApi.executeReview(reviewForm);
             if (res.code === 200) {
-                alert('复核完成');
+                toast.success('复核完成');
                 setShowReviewModal(false);
                 loadTasks();
             } else {
-                alert(res.message || '复核失败');
+                toast.error(res.message || '复核失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '复核失败');
+            toast.error(error?.response?.data?.message || '复核失败');
         } finally {
             setSubmitting(false);
         }

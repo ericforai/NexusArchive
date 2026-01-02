@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { archiveApprovalApi, ArchiveApproval } from '../../api/archiveApproval';
 import { CheckCircle2, XCircle, FileText, Clock, User, Calendar, MessageSquare, AlertCircle } from 'lucide-react';
+import { toast } from '../../utils/notificationService';
 
 export const ArchiveApprovalView: React.FC = () => {
     const [approvals, setApprovals] = useState<ArchiveApproval[]>([]);
@@ -62,7 +63,7 @@ export const ArchiveApprovalView: React.FC = () => {
             loadApprovals();
         } catch (error) {
             console.error('Failed to approve:', error);
-            alert('审批失败，请重试');
+            toast.error('审批失败，请重试');
         } finally {
             setProcessing(false);
         }
@@ -72,7 +73,7 @@ export const ArchiveApprovalView: React.FC = () => {
         if (!selectedApproval) return;
 
         if (!comment.trim()) {
-            alert('拒绝归档必须填写审批意见');
+            toast.warning('拒绝归档必须填写审批意见');
             return;
         }
 
@@ -89,7 +90,7 @@ export const ArchiveApprovalView: React.FC = () => {
             loadApprovals();
         } catch (error) {
             console.error('Failed to reject:', error);
-            alert('审批失败，请重试');
+            toast.error('审批失败，请重试');
         } finally {
             setProcessing(false);
         }

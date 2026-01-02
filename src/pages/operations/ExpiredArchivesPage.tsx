@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Filter, Loader2, FileText, CheckSquare, Square, Download } from 'lucide-react';
 import { destructionApi, ExpiredArchive } from '../../api/destruction';
 import { useFondsStore } from '../../store';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 到期档案识别页面
@@ -80,7 +81,7 @@ export const ExpiredArchivesPage: React.FC = () => {
 
     const handleGenerateAppraisal = async () => {
         if (selectedIds.length === 0) {
-            alert('请至少选择一个档案');
+            toast.warning('请至少选择一个档案');
             return;
         }
         if (!window.confirm(`确认生成鉴定清单吗？将包含 ${selectedIds.length} 个档案`)) {
@@ -89,14 +90,14 @@ export const ExpiredArchivesPage: React.FC = () => {
         try {
             const res = await destructionApi.generateAppraisalList(selectedIds);
             if (res.code === 200) {
-                alert('鉴定清单生成成功');
+                toast.success('鉴定清单生成成功');
                 setSelectedIds([]);
                 // 可以跳转到鉴定清单页面
             } else {
-                alert(res.message || '生成失败');
+                toast.error(res.message || '生成失败');
             }
         } catch (error: any) {
-            alert(error?.response?.data?.message || '生成失败');
+            toast.error(error?.response?.data?.message || '生成失败');
         }
     };
 
