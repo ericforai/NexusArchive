@@ -39,6 +39,7 @@ const RelationshipQueryView = lazy(() => import('../pages/utilization/Relationsh
 const BorrowingView = lazy(() => import('../pages/utilization/BorrowingView'));
 const StatsView = lazy(() => import('../pages/stats/StatsView'));
 const ComplianceReportView = lazy(() => import('../pages/archives/ComplianceReportView'));
+const ArchiveDetailPage = lazy(() => import('../pages/archives/ArchiveDetailPage'));
 const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
 
 // 系统设置模块（Tab 拆分子路由）
@@ -53,6 +54,9 @@ const IntegrationSettings = lazy(() => import('../pages/settings/IntegrationSett
 
 const PaymentFileTestView = lazy(() => import('../pages/debug/PaymentFileTestView'));
 const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWatermarkTestView'));
+
+// 凭证预览组件 Demo
+const VoucherPreviewDemo = lazy(() => import('../pages/demo/VoucherPreviewDemo'));
 
 // 匹配向导模块（OnboardingWizard 和 ComplianceReport 仍用 withSuspense）
 const OnboardingWizard = lazy(() => import('../pages/matching/OnboardingWizard'));
@@ -170,6 +174,7 @@ export const routes: RouteObject[] = [
             { path: 'archive/reports', element: <ArchiveListPage routeConfig="report" /> },
             { path: 'archive/other', element: <ArchiveListPage routeConfig="other" /> },
             { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView) },
+            { path: 'archives/:id', element: withSuspense(ArchiveDetailPage) },
 
             // ========== 档案作业 (Operations) ==========
             { path: 'operations', element: <ArchiveListPage routeConfig="view" /> }, // Fallback/Default
@@ -241,6 +246,7 @@ export const routes: RouteObject[] = [
             // ========== Debug ==========
             { path: 'debug/payment-file', element: withSuspense(PaymentFileTestView) },
             { path: 'debug/preview-watermark', element: withSuspense(PreviewWatermarkTestView) },
+            { path: 'debug/voucher-preview', element: withSuspense(VoucherPreviewDemo) },
 
             // ========== 匹配引擎 ==========
             { path: 'matching', element: <VoucherMatchingPage /> },
