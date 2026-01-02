@@ -4,12 +4,12 @@
 
 package com.nexusarchive.integration.erp.annotation;
 
-import com.nexusarchive.integration.erp.annotation.ErpAdapter;
+import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ErpAdapter(
+@ErpAdapterAnnotation(
     identifier = "test-adapter",
     name = "测试适配器",
     description = "用于测试的适配器",
@@ -31,7 +31,7 @@ class ErpAdapterTest {
         Class<?> testClass = TestAdapterForAnnotation.class;
 
         // When
-        ErpAdapter annotation = testClass.getAnnotation(ErpAdapter.class);
+        ErpAdapterAnnotation annotation = testClass.getAnnotation(ErpAdapterAnnotation.class);
 
         // Then
         assertEquals("test-adapter", annotation.identifier());

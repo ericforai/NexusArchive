@@ -15,7 +15,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ErpAdapter {
+public @interface ErpAdapterAnnotation {
 
     /**
      * 适配器唯一标识
