@@ -3,42 +3,7 @@ import React, { useState } from 'react';
 import { Tabs } from 'antd';
 import { VoucherPreviewCanvas } from './VoucherPreviewCanvas';
 import { OriginalDocumentPreview } from './OriginalDocumentPreview';
-
-export interface VoucherEntryDTO {
-  lineNo?: number;
-  summary?: string;
-  accountCode?: string;
-  accountName?: string;
-  debit?: number | string;
-  credit?: number | string;
-}
-
-export interface AttachmentDTO {
-  id: string;
-  fileName?: string;
-  name?: string;
-  fileUrl?: string;
-  type?: string;
-}
-
-export interface VoucherDTO {
-  voucherId: string;
-  voucherNo: string;
-  voucherWord?: string;
-  voucherDate?: string;
-  orgName?: string;
-  summary?: string;
-  debitTotal?: number | string;
-  creditTotal?: number | string;
-  creator?: string;
-  auditor?: string;
-  poster?: string;
-  entries?: VoucherEntryDTO[];
-  // Additional optional fields for metadata display
-  attachments?: AttachmentDTO[];
-  createdTime?: string;
-  id?: string; // Alias for voucherId in some contexts
-}
+import type { VoucherDTO, AttachmentDTO } from './types';
 
 interface VoucherPreviewTabsProps {
   voucherData: VoucherDTO;

@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { voucherTableStyles, formatCurrency, numberToChinese, formatDate } from './styles';
-import type { VoucherDTO, VoucherEntryDTO } from './VoucherPreviewTabs';
+import type { VoucherDTO, VoucherEntryDTO } from './types';
 
 interface VoucherPreviewCanvasProps {
   data: VoucherDTO;
