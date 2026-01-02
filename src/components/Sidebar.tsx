@@ -10,6 +10,7 @@ import { NavItem, ViewState } from '../types';
 import { ChevronDown, ChevronsLeft, ChevronsRight, Command, FolderOpen } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../routes/paths';
+import { toast } from '../utils/notificationService';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -314,7 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <button
-          onClick={() => alert('打开用户个人中心')}
+          onClick={() => toast.info('用户个人中心功能开发中')}
           className={`w-full flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-2 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors`}
         >
           <img src="https://picsum.photos/32/32" alt="User" className="w-8 h-8 rounded-full ring-2 ring-slate-700 flex-shrink-0" />
