@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, FileText, FileCode, Loader2, ArrowRight } from 'lucide-react';
 import { useGlobalSearchApi } from '../hooks/useGlobalSearchApi';
 import { GlobalSearchDTO } from '../types';
+import { toast } from './utils/notificationService';
 
 interface GlobalSearchProps {
     onNavigate?: (item: GlobalSearchDTO) => void;
@@ -80,7 +81,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
         if (onNavigate) {
             onNavigate(item);
         } else {
-            alert(`Selected: ${item.title} (${item.archiveCode})`);
+            toast.info(`Selected: ${item.title} (${item.archiveCode})`);
         }
     };
 

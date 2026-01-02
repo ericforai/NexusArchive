@@ -20,6 +20,7 @@ import {
 } from '../../api/originalVoucher';
 import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
 import { VoucherPreviewDrawer } from '../panorama/VoucherPreviewDrawer';
+import { toast } from '../../components/utils/notificationService';
 
 // 状态徽章组件
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -372,7 +373,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                                                     title="更多操作"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        alert('更多操作：打印、导出、查看日志（开发中）');
+                                                        toast.info('更多操作：打印、导出、查看日志（开发中）');
                                                     }}
                                                 >
                                                     <MoreHorizontal className="w-4 h-4" />
