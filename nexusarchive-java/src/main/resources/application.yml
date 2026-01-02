@@ -143,6 +143,10 @@ virus:
       host: ${VIRUS_SCAN_HOST:localhost}
       port: ${VIRUS_SCAN_PORT:3310}
 
+# MFA 多因素认证配置
+mfa:
+  enabled: ${MFA_ENABLED:false}  # MFA 功能开关，默认禁用（待实现完成后启用）
+
 app:
   security:
     cors:

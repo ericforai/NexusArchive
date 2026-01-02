@@ -16,6 +16,7 @@ import com.nexusarchive.service.MfaService;
 import com.nexusarchive.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,9 @@ import java.util.UUID;
  * - TOTP code generation/validation (line 274) - currently returns hardcoded "000000"
  * - Backup code encryption (lines 309, 317, 326, 339) - stored in plain text
  *
+ * FEATURE FLAG: MFA is disabled by default via configuration (mfa.enabled=false).
+ * Set mfa.enabled=true to enable MFA functionality after implementing the TODO items above.
+ *
  * DO NOT DEPLOY TO PRODUCTION without addressing these issues.
  */
 /**
@@ -51,12 +55,16 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class MfaServiceImpl implements MfaService {
-    
+
     private final UserMfaConfigMapper mfaConfigMapper;
     private final UserService userService;
     private final ObjectMapper objectMapper;
     private final AuditLogService auditLogService;
-    
+
+    // MFA 功能开关（从配置文件读取，默认禁用）
+    @Value("${mfa.enabled:false}")
+    private boolean mfaEnabled;
+
     // TOTP 参数
     private static final int TOTP_DIGITS = 6;
     private static final int TOTP_PERIOD = 30; // 30秒
@@ -65,6 +73,11 @@ public class MfaServiceImpl implements MfaService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public MfaSetupResponse setupMfa(String userId) {
+        // 检查 MFA 功能是否启用
+        if (!mfaEnabled) {
+            throw new IllegalStateException("MFA 功能未启用。请联系管理员启用 MFA 功能（配置 mfa.enabled=true）后再试。");
+        }
+
         // 1. 验证用户存在
         userService.getUserById(userId);
         
@@ -115,6 +128,11 @@ public class MfaServiceImpl implements MfaService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void enableMfa(String userId, String verificationCode) {
+        // 检查 MFA 功能是否启用
+        if (!mfaEnabled) {
+            throw new IllegalStateException("MFA 功能未启用。请联系管理员启用 MFA 功能（配置 mfa.enabled=true）后再试。");
+        }
+
         // 1. 验证验证码
         if (!verifyTotpCode(userId, verificationCode)) {
             throw new IllegalArgumentException("验证码错误");
@@ -238,6 +256,12 @@ public class MfaServiceImpl implements MfaService {
     
     @Override
     public boolean isMfaEnabled(String userId) {
+        // 首先检查系统级 MFA 功能开关
+        if (!mfaEnabled) {
+            return false;
+        }
+
+        // 然后检查用户级别的 MFA 启用状态
         UserMfaConfig config = getMfaConfig(userId);
         return config != null && Boolean.TRUE.equals(config.getMfaEnabled());
     }
