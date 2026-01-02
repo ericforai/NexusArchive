@@ -1,0 +1,58 @@
+name: Update Module Manifest
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'scripts/discover-frontend-modules.js'
+      - '.github/workflows/update-modules.yml'
+
+# 防止工作流循环触发
+concurrency:
+  group: module-manifest-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update-frontend-manifest:
+    name: Update Frontend Module Manifest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update module manifest
+        id: update
+        run: npm run modules:update
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code docs/architecture/module-manifest.md || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/architecture/module-manifest.md
+          git commit -m "chore: auto-update frontend module manifest
+
+This commit was automatically created by GitHub Actions when frontend code changes were detected."
+          git push
