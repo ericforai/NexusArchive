@@ -7,6 +7,7 @@ import React from 'react';
 import { GlobalSearch } from './GlobalSearch';
 import { GlobalSearchDTO } from '../types';
 import { FondsSwitcher } from './common/FondsSwitcher';
+import { toast } from '../utils/notificationService';
 
 interface TopBarProps {
   onLogout?: () => void;
@@ -19,7 +20,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
       onLogout();
       return;
     }
-    alert(`打开: ${item}`);
+    toast.info(`${item} 功能开发中`);
   }
 
   return (
