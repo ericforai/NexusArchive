@@ -24,6 +24,7 @@ import {
     BatchStatus,
     IntegrityReport
 } from '../../api/archiveBatch';
+import { useFondsStore } from '../../store/useFondsStore';
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -39,6 +40,9 @@ const STATUS_CONFIG: Record<BatchStatus, { color: string; text: string }> = {
 };
 
 const ArchiveBatchView: React.FC = () => {
+    // 全宗状态
+    const currentFonds = useFondsStore((state) => state.currentFonds);
+
     // 状态
     const [loading, setLoading] = useState(false);
     const [batches, setBatches] = useState<ArchiveBatch[]>([]);
@@ -104,7 +108,7 @@ const ArchiveBatchView: React.FC = () => {
     const handleCreate = async (values: { period: [dayjs.Dayjs, dayjs.Dayjs] }) => {
         try {
             await archiveBatchApi.createBatch({
-                fondsId: 1, // TODO: 从上下文获取
+                fondsId: currentFonds?.id ? parseInt(currentFonds.id) : 1,
                 periodStart: values.period[0].format('YYYY-MM-DD'),
                 periodEnd: values.period[1].format('YYYY-MM-DD'),
             });
