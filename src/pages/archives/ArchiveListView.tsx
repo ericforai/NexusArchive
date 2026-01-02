@@ -13,13 +13,14 @@
  *
  * 移除了所有 API 调用和复杂业务逻辑。
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search, Filter, Download, Layers, FileText,
   Settings2, Zap, Receipt, Upload, CheckCircle2,
   ShieldCheck, Trash2, AlertTriangle, Loader2, Eye, X
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 
 import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useSmartMatching } from '../../features/archives';
 import ArchiveDetailDrawer from './ArchiveDetailDrawer';
@@ -72,6 +73,7 @@ export interface ArchiveListViewProps {
 
 const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: archiveActions }) => {
   const { mode, query, page, data, selection, pool, ui } = controller;
+  const location = useLocation();
 
   // Local UI state (purely presentational)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -107,6 +109,17 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
     setViewRow(null);
     setActivePreviewId(null);
   };
+
+  // Route change listener: auto-close drawer on navigation
+  useEffect(() => {
+    // Close drawer when route changes (different pathname)
+    if (isViewModalOpen) {
+      setIsViewModalOpen(false);
+      setViewRow(null);
+      setActivePreviewId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // Link Modal State
   // Helper for rendering cells
