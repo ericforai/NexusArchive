@@ -3,7 +3,7 @@
 // Pos: 通用复用组件 - 组织树选择器弹窗
 
 import React, { useState, useMemo } from 'react';
-import { X, Search, Folder, File, ChevronRight, ChevronDown, Check } from 'lucide-react';
+import { Search, Folder, File, ChevronRight, ChevronDown, Check } from 'lucide-react';
 import { BaseModal } from '../modals/BaseModal';
 import { OrgNode } from '../../types';
 

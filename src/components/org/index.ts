@@ -9,4 +9,7 @@ export { OrgBreadcrumb } from './OrgBreadcrumb';
 export type { OrgBreadcrumbProps } from './OrgBreadcrumb';
 
 export { useOrg } from './useOrg';
-export type { UseOrgReturn, OrgNode } from './useOrg';
+export type { UseOrgReturn } from './useOrg';
+
+// Re-export OrgNode from types
+export type { OrgNode } from '../../types';

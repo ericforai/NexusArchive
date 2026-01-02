@@ -4,8 +4,7 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  X, ZoomIn, ZoomOut, RotateCw, Download, Maximize2, Minimize2,
-  FileText, Image as ImageIcon, File, Loader2, AlertCircle
+  FileText, File, Loader2, AlertCircle
 } from 'lucide-react';
 import { PdfViewer } from './PdfViewer';
 import { ImageViewer } from './ImageViewer';

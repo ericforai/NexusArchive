@@ -51,6 +51,7 @@ const OrgSettings = lazy(() => import('../pages/settings/OrgSettingsPage'));
 const SecuritySettings = lazy(() => import('../pages/settings/SecuritySettingsPage'));
 const AuditLogView = lazy(() => import('../pages/settings/AuditLogView'));
 const IntegrationSettings = lazy(() => import('../pages/settings/IntegrationSettingsPage'));
+const DataImportPage = lazy(() => import('../pages/settings/DataImportPage'));
 
 const PaymentFileTestView = lazy(() => import('../pages/debug/PaymentFileTestView'));
 const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWatermarkTestView'));
@@ -217,7 +218,7 @@ export const routes: RouteObject[] = [
                     { path: 'security', element: withSuspense(SecuritySettings) },
                     { path: 'integration', element: withSuspense(IntegrationSettings) },
                     { path: 'audit', element: withSuspense(AuditLogView) },
-                    { path: 'data-import', element: withSuspense(() => import('../pages/settings/DataImportPage')) },
+                    { path: 'data-import', element: withSuspense(DataImportPage) },
                     { path: 'mfa', element: withSuspense(MfaSettingsPage) },
                 ],
             },

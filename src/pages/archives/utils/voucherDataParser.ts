@@ -83,7 +83,7 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
           credit: Number(credit) || 0,
         };
       })
-      .filter((e: VoucherEntryDTO) => e.debit! > 0 || e.credit! > 0);
+      .filter((e: VoucherEntryDTO) => (Number(e.debit) || 0) > 0 || (Number(e.credit) || 0) > 0);
 
     // 计算合计
     const totalDebit = parsedEntries.reduce((sum: number, e: VoucherEntryDTO) => sum + (Number(e.debit) || 0), 0);

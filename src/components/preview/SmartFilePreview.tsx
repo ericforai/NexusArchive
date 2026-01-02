@@ -61,7 +61,7 @@ export function SmartFilePreview({
   const [currentPage, setCurrentPage] = useState(1);
 
   // 使用 useFilePreview 获取数据
-  const { blobUrl, watermark, traceId, loading, error, retry } = useFilePreview({
+  const { blobUrl, loading, error, retry } = useFilePreview({
     ...previewParams,
     autoLoad: true,
   });

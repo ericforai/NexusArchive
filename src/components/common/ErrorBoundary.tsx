@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
         // 安全地记录错误信息，避免对象转换错误
         try {
             console.error('Uncaught error:', error?.message || error, errorInfo?.componentStack || errorInfo);
-        } catch (e) {
+        } catch {
             // 如果记录错误本身失败，使用更安全的方式
             console.error('Error occurred:', String(error?.message || 'Unknown error'));
             if (errorInfo?.componentStack) {

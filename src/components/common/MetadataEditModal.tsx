@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Save, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { FormModal } from '../modals/FormModal';
 import { MetadataForm, MetadataFormData, MetadataFormConfig } from './MetadataForm';
 

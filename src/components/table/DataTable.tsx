@@ -3,9 +3,10 @@
 // Pos: 通用复用组件 - 数据表格
 
 import React, { useMemo } from 'react';
-import { Table, TableProps as AntTableProps } from 'antd';
+import { Table } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import type { PaginationProps } from 'antd/es/pagination';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface ColumnType<T = any> {
   key: string;
@@ -72,10 +73,10 @@ export function DataTable<T extends Record<string, any>>({
   }, [columns]);
 
   // Custom pagination icons
-  const itemRender: AntTableProps['pagination']['itemRender'] = (
-    current,
-    type,
-    originalElement
+  const itemRender: PaginationProps['itemRender'] = (
+    current: number,
+    type: string,
+    originalElement: React.ReactNode
   ) => {
     if (type === 'prev') {
       return <ChevronLeft className="w-4 h-4" />;

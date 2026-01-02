@@ -5,22 +5,12 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { client } from '../../api/client';
-import { getHttpClientState, performLogout, registerAuthProvider } from '../../api/client.types';
-import { useAuthStore } from '../../store';
-
-// Mock the store
-vi.mock('../../store', () => ({
-    useAuthStore: {
-        getState: vi.fn(),
-        subscribe: vi.fn()
-    }
-}));
+import { getHttpClientState, performLogout } from '../../api/client.types';
 
 // Mock the client types functions
 vi.mock('../../api/client.types', () => ({
     getHttpClientState: vi.fn(),
     performLogout: vi.fn(),
-    registerAuthProvider: vi.fn()
 }));
 
 // Mock window location
@@ -29,12 +19,11 @@ const originalLocation = window.location;
 describe('API Client Interceptors', () => {
     let mockPerformLogout: any;
     let originalAdapter: any;
-    let mockGetHttpClientState: any;
 
     beforeEach(() => {
         // Reset mocks
         mockPerformLogout = vi.fn();
-        mockGetHttpClientState = (getHttpClientState as any).mockReturnValue({
+        (getHttpClientState as any).mockReturnValue({
             token: 'test-token',
             fondsCode: null
         });

@@ -2,7 +2,7 @@
 // Output: FormModal 组件
 // Pos: 通用复用组件 - 表单模态框
 
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { BaseModal, BaseModalProps } from './BaseModal';
 
 export interface FormModalProps extends BaseModalProps {

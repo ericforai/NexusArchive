@@ -128,6 +128,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
       data-testid="archive-detail-drawer"
       open={open}
       onClose={onClose}
+      // eslint-disable-next-line antd/no-deprecated
       width={drawerWidth}
       placement="right"
       maskClosable={true}

@@ -5,6 +5,7 @@ import { VoucherPreview } from '../VoucherPreview';
 describe('VoucherPreview', () => {
   const mockVoucherData = {
     id: 'test-001',
+    voucherId: 'test-001',
     voucherNo: '001',
     voucherWord: '记',
     voucherDate: '2025-01-01',

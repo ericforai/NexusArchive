@@ -68,7 +68,6 @@ describe('BaseModal', () => {
       </BaseModal>
     );
 
-    const backdrop = screen.getByTestId('modal-backdrop');
     // Click on a child element (not the backdrop itself)
     const content = screen.getByText('Content');
     fireEvent.click(content);

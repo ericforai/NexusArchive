@@ -2,7 +2,7 @@
 // Output: PdfViewer 组件
 // Pos: 通用复用组件 - PDF 查看器
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Page, Document, pdfjs } from 'react-pdf';
 
 // 配置 PDF.js worker
@@ -31,13 +31,13 @@ export function PdfViewer({
   scale,
   rotation,
   currentPage,
-  onPageChange,
+  onPageChange: _onPageChange,
   onPageCountChange,
   onLoad,
   onError,
   className = '',
 }: PdfViewerProps) {
-  const [numPages, setNumPages] = useState(0);
+  const [_numPages, setNumPages] = useState(0);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

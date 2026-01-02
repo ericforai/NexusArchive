@@ -6,7 +6,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { TreeNode } from './Tree';
 import { OrgNode } from '../../types';
-import { Loader2, ChevronRight, ChevronDown, Folder, File, Check } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, File, Check } from 'lucide-react';
 
 /**
  * 组织选择器组件（可复用）
@@ -68,7 +68,7 @@ export const OrgSelector: React.FC<OrgSelectorProps> = ({
     value,
     onChange,
     disabled = false,
-    placeholder = '请选择组织',
+    placeholder: _placeholder = '请选择组织',
     showSearch = true,
     className = '',
 }) => {
@@ -126,6 +126,7 @@ export const OrgSelector: React.FC<OrgSelectorProps> = ({
                 });
                 return keys;
             };
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setExpandedKeys(getAllKeys(filteredTreeData));
         }
     }, [searchText, filteredTreeData]);
@@ -134,6 +135,7 @@ export const OrgSelector: React.FC<OrgSelectorProps> = ({
     useEffect(() => {
         if (value !== undefined) {
             const newSelectedKeys = Array.isArray(value) ? value : (value ? [value] : []);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedKeys(newSelectedKeys);
         }
     }, [value]);

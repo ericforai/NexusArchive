@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { BaseModal } from '../modals/BaseModal';
-import { SmartFilePreview, SmartFilePreviewProps, FileItem } from './SmartFilePreview';
+import { SmartFilePreview, SmartFilePreviewProps } from './SmartFilePreview';
 
 export interface FilePreviewModalProps extends Omit<SmartFilePreviewProps, 'className'> {
   /** 是否打开 Modal */
