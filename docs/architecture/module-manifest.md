@@ -1,9 +1,9 @@
 # Module Manifest（模块清单）
 
 > 本清单是模块边界与依赖关系的单一事实来源（SSOT）。
-> **版本**: 2.3.0
+> **版本**: 2.4.0
 > **更新日期**: 2026-01-02
-> **自动生成**: 通过 scripts/discover-frontend-modules.js
+> **自动生成**: 通过 scripts/discover-frontend-modules.js + ModuleGovernanceService
 
 ---
 
@@ -86,6 +86,17 @@
 | BE.INTEGRATION | Integration Layer | `com.nexusarchive.integration` | 外部系统集成 (ERP 适配器) | `com.nexusarchive.service..`, Spring Integration | ✅ 活跃 |
 | BE.ERP_PLUGINS | ERP Plugins | `com.nexusarchive.service.erp.plugin` | ERP 插件 (Plugin Architecture) | `com.nexusarchive.integration..`, `com.nexusarchive.service..` | ✅ 活跃 v2.0 |
 
+### ERP 集成子模块 (v2.4)
+
+| 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
+| --- | --- | --- | --- | --- | --- |
+| BE.ERP.ADAPTER_YONSUITE | YonSuite 适配器 | `integration.erp.adapter.YonSuiteErpAdapter` | 用友 YonSuite ERP 集成 | Spring Integration, `integration.erp.dto..` | ✅ 活跃 v2.4 |
+| BE.ERP.ADAPTER_KINGDEE | 金蝶适配器 | `integration.erp.adapter.KingdeeAdapter` | 金蝶云星空 ERP 集成 | Spring Integration, `integration.erp.dto..` | ✅ 活跃 v2.4 |
+| BE.ERP.ADAPTER_WEAVER | 浪潮适配器 | `integration.erp.adapter.WeaverAdapter` | 浪潮 GS ERP 集成 | Spring Integration, `integration.erp.dto..` | ✅ 活跃 v2.4 |
+| BE.ERP.ADAPTER_WEAVER_E10 | 泛微E10适配器 | `integration.erp.adapter.WeaverE10Adapter` | 泛微 E10 OA 集成 | Spring Integration, `integration.erp.dto..` | ✅ 活跃 v2.4 |
+| BE.ERP.ADAPTER_GENERIC | 通用适配器 | `integration.erp.adapter.GenericErpAdapter` | 通用 ERP 集成协议 | Spring Integration, `integration.erp.dto..` | ✅ 活跃 v2.4 |
+| BE.ERP.METADATA | 元数据管理 | `integration.erp.annotation..`, `integration.erp.registry..` | 适配器元数据注册与查询 | `integration.erp.dto..` | ✅ 活跃 v2.4 |
+
 ### 基础设施 (Infrastructure)
 
 | 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
@@ -114,6 +125,7 @@
 
 ## 更新日志
 
+- **2026-01-02 v2.4.0**: ERP 模块重构 - 统一 Adapter 架构，添加注解驱动的元数据系统
 - **2026-01-02 v2.2.0**: 新增凭证预览抽屉系统模块（FE.ARCHIVES, FE.DRAWER, FE.VOUCHER_PREVIEW, FE.DRAWER_STORE）
 - **2026-01-01 v2.1.0**: 添加模块化组件 (INGEST, VOUCHER, MATCHING)、基础设施模块、集成层
 - **2025-12-31 v2.0.0**: 初始版本，包含 BORROWING 试点模块

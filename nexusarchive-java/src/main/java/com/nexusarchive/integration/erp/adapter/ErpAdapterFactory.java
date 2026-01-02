@@ -5,10 +5,15 @@
 
 package com.nexusarchive.integration.erp.adapter;
 
+import com.nexusarchive.integration.erp.dto.ErpMetadata;
+import com.nexusarchive.integration.erp.registry.ErpMetadataRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * ERP 适配器工厂
  * 自动注入所有 ErpAdapter 实现，提供统一获取入口
- * 
+ *
  * @author Agent D (基础设施工程师)
  */
 @Component
@@ -25,6 +30,41 @@ import java.util.stream.Collectors;
 public class ErpAdapterFactory {
 
     private final Map<String, ErpAdapter> adapters;
+
+    @Autowired
+    private ErpMetadataRegistry metadataRegistry;
+
+    @PostConstruct
+    public void scanAndRegisterAdapters() {
+        // 扫描所有 ErpAdapter 实现，自动注册元数据
+        adapters.values().forEach(adapter -> {
+            Class<?> adapterClass = adapter.getClass();
+            if (adapterClass.isAnnotationPresent(com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation.class)) {
+                metadataRegistry.register(adapterClass);
+            }
+        });
+
+        log.info("Scanned and registered {} ERP adapters", adapters.size());
+    }
+
+    /**
+     * 获取适配器元数据
+     *
+     * @param identifier 适配器标识
+     * @return 元数据
+     */
+    public ErpMetadata getMetadata(String identifier) {
+        return metadataRegistry.getByIdentifier(identifier);
+    }
+
+    /**
+     * 获取所有适配器元数据
+     *
+     * @return 元数据列表
+     */
+    public Collection<ErpMetadata> getAllMetadata() {
+        return metadataRegistry.getAll();
+    }
 
     /**
      * 获取指定类型的适配器

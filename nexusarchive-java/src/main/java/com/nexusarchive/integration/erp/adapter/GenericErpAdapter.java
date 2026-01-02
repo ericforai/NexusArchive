@@ -5,6 +5,7 @@
 
 package com.nexusarchive.integration.erp.adapter;
 
+import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
 import com.nexusarchive.integration.erp.dto.*;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
@@ -22,9 +23,19 @@ import java.util.List;
 /**
  * 通用 REST API ERP 适配器
  * 支持配置化对接标准 REST API 的 ERP 系统
- * 
+ *
  * @author Agent D (基础设施工程师)
  */
+@ErpAdapterAnnotation(
+    identifier = "generic",
+    name = "通用ERP",
+    description = "通用 ERP 适配器，支持标准接口协议",
+    version = "1.0.0",
+    erpType = "GENERIC",
+    supportedScenarios = {"VOUCHER_SYNC"},
+    supportsWebhook = false,
+    priority = 100
+)
 @Service("generic")
 @Slf4j
 public class GenericErpAdapter implements ErpAdapter {

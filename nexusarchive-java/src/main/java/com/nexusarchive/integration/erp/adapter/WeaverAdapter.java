@@ -6,6 +6,7 @@
 package com.nexusarchive.integration.erp.adapter;
 
 import com.nexusarchive.entity.ErpScenario;
+import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
 import com.nexusarchive.integration.erp.dto.AttachmentDTO;
 import com.nexusarchive.integration.erp.dto.ConnectionTestResult;
 import com.nexusarchive.integration.erp.dto.ErpConfig;
@@ -22,6 +23,16 @@ import java.util.List;
  * 泛微 OA (Weaver Ecology) 适配器
  * 实现报销单据同步流程
  */
+@ErpAdapterAnnotation(
+    identifier = "weaver",
+    name = "浪潮GS",
+    description = "浪潮集团管理软件系统",
+    version = "1.0.0",
+    erpType = "WEAVER",
+    supportedScenarios = {"VOUCHER_SYNC"},
+    supportsWebhook = false,
+    priority = 30
+)
 @Slf4j
 @Service("weaver")
 public class WeaverAdapter implements ErpAdapter {

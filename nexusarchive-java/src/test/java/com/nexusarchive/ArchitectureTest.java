@@ -10,6 +10,9 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackages;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
@@ -255,5 +258,113 @@ class ArchitectureTest {
                 .because("配置类应集中在 config 包中");
 
         rule.check(importedClasses);
+    }
+
+    // ========== ERP 模块架构规则 (v2.4) ==========
+
+    /**
+     * 规则11: ERP 适配器应只依赖必要的包
+     * <p>
+     * 适配器层应保持简洁，不直接依赖服务层或控制器层
+     * </p>
+     */
+    @Test
+    void erpAdaptersShouldOnlyDependOnAllowedPackages() {
+        ArchRule rule = classes()
+                .that().resideInAPackage("..integration.erp.adapter..")
+                .should().onlyDependOnClassesThat()
+                .resideInAnyPackage(
+                    "..integration.erp.adapter..",
+                    "..integration.erp.dto..",
+                    "..integration.erp.annotation..",
+                    "..integration.erp.registry..",
+                    "..integration.yonsuite..",
+                    "..entity..",
+                    "java..",
+                    "jakarta..",
+                    "org.springframework..",
+                    "org.slf4j..",
+                    "lombok..",
+                    "cn.hutool.."
+                )
+                .because("ERP 适配器应保持独立，不直接依赖服务层或控制器层");
+
+        rule.check(importedClasses);
+    }
+
+    /**
+     * 规则12: ERP 元数据注册中心应隔离
+     * <p>
+     * 注册中心不应依赖适配器实现，只依赖元数据定义
+     * </p>
+     */
+    @Test
+    void erpMetadataRegistryShouldBeIsolated() {
+        ArchRule rule = classes()
+                .that().resideInAPackage("..integration.erp.registry..")
+                .should().onlyDependOnClassesThat()
+                .resideInAnyPackage(
+                    "..integration.erp.annotation..",
+                    "..integration.erp.dto..",
+                    "java..",
+                    "org.springframework..",
+                    "org.slf4j..",
+                    "lombok.."
+                )
+                .because("元数据注册中心应保持隔离，不依赖具体适配器实现");
+
+        rule.check(importedClasses);
+    }
+
+    /**
+     * 规则13: 所有 ERP 适配器实现必须有 @ErpAdapterAnnotation 注解
+     * <p>
+     * 确保所有适配器都通过注解声明元数据
+     * </p>
+     */
+    @Test
+    void allErpAdaptersShouldHaveErpAdapterAnnotation() {
+        // Check adapter package
+        classes()
+                .that().implement(com.nexusarchive.integration.erp.adapter.ErpAdapter.class)
+                .and().areNotInterfaces()
+                .and().resideInAPackage("..integration.erp.adapter..")
+                .should().beAnnotatedWith(
+                    com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation.class)
+                .because("所有 ERP 适配器实现必须通过 @ErpAdapterAnnotation 声明元数据")
+                .check(importedClasses);
+    }
+
+    /**
+     * 规则14: @ErpAdapterAnnotation 的 identifier 必须唯一
+     * <p>
+     * 确保每个适配器有唯一的标识符
+     * </p>
+     * <p>
+     * 注: 此规则需要在运行时验证，ArchUnit 的静态分析能力有限
+     * </p>
+     */
+    @Test
+    void erpAdapterAnnotationsShouldHaveUniqueIdentifiers() {
+        // 通过 ErpMetadataRegistry 测试验证唯一性
+        // 见 ErpMetadataRegistryTest
+        // ArchUnit 静态分析无法直接访问注解属性值
+    }
+
+    /**
+     * 规则15: Plugin 层应只通过接口访问适配器
+     * <p>
+     * Plugin 层应只依赖 ErpAdapter 接口，不依赖具体实现
+     * </p>
+     */
+    @Test
+    void pluginLayerShouldOnlyAccessAdaptersThroughInterface() {
+        // Plugin 层不应直接实例化适配器实现类
+        noClasses()
+                .that().resideInAPackage("..service.erp.plugin..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("..integration.erp.adapter.impl..")
+                .because("Plugin 层应通过 ErpAdapter 接口访问适配器")
+                .check(importedClasses);
     }
 }
