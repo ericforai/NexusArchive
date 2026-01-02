@@ -5,12 +5,12 @@
 
 /**
  * Archive List View (Refactored)
- * 
+ *
  * 纯展示组件，职责：
  * 1. 接收 Controller (数据/状态) 和 Actions (交互回调)
  * 2. 渲染 Toolbar, FilterBar, Table, Pagination
- * 3. 渲染 ArchiveDetailModal
- * 
+ * 3. 渲染 ArchiveDetailDrawer
+ *
  * 移除了所有 API 调用和复杂业务逻辑。
  */
 import React, { useState } from 'react';
@@ -22,8 +22,11 @@ import {
 import { createPortal } from 'react-dom';
 
 import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useSmartMatching } from '../../features/archives';
-import ArchiveDetailModal from './ArchiveDetailModal';
+import ArchiveDetailDrawer from './ArchiveDetailDrawer';
 import MatchPreviewModal from './MatchPreviewModal';
+
+// 诊断日志：验证模块导入
+console.log('%c[ArchiveListView] ArchiveDetailDrawer imported:', typeof ArchiveDetailDrawer, ArchiveDetailDrawer.name, 'color: #8b5cf6; font-weight: bold;');
 
 // Shared Components (Assuming these exist or are local)
 // In a real refactor, these should be imported. For this file update, I will keep necessary imports.
@@ -465,28 +468,25 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
         )}
       </div>
 
-      {/* Archive Detail Modal */}
-      <ArchiveDetailModal
+      {/* Archive Detail Drawer */}
+      {/* DIAGNOSTIC: Log drawer render attempt */}
+      {(() => {
+        console.log('[ArchiveListView] About to render ArchiveDetailDrawer with:', {
+          isViewModalOpen,
+          viewRowId: viewRow?.id,
+          viewRowCode: viewRow?.code
+        });
+        return null;
+      })()}
+      <ArchiveDetailDrawer
         key={viewRow?.id || 'archive-detail'}
         open={isViewModalOpen}
         onClose={closeViewModal}
         row={viewRow}
         config={mode.config}
         isPoolView={mode.isPoolView}
-        activePreviewId={activePreviewId}
-        onPreviewIdChange={setActivePreviewId}
-        mainFileId={viewRow?.fileId || null} // Assuming fileId mapping
-        relatedFiles={[]} // TODO: Fetch related files in Controller action or here? Ideally controller.
-        // For simplicity, we can pass a callback to load?
-        // Or updated controller.ui with preview state.
-        // For now, passing empty or mock.
-        renderCell={renderCell}
-        formatStatus={(s) => s || '-'}
-        resolveDocumentTypeLabel={(t) => t || '文档'}
         onAipExport={archiveActions.handleAipExport}
         isExporting={archiveActions.isExporting}
-        onUploadAttachment={archiveActions.handleUpload}
-        isUploading={archiveActions.isUploading}
       />
 
       {/* 匹配规则配置弹窗 */}

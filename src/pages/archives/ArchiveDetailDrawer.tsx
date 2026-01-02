@@ -125,6 +125,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
 
   return (
     <Drawer
+      data-testid="archive-detail-drawer"
       open={open}
       onClose={onClose}
       width={drawerWidth}
