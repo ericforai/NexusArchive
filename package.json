@@ -16,7 +16,10 @@
     "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "check:arch": "depcruise src/",
-    "check:arch:graph": "depcruise src/ --output-type dot | dot -T svg > arch-dependencies.svg"
+    "check:arch:graph": "depcruise src/ --output-type dot | dot -T svg > arch-dependencies.svg",
+    "modules:discover": "node scripts/discover-frontend-modules.js --discover",
+    "modules:validate": "node scripts/discover-frontend-modules.js --validate",
+    "modules:update": "node scripts/discover-frontend-modules.js --update-manifest"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
