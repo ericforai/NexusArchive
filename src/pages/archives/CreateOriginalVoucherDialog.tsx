@@ -8,6 +8,7 @@ import { X, Upload, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createOriginalVoucher, addOriginalVoucherFile, getOriginalVoucherTypes } from '../../api/originalVoucher';
+import { useFondsStore } from '../../store/useFondsStore';
 
 interface CreateOriginalVoucherDialogProps {
     isOpen: boolean;
@@ -27,6 +28,7 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const currentFonds = useFondsStore((state) => state.currentFonds);
 
     // Form State
     const [voucherType, setVoucherType] = useState(initialType || '');
@@ -57,7 +59,7 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
                 // Note: If both exist but mismatch, backend will catch it, but usually UI filters types if category is fixed.
                 voucherCategory: category || derivedCategory || 'OTHER',
                 currency: 'CNY',
-                fondsCode: '001', // TODO: Get from context/store
+                fondsCode: currentFonds?.fondsCode ?? '001',
                 fiscalYear: new Date().getFullYear().toString()
             });
 
