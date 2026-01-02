@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { client } from '../../api/client';
+import { getHttpClientState, performLogout, registerAuthProvider } from '../../api/client.types';
 import { useAuthStore } from '../../store';
 
 // Mock the store
@@ -15,20 +16,31 @@ vi.mock('../../store', () => ({
     }
 }));
 
+// Mock the client types functions
+vi.mock('../../api/client.types', () => ({
+    getHttpClientState: vi.fn(),
+    performLogout: vi.fn(),
+    registerAuthProvider: vi.fn()
+}));
+
 // Mock window location
 const originalLocation = window.location;
 
 describe('API Client Interceptors', () => {
-    let mockLogout: any;
+    let mockPerformLogout: any;
     let originalAdapter: any;
+    let mockGetHttpClientState: any;
 
     beforeEach(() => {
         // Reset mocks
-        mockLogout = vi.fn();
-        (useAuthStore.getState as any).mockReturnValue({
+        mockPerformLogout = vi.fn();
+        mockGetHttpClientState = (getHttpClientState as any).mockReturnValue({
             token: 'test-token',
-            logout: mockLogout
+            fondsCode: null
         });
+
+        // Mock performLogout
+        (performLogout as any).mockImplementation(mockPerformLogout);
 
         // Mock window.location
         Object.defineProperty(window, 'location', {
@@ -91,7 +103,7 @@ describe('API Client Interceptors', () => {
             // Error is rethrown, we ignore it
         }
 
-        expect(mockLogout).toHaveBeenCalled();
+        expect(mockPerformLogout).toHaveBeenCalled();
         expect(window.location.href).toBe('/system/login');
     });
 });
