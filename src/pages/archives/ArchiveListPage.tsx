@@ -12,8 +12,14 @@
 import React, { Suspense, lazy } from 'react';
 import { ArchiveRouteMode, useArchiveActions, useArchiveListController } from '../../features/archives';
 
+// 诊断：模块加载日志
+console.log('%c[ArchiveListPage] MODULE LOADED', 'color: #ef4444; font-weight: bold; font-size: 18px;');
+
 // 懒加载 ArchiveListView 以保持路由级代码分割
-const ArchiveListView = lazy(() => import('./ArchiveListView'));
+const ArchiveListView = lazy(() => {
+    console.log('%c[ArchiveListPage] LAZY LOADING ArchiveListView...', 'color: #f59e0b; font-weight: bold;');
+    return import('./ArchiveListView');
+});
 
 interface ArchiveListPageProps {
     routeConfig: ArchiveRouteMode;

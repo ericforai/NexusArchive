@@ -135,7 +135,7 @@ export const VoucherMetadata: React.FC<VoucherMetadataProps> = ({
   }, [data, fields]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <div data-testid="voucher-metadata" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
       <div className={`px-4 py-3 border-b border-slate-100 bg-slate-50 ${compact ? 'py-2' : ''}`}>
         <h3 className="font-semibold text-slate-700 text-sm">业务元数据</h3>
       </div>

@@ -9,7 +9,8 @@ import { ArchiveStructureTree } from './ArchiveStructureTree';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
 import { VoucherPlayer } from './VoucherPlayer';
-import { Maximize2 } from 'lucide-react';
+import { VoucherPreview } from '../../components/voucher';
+import { Maximize2, FileText, Receipt } from 'lucide-react';
 
 interface ArchivalPanoramaViewProps {
     initialVoucherId?: string;
@@ -17,6 +18,141 @@ interface ArchivalPanoramaViewProps {
 
 import { archivesApi } from '../../api/archives';
 import { originalVoucherApi } from '../../api/originalVoucher';
+import { VoucherDTO } from '../../components/voucher';
+
+// ============ VoucherPreview Wrapper Component ============
+
+interface VoucherPreviewWrapperProps {
+    voucherId: string;
+    sourceType: 'ARCHIVE' | 'ORIGINAL' | null;
+}
+
+const VoucherPreviewWrapper: React.FC<VoucherPreviewWrapperProps> = ({ voucherId, sourceType }) => {
+    const [voucherData, setVoucherData] = useState<VoucherDTO | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!voucherId) return;
+
+        const loadData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                if (sourceType === 'ORIGINAL') {
+                    // 原始凭证
+                    const ov = await originalVoucherApi.getOriginalVoucher(voucherId);
+                    if (ov) {
+                        const ovData = ov as any; // Use type assertion to access optional properties
+                        setVoucherData({
+                            voucherId: ov.id,
+                            voucherNo: ov.voucherNo || '',
+                            voucherWord: '记',
+                            voucherDate: ov.businessDate || '',
+                            orgName: ovData.orgName || '',
+                            summary: ov.summary || '',
+                            debitTotal: ov.amount || 0,
+                            creditTotal: ov.amount || 0,
+                            creator: ov.creator || ovData.uploadedBy || '',
+                            entries: [],
+                        });
+                    } else {
+                        setError('未找到原始凭证');
+                    }
+                } else {
+                    // 归档档案
+                    const res = await archivesApi.getArchiveById(voucherId);
+                    if (res.code === 200 && res.data) {
+                        const archive = res.data as any;
+                        // 解析分录数据
+                        let entries: any[] = [];
+                        if (archive.customMetadata) {
+                            try {
+                                const parsed = JSON.parse(archive.customMetadata);
+                                if (Array.isArray(parsed)) {
+                                    entries = parsed.map((entry: any, idx: number) => ({
+                                        lineNo: idx + 1,
+                                        summary: entry.description || entry.summary || '',
+                                        accountCode: entry.accsubject?.code || entry.subjectCode || '',
+                                        accountName: entry.accsubject?.name || entry.subjectName || '',
+                                        debit: entry.debit_org || 0,
+                                        credit: entry.credit_org || 0,
+                                    }));
+                                }
+                            } catch (e) {
+                                console.warn('Failed to parse customMetadata:', e);
+                            }
+                        }
+
+                        setVoucherData({
+                            voucherId: archive.id,
+                            voucherNo: archive.archiveCode || archive.id,
+                            voucherWord: '记',
+                            voucherDate: archive.docDate || archive.createdTime || '',
+                            orgName: archive.orgName || '',
+                            summary: archive.title || archive.summary || '',
+                            debitTotal: entries.reduce((sum, e) => sum + (e.debit || 0), 0) || archive.amount || 0,
+                            creditTotal: entries.reduce((sum, e) => sum + (e.credit || 0), 0) || archive.amount || 0,
+                            creator: archive.creator || archive.createdBy || '',
+                            auditor: archive.auditor || '',
+                            poster: archive.poster || '',
+                            entries,
+                        });
+                    } else if (sourceType === null) {
+                        // 尝试原始凭证作为降级
+                        const ov = await originalVoucherApi.getOriginalVoucher(voucherId);
+                        if (ov) {
+                            const ovData = ov as any;
+                            setVoucherData({
+                                voucherId: ov.id,
+                                voucherNo: ov.voucherNo || '',
+                                voucherWord: '记',
+                                voucherDate: ov.businessDate || '',
+                                orgName: ovData.orgName || '',
+                                summary: ov.summary || '',
+                                debitTotal: ov.amount || 0,
+                                creditTotal: ov.amount || 0,
+                                creator: ov.creator || '',
+                                entries: [],
+                            });
+                        } else {
+                            setError('未找到档案或原始凭证');
+                        }
+                    } else {
+                        setError('未找到该档案');
+                    }
+                }
+            } catch (err: any) {
+                console.error('VoucherPreviewWrapper load error:', err);
+                setError('加载数据失败');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, [voucherId, sourceType]);
+
+    if (loading) {
+        return (
+            <div className="h-full flex items-center justify-center text-slate-500">
+                <div className="animate-pulse">加载中...</div>
+            </div>
+        );
+    }
+
+    if (error || !voucherData) {
+        return (
+            <div className="h-full flex items-center justify-center text-slate-400 bg-slate-50/50">
+                <p>{error || '暂无数据'}</p>
+            </div>
+        );
+    }
+
+    return <VoucherPreview data={voucherData} layout="vertical" size="normal" />;
+};
+
+// ============ Main Component ============
 
 export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ initialVoucherId }) => {
     const { id } = useParams<{ id: string }>();
@@ -24,6 +160,7 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
     const [sourceType, setSourceType] = useState<'ARCHIVE' | 'ORIGINAL' | null>(null);
     const [loading, setLoading] = useState(false);
+    const [detailViewMode, setDetailViewMode] = useState<'detail' | 'voucher'>('detail');
 
     // 当 URL 参数变化时更新选中状态
     useEffect(() => {
@@ -102,8 +239,43 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
                 </div>
 
                 {/* Middle Pane: Voucher Detail Card */}
-                <div className="flex-1 min-w-[400px] h-full overflow-hidden border-r border-slate-200">
-                    <VoucherDetailCard voucherId={selectedVoucherId} sourceType={sourceType} />
+                <div className="flex-1 min-w-[400px] h-full overflow-hidden border-r border-slate-200 flex flex-col">
+                    {/* View Mode Toggle */}
+                    <div className="h-10 border-b border-slate-100 flex items-center justify-between px-3 bg-white shrink-0">
+                        <span className="text-xs font-medium text-slate-500">凭证详情</span>
+                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                            <button
+                                onClick={() => setDetailViewMode('detail')}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                                    detailViewMode === 'detail'
+                                        ? 'bg-white text-primary-700 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <FileText size={12} />
+                                <span>详情</span>
+                            </button>
+                            <button
+                                onClick={() => setDetailViewMode('voucher')}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                                    detailViewMode === 'voucher'
+                                        ? 'bg-white text-primary-700 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <Receipt size={12} />
+                                <span>凭证预览</span>
+                            </button>
+                        </div>
+                    </div>
+                    {/* Content */}
+                    <div className="flex-1 overflow-hidden">
+                        {detailViewMode === 'detail' ? (
+                            <VoucherDetailCard voucherId={selectedVoucherId} sourceType={sourceType} />
+                        ) : (
+                            <VoucherPreviewWrapper voucherId={selectedVoucherId} sourceType={sourceType} />
+                        )}
+                    </div>
                 </div>
 
                 {/* Right Pane: Evidence Preview */}

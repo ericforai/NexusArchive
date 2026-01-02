@@ -31,11 +31,12 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         const yearMap = new Map<string, TreeNode>();
 
         archives.forEach((archive) => {
-            const year = archive.fiscalYear || (archive.docDate ? archive.docDate.split('-')[0] : '未分类');
+            const docDateStr = archive.docDate ? String(archive.docDate) : null;
+            const year = archive.fiscalYear || (docDateStr ? docDateStr.split('-')[0] : '未分类');
 
             // Filter out 2014 (demo data/expired archives)
             if (year === '2014') return;
-            const month = archive.docDate ? archive.docDate.slice(0, 7) : `${year}-未知`;
+            const month = docDateStr ? docDateStr.slice(0, 7) : `${year}-未知`;
             const voucherNode: TreeNode = {
                 id: archive.id,
                 label: `${archive.archiveCode || archive.title || archive.id}`,
@@ -54,9 +55,10 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
             const yearNode = yearMap.get(year)!;
             let monthNode = yearNode.children?.find(child => child.id === month);
             if (!monthNode) {
+                const monthStr = String(month);
                 monthNode = {
-                    id: month,
-                    label: `${month.split('-')[1] || month}月`,
+                    id: monthStr,
+                    label: `${monthStr.split('-')[1] || monthStr}月`,
                     type: 'month',
                     children: []
                 };
@@ -85,13 +87,17 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         setError(null);
         try {
             const res = await archivesApi.getArchives({ page: 1, limit: 100, categoryCode: 'AC01' });
+            console.log('[ArchiveStructureTree] API response:', res);
             if (res.code === 200 && res.data) {
                 const records = (res.data as any).records || [];
+                console.log('[ArchiveStructureTree] Records count:', records.length, 'Records:', records.slice(0, 3));
                 if (records.length === 0) {
                     // 无数据时显示空状态
+                    console.warn('[ArchiveStructureTree] No records found in response');
                     setTreeData([]);
                 } else {
                     const tree = buildTreeFromArchives(records as Archive[]);
+                    console.log('[ArchiveStructureTree] Tree built, node count:', tree.length, 'Tree:', tree);
                     setTreeData(tree);
                     // 自动展开所有年度和月份
                     const expandIds = tree.flatMap(y => [y.id, ...(y.children?.map(m => m.id) || [])]);
@@ -99,10 +105,11 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
                 }
             } else {
                 // 加载失败显示空状态
+                console.warn('[ArchiveStructureTree] API response error:', res.code, res.message);
                 setTreeData([]);
             }
         } catch (e) {
-            console.warn('Failed to load tree', e);
+            console.error('[ArchiveStructureTree] Failed to load tree:', e);
             setTreeData([]);
         } finally {
             setLoading(false);

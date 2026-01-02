@@ -21,10 +21,13 @@ import java.util.List;
  * </p>
  */
 @Slf4j
-@RequiredArgsConstructor
 public abstract class AbstractErpPlugin implements ErpPlugin {
 
-    private final ErpAdapterFactory erpAdapterFactory;
+    protected final ErpAdapterFactory erpAdapterFactory;
+
+    protected AbstractErpPlugin(ErpAdapterFactory erpAdapterFactory) {
+        this.erpAdapterFactory = erpAdapterFactory;
+    }
 
     @Override
     public ErpPluginResult sync(ErpPluginContext context) {

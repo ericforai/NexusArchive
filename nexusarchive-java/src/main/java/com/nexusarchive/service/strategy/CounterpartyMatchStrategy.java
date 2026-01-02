@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  * 置信度：60（中等匹配，因为可能存在同名单位）
  */
 @Slf4j
-@Component
+@Component("legacyCounterpartyMatchStrategy")
 @RequiredArgsConstructor
 public class CounterpartyMatchStrategy implements MatchingStrategy {
     

@@ -31,6 +31,9 @@ export interface PreviewPresignedResult {
 export type PreviewResult = PreviewStreamResult | PreviewPresignedResult;
 
 export const previewApi = {
+    /**
+     * 预览已归档档案
+     */
     getPreview: async (params: PreviewRequest): Promise<PreviewResult> => {
         const mode = params.mode || 'stream';
         if (mode === 'presigned') {
@@ -70,6 +73,34 @@ export const previewApi = {
 
         return {
             mode: mode === 'rendered' ? 'rendered' : 'stream',
+            blob: response.data,
+            traceId,
+            watermark,
+        };
+    },
+
+    /**
+     * 预览电子凭证池文件（未归档）
+     * @param fileId 文件ID
+     */
+    getPoolPreview: async (fileId: string): Promise<PreviewResult> => {
+        const response = await client.get(`/pool/preview/${fileId}`, {
+            responseType: 'blob',
+        });
+
+        const headers = response.headers || {};
+        const traceId = headers['x-trace-id'];
+        const opacity = headers['x-watermark-opacity'];
+        const rotate = headers['x-watermark-rotate'];
+        const watermark: WatermarkMetadata = {
+            text: headers['x-watermark-text'],
+            subText: headers['x-watermark-subtext'],
+            opacity: opacity ? Number(opacity) : undefined,
+            rotate: rotate ? Number(rotate) : undefined,
+        };
+
+        return {
+            mode: 'stream',
             blob: response.data,
             traceId,
             watermark,

@@ -147,6 +147,7 @@ public class PoolServiceImpl implements PoolService {
                 .summary(fileContent.getSummary())
                 .voucherWord(fileContent.getVoucherWord())
                 .docDate(fileContent.getDocDate() != null ? fileContent.getDocDate().toString() : "-")
+                .sourceData(fileContent.getSourceData())
                 .build();
     }
 

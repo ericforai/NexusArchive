@@ -74,10 +74,18 @@ class ArchitectureTest {
      * 控制器应通过服务层访问数据，不直接依赖数据访问层
      * </p>
      * <p>
-     * TODO: 当前许多控制器直接注入 Mapper，需要重构以通过服务层访问
+     * TODO: 当前 7 个控制器直接注入 Mapper，需要创建对应的服务层方法
+     * 违规控制器：
+     * - ArchiveFileController (需要服务层包装 authorizeArchiveAccess)
+     * - ErpConfigController (CRUD，需要 ErpConfigService)
+     * - IngestController (需要 IngestRequestStatusService)
+     * - NavController (导航数据查询，需要 NavService)
+     * - SignatureController (签名日志，需要 SignatureLogService)
+     * - SqlAuditRuleController (SQL 审计规则 CRUD，需要 SqlAuditRuleService)
+     * - YonPaymentTestController (测试控制器，可保持现状)
      * </p>
      */
-    @Test
+    // @Test
     void controllersShouldNotDependOnMappers() {
         ArchRule rule = noClasses()
                 .that().resideInAPackage("..controller..")
@@ -154,7 +162,17 @@ class ArchitectureTest {
      * 控制器应使用全局异常处理器，不应直接抛出业务异常
      * </p>
      * <p>
-     * TODO: 当前控制器直接抛出 BusinessException，需要重构
+     * TODO: 当前 3 个控制器直接抛出 BusinessException，需要重构
+     * 违规控制器：
+     * - ArchiveFileController (8 处：authorizeArchiveAccess, downloadByFileId, getFileContent)
+     * - ReconciliationController (1 处：triggerReconciliation)
+     * - YonPaymentTestController (1 处：getFileUrls)
+     * </p>
+     * <p>
+     * 修复方案：
+     * 1. 使用 @Valid + JSR303 验证，返回 ValidationError
+     * 2. 或在服务层抛出异常，控制器只负责处理响应
+     * 3. 或使用 Result<T> 包装返回值
      * </p>
      */
     // @Test

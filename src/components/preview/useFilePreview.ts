@@ -6,10 +6,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { previewApi, PreviewRequest, WatermarkMetadata } from '../../api/preview';
 
 export interface UseFilePreviewParams {
-  /** 档案ID */
-  archiveId: string;
-  /** 文件ID（可选，用于多文件场景） */
+  /** 档案ID（已归档档案使用） */
+  archiveId?: string;
+  /** 文件ID（电子凭证池或附件使用） */
   fileId?: string;
+  /** 是否为电子凭证池模式（未归档） */
+  isPool?: boolean;
   /** 预览模式 */
   mode?: 'stream' | 'presigned' | 'rendered';
   /** 是否自动加载（默认 true） */
@@ -41,7 +43,7 @@ export interface UseFilePreviewReturn {
  * </p>
  */
 export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewReturn {
-  const { archiveId, fileId, mode = 'stream', autoLoad = true } = params;
+  const { archiveId, fileId, isPool = false, mode = 'stream', autoLoad = true } = params;
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null);
@@ -82,7 +84,13 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
 
   // 加载预览
   const loadPreview = useCallback(async () => {
-    if (!archiveId) {
+    // Pool 模式需要 fileId
+    if (isPool && !fileId) {
+      setError('缺少文件ID');
+      return;
+    }
+    // Archive 模式需要 archiveId
+    if (!isPool && !archiveId) {
       setError('缺少档案ID');
       return;
     }
@@ -91,13 +99,20 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
     setError(null);
 
     try {
-      const requestParams: PreviewRequest = {
-        archiveId,
-        fileId,
-        mode,
-      };
+      let result;
 
-      const result = await previewApi.getPreview(requestParams);
+      if (isPool) {
+        // 电子凭证池模式：使用 fileId 调用 pool preview API
+        result = await previewApi.getPoolPreview(fileId!);
+      } else {
+        // 已归档档案模式：使用 archiveId 调用 archive preview API
+        const requestParams: PreviewRequest = {
+          archiveId: archiveId!,
+          fileId,
+          mode,
+        };
+        result = await previewApi.getPreview(requestParams);
+      }
 
       // 清理旧的 blob URL
       if (blobUrlRef.current) {
@@ -127,7 +142,7 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
     } finally {
       setLoading(false);
     }
-  }, [archiveId, fileId, mode, getErrorMessage]);
+  }, [archiveId, fileId, isPool, mode, getErrorMessage]);
 
   // 自动加载
   useEffect(() => {

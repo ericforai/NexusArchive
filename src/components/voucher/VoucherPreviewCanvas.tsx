@@ -6,35 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { voucherTableStyles, formatCurrency, numberToChinese, formatDate } from './styles';
-
-// VoucherDTO 类型定义
-interface VoucherEntryDTO {
-  lineNo?: number;
-  summary?: string;
-  accountCode?: string;
-  accountName?: string;
-  debit?: number | string;
-  credit?: number | string;
-}
-
-interface VoucherDTO {
-  voucherId: string;
-  voucherNo: string;
-  voucherWord?: string;
-  voucherDate?: string;
-  orgName?: string;
-  accountPeriod?: string;
-  accbookCode?: string;
-  summary?: string;
-  debitTotal?: number | string;
-  creditTotal?: number | string;
-  attachmentCount?: number;
-  creator?: string;
-  auditor?: string;
-  poster?: string;
-  status?: string;
-  entries?: VoucherEntryDTO[];
-}
+import type { VoucherDTO, VoucherEntryDTO } from './VoucherPreviewTabs';
 
 interface VoucherPreviewCanvasProps {
   data: VoucherDTO;
@@ -47,6 +19,15 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
   compact = false,
   showSignature = true,
 }) => {
+  // Debug: Log received data
+  console.log('[VoucherPreviewCanvas] Rendered with:', {
+    voucherId: data.voucherId,
+    voucherNo: data.voucherNo,
+    entriesCount: data.entries?.length || 0,
+    debitTotal: data.debitTotal,
+    creditTotal: data.creditTotal
+  });
+
   // 计算合计
   const { totalDebit, totalCredit, chineseAmount } = useMemo(() => {
     let debitSum = 0;

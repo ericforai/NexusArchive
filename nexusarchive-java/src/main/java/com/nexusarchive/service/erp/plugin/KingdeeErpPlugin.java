@@ -8,7 +8,6 @@ import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.adapter.ErpAdapter;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.integration.erp.dto.VoucherDTO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -23,10 +22,11 @@ import java.util.List;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class KingdeeErpPlugin extends AbstractErpPlugin {
 
-    private final ErpAdapterFactory erpAdapterFactory;
+    public KingdeeErpPlugin(ErpAdapterFactory erpAdapterFactory) {
+        super(erpAdapterFactory);
+    }
 
     @Override
     public String getPluginId() {

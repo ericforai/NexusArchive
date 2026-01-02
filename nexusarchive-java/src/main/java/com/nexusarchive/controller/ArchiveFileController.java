@@ -127,6 +127,65 @@ public class ArchiveFileController {
                 .body(resource);
     }
 
+    /**
+     * 获取档案关联的凭证分录数据（source_data）
+     * 用于凭证预览标签页
+     * 
+     * 支持两种数据关联方式：
+     * 1. 通过 item_id 关联查询（acc_archive -> arc_file_content）
+     * 2. 直接通过 id 查询（arc_file_content 自身记录）
+     */
+    @GetMapping("/{id}/voucher-data")
+    @Operation(summary = "获取档案关联的凭证分录数据")
+    @PreAuthorize("hasAuthority('archive:read')")
+    public ResponseEntity<com.nexusarchive.common.result.Result<VoucherDataDto>> getVoucherData(
+            @PathVariable String id,
+            jakarta.servlet.http.HttpServletRequest request) {
+        String operatorId = resolveUserId(request);
+        log.info("获取凭证分录数据: id={}", id);
+
+        ArcFileContent content = null;
+        
+        // 1. 先尝试通过 item_id 关联查询（acc_archive -> arc_file_content）
+        content = archiveFileContentService.getFileContentByItemId(id, operatorId);
+        
+        // 2. 如果未找到，尝试直接通过 id 查询 arc_file_content 自身
+        if (content == null) {
+            log.info("通过 item_id 未找到，尝试直接查询 arc_file_content: id={}", id);
+            content = archiveFileContentService.getFileContentById(id, operatorId);
+        }
+
+        if (content == null) {
+            log.warn("未找到凭证分录数据: id={}", id);
+            return ResponseEntity.ok(com.nexusarchive.common.result.Result.success(null));
+        }
+
+        VoucherDataDto dto = new VoucherDataDto();
+        dto.setFileId(content.getId());
+        dto.setSourceData(content.getSourceData());
+        dto.setVoucherWord(content.getVoucherWord());
+        dto.setSummary(content.getSummary());
+        dto.setDocDate(content.getDocDate() != null ? content.getDocDate().toString() : null);
+        dto.setCreator(content.getCreator());
+
+        log.info("返回凭证分录数据: fileId={}, hasSourceData={}", 
+                 content.getId(), content.getSourceData() != null);
+        return ResponseEntity.ok(com.nexusarchive.common.result.Result.success(dto));
+    }
+
+    /**
+     * 凭证分录数据 DTO
+     */
+    @lombok.Data
+    public static class VoucherDataDto {
+        private String fileId;
+        private String sourceData;
+        private String voucherWord;
+        private String summary;
+        private String docDate;
+        private String creator;
+    }
+
     private String determineContentType(String fileType, String fileName) {
         if (fileType != null) {
             switch (fileType.toLowerCase()) {

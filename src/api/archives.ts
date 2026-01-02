@@ -89,8 +89,38 @@ export const archivesApi = {
             console.error('导出 AIP 包失败:', error);
             throw error;
         }
+    },
+
+    /**
+     * 获取档案关联的凭证分录数据
+     * 用于凭证预览标签页
+     * @param archiveId 档案ID
+     */
+    getVoucherData: async (archiveId: string): Promise<VoucherDataResponse | null> => {
+        try {
+            const response = await client.get<ApiResponse<VoucherDataResponse>>(`/archive/${archiveId}/voucher-data`);
+            if (response.data.code === 200 && response.data.data) {
+                return response.data.data;
+            }
+            return null;
+        } catch (error) {
+            console.error('获取凭证分录数据失败:', error);
+            return null;
+        }
     }
 };
+
+/**
+ * 凭证分录数据响应
+ */
+export interface VoucherDataResponse {
+    fileId: string;
+    sourceData: string | null;
+    voucherWord: string | null;
+    summary: string | null;
+    docDate: string | null;
+    creator: string | null;
+}
 
 export const archivesApiEx = {
     getRecent: async (limit: number = 5) => {

@@ -34,6 +34,10 @@ export interface VoucherDTO {
   auditor?: string;
   poster?: string;
   entries?: VoucherEntryDTO[];
+  // Additional optional fields for metadata display
+  attachments?: AttachmentDTO[];
+  createdTime?: string;
+  id?: string; // Alias for voucherId in some contexts
 }
 
 interface VoucherPreviewTabsProps {
@@ -49,6 +53,10 @@ export const VoucherPreviewTabs: React.FC<VoucherPreviewTabsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
 
+  const handleTabChange = (key: string) => {
+    setActiveTab(key as 'voucher' | 'attachments');
+  };
+
   const tabItems = [
     {
       key: 'voucher',
@@ -63,10 +71,10 @@ export const VoucherPreviewTabs: React.FC<VoucherPreviewTabsProps> = ({
   ];
 
   return (
-    <div className="h-full bg-white">
+    <div className="h-full w-full bg-white">
       <Tabs
         activeKey={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
         items={tabItems}
         className="voucher-preview-tabs"
       />

@@ -70,7 +70,9 @@ services:
       # 开发配置
       VIRUS_SCAN_TYPE: mock
       TIMESTAMP_FALLBACK: "true"
-      SCHEMA_VALIDATION_ENABLED: "false"
+      # Schema 验证：开发环境启用，发现不一致时阻止启动
+      SCHEMA_VALIDATION_ENABLED: "true"
+      SCHEMA_VALIDATION_FAIL: "false"  # 开发环境只警告，不完全阻止（方便调试）
       # CORS (前端开发服务器)
       APP_SECURITY_CORS_ALLOWED_ORIGINS: http://localhost:15175,http://127.0.0.1:15175
       # YonSuite (可选)

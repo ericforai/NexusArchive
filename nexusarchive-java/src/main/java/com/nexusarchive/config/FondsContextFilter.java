@@ -33,6 +33,19 @@ public class FondsContextFilter extends OncePerRequestFilter {
     private final FondsScopeService fondsScopeService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        // 排除公开接口，这些接口不需要全宗上下文
+        if (path.startsWith("/api/auth/") || 
+            path.startsWith("/api/health") ||
+            path.startsWith("/error") ||
+            path.equals("/api/")) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -78,7 +91,9 @@ public class FondsContextFilter extends OncePerRequestFilter {
             return allowedFonds.contains(trimmed) ? trimmed : null;
         }
 
-        if (allowedFonds.size() == 1) {
+        // 如果没有指定全宗号，默认使用第一个全宗（避免登录后跳转失败）
+        // 前端可以通过 X-Fonds-No 请求头指定具体使用的全宗号
+        if (!allowedFonds.isEmpty()) {
             return allowedFonds.get(0);
         }
 

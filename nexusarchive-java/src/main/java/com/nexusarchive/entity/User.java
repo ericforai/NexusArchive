@@ -65,7 +65,9 @@ public class User implements Serializable {
     
     /**
      * 组织ID（已替换 departmentId）
+     * 注意：数据库暂无此列，标记为不存在
      */
+    @TableField(exist = false)
     private String organizationId;
     
     /**

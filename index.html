@@ -150,6 +150,9 @@
       background: #94a3b8;
     }
   </style>
+  <!--
+  [DISABLED] importmap 已禁用 - 它会导致 React 版本冲突 (useContext null error)
+  Vite 开发模式使用 node_modules 中的 React，不需要 CDN importmap
   <script type="importmap">
 {
   "imports": {
@@ -162,12 +165,19 @@
   }
 }
 </script>
-  <link rel="stylesheet" href="/src/index.css">
+  -->
+  <link rel="stylesheet" href="/src/index.css?v=7">
 </head>
 
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-primary-100 selection:text-primary-900">
   <div id="root"></div>
-  <script type="module" src="/src/index.tsx"></script>
+  <script>
+    // 强制刷新检查 - 应该始终执行
+    console.log('%c[HTML] INDEX.HTML v7 LOADED', 'color: #dc2626; background: #fef3c7; font-size: 24px; font-weight: bold; padding: 10px;');
+    console.log('%c[HTML] 凭证预览标签应该有红色 [NEW v7] 徽章', 'color: #dc2626; font-size: 16px; font-weight: bold;');
+    window.HTML_VERSION = 'v7-20260102-FINAL';
+  </script>
+  <script type="module" src="/src/index.tsx?v=7"></script>
 </body>
 
 </html>

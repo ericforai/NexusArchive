@@ -84,4 +84,9 @@ public class PoolItemDto {
      * 业务日期 (单据日期)
      */
     private String docDate;
+
+    /**
+     * 原始JSON数据（用于前端分录展示）
+     */
+    private String sourceData;
 }

@@ -1,0 +1,240 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link [ref=e6] [cursor=pointer]:
+          - /url: /system
+          - img [ref=e7]
+        - generic [ref=e9]:
+          - heading "DigiVoucher" [level=1] [ref=e10]
+          - paragraph [ref=e11]: 电子会计档案
+      - navigation [ref=e12]:
+        - link "档案门户" [ref=e14] [cursor=pointer]:
+          - /url: /system
+          - generic [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e21]: 档案门户
+        - link "全景视图" [ref=e24] [cursor=pointer]:
+          - /url: /system/panorama
+          - generic [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e28]: 全景视图
+        - button "预归档库" [ref=e30] [cursor=pointer]:
+          - generic [ref=e31]:
+            - img [ref=e32]
+            - generic [ref=e36]: 预归档库
+          - img [ref=e38]
+        - button "资料收集" [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]:
+            - img [ref=e43]
+            - generic [ref=e47]: 资料收集
+          - img [ref=e49]
+        - button "会计档案" [ref=e52] [cursor=pointer]:
+          - generic [ref=e53]:
+            - img [ref=e54]
+            - generic [ref=e57]: 会计档案
+          - img [ref=e59]
+        - button "档案作业" [ref=e62] [cursor=pointer]:
+          - generic [ref=e63]:
+            - img [ref=e64]
+            - generic [ref=e67]: 档案作业
+          - img [ref=e69]
+        - button "档案利用" [ref=e72] [cursor=pointer]:
+          - generic [ref=e73]:
+            - img [ref=e74]
+            - generic [ref=e77]: 档案利用
+          - img [ref=e79]
+        - link "数据统计" [ref=e82] [cursor=pointer]:
+          - /url: /system/stats
+          - generic [ref=e83]:
+            - img [ref=e84]
+            - generic [ref=e86]: 数据统计
+        - link "系统设置" [ref=e88] [cursor=pointer]:
+          - /url: /system/settings
+          - generic [ref=e89]:
+            - img [ref=e90]
+            - generic [ref=e93]: 系统设置
+      - generic [ref=e94]:
+        - button "访问产品官网" [ref=e95] [cursor=pointer]:
+          - generic [ref=e96]: 访问产品官网
+        - button "User 管理员 系统维护部" [ref=e97] [cursor=pointer]:
+          - img "User" [ref=e98]
+          - generic [ref=e99]:
+            - paragraph [ref=e100]: 管理员
+            - paragraph [ref=e101]: 系统维护部
+        - button [ref=e102] [cursor=pointer]:
+          - img [ref=e103]
+    - generic [ref=e106]:
+      - banner [ref=e107]:
+        - button "演示全宗" [ref=e110] [cursor=pointer]:
+          - img [ref=e111]
+          - generic [ref=e115]: 演示全宗
+          - img [ref=e116]
+        - generic [ref=e119]:
+          - generic:
+            - img
+          - 'textbox "全库检索: 凭证号、摘要、金额、关联单据..." [ref=e120]'
+          - generic [ref=e122]: ⌘K
+        - generic [ref=e125] [cursor=pointer]:
+          - generic [ref=e126]:
+            - paragraph [ref=e127]: 企业管理员
+            - paragraph [ref=e128]: 集团财务部
+          - img "Profile" [ref=e129]
+      - main [ref=e130]:
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - heading "工作台概览" [level=2] [ref=e134]
+              - paragraph [ref=e135]: 欢迎回到 DigiVoucher，系统运行正常，四性检测实时监控中。
+            - button "快速归档" [ref=e137] [cursor=pointer]:
+              - img [ref=e138]
+              - text: 快速归档
+          - generic [ref=e142]:
+            - generic [ref=e143] [cursor=pointer]:
+              - img [ref=e147]
+              - generic [ref=e150]:
+                - heading "87" [level=3] [ref=e151]
+                - paragraph [ref=e152]: 总归档量
+            - generic [ref=e153] [cursor=pointer]:
+              - img [ref=e157]
+              - generic [ref=e159]:
+                - heading "357.5 KB" [level=3] [ref=e160]
+                - paragraph [ref=e161]: 存储占用
+            - generic [ref=e162] [cursor=pointer]:
+              - img [ref=e166]
+              - generic [ref=e168]:
+                - heading "0" [level=3] [ref=e169]
+                - paragraph [ref=e170]: 待处理任务
+            - generic [ref=e171] [cursor=pointer]:
+              - img [ref=e175]
+              - generic [ref=e177]:
+                - heading "0" [level=3] [ref=e178]
+                - paragraph [ref=e179]: 今日入库
+          - generic [ref=e180]:
+            - generic [ref=e181]:
+              - generic [ref=e182]:
+                - heading "归档量趋势 & 智能化分析" [level=3] [ref=e185]
+                - combobox [ref=e186] [cursor=pointer]:
+                  - option "最近 6 个月" [selected]
+                  - option "最近 1 年"
+              - application [ref=e191]:
+                - generic [ref=e200]:
+                  - generic [ref=e201]:
+                    - generic [ref=e203]: 2025-12-06
+                    - generic [ref=e205]: 2025-12-11
+                    - generic [ref=e207]: 2025-12-16
+                    - generic [ref=e209]: 2025-12-21
+                    - generic [ref=e211]: 2025-12-26
+                    - generic [ref=e213]: 2026-01-02
+                  - generic [ref=e214]:
+                    - generic [ref=e216]: "0"
+                    - generic [ref=e218]: "20"
+                    - generic [ref=e220]: "40"
+                    - generic [ref=e222]: "60"
+                    - generic [ref=e224]: "80"
+            - generic [ref=e225]:
+              - generic [ref=e226]:
+                - heading "待办与通知" [level=3] [ref=e227]:
+                  - img [ref=e228]
+                  - text: 待办与通知
+                - button "刷新通知" [ref=e231] [cursor=pointer]
+              - generic [ref=e232]:
+                - generic [ref=e236] [cursor=pointer]:
+                  - paragraph [ref=e237]: "新归档: YS-20251231-837009A7 - 8fff27fa69dbe0f7ea1d807a5aee6542f9dd25aeb3ba58a7a84807b3b2e4d86b"
+                  - paragraph [ref=e238]: 2025-12-31 13:21:12
+                - generic [ref=e242] [cursor=pointer]:
+                  - paragraph [ref=e243]: "新归档: YS-20251231-FDDDB099 - 95db9629e869552a7957b292b8428803"
+                  - paragraph [ref=e244]: 2025-12-31 13:21:12
+                - generic [ref=e248] [cursor=pointer]:
+                  - paragraph [ref=e249]: "新归档: YS-20251231-B5D26C1F - 62c22593ea0b6718e7c8e5807832a9c9221ade5c326726aed404b074170de54c"
+                  - paragraph [ref=e250]: 2025-12-31 13:21:12
+              - button "查看全部通知（刷新）" [ref=e252] [cursor=pointer]
+          - generic [ref=e253]:
+            - generic [ref=e254]:
+              - heading "最近归档记录" [level=3] [ref=e255]
+              - button [ref=e256] [cursor=pointer]:
+                - img [ref=e257]
+            - table [ref=e262]:
+              - rowgroup [ref=e263]:
+                - row "档案编号 名称/摘要 类别 金额 业务日期 创建时间 状态 操作" [ref=e264]:
+                  - columnheader "档案编号" [ref=e265]
+                  - columnheader "名称/摘要" [ref=e266]
+                  - columnheader "类别" [ref=e267]
+                  - columnheader "金额" [ref=e268]
+                  - columnheader "业务日期" [ref=e269]
+                  - columnheader "创建时间" [ref=e270]
+                  - columnheader "状态" [ref=e271]
+                  - columnheader "操作" [ref=e272]
+              - rowgroup [ref=e273]:
+                - row "YS-20251231-B5D26C1F 62c22593ea0b6718e7c8e5807832a9c9221ade5c326726aed404b074170de54c AC01 ¥30 202589 -- MATCHED" [ref=e274] [cursor=pointer]:
+                  - cell "YS-20251231-B5D26C1F" [ref=e275]
+                  - cell "62c22593ea0b6718e7c8e5807832a9c9221ade5c326726aed404b074170de54c" [ref=e276]
+                  - cell "AC01" [ref=e277]:
+                    - generic [ref=e278]: AC01
+                  - cell "¥30" [ref=e279]
+                  - cell "202589" [ref=e280]
+                  - cell "--" [ref=e281]
+                  - cell "MATCHED" [ref=e282]:
+                    - generic [ref=e283]: MATCHED
+                  - cell [ref=e284]:
+                    - button [ref=e285]:
+                      - img [ref=e286]
+                - row "YS-20251231-4721CBE0 95db9629e869552a7957b292b8428803 AC01 ¥50 202589 -- MATCHED" [ref=e290] [cursor=pointer]:
+                  - cell "YS-20251231-4721CBE0" [ref=e291]
+                  - cell "95db9629e869552a7957b292b8428803" [ref=e292]
+                  - cell "AC01" [ref=e293]:
+                    - generic [ref=e294]: AC01
+                  - cell "¥50" [ref=e295]
+                  - cell "202589" [ref=e296]
+                  - cell "--" [ref=e297]
+                  - cell "MATCHED" [ref=e298]:
+                    - generic [ref=e299]: MATCHED
+                  - cell [ref=e300]:
+                    - button [ref=e301]:
+                      - img [ref=e302]
+                - row "YS-20251231-FDDDB099 95db9629e869552a7957b292b8428803 AC01 ¥150 202581 -- MATCHED" [ref=e306] [cursor=pointer]:
+                  - cell "YS-20251231-FDDDB099" [ref=e307]
+                  - cell "95db9629e869552a7957b292b8428803" [ref=e308]
+                  - cell "AC01" [ref=e309]:
+                    - generic [ref=e310]: AC01
+                  - cell "¥150" [ref=e311]
+                  - cell "202581" [ref=e312]
+                  - cell "--" [ref=e313]
+                  - cell "MATCHED" [ref=e314]:
+                    - generic [ref=e315]: MATCHED
+                  - cell [ref=e316]:
+                    - button [ref=e317]:
+                      - img [ref=e318]
+                - row "YS-20251231-837009A7 8fff27fa69dbe0f7ea1d807a5aee6542f9dd25aeb3ba58a7a84807b3b2e4d86b AC01 ¥150 202581 -- MATCHED" [ref=e322] [cursor=pointer]:
+                  - cell "YS-20251231-837009A7" [ref=e323]
+                  - cell "8fff27fa69dbe0f7ea1d807a5aee6542f9dd25aeb3ba58a7a84807b3b2e4d86b" [ref=e324]
+                  - cell "AC01" [ref=e325]:
+                    - generic [ref=e326]: AC01
+                  - cell "¥150" [ref=e327]
+                  - cell "202581" [ref=e328]
+                  - cell "--" [ref=e329]
+                  - cell "MATCHED" [ref=e330]:
+                    - generic [ref=e331]: MATCHED
+                  - cell [ref=e332]:
+                    - button [ref=e333]:
+                      - img [ref=e334]
+                - row "BR-GROUP-2024-30Y-FIN-AC01-3001 年度审计服务费 AC01 ¥88,000 20241210 2025,12,28,9,3,35,17527000 已归档" [ref=e338] [cursor=pointer]:
+                  - cell "BR-GROUP-2024-30Y-FIN-AC01-3001" [ref=e339]
+                  - cell "年度审计服务费" [ref=e340]
+                  - cell "AC01" [ref=e341]:
+                    - generic [ref=e342]: AC01
+                  - cell "¥88,000" [ref=e343]
+                  - cell "20241210" [ref=e344]
+                  - cell "2025,12,28,9,3,35,17527000" [ref=e345]
+                  - cell "已归档" [ref=e346]:
+                    - generic [ref=e347]:
+                      - img [ref=e348]
+                      - text: 已归档
+                  - cell [ref=e351]:
+                    - button [ref=e352]:
+                      - img [ref=e353]
+  - generic [ref=e357]: "0"
+```

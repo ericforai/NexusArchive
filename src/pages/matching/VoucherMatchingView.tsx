@@ -6,13 +6,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Card, Button, Tag, Table, Space, Alert, Progress,
-    Modal, message, Spin, Empty
+    Modal, message, Spin, Empty, Collapse
 } from 'antd';
 import {
     CheckCircleOutlined, ExclamationCircleOutlined,
-    ClockCircleOutlined, SyncOutlined, FileSearchOutlined
+    ClockCircleOutlined, SyncOutlined, FileSearchOutlined, FileTextOutlined
 } from '@ant-design/icons';
 import { matchingApi, MatchResult, LinkResult, ScoredCandidate } from '../../api/matching';
+import { VoucherPreview, VoucherDTO } from '../../components/voucher';
+import { archivesApi } from '../../api/archives';
 import './VoucherMatchingView.css';
 
 interface VoucherMatchingViewProps {
@@ -33,6 +35,7 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
         visible: boolean;
         link: LinkResult | null;
     }>({ visible: false, link: null });
+    const [voucherData, setVoucherData] = useState<VoucherDTO | null>(null);
 
     // 用于跟踪组件是否已卸载，防止内存泄漏
     const mountedRef = useRef(true);
@@ -73,6 +76,56 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                 setLoading(false);
             }
         }
+    }, [voucherId]);
+
+    // 加载凭证数据
+    useEffect(() => {
+        if (!voucherId) return;
+
+        const loadVoucherData = async () => {
+            try {
+                const res = await archivesApi.getArchiveById(voucherId);
+                if (res.code === 200 && res.data) {
+                    const archive = res.data as any;
+                    let entries: any[] = [];
+
+                    if (archive.customMetadata) {
+                        try {
+                            const parsed = JSON.parse(archive.customMetadata);
+                            if (Array.isArray(parsed)) {
+                                entries = parsed.map((entry: any, idx: number) => ({
+                                    lineNo: idx + 1,
+                                    summary: entry.description || entry.summary || '',
+                                    accountCode: entry.accsubject?.code || '',
+                                    accountName: entry.accsubject?.name || '',
+                                    debit: entry.debit_org || 0,
+                                    credit: entry.credit_org || 0,
+                                }));
+                            }
+                        } catch (e) {
+                            console.warn('Failed to parse customMetadata:', e);
+                        }
+                    }
+
+                    setVoucherData({
+                        voucherId: archive.id,
+                        voucherNo: archive.archiveCode || archive.id,
+                        voucherWord: '记',
+                        voucherDate: archive.docDate || archive.createdTime || '',
+                        orgName: archive.orgName || '',
+                        summary: archive.title || archive.summary || '',
+                        debitTotal: entries.reduce((sum, e) => sum + (e.debit || 0), 0) || archive.amount || 0,
+                        creditTotal: entries.reduce((sum, e) => sum + (e.credit || 0), 0) || archive.amount || 0,
+                        creator: archive.creator || '',
+                        entries,
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load voucher data:', error);
+            }
+        };
+
+        loadVoucherData();
     }, [voucherId]);
 
     useEffect(() => {
@@ -308,7 +361,33 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
     }
 
     return (
-        <div className="voucher-matching-view">
+        <div className="voucher-matching-view space-y-4">
+            {/* Voucher Preview Panel */}
+            {voucherData && (
+                <Collapse
+                    defaultActiveKey={[]}
+                    items={[
+                        {
+                            key: 'voucher-preview',
+                            label: (
+                                <Space>
+                                    <FileTextOutlined />
+                                    <span>凭证预览</span>
+                                    <Tag color="blue">{voucherData.voucherNo}</Tag>
+                                </Space>
+                            ),
+                            children: (
+                                <div className="bg-white p-4">
+                                    <VoucherPreview data={voucherData} layout="vertical" size="compact" />
+                                </div>
+                            ),
+                        },
+                    ]}
+                    bordered
+                    className="voucher-preview-collapse"
+                />
+            )}
+
             <Card
                 title={
                     <Space>

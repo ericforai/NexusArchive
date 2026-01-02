@@ -77,3 +77,5 @@ export const VoucherPreviewDemo: React.FC = () => {
     </div>
   );
 };
+
+export default VoucherPreviewDemo;

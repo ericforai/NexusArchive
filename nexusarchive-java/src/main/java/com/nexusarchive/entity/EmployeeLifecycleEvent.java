@@ -44,12 +44,16 @@ public class EmployeeLifecycleEvent {
 
     /**
      * 组织ID（入职/调岗时使用）
+     * 数据库列名：previous_dept_id
      */
+    @TableField(value = "previous_dept_id")
     private String organizationId;
 
     /**
      * 目标组织ID（调岗时使用）
+     * 数据库列名：new_dept_id
      */
+    @TableField(value = "new_dept_id")
     private String toOrganizationId;
 
     /**

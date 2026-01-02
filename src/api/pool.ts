@@ -27,6 +27,8 @@ export interface PoolItem {
   summary?: string;
   /** 业务日期 */
   docDate?: string;
+  /** 原始JSON数据（用于分录展示） */
+  sourceData?: string;
 }
 
 /**
