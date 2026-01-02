@@ -121,9 +121,32 @@ encryption:
 ## Timeline
 
 ### Immediate (Before Production)
-- [ ] Document limitations and add warning in UI
-- [ ] Add security warning banner in MFA setup page
-- [ ] Disable MFA feature in production configuration
+- [x] ~~Document limitations and add warning in UI~~
+- [x] ~~Add security warning banner in MFA setup page~~
+- [x] **Disable MFA feature in production configuration** ✅ **COMPLETED**
+- [ ] Add warning banner in frontend UI when MFA is disabled
+
+### Status Update (2026-01-02)
+
+**Feature Flag Added**: MFA functionality is now protected by a configuration flag (`mfa.enabled=false` by default).
+
+**Configuration**:
+```yaml
+# application.yml
+mfa:
+  enabled: ${MFA_ENABLED:false}  # Default: false (disabled)
+```
+
+**Behavior**:
+- When `mfa.enabled=false`: All MFA operations (setup, enable, verify) throw `IllegalStateException`
+- When `mfa.enabled=true`: MFA operations proceed (but TODO items must still be completed)
+
+**To Enable MFA** (after implementing TODO items):
+1. Set environment variable: `export MFA_ENABLED=true`
+2. Or update `application.yml`: `mfa.enabled: true`
+3. Restart the application
+
+**Security**: This feature flag prevents accidental MFA usage in production while TODO items remain unresolved.
 
 ### Sprint 1: TOTP Implementation
 - [ ] Add `googleauth` dependency
