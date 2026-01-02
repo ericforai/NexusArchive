@@ -35,6 +35,13 @@ Object.defineProperty(window, 'matchMedia', {
     })),
 });
 
+// Mock ResizeObserver (required for Ant Design components)
+global.ResizeObserver = class ResizeObserver {
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+};
+
 // Mock console.log/warn to reduce noise in tests
 vi.spyOn(console, 'log').mockImplementation(() => { });
 vi.spyOn(console, 'warn').mockImplementation(() => { });
