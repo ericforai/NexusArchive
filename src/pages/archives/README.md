@@ -13,7 +13,8 @@
 | --- | --- |
 | `ArchiveListPage.tsx` | 档案列表页面容器 |
 | `ArchiveListView.tsx` | 档案列表视图 |
-| `ArchiveDetailDrawer.tsx` | 档案详情抽屉（2026-01-02: 替代 ArchiveDetailModal）|
+| `ArchiveDetailDrawer.tsx` | 档案详情抽屉（2026-01-02: 响应式 Drawer UI）|
+| `ArchiveDetailPage.tsx` | 档案详情全页面（2026-01-02: 展开-to-新页功能）|
 | `AddRecordModal.tsx` | 新增档案弹窗 |
 | `ComplianceModal.tsx` | 合规检查弹窗 |
 | `ComplianceReportView.tsx` | 合规报告页面 |
@@ -22,6 +23,13 @@
 | `MatchPreviewModal.tsx` | 匹配预览弹窗 |
 | `OriginalVoucherListView.tsx` | 原始凭证列表视图 |
 | `RuleConfigModal.tsx` | 规则配置弹窗 |
+
+## 2026-01-02 更新
+
+- ✅ 模态框 → 抽屉重构（Drawer 替代 Modal）
+- ✅ 响应式布局（50vw/70vw/100vw 断点）
+- ✅ 路由变更自动关闭
+- ✅ 展开-to-新页功能
 
 ## 架构约束
 
