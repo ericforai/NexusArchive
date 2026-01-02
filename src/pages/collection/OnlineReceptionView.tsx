@@ -190,6 +190,7 @@ export const OnlineReceptionView: React.FC = () => {
             description: newChannel.description,
             apiEndpoint: null,
             accbookCode: null,
+            accbookCodes: null,
             lastSyncMsg: null
         };
         // Note: This local add is just for UI demo of "Add Channel" which might not be fully backed by API yet

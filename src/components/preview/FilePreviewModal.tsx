@@ -12,7 +12,7 @@ export interface FilePreviewModalProps extends Omit<SmartFilePreviewProps, 'clas
   /** 关闭回调 */
   onClose: () => void;
   /** Modal 最大宽度 */
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | 'full';
 }
 
 /**

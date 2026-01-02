@@ -1,7 +1,7 @@
 // src/components/voucher/VoucherMetadata.tsx
 import React from 'react';
 import { formatCurrency, formatDate } from './styles';
-import type { VoucherDTO } from './VoucherPreviewTabs';
+import type { VoucherDTO } from './types';
 
 interface MetadataField {
   label: string;

@@ -174,7 +174,7 @@ export const FondsManagement: React.FC = () => {
                             </tr>
                         ) : (
                             fondsList.map((item) => {
-                                const entity = entityList.find(e => e.id === (item as any).entityId);
+                                const entity = orgList.find((e: Org) => e.id === (item as any).entityId);
                                 return (
                                 <tr key={item.id} className="hover:bg-slate-50 group transition-colors">
                                     <td className="px-4 py-3 font-mono text-primary-600 font-medium">{item.fondsCode}</td>

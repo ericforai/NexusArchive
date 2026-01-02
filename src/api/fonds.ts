@@ -10,11 +10,14 @@ export interface BasFonds {
     id: string;
     fondsCode: string;
     fondsName: string;
+    fondsNo?: string;  // 全宗号
     companyName?: string;
     description?: string;
     createdBy?: string;
     createdTime?: string;
     updatedTime?: string;
+    // 兼容属性
+    entityId?: string;  // 实体ID (与id相同)
 }
 
 export const fondsApi = {

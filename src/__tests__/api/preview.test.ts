@@ -98,7 +98,9 @@ describe('previewApi', () => {
         });
 
         expect(result.mode).toBe('presigned');
-        expect(result.presignedUrl).toBe('https://example.com/presigned');
+        if (result.mode === 'presigned') {
+            expect(result.presignedUrl).toBe('https://example.com/presigned');
+        }
         expect(result.traceId).toBe('trace-456');
         expect(result.watermark?.text).toBe('user-2 2025-01-02 trace-456');
     });

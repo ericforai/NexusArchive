@@ -2,8 +2,8 @@
 import React from 'react';
 import { VoucherMetadata } from './VoucherMetadata';
 import { VoucherPreviewTabs } from './VoucherPreviewTabs';
-import type { VoucherDTO } from './VoucherPreviewTabs';
-import type { AttachmentDTO } from './VoucherPreviewTabs';
+import type { VoucherDTO } from './types';
+import type { AttachmentDTO } from './types';
 
 type LayoutType = 'horizontal' | 'vertical';
 type SizeType = 'compact' | 'normal' | 'large';

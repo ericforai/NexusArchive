@@ -20,7 +20,7 @@ export interface BaseModalProps {
   /** 自定义 footer */
   footer?: ReactNode;
   /** 最大宽度 */
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | 'full';
   /** 是否显示关闭按钮 */
   showCloseButton?: boolean;
   /** 点击 backdrop 是否关闭 */
@@ -35,6 +35,7 @@ const maxWidthClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-xl',
   '2xl': 'max-w-2xl',
+  '4xl': 'max-w-4xl',
   full: 'max-w-full',
 };
 

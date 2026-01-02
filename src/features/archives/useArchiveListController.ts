@@ -436,7 +436,10 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
 
     const pool: ControllerPool = {
         statusFilter: poolStatusFilter,
-        setStatusFilter: setPoolStatusFilter,
+        setStatusFilter: (v: PoolStatusFilter) => {
+            console.log('[Controller] 点击筛选按钮，设置 statusFilter:', v, '(原值:', poolStatusFilter, ')');
+            setPoolStatusFilter(v);
+        },
         statusStats: poolStatusStats,
         refreshStats: refreshPoolStats,
     };
@@ -457,16 +460,19 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
     };
 
     // ===== 数据加载 =====
-    const loadPoolData = useCallback(async (pageNum = currentPage) => {
+    const loadPoolData = useCallback(async (pageNum = currentPage, filterOverride?: PoolStatusFilter) => {
         setIsLoading(true);
         setErrorMessage(null);
         setSelectedIds([]);
         try {
             const poolItems = await poolApi.getList();
+            // 使用传入的筛选值或当前状态值
+            const activeFilter = filterOverride !== undefined ? filterOverride : poolStatusFilter;
+            console.log('[loadPoolData] 筛选参数:', { filterOverride, poolStatusFilter, activeFilter, totalItems: poolItems.length });
             const filtered = poolItems.filter((item) => {
                 const itemStatus = (item as any).status || 'PENDING_CHECK';
-                if (poolStatusFilter && poolStatusFilter !== 'all') {
-                    if (itemStatus !== poolStatusFilter) return false;
+                if (activeFilter && activeFilter !== 'all') {
+                    if (itemStatus !== activeFilter) return false;
                 } else if (statusFilter) {
                     if (itemStatus !== statusFilter) return false;
                 }
@@ -475,6 +481,7 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
                     String(val || '').toLowerCase().includes(searchTerm.toLowerCase())
                 );
             });
+            console.log('[loadPoolData] 筛选后数据:', filtered.length, '条');
             const total = filtered.length;
             const start = (pageNum - 1) * pageInfo.pageSize;
             const paged = filtered.slice(start, start + pageInfo.pageSize);
@@ -528,34 +535,83 @@ export function useArchiveListController(options: ControllerOptions): ArchiveLis
         }
     }, [currentPage, pageInfo.pageSize, searchTerm, statusFilter, mode.defaultStatus, mode.categoryCode, orgFilter, subTitle, subTypeFilter, showToast]);
 
-    const loadCurrentView = useCallback((pageNum = currentPage) => {
+    const loadCurrentView = useCallback((pageNum = currentPage, poolFilter?: PoolStatusFilter) => {
         if (isPoolView) {
-            return loadPoolData(pageNum);
+            return loadPoolData(pageNum, poolFilter);
         }
         return loadArchiveList(pageNum);
     }, [isPoolView, loadPoolData, loadArchiveList, currentPage]);
 
     // 依赖变化时重置分页并加载
     const prevDepsRef = useRef({ subTitle, searchTerm, statusFilter, orgFilter, subTypeFilter, poolStatusFilter });
+    const isInitialLoadRef = useRef(true);
 
+    // 初始加载
     useEffect(() => {
+        if (isInitialLoadRef.current) {
+            isInitialLoadRef.current = false;
+            console.log('[useEffect:初始加载] 首次加载数据');
+            if (isPoolView) {
+                loadPoolData(1, poolStatusFilter);
+            } else {
+                loadArchiveList(1);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // 专门监听 poolStatusFilter 变化（电子凭证池筛选）
+    useEffect(() => {
+        if (isInitialLoadRef.current) return; // 跳过初始加载
+        const prevFilter = prevDepsRef.current.poolStatusFilter;
+        console.log('[useEffect:poolStatusFilter] 检测到变化:', prevFilter, '->', poolStatusFilter);
+        if (prevFilter !== poolStatusFilter) {
+            prevDepsRef.current = { ...prevDepsRef.current, poolStatusFilter };
+            if (isPoolView) {
+                console.log('[useEffect:poolStatusFilter] 触发 loadPoolData');
+                setCurrentPage(1);
+                loadPoolData(1, poolStatusFilter);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [poolStatusFilter, isPoolView]);
+
+    // 其他筛选条件变化监听
+    useEffect(() => {
+        if (isInitialLoadRef.current) return; // 跳过初始加载
         const prevDeps = prevDepsRef.current;
         const depsChanged =
             prevDeps.subTitle !== subTitle ||
             prevDeps.searchTerm !== searchTerm ||
             prevDeps.statusFilter !== statusFilter ||
             prevDeps.orgFilter !== orgFilter ||
-            prevDeps.subTypeFilter !== subTypeFilter ||
-            prevDeps.poolStatusFilter !== poolStatusFilter;
+            prevDeps.subTypeFilter !== subTypeFilter;
 
         if (depsChanged) {
-            prevDepsRef.current = { subTitle, searchTerm, statusFilter, orgFilter, subTypeFilter, poolStatusFilter };
+            prevDepsRef.current = { ...prevDepsRef.current, subTitle, searchTerm, statusFilter, orgFilter, subTypeFilter };
             setCurrentPage(1);
-            loadCurrentView(1);
-        } else {
-            loadCurrentView(currentPage);
+            if (isPoolView) {
+                loadPoolData(1, poolStatusFilter);
+            } else {
+                loadArchiveList(1);
+            }
         }
-    }, [subTitle, searchTerm, statusFilter, orgFilter, subTypeFilter, poolStatusFilter, currentPage, loadCurrentView]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [subTitle, searchTerm, statusFilter, orgFilter, subTypeFilter, isPoolView]);
+
+    // 页码变化监听（仅用户手动翻页）
+    const isPageChangeFromFilterRef = useRef(false);
+    useEffect(() => {
+        if (isInitialLoadRef.current) return;
+        // 如果页码变化是由筛选条件变更导致的，跳过（已经在筛选 useEffect 中处理过）
+        if (isPageChangeFromFilterRef.current) {
+            isPageChangeFromFilterRef.current = false;
+            return;
+        }
+        console.log('[useEffect:currentPage] 页码变化:', currentPage);
+        loadCurrentView(currentPage, poolStatusFilter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
 
     // ===== Actions =====
     const exportCsv = useCallback(() => {

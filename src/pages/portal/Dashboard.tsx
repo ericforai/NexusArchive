@@ -359,8 +359,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                       timeStr = time;
                     } else if (typeof time === 'number') {
                       timeStr = new Date(time).toISOString();
-                    } else if (time instanceof Date) {
-                      timeStr = time.toISOString();
+                    } else if ((time as any) instanceof Date) {
+                      timeStr = (time as Date).toISOString();
                     } else {
                       timeStr = String(time);
                     }

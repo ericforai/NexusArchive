@@ -6,7 +6,7 @@ export { OriginalDocumentPreview } from './OriginalDocumentPreview';
 export { VoucherPreview } from './VoucherPreview';
 
 // Export types
-export type { VoucherDTO, VoucherEntryDTO, AttachmentDTO } from './VoucherPreviewTabs';
+export type { VoucherDTO, VoucherEntryDTO, AttachmentDTO } from './types';
 
 // Export utility functions and styles
 export { voucherTableStyles, formatCurrency, formatDate, numberToChinese } from './styles';

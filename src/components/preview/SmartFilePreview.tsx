@@ -61,7 +61,7 @@ export function SmartFilePreview({
   const [currentPage, setCurrentPage] = useState(1);
 
   // 使用 useFilePreview 获取数据
-  const { blobUrl, loading, error, retry } = useFilePreview({
+  const { blobUrl, presignedUrl, loading, error, retry } = useFilePreview({
     ...previewParams,
     autoLoad: true,
   });
@@ -138,7 +138,7 @@ export function SmartFilePreview({
     }
 
     // No content
-    if (!blobUrl && !previewParams.presignedUrl) {
+    if (!blobUrl && !presignedUrl) {
       return (
         <div className="flex items-center justify-center h-full text-slate-500">
           <p>暂无预览内容</p>
@@ -146,7 +146,7 @@ export function SmartFilePreview({
       );
     }
 
-    const url = blobUrl || previewParams.presignedUrl || '';
+    const url = blobUrl || presignedUrl || '';
 
     // 根据文件类型渲染
     if (fileType === 'pdf') {

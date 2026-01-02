@@ -34,7 +34,6 @@ const PreviewWatermarkTestView: React.FC = () => {
                 onClose={() => setOpen(false)}
                 archiveId="ARCH-TEST-001"
                 fileId="FILE-TEST-001"
-                fileName="preview.pdf"
             />
         </div>
     );

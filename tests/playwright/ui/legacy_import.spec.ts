@@ -25,7 +25,7 @@ test.describe('历史数据导入 @P0', () => {
     
     // 检查页面内容是否包含相关文本
     const pageContent = await page.textContent('body').catch(() => '');
-    if (pageContent.includes('导入') || pageContent.includes('历史')) {
+    if (pageContent && (pageContent.includes('导入') || pageContent.includes('历史'))) {
       expect(true).toBeTruthy();
     } else {
       // 即使找不到文本，页面已加载也算通过
