@@ -17,6 +17,17 @@ if [ -f "package.json" ]; then
     exit 1
   }
   echo "  ✅ Frontend architecture check passed"
+
+  # 前端模块清单验证
+  echo "  → Validating frontend module manifest..."
+  npm run modules:validate --silent || {
+    echo ""
+    echo "❌ Frontend module manifest validation failed!"
+    echo "   Run 'npm run modules:validate' to see the inconsistencies."
+    echo "   Run 'npm run modules:update' to auto-update the manifest."
+    exit 1
+  }
+  echo "  ✅ Frontend module manifest validated"
 fi
 
 # 后端架构检查（如果在 Java 项目目录中）
