@@ -1,8 +1,8 @@
 # Module Manifest（模块清单）
 
 > 本清单是模块边界与依赖关系的单一事实来源（SSOT）。
-> **版本**: 2.1.0
-> **更新日期**: 2026-01-01
+> **版本**: 2.2.0
+> **更新日期**: 2026-01-02
 > **自动生成**: 通过 `ModuleGovernanceService.discoverNewModules()` 发现
 
 ---
@@ -11,9 +11,18 @@
 
 | 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
+| FE.ARCHIVES | Archives | `src/pages/archives` + `src/components/voucher` | 档案管理/凭证预览（Drawer+Page 双模式） | `src/api`, `src/store`, `src/utils`, `src/hooks`, `src/types.ts` | ✅ 活跃 v2.2 |
 | FE.SYS | SYS(Settings) | `src/features/settings` + `src/pages/settings` + `src/components/settings` | 系统基础配置/字典/日志（不含 Admin/Fonds） | `src/api`, `src/store`, `src/utils`, `src/hooks`, `src/types.ts` | ✅ 锁定 |
 | FE.ADMIN | Admin | `src/pages/admin` + 相关组件 | 用户/角色/全宗等"活"业务数据 | `src/api`, `src/store`, `src/utils`, `src/types.ts` | ⏳ 待收敛 |
 | FE.SHARED | Shared | `src/api`, `src/store`, `src/utils`, `src/hooks`, `src/types.ts`, `src/constants.tsx`, `src/queryClient.ts` | 跨模块通用能力与基础设施 | 无跨模块依赖 | ✅ 基础 |
+
+### 新增组件模块 (v2.2)
+
+| 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
+| --- | --- | --- | --- | --- | --- |
+| FE.DRAWER | Drawer UI | `src/pages/archives/ArchiveDetailDrawer.tsx` | 凭证预览抽屉（响应式 50vw/70vw/100vw） | `src/store/useDrawerStore`, `src/components/voucher` | ✅ 活跃 v2.2 |
+| FE.VOUCHER_PREVIEW | Voucher Preview | `src/components/voucher/*` | 凭证预览组件（Metadata/Canvas/Tabs） | `src/api`, `src/types.ts` | ✅ 活跃 v2.2 |
+| FE.DRAWER_STORE | Drawer State | `src/store/useDrawerStore.ts` | 抽屉状态管理（Zustand） | 无 | ✅ 活跃 v2.2 |
 
 ---
 
@@ -75,5 +84,6 @@
 
 ## 更新日志
 
+- **2026-01-02 v2.2.0**: 新增凭证预览抽屉系统模块（FE.ARCHIVES, FE.DRAWER, FE.VOUCHER_PREVIEW, FE.DRAWER_STORE）
 - **2026-01-01 v2.1.0**: 添加模块化组件 (INGEST, VOUCHER, MATCHING)、基础设施模块、集成层
 - **2025-12-31 v2.0.0**: 初始版本，包含 BORROWING 试点模块
