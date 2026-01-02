@@ -85,6 +85,15 @@
 | --- | --- | --- | --- | --- | --- |
 | BE.INTEGRATION | Integration Layer | `com.nexusarchive.integration` | 外部系统集成 (ERP 适配器) | `com.nexusarchive.service..`, Spring Integration | ✅ 活跃 |
 | BE.ERP_PLUGINS | ERP Plugins | `com.nexusarchive.service.erp.plugin` | ERP 插件 (Plugin Architecture) | `com.nexusarchive.integration..`, `com.nexusarchive.service..` | ✅ 活跃 v2.0 |
+| BE.AI | AI 驱动模块 | `com.nexusarchive.integration.erp.ai` | AI 驱动的 ERP 适配自动生成 | `com.nexusarchive.integration..`, `com.nexusarchive.service..`, Swagger Parser | ✅ NEW (2026-01-02) |
+
+#### BE.AI - AI 驱动模块子组件
+
+- `parser/`: OpenAPI 文档解析器
+- `mapper/`: 业务语义映射器
+- `generator/`: 代码生成器
+- `agent/`: Agent 编排器
+- `controller/`: REST API 控制器
 
 ### 基础设施 (Infrastructure)
 
