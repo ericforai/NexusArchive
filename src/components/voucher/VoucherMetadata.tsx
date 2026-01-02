@@ -1,35 +1,7 @@
 // src/components/voucher/VoucherMetadata.tsx
 import React from 'react';
 import { formatCurrency, formatDate } from './styles';
-
-interface VoucherEntryDTO {
-  lineNo?: number;
-  summary?: string;
-  accountCode?: string;
-  accountName?: string;
-  debit?: number | string;
-  credit?: number | string;
-}
-
-interface AttachmentDTO {
-  id: string;
-  type?: string;
-  name: string;
-}
-
-interface VoucherDTO {
-  id: string;
-  voucherId?: string;
-  voucherNo: string;
-  voucherWord?: string;
-  voucherDate?: string;
-  summary?: string;
-  debitTotal?: number | string;
-  creditTotal?: number | string;
-  createdTime?: string;
-  orgName?: string;
-  attachments?: AttachmentDTO[];
-}
+import type { VoucherDTO } from './VoucherPreviewTabs';
 
 interface MetadataField {
   label: string;
@@ -99,7 +71,7 @@ export const VoucherMetadata: React.FC<VoucherMetadataProps> = ({
     if (shouldIncludeField('invoiceCount')) {
       const invoiceCount = data.attachments?.filter(a =>
         a.type?.toLowerCase().includes('invoice') ||
-        a.name.toLowerCase().includes('发票')
+        (a.name && a.name.toLowerCase().includes('发票'))
       ).length || 0;
       result.push({
         label: '关联发票数',
@@ -182,6 +154,69 @@ export const VoucherMetadata: React.FC<VoucherMetadataProps> = ({
           </div>
         ))}
       </div>
+
+      {/* 凭证分录列表 */}
+      {data.entries && data.entries.length > 0 && (() => {
+        const entries = data.entries;
+        return (
+          <div className="border-t-2 border-slate-200 mt-2">
+            <div className={`px-4 py-3 bg-slate-100 border-b border-slate-200 ${compact ? 'py-2' : ''}`}>
+              <h3 className="font-semibold text-slate-800 text-sm">
+                凭证分录 ({entries.length}条)
+              </h3>
+            </div>
+            <div className={`bg-white ${compact ? 'text-sm' : ''}`}>
+              {entries.map((entry, index) => (
+                <div
+                  key={entry.lineNo || index}
+                  className={`px-4 ${compact ? 'py-2' : 'py-3'} ${
+                    index < entries.length - 1 ? 'border-b border-slate-100' : ''
+                  }`}
+                >
+                {/* 分录头部 - 摘要 */}
+                <div className="mb-2">
+                  <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded mr-2">
+                    {entry.lineNo || index + 1}
+                  </span>
+                  <span className="font-medium text-slate-800">
+                    {entry.summary || '-'}
+                  </span>
+                </div>
+
+                {/* 分录详情 - 科目和金额 */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-slate-800 font-medium truncate">
+                      {entry.accountName || '-'}
+                    </div>
+                    {entry.accountCode && (
+                      <div className="text-xs text-slate-500 font-mono truncate">
+                        {entry.accountCode}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-6 font-mono text-sm">
+                    <div className="text-right">
+                      <div className="text-xs text-slate-500 mb-0.5">借方</div>
+                      <div className={`font-semibold ${Number(entry.debit || 0) > 0 ? 'text-green-700' : 'text-slate-400'}`}>
+                        {entry.debit ? formatCurrency(entry.debit) : '-'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-slate-500 mb-0.5">贷方</div>
+                      <div className={`font-semibold ${Number(entry.credit || 0) > 0 ? 'text-red-700' : 'text-slate-400'}`}>
+                        {entry.credit ? formatCurrency(entry.credit) : '-'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        );
+      })()}
     </div>
   );
 };
