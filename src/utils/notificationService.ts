@@ -7,6 +7,9 @@ import { EnhancedNotification, NotificationRule } from '../types';
 import { safeStorage } from './storage';
 import { message } from 'antd';
 
+// Store for active message instances by key
+const activeMessages = new Map<string, ReturnType<typeof message.loading>>();
+
 // LocalStorage keys
 const STORAGE_KEYS = {
   NOTIFICATIONS: 'nexusarchive_notifications',
@@ -215,22 +218,69 @@ export type ToastNotificationType = 'success' | 'info' | 'warning' | 'error';
 /**
  * Toast notification service
  * Wraps Ant Design message API for consistent notifications
+ * Supports both simple usage and options object pattern for toasts by ID
  */
 export const toast = {
-    success: (content: string, duration = 3) => {
-        message.success(content, duration);
+    success: (content: string, options?: { id?: string; duration?: number }) => {
+        if (options?.id) {
+            // Dismiss previous message with this ID
+            activeMessages.get(options.id)?.();
+            activeMessages.delete(options.id);
+        }
+        const duration = options?.duration ?? 3;
+        return message.success(content, duration);
     },
-    error: (content: string, duration = 5) => {
-        message.error(content, duration);
+    error: (content: string, options?: { id?: string; duration?: number }) => {
+        if (options?.id) {
+            activeMessages.get(options.id)?.();
+            activeMessages.delete(options.id);
+        }
+        const duration = options?.duration ?? 5;
+        return message.error(content, duration);
     },
-    info: (content: string, duration = 3) => {
-        message.info(content, duration);
+    info: (content: string, options?: { id?: string; duration?: number }) => {
+        if (options?.id) {
+            activeMessages.get(options.id)?.();
+            activeMessages.delete(options.id);
+        }
+        const duration = options?.duration ?? 3;
+        return message.info(content, duration);
     },
-    warning: (content: string, duration = 3) => {
-        message.warning(content, duration);
+    warning: (content: string, options?: { id?: string; duration?: number }) => {
+        if (options?.id) {
+            activeMessages.get(options.id)?.();
+            activeMessages.delete(options.id);
+        }
+        const duration = options?.duration ?? 3;
+        return message.warning(content, duration);
     },
-    loading: (content: string, duration = 0) => {
-        return message.loading(content, duration);
+    loading: (content: string, options?: { id?: string; duration?: number }) => {
+        const duration = options?.duration ?? 0;
+        const msgInstance = message.loading(content, duration);
+
+        // Store the instance if an ID is provided
+        if (options?.id) {
+            activeMessages.set(options.id, msgInstance);
+        }
+
+        return msgInstance;
+    },
+    // Dismiss method to close specific messages by ID or all messages
+    dismiss: (key?: string) => {
+        if (key) {
+            // Dismiss specific message by ID
+            const msgInstance = activeMessages.get(key);
+            if (msgInstance) {
+                msgInstance();
+                activeMessages.delete(key);
+            }
+            // Also try to destroy any message with this key
+            message.destroy(key);
+        } else {
+            // Dismiss all messages
+            message.destroy();
+            activeMessages.clear();
+        }
     },
 };
 
