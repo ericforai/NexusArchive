@@ -1,5 +1,5 @@
-// Input: React、react-router-dom 路由创建器、routes 配置
-// Output: 默认导出的 App 路由入口组件
+// Input: React、react-router-dom 路由创建器、routes 配置、ToastContainer
+// Output: 默认导出的 App 路由入口组件（包装 Toast 容器）
 // Pos: 前端路由挂载入口
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -11,12 +11,17 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './routes';
+import { ToastContainer } from './components/common/ToastContainer';
 
 // 创建路由实例
 const router = createBrowserRouter(routes);
 
 const App: React.FC = () => {
-  return <RouterProvider router={router} />;
+  return (
+    <ToastContainer>
+      <RouterProvider router={router} />
+    </ToastContainer>
+  );
 };
 
 export default App;

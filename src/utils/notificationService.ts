@@ -1,10 +1,11 @@
-// Input: 类型定义与 safeStorage
-// Output: 通知规则与通知读写工具函数
-// Pos: 前端通知服务工具
+// Input: 类型定义、safeStorage 与 Ant Design message API
+// Output: 通知规则、通知读写工具函数与 Toast 通知服务
+// Pos: 前端通知服务工具（包含 localStorage 持久化与 Toast 通知）
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { EnhancedNotification, NotificationRule } from '../types';
 import { safeStorage } from './storage';
+import { message } from 'antd';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -204,4 +205,32 @@ class NotificationService {
 
 // Singleton instance
 export const notificationService = new NotificationService();
+
+// ============================================================================
+// Toast Notification Service (Ant Design message wrapper)
+// ============================================================================
+
+export type ToastNotificationType = 'success' | 'info' | 'warning' | 'error';
+
+/**
+ * Toast notification service
+ * Wraps Ant Design message API for consistent notifications
+ */
+export const toast = {
+    success: (content: string, duration = 3) => {
+        message.success(content, duration);
+    },
+    error: (content: string, duration = 5) => {
+        message.error(content, duration);
+    },
+    info: (content: string, duration = 3) => {
+        message.info(content, duration);
+    },
+    warning: (content: string, duration = 3) => {
+        message.warning(content, duration);
+    },
+    loading: (content: string, duration = 0) => {
+        return message.loading(content, duration);
+    },
+};
 
