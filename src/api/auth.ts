@@ -6,6 +6,7 @@
 import { client } from './client';
 import { ApiResponse } from '../types';
 import { useAuthStore } from '../store';
+import { LoginCredentials } from './auth.types';
 
 export interface UserInfo {
     id: string;
@@ -25,7 +26,7 @@ export interface LoginResponse {
 }
 
 export const authApi = {
-    login: async (credentials: any) => {
+    login: async (credentials: LoginCredentials) => {
         const response = await client.post<ApiResponse<LoginResponse>>('/auth/login', credentials);
         return response.data;
     },
