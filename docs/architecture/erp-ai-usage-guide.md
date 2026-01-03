@@ -67,6 +67,7 @@ curl -X POST "http://localhost:19090/api/erp-ai/adapt" \
 | 端点 | 方法 | 描述 |
 |------|------|------|
 | `/api/erp-ai/adapt` | POST | 上传 OpenAPI 文档并生成适配器 |
+| `/api/erp-ai/deploy` | POST | 上传 OpenAPI 文档、生成适配器并自动部署 ✨ |
 | `/api/erp-ai/preview/{sessionId}` | GET | 预览生成的代码（MVP 简化版） |
 
 ### 1. 上传文档并生成适配器
@@ -147,7 +148,72 @@ curl -X POST "http://localhost:19090/api/erp-ai/adapt" \
 }
 ```
 
-### 2. 预览生成的代码（MVP 简化版）
+### 2. 自动部署端点 ✨
+
+**请求**: `POST /api/erp-ai/deploy`
+
+**功能**：完整自动部署流程，包括：
+1. ✅ 保存代码到源码目录
+2. ✅ 自动编译验证
+3. ✅ 自动运行测试
+4. ✅ 数据库自动注册
+5. ⚠️ 热加载（MVP 版本需手动重启服务器）
+
+**参数**：
+- `files` (required): OpenAPI 文档文件
+- `erpType` (required): ERP 类型标识符
+- `erpName` (required): ERP 系统名称
+
+**示例**：
+
+```bash
+curl -X POST "http://localhost:19090/api/erp-ai/deploy" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "files=@kingdee-api.json" \
+  -F "erpType=kingdee" \
+  -F "erpName=金蝶云星空"
+```
+
+**成功响应**：
+
+```json
+{
+  "success": true,
+  "message": "操作成功",
+  "data": {
+    "success": true,
+    "code": {
+      "adapterClass": "// 生成的适配器代码...",
+      "className": "KingdeeErpAdapter",
+      "packageName": "com.nexusarchive.integration.erp.adapter.kingdee"
+    },
+    "mappings": [...],
+    "adapterId": "kingdee",
+    "deploymentResult": {
+      "success": true,
+      "stepsCompleted": [
+        "✅ 代码已保存到: .../KingdeeErpAdapter.java",
+        "✅ 编译成功",
+        "✅ 测试通过: 2 个测试",
+        "✅ 数据库注册成功",
+        "⚠️ 热加载失败（需手动重启）"
+      ],
+      "errors": [],
+      "adapterPath": "/path/to/KingdeeErpAdapter.java",
+      "className": "KingdeeErpAdapter"
+    },
+    "message": "ERP 适配并自动部署完成"
+  }
+}
+```
+
+**注意**：
+- 代码将保存到 `src/main/java/com/nexusarchive/integration/erp/adapter/{erpType}/`
+- Maven 编译超时时间为 120 秒
+- 测试失败不会阻止部署（仅警告）
+- 数据库注册失败将阻止部署
+
+### 3. 预览生成的代码（MVP 简化版）
 
 **请求**: `GET /api/erp-ai/preview/{sessionId}`
 
