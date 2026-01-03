@@ -63,6 +63,38 @@ export interface ConnectionTestResult {
     message: string;
 }
 
+/**
+ * 场景预览项
+ */
+export interface ScenarioPreviewItem {
+    scenarioKey: string;
+    displayName: string;
+    description: string;
+    apiPath: string;
+    operationId: string;
+    method: string;
+}
+
+/**
+ * 现有配置项
+ */
+export interface ExistingConfigItem {
+    configId: number;
+    name: string;
+    baseUrl: string | null;
+}
+
+/**
+ * 预览响应
+ */
+export interface PreviewResponse {
+    erpType: string;
+    erpDisplayName: string;
+    scenarios: ScenarioPreviewItem[];
+    existingConfigs: ExistingConfigItem[];
+    suggestedConfigId: number | null;
+}
+
 export const erpApi = {
     // Configs
     getConfigs: async (): Promise<ApiResponse<ErpConfig[]>> => {
@@ -175,6 +207,31 @@ export const erpApi = {
 
     previewCode: async (sessionId: string): Promise<ApiResponse<any>> => {
         const response = await client.get<ApiResponse<any>>(`/erp-ai/preview/${sessionId}`);
+        return response.data;
+    },
+
+    /**
+     * 预览 OpenAPI 文档中的场景
+     * @param file OpenAPI 文档文件
+     * @param targetConfigId 目标连接器 ID（可选）
+     * @param packageName 包名（可选，用于代码生成）
+     */
+    previewScenarios: async (
+        file: File,
+        targetConfigId?: number,
+        packageName?: string
+    ): Promise<ApiResponse<PreviewResponse>> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (targetConfigId !== undefined) {
+            formData.append('targetConfigId', targetConfigId.toString());
+        }
+        if (packageName !== undefined) {
+            formData.append('packageName', packageName);
+        }
+        const response = await client.post<ApiResponse<PreviewResponse>>('/erp-ai/preview', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     },
 };
