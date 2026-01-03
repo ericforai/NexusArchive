@@ -2,11 +2,13 @@
 // Input: OpenApiDefinition, filename
 // Output: ERP type identification
 // Pos: AI 模块 - ERP 类型识别器
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.integration.erp.ai.identifier;
 
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import lombok.Getter;
+import org.springframework.stereotype.Component;
 
 /**
  * ERP 类型识别器
@@ -14,6 +16,7 @@ import lombok.Getter;
  * 从文件名和 OpenAPI 文档内容识别 ERP 类型
  * </p>
  */
+@Component
 public class ErpTypeIdentifier {
 
     /**
