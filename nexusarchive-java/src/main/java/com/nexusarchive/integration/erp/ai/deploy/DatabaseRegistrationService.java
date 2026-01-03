@@ -88,8 +88,16 @@ public class DatabaseRegistrationService {
     @Transactional
     public RegistrationResult registerScenarios(Long targetConfigId, String fileName,
                                                List<BusinessSemanticMapper.ScenarioMapping> mappings) {
+        // Input validation
+        if (fileName == null || fileName.trim().isEmpty()) {
+            throw new IllegalArgumentException("fileName cannot be null or empty");
+        }
+        if (mappings == null) {
+            mappings = List.of(); // Treat null as empty list
+        }
+
         log.info("开始注册场景: targetConfigId={}, fileName={}, mappingsCount={}",
-                 targetConfigId, fileName, mappings != null ? mappings.size() : 0);
+                 targetConfigId, fileName, mappings.size());
 
         // Step 1: 识别 ERP 类型
         ErpTypeIdentifier.ErpType erpType = erpTypeIdentifier.identify(fileName, null);
@@ -311,16 +319,21 @@ public class DatabaseRegistrationService {
 
     /**
      * 插入单个场景记录
+     * <p>
+     * Uses ON CONFLICT DO NOTHING to handle race conditions where multiple threads
+     * might try to insert the same scenario simultaneously.
+     * </p>
      *
      * @param configId 配置 ID
      * @param scenarioName 场景名称对象
-     * @return 插入成功返回 true，失败返回 false
+     * @return 插入成功返回 true，失败或已存在返回 false
      */
     private boolean insertScenario(Long configId, ScenarioName scenarioName) {
         String sql = """
             INSERT INTO sys_erp_scenario (
                 config_id, scenario_key, name, description, is_active, sync_strategy, created_time
             ) VALUES (?, ?, ?, ?, true, 'MANUAL', CURRENT_TIMESTAMP)
+            ON CONFLICT (config_id, scenario_key) DO NOTHING
             """;
 
         try {
@@ -330,17 +343,11 @@ public class DatabaseRegistrationService {
                 scenarioName.displayName(),
                 scenarioName.description()
             );
-
-            if (rows > 0) {
-                log.debug("插入场景成功: configId={}, scenarioKey={}", configId, scenarioName.scenarioKey());
-                return true;
-            }
+            return rows > 0;
         } catch (Exception e) {
-            log.warn("插入场景失败: configId={}, scenarioKey={}, error={}",
-                     configId, scenarioName.scenarioKey(), e.getMessage());
+            log.warn("插入场景失败: {}", e.getMessage());
+            return false;
         }
-
-        return false;
     }
 
     /**
