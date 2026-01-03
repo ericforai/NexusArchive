@@ -25,7 +25,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/erp-ai")
+@RequestMapping("/erp-ai")
 public class ErpAdaptationController {
 
     private final ErpAdaptationOrchestrator orchestrator;
