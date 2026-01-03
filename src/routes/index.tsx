@@ -87,6 +87,9 @@ const AccessReviewPage = lazy(() => import('../pages/admin/AccessReviewPage'));
 // MFA设置模块
 const MfaSettingsPage = lazy(() => import('../pages/settings/MfaSettingsPage'));
 
+// ERP AI 适配器预览模块
+const ErpPreviewPage = lazy(() => import('../pages/settings/ErpPreviewPage'));
+
 // 冻结/保全管理模块
 const FreezeHoldPage = lazy(() => import('../pages/operations/FreezeHoldPage'));
 const FreezeHoldDetailPage = lazy(() => import('../pages/operations/FreezeHoldDetailPage'));
@@ -224,6 +227,9 @@ export const routes: RouteObject[] = [
                     { path: 'mfa', element: withSuspense(MfaSettingsPage) },
                 ],
             },
+
+            // ========== ERP AI 适配器预览 ==========
+            { path: 'settings/erp-ai/preview', element: withSuspense(ErpPreviewPage) },
 
             // ========== 法人管理 ==========
             { path: 'admin/entity', element: withSuspense(EntityManagementPage) },
