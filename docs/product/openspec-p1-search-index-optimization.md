@@ -403,3 +403,4 @@ WHERE custom_metadata @> '{"bookType": "总账"}'::jsonb
 **文档状态**: ✅ 已完成  
 **下一步**: 检查当前索引配置，创建数据库迁移脚本
 
+

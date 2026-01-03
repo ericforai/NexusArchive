@@ -20,7 +20,7 @@ import {
 } from '../../api/originalVoucher';
 import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
 import { VoucherPreviewDrawer } from '../panorama/VoucherPreviewDrawer';
-import { toast } from '../../components/utils/notificationService';
+import { toast } from '../../utils/notificationService';
 
 // 状态徽章组件
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {

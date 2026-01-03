@@ -29,7 +29,17 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      // 移除任何外部注入的 importmap（如 AI Studio 插件），防止 React 版本冲突
+      {
+        name: 'remove-external-importmap',
+        transformIndexHtml(html: string) {
+          // 移除指向 aistudiocdn 的 importmap
+          return html.replace(/<script type="importmap">[\s\S]*?aistudiocdn[\s\S]*?<\/script>/gi, '');
+        },
+      },
+    ],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
@@ -45,8 +55,8 @@ export default defineConfig(({ mode }) => {
         '@store': path.resolve(__dirname, './src/store'),
         '@utils': path.resolve(__dirname, './src/utils'),
       },
-      // 强制使用单一版本的 React，解决 "Cannot read properties of null (reading 'useCallback')" 问题
-      dedupe: ['react', 'react-dom'],
+      // 强制使用单一版本的 React 和 React Router，解决 "Cannot read properties of null (reading 'useContext')" 问题
+      dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
     },
     optimizeDeps: {
       include: ['react', 'react-dom', 'zustand', 'react-router-dom'],

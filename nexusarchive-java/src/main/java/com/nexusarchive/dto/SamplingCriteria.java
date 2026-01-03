@@ -46,3 +46,4 @@ public class SamplingCriteria {
     private String fondsNo;
 }
 
+

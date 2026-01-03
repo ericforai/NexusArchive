@@ -59,3 +59,4 @@ COMMENT ON INDEX idx_archive_custom_metadata_gin IS 'custom_metadata JSONB GIN �
 COMMENT ON INDEX idx_archive_standard_metadata_gin IS 'standard_metadata JSONB GIN 索引，用于 JSONB 包含和键值查询';
 COMMENT ON INDEX idx_archive_fonds_year_category IS '全宗号+年度+分类号复合索引，用于多条件组合查询';
 COMMENT ON INDEX idx_archive_archived_fonds_year IS '已归档档案的部分索引，优化常用查询';
+

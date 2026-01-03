@@ -39,3 +39,4 @@ public interface EntityService extends IService<SysEntity> {
     boolean canDelete(String entityId);
 }
 
+

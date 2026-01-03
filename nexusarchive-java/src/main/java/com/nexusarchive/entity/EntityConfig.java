@@ -74,3 +74,4 @@ public class EntityConfig {
     private Integer deleted;
 }
 
+

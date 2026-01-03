@@ -70,3 +70,4 @@ public class UserMfaConfig {
     private Integer deleted;
 }
 
+

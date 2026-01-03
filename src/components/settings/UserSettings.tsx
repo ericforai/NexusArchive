@@ -7,7 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Plus, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { User, Role } from '../../types';
-import { toast } from '../utils/notificationService';
+import { toast } from '../../utils/notificationService';
 
 type UserStatus = 'active' | 'disabled' | 'locked';
 

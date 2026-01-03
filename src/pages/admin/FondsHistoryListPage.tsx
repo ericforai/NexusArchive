@@ -225,3 +225,4 @@ export const FondsHistoryListPage: React.FC = () => {
 
 export default FondsHistoryListPage;
 
+

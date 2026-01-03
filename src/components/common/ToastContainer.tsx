@@ -1,9 +1,10 @@
-// Input: React 与 Ant Design App 组件
+// Input: React 与 Ant Design ConfigProvider
 // Output: Toast 容器组件
-// Pos: 通用复用组件，为 Ant Design message hooks 提供 App 上下文
+// Pos: 通用复用组件，为 Ant Design message 提供配置上下文
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { App } from 'antd';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import React from 'react';
 
 interface ToastContainerProps {
@@ -12,15 +13,13 @@ interface ToastContainerProps {
 
 /**
  * Toast container component
- * Must be wrapped in App.AppProvider for message hooks to work
- *
- * This component wraps the application with Ant Design's App context,
- * which is required for the message API (toast notifications) to function properly.
+ * Uses ConfigProvider instead of App to avoid React 19 compatibility issues
+ * while still providing Ant Design context for message/notification APIs.
  */
 export const ToastContainer: React.FC<ToastContainerProps> = ({ children }) => {
     return (
-        <App>
+        <ConfigProvider locale={zhCN}>
             {children}
-        </App>
+        </ConfigProvider>
     );
 };

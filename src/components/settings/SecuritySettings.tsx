@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Loader2, ShieldCheck, FileWarning } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { AdminSettingItem, AdminSettingUpdate } from '../../types';
-import { toast } from '../utils/notificationService';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 安全与合规设置页面

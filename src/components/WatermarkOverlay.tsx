@@ -8,3 +8,4 @@ import WatermarkOverlay from './watermark/WatermarkOverlay';
 export type { WatermarkOverlayProps } from './watermark/WatermarkOverlay';
 
 export default WatermarkOverlay;
+

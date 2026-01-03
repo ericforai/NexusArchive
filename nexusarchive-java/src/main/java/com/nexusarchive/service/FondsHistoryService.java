@@ -92,3 +92,4 @@ public interface FondsHistoryService {
     List<FondsHistoryDetail> getFondsHistory(String fondsNo);
 }
 
+

@@ -38,3 +38,4 @@ public interface EntityConfigMapper extends BaseMapper<EntityConfig> {
     List<EntityConfig> findByEntityIdAndType(@Param("entityId") String entityId, @Param("configType") String configType);
 }
 
+

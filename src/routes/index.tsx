@@ -16,8 +16,10 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 // 布局组件（非懒加载，因为是框架级别）
 import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
-import { ProductWebsite } from '../pages/ProductWebsite';
 import { ActivationPage } from '../pages/ActivationPage';
+
+// ProductWebsite 使用懒加载以确保 Router context 正确初始化
+const ProductWebsite = lazy(() => import('../pages/ProductWebsite').then(m => ({ default: m.ProductWebsite })));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -127,7 +129,7 @@ function withSuspense<P extends object>(
  */
 export const routes: RouteObject[] = [
     // 根路径显示产品首页（公开访问）
-    { path: '/', element: <ProductWebsite /> },
+    { path: '/', element: withSuspense(ProductWebsite) },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },
@@ -227,20 +229,20 @@ export const routes: RouteObject[] = [
             { path: 'admin/entity', element: withSuspense(EntityManagementPage) },
             { path: 'admin/entity/config', element: withSuspense(EntityConfigPage) },
             { path: 'admin/enterprise-architecture', element: withSuspense(EnterpriseArchitecturePage) },
-            
+
             // ========== 全宗沿革管理 ==========
             { path: 'admin/fonds-history', element: withSuspense(FondsHistoryPage) },
             { path: 'admin/fonds-history/list', element: withSuspense(FondsHistoryListPage) },
-            
+
             // ========== 跨全宗访问授权票据 ==========
             { path: 'security/auth-ticket/apply', element: withSuspense(AuthTicketApplyPage) },
             { path: 'security/auth-ticket', element: withSuspense(AuthTicketListPage) },
             { path: 'security/auth-ticket/list', element: withSuspense(AuthTicketListPage) },
-            
+
             // ========== 冻结/保全管理 ==========
             { path: 'operations/freeze-hold', element: withSuspense(FreezeHoldPage) },
             { path: 'operations/freeze-hold/:id', element: withSuspense(FreezeHoldDetailPage) },
-            
+
             // ========== 后台管理 ==========
             { path: 'admin/*', element: withSuspense(AdminLayout) },
 

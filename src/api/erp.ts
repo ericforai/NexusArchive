@@ -149,6 +149,34 @@ export const erpApi = {
         const response = await client.get<ApiResponse<any>>('/monitoring/integration');
         return response.data;
     },
+
+    // ERP AI Adapter APIs
+    adaptErp: async (files: File[], erpType: string, erpName: string): Promise<ApiResponse<any>> => {
+        const formData = new FormData();
+        files.forEach(file => formData.append('files', file));
+        formData.append('erpType', erpType);
+        formData.append('erpName', erpName);
+        const response = await client.post<ApiResponse<any>>('/erp-ai/adapt', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    adaptAndDeployErp: async (files: File[], erpType: string, erpName: string): Promise<ApiResponse<any>> => {
+        const formData = new FormData();
+        files.forEach(file => formData.append('files', file));
+        formData.append('erpType', erpType);
+        formData.append('erpName', erpName);
+        const response = await client.post<ApiResponse<any>>('/erp-ai/deploy', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    previewCode: async (sessionId: string): Promise<ApiResponse<any>> => {
+        const response = await client.get<ApiResponse<any>>(`/erp-ai/preview/${sessionId}`);
+        return response.data;
+    },
 };
 
 // Integration Channel for Online Reception page

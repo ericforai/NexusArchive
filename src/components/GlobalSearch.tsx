@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, FileText, FileCode, Loader2, ArrowRight } from 'lucide-react';
 import { useGlobalSearchApi } from '../hooks/useGlobalSearchApi';
 import { GlobalSearchDTO } from '../types';
-import { toast } from './utils/notificationService';
+import { toast } from '../utils/notificationService';
 
 interface GlobalSearchProps {
     onNavigate?: (item: GlobalSearchDTO) => void;

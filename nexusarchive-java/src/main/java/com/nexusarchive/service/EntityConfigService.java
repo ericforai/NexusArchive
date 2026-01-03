@@ -59,3 +59,4 @@ public interface EntityConfigService extends IService<EntityConfig> {
     void deleteConfigsByEntityId(String entityId, String configType);
 }
 
+

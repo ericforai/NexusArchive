@@ -60,6 +60,7 @@ public class ApiIntent {
         CONTRACT,            // 合同
         ATTACHMENT,          // 附件
         ACCOUNT_BALANCE,     // 科目余额
+        SALES_OUT,           // 销售出库
         UNKNOWN
     }
 

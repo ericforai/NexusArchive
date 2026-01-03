@@ -17,3 +17,4 @@ import org.apache.ibatis.annotations.Mapper;
 public interface LegacyImportTaskMapper extends BaseMapper<LegacyImportTask> {
 }
 
+

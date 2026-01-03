@@ -55,3 +55,4 @@ public interface DestructionLogService {
     String calculateHashChain(String prevHash, Object logData);
 }
 
+

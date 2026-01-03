@@ -35,6 +35,10 @@ public enum StandardScenario {
                      ApiIntent.OperationType.QUERY,
                      ApiIntent.BusinessObject.ATTACHMENT),
 
+    SALES_OUT_SYNC("salesOutSync", "销售出库同步",
+                    ApiIntent.OperationType.QUERY,
+                    ApiIntent.BusinessObject.SALES_OUT),
+
     VOUCHER_WEBHOOK("voucherWebhook", "凭证推送",
                      ApiIntent.OperationType.CALLBACK,
                      ApiIntent.BusinessObject.ACCOUNTING_VOUCHER),

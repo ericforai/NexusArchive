@@ -28,3 +28,4 @@ public interface SysEntityMapper extends BaseMapper<SysEntity> {
     List<String> findFondsIdsByEntityId(String entityId);
 }
 
+

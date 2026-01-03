@@ -107,3 +107,4 @@ echo -e "${YELLOW}查看详细报告:${NC}"
 echo "  npx playwright show-report"
 echo ""
 
+

@@ -99,6 +99,12 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
     const [diagnosing, setDiagnosing] = useState(false);
     const [diagnosisResult, setDiagnosisResult] = useState<IntegrationDiagnosisResult | null>(null);
 
+    // ERP AI Adapter State
+    const [showAiAdapter, setShowAiAdapter] = useState(false);
+    const [aiAdapterLoading, setAiAdapterLoading] = useState(false);
+    const [aiAdapterFiles, setAiAdapterFiles] = useState<File[]>([]);
+    const [aiAdapterResult, setAiAdapterResult] = useState<any>(null);
+
     // Phase 4: Reconciliation State
     const [showRecon, setShowRecon] = useState(false);
     const [reconRecord, setReconRecord] = useState<ReconciliationRecord | null>(null);
@@ -532,6 +538,60 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
         reader.readAsText(file);
     };
 
+    // ERP AI Adapter handlers
+    const openAiAdapter = () => {
+        setAiAdapterFiles([]);
+        setAiAdapterResult(null);
+        setShowAiAdapter(true);
+    };
+
+    const handleAiAdapterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setAiAdapterFiles(files);
+    };
+
+    const handleAiAdapt = async (autoDeploy: boolean = false) => {
+        if (aiAdapterFiles.length === 0) {
+            toast.error('请选择 API 定义文件');
+            return;
+        }
+
+        setAiAdapterLoading(true);
+        try {
+            // 使用文件名推断 ERP 类型
+            const fileName = aiAdapterFiles[0].name.toLowerCase();
+            let erpType = 'generic';
+            if (fileName.includes('yonsuite') || fileName.includes('yonbip') || fileName.includes('yonyou')) {
+                erpType = 'yonsuite';
+            } else if (fileName.includes('kingdee') || fileName.includes('k3cloud')) {
+                erpType = 'kingdee';
+            } else if (fileName.includes('weaver') || fileName.includes('ecology')) {
+                erpType = 'weaver';
+            }
+
+            const erpName = `${erpType}-${Date.now()}`;
+
+            const res = autoDeploy
+                ? await erpApi.adaptAndDeployErp(aiAdapterFiles, erpType, erpName)
+                : await erpApi.adaptErp(aiAdapterFiles, erpType, erpName);
+
+            if (res.code === 200) {
+                setAiAdapterResult(res.data);
+                toast.success(autoDeploy ? 'AI 适配并自动部署成功!' : 'AI 适配成功!');
+                if (autoDeploy) {
+                    // 刷新配置列表
+                    setTimeout(() => loadConfigs(), 2000);
+                }
+            } else {
+                toast.error(res.message || 'AI 适配失败');
+            }
+        } catch (error: any) {
+            toast.error('AI 适配失败: ' + (error.message || '未知错误'));
+        } finally {
+            setAiAdapterLoading(false);
+        }
+    };
+
     const activeConfig = configs.find(c => c.id === activeConfigId);
     const configsByType = adapterTypes.reduce((acc, type) => {
         acc[type] = configs.filter(c => (c.erpType?.toLowerCase() || 'generic') === type);
@@ -726,7 +786,9 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
                             <button className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all shadow-sm border border-transparent hover:border-blue-100">
                                 <PlusCircle size={18} />
                             </button>
-                            <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50">
+                            <div className="absolute right-0 top-full hidden group-hover:block z-50 pt-1">
+                                {/* 透明桥接层：扩展覆盖范围确保hover连续，宽度与菜单一致 */}
+                                <div className="absolute -top-1 w-56 h-2" />
                                 <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 p-2 w-56 animate-in fade-in zoom-in-95 duration-200">
                                     <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
                                         配置管理
@@ -747,6 +809,18 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
                                         导入配置文件
                                         <input type="file" className="hidden" accept=".json" onChange={handleImportConfig} />
                                     </label>
+                                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mt-2 mb-1">
+                                        AI 智能适配
+                                    </div>
+                                    <button
+                                        onClick={openAiAdapter}
+                                        className="w-full text-left px-3 py-2.5 text-xs font-bold text-purple-600 hover:bg-purple-50 rounded-xl flex items-center gap-3 transition-colors group/item"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 group-hover/item:scale-110 transition-transform">
+                                            <Zap size={14} />
+                                        </div>
+                                        AI 智能适配器
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -916,7 +990,9 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
                                             <button className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
                                                 <Sliders size={16} />
                                             </button>
-                                            <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50">
+                                            <div className="absolute right-0 top-full hidden group-hover:block z-50 pt-1">
+                                                {/* 透明桥接层：扩展覆盖范围确保hover连续，宽度与菜单一致 */}
+                                                <div className="absolute -top-1 w-56 h-2" />
                                                 <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 p-2 w-56 animate-in fade-in zoom-in-95 duration-200">
                                                     <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
                                                         更多操作
@@ -1380,6 +1456,103 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
                                     </div>
                                     <span className="font-bold text-slate-600">查看运行日志</span>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ERP AI Adapter Modal */}
+                {showAiAdapter && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md">
+                        <div className="bg-white rounded-lg shadow-2xl w-[650px] max-w-[95vw] animate-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+                            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50">
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                        <Zap size={20} className="text-purple-600 fill-purple-600" />
+                                        ERP AI 智能适配器
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-1">上传 OpenAPI 文档，AI 自动生成适配器代码</p>
+                                </div>
+                                <button onClick={() => setShowAiAdapter(false)} className="text-slate-400 hover:text-slate-600">
+                                    <XCircle size={22} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                                {/* File Upload Area */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                        上传 API 定义文件 <span className="text-purple-600">(OpenAPI/Swagger JSON/YAML)</span>
+                                    </label>
+                                    <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-purple-400 hover:bg-purple-50/30 transition-colors">
+                                        <input
+                                            type="file"
+                                            accept=".json,.yaml,.yml"
+                                            multiple
+                                            onChange={handleAiAdapterFileChange}
+                                            className="hidden"
+                                            id="ai-adapter-file"
+                                        />
+                                        <label htmlFor="ai-adapter-file" className="cursor-pointer block">
+                                            <Upload size={32} className="mx-auto text-slate-400 mb-2" />
+                                            <p className="text-sm text-slate-600">点击选择或拖拽文件到此处</p>
+                                            <p className="text-xs text-slate-400 mt-1">支持 .json, .yaml, .yml 格式</p>
+                                        </label>
+                                        {aiAdapterFiles.length > 0 && (
+                                            <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                                                {aiAdapterFiles.map((file, idx) => (
+                                                    <span key={idx} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                                                        <CheckCircle2 size={12} />
+                                                        {file.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Result Display */}
+                                {aiAdapterResult && (
+                                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                                        <div className="flex items-center gap-2 text-emerald-700 font-semibold mb-2">
+                                            <CheckCircle2 size={18} />
+                                            适配成功!
+                                        </div>
+                                        <pre className="text-xs text-emerald-800 bg-emerald-100/50 p-3 rounded overflow-auto max-h-40">
+                                            {JSON.stringify(aiAdapterResult, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <div className="text-xs text-slate-500">
+                                    <p>💡 提示：AI 将自动解析 API 定义并生成适配器代码</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowAiAdapter(false)}
+                                        className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded transition-colors text-sm font-medium"
+                                    >
+                                        取消
+                                    </button>
+                                    <button
+                                        onClick={() => handleAiAdapt(false)}
+                                        disabled={aiAdapterLoading || aiAdapterFiles.length === 0}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+                                    >
+                                        {aiAdapterLoading ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
+                                        生成适配器
+                                    </button>
+                                    <button
+                                        onClick={() => handleAiAdapt(true)}
+                                        disabled={aiAdapterLoading || aiAdapterFiles.length === 0}
+                                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium flex items-center gap-2 shadow-lg"
+                                    >
+                                        {aiAdapterLoading ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
+                                        AI 适配并部署
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,10 +1,10 @@
 一旦我所属的文件夹有所变化，请更新我。
-本目录存放 SQL 模板资源。
-用于 SQL 审计规则的字典查询。
+本目录存放 NexusArchive 核心包。
+用于 Sprint 0 Spike 代码组织。
 
 ## 文件清单
 
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
-| `sql-audit-rules.sql` | SQL | SQL 审计字典查询模板 |
+| `core/` | 目录入口 | Sprint 0 核心逻辑 |

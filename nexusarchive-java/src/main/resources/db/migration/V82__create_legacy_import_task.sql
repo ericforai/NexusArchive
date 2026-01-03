@@ -52,3 +52,4 @@ COMMENT ON COLUMN legacy_import_task.created_entity_ids IS '自动创建的实�
 COMMENT ON COLUMN legacy_import_task.started_at IS '开始时间';
 COMMENT ON COLUMN legacy_import_task.completed_at IS '完成时间';
 COMMENT ON COLUMN legacy_import_task.created_at IS '创建时间';
+

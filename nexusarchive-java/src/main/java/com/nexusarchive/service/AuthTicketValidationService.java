@@ -41,3 +41,4 @@ public interface AuthTicketValidationService {
     boolean isAccessScopeAllowed(AuthScope ticketScope, AuthScope accessScope);
 }
 
+

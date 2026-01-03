@@ -33,3 +33,4 @@ public interface AuthTicketMapper extends BaseMapper<AuthTicket> {
     List<AuthTicket> findExpiredTickets(LocalDateTime now);
 }
 
+

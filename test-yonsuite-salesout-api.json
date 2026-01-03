@@ -1,0 +1,166 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "用友 YonSuite 销售出库API",
+    "version": "1.0.0",
+    "description": "YonSuite Sales Out API - 示例文档"
+  },
+  "servers": [
+    {
+      "url": "https://api.yonyoucloud.com/iuap-api-gateway",
+      "description": "YonSuite 生产环境"
+    }
+  ],
+  "paths": {
+    "/yonbip/digitalModel/salesout/doc/query": {
+      "post": {
+        "summary": "查询销售出库单列表",
+        "description": "根据条件查询销售出库单",
+        "operationId": "querySalesOutList",
+        "tags": ["销售出库"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pageIndex": {
+                    "type": "integer",
+                    "description": "页码",
+                    "example": 1
+                  },
+                  "pageSize": {
+                    "type": "integer",
+                    "description": "每页数量",
+                    "example": 100
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "开始日期",
+                    "example": "2025-01-01"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "结束日期",
+                    "example": "2025-01-31"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "200"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "单据ID"
+                          },
+                          "billCode": {
+                            "type": "string",
+                            "description": "单据编号"
+                          },
+                          "billDate": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "单据日期"
+                          },
+                          "customerName": {
+                            "type": "string",
+                            "description": "客户名称"
+                          },
+                          "totalAmount": {
+                            "type": "number",
+                            "description": "总金额"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/yonbip/digitalModel/salesout/doc/detail": {
+      "get": {
+        "summary": "获取销售出库单详情",
+        "description": "根据单据ID获取详细信息",
+        "operationId": "getSalesOutDetail",
+        "tags": ["销售出库"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "单据ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功"
+          }
+        }
+      }
+    },
+    "/yonbip/digitalModel/receipt/doc/query": {
+      "post": {
+        "summary": "查询收款单列表",
+        "description": "根据条件查询收款单",
+        "operationId": "queryReceiptList",
+        "tags": ["收款单"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pageIndex": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "pageSize": {
+                    "type": "integer",
+                    "example": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功"
+          }
+        }
+      }
+    }
+  }
+}

@@ -294,3 +294,4 @@ export const DestructionApprovalPage: React.FC = () => {
 
 export default DestructionApprovalPage;
 
+

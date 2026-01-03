@@ -14,3 +14,4 @@ import com.nexusarchive.entity.AppraisalList;
 public interface AppraisalListMapper extends BaseMapper<AppraisalList> {
 }
 
+

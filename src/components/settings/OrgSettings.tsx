@@ -8,7 +8,7 @@ import { Plus, Loader2, Upload } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { Tree, TreeNode } from '../org/Tree';
 import { OrgImportResult, OrgNode } from '../../types';
-import { toast } from '../utils/notificationService';
+import { toast } from '../../utils/notificationService';
 
 /**
  * 组织架构管理页面

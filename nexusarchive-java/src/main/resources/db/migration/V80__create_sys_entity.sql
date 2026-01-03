@@ -68,3 +68,4 @@ CREATE TRIGGER trigger_update_sys_entity_updated_time
     BEFORE UPDATE ON sys_entity
     FOR EACH ROW
     EXECUTE FUNCTION update_sys_entity_updated_time();
+

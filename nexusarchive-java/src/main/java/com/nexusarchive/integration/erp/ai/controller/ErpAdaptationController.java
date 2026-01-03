@@ -6,9 +6,18 @@
 
 package com.nexusarchive.integration.erp.ai.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator.AdaptationRequest;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator.AdaptationResult;
+import com.nexusarchive.integration.erp.ai.identifier.ErpTypeIdentifier;
+import com.nexusarchive.integration.erp.ai.identifier.ScenarioName;
+import com.nexusarchive.integration.erp.ai.identifier.ScenarioNamer;
+import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
+import com.nexusarchive.integration.erp.ai.parser.OpenApiDocumentParser;
+import com.nexusarchive.service.ErpConfigService;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +26,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -29,9 +40,23 @@ import java.util.UUID;
 public class ErpAdaptationController {
 
     private final ErpAdaptationOrchestrator orchestrator;
+    private final OpenApiDocumentParser openApiDocumentParser;
+    private final ErpTypeIdentifier erpTypeIdentifier;
+    private final ScenarioNamer scenarioNamer;
+    private final ErpConfigService erpConfigService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ErpAdaptationController(ErpAdaptationOrchestrator orchestrator) {
+    public ErpAdaptationController(
+            ErpAdaptationOrchestrator orchestrator,
+            OpenApiDocumentParser openApiDocumentParser,
+            ErpTypeIdentifier erpTypeIdentifier,
+            ScenarioNamer scenarioNamer,
+            ErpConfigService erpConfigService) {
         this.orchestrator = orchestrator;
+        this.openApiDocumentParser = openApiDocumentParser;
+        this.erpTypeIdentifier = erpTypeIdentifier;
+        this.scenarioNamer = scenarioNamer;
+        this.erpConfigService = erpConfigService;
     }
 
     /**
@@ -124,6 +149,137 @@ public class ErpAdaptationController {
     }
 
     /**
+     * 预览 API 接口场景
+     * <p>
+     * 上传 OpenAPI 文档，识别 ERP 类型和场景，返回预览信息
+     * </p>
+     *
+     * @param file OpenAPI 文档文件
+     * @param targetConfigId 目标连接器 ID（可选）
+     * @param packageName 包名（可选，用于代码生成）
+     * @return 预览响应
+     */
+    @PostMapping("/preview")
+    public ResponseEntity<ApiResponse> previewScenarios(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "targetConfigId", required = false) Long targetConfigId,
+            @RequestParam(value = "packageName", required = false) String packageName) {
+
+        try {
+            log.info("收到预览请求: fileName={}, targetConfigId={}", file.getOriginalFilename(), targetConfigId);
+
+            // 1. 验证文件
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("文件不能为空"));
+            }
+
+            String fileName = file.getOriginalFilename();
+            if (fileName == null) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("文件名不能为空"));
+            }
+
+            // 2. 解析 OpenAPI 文档
+            OpenApiDocumentParser.ParseResult parseResult = openApiDocumentParser.parse(file);
+            if (!parseResult.isSuccess()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("OpenAPI 解析失败: " + parseResult.getErrorMessage()));
+            }
+
+            List<OpenApiDefinition> definitions = parseResult.getDefinitions();
+            if (definitions == null || definitions.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("未找到任何 API 定义"));
+            }
+
+            // 3. 识别 ERP 类型
+            ErpTypeIdentifier.ErpType erpType = erpTypeIdentifier.identify(fileName, null);
+            log.info("识别到 ERP 类型: {}", erpType.getCode());
+
+            // 4. 生成场景预览
+            List<ScenarioPreviewItem> scenarios = definitions.stream()
+                .map(def -> {
+                    ScenarioName scenarioName = scenarioNamer.generateScenarioName(def);
+                    return ScenarioPreviewItem.builder()
+                        .scenarioKey(scenarioName.scenarioKey())
+                        .displayName(scenarioName.displayName())
+                        .description(scenarioName.description())
+                        .apiPath(def.getPath())
+                        .operationId(def.getOperationId())
+                        .method(def.getMethod())
+                        .build();
+                })
+                .toList();
+
+            // 5. 查找现有配置
+            List<ErpConfig> existingConfigs = erpConfigService.findConfigsByErpType(erpType.getCode());
+            List<ExistingConfigItem> configItems = existingConfigs.stream()
+                .map(config -> {
+                    String baseUrl = extractBaseUrl(config.getConfigJson());
+                    return ExistingConfigItem.builder()
+                        .configId(config.getId())
+                        .name(config.getName())
+                        .baseUrl(baseUrl)
+                        .build();
+                })
+                .toList();
+
+            // 6. 建议配置 ID
+            Long suggestedConfigId = null;
+            if (!configItems.isEmpty()) {
+                suggestedConfigId = configItems.get(0).getConfigId();
+                log.info("建议使用现有配置: configId={}", suggestedConfigId);
+            }
+
+            // 7. 如果用户指定了 targetConfigId，验证它
+            if (targetConfigId != null) {
+                boolean found = configItems.stream()
+                    .anyMatch(c -> c.getConfigId().equals(targetConfigId));
+                if (!found) {
+                    log.warn("用户指定的配置 ID 不存在或不匹配: targetConfigId={}", targetConfigId);
+                }
+            }
+
+            // 8. 构建响应
+            PreviewResponse previewResponse = PreviewResponse.builder()
+                .erpType(erpType.getCode())
+                .erpDisplayName(erpType.getDisplayName())
+                .scenarios(scenarios)
+                .existingConfigs(configItems)
+                .suggestedConfigId(suggestedConfigId)
+                .build();
+
+            return ResponseEntity.ok(ApiResponse.success(previewResponse));
+
+        } catch (IOException e) {
+            log.error("文件处理失败", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("文件处理失败: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("预览失败", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("服务器内部错误: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 从 configJson 中提取 baseUrl
+     */
+    private String extractBaseUrl(String configJson) {
+        if (configJson == null || configJson.isEmpty()) {
+            return null;
+        }
+        try {
+            Map<String, Object> config = objectMapper.readValue(configJson, new TypeReference<Map<String, Object>>() {});
+            return (String) config.get("host");
+        } catch (Exception e) {
+            log.debug("无法解析 configJson: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * 预览生成的代码
      * MVP: 简化实现，返回基本信息
      */
@@ -158,5 +314,43 @@ public class ErpAdaptationController {
                 .message(message)
                 .build();
         }
+    }
+
+    /**
+     * 预览响应
+     */
+    @Data
+    @lombok.Builder
+    public static class PreviewResponse {
+        private String erpType;
+        private String erpDisplayName;
+        private List<ScenarioPreviewItem> scenarios;
+        private List<ExistingConfigItem> existingConfigs;
+        private Long suggestedConfigId;
+    }
+
+    /**
+     * 场景预览项
+     */
+    @Data
+    @lombok.Builder
+    public static class ScenarioPreviewItem {
+        private String scenarioKey;
+        private String displayName;
+        private String description;
+        private String apiPath;
+        private String operationId;
+        private String method;
+    }
+
+    /**
+     * 现有配置项
+     */
+    @Data
+    @lombok.Builder
+    public static class ExistingConfigItem {
+        private Long configId;
+        private String name;
+        private String baseUrl;
     }
 }

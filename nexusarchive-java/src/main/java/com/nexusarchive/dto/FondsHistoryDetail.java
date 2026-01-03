@@ -30,3 +30,4 @@ public class FondsHistoryDetail {
     private LocalDateTime createdAt;
 }
 
+

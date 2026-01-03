@@ -116,6 +116,9 @@ public class BusinessSemanticMapper {
             return ApiIntent.BusinessObject.ATTACHMENT;
         } else if (combined.contains("account") || combined.contains("科目") || combined.contains("余额")) {
             return ApiIntent.BusinessObject.ACCOUNT_BALANCE;
+        } else if (combined.contains("salesout") || combined.contains("销售出库") ||
+                   combined.contains("sales_out") || combined.contains("出库")) {
+            return ApiIntent.BusinessObject.SALES_OUT;
         }
         return ApiIntent.BusinessObject.UNKNOWN;
     }

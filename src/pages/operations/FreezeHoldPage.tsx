@@ -501,3 +501,4 @@ export const FreezeHoldPage: React.FC = () => {
 
 export default FreezeHoldPage;
 
+

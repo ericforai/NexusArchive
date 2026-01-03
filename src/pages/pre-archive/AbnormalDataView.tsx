@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getPendingAbnormals, retryAbnormal, AbnormalVoucher } from '../../api/abnormal';
-import { toast } from '../../components/utils/notificationService';
+import { toast } from '../../utils/notificationService';
 
 const AbnormalDataView: React.FC = () => {
     const [data, setData] = useState<AbnormalVoucher[]>([]);

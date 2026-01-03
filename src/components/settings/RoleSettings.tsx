@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Edit3, Trash2, Loader2 } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { Role } from '../../types';
-import { toast } from '../utils/notificationService';
+import { toast } from '../../utils/notificationService';
 
 interface RoleForm {
     id?: string;

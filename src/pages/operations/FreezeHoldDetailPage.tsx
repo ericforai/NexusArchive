@@ -334,3 +334,4 @@ export const FreezeHoldDetailPage: React.FC = () => {
 
 export default FreezeHoldDetailPage;
 
+

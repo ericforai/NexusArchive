@@ -140,3 +140,4 @@ public class DestructionValidationServiceImpl implements DestructionValidationSe
         return new ArrayList<>(borrowedArchiveIds);
     }
 }
+

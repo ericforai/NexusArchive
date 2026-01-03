@@ -57,3 +57,4 @@ CREATE INDEX IF NOT EXISTS idx_search_performance_type
 CREATE INDEX IF NOT EXISTS idx_storage_capacity_fonds 
     ON storage_capacity_stats(fonds_no, recorded_at);
 
+
