@@ -6,6 +6,7 @@
 
 package com.nexusarchive.integration.erp.ai.agent;
 
+import com.nexusarchive.integration.erp.ai.deploy.ErpAdapterAutoDeployService;
 import com.nexusarchive.integration.erp.ai.generator.ErpAdapterCodeGenerator;
 import com.nexusarchive.integration.erp.ai.generator.GeneratedCode;
 import com.nexusarchive.integration.erp.ai.mapper.BusinessSemanticMapper;
@@ -36,13 +37,16 @@ public class ErpAdaptationOrchestrator {
     private final OpenApiDocumentParser documentParser;
     private final BusinessSemanticMapper semanticMapper;
     private final ErpAdapterCodeGenerator codeGenerator;
+    private final ErpAdapterAutoDeployService autoDeployService;
 
     public ErpAdaptationOrchestrator(OpenApiDocumentParser documentParser,
                                     BusinessSemanticMapper semanticMapper,
-                                    ErpAdapterCodeGenerator codeGenerator) {
+                                    ErpAdapterCodeGenerator codeGenerator,
+                                    ErpAdapterAutoDeployService autoDeployService) {
         this.documentParser = documentParser;
         this.semanticMapper = semanticMapper;
         this.codeGenerator = codeGenerator;
+        this.autoDeployService = autoDeployService;
     }
 
     /**
@@ -87,6 +91,49 @@ public class ErpAdaptationOrchestrator {
             .adapterId(request.getErpType().toLowerCase().replace(" ", "-"))
             .message("ERP 适配完成")
             .build();
+    }
+
+    /**
+     * 执行 ERP 适配并自动部署
+     *
+     * @param request 适配请求
+     * @return 适配结果（包含部署结果）
+     */
+    public AdaptationResult adaptAndDeploy(AdaptationRequest request) throws IOException, InterruptedException {
+        log.info("开始 ERP 适配+自动部署: erpType={}, erpName={}", request.getErpType(), request.getErpName());
+
+        // 先执行适配
+        AdaptationResult result = adapt(request);
+
+        if (!result.isSuccess()) {
+            return result;
+        }
+
+        // 再执行自动部署
+        log.info("Step 4: 自动部署");
+        ErpAdapterAutoDeployService.DeploymentResult deployResult = autoDeployService.deploy(result.getCode());
+
+        // 合并结果
+        return AdaptationResult.builder()
+            .success(result.isSuccess() && deployResult.isSuccess())
+            .code(result.getCode())
+            .mappings(result.getMappings())
+            .adapterId(result.getAdapterId())
+            .deploymentResult(deployResult)
+            .message(buildDeploymentMessage(result, deployResult))
+            .build();
+    }
+
+    /**
+     * 构建部署消息
+     */
+    private String buildDeploymentMessage(AdaptationResult adaptationResult,
+                                          ErpAdapterAutoDeployService.DeploymentResult deployResult) {
+        if (deployResult.isSuccess()) {
+            return "ERP 适配并自动部署完成";
+        } else {
+            return "ERP 适配成功，但部署失败: " + deployResult.getMessage();
+        }
     }
 
     /**
@@ -150,6 +197,7 @@ public class ErpAdaptationOrchestrator {
         private List<BusinessSemanticMapper.ScenarioMapping> mappings;
         private String adapterId;
         private String message;
+        private ErpAdapterAutoDeployService.DeploymentResult deploymentResult;
 
         public static AdaptationResult failure(String errorMessage) {
             return AdaptationResult.builder()

@@ -63,6 +63,7 @@ public class ErpAdapterCodeGenerator {
             .dtoClasses(dtoClasses)
             .testClass(testClass)
             .configSql(configSql)
+            .mappings(mappings)
             .build();
     }
 

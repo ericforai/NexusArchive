@@ -6,6 +6,7 @@
 
 package com.nexusarchive.integration.erp.ai.generator;
 
+import com.nexusarchive.integration.erp.ai.mapper.BusinessSemanticMapper;
 import lombok.Builder;
 import lombok.Data;
 
@@ -60,6 +61,11 @@ public class GeneratedCode {
      * 集成配置 SQL
      */
     private String configSql;
+
+    /**
+     * 场景映射列表
+     */
+    private List<BusinessSemanticMapper.ScenarioMapping> mappings;
 
     /**
      * DTO 类

@@ -6,6 +6,7 @@
 
 package com.nexusarchive.integration.erp.ai.agent;
 
+import com.nexusarchive.integration.erp.ai.deploy.ErpAdapterAutoDeployService;
 import com.nexusarchive.integration.erp.ai.generator.ErpAdapterCodeGenerator;
 import com.nexusarchive.integration.erp.ai.mapper.BusinessSemanticMapper;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDocumentParser;
@@ -20,6 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 /**
  * ErpAdaptationOrchestrator 测试
@@ -33,7 +35,8 @@ class ErpAdaptationOrchestratorTest {
         OpenApiDocumentParser parser = new OpenApiDocumentParser();
         BusinessSemanticMapper mapper = new BusinessSemanticMapper();
         ErpAdapterCodeGenerator generator = new ErpAdapterCodeGenerator();
-        orchestrator = new ErpAdaptationOrchestrator(parser, mapper, generator);
+        ErpAdapterAutoDeployService autoDeployService = mock(ErpAdapterAutoDeployService.class);
+        orchestrator = new ErpAdaptationOrchestrator(parser, mapper, generator, autoDeployService);
     }
 
     @Test
