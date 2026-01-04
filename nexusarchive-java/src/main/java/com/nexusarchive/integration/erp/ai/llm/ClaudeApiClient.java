@@ -21,6 +21,7 @@ import java.util.List;
 public class ClaudeApiClient {
 
     private final AiProperties properties;
+    private final RateLimitService rateLimiter;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -32,6 +33,11 @@ public class ClaudeApiClient {
     public String complete(String userPrompt) {
         if (!properties.isEnabled()) {
             throw new IllegalStateException("AI generation is disabled");
+        }
+
+        // 检查速率限制
+        if (!rateLimiter.tryAcquire()) {
+            throw new IllegalStateException("AI API rate limit exceeded. Please try again later.");
         }
 
         log.info("Calling Claude API with model: {}", properties.getModel());
