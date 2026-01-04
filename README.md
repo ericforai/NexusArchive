@@ -163,7 +163,7 @@ BASE_URL=http://localhost:15175 PW_USER=zhangsan PW_PASS=admin123 npm run test:s
 | **功能** | [功能模块](docs/guides/功能模块.md) · [权限管理](docs/guides/权限管理.md) |
 | **产品** | [PRD v1.0](docs/product/prd-v1.0.md) · [产品架构](docs/product/architecture.md) |
 | **安全** | [安全指南](docs/guides/安全指南.md) · [审计日志](docs/guides/安全指南.md#审计日志防篡改) |
-| **集成** | [用友集成](docs/guides/用友集成.md) · [API 速查](docs/api/接口速查.md) |
+| **集成** | [用友集成](docs/guides/用友集成.md) · [AI 适配器生成](docs/guides/ai-adapter-generation.md) · [API 速查](docs/api/接口速查.md) |
 | **数据库** | [数据库设计](docs/database/数据库设计.md) · [DDL 脚本](docs/database/) |
 | **规划** | [优化计划](docs/planning/优化计划.md) · [更新日志](docs/CHANGELOG.md) · [模块边界试点成果](docs/implementation/2025-12-27-module-boundary-pilot.md) |
 
