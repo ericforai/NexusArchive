@@ -1,7 +1,7 @@
 // nexusarchive-java/src/main/java/com/nexusarchive/integration/erp/ai/agent/ErpAdaptationOrchestrator.java
 // Input: Files + ERP info
 // Output: AdaptationResult containing generated code
-// Pos: AI 模块 - Agent 编排器
+// Pos: ERP 模块 - 适配编排器
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.integration.erp.ai.agent;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * ERP 适配编排器
  * <p>
- * 协调各个 AI 组件完成 ERP 适配流程
+ * 协调各个组件完成 ERP 适配流程（基于模板的代码生成）
  * </p>
  */
 @Slf4j
