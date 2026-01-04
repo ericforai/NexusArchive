@@ -378,8 +378,13 @@ public class ErpAdaptationController {
 
     /**
      * 生成代码（AI 生成，返回会话 ID）
+     * <p>
+     * 已废弃：AI 生成功能已被移除。
+     * 请使用 /adapt-with-deploy 端点进行基于模板的代码生成。
+     * </p>
      */
     @PostMapping("/generate-ai")
+    @Deprecated
     public ResponseEntity<ApiResponse> generateWithAi(
             @RequestParam("file") MultipartFile file,
             @RequestParam("erpType") String erpType,
@@ -387,39 +392,13 @@ public class ErpAdaptationController {
             @RequestParam(value = "baseUrl", required = false) String baseUrl,
             @RequestParam(value = "authType", required = false) String authType) {
 
-        try {
-            log.info("收到 AI 生成请求: erpType={}, erpName={}", erpType, erpName);
+        log.warn("收到已废弃的 AI 生成请求: erpType={}, erpName={}", erpType, erpName);
 
-            // 解析 OpenAPI 文档
-            OpenApiDocumentParser.ParseResult parseResult = openApiDocumentParser.parse(file);
-            if (!parseResult.isSuccess()) {
-                return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("OpenAPI 解析失败: " + parseResult.getErrorMessage()));
-            }
-
-            // 使用 AI 生成代码
-            AiGenerationSession session = aiGenerationSessionService.createSession(
-                parseResult.getDefinitions(),
-                erpType,
-                erpName,
-                baseUrl != null ? baseUrl : "https://api.example.com",
-                authType != null ? authType : "appkey"
-            );
-
-            // 保存会话
-            aiGenerationSessionService.saveSession(session);
-
-            return ResponseEntity.ok(ApiResponse.success(Map.of(
-                "sessionId", session.getSessionId(),
-                "status", session.getStatus(),
-                "generatedCode", session.getGeneratedCode()
-            )));
-
-        } catch (Exception e) {
-            log.error("AI 生成失败", e);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("AI 生成失败: " + e.getMessage()));
-        }
+        return ResponseEntity.badRequest().body(ApiResponse.error(
+            "AI code generation is no longer available. " +
+            "Please use the /adapt-with-deploy endpoint for template-based code generation. " +
+            "External LLM API clients have been removed from the system."
+        ));
     }
 
     /**

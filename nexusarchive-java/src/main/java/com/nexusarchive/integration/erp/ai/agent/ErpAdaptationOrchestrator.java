@@ -7,7 +7,6 @@
 package com.nexusarchive.integration.erp.ai.agent;
 
 import com.nexusarchive.integration.erp.ai.deploy.ErpAdapterAutoDeployService;
-import com.nexusarchive.integration.erp.ai.generator.AiCodeGenerationService;
 import com.nexusarchive.integration.erp.ai.generator.ErpAdapterCodeGenerator;
 import com.nexusarchive.integration.erp.ai.generator.GeneratedCode;
 import com.nexusarchive.integration.erp.ai.mapper.BusinessSemanticMapper;
@@ -40,9 +39,6 @@ public class ErpAdaptationOrchestrator {
     private final BusinessSemanticMapper semanticMapper;
     private final ErpAdapterCodeGenerator codeGenerator;
     private final ErpAdapterAutoDeployService autoDeployService;
-
-    @Autowired(required = false)
-    private AiCodeGenerationService aiCodeGenerationService;
 
     public ErpAdaptationOrchestrator(OpenApiDocumentParser documentParser,
                                     BusinessSemanticMapper semanticMapper,
@@ -181,28 +177,10 @@ public class ErpAdaptationOrchestrator {
     }
 
     /**
-     * 生成代码 - 优先使用 AI，回退到模板生成
+     * 生成代码 - 使用模板生成
      */
     private GeneratedCode generateCode(List<OpenApiDefinition> definitions, AdaptationRequest request) {
-        // 尝试使用 AI 生成
-        if (aiCodeGenerationService != null && aiCodeGenerationService.isAvailable()) {
-            try {
-                log.info("Using AI code generation");
-                return aiCodeGenerationService.generateWithAI(
-                    definitions,
-                    request.getErpType(),
-                    request.getErpName(),
-                    request.getBaseUrl(),
-                    request.getAuthType()
-                );
-            } catch (Exception e) {
-                log.warn("AI generation failed, falling back to template generation: {}", e.getMessage());
-            }
-        } else {
-            log.info("AI generation not available, using template generation");
-        }
-
-        // 回退到模板生成
+        log.info("Using template-based code generation");
         List<BusinessSemanticMapper.ScenarioMapping> mappings = mapToScenarios(definitions);
         return codeGenerator.generate(mappings, request.getErpType(), request.getErpName());
     }

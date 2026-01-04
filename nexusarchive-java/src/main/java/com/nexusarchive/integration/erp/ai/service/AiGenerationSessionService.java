@@ -2,64 +2,51 @@
 package com.nexusarchive.integration.erp.ai.service;
 
 import com.nexusarchive.integration.erp.ai.dto.AiGenerationSession;
-import com.nexusarchive.integration.erp.ai.generator.AiCodeGenerationService;
-import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * AI 生成会话服务
+ * <p>
+ * 注意：此服务现在主要用于会话管理。AI 代码生成功能已被移除。
+ * 系统现在使用模板化的代码生成（ErpAdapterCodeGenerator）。
+ * </p>
+ */
 @Slf4j
 @Service
 public class AiGenerationSessionService {
 
-    private final AiCodeGenerationService aiCodeGenerationService;
     private final Map<String, AiGenerationSession> sessions = new ConcurrentHashMap<>();
 
-    public AiGenerationSessionService(AiCodeGenerationService aiCodeGenerationService) {
-        this.aiCodeGenerationService = aiCodeGenerationService;
-    }
-
+    /**
+     * 创建会话
+     * <p>
+     * AI 生成功能已被移除，此方法现在抛出不支持异常。
+     * 请使用 ErpAdaptationOrchestrator 进行基于模板的代码生成。
+     * </p>
+     */
     public AiGenerationSession createSession(
-            List<OpenApiDefinition> definitions,
             String erpType,
-            String erpName,
-            String baseUrl,
-            String authType) {
+            String erpName) {
 
-        // 生成代码
-        var generatedCode = aiCodeGenerationService.generateWithAI(
-            definitions, erpType, erpName, baseUrl, authType
+        // AI code generation functionality has been removed
+        throw new UnsupportedOperationException(
+            "AI session creation is not available. External LLM API clients have been removed. " +
+            "Please use ErpAdaptationOrchestrator for template-based code generation."
         );
-
-        // 创建原始提示词记录
-        String originalPrompt = String.format(
-            "Generate ERP adapter for %s (%s) with %d API definitions",
-            erpName, erpType, definitions.size()
-        );
-
-        // 创建会话
-        AiGenerationSession session = AiGenerationSession.builder()
-            .sessionId(UUID.randomUUID().toString())
-            .erpType(erpType)
-            .erpName(erpName)
-            .originalPrompt(originalPrompt)
-            .generatedCode(generatedCode.getAdapterClass())
-            .iterationCount(1)
-            .createdAt(LocalDateTime.now())
-            .lastModifiedAt(LocalDateTime.now())
-            .status(AiGenerationSession.AiGenerationStatus.GENERATED)
-            .build();
-
-        sessions.put(session.getSessionId(), session);
-
-        return session;
     }
 
+    /**
+     * 重新生成
+     * <p>
+     * AI 重新生成功能已被移除。
+     * </p>
+     */
     public AiGenerationSession regenerate(String sessionId, String userFeedback) {
         AiGenerationSession existing = sessions.get(sessionId);
         if (existing == null) {
@@ -72,6 +59,9 @@ public class AiGenerationSessionService {
         );
     }
 
+    /**
+     * 批准会话
+     */
     public void approve(String sessionId) {
         AiGenerationSession session = sessions.get(sessionId);
         if (session == null) {
@@ -86,6 +76,9 @@ public class AiGenerationSessionService {
         log.info("Session {} approved, proceeding with deployment", sessionId);
     }
 
+    /**
+     * 保存会话
+     */
     public void saveSession(AiGenerationSession session) {
         sessions.put(session.getSessionId(), session);
     }
