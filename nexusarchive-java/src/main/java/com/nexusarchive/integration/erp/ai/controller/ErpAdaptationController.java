@@ -12,11 +12,13 @@ import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator.AdaptationRequest;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator.AdaptationResult;
+import com.nexusarchive.integration.erp.ai.dto.AiGenerationSession;
 import com.nexusarchive.integration.erp.ai.identifier.ErpTypeIdentifier;
 import com.nexusarchive.integration.erp.ai.identifier.ScenarioName;
 import com.nexusarchive.integration.erp.ai.identifier.ScenarioNamer;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDocumentParser;
+import com.nexusarchive.integration.erp.ai.service.AiGenerationSessionService;
 import com.nexusarchive.service.ErpConfigService;
 import lombok.Builder;
 import lombok.Data;
@@ -30,13 +32,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * ERP 适配 REST API 控制器
  */
 @Slf4j
 @RestController
-@RequestMapping("/erp-ai")
+@RequestMapping(value = "/erp-ai", produces = "application/json;charset=UTF-8")
 public class ErpAdaptationController {
 
     private final ErpAdaptationOrchestrator orchestrator;
@@ -44,6 +47,7 @@ public class ErpAdaptationController {
     private final ErpTypeIdentifier erpTypeIdentifier;
     private final ScenarioNamer scenarioNamer;
     private final ErpConfigService erpConfigService;
+    private final AiGenerationSessionService aiGenerationSessionService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ErpAdaptationController(
@@ -51,12 +55,14 @@ public class ErpAdaptationController {
             OpenApiDocumentParser openApiDocumentParser,
             ErpTypeIdentifier erpTypeIdentifier,
             ScenarioNamer scenarioNamer,
-            ErpConfigService erpConfigService) {
+            ErpConfigService erpConfigService,
+            AiGenerationSessionService aiGenerationSessionService) {
         this.orchestrator = orchestrator;
         this.openApiDocumentParser = openApiDocumentParser;
         this.erpTypeIdentifier = erpTypeIdentifier;
         this.scenarioNamer = scenarioNamer;
         this.erpConfigService = erpConfigService;
+        this.aiGenerationSessionService = aiGenerationSessionService;
     }
 
     /**
@@ -264,6 +270,86 @@ public class ErpAdaptationController {
     }
 
     /**
+     * 简化的部署接口
+     * <p>
+     * 上传 OpenAPI 文档，自动识别并部署到指定连接器
+     * </p>
+     *
+     * @param file OpenAPI 文档文件
+     * @param erpSystem ERP 系统类型
+     * @param targetConfigId 目标连接器 ID（可选，不提供则创建新连接器）
+     * @return 部署结果
+     */
+    @PostMapping("/adapt-deploy")
+    public ResponseEntity<ApiResponse> adaptAndDeploySimple(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("erpSystem") String erpSystem,
+            @RequestParam(value = "targetConfigId", required = false) Long targetConfigId) {
+
+        try {
+            log.info("收到简化部署请求: fileName={}, erpSystem={}, targetConfigId={}",
+                file.getOriginalFilename(), erpSystem, targetConfigId);
+
+            // 1. 验证文件
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("文件不能为空"));
+            }
+
+            // 2. 解析 OpenAPI 文档
+            OpenApiDocumentParser.ParseResult parseResult = openApiDocumentParser.parse(file);
+            if (!parseResult.isSuccess()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("OpenAPI 解析失败: " + parseResult.getErrorMessage()));
+            }
+
+            // 3. 生成适配器名称
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String erpName = targetConfigId != null ? "existing-" + timestamp : erpSystem + "-" + timestamp;
+
+            // 4. 调用完整的部署逻辑
+            List<MultipartFile> files = List.of(file);
+            AdaptationRequest request = AdaptationRequest.builder()
+                .erpType(erpSystem)
+                .erpName(erpName)
+                .apiFiles(files)
+                .build();
+
+            // 5. 执行适配+部署
+            AdaptationResult result = orchestrator.adaptAndDeploy(request);
+
+            if (result.isSuccess()) {
+                String message = targetConfigId != null
+                    ? "成功部署 " + erpSystem + " 适配器到连接器 ID: " + targetConfigId
+                    : "成功创建并部署新的 " + erpSystem + " 连接器";
+
+                return ResponseEntity.ok(ApiResponse.success(Map.of(
+                    "message", message,
+                    "erpType", erpSystem,
+                    "adapterName", erpName,
+                    "scenarioCount", parseResult.getDefinitions().size()
+                )));
+            } else {
+                return ResponseEntity.badRequest().body(ApiResponse.error(result.getMessage()));
+            }
+
+        } catch (IOException e) {
+            log.error("文件处理失败", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("文件处理失败: " + e.getMessage()));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("部署过程被中断", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("部署被中断: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("部署失败", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("服务器内部错误: " + e.getMessage()));
+        }
+    }
+
+    /**
      * 从 configJson 中提取 baseUrl
      */
     private String extractBaseUrl(String configJson) {
@@ -288,6 +374,100 @@ public class ErpAdaptationController {
         // MVP: 简化实现， sessionId 在当前版本中未使用
         // 完整版本会从会话存储中获取生成的代码
         return ResponseEntity.ok(ApiResponse.success("预览功能（MVP 简化版本）"));
+    }
+
+    /**
+     * 生成代码（AI 生成，返回会话 ID）
+     */
+    @PostMapping("/generate-ai")
+    public ResponseEntity<ApiResponse> generateWithAi(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("erpType") String erpType,
+            @RequestParam("erpName") String erpName,
+            @RequestParam(value = "baseUrl", required = false) String baseUrl,
+            @RequestParam(value = "authType", required = false) String authType) {
+
+        try {
+            log.info("收到 AI 生成请求: erpType={}, erpName={}", erpType, erpName);
+
+            // 解析 OpenAPI 文档
+            OpenApiDocumentParser.ParseResult parseResult = openApiDocumentParser.parse(file);
+            if (!parseResult.isSuccess()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("OpenAPI 解析失败: " + parseResult.getErrorMessage()));
+            }
+
+            // 使用 AI 生成代码
+            AiGenerationSession session = aiGenerationSessionService.createSession(
+                parseResult.getDefinitions(),
+                erpType,
+                erpName,
+                baseUrl != null ? baseUrl : "https://api.example.com",
+                authType != null ? authType : "appkey"
+            );
+
+            // 保存会话
+            aiGenerationSessionService.saveSession(session);
+
+            return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "sessionId", session.getSessionId(),
+                "status", session.getStatus(),
+                "generatedCode", session.getGeneratedCode()
+            )));
+
+        } catch (Exception e) {
+            log.error("AI 生成失败", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("AI 生成失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 提供反馈并重新生成
+     */
+    @PostMapping("/regenerate-ai/{sessionId}")
+    public ResponseEntity<ApiResponse> regenerateWithFeedback(
+            @PathVariable String sessionId,
+            @RequestBody FeedbackRequest feedback) {
+
+        try {
+            log.info("收到重新生成请求: sessionId={}", sessionId);
+
+            AiGenerationSession updatedSession = aiGenerationSessionService.regenerate(
+                sessionId,
+                feedback.getUserFeedback()
+            );
+
+            return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "sessionId", updatedSession.getSessionId(),
+                "iterationCount", updatedSession.getIterationCount(),
+                "generatedCode", updatedSession.getGeneratedCode()
+            )));
+
+        } catch (Exception e) {
+            log.error("重新生成失败", e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("重新生成失败: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 批准生成的代码
+     */
+    @PostMapping("/approve/{sessionId}")
+    public ResponseEntity<ApiResponse> approveCode(@PathVariable String sessionId) {
+        try {
+            aiGenerationSessionService.approve(sessionId);
+            return ResponseEntity.ok(ApiResponse.success("代码已批准，将继续部署"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("批准失败: " + e.getMessage()));
+        }
+    }
+
+    @Data
+    private static class FeedbackRequest {
+        private String userFeedback;
     }
 
     /**

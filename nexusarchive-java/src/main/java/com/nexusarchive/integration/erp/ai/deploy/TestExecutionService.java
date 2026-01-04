@@ -51,10 +51,7 @@ public class TestExecutionService {
         Path pomPath = basePath.resolve("pom.xml");
 
         if (!Files.exists(pomPath)) {
-            return ErpAdapterAutoDeployService.TestResult.builder()
-                .success(false)
-                .errorMessage("找不到 pom.xml: " + pomPath)
-                .build();
+            return ErpAdapterAutoDeployService.TestResult.failure("找不到 pom.xml: " + pomPath);
         }
 
         try {
@@ -95,10 +92,7 @@ public class TestExecutionService {
 
             if (!finished) {
                 process.destroyForcibly();
-                return ErpAdapterAutoDeployService.TestResult.builder()
-                    .success(false)
-                    .errorMessage("测试超时（超过 " + TEST_TIMEOUT_SECONDS + " 秒）")
-                    .build();
+                return ErpAdapterAutoDeployService.TestResult.failure("测试超时（超过 " + TEST_TIMEOUT_SECONDS + " 秒）");
             }
 
             int exitCode = process.exitValue();
@@ -107,32 +101,20 @@ public class TestExecutionService {
                 // 解析测试数量
                 int testCount = parseTestCount(outputLines);
                 log.info("测试通过: {} 个测试", testCount);
-                return ErpAdapterAutoDeployService.TestResult.builder()
-                    .success(true)
-                    .testCount(testCount)
-                    .build();
+                return ErpAdapterAutoDeployService.TestResult.success(testCount);
             } else {
                 String errorMsg = parseTestErrors(outputLines);
                 log.warn("测试失败: {}", errorMsg);
-                return ErpAdapterAutoDeployService.TestResult.builder()
-                    .success(false)
-                    .errorMessage(errorMsg)
-                    .build();
+                return ErpAdapterAutoDeployService.TestResult.failure(errorMsg);
             }
 
         } catch (IOException e) {
             log.error("测试过程发生 IO 异常", e);
-            return ErpAdapterAutoDeployService.TestResult.builder()
-                .success(false)
-                .errorMessage("测试异常: " + e.getMessage())
-                .build();
+            return ErpAdapterAutoDeployService.TestResult.failure("测试异常: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("测试过程被中断", e);
-            return ErpAdapterAutoDeployService.TestResult.builder()
-                .success(false)
-                .errorMessage("测试被中断: " + e.getMessage())
-                .build();
+            return ErpAdapterAutoDeployService.TestResult.failure("测试被中断: " + e.getMessage());
         }
     }
 

@@ -50,10 +50,7 @@ public class CompilationService {
         Path pomPath = basePath.resolve("pom.xml");
 
         if (!Files.exists(pomPath)) {
-            return ErpAdapterAutoDeployService.CompilationResult.builder()
-                .success(false)
-                .errorMessage("找不到 pom.xml: " + pomPath)
-                .build();
+            return ErpAdapterAutoDeployService.CompilationResult.failure("找不到 pom.xml: " + pomPath);
         }
 
         try {
@@ -94,10 +91,7 @@ public class CompilationService {
 
             if (!finished) {
                 process.destroyForcibly();
-                return ErpAdapterAutoDeployService.CompilationResult.builder()
-                    .success(false)
-                    .errorMessage("编译超时（超过 " + COMPILATION_TIMEOUT_SECONDS + " 秒）")
-                    .build();
+                return ErpAdapterAutoDeployService.CompilationResult.failure("编译超时（超过 " + COMPILATION_TIMEOUT_SECONDS + " 秒）");
             }
 
             int exitCode = process.exitValue();
@@ -105,35 +99,23 @@ public class CompilationService {
             if (exitCode == 0) {
                 String output = String.join("\n", outputLines);
                 log.info("编译成功");
-                return ErpAdapterAutoDeployService.CompilationResult.builder()
-                    .success(true)
-                    .outputMessage("编译成功")
-                    .build();
+                return ErpAdapterAutoDeployService.CompilationResult.success(output);
             } else {
                 String errorMsg = String.join("\n", errorLines);
                 if (errorMsg.isEmpty()) {
                     errorMsg = "编译失败，退出码: " + exitCode;
                 }
                 log.error("编译失败: {}", errorMsg);
-                return ErpAdapterAutoDeployService.CompilationResult.builder()
-                    .success(false)
-                    .errorMessage(errorMsg)
-                    .build();
+                return ErpAdapterAutoDeployService.CompilationResult.failure(errorMsg);
             }
 
         } catch (IOException e) {
             log.error("编译过程发生 IO 异常", e);
-            return ErpAdapterAutoDeployService.CompilationResult.builder()
-                .success(false)
-                .errorMessage("编译异常: " + e.getMessage())
-                .build();
+            return ErpAdapterAutoDeployService.CompilationResult.failure("编译异常: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("编译过程被中断", e);
-            return ErpAdapterAutoDeployService.CompilationResult.builder()
-                .success(false)
-                .errorMessage("编译被中断: " + e.getMessage())
-                .build();
+            return ErpAdapterAutoDeployService.CompilationResult.failure("编译被中断: " + e.getMessage());
         }
     }
 

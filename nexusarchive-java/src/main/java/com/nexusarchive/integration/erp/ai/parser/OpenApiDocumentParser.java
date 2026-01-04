@@ -44,7 +44,7 @@ public class OpenApiDocumentParser {
     public ParseResult parse(MultipartFile file) throws IOException {
         // 1. 保存到临时文件
         Path tempFile = Files.createTempFile("openapi-", ".json");
-        file.transferTo(tempFile.toFile());
+        Files.write(tempFile, file.getBytes());
 
         try {
             // 2. 解析 OpenAPI 文档

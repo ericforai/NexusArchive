@@ -180,22 +180,48 @@ public class ErpAdapterAutoDeployService {
      * 编译结果
      */
     @Data
-    @Builder
     public static class CompilationResult {
         private boolean success;
         private String outputMessage;
         private String errorMessage;
+
+        public static CompilationResult success(String outputMessage) {
+            CompilationResult result = new CompilationResult();
+            result.success = true;
+            result.outputMessage = outputMessage;
+            return result;
+        }
+
+        public static CompilationResult failure(String errorMessage) {
+            CompilationResult result = new CompilationResult();
+            result.success = false;
+            result.errorMessage = errorMessage;
+            return result;
+        }
     }
 
     /**
      * 测试结果
      */
     @Data
-    @Builder
     public static class TestResult {
         private boolean success;
         private int testCount;
         private String errorMessage;
+
+        public static TestResult success(int testCount) {
+            TestResult result = new TestResult();
+            result.success = true;
+            result.testCount = testCount;
+            return result;
+        }
+
+        public static TestResult failure(String errorMessage) {
+            TestResult result = new TestResult();
+            result.success = false;
+            result.errorMessage = errorMessage;
+            return result;
+        }
     }
 
     /**

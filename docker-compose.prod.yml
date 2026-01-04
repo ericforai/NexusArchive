@@ -1,3 +1,18 @@
+# ==============================================================================
+# ⚠️  AI CODING WARNING - 重要规则 ⚠️
+# ==============================================================================
+# 
+# 健康检查必须使用 127.0.0.1，禁止使用 localhost
+# 原因：Alpine Linux中localhost解析为IPv6 ::1，导致健康检查失败
+# 
+# ❌ 错误示例：test: ["CMD", "wget", "-q", "--spider", "http://localhost:15175"]
+# ✅ 正确示例：test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:15175"]
+#
+# 修改任何健康检查配置时，必须遵守此规则！
+#
+# 详细说明：docs/DOCKER_BUILD_GUIDE.md
+# ==============================================================================
+
 # 生产环境 Docker Compose 配置
 # 用法: docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
@@ -79,7 +94,7 @@ services:
       - ./nexusarchive-java/data:/app/data
       - ./nexusarchive-java/keystore:/app/keystore
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:19090/api/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:19090/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -102,7 +117,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:80/"]
       interval: 30s
       timeout: 10s
       retries: 3

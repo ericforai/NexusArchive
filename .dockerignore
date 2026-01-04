@@ -1,3 +1,20 @@
+# ==============================================================================
+# ⚠️  Docker构建优化 - AI修改须知 ⚠️
+# ==============================================================================
+#
+# 目标：保持构建上下文 < 500KB
+# 原因：大文件会导致构建缓慢和镜像过大
+#
+# 必须排除的文件类型：
+#   - *.log (日志文件，通常很大)
+#   - *.tar.gz, *.zip (备份文件)
+#   - test-*.json, test-*.txt (测试结果)
+#   - *.tmp (临时文件)
+#
+# 添加新文件类型前，先检查大小！
+# 详细说明：docs/DOCKER_BUILD_GUIDE.md
+# ==============================================================================
+
 # Input: 版本控制/构建忽略规则
 # Output: 忽略规则配置
 # Pos: 仓库配置
@@ -11,16 +28,16 @@ build
 .vscode
 .idea
 *.log
+*.tar.gz
+*.zip
 backend/target
-nexusarchive-java/target/*.log
-nexusarchive-java/target/classes
-nexusarchive-java/target/generated-sources
-nexusarchive-java/target/maven-archiver
-nexusarchive-java/target/maven-status
-docker-compose.yml
-docker-compose.dev.yml
-Dockerfile
-Dockerfile.frontend
+nexusarchive-java/target
+test-*.json
+test-*.txt
+*.tmp
+.DS_Store
+docker-compose*.yml
+Dockerfile*
 .env
 .env.*
 !.env.example
