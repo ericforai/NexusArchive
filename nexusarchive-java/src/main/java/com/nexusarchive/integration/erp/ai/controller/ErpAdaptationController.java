@@ -402,32 +402,21 @@ public class ErpAdaptationController {
     }
 
     /**
-     * 提供反馈并重新生成
+     * 提供反馈并重新生成 (已弃用)
+     * @deprecated AI code generation has been removed. Use the template-based code generation via the /adapt-with-deploy endpoint.
      */
+    @Deprecated
     @PostMapping("/regenerate-ai/{sessionId}")
     public ResponseEntity<ApiResponse> regenerateWithFeedback(
             @PathVariable String sessionId,
             @RequestBody FeedbackRequest feedback) {
 
-        try {
-            log.info("收到重新生成请求: sessionId={}", sessionId);
+        log.warn("收到已弃用的 /regenerate-ai 端点请求: sessionId={}", sessionId);
 
-            AiGenerationSession updatedSession = aiGenerationSessionService.regenerate(
-                sessionId,
-                feedback.getUserFeedback()
-            );
-
-            return ResponseEntity.ok(ApiResponse.success(Map.of(
-                "sessionId", updatedSession.getSessionId(),
-                "iterationCount", updatedSession.getIterationCount(),
-                "generatedCode", updatedSession.getGeneratedCode()
-            )));
-
-        } catch (Exception e) {
-            log.error("重新生成失败", e);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("重新生成失败: " + e.getMessage()));
-        }
+        return ResponseEntity.badRequest().body(ApiResponse.error(
+            "AI code regeneration has been removed. " +
+            "Please use the template-based code generation via the /adapt-with-deploy endpoint."
+        ));
     }
 
     /**
