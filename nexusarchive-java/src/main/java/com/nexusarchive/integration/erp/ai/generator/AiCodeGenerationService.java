@@ -6,7 +6,6 @@
 
 package com.nexusarchive.integration.erp.ai.generator;
 
-import com.nexusarchive.integration.erp.ai.llm.deepseek.DeepSeekApiClient;
 import com.nexusarchive.integration.erp.ai.llm.parser.CodeParser;
 import com.nexusarchive.integration.erp.ai.llm.parser.CodeValidationException;
 import com.nexusarchive.integration.erp.ai.llm.parser.JavaSyntaxValidator;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * AI 代码生成服务
  * <p>
- * 使用 LLM 生成 ERP 适配器代码
+ * 外部 LLM API 客户端已移除，此服务现在仅用于代码生成的基础结构。
  * </p>
  */
 @Slf4j
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AiCodeGenerationService {
 
-    private final DeepSeekApiClient deepSeekClient;
     private final CodeGenerationPromptBuilder promptBuilder;
     private final CodeParser codeParser;
     private final JavaSyntaxValidator syntaxValidator;
@@ -49,70 +47,17 @@ public class AiCodeGenerationService {
                                      String erpName,
                                      String baseUrl,
                                      String authType) {
-        long startTime = System.currentTimeMillis();
-        boolean success = false;
-        int tokensUsed = 0;
-
-        try {
-            log.info("Starting AI code generation for {} APIs", definitions.size());
-
-            // 1. 构建 Prompt 上下文
-            PromptContext context = buildContext(definitions, erpType, erpName, baseUrl, authType);
-
-            // 2. 生成 Prompt
-            String prompt = promptBuilder.buildPrompt(context);
-            log.debug("Generated prompt ({} chars)", prompt.length());
-
-            // 3. 调用 DeepSeek API
-            String aiResponse = deepSeekClient.complete(prompt);
-            success = true;
-            // Rough token estimate: 1 token ≈ 4 characters (prompt + response)
-            tokensUsed = (prompt.length() + aiResponse.length()) / 4;
-            log.info("Received AI response ({} chars)", aiResponse.length());
-
-            // 4. 提取 Java 代码
-            String javaCode = codeParser.extractJavaCode(aiResponse);
-            log.info("Extracted Java code ({} chars)", javaCode.length());
-
-            // 5. 验证语法
-            syntaxValidator.validate(javaCode);
-            log.info("Code syntax validation passed");
-
-            // 6. 解析元信息
-            CodeParser.ParsedCodeMetadata metadata = codeParser.parseMetadata(javaCode);
-
-            // 7. 构建 GeneratedCode 对象
-            return GeneratedCode.builder()
-                .adapterClass(javaCode)
-                .className(metadata.getClassName())
-                .packageName(metadata.getPackageName())
-                .erpType(erpType)
-                .erpName(erpName)
-                .build();
-
-        } catch (CodeValidationException e) {
-            log.error("AI code generation validation failed", e);
-            throw new RuntimeException("Failed to generate valid code: " + e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("AI code generation failed", e);
-            throw new RuntimeException("AI generation error: " + e.getMessage(), e);
-        } finally {
-            long responseTime = System.currentTimeMillis() - startTime;
-            metrics.recordRequest(success, tokensUsed, responseTime);
-            log.debug("Recorded metrics: success={}, tokens={}, time={}ms", success, tokensUsed, responseTime);
-        }
+        // AI generation functionality has been removed
+        throw new UnsupportedOperationException(
+            "AI code generation is not available. External LLM API clients (Claude, GLM, DeepSeek) have been removed."
+        );
     }
 
     /**
      * 检查 AI 生成是否可用
      */
     public boolean isAvailable() {
-        try {
-            return deepSeekClient != null;
-        } catch (Exception e) {
-            log.warn("AI generation not available", e);
-            return false;
-        }
+        return false;
     }
 
     /**

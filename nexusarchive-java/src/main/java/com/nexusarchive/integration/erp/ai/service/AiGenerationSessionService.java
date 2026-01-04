@@ -3,7 +3,6 @@ package com.nexusarchive.integration.erp.ai.service;
 
 import com.nexusarchive.integration.erp.ai.dto.AiGenerationSession;
 import com.nexusarchive.integration.erp.ai.generator.AiCodeGenerationService;
-import com.nexusarchive.integration.erp.ai.llm.ClaudeApiClient;
 import com.nexusarchive.integration.erp.ai.llm.parser.CodeParser;
 import com.nexusarchive.integration.erp.ai.llm.parser.CodeValidationException;
 import com.nexusarchive.integration.erp.ai.llm.parser.JavaSyntaxValidator;
@@ -22,18 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AiGenerationSessionService {
 
     private final AiCodeGenerationService aiCodeGenerationService;
-    private final ClaudeApiClient claudeApiClient;
     private final CodeParser codeParser;
     private final JavaSyntaxValidator syntaxValidator;
     private final Map<String, AiGenerationSession> sessions = new ConcurrentHashMap<>();
 
     public AiGenerationSessionService(
             AiCodeGenerationService aiCodeGenerationService,
-            ClaudeApiClient claudeApiClient,
             CodeParser codeParser,
             JavaSyntaxValidator syntaxValidator) {
         this.aiCodeGenerationService = aiCodeGenerationService;
-        this.claudeApiClient = claudeApiClient;
         this.codeParser = codeParser;
         this.syntaxValidator = syntaxValidator;
     }
@@ -80,48 +76,10 @@ public class AiGenerationSessionService {
             throw new IllegalArgumentException("Session not found: " + sessionId);
         }
 
-        try {
-            // 构建 refined prompt（包含用户反馈）
-            String refinedPrompt = buildRefinedPrompt(existing, userFeedback);
-
-            // 重新调用 AI
-            String aiResponse = claudeApiClient.complete(refinedPrompt);
-            log.info("Received AI regeneration response ({} chars)", aiResponse.length());
-
-            // 提取 Java 代码
-            String newCode = codeParser.extractJavaCode(aiResponse);
-            log.info("Extracted Java code from regeneration ({} chars)", newCode.length());
-
-            // 验证语法
-            syntaxValidator.validate(newCode);
-            log.info("Regenerated code syntax validation passed");
-
-            // 使用 builder 模式创建新的会话对象（避免并发问题）
-            AiGenerationSession updatedSession = AiGenerationSession.builder()
-                .sessionId(existing.getSessionId())
-                .erpType(existing.getErpType())
-                .erpName(existing.getErpName())
-                .originalPrompt(existing.getOriginalPrompt())
-                .generatedCode(newCode)
-                .userFeedback(userFeedback)
-                .iterationCount(existing.getIterationCount() + 1)
-                .createdAt(existing.getCreatedAt())
-                .lastModifiedAt(LocalDateTime.now())
-                .status(AiGenerationSession.AiGenerationStatus.GENERATED)
-                .build();
-
-            // 原子性地替换会话
-            sessions.put(sessionId, updatedSession);
-
-            return updatedSession;
-
-        } catch (CodeValidationException e) {
-            log.error("Code validation failed during regeneration", e);
-            throw new RuntimeException("Failed to validate regenerated code: " + e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("Regeneration failed", e);
-            throw new RuntimeException("Regeneration error: " + e.getMessage(), e);
-        }
+        // AI regeneration functionality has been removed
+        throw new UnsupportedOperationException(
+            "AI regeneration is not available. External LLM API clients have been removed."
+        );
     }
 
     public void approve(String sessionId) {
@@ -140,16 +98,5 @@ public class AiGenerationSessionService {
 
     public void saveSession(AiGenerationSession session) {
         sessions.put(session.getSessionId(), session);
-    }
-
-    private String buildRefinedPrompt(AiGenerationSession session, String feedback) {
-        return String.format("""
-            Original prompt generated the following code.
-
-            User feedback: %s
-
-            Please refine the generated code addressing the feedback above.
-            Keep the same class structure and package name.
-            """, feedback);
     }
 }
