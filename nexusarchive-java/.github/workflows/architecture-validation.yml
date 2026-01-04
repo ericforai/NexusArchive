@@ -1,0 +1,64 @@
+# Architecture Defense: J3 Closed Rules - CI Integration
+# 违规会导致 CI 失败，阻止合并
+
+name: Architecture Defense
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  architecture-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run ArchUnit validation
+        run: |
+          cd nexusarchive-java
+          mvn test -Dtest=ArchitectureTest -Dgroups=architecture
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archunit-results
+          path: nexusarchive-java/target/surefire-reports/TEST-com.nexusarchive.ArchitectureTest.xml
+
+      - name: Architecture violation report
+        if: failure()
+        run: |
+          echo "::error::❌ Architecture Defense violation detected!"
+          echo "::error::"
+          echo "::error::Possible violations:"
+          echo "::error::  1. Circular dependencies between modules"
+          echo "::error::  2. Controller → Mapper direct dependency (should use Service)"
+          echo "::error::  3. Controller → ServiceImpl direct dependency (should use interface)"
+          echo "::error::  4. Persistence annotations in wrong layers"
+          echo "::error::  5. Configuration classes outside config package"
+          echo "::error::  6. ERP adapters violating dependency rules"
+          echo "::error::"
+          echo "::error::Run locally to debug:"
+          echo "::error::  cd nexusarchive-java && mvn test -Dtest=ArchitectureTest"
+          exit 1
+
+      - name: Architecture validation passed
+        if: success()
+        run: |
+          echo "✅ Architecture validation passed!"
+          echo ""
+          echo "📊 J1: Self-Description - Module manifests defined"
+          echo "📊 J2: Self-Check - ArchUnit rules validated"
+          echo "📊 J3: Closed Rules - CI blocks violations"
+          echo "📊 J4: Reflex - Violations cause build failure"

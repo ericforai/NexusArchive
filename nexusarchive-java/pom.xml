@@ -353,7 +353,7 @@
                 <configuration>
                     <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                     <!-- Architecture Defense: 架构测试配置 -->
-                    <groups>com.nexusarchive.ArchitectureTest,com.nexusarchive.EnhancedArchitectureTest</groups>
+                    <groups>architecture</groups>
                 </configuration>
             </plugin>
 

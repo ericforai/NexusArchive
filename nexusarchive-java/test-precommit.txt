@@ -1,0 +1,18 @@
+==> .github/workflows/architecture-validation.yml <==
+name: 架构验证
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  architecture-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+==> test-precommit.txt <==

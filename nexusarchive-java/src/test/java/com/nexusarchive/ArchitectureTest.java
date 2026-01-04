@@ -4,11 +4,13 @@
 
 package com.nexusarchive;
 
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
-import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,6 +27,7 @@ import static com.tngtech.archunit.base.DescribedPredicate.not;
  * 验证代码架构规则，防止腐化
  * </p>
  */
+@Tag("architecture")
 class ArchitectureTest {
 
     /**
