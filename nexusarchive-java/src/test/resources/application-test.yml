@@ -17,6 +17,12 @@ spring:
 yonsuite:
   enabled: false
 
+# AI 配置 - 测试环境默认关闭，避免真实 API 调用
+ai:
+  claude:
+    enabled: false
+    timeout: 5000
+
 # 日志简化
 logging:
   level:
