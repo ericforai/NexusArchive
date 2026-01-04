@@ -8,8 +8,6 @@ package com.nexusarchive.integration.erp.ai.generator;
 
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
@@ -21,11 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * 外部 LLM API 客户端已移除，此测试验证服务状态。
  * </p>
  */
-@SpringBootTest
 class AiCodeGenerationServiceTest {
 
-    @Autowired
-    private AiCodeGenerationService aiCodeGenerationService;
+    private final AiCodeGenerationService aiCodeGenerationService = new AiCodeGenerationService();
 
     @Test
     void testIsAvailable() {

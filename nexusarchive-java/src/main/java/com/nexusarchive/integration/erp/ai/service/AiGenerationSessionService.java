@@ -3,9 +3,6 @@ package com.nexusarchive.integration.erp.ai.service;
 
 import com.nexusarchive.integration.erp.ai.dto.AiGenerationSession;
 import com.nexusarchive.integration.erp.ai.generator.AiCodeGenerationService;
-import com.nexusarchive.integration.erp.ai.llm.parser.CodeParser;
-import com.nexusarchive.integration.erp.ai.llm.parser.CodeValidationException;
-import com.nexusarchive.integration.erp.ai.llm.parser.JavaSyntaxValidator;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,17 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AiGenerationSessionService {
 
     private final AiCodeGenerationService aiCodeGenerationService;
-    private final CodeParser codeParser;
-    private final JavaSyntaxValidator syntaxValidator;
     private final Map<String, AiGenerationSession> sessions = new ConcurrentHashMap<>();
 
-    public AiGenerationSessionService(
-            AiCodeGenerationService aiCodeGenerationService,
-            CodeParser codeParser,
-            JavaSyntaxValidator syntaxValidator) {
+    public AiGenerationSessionService(AiCodeGenerationService aiCodeGenerationService) {
         this.aiCodeGenerationService = aiCodeGenerationService;
-        this.codeParser = codeParser;
-        this.syntaxValidator = syntaxValidator;
     }
 
     public AiGenerationSession createSession(

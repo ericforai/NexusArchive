@@ -6,20 +6,11 @@
 
 package com.nexusarchive.integration.erp.ai.generator;
 
-import com.nexusarchive.integration.erp.ai.llm.parser.CodeParser;
-import com.nexusarchive.integration.erp.ai.llm.parser.CodeValidationException;
-import com.nexusarchive.integration.erp.ai.llm.parser.JavaSyntaxValidator;
-import com.nexusarchive.integration.erp.ai.llm.prompt.CodeGenerationPromptBuilder;
-import com.nexusarchive.integration.erp.ai.llm.prompt.PromptContext;
-import com.nexusarchive.integration.erp.ai.monitoring.AiGenerationMetrics;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * AI 代码生成服务
@@ -29,15 +20,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiCodeGenerationService {
-
-    private final CodeGenerationPromptBuilder promptBuilder;
-    private final CodeParser codeParser;
-    private final JavaSyntaxValidator syntaxValidator;
-
-    @Autowired
-    private AiGenerationMetrics metrics;
 
     /**
      * 使用 AI 生成完整的适配器代码
@@ -58,45 +41,5 @@ public class AiCodeGenerationService {
      */
     public boolean isAvailable() {
         return false;
-    }
-
-    /**
-     * 构建 Prompt 上下文
-     */
-    private PromptContext buildContext(List<OpenApiDefinition> definitions,
-                                       String erpType,
-                                       String erpName,
-                                       String baseUrl,
-                                       String authType) {
-        List<PromptContext.ApiDefinition> apiDefs = definitions.stream()
-            .map(d -> PromptContext.ApiDefinition.builder()
-                .operationId(d.getOperationId())
-                .method(d.getMethod())
-                .path(d.getPath())
-                .summary(d.getSummary())
-                .requestSchema(d.getRequestSchema() != null ? d.getRequestSchema().toString() : "{}")
-                .responseSchema(d.getResponseSchema() != null ? d.getResponseSchema().toString() : "{}")
-                .build())
-            .collect(Collectors.toList());
-
-        String className = generateClassName(erpType);
-        String packageName = "com.nexusarchive.integration.erp.adapter." + erpType.toLowerCase();
-
-        return PromptContext.builder()
-            .erpType(erpType)
-            .erpName(erpName)
-            .className(className)
-            .packageName(packageName)
-            .baseUrl(baseUrl)
-            .authType(authType)
-            .apiDefinitions(apiDefs)
-            .build();
-    }
-
-    /**
-     * 生成类名
-     */
-    private String generateClassName(String erpType) {
-        return erpType.substring(0, 1).toUpperCase() + erpType.substring(1).toLowerCase() + "ErpAdapter";
     }
 }
