@@ -360,64 +360,6 @@ public class ErpAdaptationController {
         }
     }
 
-    /**
-     * 预览生成的代码
-     * MVP: 简化实现，返回基本信息
-     */
-    @GetMapping("/preview/{sessionId}")
-    public ResponseEntity<ApiResponse> previewCode(@PathVariable String sessionId) {
-        // MVP: 简化实现， sessionId 在当前版本中未使用
-        // 完整版本会从会话存储中获取生成的代码
-        return ResponseEntity.ok(ApiResponse.success("预览功能（MVP 简化版本）"));
-    }
-
-    /**
-     * 生成代码（AI 生成，返回会话 ID）
-     * <p>
-     * 已废弃：AI 生成功能已被移除。
-     * 请使用 /adapt-with-deploy 端点进行基于模板的代码生成。
-     * </p>
-     */
-    @PostMapping("/generate-ai")
-    @Deprecated
-    public ResponseEntity<ApiResponse> generateWithAi(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("erpType") String erpType,
-            @RequestParam("erpName") String erpName,
-            @RequestParam(value = "baseUrl", required = false) String baseUrl,
-            @RequestParam(value = "authType", required = false) String authType) {
-
-        log.warn("收到已废弃的 AI 生成请求: erpType={}, erpName={}", erpType, erpName);
-
-        return ResponseEntity.badRequest().body(ApiResponse.error(
-            "AI code generation is no longer available. " +
-            "Please use the /adapt-with-deploy endpoint for template-based code generation. " +
-            "External LLM API clients have been removed from the system."
-        ));
-    }
-
-    /**
-     * 提供反馈并重新生成 (已弃用)
-     * @deprecated AI code generation has been removed. Use the template-based code generation via the /adapt-with-deploy endpoint.
-     */
-    @Deprecated
-    @PostMapping("/regenerate-ai/{sessionId}")
-    public ResponseEntity<ApiResponse> regenerateWithFeedback(
-            @PathVariable String sessionId,
-            @RequestBody FeedbackRequest feedback) {
-
-        log.warn("收到已弃用的 /regenerate-ai 端点请求: sessionId={}", sessionId);
-
-        return ResponseEntity.badRequest().body(ApiResponse.error(
-            "AI code regeneration has been removed. " +
-            "Please use the template-based code generation via the /adapt-with-deploy endpoint."
-        ));
-    }
-
-    @Data
-    private static class FeedbackRequest {
-        private String userFeedback;
-    }
 
     /**
      * API 响应封装
