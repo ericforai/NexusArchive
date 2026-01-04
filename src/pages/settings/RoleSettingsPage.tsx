@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Shield, ShieldCheck } from 'lucide-react';
-import { RoleSettings } from '../../components/settings/RoleSettings';
+import { RoleSettings } from '../../components/settings';
 import { AccessReviewPage } from '../../components/pages';
 import { useAdminSettingsApi } from '../../features/settings';
 

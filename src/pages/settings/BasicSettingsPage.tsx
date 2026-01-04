@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { BasicSettings } from '../../components/settings/BasicSettings';
+import { BasicSettings } from '../../components/settings';
 import { useAdminSettingsApi } from '../../features/settings';
 
 const BasicSettingsPage: React.FC = () => {

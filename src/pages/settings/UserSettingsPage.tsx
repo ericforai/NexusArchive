@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Users, UserCog } from 'lucide-react';
-import { UserSettings } from '../../components/settings/UserSettings';
+import { UserSettings } from '../../components/settings';
 import { UserLifecyclePage } from '../../components/pages';
 import { useAdminSettingsApi } from '../../features/settings';
 

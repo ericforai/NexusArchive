@@ -5,7 +5,7 @@
 
 /**
  * 系统设置功能模块
- * 
+ *
  * 提供设置页面的布局和各子页面组件
  */
 
@@ -15,3 +15,4 @@ export { UserSettings } from './UserSettings';
 export { RoleSettings } from './RoleSettings';
 export { OrgSettings } from './OrgSettings';
 export { SecuritySettings } from './SecuritySettings';
+export { default as IntegrationSettings } from './IntegrationSettings';
