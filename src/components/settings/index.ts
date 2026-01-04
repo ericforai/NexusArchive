@@ -16,3 +16,4 @@ export { RoleSettings } from './RoleSettings';
 export { OrgSettings } from './OrgSettings';
 export { SecuritySettings } from './SecuritySettings';
 export { default as IntegrationSettings } from './IntegrationSettings';
+export { default as LicenseSettings } from './LicenseSettings';

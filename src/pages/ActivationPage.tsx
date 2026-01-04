@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { LicenseSettings } from '../components/settings/LicenseSettings';
+import { LicenseSettings } from '../components/settings';
 import { LogOut } from 'lucide-react';
 import { authApi } from '../api/auth';
 import { useNavigate } from 'react-router-dom';
