@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { IntegrationSettingsApi } from './types';
 import { ErpConfig, ErpScenario, ErpSubInterface, IntegrationDiagnosisResult, IntegrationMonitoring, ReconciliationRecord, SyncHistory } from '../../types';
+import { useAuthStore } from '../../store/useAuthStore';
 import { toast } from 'react-hot-toast';
 import { ComplianceRadar, ReconciliationReport } from '../common';
 
@@ -103,7 +104,8 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
     const [showAiAdapter, setShowAiAdapter] = useState(false);
     const [aiAdapterLoading, setAiAdapterLoading] = useState(false);
     const [aiAdapterFiles, setAiAdapterFiles] = useState<File[]>([]);
-    const [aiAdapterResult, setAiAdapterResult] = useState<any>(null);
+    const [aiAdapterPreview, setAiAdapterPreview] = useState<any>(null);
+    const [selectedTargetConfigId, setSelectedTargetConfigId] = useState<number | null>(null);
 
     // Phase 4: Reconciliation State
     const [showRecon, setShowRecon] = useState(false);
@@ -541,52 +543,129 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
     // ERP AI Adapter handlers
     const openAiAdapter = () => {
         setAiAdapterFiles([]);
-        setAiAdapterResult(null);
+        setAiAdapterPreview(null);
+        setSelectedTargetConfigId(null);
         setShowAiAdapter(true);
     };
 
-    const handleAiAdapterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAiAdapterFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
         setAiAdapterFiles(files);
+        setAiAdapterLoading(true);
+
+        try {
+            // 调用预览 API
+            const res = await erpApi.previewScenarios(files[0]);
+            if (res.success === true && res.data) {
+                setAiAdapterPreview(res.data);
+                // 自动选择推荐的连接器
+                if (res.data.suggestedConfigId) {
+                    setSelectedTargetConfigId(res.data.suggestedConfigId);
+                }
+                toast(`识别到 ${res.data.erpDisplayName}，${res.data.scenarios.length} 个场景`);
+            } else {
+                toast(res.message || '识别失败');
+            }
+        } catch (error) {
+            console.error('Preview failed:', error);
+            toast('文件识别失败，请检查格式');
+        } finally {
+            setAiAdapterLoading(false);
+        }
     };
 
-    const handleAiAdapt = async (autoDeploy: boolean = false) => {
-        if (aiAdapterFiles.length === 0) {
-            toast.error('请选择 API 定义文件');
+    const handleAiDeploy = async () => {
+        if (!aiAdapterFiles.length || !aiAdapterPreview) {
+            toast('请先上传文件');
             return;
         }
 
         setAiAdapterLoading(true);
         try {
-            // 使用文件名推断 ERP 类型
-            const fileName = aiAdapterFiles[0].name.toLowerCase();
-            let erpType = 'generic';
-            if (fileName.includes('yonsuite') || fileName.includes('yonbip') || fileName.includes('yonyou')) {
-                erpType = 'yonsuite';
-            } else if (fileName.includes('kingdee') || fileName.includes('k3cloud')) {
-                erpType = 'kingdee';
-            } else if (fileName.includes('weaver') || fileName.includes('ecology')) {
-                erpType = 'weaver';
+            // 从 store 获取 token
+            const getToken = useAuthStore.getState().token;
+            let token = getToken || '';
+
+            // 尝试刷新 token
+            try {
+                const refreshResponse = await fetch('/api/auth/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (refreshResponse.ok) {
+                    const refreshData = await refreshResponse.json();
+                    if (refreshData.code === 200 && refreshData.data?.token) {
+                        token = refreshData.data.token;
+                        // 更新 store 中的 token
+                        useAuthStore.getState().login(token, refreshData.data.user);
+                        console.log('Token refreshed successfully');
+                    }
+                } else {
+                    console.log('Token refresh failed:', refreshResponse.status);
+                }
+            } catch (refreshError) {
+                console.log('Token refresh error:', refreshError);
             }
 
-            const erpName = `${erpType}-${Date.now()}`;
+            // 调用部署 API
+            const formData = new FormData();
+            formData.append('file', aiAdapterFiles[0]);
+            formData.append('erpSystem', aiAdapterPreview.erpType);
 
-            const res = autoDeploy
-                ? await erpApi.adaptAndDeployErp(aiAdapterFiles, erpType, erpName)
-                : await erpApi.adaptErp(aiAdapterFiles, erpType, erpName);
+            if (selectedTargetConfigId) {
+                formData.append('targetConfigId', selectedTargetConfigId.toString());
+            }
 
-            if (res.code === 200) {
-                setAiAdapterResult(res.data);
-                toast.success(autoDeploy ? 'AI 适配并自动部署成功!' : 'AI 适配成功!');
-                if (autoDeploy) {
-                    // 刷新配置列表
-                    setTimeout(() => loadConfigs(), 2000);
-                }
+            const response = await fetch('/api/erp-ai/adapt-deploy', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            console.log('Deploy response status:', response.status);
+
+            // 先检查 HTTP 状态
+            if (response.status === 401) {
+                toast('登录已过期，请重新登录');
+                setShowAiAdapter(false);
+                return;
+            }
+
+            const res = await response.json();
+            console.log('Deploy response:', res);
+
+            // 再检查响应中的 code
+            if (res.code === 401) {
+                toast('登录已过期，请重新登录');
+                setShowAiAdapter(false);
+                return;
+            }
+
+            if (res.success === true) {
+                const scenarioCount = res.data?.scenarioCount || 0;
+
+                // 直接构造消息，避免后端乱码
+                const baseMessage = selectedTargetConfigId
+                    ? `成功识别 ${scenarioCount} 个场景，已添加到连接器`
+                    : `成功识别 ${scenarioCount} 个场景，已创建新的 ${aiAdapterPreview.erpDisplayName} 连接器`;
+
+                toast(baseMessage);
+                setShowAiAdapter(false);
+                // 刷新配置列表
+                setTimeout(() => loadConfigs(), 1000);
             } else {
-                toast.error(res.message || 'AI 适配失败');
+                toast('部署失败，请重试');
             }
         } catch (error: any) {
-            toast.error('AI 适配失败: ' + (error.message || '未知错误'));
+            console.error('Deploy failed:', error);
+            toast('部署失败: ' + (error.message || '未知错误'));
         } finally {
             setAiAdapterLoading(false);
         }
@@ -1482,52 +1561,125 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
                                 {/* File Upload Area */}
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-2">
-                                        上传 API 定义文件 <span className="text-purple-600">(OpenAPI/Swagger JSON/YAML)</span>
+                                        上传 OpenAPI 文档
                                     </label>
                                     <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-purple-400 hover:bg-purple-50/30 transition-colors">
                                         <input
                                             type="file"
                                             accept=".json,.yaml,.yml"
-                                            multiple
                                             onChange={handleAiAdapterFileChange}
                                             className="hidden"
                                             id="ai-adapter-file"
+                                            disabled={aiAdapterLoading}
                                         />
-                                        <label htmlFor="ai-adapter-file" className="cursor-pointer block">
-                                            <Upload size={32} className="mx-auto text-slate-400 mb-2" />
-                                            <p className="text-sm text-slate-600">点击选择或拖拽文件到此处</p>
-                                            <p className="text-xs text-slate-400 mt-1">支持 .json, .yaml, .yml 格式</p>
+                                        <label htmlFor="ai-adapter-file" className={`cursor-pointer block ${aiAdapterLoading ? 'opacity-50' : ''}`}>
+                                            {aiAdapterLoading ? (
+                                                <Loader2 className="animate-spin text-purple-500 mx-auto" size={32} />
+                                            ) : (
+                                                <Upload size={32} className="mx-auto text-slate-400 mb-2" />
+                                            )}
+                                            <p className="text-sm text-slate-600">
+                                                {aiAdapterLoading ? '正在识别...' : '点击选择文件'}
+                                            </p>
+                                            <p className="text-xs text-slate-400 mt-1">支持 OpenAPI JSON/YAML 格式</p>
                                         </label>
                                         {aiAdapterFiles.length > 0 && (
                                             <div className="mt-3 flex flex-wrap gap-2 justify-center">
-                                                {aiAdapterFiles.map((file, idx) => (
-                                                    <span key={idx} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                                                        <CheckCircle2 size={12} />
-                                                        {file.name}
-                                                    </span>
-                                                ))}
+                                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                                                    <CheckCircle2 size={12} />
+                                                    {aiAdapterFiles[0].name}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Result Display */}
-                                {aiAdapterResult && (
-                                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                                        <div className="flex items-center gap-2 text-emerald-700 font-semibold mb-2">
-                                            <CheckCircle2 size={18} />
-                                            适配成功!
+                                {/* Recognition Result */}
+                                {aiAdapterPreview && (
+                                    <>
+                                        {/* ERP Type */}
+                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-lg">
+                                                    {aiAdapterPreview.erpType === 'yonsuite' && <Database size={20} className="text-blue-600" />}
+                                                    {aiAdapterPreview.erpType === 'kingdee' && <Zap size={20} className="text-blue-600" />}
+                                                    {aiAdapterPreview.erpType === 'weaver' && <Settings size={20} className="text-blue-600" />}
+                                                    {!['yonsuite', 'kingdee', 'weaver'].includes(aiAdapterPreview.erpType) && <Settings size={20} className="text-blue-600" />}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-blue-900">{aiAdapterPreview.erpDisplayName}</p>
+                                                    <p className="text-sm text-blue-600">识别到 {aiAdapterPreview.scenarios.length} 个场景</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <pre className="text-xs text-emerald-800 bg-emerald-100/50 p-3 rounded overflow-auto max-h-40">
-                                            {JSON.stringify(aiAdapterResult, null, 2)}
-                                        </pre>
-                                    </div>
+
+                                        {/* Scenarios */}
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-slate-700 mb-2">识别的场景</h4>
+                                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                                {aiAdapterPreview.scenarios.map((scenario: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg text-sm">
+                                                        <CheckCircle2 size={14} className="text-green-500 shrink-0" />
+                                                        <span className="font-medium text-slate-700">{scenario.displayName}</span>
+                                                        <span className="text-xs text-slate-400 font-mono ml-auto">{scenario.scenarioKey}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Target Config Selection */}
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-slate-700 mb-2">选择目标连接器</h4>
+                                            <div className="space-y-2">
+                                                <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${selectedTargetConfigId === null ? 'border-blue-300 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="target-config"
+                                                        checked={selectedTargetConfigId === null}
+                                                        onChange={() => setSelectedTargetConfigId(null)}
+                                                        className="text-blue-600"
+                                                    />
+                                                    <PlusCircle size={18} className="text-green-600" />
+                                                    <div>
+                                                        <p className="font-medium text-slate-700">创建新连接器</p>
+                                                        <p className="text-xs text-slate-500">添加为新的 {aiAdapterPreview.erpDisplayName} 连接器</p>
+                                                    </div>
+                                                </label>
+
+                                                {aiAdapterPreview.existingConfigs.map((config: any) => (
+                                                    <label
+                                                        key={config.configId}
+                                                        className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${selectedTargetConfigId === config.configId ? 'border-blue-300 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name="target-config"
+                                                            checked={selectedTargetConfigId === config.configId}
+                                                            onChange={() => setSelectedTargetConfigId(config.configId)}
+                                                            className="text-blue-600"
+                                                        />
+                                                        <Database size={18} className="text-blue-500" />
+                                                        <div className="flex-1">
+                                                            <p className="font-medium text-slate-700">{config.name}</p>
+                                                        </div>
+                                                        {aiAdapterPreview.suggestedConfigId === config.configId && (
+                                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">推荐</span>
+                                                        )}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </div>
 
                             <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
                                 <div className="text-xs text-slate-500">
-                                    <p>💡 提示：AI 将自动解析 API 定义并生成适配器代码</p>
+                                    {aiAdapterPreview ? (
+                                        <p>✅ 已识别 {aiAdapterPreview.scenarios.length} 个场景</p>
+                                    ) : (
+                                        <p>💡 上传 OpenAPI 文档自动识别场景</p>
+                                    )}
                                 </div>
                                 <div className="flex gap-2">
                                     <button
@@ -1537,20 +1689,12 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ erpApi }) => 
                                         取消
                                     </button>
                                     <button
-                                        onClick={() => handleAiAdapt(false)}
-                                        disabled={aiAdapterLoading || aiAdapterFiles.length === 0}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
-                                    >
-                                        {aiAdapterLoading ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-                                        生成适配器
-                                    </button>
-                                    <button
-                                        onClick={() => handleAiAdapt(true)}
-                                        disabled={aiAdapterLoading || aiAdapterFiles.length === 0}
-                                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium flex items-center gap-2 shadow-lg"
+                                        onClick={handleAiDeploy}
+                                        disabled={aiAdapterLoading || !aiAdapterPreview}
+                                        className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium flex items-center gap-2 shadow-lg"
                                     >
                                         {aiAdapterLoading ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
-                                        AI 适配并部署
+                                        确认部署
                                     </button>
                                 </div>
                             </div>

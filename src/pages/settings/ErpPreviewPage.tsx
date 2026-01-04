@@ -51,7 +51,7 @@ const ErpPreviewPage: React.FC = () => {
         setLoading(true);
         try {
             const response = await erpApi.previewScenarios(file);
-            if (response.code === 200 && response.data) {
+            if (response.success === true && response.data) {
                 setPreviewData(response.data);
                 // Auto-select suggested config
                 if (response.data.suggestedConfigId) {

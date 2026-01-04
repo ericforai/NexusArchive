@@ -25,6 +25,9 @@ import {
     ConnectionTestResult
 } from '../../types';
 
+// 导入 AI 适配器相关类型
+import type { ScenarioPreviewItem, ExistingConfigItem, PreviewResponse as PreviewScenariosResponse } from '../../api/erp';
+
 export interface AdminSettingsApi {
     getSettings: () => Promise<ApiResponse<AdminSettingItem[]>>;
     updateSettings: (settings: AdminSettingUpdate[]) => Promise<ApiResponse<void>>;
@@ -62,13 +65,12 @@ export interface IntegrationSettingsApi {
     saveConfig: (config: Partial<ErpConfig>) => Promise<ApiResponse<void>>;
     deleteConfig: (id: number) => Promise<ApiResponse<void>>;
     getIntegrationMonitoring: () => Promise<ApiResponse<IntegrationMonitoring>>;
+    // AI 适配器相关
+    previewScenarios: (file: File, erpSystem?: string, targetConfigId?: number | null) => Promise<ApiResponse<PreviewScenariosResponse>>;
+    deployAdapter: (file: File, erpSystem: string, targetConfigId?: number | null) => Promise<ApiResponse<Record<string, unknown>>>;
 }
 
 export interface LicenseSettingsApi {
     load: (licenseText: string) => Promise<ApiResponse<LicenseInfo>>;
     getCurrent: () => Promise<ApiResponse<LicenseInfo>>;
-}
-
-export interface AuditSettingsApi {
-    getLogs: (params?: Record<string, unknown>) => Promise<ApiResponse<PageResult<AuditLog>>>;
 }

@@ -213,23 +213,51 @@ export const erpApi = {
     /**
      * 预览 OpenAPI 文档中的场景
      * @param file OpenAPI 文档文件
+     * @param erpSystem ERP 系统类型（可选）
      * @param targetConfigId 目标连接器 ID（可选）
      * @param packageName 包名（可选，用于代码生成）
      */
     previewScenarios: async (
         file: File,
-        targetConfigId?: number,
+        erpSystem?: string,
+        targetConfigId?: number | null,
         packageName?: string
     ): Promise<ApiResponse<PreviewResponse>> => {
         const formData = new FormData();
         formData.append('file', file);
-        if (targetConfigId !== undefined) {
+        if (erpSystem !== undefined) {
+            formData.append('erpSystem', erpSystem);
+        }
+        if (targetConfigId !== undefined && targetConfigId !== null) {
             formData.append('targetConfigId', targetConfigId.toString());
         }
         if (packageName !== undefined) {
             formData.append('packageName', packageName);
         }
         const response = await client.post<ApiResponse<PreviewResponse>>('/erp-ai/preview', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    /**
+     * 部署 ERP 适配器（简化版）
+     * @param file OpenAPI 文档文件
+     * @param erpSystem ERP 系统类型
+     * @param targetConfigId 目标连接器 ID（可选）
+     */
+    deployAdapter: async (
+        file: File,
+        erpSystem: string,
+        targetConfigId?: number | null
+    ): Promise<ApiResponse<Record<string, unknown>>> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('erpSystem', erpSystem);
+        if (targetConfigId !== undefined && targetConfigId !== null) {
+            formData.append('targetConfigId', targetConfigId.toString());
+        }
+        const response = await client.post<ApiResponse<Record<string, unknown>>>('/erp-ai/adapt-deploy', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;
