@@ -93,8 +93,6 @@ services:
       # YonSuite (可选)
       YONSUITE_APP_KEY: ${YONSUITE_APP_KEY:-}
       YONSUITE_APP_SECRET: ${YONSUITE_APP_SECRET:-}
-      # DeepSeek AI 配置
-      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}  # DeepSeek API Key
     ports:
       - "19090:19090"
     volumes:
