@@ -1,8 +1,16 @@
-# AI 驱动的 ERP 适配器生成指南
+# ERP 适配器自动生成指南
+
+> **重要提示**: 本系统已简化为基于模板的代码生成方式，不再使用 AI/LLM。本文档保留作为历史参考。
 
 ## 概述
 
-本系统使用 Claude AI 自动生成完整的 ERP 适配器代码，包括 HTTP 客户端、认证签名、数据映射和错误处理。
+本系统使用模板引擎自动生成完整的 ERP 适配器代码，包括 HTTP 客户端、数据映射和错误处理。
+
+**主要特性**:
+- ✅ 基于 OpenAPI 规范自动生成代码
+- ✅ 模板驱动，无需 AI 依赖
+- ✅ 自动场景映射和代码生成
+- ✅ 一键部署到生产环境
 
 ## 使用步骤
 
@@ -10,8 +18,8 @@
 
 确保你的 OpenAPI 文档包含：
 - 完整的请求/响应 Schema
-- 认证方式说明
 - Base URL 和端点路径
+- 清晰的 API 命名
 
 示例：
 ```yaml
@@ -24,6 +32,7 @@ servers:
 paths:
   /yiyan/salesOut/list:
     get:
+      operationId: listSalesOut
       summary: 销售出库单列表
       parameters:
         - name: startDate
@@ -34,53 +43,78 @@ paths:
 
 ### 2. 上传并生成
 
-**方法 1: 使用前端界面**
-1. 访问 http://localhost:15175/system/settings/integration
-2. 点击 "AI 智能适配器"
-3. 上传 OpenAPI 文档
-4. 选择 ERP 类型和认证方式
-5. 点击 "生成适配器"
-
-**方法 2: 使用 REST API**
+**使用 REST API**:
 ```bash
-curl -X POST http://localhost:19090/api/erp-ai/generate-ai \
-  -F "file=@yonsuite-api.json" \
+# 生成代码
+curl -X POST http://localhost:19090/api/erp-ai/adapt \
+  -F "files=@yonsuite-api.json" \
   -F "erpType=yonsuite" \
-  -F "erpName=我的YonSuite" \
-  -F "authType=appkey" \
+  -F "erpName=YonSuite" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 生成并自动部署
+curl -X POST http://localhost:19090/api/erp-ai/deploy \
+  -F "files=@yonsuite-api.json" \
+  -F "erpType=yonsuite" \
+  -F "erpName=YonSuite" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### 3. 审核和迭代
+### 3. 部署流程
 
-生成的代码会返回供审核。你可以：
-- 查看生成的代码
-- 提供修改意见
-- 请求重新生成
-- 批准后部署
+使用 `/api/erp-ai/deploy` 端点时，系统会自动：
+1. 解析 OpenAPI 文档
+2. 映射业务场景
+3. 生成适配器代码
+4. 保存到源码目录
+5. 编译验证
+6. 运行测试
+7. 数据库注册
+8. 热加载适配器
 
-### 4. 部署
+## 工作原理
 
-审核通过后，系统会：
-- 保存代码到源码目录
-- 编译验证
-- 数据库注册
-- 热加载适配器
+### 文档解析
+- 使用 Swagger Parser 解析 OpenAPI 规范
+- 提取 API 端点、参数、响应结构
 
-## 成本控制
+### 场景映射
+- 基于 API 路径、操作 ID、摘要进行模式匹配
+- 自动识别标准业务场景（凭证同步、发票同步等）
 
-- 速率限制：10 次/分钟
-- Token 使用：~2000 tokens/次
-- 建议每月预算：$50-100
+### 代码生成
+- 使用 Velocity 模板引擎
+- 生成适配器类、DTO、测试类
 
-## 故障排查
+### 自动部署
+- Maven 编译和测试
+- 数据库自动注册
+- Spring 热加载
 
-### AI 生成失败
-- 检查 API Key 配置
-- 查看日志中的错误信息
-- 确认 OpenAPI 文档格式正确
+## 常见问题
 
-### 生成的代码无法编译
-- 检查 AI 生成的代码是否完整
-- 查看编译错误日志
-- 提供反馈让 AI 重新生成
+### 文档解析失败
+- 确认 OpenAPI 格式正确（3.0 规范）
+- 使用在线工具验证：https://validator.swagger.io/
+
+### 场景识别不准确
+- 使用清晰的 API 命名（operationId, summary）
+- 添加相关标签（tags）
+- 参考支持的标准场景列表
+
+### 部署失败
+- 检查编译日志
+- 验证数据库连接
+- 查看测试结果
+
+## 相关文档
+
+- [完整使用指南](../development/erp-adapter-guide.md)
+- [系统架构说明](../architecture/erp-ai-usage-guide.md)
+- [手动开发指南](../architecture/erp-adapter-development-guide.md)
+
+## 版本历史
+
+- **v2.0.0** (2026-01-04): 简化为模板驱动，移除 AI 依赖
+- **v1.0.0** (2026-01-02): 初始 MVP 版本（基于 AI）
+

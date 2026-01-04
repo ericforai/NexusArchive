@@ -1,8 +1,10 @@
-# ERP AI 适配系统 - 使用指南
+# ERP 适配系统 - 使用指南
 
-> **版本**: 1.0.0-MVP
-> **更新日期**: 2026-01-02
+> **版本**: 2.0.0
+> **更新日期**: 2026-01-04
 > **模块**: `integration.erp.ai`
+
+> **注意**: 本系统已简化为基于模板的代码生成方式，不再依赖 AI/LLM。如需了解详情，请参考 [ERP Adapter Integration Guide](../development/erp-adapter-guide.md)。
 
 ---
 
@@ -551,49 +553,23 @@ mvn test -Dtest=ErpAdapterCodeGeneratorTest
 
 ---
 
-## Phase 2 功能预览
+## 未来功能
 
 以下功能计划在后续版本中实现：
 
 ### PDF 文档解析
 
-```bash
-curl -X POST "http://localhost:19090/api/erp-ai/adapt" \
-  -F "files=@erp-api-documentation.pdf" \
-  -F "erpType=sap" \
-  -F "erpName=SAP S/4HANA"
-```
+- 支持 PDF 格式的 API 文档
+- 自动提取 API 定义
 
 ### Markdown 文档支持
 
-```bash
-curl -X POST "http://localhost:19090/api/erp-ai/adapt" \
-  -F "files=@api-reference.md" \
-  -F "erpType=custom" \
-  -F "erpName=自定义 ERP"
-```
+- 支持 Markdown 格式的 API 参考
 
-### 智能语义理解（集成 Claude API）
+### 增强的场景映射
 
-- 自动理解复杂的 API 文档结构
-- 支持非标准命名约定
-- 提供映射建议和优化
-
-### 自动编译和部署
-
-```bash
-# 生成的代码自动编译
-curl -X POST "http://localhost:19090/api/erp-ai/deploy" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"adapterId": "kingdee"}'
-
-# 返回部署状态
-{
-  "success": true,
-  "buildStatus": "SUCCESS",
-  "deploymentUrl": "/api/erp/kingdee"
-}
-```
+- 更复杂的 API 模式识别
+- 自定义场景映射规则
 
 ---
 
@@ -661,7 +637,17 @@ curl -X POST "http://localhost:19090/api/erp-ai/deploy" \
 
 ### C. 技术支持
 
-- **模块位置**: `com.nexusarchive.integration.erp.ai`
-- **测试覆盖**: 12/12 测试通过
-- **文档更新**: 2026-01-02
-- **版本**: 1.0.0-MVP
+- **模块位置**: `com.nexusarchive.integration.erp`
+- **测试覆盖**: 完整的单元测试和集成测试
+- **文档更新**: 2026-01-04
+- **版本**: 2.0.0 (Simplified)
+
+### D. 系统变更说明
+
+**从 v1.0.0 (MVP) 到 v2.0.0 的主要变更**:
+
+1. ✅ **移除 AI 依赖**: 不再使用 LLM 进行代码生成
+2. ✅ **简化架构**: 移除不必要的抽象层和 Agent 系统
+3. ✅ **保留核心功能**: OpenAPI 解析、场景映射、模板生成
+4. ✅ **改进部署**: 自动部署流程更加可靠
+5. ⚠️ **移除功能**: PDF/Markdown 解析、迭代优化（计划未来恢复）
