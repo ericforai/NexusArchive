@@ -4,8 +4,57 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import path from 'path';
+import fs from 'fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+
+// J4: Runtime Introspection - Load module manifests for architecture debugging
+function loadModuleManifests() {
+  const manifests: any[] = [];
+  const manifestDirs = [
+    'src/features',
+    'src/components',
+    'src/pages',
+    'src/utils',
+    'src/hooks',
+    'src/store'
+  ];
+
+  for (const dir of manifestDirs) {
+    const dirPath = path.resolve(__dirname, dir);
+    if (!fs.existsSync(dirPath)) continue;
+
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const manifestPath = path.join(dirPath, entry.name, 'manifest.config.ts');
+        if (fs.existsSync(manifestPath)) {
+          try {
+            const content = fs.readFileSync(manifestPath, 'utf-8');
+            // Extract module ID from the manifest
+            const idMatch = content.match(/id:\s*['"`]([^'"`]+)['"`]/);
+            const ownerMatch = content.match(/owner:\s*['"`]([^'"`]+)['"`]/);
+            const publicApiMatch = content.match(/publicApi:\s*['"`]([^'"`]+)['"`]/);
+
+            if (idMatch) {
+              manifests.push({
+                id: idMatch[1],
+                owner: ownerMatch?.[1] || 'unknown',
+                publicApi: publicApiMatch?.[1] || './index.ts',
+                path: `${dir}/${entry.name}`,
+                manifestFile: manifestPath
+              });
+            }
+          } catch (e) {
+            // Skip invalid manifests
+          }
+        }
+      }
+    }
+  }
+
+  return manifests;
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -39,23 +88,83 @@ export default defineConfig(({ mode }) => {
           return html.replace(/<script type="importmap">[\s\S]*?aistudiocdn[\s\S]*?<\/script>/gi, '');
         },
       },
-      // Architecture Defense: Runtime introspection
+      // Architecture Defense: Runtime introspection (J4)
       {
         name: 'arch-introspection',
         apply: 'serve', // Only in development mode
         transformIndexHtml(html: string) {
+          const manifests = loadModuleManifests();
           const archScript = `
 <script>
-  // Architecture Defense - Runtime Introspection
-  window.__ARCH__ = window.__ARCH__ || {};
-  console.group('%c🏗️ Architecture Defense', 'color: #4CAF50; font-size: 14px; font-weight: bold');
-  console.log('Module manifests available at: window.__ARCH__');
-  console.log('Usage:');
-  console.log('  window.__ARCH__.modules - All registered modules');
-  console.log('  window.__ARCH__.getModule("id") - Get specific module');
-  console.log('  window.__ARCH__.getOwner("id") - Get module owner');
-  console.log('  window.__ARCH__.validate() - Validate architecture');
-  console.groupEnd();
+  (function() {
+    'use strict';
+
+    // J4: Reflex - Runtime architecture introspection for debugging
+    window.__ARCH__ = {
+      modules: ${JSON.stringify(manifests)},
+
+      // Get module by ID
+      getModule(id) {
+        return this.modules.find(m => m.id === id);
+      },
+
+      // Get owner of a module
+      getOwner(id) {
+        const mod = this.getModule(id);
+        return mod ? mod.owner : null;
+      },
+
+      // Get all modules owned by a team
+      getByOwner(owner) {
+        return this.modules.filter(m => m.owner === owner);
+      },
+
+      // Validate architecture (basic check)
+      validate() {
+        const issues = [];
+        this.modules.forEach(m => {
+          if (!m.id) issues.push(\`Missing ID: \${m.path}\`);
+          if (!m.owner) issues.push(\`Missing owner: \${m.id}\`);
+          if (!m.publicApi) issues.push(\`Missing public API: \${m.id}\`);
+        });
+        return {
+          valid: issues.length === 0,
+          issues,
+          totalModules: this.modules.length
+        };
+      },
+
+      // Search modules by pattern
+      search(pattern) {
+        const regex = new RegExp(pattern, 'i');
+        return this.modules.filter(m =>
+          regex.test(m.id) || regex.test(m.path)
+        );
+      },
+
+      // Show architecture info
+      info() {
+        console.group('%c🏗️ Architecture Defense - J4: Reflex', 'color: #4CAF50; font-size: 14px; font-weight: bold');
+        console.log('%cModules loaded:', 'font-weight: bold', this.modules.length);
+        console.table(this.modules.map(m => ({
+          ID: m.id,
+          Owner: m.owner,
+          Path: m.path
+        })));
+        console.log('%cAvailable methods:', 'font-weight: bold');
+        console.log('  __ARCH__.getModule("id") - Get module by ID');
+        console.log('  __ARCH__.getOwner("id") - Get module owner');
+        console.log('  __ARCH__.getByOwner("team") - Get all modules by owner');
+        console.log('  __ARCH__.validate() - Validate architecture');
+        console.log('  __ARCH__.search("pattern") - Search modules');
+        console.log('  __ARCH__.info() - Show this help');
+        console.groupEnd();
+      }
+    };
+
+    // Auto-show info on load
+    window.__ARCH__.info();
+  })();
 </script>`;
           return html.replace('</head>', `${archScript}</head>`);
         },
