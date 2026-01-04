@@ -19,12 +19,13 @@ public class JavaSyntaxValidator {
      * 验证 Java 代码语法
      */
     public void validate(String javaCode) throws CodeValidationException {
-        List<String> errors = new ArrayList<>();
+        Path tempDir = null;
+        Path tempFile = null;
 
         try {
             // 创建临时文件
-            Path tempDir = Files.createTempDirectory("ai-code-");
-            Path tempFile = tempDir.resolve("GeneratedAdapter.java");
+            tempDir = Files.createTempDirectory("ai-code-");
+            tempFile = tempDir.resolve("GeneratedAdapter.java");
             Files.writeString(tempFile, javaCode);
 
             // 使用 javac 验证语法
@@ -59,14 +60,21 @@ public class JavaSyntaxValidator {
 
             log.info("Java syntax validation passed");
 
-            // 清理临时文件
-            Files.deleteIfExists(tempFile);
-            Files.deleteIfExists(tempDir);
-
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new CodeValidationException("Syntax validation interrupted",
+                List.of(e.getMessage()));
+        } catch (IOException e) {
             throw new CodeValidationException("Syntax validation failed: " + e.getMessage(),
                 List.of(e.getMessage()));
+        } finally {
+            // 清理临时文件
+            try {
+                if (tempFile != null) Files.deleteIfExists(tempFile);
+                if (tempDir != null) Files.deleteIfExists(tempDir);
+            } catch (IOException e) {
+                log.warn("Failed to cleanup temp files", e);
+            }
         }
     }
 }
