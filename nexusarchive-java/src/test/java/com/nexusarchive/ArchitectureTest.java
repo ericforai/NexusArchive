@@ -80,15 +80,17 @@ class ArchitectureTest {
      * 控制器应通过服务层访问数据，不直接依赖数据访问层
      * </p>
      * <p>
-     * TODO: 当前 7 个控制器直接注入 Mapper，需要创建对应的服务层方法
+     * TODO: 当前 6 个控制器直接注入 Mapper，需要创建对应的服务层方法
      * 违规控制器：
      * - ArchiveFileController (需要服务层包装 authorizeArchiveAccess)
-     * - ErpConfigController (CRUD，需要 ErpConfigService)
      * - IngestController (需要 IngestRequestStatusService)
      * - NavController (导航数据查询，需要 NavService)
      * - SignatureController (签名日志，需要 SignatureLogService)
      * - SqlAuditRuleController (SQL 审计规则 CRUD，需要 SqlAuditRuleService)
      * - YonPaymentTestController (测试控制器，可保持现状)
+     * </p>
+     * <p>
+     * 已修复：ErpConfigController (已在任务1中创建 ErpConfigService) ✓
      * </p>
      */
     // @Test
