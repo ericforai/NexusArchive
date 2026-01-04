@@ -12,9 +12,11 @@ import com.nexusarchive.integration.erp.ai.llm.parser.CodeValidationException;
 import com.nexusarchive.integration.erp.ai.llm.parser.JavaSyntaxValidator;
 import com.nexusarchive.integration.erp.ai.llm.prompt.CodeGenerationPromptBuilder;
 import com.nexusarchive.integration.erp.ai.llm.prompt.PromptContext;
+import com.nexusarchive.integration.erp.ai.monitoring.AiGenerationMetrics;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,6 +38,9 @@ public class AiCodeGenerationService {
     private final CodeParser codeParser;
     private final JavaSyntaxValidator syntaxValidator;
 
+    @Autowired
+    private AiGenerationMetrics metrics;
+
     /**
      * 使用 AI 生成完整的适配器代码
      */
@@ -44,6 +49,10 @@ public class AiCodeGenerationService {
                                      String erpName,
                                      String baseUrl,
                                      String authType) {
+        long startTime = System.currentTimeMillis();
+        boolean success = false;
+        int tokensUsed = 0;
+
         try {
             log.info("Starting AI code generation for {} APIs", definitions.size());
 
@@ -56,6 +65,9 @@ public class AiCodeGenerationService {
 
             // 3. 调用 Claude API
             String aiResponse = claudeClient.complete(prompt);
+            success = true;
+            // Rough token estimate: 1 token ≈ 4 characters (prompt + response)
+            tokensUsed = (prompt.length() + aiResponse.length()) / 4;
             log.info("Received AI response ({} chars)", aiResponse.length());
 
             // 4. 提取 Java 代码
@@ -84,6 +96,10 @@ public class AiCodeGenerationService {
         } catch (Exception e) {
             log.error("AI code generation failed", e);
             throw new RuntimeException("AI generation error: " + e.getMessage(), e);
+        } finally {
+            long responseTime = System.currentTimeMillis() - startTime;
+            metrics.recordRequest(success, tokensUsed, responseTime);
+            log.debug("Recorded metrics: success={}, tokens={}, time={}ms", success, tokensUsed, responseTime);
         }
     }
 

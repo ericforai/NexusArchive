@@ -43,7 +43,7 @@ public class RateLimitService {
     /**
      * 获取当前可用请求数
      */
-    public int getAvailablePermits() {
+    public synchronized int getAvailablePermits() {
         return MAX_REQUESTS_PER_MINUTE - requestCount.get();
     }
 }
