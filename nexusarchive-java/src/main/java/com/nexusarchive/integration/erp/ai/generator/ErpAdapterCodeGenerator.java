@@ -90,9 +90,10 @@ public class ErpAdapterCodeGenerator {
                                         String className,
                                         String packageName,
                                         String erpName) {
-        // 获取支持的场景
+        // 获取支持的场景（去重）
         String scenarios = mappings.stream()
             .map(m -> "\"" + m.getScenario().getCode() + "\"")
+            .distinct()
             .collect(Collectors.joining(", "));
 
         String erpId = erpName.toLowerCase().replace(" ", "-");
@@ -105,11 +106,14 @@ public class ErpAdapterCodeGenerator {
 
             package %s;
 
-            import com.nexusarchive.dto.VoucherDTO;
-            import com.nexusarchive.integration.erp.ErpAdapter;
-            import com.nexusarchive.integration.erp.ErpConfig;
+            import com.nexusarchive.integration.erp.adapter.ErpAdapter;
+            import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
+            import com.nexusarchive.integration.erp.dto.AttachmentDTO;
+            import com.nexusarchive.integration.erp.dto.ConnectionTestResult;
+            import com.nexusarchive.integration.erp.dto.ErpConfig;
+            import com.nexusarchive.integration.erp.dto.VoucherDTO;
             import lombok.extern.slf4j.Slf4j;
-            import org.springframework.stereotype.Component;
+            import org.springframework.stereotype.Service;
 
             import java.time.LocalDate;
             import java.util.List;
@@ -121,13 +125,30 @@ public class ErpAdapterCodeGenerator {
              * </p>
              */
             @Slf4j
-            @Component
-            @ErpAdapter(
+            @Service
+            @ErpAdapterAnnotation(
                 identifier = "%s",
                 name = "%s",
                 supportedScenarios = {%s}
             )
             public class %s implements ErpAdapter {
+
+                @Override
+                public String getIdentifier() {
+                    return "%s";
+                }
+
+                @Override
+                public String getName() {
+                    return "%s";
+                }
+
+                @Override
+                public ConnectionTestResult testConnection(ErpConfig config) {
+                    // TODO: 实现连接测试逻辑
+                    log.info("测试连接: {}", config.getBaseUrl());
+                    return ConnectionTestResult.success("连接成功", 0L);
+                }
 
                 @Override
                 public List<VoucherDTO> syncVouchers(ErpConfig config, LocalDate startDate, LocalDate endDate) {
@@ -137,10 +158,15 @@ public class ErpAdapterCodeGenerator {
                 }
 
                 @Override
-                public boolean testConnection(ErpConfig config) {
-                    // TODO: 实现连接测试逻辑
-                    log.info("测试连接: {}", config.getBaseUrl());
-                    return true;
+                public VoucherDTO getVoucherDetail(ErpConfig config, String voucherNo) {
+                    // TODO: 实现凭证详情获取逻辑
+                    return null;
+                }
+
+                @Override
+                public List<AttachmentDTO> getAttachments(ErpConfig config, String voucherNo) {
+                    // TODO: 实现附件列表获取逻辑
+                    return List.of();
                 }
             }
             """,
@@ -152,7 +178,9 @@ public class ErpAdapterCodeGenerator {
             erpId,
             erpName,
             scenarios,
-            className
+            className,
+            erpId,
+            erpName
         );
     }
 
