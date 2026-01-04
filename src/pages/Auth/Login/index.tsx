@@ -14,7 +14,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../../../api/auth';
 import { triggerAuditRefresh } from '../../../utils/audit';
 import { useAuthStore } from '../../../store';
-import { LoginCard } from '../../../components/auth/LoginCard';
+import { LoginCard } from '../../../components/auth';
 
 interface LocationState {
     from?: { pathname: string };
