@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/admin/permissions")
 @PreAuthorize("hasAuthority('manage_roles') or hasRole('SYSTEM_ADMIN') or hasAuthority('nav:all')")
@@ -28,12 +30,12 @@ public class AdminPermissionController {
     }
 
     @PostMapping
-    public Result<Permission> create(@RequestBody Permission permission) {
+    public Result<Permission> create(@Valid @RequestBody Permission permission) {
         return Result.success("创建成功", permissionService.create(permission));
     }
 
     @PutMapping("/{id}")
-    public Result<Permission> update(@PathVariable String id, @RequestBody Permission permission) {
+    public Result<Permission> update(@PathVariable String id, @Valid @RequestBody Permission permission) {
         return Result.success("更新成功", permissionService.update(id, permission));
     }
 

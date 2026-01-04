@@ -16,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.nexusarchive.security.CustomUserDetails;
 import com.nexusarchive.annotation.ArchivalAudit;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/destruction")
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class DestructionController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "CREATE_DESTRUCTION", resourceType = "DESTRUCTION", description = "创建销毁申请")
-    public Result<Destruction> createDestruction(@RequestBody Destruction destruction,
+    public Result<Destruction> createDestruction(@Valid @RequestBody Destruction destruction,
                                                 @AuthenticationPrincipal CustomUserDetails user) {
         if (destruction.getApplicantId() == null && user != null) {
             destruction.setApplicantId(user.getId());

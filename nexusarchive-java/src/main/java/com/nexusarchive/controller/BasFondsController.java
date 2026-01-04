@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/bas/fonds")
 @RequiredArgsConstructor
@@ -48,7 +50,7 @@ public class BasFondsController {
     }
 
     @PostMapping
-    public Result<Boolean> save(@RequestBody BasFonds fonds) {
+    public Result<Boolean> save(@Valid @RequestBody BasFonds fonds) {
         if (fonds.getFondsCode() == null || fonds.getFondsName() == null) {
             return Result.error("Fonds Code and Name are required");
         }
@@ -56,7 +58,7 @@ public class BasFondsController {
     }
 
     @PutMapping
-    public Result<Boolean> update(@RequestBody BasFonds fonds) {
+    public Result<Boolean> update(@Valid @RequestBody BasFonds fonds) {
         // 使用带约束的更新方法
         return Result.success(basFondsService.updateFonds(fonds));
     }

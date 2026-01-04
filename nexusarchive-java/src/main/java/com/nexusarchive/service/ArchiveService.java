@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.ArcFileContentMapper;
@@ -145,7 +146,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
         }
         DataScopeContext scope = dataScopeService.resolve();
         if (!dataScopeService.canAccessArchive(archive, scope)) {
-            throw new BusinessException("无权查看该档案");
+            throw new BusinessException(ErrorCode.NO_PERMISSION_TO_VIEW_ARCHIVE);
         }
         return archive;
     }
@@ -343,7 +344,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
             wrapper.ne("id", excludeId);
         }
         if (archiveMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException("档号已存在: " + code);
+            throw new BusinessException(ErrorCode.ARCHIVE_CODE_EXISTS, code);
         }
     }
 

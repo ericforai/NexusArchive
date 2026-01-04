@@ -416,6 +416,19 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         return reconciliationRecordMapper.selectList(historyBySource);
     }
 
+    /**
+     * 保存对账结果
+     * <p>
+     * 使用 REQUIRES_NEW 传播属性的原因：
+     * 1. 对账过程是长时间运行的只读操作（从 ERP 和档案系统聚合数据）
+     * 2. 对账记录的保存应该独立于对账过程本身
+     * 3. 即使对账计算过程中出现异常，已经成功计算的结果也应该被保存
+     * 4. 允许在外部事务失败时，对账记录仍然能保存（用于故障恢复和审计追踪）
+     * </p>
+     *
+     * @param record 对账记录
+     * @return 保存后的对账记录
+     */
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public ReconciliationRecord saveReconciliationResult(ReconciliationRecord record) {
         ReconciliationRecord existing = findExistingRecord(record);

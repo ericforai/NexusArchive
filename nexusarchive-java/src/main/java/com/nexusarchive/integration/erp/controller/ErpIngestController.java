@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/integration/erp")
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class ErpIngestController {
     private final ArchiveService archiveService;
 
     @PostMapping("/receive-sip")
-    public ResponseEntity<BatchIngestResponse> receiveSip(@RequestBody BatchIngestRequest request) {
+    public ResponseEntity<BatchIngestResponse> receiveSip(@Valid @RequestBody BatchIngestRequest request) {
         log.info("Received ERP SIP Push from system: {}, batchId: {}", request.getSourceSystem(), request.getBatchId());
 
         BatchIngestResponse response = new BatchIngestResponse();

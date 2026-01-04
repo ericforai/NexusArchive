@@ -30,6 +30,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
+
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -82,7 +84,7 @@ public class PoolController {
      */
     @PostMapping("/candidates/search")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<List<PoolItemDto>> searchCandidates(@RequestBody com.nexusarchive.dto.search.CandidateSearchRequest request) {
+    public Result<List<PoolItemDto>> searchCandidates(@Valid @RequestBody com.nexusarchive.dto.search.CandidateSearchRequest request) {
         log.info("API 搜索候选凭证: {}", request);
         try {
             List<PoolItemDto> results = poolService.searchCandidates(request);
@@ -377,7 +379,7 @@ public class PoolController {
     @ArchivalAudit(operationType = "SUBMIT_ARCHIVE", resourceType = "PRE_ARCHIVE", description = "提交归档申请")
     public Result<ArchiveApproval> submitForArchival(
             @PathVariable String id,
-            @RequestBody SubmitRequest request) {
+            @Valid @RequestBody SubmitRequest request) {
         log.info("提交归档申请: fileId={}", id);
         try {
             ArchiveApproval approval = preArchiveSubmitService.submitForArchival(
@@ -399,7 +401,7 @@ public class PoolController {
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SUBMIT_ARCHIVE_BATCH", resourceType = "PRE_ARCHIVE", description = "批量提交归档申请")
     public Result<BatchOperationResult<ArchiveApproval>> submitBatchForArchival(
-            @RequestBody BatchSubmitRequest request) {
+            @Valid @RequestBody BatchSubmitRequest request) {
         log.info("批量提交归档申请: {} 个文件", request.getFileIds().size());
         try {
             BatchOperationResult<ArchiveApproval> result = preArchiveSubmitService.submitBatchForArchival(

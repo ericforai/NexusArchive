@@ -199,7 +199,7 @@ public class BorrowingApplicationService implements BorrowingFacade {
         }
         boolean match = Arrays.stream(allowed).anyMatch(status -> status == current);
         if (!match) {
-            throw new BusinessException("当前状态不允许执行此操作");
+            throw new BusinessException(ErrorCode.BORROW_INVALID_STATUS);
         }
     }
 

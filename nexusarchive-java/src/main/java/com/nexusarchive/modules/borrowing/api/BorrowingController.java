@@ -8,6 +8,7 @@ package com.nexusarchive.modules.borrowing.api;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.annotation.ArchivalAudit;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.modules.borrowing.api.dto.BorrowingApprovalRequest;
 import com.nexusarchive.modules.borrowing.api.dto.BorrowingCreateRequest;
@@ -21,6 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/borrowing")
 @RequiredArgsConstructor
@@ -31,7 +34,7 @@ public class BorrowingController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('borrowing:create','nav:all') or hasRole('business_user') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "CREATE", resourceType = "BORROWING", description = "创建借阅申请")
-    public Result<BorrowingDto> createBorrowing(@RequestBody BorrowingCreateRequest borrowing, HttpServletRequest request) {
+    public Result<BorrowingDto> createBorrowing(@Valid @RequestBody BorrowingCreateRequest borrowing, HttpServletRequest request) {
         String userId = resolveUserId(request);
         String userName = resolveUserName();
         return Result.success(borrowingFacade.createBorrowing(borrowing, userId, userName));
@@ -68,9 +71,9 @@ public class BorrowingController {
     @PreAuthorize("hasAnyAuthority('borrowing:approve','borrowing:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "APPROVE", resourceType = "BORROWING", description = "审批借阅申请")
     public Result<BorrowingDto> approveBorrowing(@PathVariable String id,
-                                                 @RequestBody(required = false) BorrowingApprovalRequest approvalRequest) {
+                                                 @Valid @RequestBody(required = false) BorrowingApprovalRequest approvalRequest) {
         if (approvalRequest == null) {
-            throw new BusinessException("审批参数不能为空");
+            throw new BusinessException(ErrorCode.BORROW_APPROVAL_PARAMS_CANNOT_BE_EMPTY);
         }
         BorrowingDto updated = borrowingFacade.approveBorrowing(id, approvalRequest);
         return Result.success(updated);
@@ -101,7 +104,7 @@ public class BorrowingController {
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails details) {
             return details.getId();
         }
-        throw new BusinessException("无法获取当前登录用户");
+        throw new BusinessException(ErrorCode.CANNOT_GET_CURRENT_USER);
     }
 
     private String resolveUserName() {

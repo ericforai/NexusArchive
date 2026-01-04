@@ -64,7 +64,14 @@ public class PreArchiveSubmitService {
 
     /**
      * 提交单个文件归档申请
-     * 
+     * <p>
+     * 使用 REQUIRES_NEW 传播属性的原因：
+     * 1. 此方法被批量操作调用（submitBatchForArchival），每次提交需要独立事务
+     * 2. 单个文件的提交失败不应影响其他文件的提交
+     * 3. 生成档号操作使用了独立的序列号生成器，需要独立提交以避免长事务锁定
+     * 4. 保证每个文件的归档申请状态变更的原子性
+     * </p>
+     *
      * @param fileId        预归档文件ID
      * @param applicantId   申请人ID
      * @param applicantName 申请人姓名
@@ -169,7 +176,7 @@ public class PreArchiveSubmitService {
      * 完成归档（审批通过后调用）
      * 锁定文件，设置归档时间
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void completeArchival(String archiveId) {
         log.info("完成归档，锁定文件: archiveId={}", archiveId);
 

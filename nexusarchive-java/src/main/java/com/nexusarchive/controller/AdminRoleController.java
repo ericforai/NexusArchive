@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 /**
  * 角色管理控制器
  * 
@@ -73,7 +75,7 @@ public class AdminRoleController {
      */
     @PostMapping
     @ArchivalAudit(operationType = "CREATE", resourceType = "ROLE", description = "创建角色")
-    public Result<Role> createRole(@RequestBody Role role) {
+    public Result<Role> createRole(@Valid @RequestBody Role role) {
         Role created = roleService.createRole(role);
         return Result.success("角色创建成功", created);
     }
@@ -85,7 +87,7 @@ public class AdminRoleController {
      */
     @PutMapping("/{id}")
     @ArchivalAudit(operationType = "UPDATE", resourceType = "ROLE", description = "更新角色")
-    public Result<Void> updateRole(@PathVariable String id, @RequestBody Role role) {
+    public Result<Void> updateRole(@PathVariable String id, @Valid @RequestBody Role role) {
         roleService.updateRole(id, role);
         return Result.success("角色更新成功", null);
     }

@@ -7,6 +7,7 @@
 package com.nexusarchive.integration.erp.ai.deploy;
 
 import com.nexusarchive.integration.erp.ai.generator.GeneratedCode;
+import com.nexusarchive.integration.erp.ai.mapper.BusinessSemanticMapper;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,20 @@ public class ErpAdapterAutoDeployService {
      * @return 部署结果
      */
     public DeploymentResult deploy(GeneratedCode code) throws IOException, InterruptedException {
+        return deploy(code, null, null, null);
+    }
+
+    /**
+     * 执行完整的自动部署流程（支持目标连接器 ID）
+     *
+     * @param code 生成的代码
+     * @param targetConfigId 目标连接器配置 ID（可选）
+     * @param fileName API 文件名（用于识别 ERP 类型）
+     * @param mappings 场景映射列表（用于数据库注册）
+     * @return 部署结果
+     */
+    public DeploymentResult deploy(GeneratedCode code, Long targetConfigId, String fileName,
+                                   List<BusinessSemanticMapper.ScenarioMapping> mappings) throws IOException, InterruptedException {
         log.info("开始自动部署流程: className={}", code.getClassName());
 
         List<String> steps = new ArrayList<>();
@@ -117,9 +132,20 @@ public class ErpAdapterAutoDeployService {
         // Step 4: 数据库注册
         log.info("Step 4: 数据库注册");
         try {
-            databaseRegistrationService.register(code);
-            steps.add("✅ 数据库注册成功");
-            log.info("数据库注册成功");
+            // 如果提供了场景映射，使用新的注册方法（支持 targetConfigId）
+            if (mappings != null && fileName != null) {
+                DatabaseRegistrationService.RegistrationResult regResult =
+                    databaseRegistrationService.registerScenarios(targetConfigId, fileName, mappings);
+                steps.add("✅ 数据库注册成功: configId=" + regResult.configId() +
+                         ", 创建场景=" + regResult.createdCount() + ", 跳过=" + regResult.skippedCount());
+                log.info("数据库注册成功: configId={}, created={}, skipped={}",
+                    regResult.configId(), regResult.createdCount(), regResult.skippedCount());
+            } else {
+                // 兼容旧代码路径（向后兼容）
+                databaseRegistrationService.register(code);
+                steps.add("✅ 数据库注册成功");
+                log.info("数据库注册成功");
+            }
         } catch (Exception e) {
             success = false;
             errors.add("❌ 数据库注册失败: " + e.getMessage());

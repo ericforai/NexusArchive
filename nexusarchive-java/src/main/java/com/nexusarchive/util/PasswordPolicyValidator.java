@@ -6,6 +6,7 @@
 package com.nexusarchive.util;
 
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 
 import java.util.regex.Pattern;
 
@@ -21,19 +22,19 @@ public class PasswordPolicyValidator {
 
     public static void validate(String password) {
         if (password == null || password.length() < 8) {
-            throw new BusinessException("密码至少 8 位");
+            throw new BusinessException(ErrorCode.PASSWORD_TOO_SHORT);
         }
         if (!UPPER.matcher(password).find()) {
-            throw new BusinessException("密码需包含大写字母");
+            throw new BusinessException(ErrorCode.PASSWORD_MISSING_UPPERCASE);
         }
         if (!LOWER.matcher(password).find()) {
-            throw new BusinessException("密码需包含小写字母");
+            throw new BusinessException(ErrorCode.PASSWORD_MISSING_LOWERCASE);
         }
         if (!DIGIT.matcher(password).find()) {
-            throw new BusinessException("密码需包含数字");
+            throw new BusinessException(ErrorCode.PASSWORD_MISSING_DIGIT);
         }
         if (!SPECIAL.matcher(password).find()) {
-            throw new BusinessException("密码需包含特殊字符");
+            throw new BusinessException(ErrorCode.PASSWORD_MISSING_SPECIAL_CHAR);
         }
     }
 }

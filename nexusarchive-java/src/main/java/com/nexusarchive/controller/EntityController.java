@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 /**
  * 法人实体控制器
  * 
@@ -85,7 +87,7 @@ public class EntityController {
     @PostMapping
     @Operation(summary = "创建法人")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<Boolean> save(@RequestBody SysEntity entity) {
+    public Result<Boolean> save(@Valid @RequestBody SysEntity entity) {
         if (entity.getName() == null || entity.getName().trim().isEmpty()) {
             return Result.error("法人名称不能为空");
         }
@@ -98,7 +100,7 @@ public class EntityController {
     @PutMapping
     @Operation(summary = "更新法人")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<Boolean> update(@RequestBody SysEntity entity) {
+    public Result<Boolean> update(@Valid @RequestBody SysEntity entity) {
         if (entity.getId() == null) {
             return Result.error("法人ID不能为空");
         }

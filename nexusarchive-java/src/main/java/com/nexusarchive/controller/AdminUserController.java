@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 /**
  * 用户管理接口（管理员）
  */
@@ -33,13 +35,13 @@ public class AdminUserController {
 
     @PostMapping
     @ArchivalAudit(operationType = "CREATE", resourceType = "USER", description = "创建用户")
-    public Result<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+    public Result<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         return Result.success(userService.createUser(request));
     }
 
     @PutMapping("/{id}")
     @ArchivalAudit(operationType = "UPDATE", resourceType = "USER", description = "更新用户信息")
-    public Result<UserResponse> updateUser(@PathVariable String id, @RequestBody UpdateUserRequest request) {
+    public Result<UserResponse> updateUser(@PathVariable String id, @Valid @RequestBody UpdateUserRequest request) {
         request.setId(id);
         return Result.success(userService.updateUser(request));
     }
@@ -68,14 +70,14 @@ public class AdminUserController {
 
     @PostMapping("/{id}/reset-password")
     @ArchivalAudit(operationType = "RESET_PASSWORD", resourceType = "USER", description = "重置用户密码")
-    public Result<Void> resetPassword(@PathVariable String id, @RequestBody ResetPasswordRequest request) {
+    public Result<Void> resetPassword(@PathVariable String id, @Valid @RequestBody ResetPasswordRequest request) {
         userService.resetPassword(id, request.getNewPassword());
         return Result.success("密码已重置", null);
     }
 
     @PutMapping("/{id}/status")
     @ArchivalAudit(operationType = "UPDATE", resourceType = "USER", description = "修改用户状态")
-    public Result<Void> updateStatus(@PathVariable String id, @RequestBody UpdateUserStatusRequest request) {
+    public Result<Void> updateStatus(@PathVariable String id, @Valid @RequestBody UpdateUserStatusRequest request) {
         userService.updateStatus(id, request.getStatus());
         return Result.success("状态已更新", null);
     }

@@ -128,13 +128,13 @@ public class AuditLogService {
     
     /**
      * 保存审计日志并计算哈希链
-     * 
+     *
      * 哈希链机制：
      * 1. 获取前一条日志的哈希值
      * 2. 计算当前日志哈希: SM3(operatorId + operationType + objectDigest + createdTime + prevHash)
      * 3. 存储当前日志和哈希值
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void saveAuditLogWithHash(SysAuditLog auditLog) {
         auditLogMapper.insert(auditLog);
 

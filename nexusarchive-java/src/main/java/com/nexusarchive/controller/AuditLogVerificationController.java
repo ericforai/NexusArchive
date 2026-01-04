@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 /**
  * 审计日志验真控制器
  * 
@@ -121,7 +123,7 @@ public class AuditLogVerificationController {
             @RequestParam int sampleSize,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestBody(required = false) SamplingCriteria criteria) {
+            @Valid @RequestBody(required = false) SamplingCriteria criteria) {
         try {
             SamplingResult result;
             if (criteria != null) {

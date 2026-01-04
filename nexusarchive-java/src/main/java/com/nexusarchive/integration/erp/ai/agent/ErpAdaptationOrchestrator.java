@@ -59,6 +59,12 @@ public class ErpAdaptationOrchestrator {
     public AdaptationResult adapt(AdaptationRequest request) throws IOException {
         log.info("开始 ERP 适配: erpType={}, erpName={}", request.getErpType(), request.getErpName());
 
+        // 获取文件名（用于识别 ERP 类型）
+        String fileName = request.getFileName();
+        if (fileName == null && request.getApiFiles() != null && !request.getApiFiles().isEmpty()) {
+            fileName = request.getApiFiles().get(0).getOriginalFilename();
+        }
+
         // Step 1: 解析 API 文档
         log.info("Step 1: 解析 API 文档");
         List<OpenApiDefinition> definitions = parseApiDocuments(request.getApiFiles());
@@ -91,6 +97,8 @@ public class ErpAdaptationOrchestrator {
             .mappings(mappings)
             .adapterId(request.getErpType().toLowerCase().replace(" ", "-"))
             .message("ERP 适配完成")
+            .targetConfigId(request.getTargetConfigId())
+            .fileName(fileName)
             .build();
     }
 
@@ -110,9 +118,11 @@ public class ErpAdaptationOrchestrator {
             return result;
         }
 
-        // 再执行自动部署
+        // 再执行自动部署（传递 targetConfigId, fileName, mappings）
         log.info("Step 4: 自动部署");
-        ErpAdapterAutoDeployService.DeploymentResult deployResult = autoDeployService.deploy(result.getCode());
+        ErpAdapterAutoDeployService.DeploymentResult deployResult =
+            autoDeployService.deploy(result.getCode(), result.getTargetConfigId(),
+                                    result.getFileName(), result.getMappings());
 
         // 合并结果
         return AdaptationResult.builder()
@@ -122,6 +132,8 @@ public class ErpAdaptationOrchestrator {
             .adapterId(result.getAdapterId())
             .deploymentResult(deployResult)
             .message(buildDeploymentMessage(result, deployResult))
+            .targetConfigId(result.getTargetConfigId())
+            .fileName(result.getFileName())
             .build();
     }
 
@@ -196,6 +208,8 @@ public class ErpAdaptationOrchestrator {
         private String baseUrl;
         private String authType;
         private List<MultipartFile> apiFiles;
+        private Long targetConfigId;  // 目标连接器 ID（可选）
+        private String fileName;       // API 文件名（用于识别 ERP 类型）
     }
 
     /**
@@ -210,6 +224,8 @@ public class ErpAdaptationOrchestrator {
         private String adapterId;
         private String message;
         private ErpAdapterAutoDeployService.DeploymentResult deploymentResult;
+        private Long targetConfigId;  // 目标连接器 ID（可选）
+        private String fileName;       // API 文件名
 
         public static AdaptationResult failure(String errorMessage) {
             return AdaptationResult.builder()

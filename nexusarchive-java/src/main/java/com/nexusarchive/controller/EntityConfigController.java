@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 /**
  * 法人配置控制器
  * 
@@ -58,7 +60,7 @@ public class EntityConfigController {
     @PostMapping
     @Operation(summary = "保存或更新配置")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<Map<String, String>> saveOrUpdateConfig(@RequestBody EntityConfig config) {
+    public Result<Map<String, String>> saveOrUpdateConfig(@Valid @RequestBody EntityConfig config) {
         if (config.getEntityId() == null || config.getConfigType() == null || config.getConfigKey() == null) {
             return Result.error("法人ID、配置类型和配置键不能为空");
         }

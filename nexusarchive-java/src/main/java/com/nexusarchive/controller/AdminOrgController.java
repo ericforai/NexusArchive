@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/admin/org")
 @PreAuthorize("hasAuthority('manage_org') or hasRole('SYSTEM_ADMIN') or hasAuthority('nav:all')")
@@ -37,7 +39,7 @@ public class AdminOrgController {
     }
 
     @PostMapping
-    public Result<Org> create(@RequestBody Org org) {
+    public Result<Org> create(@Valid @RequestBody Org org) {
         return Result.success("创建成功", orgService.create(org));
     }
 
@@ -61,7 +63,7 @@ public class AdminOrgController {
     }
 
     @PutMapping("/{id}")
-    public Result<Org> update(@PathVariable String id, @RequestBody Org org) {
+    public Result<Org> update(@PathVariable String id, @Valid @RequestBody Org org) {
         return Result.success("更新成功", orgService.update(id, org));
     }
 

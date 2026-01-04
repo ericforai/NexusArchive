@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/admin/sql-audit-rules")
 @PreAuthorize("hasAuthority('manage_settings') or hasRole('SYSTEM_ADMIN') or hasAuthority('nav:all')")
@@ -70,7 +72,7 @@ public class SqlAuditRuleController {
     @PostMapping
     @Operation(summary = "新增/更新 SQL 审计规则")
     @ArchivalAudit(operationType = "UPDATE", resourceType = "SQL_AUDIT_RULE", description = "新增/更新 SQL 审计规则")
-    public Result<Void> save(@RequestBody SysSqlAuditRule rule) {
+    public Result<Void> save(@Valid @RequestBody SysSqlAuditRule rule) {
         String error = validateRule(rule);
         if (error != null) {
             return Result.error(error);

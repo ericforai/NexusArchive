@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
+import jakarta.validation.Valid;
+
 /**
  * 高级档案检索控制器
  * 
@@ -36,7 +38,7 @@ public class AdvancedArchiveSearchController {
     @PostMapping("/advanced")
     @Operation(summary = "高级检索")
     @PreAuthorize("hasAnyAuthority('archive:view', 'archive:search')")
-    public Result<Page<ArchiveSearchResult>> advancedSearch(@RequestBody AdvancedSearchRequest request) {
+    public Result<Page<ArchiveSearchResult>> advancedSearch(@Valid @RequestBody AdvancedSearchRequest request) {
         try {
             Page<ArchiveSearchResult> results = advancedSearchService.advancedSearch(request);
             return Result.success(results);

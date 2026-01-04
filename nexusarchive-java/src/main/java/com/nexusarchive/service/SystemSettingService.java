@@ -7,6 +7,7 @@ package com.nexusarchive.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.entity.SystemSetting;
 import com.nexusarchive.mapper.SystemSettingMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +35,11 @@ public class SystemSettingService {
     @Transactional
     public void saveAll(List<SystemSetting> items) {
         if (items == null || items.isEmpty()) {
-            throw new BusinessException("配置为空");
+            throw new BusinessException(ErrorCode.SYSTEM_CONFIG_NOT_FOUND);
         }
         List<String> keys = items.stream().map(SystemSetting::getConfigKey).filter(StringUtils::hasText).collect(Collectors.toList());
         if (keys.isEmpty()) {
-            throw new BusinessException("配置键不能为空");
+            throw new BusinessException(ErrorCode.SYSTEM_CONFIG_KEY_CANNOT_BE_EMPTY);
         }
         Map<String, SystemSetting> existingMap = settingMapper.selectList(new LambdaQueryWrapper<SystemSetting>()
                         .eq(SystemSetting::getDeleted, 0)

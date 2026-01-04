@@ -5,6 +5,8 @@
 
 package com.nexusarchive.controller;
 
+import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.dto.reconciliation.ReconciliationRequest;
 import com.nexusarchive.entity.ReconciliationRecord;
 import com.nexusarchive.service.ReconciliationService;
@@ -44,7 +46,7 @@ public class ReconciliationController {
         
         // ✅ P1 修复: 速率限制检查
         if (!rateLimiter.tryAcquire(1, java.time.Duration.ofSeconds(3))) {
-            throw new com.nexusarchive.common.exception.BusinessException("对账请求过于频繁,请稍后再试");
+            throw new BusinessException(ErrorCode.RECONCILIATION_TOO_FREQUENT);
         }
         
         // ✅ 从 Spring Security 上下文获取真实用户

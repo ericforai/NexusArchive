@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 /**
  * 组卷与归档审核 Controller
  * 符合 DA/T 104-2024 组卷规范
@@ -36,7 +38,7 @@ public class VolumeController {
      * POST /api/volumes/assemble
      */
     @PostMapping("/assemble")
-    public ResponseEntity<Map<String, Object>> assembleByMonth(@RequestBody AssembleRequest request) {
+    public ResponseEntity<Map<String, Object>> assembleByMonth(@Valid @RequestBody AssembleRequest request) {
         log.info("请求组卷: fiscalPeriod={}", request.getFiscalPeriod());
         
         Volume volume = volumeService.assembleByMonth(request.getFiscalPeriod());
@@ -140,7 +142,7 @@ public class VolumeController {
     @PostMapping("/{id}/reject")
     public ResponseEntity<Map<String, Object>> rejectArchival(
             @PathVariable String id,
-            @RequestBody RejectRequest request) {
+            @Valid @RequestBody RejectRequest request) {
         
         volumeService.rejectArchival(id, request.getReviewerId(), request.getReason());
         

@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/erp/scenario")
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class ErpScenarioController {
 
     @PutMapping
     @Operation(summary = "更新场景配置")
-    public Result<Void> update(@RequestBody ErpScenario scenario) {
+    public Result<Void> update(@Valid @RequestBody ErpScenario scenario) {
         erpScenarioService.updateScenario(scenario);
         return Result.success();
     }
@@ -92,7 +94,7 @@ public class ErpScenarioController {
 
     @PutMapping("/interface")
     @Operation(summary = "更新子接口配置")
-    public Result<Void> updateSubInterface(@RequestBody ErpSubInterface subInterface,
+    public Result<Void> updateSubInterface(@Valid @RequestBody ErpSubInterface subInterface,
                                             jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
         String clientIp = getClientIp(request);

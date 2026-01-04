@@ -308,6 +308,8 @@ public class ErpAdaptationController {
                 .erpType(erpSystem)
                 .erpName(erpName)
                 .apiFiles(files)
+                .targetConfigId(targetConfigId)
+                .fileName(file.getOriginalFilename())
                 .build();
 
             // 5. 执行适配+部署

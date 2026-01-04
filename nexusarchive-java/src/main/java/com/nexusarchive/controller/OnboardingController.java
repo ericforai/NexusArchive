@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 /**
  * 初始化向导 API
  * 
@@ -63,7 +65,7 @@ public class OnboardingController {
     @PostMapping("/confirm/{companyId}")
     public Result<Void> confirmMappings(
             @PathVariable Long companyId,
-            @RequestBody List<MappingConfirmation> mappings) {
+            @Valid @RequestBody List<MappingConfirmation> mappings) {
         onboardingService.confirmMappings(companyId, mappings);
         return Result.success();
     }

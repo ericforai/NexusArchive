@@ -22,6 +22,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 /**
  * 授权票据控制器
  * 
@@ -42,7 +44,7 @@ public class AuthTicketController {
     @PreAuthorize("hasAnyAuthority('archive:view', 'archive:manage')")
     public Result<Map<String, Object>> createAuthTicket(
             @RequestParam String targetFonds,
-            @RequestBody AuthScope scope,
+            @Valid @RequestBody AuthScope scope,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime expiresAt,
             @RequestParam String reason,
             @RequestHeader("X-Current-Fonds-No") String sourceFonds,

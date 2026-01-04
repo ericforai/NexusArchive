@@ -12,6 +12,8 @@ import com.nexusarchive.service.OpenAppraisalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 /**
  * 开放鉴定控制器
  */
@@ -50,7 +52,7 @@ public class OpenAppraisalController {
      * 创建鉴定任务
      */
     @PostMapping("/create")
-    public Result<OpenAppraisal> createAppraisal(@RequestBody OpenAppraisal appraisal) {
+    public Result<OpenAppraisal> createAppraisal(@Valid @RequestBody OpenAppraisal appraisal) {
         try {
             OpenAppraisal created = appraisalService.createAppraisal(appraisal);
             return Result.success(created);
@@ -63,7 +65,7 @@ public class OpenAppraisalController {
      * 提交鉴定结果
      */
     @PostMapping("/submit")
-    public Result<Void> submitAppraisal(@RequestBody AppraisalSubmitRequest request) {
+    public Result<Void> submitAppraisal(@Valid @RequestBody AppraisalSubmitRequest request) {
         try {
             appraisalService.submitAppraisal(
                 request.getId(),

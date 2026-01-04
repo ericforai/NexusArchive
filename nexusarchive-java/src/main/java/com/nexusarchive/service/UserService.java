@@ -8,6 +8,7 @@ package com.nexusarchive.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.dto.request.CreateUserRequest;
 import com.nexusarchive.dto.request.UpdateUserRequest;
 import com.nexusarchive.dto.response.UserResponse;
@@ -46,7 +47,7 @@ public class UserService {
     public UserResponse createUser(CreateUserRequest request) {
         // 检查用户名是否已存在
         if (userMapper.findByUsername(request.getUsername()) != null) {
-            throw new BusinessException("用户名已存在");
+            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
         }
         // 三员互斥校验
         roleValidationService.validateThreeRoleExclusion(null, request.getRoleIds());
@@ -82,7 +83,7 @@ public class UserService {
     public UserResponse updateUser(UpdateUserRequest request) {
         User existing = userMapper.selectById(request.getId());
         if (existing == null) {
-            throw new BusinessException("用户不存在");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         // 三员互斥校验（排除自身已有角色）
         roleValidationService.validateThreeRoleExclusion(request.getId(), request.getRoleIds());
@@ -109,7 +110,7 @@ public class UserService {
     public void deleteUser(String userId) {
         User user = userMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         user.setDeleted(1);
         user.setLastModifiedTime(LocalDateTime.now());
@@ -122,7 +123,7 @@ public class UserService {
     public UserResponse getUserById(String userId) {
         User user = userMapper.selectById(userId);
         if (user == null || user.getDeleted() == 1) {
-            throw new BusinessException("用户不存在");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         return toResponse(user);
     }
@@ -173,7 +174,7 @@ public class UserService {
     public void resetPassword(String userId, String newPassword) {
         User user = userMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         PasswordPolicyValidator.validate(newPassword);
         String hash = passwordUtil.hashPassword(newPassword);
@@ -188,11 +189,11 @@ public class UserService {
     @Transactional
     public void updateStatus(String userId, String status) {
         if (!Arrays.asList("active", "disabled", "locked").contains(status)) {
-            throw new BusinessException("非法状态值");
+            throw new BusinessException(ErrorCode.INVALID_USER_STATUS);
         }
         User user = userMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         user.setStatus(status);
         user.setLastModifiedTime(LocalDateTime.now());

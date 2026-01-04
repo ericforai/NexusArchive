@@ -16,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.nexusarchive.security.CustomUserDetails;
 import com.nexusarchive.annotation.ArchivalAudit;
 
+import jakarta.validation.Valid;
+
 /**
  * 档案审批控制器
  */
@@ -58,7 +60,7 @@ public class ArchiveApprovalController {
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "CREATE_APPROVAL", resourceType = "ARCHIVE_APPROVAL", description = "创建归档审批申请")
-    public Result<ArchiveApproval> createApproval(@RequestBody ArchiveApproval approval,
+    public Result<ArchiveApproval> createApproval(@Valid @RequestBody ArchiveApproval approval,
                                                   @AuthenticationPrincipal CustomUserDetails user) {
         if (user != null && approval.getApplicantId() == null) {
             approval.setApplicantId(user.getId());
@@ -78,7 +80,7 @@ public class ArchiveApprovalController {
     @PostMapping("/approve")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批准归档申请")
-    public Result<Void> approveArchive(@RequestBody ApprovalRequest request,
+    public Result<Void> approveArchive(@Valid @RequestBody ApprovalRequest request,
                                        @AuthenticationPrincipal CustomUserDetails user) {
         String approverId = user != null ? user.getId() : "system";
         String approverName = user != null ? user.getFullName() : "system";
@@ -97,7 +99,7 @@ public class ArchiveApprovalController {
     @PostMapping("/reject")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "拒绝归档申请")
-    public Result<Void> rejectArchive(@RequestBody ApprovalRequest request,
+    public Result<Void> rejectArchive(@Valid @RequestBody ApprovalRequest request,
                                       @AuthenticationPrincipal CustomUserDetails user) {
         String approverId = user != null ? user.getId() : "system";
         String approverName = user != null ? user.getFullName() : "system";

@@ -161,7 +161,7 @@ public class OriginalVoucherController {
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<VoucherRelation> createRelation(
             @PathVariable String id,
-            @RequestBody CreateRelationRequest req,
+            @Valid @RequestBody CreateRelationRequest req,
             HttpServletRequest request) {
         String userId = (String) request.getAttribute("userId");
         return Result.success(voucherService.createRelation(id, req.accountingVoucherId(), req.description(), userId));

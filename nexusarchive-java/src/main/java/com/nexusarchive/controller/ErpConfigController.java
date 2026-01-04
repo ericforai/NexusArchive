@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 @Slf4j
 @RestController
 @RequestMapping("/erp/config")
@@ -41,7 +43,7 @@ public class ErpConfigController {
     @PostMapping
     @Operation(summary = "新增/更新配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
-    public Result<Void> save(@RequestBody ErpConfig config) {
+    public Result<Void> save(@Valid @RequestBody ErpConfig config) {
         erpConfigService.saveConfig(config);
         return Result.success();
     }
