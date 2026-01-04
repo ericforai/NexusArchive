@@ -12,13 +12,11 @@ import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator.AdaptationRequest;
 import com.nexusarchive.integration.erp.ai.agent.ErpAdaptationOrchestrator.AdaptationResult;
-import com.nexusarchive.integration.erp.ai.dto.AiGenerationSession;
 import com.nexusarchive.integration.erp.ai.identifier.ErpTypeIdentifier;
 import com.nexusarchive.integration.erp.ai.identifier.ScenarioName;
 import com.nexusarchive.integration.erp.ai.identifier.ScenarioNamer;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import com.nexusarchive.integration.erp.ai.parser.OpenApiDocumentParser;
-import com.nexusarchive.integration.erp.ai.service.AiGenerationSessionService;
 import com.nexusarchive.service.ErpConfigService;
 import lombok.Builder;
 import lombok.Data;
@@ -47,7 +45,6 @@ public class ErpAdaptationController {
     private final ErpTypeIdentifier erpTypeIdentifier;
     private final ScenarioNamer scenarioNamer;
     private final ErpConfigService erpConfigService;
-    private final AiGenerationSessionService aiGenerationSessionService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ErpAdaptationController(
@@ -55,14 +52,12 @@ public class ErpAdaptationController {
             OpenApiDocumentParser openApiDocumentParser,
             ErpTypeIdentifier erpTypeIdentifier,
             ScenarioNamer scenarioNamer,
-            ErpConfigService erpConfigService,
-            AiGenerationSessionService aiGenerationSessionService) {
+            ErpConfigService erpConfigService) {
         this.orchestrator = orchestrator;
         this.openApiDocumentParser = openApiDocumentParser;
         this.erpTypeIdentifier = erpTypeIdentifier;
         this.scenarioNamer = scenarioNamer;
         this.erpConfigService = erpConfigService;
-        this.aiGenerationSessionService = aiGenerationSessionService;
     }
 
     /**
@@ -417,20 +412,6 @@ public class ErpAdaptationController {
             "AI code regeneration has been removed. " +
             "Please use the template-based code generation via the /adapt-with-deploy endpoint."
         ));
-    }
-
-    /**
-     * 批准生成的代码
-     */
-    @PostMapping("/approve/{sessionId}")
-    public ResponseEntity<ApiResponse> approveCode(@PathVariable String sessionId) {
-        try {
-            aiGenerationSessionService.approve(sessionId);
-            return ResponseEntity.ok(ApiResponse.success("代码已批准，将继续部署"));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("批准失败: " + e.getMessage()));
-        }
     }
 
     @Data
