@@ -8,7 +8,7 @@ import { FileText, Paperclip, ExternalLink, Download, AlertCircle } from 'lucide
 import { attachmentsApi, AttachmentFile } from '../../api/attachments';
 import { originalVoucherApi } from '../../api/originalVoucher';
 import { useAuthStore } from '../../store';
-import { FileViewer } from '../../components/common/OfdViewer';
+import { FileViewer } from '../../components/common';
 
 interface EvidencePreviewProps {
     voucherId: string;
