@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { FileText, Paperclip, ExternalLink, Download, AlertCircle } from 'lucide-react';
 import { attachmentsApi, AttachmentFile } from '../../api/attachments';
 import { originalVoucherApi } from '../../api/originalVoucher';
+import { useAuthStore } from '../../store';
 import { FileViewer } from '../../components/common/OfdViewer';
 
 interface EvidencePreviewProps {
@@ -112,6 +113,9 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
     const [selectedFile, setSelectedFile] = useState<AttachmentFile | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Get auth token for FileViewer (pages can use store)
+    const token = useAuthStore(state => state.token);
 
     // 加载附件列表
     const loadFiles = useCallback(async () => {
@@ -325,6 +329,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 fileType={selectedFile.fileType?.toLowerCase()}
                                 fileName={selectedFile.fileName}
                                 className="h-full"
+                                token={token}
                             />
                         </div>
                     </div>

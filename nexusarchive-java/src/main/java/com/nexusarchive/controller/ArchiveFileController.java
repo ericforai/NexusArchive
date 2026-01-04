@@ -7,6 +7,8 @@ package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
+import com.nexusarchive.dto.VoucherDataDto;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArchiveMapper;
@@ -52,14 +54,14 @@ public class ArchiveFileController {
         ArcFileContent content = archiveFileContentService.getFileContentByItemId(id, operatorId);
 
         if (content == null || content.getStoragePath() == null) {
-            throw new BusinessException("File not found for archive: " + id);
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND_FOR_ARCHIVE, id);
         }
         authorizeArchiveAccess(content.getArchivalCode());
 
         Path filePath = fileStorageService.resolvePath(content.getStoragePath());
         
         if (!fileStorageService.exists(content.getStoragePath())) {
-            throw new BusinessException("Physical file not found: " + content.getStoragePath());
+            throw new BusinessException(ErrorCode.PHYSICAL_FILE_NOT_FOUND, content.getStoragePath());
         }
 
         // [FIXED P0-3] 使用 FileSystemResource，自动管理资源生命周期
@@ -97,14 +99,14 @@ public class ArchiveFileController {
         ArcFileContent content = archiveFileContentService.getFileContentById(fileId, operatorId);
 
         if (content == null || content.getStoragePath() == null) {
-            throw new BusinessException("File not found: " + fileId);
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, fileId);
         }
         authorizeArchiveAccess(content.getArchivalCode());
 
         Path filePath = fileStorageService.resolvePath(content.getStoragePath());
         
         if (!fileStorageService.exists(content.getStoragePath())) {
-            throw new BusinessException("Physical file not found: " + content.getStoragePath());
+            throw new BusinessException(ErrorCode.PHYSICAL_FILE_NOT_FOUND, content.getStoragePath());
         }
 
         // [FIXED P0-3] 使用 FileSystemResource，自动管理资源生命周期
@@ -138,7 +140,7 @@ public class ArchiveFileController {
     @GetMapping("/{id}/voucher-data")
     @Operation(summary = "获取档案关联的凭证分录数据")
     @PreAuthorize("hasAuthority('archive:read')")
-    public ResponseEntity<com.nexusarchive.common.result.Result<VoucherDataDto>> getVoucherData(
+    public ResponseEntity<com.nexusarchive.common.result.Result<com.nexusarchive.dto.VoucherDataDto>> getVoucherData(
             @PathVariable String id,
             jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
@@ -160,7 +162,7 @@ public class ArchiveFileController {
             return ResponseEntity.ok(com.nexusarchive.common.result.Result.success(null));
         }
 
-        VoucherDataDto dto = new VoucherDataDto();
+        com.nexusarchive.dto.VoucherDataDto dto = new com.nexusarchive.dto.VoucherDataDto();
         dto.setFileId(content.getId());
         dto.setSourceData(content.getSourceData());
         dto.setVoucherWord(content.getVoucherWord());
@@ -171,19 +173,6 @@ public class ArchiveFileController {
         log.info("返回凭证分录数据: fileId={}, hasSourceData={}", 
                  content.getId(), content.getSourceData() != null);
         return ResponseEntity.ok(com.nexusarchive.common.result.Result.success(dto));
-    }
-
-    /**
-     * 凭证分录数据 DTO
-     */
-    @lombok.Data
-    public static class VoucherDataDto {
-        private String fileId;
-        private String sourceData;
-        private String voucherWord;
-        private String summary;
-        private String docDate;
-        private String creator;
     }
 
     private String determineContentType(String fileType, String fileName) {
@@ -213,7 +202,7 @@ public class ArchiveFileController {
 
     private void authorizeArchiveAccess(String archivalCode) {
         if (archivalCode == null || archivalCode.isEmpty()) {
-            throw new BusinessException("File not bound to an archive");
+            throw new BusinessException(ErrorCode.FILE_NOT_BOUND_TO_ARCHIVE);
         }
 
         // 兼容两种数据格式：
@@ -228,14 +217,14 @@ public class ArchiveFileController {
                             .last("LIMIT 1")
             );
         }
-        
+
         if (archive == null) {
-            throw new BusinessException("Archive not found: " + archivalCode);
+            throw new BusinessException(ErrorCode.ARCHIVE_NOT_FOUND, archivalCode);
         }
 
         DataScopeService.DataScopeContext scope = dataScopeService.resolve();
         if (!dataScopeService.canAccessArchive(archive, scope)) {
-            throw new BusinessException("无权访问该档案文件");
+            throw new BusinessException(ErrorCode.ARCHIVE_ACCESS_DENIED);
         }
     }
 

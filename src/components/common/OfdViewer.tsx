@@ -1,10 +1,9 @@
-// Input: React、本地模块 utils/storage、store
+// Input: React、本地模块 utils/storage
 // Output: React 组件 OfdViewer
 // Pos: 通用复用组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react'
-import { useAuthStore } from '../../store'
 
 interface FileViewerProps {
     fileUrl: string
@@ -12,9 +11,10 @@ interface FileViewerProps {
     fileName?: string
     className?: string
     style?: React.CSSProperties
+    token?: string  // Auth token for fetching files (avoid store coupling)
 }
 
-export function FileViewer({ fileUrl, fileType, fileName, className, style }: FileViewerProps) {
+export function FileViewer({ fileUrl, fileType, fileName, className, style, token }: FileViewerProps) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [blobUrl, setBlobUrl] = useState<string | null>(null)
@@ -28,8 +28,7 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style }: Fi
 
         async function loadFile() {
             try {
-                // Get token from AuthStore (Fix: use correct store instead of legacy storage)
-                const token = useAuthStore.getState().token
+                // Use token from props instead of store (avoid shared component coupling)
                 const headers: Record<string, string> = {}
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`

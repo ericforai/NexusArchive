@@ -8,6 +8,7 @@ package com.nexusarchive.modules.borrowing.app;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.modules.borrowing.api.dto.BorrowingApprovalRequest;
 import com.nexusarchive.modules.borrowing.api.dto.BorrowingCreateRequest;
 import com.nexusarchive.modules.borrowing.api.dto.BorrowingDto;
@@ -40,17 +41,17 @@ public class BorrowingApplicationService implements BorrowingFacade {
     @Transactional
     public BorrowingDto createBorrowing(BorrowingCreateRequest request, String userId, String userName) {
         if (request == null) {
-            throw new BusinessException("借阅请求不能为空");
+            throw new BusinessException(ErrorCode.BORROW_REQUEST_CANNOT_BE_EMPTY);
         }
         if (userId == null || userId.isBlank()) {
-            throw new BusinessException("未获取到当前用户，请重新登录后重试");
+            throw new BusinessException(ErrorCode.BORROW_USER_NOT_FOUND);
         }
         if (request.getArchiveId() == null || request.getArchiveId().isBlank()) {
-            throw new BusinessException("借阅档案不能为空");
+            throw new BusinessException(ErrorCode.BORROW_ARCHIVE_CANNOT_BE_EMPTY);
         }
         com.nexusarchive.entity.Archive archive = archiveService.getArchiveById(request.getArchiveId());
         if (archive == null) {
-            throw new BusinessException("档案不存在，无法发起借阅");
+            throw new BusinessException(ErrorCode.BORROW_ARCHIVE_NOT_FOUND);
         }
 
         Borrowing borrowing = new Borrowing();
@@ -109,7 +110,7 @@ public class BorrowingApplicationService implements BorrowingFacade {
     @Transactional
     public BorrowingDto approveBorrowing(String id, BorrowingApprovalRequest approvalRequest) {
         if (approvalRequest == null) {
-            throw new BusinessException("审批参数不能为空");
+            throw new BusinessException(ErrorCode.BORROW_APPROVAL_PARAMS_CANNOT_BE_EMPTY);
         }
         Borrowing borrowing = getExistingBorrowing(id);
         assertStatus(borrowing, BorrowingStatus.PENDING);
@@ -184,7 +185,7 @@ public class BorrowingApplicationService implements BorrowingFacade {
     private Borrowing getExistingBorrowing(String id) {
         Borrowing borrowing = borrowingMapper.selectById(id);
         if (borrowing == null) {
-            throw new BusinessException("借阅记录不存在或已被删除");
+            throw new BusinessException(ErrorCode.BORROW_RECORD_NOT_FOUND);
         }
         return borrowing;
     }

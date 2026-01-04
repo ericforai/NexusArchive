@@ -130,18 +130,23 @@ class ArchitectureTest {
      * 注意: 工具类、适配器、解析器、工作流服务等可以有自己的命名规范
      * </p>
      * <p>
-     * TODO: 排除 volume/batch/legacy 子包中的特殊命名类
+     * 排除: volume/batch/legacy/reconciliation 子包中的特殊命名类（工作流、批处理等）
      * </p>
      */
-    // @Test
+    @Test
     void serviceImplClassesShouldHaveCorrectNaming() {
         // 只检查 service.impl 包下的直接子类，排除深层子包和内部类
+        // 排除特殊子包：batch, legacy, volume, reconciliation
         ArchRule rule = classes()
                 .that().resideInAPackage("..service.impl")
+                .and(not(resideInAPackage("..service.impl.batch..")))
+                .and(not(resideInAPackage("..service.impl.legacy..")))
+                .and(not(resideInAPackage("..service.impl.volume..")))
+                .and(not(resideInAPackage("..service.impl.reconciliation..")))
                 .and().haveSimpleNameContaining("Service")
                 .and().areTopLevelClasses()
                 .should().haveSimpleNameEndingWith("ServiceImpl")
-                .because("主要服务实现类应使用规范的命名");
+                .because("主要服务实现类应使用规范的命名（特殊工作流类除外）");
 
         rule.check(importedClasses);
     }
@@ -177,6 +182,7 @@ class ArchitectureTest {
      * - YonPaymentTestController (1 处：getFileUrls)
      * </p>
      * <p>
+     * 评估：这是一个中等重构工作，需要将授权逻辑移到服务层
      * 修复方案：
      * 1. 使用 @Valid + JSR303 验证，返回 ValidationError
      * 2. 或在服务层抛出异常，控制器只负责处理响应
