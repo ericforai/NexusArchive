@@ -11,8 +11,9 @@ server:
 spring:
   application:
     name: nexusarchive
-  
+
   profiles:
+    include: ai
     active: ${SPRING_PROFILES_ACTIVE:dev}
   
   flyway:
