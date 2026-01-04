@@ -34,6 +34,7 @@ public class CodeGenerationPromptBuilder {
                 .replace("{packageName}", context.getPackageName())
                 .replace("{baseUrl}", context.getBaseUrl())
                 .replace("{authType}", context.getAuthType())
+                .replace("{timestamp}", String.valueOf(System.currentTimeMillis()))
                 .replace("{apiDefinitions}", formatApiDefinitions(context.getApiDefinitions()))
                 .replace("{authTemplate}", buildAuthTemplate(context.getAuthType()))
                 .replace("{scenarioList}", buildScenarioList(context.getApiDefinitions()));
@@ -92,7 +93,10 @@ public class CodeGenerationPromptBuilder {
     }
 
     private String extractScenario(String operationId) {
-        // 从 operationId 提取场景名
-        return operationId.replaceAll("([A-Z])", "_$1").toLowerCase();
+        // Convert "salesOutList" -> "salesOutSync"
+        if (operationId.endsWith("List")) {
+            return operationId.substring(0, operationId.length() - 4) + "Sync";
+        }
+        return operationId + "Sync"; // Default fallback
     }
 }

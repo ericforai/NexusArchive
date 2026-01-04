@@ -1,7 +1,6 @@
 // nexusarchive-java/src/main/java/com/nexusarchive/integration/erp/ai/llm/prompt/PromptContext.java
 package com.nexusarchive.integration.erp.ai.llm.prompt;
 
-import com.nexusarchive.integration.erp.ai.parser.OpenApiDefinition;
 import lombok.Builder;
 import lombok.Data;
 

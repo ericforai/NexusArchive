@@ -19,7 +19,7 @@
 ### 1. 类结构
 ```java
 @Component
-@ErpAdapter(
+@ErpAdapterAnnotation(
     identifier = "{erpType}-{timestamp}",
     name = "{erpName}",
     supportedScenarios = {scenarioList}
