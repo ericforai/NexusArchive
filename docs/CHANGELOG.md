@@ -4,6 +4,35 @@
 
 ---
 
+## [2025-01-04] 表格预览交互优化与可复用组件
+
+### 核心变更
+- **新增可复用组件**：创建 `TablePreviewAction` 组件，统一表格预览按钮样式与交互。
+- **优化用户体验**：表格预览改为独立操作列，移除金额列内的"查看"文字，提升视觉清晰度。
+- **整行可点击**：实现整行点击预览功能，悬停时蓝色高亮，提高操作效率。
+- **测试覆盖**：为 `TablePreviewAction` 组件添加 23 个单元测试，确保代码质量。
+- **架构合规**：遵循单一入口原则，组件导出至 `index.ts`，文档完整。
+
+### 修改文件
+| 文件 | 变更 |
+|------|------|
+| `src/components/table/TablePreviewAction.tsx` | [NEW] 可复用表格预览操作组件 |
+| `src/components/table/__tests__/TablePreviewAction.test.tsx` | [NEW] 单元测试（23个测试用例） |
+| `src/components/table/index.ts` | [UPDATE] 添加 TablePreviewAction 公共导出 |
+| `src/components/table/README.md` | [UPDATE] 添加文件清单与 TablePreviewAction 文档 |
+| `src/pages/archives/ArchiveListView.tsx` | [UPDATE] 使用新的预览组件和交互 |
+| `src/pages/archives/OriginalVoucherListView.tsx` | [UPDATE] 使用新的预览组件和交互 |
+| `docs/CHANGELOG.md` | [UPDATE] 记录本次变更 |
+
+### 技术细节
+- 使用 TypeScript 严格类型定义
+- 支持悬停高亮（Tailwind CSS）
+- 可配置的预览标签和删除按钮
+- 阻止事件冒泡
+- 支持键盘导航（Tab、Enter）
+
+---
+
 ## [2025-12-31] 后端核心实体与接口合规性补全
 
 ### 核心变更

@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Users, UserCog } from 'lucide-react';
 import { UserSettings } from '../../components/settings/UserSettings';
-import { UserLifecyclePage } from '../../pages/admin/UserLifecyclePage';
+import { UserLifecyclePage } from '../../components/pages';
 import { useAdminSettingsApi } from '../../features/settings';
 
 type UserTab = 'list' | 'lifecycle';

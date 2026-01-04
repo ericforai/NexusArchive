@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { LegacyImportPage } from '../admin/LegacyImportPage';
+import { LegacyImportPage } from '../../components/pages';
 
 /**
  * 数据导入页面
@@ -20,5 +20,6 @@ const DataImportPage: React.FC = () => {
 };
 
 export default DataImportPage;
+
 
 

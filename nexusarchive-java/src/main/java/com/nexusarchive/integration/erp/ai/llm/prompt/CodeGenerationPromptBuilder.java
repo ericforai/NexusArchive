@@ -26,14 +26,14 @@ public class CodeGenerationPromptBuilder {
             // 读取模板
             String template = loadTemplate();
 
-            // 替换变量
+            // 替换变量 (处理 null 值)
             return template
-                .replace("{erpType}", context.getErpType())
-                .replace("{erpName}", context.getErpName())
-                .replace("{className}", context.getClassName())
-                .replace("{packageName}", context.getPackageName())
-                .replace("{baseUrl}", context.getBaseUrl())
-                .replace("{authType}", context.getAuthType())
+                .replace("{erpType}", nonNull(context.getErpType()))
+                .replace("{erpName}", nonNull(context.getErpName()))
+                .replace("{className}", nonNull(context.getClassName()))
+                .replace("{packageName}", nonNull(context.getPackageName()))
+                .replace("{baseUrl}", nonNull(context.getBaseUrl()))
+                .replace("{authType}", nonNull(context.getAuthType()))
                 .replace("{timestamp}", String.valueOf(System.currentTimeMillis()))
                 .replace("{apiDefinitions}", formatApiDefinitions(context.getApiDefinitions()))
                 .replace("{authTemplate}", buildAuthTemplate(context.getAuthType()))
@@ -43,6 +43,10 @@ public class CodeGenerationPromptBuilder {
             log.error("Failed to load prompt template", e);
             throw new RuntimeException("Prompt template loading failed", e);
         }
+    }
+
+    private String nonNull(String value) {
+        return value != null ? value : "https://api.example.com";
     }
 
     private String loadTemplate() throws IOException {
@@ -64,7 +68,8 @@ public class CodeGenerationPromptBuilder {
     }
 
     private String buildAuthTemplate(String authType) {
-        return switch (authType.toLowerCase()) {
+        String type = authType != null ? authType : "none";
+        return switch (type.toLowerCase()) {
             case "appkey" -> """
                 使用 AppKey + AppSecret + Timestamp 签名：
                 ```java

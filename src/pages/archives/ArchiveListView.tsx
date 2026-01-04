@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useSmartMatching } from '../../features/archives';
 import ArchiveDetailDrawer from './ArchiveDetailDrawer';
 import MatchPreviewModal from './MatchPreviewModal';
+import { TablePreviewAction } from '../../components/table';
 
 // 诊断日志：验证模块导入
 console.log('%c[ArchiveListView] ArchiveDetailDrawer imported:', typeof ArchiveDetailDrawer, ArchiveDetailDrawer.name, 'color: #8b5cf6; font-weight: bold;');
@@ -98,6 +99,19 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
 
+  // 悬停行状态
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
+  // 防抖预览
+  let previewClickTimer: NodeJS.Timeout | null = null;
+  const handlePreviewClick = (row: GenericRow) => {
+    if (previewClickTimer) return;
+    previewClickTimer = setTimeout(() => {
+      openViewModal(row);
+      previewClickTimer = null;
+    }, 200);
+  };
+
   const openViewModal = (row: GenericRow) => {
     setViewRow(row);
     setActivePreviewId(row.fileId || row.id || null);
@@ -165,27 +179,17 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
     // Money Type
     if (column.type === 'money') {
       if (!value || value === '-') return <span className="text-slate-400 font-mono text-right block">-</span>;
-      return <span className={`font-mono font-semibold text-right block text-slate-700`}>{value}</span>;
+      return <span className="font-mono font-semibold text-right block text-slate-700">{value}</span>;
     }
 
     // Voucher Number (Interactive)
     if (['erpVoucherNo', 'voucherNo'].includes(column.key)) {
       return (
-        <div className="flex items-center gap-3 group relative">
-          <button
-            onClick={(e) => { e.stopPropagation(); openViewModal(row); }}
-            className="font-medium text-slate-700 hover:text-primary-600 transition-colors border-b border-transparent hover:border-primary-600 hover:border-dashed text-left"
-          >
-            {value}
-          </button>
-
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute left-full ml-2 bg-white/90 backdrop-blur shadow-sm border border-slate-200 rounded px-1.5 py-0.5 z-10 whitespace-nowrap">
-            <button onClick={(e) => { e.stopPropagation(); openViewModal(row); }} className="p-1 text-primary-600"><Eye size={14} /></button>
-            {mode.isPoolView && !mode.isLinkingView && (
-              <button onClick={(e) => { e.stopPropagation(); archiveActions.handleDelete(row.id); }} className="p-1 text-rose-600"><Trash2 size={14} /></button>
-            )}
-          </div>
-        </div>
+        <button
+          className="font-medium text-slate-700 transition-colors text-left"
+        >
+          {value}
+        </button>
       );
     }
 
@@ -392,28 +396,46 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
                         {col.header}
                       </th>
                     ))}
-                    {/* Actions column for pool view */}
-                    {mode.isPoolView && (
-                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 w-20">
-                        操作
-                      </th>
-                    )}
+                    {/* Actions column - always show */}
+                    <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 w-32 text-right">
+                      操作
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {data.isLoading ? (
                     <tr>
-                      <td colSpan={10} className="p-20 text-center">
+                      <td colSpan={12} className="p-20 text-center">
                         <Loader2 size={32} className="animate-spin text-primary-500 mx-auto mb-4" />
                         <p className="text-slate-500">加载数据中...</p>
                       </td>
                     </tr>
                   ) : data.rows.length === 0 ? (
-                    <tr><td colSpan={10}>{renderEmptyState()}</td></tr>
+                    <tr><td colSpan={12}>{renderEmptyState()}</td></tr>
                   ) : (
                     data.rows.map((row) => (
-                      <tr key={row.id} className="group hover:bg-blue-50/30 transition-colors duration-150">
-                        <td className="p-4 text-center">
+                      <tr
+                        key={row.id}
+                        className={`
+                          cursor-pointer transition-all duration-200
+                          ${hoveredRowId === row.id
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500 dark:border-l-blue-400'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}
+                        `}
+                        onMouseEnter={() => setHoveredRowId(row.id)}
+                        onMouseLeave={() => setHoveredRowId(null)}
+                        onClick={() => handlePreviewClick(row)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`预览 ${row.voucherNo || row.code || row.id}`}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handlePreviewClick(row);
+                          }
+                        }}
+                      >
+                        <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={selection.selectedIds.includes(row.id)}
@@ -426,27 +448,14 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
                             {renderCell(row, col)}
                           </td>
                         ))}
-                        {/* Actions column for pool view */}
-                        {mode.isPoolView && (
-                          <td className="p-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openViewModal(row); }}
-                                className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                title="预览"
-                              >
-                                <Eye size={16} />
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); archiveActions.handleDelete(row.id); }}
-                                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                title="删除"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        )}
+                        {/* Actions column - always show */}
+                        <td className="p-4 text-sm" onClick={(e) => e.stopPropagation()}>
+                          <TablePreviewAction
+                            hovered={hoveredRowId === row.id}
+                            onPreview={() => handlePreviewClick(row)}
+                            showDelete={false}
+                          />
+                        </td>
                       </tr>
                     ))
                   )}
@@ -560,6 +569,83 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               >
                 保存配置
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 筛选弹窗 */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-slate-800">筛选条件</h3>
+              <button onClick={() => setIsFilterOpen(false)}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Status Filter */}
+              <div>
+                <label className="text-sm font-bold text-slate-700 mb-2 block">状态</label>
+                <select
+                  value={query.statusFilter}
+                  onChange={(e) => query.setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">全部</option>
+                  <option value="draft">草稿</option>
+                  <option value="pending">准备归档</option>
+                  <option value="archived">已归档</option>
+                </select>
+              </div>
+
+              {/* Organization Filter */}
+              <div>
+                <label className="text-sm font-bold text-slate-700 mb-2 block">组织机构</label>
+                <select
+                  value={query.orgFilter}
+                  onChange={(e) => query.setOrgFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">全部</option>
+                  {query.orgOptions.map((org) => (
+                    <option key={org.value} value={org.value}>
+                      {org.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sub-Type Filter */}
+              {query.subTypeFilter !== undefined && (
+                <div>
+                  <label className="text-sm font-bold text-slate-700 mb-2 block">子类型</label>
+                  <input
+                    type="text"
+                    value={query.subTypeFilter}
+                    onChange={(e) => query.setSubTypeFilter(e.target.value)}
+                    placeholder="输入子类型..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  query.setStatusFilter('');
+                  query.setOrgFilter('');
+                  query.setSubTypeFilter('');
+                }}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                重置
+              </button>
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              >
+                确定
               </button>
             </div>
           </div>

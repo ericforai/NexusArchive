@@ -188,4 +188,55 @@ public class JwtUtil {
         extractAllClaims(token); // 尝试提取 claims，如果签名无效或过期会抛出异常
         return true; // 如果没有抛出异常，则认为有效
     }
+
+    /**
+     * 刷新Token
+     * <p>
+     * 从旧token中提取用户信息，生成新token
+     * </p>
+     *
+     * @param token 旧token（即使过期也可以刷新）
+     * @return 新token
+     */
+    public String refreshToken(String token) {
+        try {
+            // 尝试解析旧token（忽略过期）
+            Claims claims = Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            String username = claims.get("username", String.class);
+            String userId = claims.getSubject();
+
+            // 生成新token
+            return generateToken(username, userId);
+        } catch (ExpiredJwtException e) {
+            // token过期，但可以从中提取信息
+            Claims claims = e.getClaims();
+            String username = claims.get("username", String.class);
+            String userId = claims.getSubject();
+            return generateToken(username, userId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("无法刷新token: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 检查token是否即将过期（在指定分钟内）
+     *
+     * @param token token
+     * @param minutes 分钟数
+     * @return true 如果token将在指定分钟内过期
+     */
+    public boolean isTokenExpiringSoon(String token, int minutes) {
+        try {
+            Date expiration = extractExpiration(token);
+            long timeUntilExpiration = expiration.getTime() - System.currentTimeMillis();
+            return timeUntilExpiration <= (minutes * 60 * 1000);
+        } catch (Exception e) {
+            return true; // 如果解析失败，认为需要刷新
+        }
+    }
 }

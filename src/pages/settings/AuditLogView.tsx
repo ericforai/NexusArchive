@@ -8,8 +8,7 @@ import { Filter, Loader2, Search, Copy, Check, Shield, FileArchive } from 'lucid
 import { subscribeAuditRefresh } from '../../utils/audit';
 import { useAuditSettingsApi } from '../../features/settings';
 import { AuditLog } from '../../types';
-import { AuditVerificationPage } from '../audit/AuditVerificationPage';
-import { AuditEvidencePackagePage } from '../audit/AuditEvidencePackagePage';
+import { AuditVerificationPage, AuditEvidencePackagePage } from '../../components/pages';
 
 type AuditTab = 'logs' | 'verification' | 'export';
 

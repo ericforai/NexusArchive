@@ -409,27 +409,35 @@ components/organization/
 
 ### 2.3 中优先级 - 自定义 Hooks
 
-#### 2.3.1 useArchiveListController.ts (594 行)
+#### 2.3.1 useArchiveListController.ts (594 行) - ✅ **已完成 (2026-01-04)**
 
-**问题分析**:
+**原问题分析**:
 - 包含查询、分页、筛选、导出等多个职责
 - 600+ 行混合逻辑
 
-**拆分建议**:
+**✅ 已实施重构**:
 ```
-hooks/archives/
-├── useArchiveList.ts                  (~120 行) - 主 Hook
-├── useArchiveQuery.ts                 (~100 行) - 查询逻辑
-├── useArchivePagination.ts            (~80 行)  - 分页逻辑
-├── useArchiveFilters.ts               (~120 行) - 筛选逻辑
-├── useArchiveActions.ts               (~150 行) - 操作逻辑
-└── README.md
+src/features/archives/controllers/
+├── useArchiveMode.ts                  (~50 行) - 模式解析
+├── useArchiveQuery.ts                 (~50 行) - 查询逻辑
+├── useArchivePagination.ts            (~20 行) - 分页逻辑
+├── useArchiveSelection.ts             (~30 行) - 选择逻辑
+├── useArchivePool.ts                  (~40 行) - 池状态管理
+├── useArchiveData.ts                  (~30 行) - 数据状态
+├── useArchiveDataLoader.ts            (~150 行) - 数据加载
+├── useArchiveToast.ts                 (~25 行) - Toast 通知
+├── useArchiveControllerActions.ts     (~35 行) - CSV 导出
+├── types.ts                           (~120 行) - 类型定义
+├── utils.ts                           (~70 行) - 工具函数
+└── index.ts                           (~25 行) - 统一导出
 ```
 
-**收益**:
-- 每个 Hook 可独立测试
-- 提高复用性
-- 降低复杂度
+**重构成果**:
+- 主控制器: 650 行 → ~90 行 (-86%)
+- 模块数量: 1 个 → 9 个专用 Hook
+- TypeScript 编译: ✅ 通过
+- 向后兼容: ✅ 100%
+- 重构报告: [docs/reports/useArchiveListController-refactoring-complete.md](../../reports/useArchiveListController-refactoring-complete.md)
 
 ---
 

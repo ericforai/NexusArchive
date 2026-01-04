@@ -17,3 +17,4 @@ public interface UserMfaConfigMapper extends BaseMapper<UserMfaConfig> {
 }
 
 
+

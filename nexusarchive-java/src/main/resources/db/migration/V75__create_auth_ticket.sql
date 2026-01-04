@@ -50,3 +50,4 @@ ALTER TABLE auth_ticket ADD CONSTRAINT chk_auth_ticket_expires
     CHECK (expires_at > created_at + INTERVAL '1 day' AND expires_at <= created_at + INTERVAL '90 days');
 
 
+

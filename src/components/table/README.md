@@ -1,6 +1,16 @@
-# 表格组件库
+一旦我所属的文件夹有所变化，请更新我。
+本目录存放表格相关通用组件，提供统一的表格操作和数据管理能力。
 
-统一的表格组件，减少列表页面的重复代码。
+## 文件清单
+
+| 文件 | 地位 | 功能 |
+| --- | --- | --- |
+| `DataTable.tsx` | 通用组件 | 统一的数据表格组件，基于 Ant Design Table |
+| `TableFilters.tsx` | 通用组件 | 表格筛选组件，支持多种字段类型 |
+| `TableActions.tsx` | 通用组件 | 表格操作组件，提供下拉菜单形式的操作按钮 |
+| `TablePreviewAction.tsx` | 通用组件 | 表格行预览操作组件，提供统一的预览按钮样式 |
+| `useDataTable.ts` | Hook | 表格数据管理 Hook，封装分页、筛选、数据获取逻辑 |
+| `index.ts` | 聚合入口 | 表格组件库统一导出 |
 
 ## 组件列表
 
@@ -77,6 +87,34 @@ const actions: ActionItem[] = [
 <TableActions actions={actions} record={record} />
 ```
 
+### TablePreviewAction
+表格行预览操作组件，提供统一的预览按钮样式。
+
+**Features:**
+- 统一的预览按钮样式和交互
+- 悬停高亮效果
+- 可选的删除按钮
+- 支持键盘导航（Tab、Enter）
+
+**Usage:**
+```tsx
+import { TablePreviewAction } from '@/components/table';
+
+<TablePreviewAction
+  hovered={hoveredRowId === row.id}
+  onPreview={() => handlePreview(row)}
+  showDelete={false}
+  onDelete={() => handleDelete(row.id)}
+/>
+```
+
+**Props:**
+- `hovered`: `boolean` - 是否悬停
+- `onPreview`: `() => void` - 预览回调
+- `showDelete`: `boolean` - 是否显示删除按钮
+- `onDelete`: `() => void` - 删除回调（可选）
+- `previewLabel`: `string` - 预览按钮文字（默认"查看"）
+
 ### useDataTable
 表格数据管理 Hook，封装分页、筛选、数据获取逻辑。
 
@@ -101,7 +139,7 @@ const { data, loading, pagination, handlePageChange, handleFilterChange } = useD
 ## 完整示例
 
 ```tsx
-import { DataTable, TableFilters, TableActions, useDataTable } from '@/components/table';
+import { DataTable, TableFilters, TablePreviewAction, useDataTable } from '@/components/table';
 
 function ArchiveList() {
   const {
@@ -115,19 +153,21 @@ function ArchiveList() {
     fetchFn: fetchArchives,
   });
 
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
   const columns: ColumnType<Archive>[] = [
     { key: 'id', title: 'ID', dataIndex: 'id' },
     { key: 'title', title: '标题', dataIndex: 'title' },
+    { key: 'amount', title: '金额', dataIndex: 'amount' },
     {
       key: 'actions',
       title: '操作',
       render: (_, record) => (
-        <TableActions
-          actions={[
-            { key: 'view', label: '查看', onClick: () => onView(record) },
-            { key: 'edit', label: '编辑', onClick: () => onEdit(record) },
-          ]}
-          record={record}
+        <TablePreviewAction
+          hovered={hoveredRowId === record.id}
+          onPreview={() => handlePreview(record)}
+          showDelete={canDelete}
+          onDelete={() => handleDelete(record.id)}
         />
       ),
     },
@@ -151,6 +191,10 @@ function ArchiveList() {
         loading={loading}
         pagination={pagination}
         onChange={handlePageChange}
+        onRow={(record) => ({
+          onMouseEnter: () => setHoveredRowId(record.id),
+          onMouseLeave: () => setHoveredRowId(null),
+        })}
       />
     </div>
   );

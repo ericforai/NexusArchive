@@ -55,6 +55,16 @@ public class ComplianceResult {
         return warnings.size();
     }
 
+    /** 获取违规项列表 */
+    public List<String> getViolations() {
+        return new ArrayList<>(violations);
+    }
+
+    /** 获取警告项列表 */
+    public List<String> getWarnings() {
+        return new ArrayList<>(warnings);
+    }
+
     /** 获取合规级别 */
     public ComplianceLevel getComplianceLevel() {
         if (violations.isEmpty() && warnings.isEmpty()) {

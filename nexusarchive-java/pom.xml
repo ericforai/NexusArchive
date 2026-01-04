@@ -352,7 +352,25 @@
                 <version>3.0.0</version>
                 <configuration>
                     <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <!-- Architecture Defense: 架构测试配置 -->
+                    <groups>com.nexusarchive.ArchitectureTest,com.nexusarchive.EnhancedArchitectureTest</groups>
                 </configuration>
+            </plugin>
+
+            <!-- Architecture Defense: 架构验证插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>architecture-validation</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             
             <plugin>

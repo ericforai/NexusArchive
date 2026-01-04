@@ -1,7 +1,26 @@
 本目录存放系统架构相关文档。
 用于描述整体设计与模块关系。
 
-## 最新更新 (2026-01-02)
+## 最新更新 (2026-01-04)
+
+### 前端模块化重构完成
+已完成 `useArchiveListController.ts` 的模块化重构：
+- **主控制器**: 650 行 → ~90 行 (-86%)
+- **拆分结果**: 9 个专用 Hook (模式、查询、分页、选择、池、数据、加载、Toast、动作)
+- **设计模式**: Compositor 组合器模式
+- **编译状态**: ✅ TypeScript 通过
+- **向后兼容**: ✅ 100% API 兼容
+详见: [重构完成报告](../reports/useArchiveListController-refactoring-complete.md) | [模块化重构记录](./modularization-refactoring-2025-12-31.md#前端模块化重构)
+
+### 熵减审查更新
+已更新前端熵减审查报告，标记 `useArchiveListController` 为已完成。
+详见: [熵减审查报告](../entropy-reduction-frontend-audit.md)
+
+---
+
+## 历史更新
+
+### 2026-01-02
 
 ### 凭证预览抽屉系统
 已重构档案详情查看体验：
@@ -17,7 +36,7 @@
 
 ---
 
-## 历史更新
+## 更新历史
 
 ### 2026-01-01
 
@@ -50,7 +69,7 @@
 | `frontend-continuous-improvement.md` | 文档 | 前端架构持续改进 |
 | **模块化重构** | | |
 | `modularization-opportunities-2025-12-31.md` | 文档 | 模块化机会分析 |
-| `modularization-refactoring-2025-12-31.md` | 文档 | 模块化重构记录 |
+| `modularization-refactoring-2025-12-31.md` | 文档 | 模块化重构记录（后端+前端）|
 | **其他** | | |
 | `data-ownership-map.md` | 文档 | 数据主权清单 |
 | `contract-catalog.md` | 文档 | 对外契约清单 |

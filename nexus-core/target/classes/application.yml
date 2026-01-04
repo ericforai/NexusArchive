@@ -1,0 +1,38 @@
+# Input: Spring Boot 配置
+# Output: Sprint 0 基线配置（含 SQL 审计守卫）
+# Pos: NexusCore 运行配置
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+spring:
+  application:
+    name: nexus-core
+
+server:
+  port: 18080
+
+nexus:
+  audit:
+    sql-guard:
+      enabled: true
+      dictionary-enabled: true
+      dictionary-table: sys_sql_audit_rule
+      dictionary-key-column: rule_key
+      dictionary-value-column: rule_value
+      protected-markers-key: protected_markers
+      required-columns-key: required_columns
+      protected-markers:
+        - acc_archive
+        - arc_
+        - bas_fonds
+        - sys_fonds
+      required-columns:
+        - fonds_no
+        - fiscal_year
+
+signature:
+  truststore:
+    path: ""
+    password: ""
+
+compliance:
+  strict-mode: true

@@ -5,7 +5,7 @@ ai:
   claude:
     enabled: true
     api-key: ${CLAUDE_API_KEY:}
-    model: claude-3-5-sonnet-20241022
+    model: deepseek-chat  # DeepSeek 模型 (deepseek-chat 或 deepseek-coder)
     max-tokens: 8192
     temperature: 0.3
     timeout: 60000

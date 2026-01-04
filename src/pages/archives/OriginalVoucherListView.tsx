@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    Search, Filter, Plus, Eye, Trash2,
+    Search, Filter, Plus, Trash2,
     Archive, RefreshCw, MoreHorizontal
 } from 'lucide-react';
 import {
@@ -19,7 +19,7 @@ import {
     ARCHIVE_STATUS
 } from '../../api/originalVoucher';
 import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
-import { VoucherPreviewDrawer } from '../panorama/VoucherPreviewDrawer';
+import { VoucherPreviewDrawer } from '../../components/pages';
 import { toast } from '../../utils/notificationService';
 
 // 状态徽章组件
@@ -111,6 +111,20 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
 
     // 选中行
     const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+    // 悬停行状态
+    const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
+    // 防抖预览
+    let previewClickTimer: NodeJS.Timeout | null = null;
+    const handlePreviewClick = (voucherId: string) => {
+        if (previewClickTimer) return;
+        previewClickTimer = setTimeout(() => {
+            setPreviewVoucherId(voucherId);
+            setPreviewOpen(true);
+            previewClickTimer = null;
+        }, 200);
+    };
 
     // 查询原始凭证列表
     // 根据 poolMode 选择查询池状态 VS 归档状态
@@ -295,8 +309,28 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                                 </tr>
                             ) : (
                                 vouchers.map((voucher) => (
-                                    <tr key={voucher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                        <td className="p-4">
+                                    <tr
+                                        key={voucher.id}
+                                        className={`
+                                            cursor-pointer transition-all duration-200
+                                            ${hoveredRowId === voucher.id
+                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500 dark:border-l-blue-400'
+                                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}
+                                        `}
+                                        onMouseEnter={() => setHoveredRowId(voucher.id)}
+                                        onMouseLeave={() => setHoveredRowId(null)}
+                                        onClick={() => handlePreviewClick(voucher.id)}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`预览凭证 ${voucher.voucherNo}`}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handlePreviewClick(voucher.id);
+                                            }
+                                        }}
+                                    >
+                                        <td className="p-4" onClick={(e) => e.stopPropagation()}>
                                             <input
                                                 type="checkbox"
                                                 className="rounded border-gray-300 dark:border-gray-600"
@@ -304,13 +338,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                                                 onChange={(e) => handleSelectRow(voucher.id, e.target.checked)}
                                             />
                                         </td>
-                                        <td
-                                            className="p-4 font-medium text-blue-600 dark:text-blue-400 cursor-pointer hover:underline"
-                                            onClick={() => {
-                                                setPreviewVoucherId(voucher.id);
-                                                setPreviewOpen(true);
-                                            }}
-                                        >
+                                        <td className="p-4 font-medium text-blue-600 dark:text-blue-400">
                                             {voucher.voucherNo}
                                         </td>
                                         <td className="p-4">
@@ -322,24 +350,24 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                                         <td className="p-4 max-w-xs truncate" title={voucher.summary}>
                                             {voucher.summary || '-'}
                                         </td>
-                                        <td className="p-4 text-right font-medium text-gray-900 dark:text-white font-mono">
-                                            {formatAmount(voucher.amount, voucher.currency)}
+                                        <td className="p-4 text-right">
+                                            <span className="font-medium text-gray-900 dark:text-white font-mono">
+                                                {formatAmount(voucher.amount, voucher.currency)}
+                                            </span>
+                                            <span className={`
+                                                ml-3 text-xs font-medium transition-all duration-200
+                                                ${hoveredRowId === voucher.id
+                                                    ? 'text-blue-600 dark:text-blue-400'
+                                                    : 'text-gray-400 dark:text-gray-500'}
+                                            `}>
+                                                查看
+                                            </span>
                                         </td>
                                         <td className="p-4">
                                             <StatusBadge status={voucher.archiveStatus} />
                                         </td>
-                                        <td className="p-4">
+                                        <td className="p-4" onClick={(e) => e.stopPropagation()}>
                                             <div className="flex items-center justify-center gap-2">
-                                                <button
-                                                    className="p-1 text-gray-500 hover:text-blue-600 transition"
-                                                    title="查看详情"
-                                                    onClick={() => {
-                                                        setPreviewVoucherId(voucher.id);
-                                                        setPreviewOpen(true);
-                                                    }}
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
                                                 {voucher.archiveStatus !== 'ARCHIVED' && (
                                                     <button
                                                         className="p-1 text-gray-500 hover:text-red-600 transition"

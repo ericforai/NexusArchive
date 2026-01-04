@@ -4,7 +4,9 @@ package com.nexusarchive.integration.erp.ai.llm.parser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,7 +42,7 @@ public class JavaSyntaxValidator {
 
             // 读取错误输出
             List<String> outputLines = new ArrayList<>();
-            try (var reader = process.getInputStream().bufferedReader()) {
+            try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     outputLines.add(line);

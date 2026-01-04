@@ -39,6 +39,27 @@ export default defineConfig(({ mode }) => {
           return html.replace(/<script type="importmap">[\s\S]*?aistudiocdn[\s\S]*?<\/script>/gi, '');
         },
       },
+      // Architecture Defense: Runtime introspection
+      {
+        name: 'arch-introspection',
+        apply: 'serve', // Only in development mode
+        transformIndexHtml(html: string) {
+          const archScript = `
+<script>
+  // Architecture Defense - Runtime Introspection
+  window.__ARCH__ = window.__ARCH__ || {};
+  console.group('%c🏗️ Architecture Defense', 'color: #4CAF50; font-size: 14px; font-weight: bold');
+  console.log('Module manifests available at: window.__ARCH__');
+  console.log('Usage:');
+  console.log('  window.__ARCH__.modules - All registered modules');
+  console.log('  window.__ARCH__.getModule("id") - Get specific module');
+  console.log('  window.__ARCH__.getOwner("id") - Get module owner');
+  console.log('  window.__ARCH__.validate() - Validate architecture');
+  console.groupEnd();
+</script>`;
+          return html.replace('</head>', `${archScript}</head>`);
+        },
+      },
     ],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),

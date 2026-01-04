@@ -45,3 +45,4 @@ CREATE INDEX IF NOT EXISTS idx_appraisal_list_status
     ON biz_appraisal_list(status, created_time);
 
 
+

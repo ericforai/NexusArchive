@@ -260,10 +260,11 @@ export interface DestructionRecord {
 
 // API Response Types
 export interface ApiResponse<T> {
-  code: number;
+  code?: number;
+  success?: boolean;
   message: string;
   data: T;
-  timestamp: number;
+  timestamp?: number;
 }
 
 export interface PageResult<T> {

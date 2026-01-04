@@ -8,5 +8,8 @@ export type { FilterField, TableFiltersProps } from './TableFilters';
 export { TableActions } from './TableActions';
 export type { ActionType, ActionItem, TableActionsProps } from './TableActions';
 
+export { TablePreviewAction } from './TablePreviewAction';
+export type { TablePreviewActionProps } from './TablePreviewAction';
+
 export { useDataTable } from './useDataTable';
 export type { PaginationConfig, UseDataTableOptions, UseDataTableReturn } from './useDataTable';

@@ -211,6 +211,74 @@ module.exports = {
           'npm-peer'
         ]
       }
+    },
+    // Architecture Defense Rules - NexusArchive Frontend
+    {
+      name: 'no-cross-feature-internal',
+      comment:
+        'Features cannot import from other features internal directories. ' +
+        'Use the public API (index.ts) of the feature instead.',
+      severity: 'error',
+      from: {
+        path: '^src/features/[^/]+'
+      },
+      to: {
+        path: '^src/features/([^/]+)/internal',
+        pathNot: '^src/features/\\1/internal'
+      }
+    },
+    {
+      name: 'no-cross-page-directory',
+      comment:
+        'Pages should not directly import from different page directories. ' +
+        'Move shared components to src/components/ instead.',
+      severity: 'warn',
+      from: {
+        path: '^src/pages/(settings|admin|audit|archives|panorama|matching|collection|operations|security|Auth|portal|utilization|pre-archive|demo)/'
+      },
+      to: {
+        path: '^src/pages/(settings|admin|audit|archives|panorama|matching|collection|operations|security|Auth|portal|utilization|pre-archive|demo)/',
+        pathNot: '^src/pages/\\1/'
+      }
+    },
+    {
+      name: 'no-component-internal-import',
+      comment:
+        'Components should use public API exports, not internal imports.',
+      severity: 'warn',
+      from: {
+        path: '^src/(pages|features)/'
+      },
+      to: {
+        path: '^src/components/([^/]+)/internal'
+      }
+    },
+    {
+      name: 'api-only-in-features',
+      comment:
+        'Direct API calls should only be made from feature modules, ' +
+        'not from shared components.',
+      severity: 'warn',
+      from: {
+        path: '^src/components/(common|shared|ui)/'
+      },
+      to: {
+        path: '^src/api/'
+      }
+    },
+    {
+      name: 'utils-only-import-from-utils-or-shared',
+      comment:
+        'Utility modules should only import from other utils or shared modules, ' +
+        'not from feature-specific code.',
+      severity: 'error',
+      from: {
+        path: '^src/utils/'
+      },
+      to: {
+        path: '^src/(features|pages)/',
+        dependencyTypes: ['local']
+      }
     }
   ],
   options: {
@@ -232,6 +300,7 @@ module.exports = {
       path: [
         // antd 按需导入在运行时有效，但静态分析可能无法解析
         '^antd/es/',
+        '^antd/locale/',
         // dayjs 也是有效的运行时依赖
         'dayjs'
       ]

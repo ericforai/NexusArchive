@@ -28,3 +28,4 @@ SET retention_start_date = COALESCE(
 WHERE retention_start_date IS NULL;
 
 
+

@@ -6,7 +6,7 @@
 
 package com.nexusarchive.integration.erp.ai.generator;
 
-import com.nexusarchive.integration.erp.ai.llm.ClaudeApiClient;
+import com.nexusarchive.integration.erp.ai.llm.deepseek.DeepSeekApiClient;
 import com.nexusarchive.integration.erp.ai.llm.parser.CodeParser;
 import com.nexusarchive.integration.erp.ai.llm.parser.CodeValidationException;
 import com.nexusarchive.integration.erp.ai.llm.parser.JavaSyntaxValidator;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AiCodeGenerationService {
 
-    private final ClaudeApiClient claudeClient;
+    private final DeepSeekApiClient deepSeekClient;
     private final CodeGenerationPromptBuilder promptBuilder;
     private final CodeParser codeParser;
     private final JavaSyntaxValidator syntaxValidator;
@@ -63,8 +63,8 @@ public class AiCodeGenerationService {
             String prompt = promptBuilder.buildPrompt(context);
             log.debug("Generated prompt ({} chars)", prompt.length());
 
-            // 3. 调用 Claude API
-            String aiResponse = claudeClient.complete(prompt);
+            // 3. 调用 DeepSeek API
+            String aiResponse = deepSeekClient.complete(prompt);
             success = true;
             // Rough token estimate: 1 token ≈ 4 characters (prompt + response)
             tokensUsed = (prompt.length() + aiResponse.length()) / 4;
@@ -108,7 +108,7 @@ public class AiCodeGenerationService {
      */
     public boolean isAvailable() {
         try {
-            return claudeClient != null;
+            return deepSeekClient != null;
         } catch (Exception e) {
             log.warn("AI generation not available", e);
             return false;

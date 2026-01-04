@@ -66,6 +66,30 @@ public class OpenApiDefinition {
      */
     private List<String> tags;
 
+    // ========== 便捷访问方法 ==========
+
+    /**
+     * 获取请求 Schema (JSON 格式)
+     */
+    public Object getRequestSchema() {
+        if (requestBody != null && requestBody.getContent() != null) {
+            return requestBody.getContent();
+        }
+        return null;
+    }
+
+    /**
+     * 获取响应 Schema (JSON 格式)
+     */
+    public Object getResponseSchema() {
+        if (responses != null && !responses.isEmpty()) {
+            // 返回第一个响应的 schema
+            ResponseDefinition firstResponse = responses.values().iterator().next();
+            return firstResponse.getContent();
+        }
+        return null;
+    }
+
     /**
      * 参数定义
      */

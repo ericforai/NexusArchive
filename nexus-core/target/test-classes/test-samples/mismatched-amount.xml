@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 测试用发票 XML (金额不一致) -->
+<Invoice>
+    <InvoiceNo>12345678</InvoiceNo>
+    <InvoiceCode>044001900111</InvoiceCode>
+    <InvoiceDate>2025-01-01</InvoiceDate>
+    <Amount>999.99</Amount>  <!-- 故意不一致: 应为 1000.00 -->
+    <TaxAmount>130.00</TaxAmount>
+    <TotalAmount>1129.99</TotalAmount>
+    <SellerName>测试销售公司</SellerName>
+    <BuyerName>测试购买公司</BuyerName>
+</Invoice>

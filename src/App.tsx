@@ -5,13 +5,20 @@
 
 /**
  * 应用根组件
- * 
+ *
  * 使用 React Router v7 的 createBrowserRouter 实现企业级路由
  */
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './routes';
 import { ToastContainer } from './components/common/ToastContainer';
+
+// Architecture Defense: Initialize runtime introspection in development
+if (import.meta.env.DEV) {
+  import('./lib/architectureIntrospection').then(() => {
+    console.log('✅ Architecture introspection initialized');
+  });
+}
 
 // 创建路由实例
 const router = createBrowserRouter(routes);

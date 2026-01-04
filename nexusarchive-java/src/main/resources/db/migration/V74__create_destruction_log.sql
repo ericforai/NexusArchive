@@ -72,3 +72,4 @@ COMMENT ON FUNCTION prevent_destruction_log_modification() IS '防止销毁清�
 -- CREATE TABLE destruction_log_2025 PARTITION OF destruction_log FOR VALUES FROM (2025) TO (2026);
 
 
+

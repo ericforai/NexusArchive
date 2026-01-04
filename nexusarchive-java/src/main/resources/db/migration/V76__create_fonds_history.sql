@@ -43,3 +43,4 @@ CREATE INDEX IF NOT EXISTS idx_fonds_history_to_fonds
     ON fonds_history(to_fonds_no, deleted);
 
 
+
