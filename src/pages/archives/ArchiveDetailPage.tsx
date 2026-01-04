@@ -10,8 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Tabs, Breadcrumb } from 'antd';
 import type { VoucherDTO } from '../../components/voucher';
-import { VoucherMetadata, VoucherPreviewCanvas } from '../../components/voucher';
-import { OriginalDocumentPreview } from '../../components/voucher/OriginalDocumentPreview';
+import { VoucherMetadata, VoucherPreviewCanvas, OriginalDocumentPreview } from '../../components/voucher';
 import { useVoucherData } from './hooks/useVoucherData';
 
 // Simulate row from URL param (in real implementation, fetch data by ID)
