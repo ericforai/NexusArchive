@@ -1,0 +1,66 @@
+# nexusarchive-java/src/main/resources/prompts/adapter-template.txt
+你是一位经验丰富的 Java 企业级开发专家，擅长 Spring Boot 和 HTTP 客户端开发。
+
+## 任务
+根据以下 ERP OpenAPI 定义，生成完整的、可直接运行的 ERP 适配器 Java 代码。
+
+## ERP 信息
+- ERP 类型: {erpType}
+- 适配器名称: {className}
+- 包名: {packageName}
+- Base URL: {baseUrl}
+- 认证方式: {authType}
+
+## API 定义
+{apiDefinitions}
+
+## 代码要求
+
+### 1. 类结构
+```java
+@Component
+@ErpAdapter(
+    identifier = "{erpType}-{timestamp}",
+    name = "{erpName}",
+    supportedScenarios = {scenarioList}
+)
+public class {className} implements ErpAdapter {
+
+    @Override
+    public List<VoucherDTO> syncVouchers(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        // 实现凭证同步逻辑
+    }
+
+    @Override
+    public boolean testConnection(ErpConfig config) {
+        // 实现连接测试逻辑
+    }
+}
+```
+
+### 2. HTTP 客户端
+- 使用 Spring 的 RestTemplate 或 WebClient
+- 添加超时配置：connectTimeout=5s, readTimeout=30s
+- 实现重试机制：最多重试 3 次，指数退避
+
+### 3. 认证签名
+{authTemplate}
+
+### 4. 数据映射
+- 将 JSON 响应映射到 VoucherDTO
+- 处理分页：pageSize=100，自动遍历所有页
+- 处理日期格式：ISO 8601 → LocalDate
+
+### 5. 错误处理
+- 捕获 HTTP 4xx/5xx 错误，记录详细日志
+- 抛出有意义的业务异常
+- 返回空列表而非 null
+
+### 6. 代码规范
+- 使用 Slf4j 记录日志（DEBUG/INFO/WARN/ERROR）
+- 添加必要的 JavaDoc 注释
+- 遵循阿里巴巴 Java 开发规范
+- 代码必须可编译，无语法错误
+
+## 输出格式
+只输出 Java 代码，不要任何解释或 Markdown 标记。
