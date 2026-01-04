@@ -2,7 +2,6 @@
 package com.nexusarchive.integration.erp.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nexusarchive.integration.erp.ai.controller.ErpAdaptationController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ class AiGenerationE2ETest {
         );
 
         // 调用生成接口
-        mockMvc.perform(multipart("/api/erp-ai/generate-ai")
+        mockMvc.perform(multipart("/erp-ai/generate-ai")
                 .file(file)
                 .param("erpType", "yonsuite")
                 .param("erpName", "测试 YonSuite")
