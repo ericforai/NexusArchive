@@ -1,33 +1,62 @@
-// Input: React、lucide-react、useFondsStore
+// Input: React、lucide-react
 // Output: 全宗切换下拉组件 FondsSwitcher
 // Pos: 通用组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect } from 'react';
 import { Building2, ChevronDown, Check, Loader2 } from 'lucide-react';
-import { useFondsStore } from '../../store';
+
+/**
+ * 全宗类型（本地定义，避免导入 API 层）
+ */
+interface Fonds {
+    id: string;
+    fondsCode: string;
+    fondsName: string;
+    fondsNo?: string;
+    companyName?: string;
+    description?: string;
+}
+
+/**
+ * 全宗切换器组件属性
+ */
+export interface FondsSwitcherProps {
+    /** 当前选中的全宗 */
+    currentFonds: Fonds | null;
+    /** 全宗列表 */
+    fondsList: Fonds[];
+    /** 是否正在加载 */
+    isLoading: boolean;
+    /** 是否已从持久化存储中恢复 */
+    hasHydrated: boolean;
+    /** 加载全宗列表的回调 */
+    onLoadFondsList: () => void;
+    /** 设置当前全宗的回调 */
+    onSetCurrentFonds: (fonds: Fonds) => void;
+}
 
 /**
  * 全宗切换器组件
- * 
+ *
  * 用于顶部导航栏，支持在多个全宗间快速切换
+ *
+ * 【架构说明】共享组件不导入 store，通过 props 接收数据和回调
  */
-export const FondsSwitcher: React.FC = () => {
-    const {
-        currentFonds,
-        fondsList,
-        isLoading,
-        loadFondsList,
-        setCurrentFonds,
-        _hasHydrated
-    } = useFondsStore();
-
+export const FondsSwitcher: React.FC<FondsSwitcherProps> = ({
+    currentFonds,
+    fondsList,
+    isLoading,
+    hasHydrated,
+    onLoadFondsList,
+    onSetCurrentFonds,
+}) => {
     // 初始加载全宗列表
     useEffect(() => {
-        if (_hasHydrated) {
-            loadFondsList();
+        if (hasHydrated) {
+            onLoadFondsList();
         }
-    }, [_hasHydrated, loadFondsList]);
+    }, [hasHydrated, onLoadFondsList]);
 
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -75,7 +104,7 @@ export const FondsSwitcher: React.FC = () => {
                                 <button
                                     key={fonds.id}
                                     onClick={() => {
-                                        setCurrentFonds(fonds);
+                                        onSetCurrentFonds(fonds);
                                         setIsOpen(false);
                                     }}
                                     className={`w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 transition-colors ${currentFonds?.id === fonds.id ? 'bg-primary-50' : ''

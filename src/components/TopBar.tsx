@@ -1,4 +1,4 @@
-// Input: React、lucide-react 图标、本地模块 GlobalSearch、api/search、FondsSwitcher
+// Input: React、lucide-react 图标、本地模块 GlobalSearch、api/search、FondsSwitcher、useFondsStore
 // Output: React 组件 TopBar
 // Pos: 业务页面组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -8,6 +8,7 @@ import { GlobalSearch } from './GlobalSearch';
 import { GlobalSearchDTO } from '../types';
 import { FondsSwitcher } from './common/FondsSwitcher';
 import { toast } from '../utils/notificationService';
+import { useFondsStore } from '../store';
 
 interface TopBarProps {
   onLogout?: () => void;
@@ -15,6 +16,16 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
+  // Get fonds state from store (page components can use store)
+  const {
+    currentFonds,
+    fondsList,
+    isLoading,
+    _hasHydrated,
+    loadFondsList,
+    setCurrentFonds,
+  } = useFondsStore();
+
   const handleClick = (item: string) => {
     if (item === '退出登录' && onLogout) {
       onLogout();
@@ -28,7 +39,14 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
 
       {/* Left: Fonds Switcher */}
       <div className="flex items-center gap-4">
-        <FondsSwitcher />
+        <FondsSwitcher
+          currentFonds={currentFonds}
+          fondsList={fondsList}
+          isLoading={isLoading}
+          hasHydrated={_hasHydrated}
+          onLoadFondsList={loadFondsList}
+          onSetCurrentFonds={setCurrentFonds}
+        />
       </div>
 
       {/* Center: Global Search */}
