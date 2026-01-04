@@ -352,8 +352,8 @@
                 <version>3.0.0</version>
                 <configuration>
                     <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                    <!-- Architecture Defense: 架构测试配置 -->
-                    <groups>architecture</groups>
+                    <!-- Architecture Defense: 架构测试配置 + 单元测试 -->
+                    <groups>architecture,unit</groups>
                 </configuration>
             </plugin>
 

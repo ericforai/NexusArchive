@@ -42,6 +42,8 @@ public class ErpConfigServiceImpl implements ErpConfigService {
                     .orderByDesc(ErpConfig::getCreatedTime);
 
         List<ErpConfig> configs = erpConfigMapper.selectList(queryWrapper);
+        // 清除敏感信息
+        configs.forEach(this::sanitizeSensitiveFields);
         log.info("查询到 {} 个 ERP 配置: erpType={}", configs.size(), erpType);
         return configs;
     }
@@ -49,18 +51,34 @@ public class ErpConfigServiceImpl implements ErpConfigService {
     @Override
     public ErpConfig findById(Long configId) {
         log.debug("查询 ERP 配置: configId={}", configId);
-        return erpConfigMapper.selectById(configId);
+        ErpConfig config = erpConfigMapper.selectById(configId);
+        // 清除敏感信息
+        if (config != null) {
+            sanitizeSensitiveFields(config);
+        }
+        return config;
     }
 
     @Override
     public List<ErpConfig> getAllConfigs() {
         log.debug("获取所有 ERP 配置");
-        return erpConfigMapper.selectList(null);
+        List<ErpConfig> configs = erpConfigMapper.selectList(null);
+        // 清除敏感信息
+        configs.forEach(this::sanitizeSensitiveFields);
+        return configs;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveConfig(ErpConfig config) {
+        // 输入验证
+        if (config == null) {
+            throw new IllegalArgumentException("配置不能为空");
+        }
+        if (config.getErpType() == null || config.getErpType().isBlank()) {
+            throw new IllegalArgumentException("ERP类型不能为空");
+        }
+
         log.info("保存 ERP 配置: id={}, name={}, erpType={}",
                 config.getId(), config.getName(), config.getErpType());
 
@@ -128,5 +146,27 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         json.set(key, encrypted);
         json.set(key + "_encrypted", "true");
         log.info("密钥已加密: key={}", key);
+    }
+
+    /**
+     * 清除敏感字段（防止通过 API 暴露）
+     *
+     * @param config ERP 配置对象
+     */
+    private void sanitizeSensitiveFields(ErpConfig config) {
+        if (config == null || config.getConfigJson() == null) {
+            return;
+        }
+        try {
+            JSONObject json = JSONUtil.parseObj(config.getConfigJson());
+            json.remove("appSecret");
+            json.remove("clientSecret");
+            json.remove("appSecret_encrypted");
+            json.remove("clientSecret_encrypted");
+            config.setConfigJson(json.toString());
+            log.debug("已清除敏感字段: configId={}", config.getId());
+        } catch (Exception e) {
+            log.warn("清除敏感字段失败: {}", e.getMessage());
+        }
     }
 }

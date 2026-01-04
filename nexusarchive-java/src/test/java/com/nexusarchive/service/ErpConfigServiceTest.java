@@ -12,6 +12,7 @@ import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.service.impl.ErpConfigServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ERP配置服务测试")
+@Tag("unit")
 class ErpConfigServiceTest {
 
     @Mock
@@ -182,6 +184,7 @@ class ErpConfigServiceTest {
         ErpConfig config = new ErpConfig();
         config.setId(1L);
         config.setName("测试配置");
+        config.setErpType("YONSUITE");  // 添加ERP类型以满足验证
 
         // 模拟已加密的JSON（包含加密标记）
         JSONObject configJson = new JSONObject();
@@ -257,6 +260,7 @@ class ErpConfigServiceTest {
         ErpConfig config = new ErpConfig();
         config.setId(1L);
         config.setName("测试配置");
+        config.setErpType("YONSUITE");  // 添加ERP类型以满足验证
         config.setConfigJson("invalid-json-string");
 
         when(erpConfigMapper.updateById(any(ErpConfig.class))).thenReturn(1);
@@ -275,6 +279,7 @@ class ErpConfigServiceTest {
         ErpConfig config = new ErpConfig();
         config.setId(1L);
         config.setName("测试配置");
+        config.setErpType("YONSUITE");  // 添加ERP类型以满足验证
         config.setConfigJson("");
 
         when(erpConfigMapper.updateById(any(ErpConfig.class))).thenReturn(1);
@@ -293,6 +298,7 @@ class ErpConfigServiceTest {
         ErpConfig config = new ErpConfig();
         config.setId(1L);
         config.setName("测试配置");
+        config.setErpType("YONSUITE");  // 添加ERP类型以满足验证
         config.setConfigJson(null);
 
         when(erpConfigMapper.updateById(any(ErpConfig.class))).thenReturn(1);
@@ -302,5 +308,149 @@ class ErpConfigServiceTest {
 
         // Then
         verify(erpConfigMapper, times(1)).updateById(any(ErpConfig.class));
+    }
+
+    @Test
+    @DisplayName("保存配置 - 验证空配置抛出异常")
+    void saveConfig_NullConfig() {
+        // Given
+        ErpConfig config = null;
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            erpConfigService.saveConfig(config);
+        });
+        verify(erpConfigMapper, never()).insert(any(ErpConfig.class));
+        verify(erpConfigMapper, never()).updateById(any(ErpConfig.class));
+    }
+
+    @Test
+    @DisplayName("保存配置 - 验证空ERP类型抛出异常")
+    void saveConfig_NullErpType() {
+        // Given
+        ErpConfig config = new ErpConfig();
+        config.setId(1L);
+        config.setName("测试配置");
+        config.setErpType(null);  // 空ERP类型
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            erpConfigService.saveConfig(config);
+        });
+        verify(erpConfigMapper, never()).insert(any(ErpConfig.class));
+        verify(erpConfigMapper, never()).updateById(any(ErpConfig.class));
+    }
+
+    @Test
+    @DisplayName("保存配置 - 验证空白ERP类型抛出异常")
+    void saveConfig_BlankErpType() {
+        // Given
+        ErpConfig config = new ErpConfig();
+        config.setId(1L);
+        config.setName("测试配置");
+        config.setErpType("   ");  // 空白ERP类型
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            erpConfigService.saveConfig(config);
+        });
+        verify(erpConfigMapper, never()).insert(any(ErpConfig.class));
+        verify(erpConfigMapper, never()).updateById(any(ErpConfig.class));
+    }
+
+    @Test
+    @DisplayName("获取所有配置 - 应清除敏感信息")
+    void getAllConfigs_ShouldSanitizeSecrets() {
+        // Given
+        JSONObject configJson = new JSONObject();
+        configJson.set("host", "https://example.com");
+        configJson.set("appSecret", "encrypted-secret");
+        configJson.set("appSecret_encrypted", "true");
+        configJson.set("clientSecret", "encrypted-client-secret");
+        configJson.set("clientSecret_encrypted", "true");
+
+        ErpConfig configWithSecrets = new ErpConfig();
+        configWithSecrets.setId(1L);
+        configWithSecrets.setName("测试配置");
+        configWithSecrets.setConfigJson(configJson.toString());
+
+        List<ErpConfig> expectedConfigs = Arrays.asList(configWithSecrets);
+        when(erpConfigMapper.selectList(null)).thenReturn(expectedConfigs);
+
+        // When
+        List<ErpConfig> result = erpConfigService.getAllConfigs();
+
+        // Then
+        assertEquals(1, result.size());
+        JSONObject resultJson = new JSONObject(result.get(0).getConfigJson());
+
+        // 验证敏感字段已被清除
+        assertNull(resultJson.getStr("appSecret"));
+        assertNull(resultJson.getStr("clientSecret"));
+        assertNull(resultJson.getStr("appSecret_encrypted"));
+        assertNull(resultJson.getStr("clientSecret_encrypted"));
+
+        // 验证非敏感字段仍然存在
+        assertEquals("https://example.com", resultJson.getStr("host"));
+    }
+
+    @Test
+    @DisplayName("根据ID查询配置 - 应清除敏感信息")
+    void findById_ShouldSanitizeSecrets() {
+        // Given
+        JSONObject configJson = new JSONObject();
+        configJson.set("host", "https://example.com");
+        configJson.set("appSecret", "encrypted-secret");
+        configJson.set("appSecret_encrypted", "true");
+
+        ErpConfig configWithSecrets = new ErpConfig();
+        configWithSecrets.setId(1L);
+        configWithSecrets.setName("测试配置");
+        configWithSecrets.setConfigJson(configJson.toString());
+
+        when(erpConfigMapper.selectById(1L)).thenReturn(configWithSecrets);
+
+        // When
+        ErpConfig result = erpConfigService.findById(1L);
+
+        // Then
+        assertNotNull(result);
+        JSONObject resultJson = new JSONObject(result.getConfigJson());
+
+        // 验证敏感字段已被清除
+        assertNull(resultJson.getStr("appSecret"));
+        assertNull(resultJson.getStr("appSecret_encrypted"));
+
+        // 验证非敏感字段仍然存在
+        assertEquals("https://example.com", resultJson.getStr("host"));
+    }
+
+    @Test
+    @DisplayName("根据ERP类型查询配置 - 应清除敏感信息")
+    void findConfigsByErpType_ShouldSanitizeSecrets() {
+        // Given
+        JSONObject configJson = new JSONObject();
+        configJson.set("host", "https://example.com");
+        configJson.set("appSecret", "encrypted-secret");
+        configJson.set("appSecret_encrypted", "true");
+
+        ErpConfig configWithSecrets = new ErpConfig();
+        configWithSecrets.setId(1L);
+        configWithSecrets.setErpType("YONSUITE");
+        configWithSecrets.setConfigJson(configJson.toString());
+
+        List<ErpConfig> expectedConfigs = Arrays.asList(configWithSecrets);
+        when(erpConfigMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(expectedConfigs);
+
+        // When
+        List<ErpConfig> result = erpConfigService.findConfigsByErpType("YONSUITE");
+
+        // Then
+        assertEquals(1, result.size());
+        JSONObject resultJson = new JSONObject(result.get(0).getConfigJson());
+
+        // 验证敏感字段已被清除
+        assertNull(resultJson.getStr("appSecret"));
+        assertNull(resultJson.getStr("appSecret_encrypted"));
     }
 }

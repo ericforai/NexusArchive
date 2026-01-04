@@ -93,6 +93,12 @@ public class ErpConfigController {
             return Result.error("配置不存在");
         }
 
+        // 只返回必要的字段，不包含敏感的 configJson
+        result.put("id", config.getId());
+        result.put("name", config.getName());
+        result.put("erpType", config.getErpType());
+        result.put("isActive", config.getIsActive());
+
         try {
             // 尝试获取适配器来验证连接配置
             var adapter = erpAdapterFactory.getAdapter(config.getErpType());

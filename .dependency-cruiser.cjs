@@ -212,12 +212,17 @@ module.exports = {
         ]
       }
     },
+    // ============================================================
     // Architecture Defense Rules - NexusArchive Frontend
+    // J2: Self-Check - Automated architecture validation
+    // ============================================================
+
     {
       name: 'no-cross-feature-internal',
       comment:
         'Features cannot import from other features internal directories. ' +
-        'Use the public API (index.ts) of the feature instead.',
+        'Use the public API (index.ts) of the feature instead. ' +
+        'Module manifest: canImportFrom should specify allowed dependencies.',
       severity: 'error',
       from: {
         path: '^src/features/[^/]+'
@@ -227,25 +232,29 @@ module.exports = {
         pathNot: '^src/features/\\1/internal'
       }
     },
+
     {
-      name: 'no-cross-page-directory',
+      name: 'features-must-use-public-api',
       comment:
-        'Pages should not directly import from different page directories. ' +
-        'Move shared components to src/components/ instead.',
-      severity: 'warn',
+        'Features must import through index.ts public API only. ' +
+        'Direct imports to feature internals violate module boundaries. ' +
+        'See manifest.config.ts for the intended public API.',
+      severity: 'error',
       from: {
-        path: '^src/pages/(settings|admin|audit|archives|panorama|matching|collection|operations|security|Auth|portal|utilization|pre-archive|demo)/'
+        path: '^src/(pages|components|hooks|store)/'
       },
       to: {
-        path: '^src/pages/(settings|admin|audit|archives|panorama|matching|collection|operations|security|Auth|portal|utilization|pre-archive|demo)/',
-        pathNot: '^src/pages/\\1/'
+        path: '^src/features/[^/]+/(?!index\\.ts).*',
+        pathNot: '^src/features/[^/]+/index\\.ts$'
       }
     },
+
     {
       name: 'no-component-internal-import',
       comment:
-        'Components should use public API exports, not internal imports.',
-      severity: 'warn',
+        'Components should use public API exports, not internal imports. ' +
+        'Import from the component\'s index.ts instead of internal/ subdirectory.',
+      severity: 'error',
       from: {
         path: '^src/(pages|features)/'
       },
@@ -253,12 +262,32 @@ module.exports = {
         path: '^src/components/([^/]+)/internal'
       }
     },
+
+    {
+      name: 'components-must-use-public-api',
+      comment:
+        'Components must be imported through their index.ts public API. ' +
+        'Direct imports to component internals violate encapsulation.',
+      severity: 'error',
+      from: {
+        path: '^src/(pages|features)/'
+      },
+      to: {
+        path: '^src/components/[^/]+/.*',
+        pathNot: [
+          '^src/components/[^/]+/index\\.ts$',
+          '^src/components/[^/]+/index\\.tsx$'
+        ]
+      }
+    },
+
     {
       name: 'api-only-in-features',
       comment:
-        'Direct API calls should only be made from feature modules, ' +
-        'not from shared components.',
-      severity: 'warn',
+        'Direct API calls should only be made from feature modules. ' +
+        'Shared components should not make API calls directly. ' +
+        'Pass data as props or use a hook instead.',
+      severity: 'error',
       from: {
         path: '^src/components/(common|shared|ui)/'
       },
@@ -266,17 +295,104 @@ module.exports = {
         path: '^src/api/'
       }
     },
+
     {
       name: 'utils-only-import-from-utils-or-shared',
       comment:
-        'Utility modules should only import from other utils or shared modules, ' +
-        'not from feature-specific code.',
+        'Utility modules must remain dependency-free. ' +
+        'Utils can only import from other utils or shared modules, ' +
+        'not from feature-specific code (this creates hidden dependencies).',
       severity: 'error',
       from: {
         path: '^src/utils/'
       },
       to: {
         path: '^src/(features|pages)/',
+        dependencyTypes: ['local']
+      }
+    },
+
+    {
+      name: 'hooks-only-in-features-or-pages',
+      comment:
+        'Custom hooks in src/hooks/ should only be used from features or pages. ' +
+        'Components should not depend on feature-specific hooks.',
+      severity: 'warn',
+      from: {
+        path: '^src/components/'
+      },
+      to: {
+        path: '^src/hooks/'
+      }
+    },
+
+    {
+      name: 'store-only-import-from-features',
+      comment:
+        'Global store (Zustand) should only be imported from features or pages, ' +
+        'not from shared components (creates hidden coupling). ' +
+        'Use props or context for shared components.',
+      severity: 'error',
+      from: {
+        path: '^src/components/(common|shared|ui)/'
+      },
+      to: {
+        path: '^src/store/'
+      }
+    },
+
+    {
+      name: 'no-react-query-in-components',
+      comment:
+        'Shared components should not use React Query directly. ' +
+        'Features/pages should handle data fetching and pass data via props.',
+      severity: 'warn',
+      from: {
+        path: '^src/components/(common|shared|ui)/'
+      },
+      to: {
+        path: '^src/hooks.*useQuery'
+      }
+    },
+
+    {
+      name: 'no-antd-theme-direct-import',
+      comment:
+        'Do not import theme tokens directly. Use theme tokens through CSS variables or the theme context. ' +
+        'Direct imports create tight coupling to Ant Design internals.',
+      severity: 'warn',
+      from: {},
+      to: {
+        path: '^antd/es/theme/.*'
+      }
+    },
+
+    {
+      name: 'no-react-router-dom-in-components',
+      comment:
+        'Shared components should not directly depend on react-router-dom. ' +
+        'Pass navigation callbacks as props instead.',
+      severity: 'warn',
+      from: {
+        path: '^src/components/(common|shared|ui)/'
+      },
+      to: {
+        dependencyTypes: ['npm'],
+        path: '^react-router-dom'
+      }
+    },
+
+    {
+      name: 'no-relative-import-across-features',
+      comment:
+        'Use absolute imports from @/ alias instead of relative paths across features. ' +
+        'Relative imports like ../../../features/xxx are brittle and break on refactoring.',
+      severity: 'warn',
+      from: {
+        path: '^src/features/'
+      },
+      to: {
+        path: '^\\.\\.[\\/\\\\].*\\.\\.[\\/\\\\]',
         dependencyTypes: ['local']
       }
     }
