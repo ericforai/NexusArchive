@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Loader2, CheckCircle2, XCircle, UserPlus, UserMinus, UserCog, AlertCircle } from 'lucide-react';
 import { userLifecycleApi, OnboardRequest, OffboardRequest, TransferRequest } from '../../api/userLifecycle';
-import { OrgSelector } from '../../components/org/OrgSelector';
+import { OrgSelector } from '../../components/org';
 import { OrgNode } from '../../types';
 import { useAdminSettingsApi } from '../../features/settings';
 
