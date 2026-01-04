@@ -9,10 +9,8 @@ import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory.ErpAdapterInfo;
-import com.nexusarchive.util.SM4Utils;
-import cn.hutool.json.JSONUtil;
-import cn.hutool.json.JSONObject;
-import com.nexusarchive.mapper.ErpConfigMapper;
+import com.nexusarchive.service.ErpConfigService;
+import com.nexusarchive.service.ErpDiagnosisService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -29,69 +27,30 @@ import java.util.List;
 @Tag(name = "ERP对接配置")
 public class ErpConfigController {
 
-    private final ErpConfigMapper erpConfigMapper;
+    private final ErpConfigService erpConfigService;
     private final ErpAdapterFactory erpAdapterFactory;
-    private final com.nexusarchive.service.ErpDiagnosisService erpDiagnosisService;
+    private final ErpDiagnosisService erpDiagnosisService;
 
     @GetMapping
     @Operation(summary = "获取所有配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<List<ErpConfig>> list() {
-        return Result.success(erpConfigMapper.selectList(null));
+        return Result.success(erpConfigService.getAllConfigs());
     }
 
     @PostMapping
     @Operation(summary = "新增/更新配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> save(@RequestBody ErpConfig config) {
-        // ✅ P1 修复: 使用加密标记而不是格式检测
-        if (config.getConfigJson() != null && !config.getConfigJson().isEmpty()) {
-            try {
-                JSONObject json = JSONUtil.parseObj(config.getConfigJson());
-                encryptSecretIfNeeded(json, "appSecret");
-                encryptSecretIfNeeded(json, "clientSecret");
-                config.setConfigJson(json.toString());
-            } catch (Exception e) {
-                // 如果不是 JSON 则跳过,由前端保证格式
-            }
-        }
-
-        if (config.getId() == null) {
-            erpConfigMapper.insert(config);
-        } else {
-            erpConfigMapper.updateById(config);
-        }
+        erpConfigService.saveConfig(config);
         return Result.success();
-    }
-
-    /**
-     * ✅ P1 修复: 使用加密标记判断是否已加密
-     */
-    private void encryptSecretIfNeeded(JSONObject json, String key) {
-        String secret = json.getStr(key);
-        if (secret == null || secret.isEmpty()) {
-            return;
-        }
-        
-        // ✅ 检查是否有加密标记
-        String encryptedFlag = json.getStr(key + "_encrypted");
-        if ("true".equals(encryptedFlag)) {
-            log.debug("密钥已加密,跳过: key={}", key);
-            return;
-        }
-        
-        // ✅ 加密并设置标记
-        String encrypted = SM4Utils.encrypt(secret);
-        json.set(key, encrypted);
-        json.set(key + "_encrypted", "true");
-        log.info("密钥已加密: key={}", key);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> delete(@PathVariable Long id) {
-        erpConfigMapper.deleteById(id);
+        erpConfigService.deleteConfig(id);
         return Result.success();
     }
 
@@ -107,8 +66,7 @@ public class ErpConfigController {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
 
         // 1. 接入系统总数
-        Long connectedSystems = erpConfigMapper.selectCount(null);
-        stats.put("connectedSystems", connectedSystems);
+        stats.put("connectedSystems", erpConfigService.countConfigs());
 
         // 2. 今日接收数据 (模拟: 真实环境应查询 arc_file_content where source_system is not null and
         // created_time = today)
@@ -116,9 +74,7 @@ public class ErpConfigController {
         stats.put("todayReceived", 0);
 
         // 3. 运行正常接口
-        stats.put("activeInterfaces", erpConfigMapper.selectCount(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ErpConfig>()
-                        .eq(ErpConfig::getIsActive, 1)));
+        stats.put("activeInterfaces", erpConfigService.countActiveConfigs());
 
         // 4. 异常报警 (模拟)
         stats.put("abnormalCount", 0);
@@ -132,7 +88,7 @@ public class ErpConfigController {
     public Result<java.util.Map<String, Object>> testConnection(@PathVariable Long id) {
         java.util.Map<String, Object> result = new java.util.HashMap<>();
 
-        ErpConfig config = erpConfigMapper.selectById(id);
+        ErpConfig config = erpConfigService.findById(id);
         if (config == null) {
             return Result.error("配置不存在");
         }

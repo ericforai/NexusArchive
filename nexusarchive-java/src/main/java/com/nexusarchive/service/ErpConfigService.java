@@ -16,6 +16,13 @@ import java.util.List;
 public interface ErpConfigService {
 
     /**
+     * 获取所有配置
+     *
+     * @return 所有配置列表
+     */
+    List<ErpConfig> getAllConfigs();
+
+    /**
      * 根据 ERP 类型查询配置列表
      *
      * @param erpType ERP 类型（YONSUITE, KINGDEE, WEAVER, GENERIC）
@@ -30,4 +37,32 @@ public interface ErpConfigService {
      * @return 配置对象，不存在返回 null
      */
     ErpConfig findById(Long configId);
+
+    /**
+     * 保存或更新配置（包含敏感信息加密处理）
+     *
+     * @param config 配置对象
+     */
+    void saveConfig(ErpConfig config);
+
+    /**
+     * 删除配置
+     *
+     * @param id 配置 ID
+     */
+    void deleteConfig(Long id);
+
+    /**
+     * 统计配置总数
+     *
+     * @return 配置总数
+     */
+    Long countConfigs();
+
+    /**
+     * 统计活跃配置数量
+     *
+     * @return 活跃配置数量
+     */
+    Long countActiveConfigs();
 }
