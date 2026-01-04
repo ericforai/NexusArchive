@@ -1,7 +1,6 @@
 // nexusarchive-java/src/main/java/com/nexusarchive/integration/erp/ai/llm/ClaudeApiClient.java
 package com.nexusarchive.integration.erp.ai.llm;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.config.AiProperties;
 import com.nexusarchive.integration.erp.ai.llm.claude.CompletionRequest;
@@ -62,18 +61,29 @@ public class ClaudeApiClient {
             // 发送请求
             String response = restTemplate.postForObject(API_URL, entity, String.class);
 
-            // 解析响应
-            JsonNode root = objectMapper.readTree(response);
-            JsonNode contentNode = root.path("content").get(0).path("text");
+            // 解析响应 - 使用 CompletionResponse DTO
+            CompletionResponse claudeResponse = objectMapper.readValue(response, CompletionResponse.class);
 
-            String generatedCode = contentNode.asText();
+            // 空值安全检查
+            if (claudeResponse.getContent() == null || claudeResponse.getContent().isEmpty()) {
+                throw new RuntimeException("Invalid response: content array is empty");
+            }
+
+            String generatedCode = claudeResponse.getContent().get(0).getText();
+            if (generatedCode == null) {
+                throw new RuntimeException("Invalid response: text field is null");
+            }
+
             log.info("Claude API returned {} characters", generatedCode.length());
 
             return generatedCode;
 
-        } catch (Exception e) {
-            log.error("Failed to call Claude API", e);
+        } catch (org.springframework.web.client.RestClientException e) {
+            log.error("HTTP request to Claude API failed", e);
             throw new RuntimeException("AI generation failed: " + e.getMessage(), e);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("Failed to parse Claude API response", e);
+            throw new RuntimeException("Invalid API response format", e);
         }
     }
 }
