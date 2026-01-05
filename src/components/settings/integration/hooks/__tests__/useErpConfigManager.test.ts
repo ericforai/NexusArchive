@@ -14,8 +14,8 @@ const mockErpApi = {
 };
 
 const mockConfigs: ErpConfig[] = [
-  { id: 1, name: 'YonSuite Dev', erpType: 'yonsuite', baseUrl: 'https://api.test.com', appKey: 'key1', appSecret: 'secret1' },
-  { id: 2, name: 'Kingdee Prod', erpType: 'kingdee', baseUrl: 'https://api.prod.com', appKey: 'key2', appSecret: 'secret2' },
+  { id: 1, name: 'YonSuite Dev', erpType: 'yonsuite', configJson: '{"baseUrl":"https://api.test.com"}', isActive: 1 },
+  { id: 2, name: 'Kingdee Prod', erpType: 'kingdee', configJson: '{"baseUrl":"https://api.prod.com"}', isActive: 1 },
 ];
 
 describe('useErpConfigManager', () => {

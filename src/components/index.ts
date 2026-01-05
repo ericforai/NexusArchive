@@ -21,5 +21,5 @@ export { UserSettings } from './settings/UserSettings';
 export { RoleSettings } from './settings/RoleSettings';
 export { OrgSettings } from './settings/OrgSettings';
 export { SecuritySettings } from './settings/SecuritySettings';
-export { default as IntegrationSettings } from './settings/IntegrationSettings';
+export { IntegrationSettingsPage } from './settings/integration';
 export { LicenseSettings } from './settings/LicenseSettings';

@@ -11,7 +11,7 @@ const mockErpApi = {
 
 // Mock toast
 vi.mock('react-hot-toast', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import('react-hot-toast')>();
   return {
     ...actual,
     default: {

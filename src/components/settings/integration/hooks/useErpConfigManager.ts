@@ -28,12 +28,12 @@ export function useErpConfigManager(options: UseErpConfigManagerOptions) {
       const res = await erpApi.getConfigs();
       if (res.code === 200 && res.data) {
         setConfigs(res.data);
-        const uniqueTypes = new Set(res.data.map((c: ErpConfig) => c.erpType?.toLowerCase() || 'generic'));
-        const types = Array.from(uniqueTypes);
+        const uniqueTypes = new Set<string>(res.data.map((c: ErpConfig) => c.erpType?.toLowerCase() || 'generic'));
+        const types = Array.from(uniqueTypes) as string[];
         setAdapterTypes(types);
 
         // Only set expanded types and active config if not already set
-        setExpandedTypes(prev => {
+        setExpandedTypes((prev: Set<string>) => {
           if (prev.size === 0 && types.length > 0) {
             return new Set([types[0]]);
           }
