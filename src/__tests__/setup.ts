@@ -5,6 +5,7 @@
 
 /// <reference types="vitest/globals" />
 import '@testing-library/jest-dom/vitest';
+import { vi } from 'vitest';
 
 // Mock localStorage
 const localStorageMock = {
@@ -45,3 +46,19 @@ global.ResizeObserver = class ResizeObserver {
 // Mock console.log/warn to reduce noise in tests
 vi.spyOn(console, 'log').mockImplementation(() => { });
 vi.spyOn(console, 'warn').mockImplementation(() => { });
+
+// Mock react-hot-toast
+vi.mock('react-hot-toast', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn(),
+        loading: vi.fn(),
+        dismiss: vi.fn(),
+    },
+    default: {
+        success: vi.fn(),
+        error: vi.fn(),
+        loading: vi.fn(),
+        dismiss: vi.fn(),
+    },
+}));
