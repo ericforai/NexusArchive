@@ -37,6 +37,7 @@ describe('useMonitoring', () => {
     vi.mocked(erpApi.getIntegrationMonitoring).mockResolvedValue({
       success: true,
       data: mockMonitoringData,
+      message: 'Success',
     });
 
     const { result } = renderHook(() => useMonitoring());
@@ -55,6 +56,7 @@ describe('useMonitoring', () => {
       () => new Promise(resolve => setTimeout(() => resolve({
         success: true,
         data: { totalSyncCount: 100, successRate: 95.5, evidenceCoverage: 88.2 },
+        message: 'Success',
       }), 100))
     );
 
@@ -90,6 +92,7 @@ describe('useMonitoring', () => {
     vi.mocked(erpApi.getIntegrationMonitoring).mockResolvedValue({
       success: false,
       message: 'Failed to load monitoring data',
+      data: null as any,
     });
 
     const { result } = renderHook(() => useMonitoring());

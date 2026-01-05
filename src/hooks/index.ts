@@ -12,3 +12,7 @@ export { useArchives, useArchive, useRecentArchives, useCreateArchive, useUpdate
 
 // 权限相关 hooks
 export { usePermissions, usePermissionsQuery } from './usePermissions';
+
+// 集成设置相关 hooks
+export { useMonitoring } from './useMonitoring';
+export { useReconciliation } from './useReconciliation';
