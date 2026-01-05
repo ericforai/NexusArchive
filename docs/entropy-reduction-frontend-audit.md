@@ -43,7 +43,7 @@ npx madge --circular src/
 
 | 文件 | 行数 | 状态 | 问题 |
 |------|------|------|------|
-| `IntegrationSettings.tsx` | 1,709 | 🔴 严重 | 上帝组件，35+ 状态 |
+| `IntegrationSettings.tsx` | 1,709 → 161 | ✅ 已重构 | 拆分为 8 hooks + 5 components |
 | `ProductWebsite.tsx` | 1,039 | 🟡 可接受 | 营销页面，主要是静态内容 |
 | `LegacyImportPage.tsx` | 822 | 🔴 严重 | 单一文件承担太多职责 |
 | `ArchiveBatchView.tsx` | 740 | 🟡 需关注 | 混合了 UI 和业务逻辑 |
