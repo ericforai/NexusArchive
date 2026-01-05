@@ -7,6 +7,12 @@ import { ErpConfig } from '@/types';
 
 interface ErpConfigListProps {
   configs: ErpConfig[];
+  scenarios?: Record<number, Array<{
+    id: number;
+    name: string;
+    lastSyncTime?: string;
+    recordCount?: number;
+  }>>;
   onTest?: (configId: number) => void;
   onDiagnose?: (configId: number) => void;
   onReconcile?: (configId: number) => void;
@@ -16,6 +22,7 @@ interface ErpConfigListProps {
 
 export function ErpConfigList({
   configs,
+  scenarios = {},
   onTest,
   onDiagnose,
   onReconcile,
@@ -41,6 +48,7 @@ export function ErpConfigList({
           key={config.id}
           config={config}
           status="connected"
+          scenarios={scenarios[config.id] || []}
           onTest={onTest}
           onDiagnose={onDiagnose}
           onReconcile={onReconcile}

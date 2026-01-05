@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+// src/components/settings/integration/components/ErpConfigCard.tsx
+import React, { useRef, useEffect, useState } from 'react';
 import { Settings, Zap, Activity, ShieldCheck, Sliders, MoreHorizontal } from 'lucide-react';
 import { ErpConfig } from '@/types';
 
@@ -28,22 +29,10 @@ export function ErpConfigCard({
   onDelete,
   scenarios = []
 }: ErpConfigCardProps) {
-  const [showMoreMenu, setShowMoreMenu] = React.useState(false);
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [editForm, setEditForm] = React.useState({
-    name: config.name,
-    baseUrl: '',
-    appKey: '',
-  });
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: config.name });
   const menuRef = useRef<HTMLDivElement>(null);
-
-  const statusConfig = {
-    connected: { text: '已连接', color: 'text-green-600', dot: '●' },
-    disconnected: { text: '未连接', color: 'text-gray-400', dot: '○' },
-    error: { text: '连接异常', color: 'text-red-600', dot: '●' },
-  };
-
-  const { text: statusText, color: statusColor, dot: statusDot } = statusConfig[status];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,7 +40,6 @@ export function ErpConfigCard({
         setShowMoreMenu(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -65,85 +53,95 @@ export function ErpConfigCard({
     }
   };
 
+  const statusConfig = {
+    connected: { text: '已连接', color: 'text-green-600', bg: 'bg-green-50', dot: '●' },
+    disconnected: { text: '未连接', color: 'text-gray-500', bg: 'bg-gray-50', dot: '○' },
+    error: { text: '异常', color: 'text-red-600', bg: 'bg-red-50', dot: '●' },
+  };
+
+  const { text: statusText, color: statusColor, bg: statusBg, dot: statusDot } = statusConfig[status];
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-      {/* Card Header */}
-      <div className="h-[60px] px-4 border-b border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <Settings size={20} className="text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-800">{config.name}</h3>
-            <p className={`text-xs ${statusColor} flex items-center gap-1`}>
-              <span>{statusDot}</span>
-              <span>{statusText}</span>
-            </p>
+    <div className="bg-white rounded-xl border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all duration-200 overflow-hidden">
+      {/* Header Section */}
+      <div className="p-5 border-b border-gray-100">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Settings size={20} className="text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-semibold text-gray-900 truncate">{config.name}</h3>
+              <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${statusBg} ${statusColor}`}>
+                <span>{statusDot}</span>
+                <span>{statusText}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Action Bar - INSIDE the card as requested */}
-      <div className="h-[48px] px-4 border-b border-slate-100 flex items-center gap-2">
-        <button
-          onClick={() => {
-            setIsEditing(!isEditing);
-            onConfig?.(config);
-          }}
-          className="h-8 px-3 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
-        >
-          <Settings size={14} className="text-slate-400" />
-          配置中心
-        </button>
-        <button
-          onClick={() => onTest?.(config.id)}
-          className="h-8 px-3 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors flex items-center gap-1.5"
-        >
-          <Zap size={14} className="text-blue-500" />
-          检查连接
-        </button>
-        <button
-          onClick={() => onDiagnose?.(config.id)}
-          className="h-8 px-3 text-xs font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-1.5"
-        >
-          <Activity size={14} />
-          健康检查
-        </button>
-        <button
-          onClick={() => onReconcile?.(config.id)}
-          className="h-8 px-3 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1.5"
-        >
-          <ShieldCheck size={14} />
-          账务核对
-        </button>
+        {/* Action Bar - Grid layout for better spacing */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+          >
+            <Settings size={14} className="text-gray-500 flex-shrink-0" />
+            <span>配置中心</span>
+          </button>
 
-        {/* More Menu with Delete Option */}
-        <div className="ml-auto relative" ref={menuRef}>
+          <button
+            onClick={() => onTest?.(config.id)}
+            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-200 hover:text-blue-600 rounded-lg transition-colors"
+          >
+            <Zap size={14} className="text-blue-500 flex-shrink-0" />
+            <span>检查连接</span>
+          </button>
+
+          <button
+            onClick={() => onDiagnose?.(config.id)}
+            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <Activity size={14} className="text-gray-300 flex-shrink-0" />
+            <span>健康检查</span>
+          </button>
+
+          <button
+            onClick={() => onReconcile?.(config.id)}
+            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+          >
+            <ShieldCheck size={14} className="text-emerald-600 flex-shrink-0" />
+            <span>账务核对</span>
+          </button>
+        </div>
+
+        {/* More Menu */}
+        <div className="relative mt-2" ref={menuRef}>
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
             aria-label="更多选项"
             aria-expanded={showMoreMenu}
             aria-haspopup="true"
-            className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+            className="absolute right-0 top-0 h-8 w-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <MoreHorizontal size={16} />
           </button>
 
           {showMoreMenu && (
             <div
-              className="absolute right-0 top-full z-50 mt-1 bg-white rounded-lg shadow-lg border border-slate-100 py-1 min-w-[160px]"
+              className="absolute right-0 top-full z-50 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
               role="menu"
             >
               <button
                 role="menuitem"
                 onClick={() => {
-                  onConfig?.(config);
+                  setIsEditing(true);
                   setShowMoreMenu(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
               >
-                <Sliders size={14} />
-                编辑配置
+                <Sliders size={14} className="text-gray-500" />
+                <span>编辑配置</span>
               </button>
               <button
                 role="menuitem"
@@ -153,47 +151,40 @@ export function ErpConfigCard({
                 }}
                 className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
               >
-                移除此连接器
+                <span>移除此连接器</span>
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Inline Config Form */}
+      {/* Inline Edit Form */}
       {isEditing && (
-        <div className="p-4 bg-slate-50 border-b border-slate-100" data-testid="inline-config-form">
-          <div className="space-y-3">
+        <div className="p-5 bg-blue-50 border-b border-blue-100" data-testid="inline-config-form">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">连接器名称</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">连接器名称</label>
               <input
                 type="text"
                 value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setEditForm({ name: e.target.value })}
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="输入连接器名称"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">服务地址</label>
-              <input
-                type="text"
-                placeholder="https://api.example.com"
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
                   onConfig?.({ ...config, name: editForm.name });
                   setIsEditing(false);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
                 保存
               </button>
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50"
+                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
               >
                 取消
               </button>
@@ -202,29 +193,29 @@ export function ErpConfigCard({
         </div>
       )}
 
-      {/* Scenario List */}
-      <div className="p-4">
+      {/* Scenarios Section */}
+      <div className="p-5">
         {scenarios.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 text-sm">
-            暂无同步场景
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-500">暂无同步场景</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {scenarios.map((scenario) => (
               <div
                 key={scenario.id}
-                className="p-3 bg-slate-50 rounded-lg border border-slate-100"
+                className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">{scenario.name}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium text-gray-900">{scenario.name}</h4>
                   {scenario.recordCount !== undefined && (
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                       已同步 {scenario.recordCount} 条
                     </span>
                   )}
                 </div>
                 {scenario.lastSyncTime && (
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-gray-500">
                     最后同步: {formatSyncTime(scenario.lastSyncTime)}
                   </p>
                 )}

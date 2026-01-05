@@ -9,7 +9,7 @@
  * Compositor pattern: combines specialized hooks and components
  * Original: 1,709 lines → Refactored: ~150 lines
  */
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Settings } from 'lucide-react';
 import { Modal } from 'antd';
 import { useErpConfigManager } from './hooks/useErpConfigManager';
@@ -64,6 +64,29 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     }
   }, [configManager.state.activeConfigId, scenarioManager.actions]);
 
+  // Create scenarios map for passing to ErpConfigList
+  const scenariosMap = useMemo(() => {
+    const map: Record<number, Array<{
+      id: number;
+      name: string;
+      lastSyncTime?: string;
+      recordCount?: number;
+    }>> = {};
+    scenarioManager.state.scenarios.forEach(s => {
+      if (!map[s.configId]) {
+        map[s.configId] = [];
+      }
+      map[s.configId].push({
+        id: s.id,
+        name: s.name,
+        lastSyncTime: s.lastSyncTime,
+        // recordCount would need to come from sync history or API
+        recordCount: undefined
+      });
+    });
+    return map;
+  }, [scenarioManager.state.scenarios]);
+
   const handleDeleteConfig = useCallback(async (configId: number) => {
     const config = configManager.state.configs.find(c => c.id === configId);
     if (!config) return;
@@ -106,6 +129,7 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       {/* Connector Grid */}
       <ErpConfigList
         configs={configManager.state.configs}
+        scenarios={scenariosMap}
         onConfig={(config) => connectorModal.actions.openModal(config)}
         onDelete={handleDeleteConfig}
         onTest={configManager.actions.testConnection}

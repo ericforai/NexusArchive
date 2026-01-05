@@ -47,11 +47,13 @@ describe('ErpConfigCard', () => {
     expect(onReconcile).toHaveBeenCalledWith(1);
   });
 
-  it('should call onConfig when clicking config button', () => {
+  it('should toggle inline form when clicking config button', () => {
     const onConfig = vi.fn();
     render(<ErpConfigCard config={mockConfig} status="connected" onConfig={onConfig} />);
+    // First click should open the inline form, not call onConfig
     fireEvent.click(screen.getByText('配置中心'));
-    expect(onConfig).toHaveBeenCalledWith(mockConfig);
+    // onConfig should not be called yet
+    expect(onConfig).not.toHaveBeenCalled();
   });
 
   it('should call onDelete when clicking delete in more menu', () => {
@@ -96,7 +98,7 @@ describe('ErpConfigCard', () => {
     const inlineForm = container.querySelector('[data-testid="inline-config-form"]');
     expect(inlineForm).toBeInTheDocument();
     expect(screen.getByText('连接器名称')).toBeInTheDocument();
-    expect(screen.getByText('服务地址')).toBeInTheDocument();
+    // Service address field has been removed from the inline form
     expect(screen.getByText('保存')).toBeInTheDocument();
     expect(screen.getByText('取消')).toBeInTheDocument();
   });
