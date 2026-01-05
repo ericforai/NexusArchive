@@ -98,6 +98,13 @@ public class CollectionBatchFile {
     @TableField(value = "created_time", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
+    /**
+     * 关联的档案ID (acc_archive.id)
+     * 上传完成后立即创建的档案记录，用于凭证关联
+     * 符合 DA/T 94-2022 元数据同步捕获要求
+     */
+    private String archiveId;
+
     // ========== 状态常量 ==========
 
     public static final String STATUS_PENDING = "PENDING";

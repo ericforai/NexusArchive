@@ -60,4 +60,13 @@ public interface CollectionBatchFileMapper extends BaseMapper<CollectionBatchFil
         @Param("fondsId") String fondsId,  // String, not Long!
         @Param("fiscalYear") String fiscalYear
     );
+
+    /**
+     * 根据文件ID查询批次文件记录
+     * 用于获取关联的档案ID
+     */
+    @Select("SELECT * FROM collection_batch_file " +
+            "WHERE file_id = #{fileId} " +
+            "LIMIT 1")
+    CollectionBatchFile selectByFileId(@Param("fileId") String fileId);
 }
