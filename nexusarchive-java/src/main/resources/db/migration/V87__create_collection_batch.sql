@@ -3,7 +3,7 @@
 -- 符合 GB/T 39362-2020 电子会计档案管理系统建设要求
 -- ============================================================
 
-CREATE TABLE public.collection_batch (
+CREATE TABLE IF NOT EXISTS public.collection_batch (
     -- 主键
     id BIGSERIAL PRIMARY KEY,
 
@@ -12,7 +12,7 @@ CREATE TABLE public.collection_batch (
     batch_name VARCHAR(200) NOT NULL,
 
     -- 全宗信息 (会计档案归属)
-    fonds_id BIGINT NOT NULL,
+    fonds_id VARCHAR(32) NOT NULL,
     fonds_code VARCHAR(20) NOT NULL,
 
     -- 会计期间
@@ -57,7 +57,7 @@ CREATE TABLE public.collection_batch (
         CHECK (status IN ('UPLOADING', 'UPLOADED', 'VALIDATING', 'VALIDATED', 'FAILED', 'ARCHIVED'))
 );
 
--- 评论
+-- 表和字段注释
 COMMENT ON TABLE public.collection_batch IS '资料收集批次表 - 管理批量上传会话';
 COMMENT ON COLUMN public.collection_batch.batch_no IS '批次编号 (格式: COL-YYYYMMDD-NNN)';
 COMMENT ON COLUMN public.collection_batch.batch_name IS '批次名称';
@@ -71,7 +71,13 @@ COMMENT ON COLUMN public.collection_batch.status IS '批次状态';
 COMMENT ON COLUMN public.collection_batch.validation_report IS '四性检测汇总报告 (JSONB)';
 
 -- 索引
-CREATE INDEX idx_collection_batch_fonds ON public.collection_batch(fonds_id);
-CREATE INDEX idx_collection_batch_status ON public.collection_batch(status);
-CREATE INDEX idx_collection_batch_created_time ON public.collection_batch(created_time DESC);
-CREATE INDEX idx_collection_batch_fiscal_year ON public.collection_batch(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_collection_batch_fonds ON public.collection_batch(fonds_id);
+CREATE INDEX IF NOT EXISTS idx_collection_batch_status ON public.collection_batch(status);
+CREATE INDEX IF NOT EXISTS idx_collection_batch_created_time ON public.collection_batch(created_time DESC);
+CREATE INDEX IF NOT EXISTS idx_collection_batch_fiscal_year ON public.collection_batch(fiscal_year);
+
+-- 索引注释
+COMMENT ON INDEX idx_collection_batch_fonds IS '全宗ID索引，用于按全宗筛选批次';
+COMMENT ON INDEX idx_collection_batch_status IS '批次状态索引，用于按状态筛选';
+COMMENT ON INDEX idx_collection_batch_created_time IS '创建时间索引，用于时间排序和查询';
+COMMENT ON INDEX idx_collection_batch_fiscal_year IS '会计年度索引，用于按年度筛选';
