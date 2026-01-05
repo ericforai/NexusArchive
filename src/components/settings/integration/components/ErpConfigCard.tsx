@@ -29,7 +29,6 @@ export function ErpConfigCard({
   scenarios = []
 }: ErpConfigCardProps) {
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
-  const [isEditing, setIsEditing] = React.useState(false);
 
   const statusConfig = {
     connected: { text: '已连接', color: 'text-green-600', dot: '●' },
