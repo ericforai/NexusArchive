@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Settings, Zap, Activity, ShieldCheck, Sliders, MoreHorizontal } from 'lucide-react';
 import { ErpConfig } from '@/types';
 
@@ -29,6 +29,7 @@ export function ErpConfigCard({
   scenarios = []
 }: ErpConfigCardProps) {
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const statusConfig = {
     connected: { text: '已连接', color: 'text-green-600', dot: '●' },
@@ -37,6 +38,26 @@ export function ErpConfigCard({
   };
 
   const { text: statusText, color: statusColor, dot: statusDot } = statusConfig[status];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const formatSyncTime = (dateString?: string) => {
+    if (!dateString) return null;
+    try {
+      return new Date(dateString).toLocaleString('zh-CN');
+    } catch {
+      return '无效日期';
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
@@ -88,17 +109,24 @@ export function ErpConfigCard({
         </button>
 
         {/* More Menu with Delete Option */}
-        <div className="ml-auto relative">
+        <div className="ml-auto relative" ref={menuRef}>
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
+            aria-label="更多选项"
+            aria-expanded={showMoreMenu}
+            aria-haspopup="true"
             className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
           >
             <MoreHorizontal size={16} />
           </button>
 
           {showMoreMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 bg-white rounded-lg shadow-lg border border-slate-100 py-1 min-w-[160px]">
+            <div
+              className="absolute right-0 top-full z-50 mt-1 bg-white rounded-lg shadow-lg border border-slate-100 py-1 min-w-[160px]"
+              role="menu"
+            >
               <button
+                role="menuitem"
                 onClick={() => {
                   onConfig?.(config);
                   setShowMoreMenu(false);
@@ -109,6 +137,7 @@ export function ErpConfigCard({
                 编辑配置
               </button>
               <button
+                role="menuitem"
                 onClick={() => {
                   onDelete?.(config.id);
                   setShowMoreMenu(false);
@@ -145,7 +174,7 @@ export function ErpConfigCard({
                 </div>
                 {scenario.lastSyncTime && (
                   <p className="text-xs text-slate-400 mt-1">
-                    最后同步: {new Date(scenario.lastSyncTime).toLocaleString('zh-CN')}
+                    最后同步: {formatSyncTime(scenario.lastSyncTime)}
                   </p>
                 )}
               </div>
