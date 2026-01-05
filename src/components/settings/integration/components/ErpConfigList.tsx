@@ -13,21 +13,27 @@ interface ErpConfigListProps {
     lastSyncTime?: string;
     recordCount?: number;
   }>>;
+  scenarioCounts?: Record<number, number>;
+  loadingScenarios?: Record<number, boolean>;
   onTest?: (configId: number) => void;
   onDiagnose?: (configId: number) => void;
   onReconcile?: (configId: number) => void;
   onConfig?: (config: ErpConfig) => void;
   onDelete?: (configId: number) => void;
+  onLoadScenarios?: (configId: number) => void;
 }
 
 export function ErpConfigList({
   configs,
   scenarios = {},
+  scenarioCounts = {},
+  loadingScenarios = {},
   onTest,
   onDiagnose,
   onReconcile,
   onConfig,
-  onDelete
+  onDelete,
+  onLoadScenarios
 }: ErpConfigListProps) {
   if (configs.length === 0) {
     return (
@@ -49,11 +55,14 @@ export function ErpConfigList({
           config={config}
           status="connected"
           scenarios={scenarios[config.id] || []}
+          scenarioCount={scenarioCounts[config.id] || 0}
+          loadingScenarios={loadingScenarios[config.id] || false}
           onTest={onTest}
           onDiagnose={onDiagnose}
           onReconcile={onReconcile}
           onConfig={onConfig}
           onDelete={onDelete}
+          onLoadScenarios={onLoadScenarios}
         />
       ))}
     </div>

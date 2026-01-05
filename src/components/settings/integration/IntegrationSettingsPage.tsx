@@ -9,7 +9,7 @@
  * Compositor pattern: combines specialized hooks and components
  * Original: 1,709 lines → Refactored: ~150 lines
  */
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Settings } from 'lucide-react';
 import { Modal } from 'antd';
 import { useErpConfigManager } from './hooks/useErpConfigManager';
@@ -32,6 +32,9 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
 
   // Hook: Scenario Sync Manager
   const scenarioManager = useScenarioSyncManager({ erpApi });
+
+  // Track loading scenarios per config
+  const [loadingScenarios, setLoadingScenarios] = useState<Record<number, boolean>>({});
 
   // Hook: Params Editor
   const paramsEditor = useParamsEditor({
@@ -57,14 +60,7 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     configManager.actions.loadConfigs();
   }, [configManager.actions]);
 
-  // Load scenarios for the first config only (to avoid 429 errors)
-  useEffect(() => {
-    const configs = configManager.state.configs;
-    if (configs.length > 0 && scenarioManager.state.scenarios.length === 0) {
-      // Only load scenarios for the first config to show example
-      scenarioManager.actions.loadScenarios(configs[0].id);
-    }
-  }, [configManager.state.configs, scenarioManager.actions, scenarioManager.state.scenarios.length]);
+  // DO NOT auto-load scenarios anymore - they will be loaded on demand via expand/collapse
 
   // Create scenarios map for passing to ErpConfigList
   const scenariosMap = useMemo(() => {
@@ -88,6 +84,30 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     });
     return map;
   }, [scenarioManager.state.scenarios]);
+
+  // Calculate scenario counts per config
+  const scenarioCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    scenarioManager.state.scenarios.forEach(s => {
+      counts[s.configId] = (counts[s.configId] || 0) + 1;
+    });
+    return counts;
+  }, [scenarioManager.state.scenarios]);
+
+  // Handle loading scenarios for a specific config
+  const handleLoadScenarios = useCallback(async (configId: number) => {
+    // Check if we already loaded scenarios for this config
+    if (scenariosMap[configId] && scenariosMap[configId].length > 0) {
+      return;
+    }
+
+    setLoadingScenarios(prev => ({ ...prev, [configId]: true }));
+    try {
+      await scenarioManager.actions.loadScenarios(configId);
+    } finally {
+      setLoadingScenarios(prev => ({ ...prev, [configId]: false }));
+    }
+  }, [scenarioManager.actions, scenariosMap]);
 
   const handleDeleteConfig = useCallback(async (configId: number) => {
     const config = configManager.state.configs.find(c => c.id === configId);
@@ -132,6 +152,8 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       <ErpConfigList
         configs={configManager.state.configs}
         scenarios={scenariosMap}
+        scenarioCounts={scenarioCounts}
+        loadingScenarios={loadingScenarios}
         onConfig={(config) => connectorModal.actions.openModal(config)}
         onDelete={handleDeleteConfig}
         onTest={configManager.actions.testConnection}
@@ -140,6 +162,7 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
           // TODO: implement reconcile
           console.log('Reconcile not implemented yet');
         }}
+        onLoadScenarios={handleLoadScenarios}
       />
 
       {/* Modals */}
