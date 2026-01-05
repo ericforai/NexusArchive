@@ -2,6 +2,26 @@
 
 > 本文档记录了Docker构建中遇到的问题及解决方案，防止问题再次发生。
 
+**更新日期**: 2025-01-05
+
+---
+
+## 架构说明
+
+当前采用**混合开发模式**：
+- **开发环境**: DB + Redis 在 Docker，应用在本地（支持热重载）
+- **生产环境**: 所有服务在 Docker 中
+
+```bash
+# 开发环境启动
+npm run dev
+
+# 生产环境部署
+npm run deploy
+```
+
+---
+
 ## 问题回顾与修复
 
 ### 问题1: 健康检查失败 ✅ 已修复
@@ -25,10 +45,8 @@ healthcheck:
 ```
 
 **修改文件**:
-- `docker-compose.dev.yml:116` - 前端健康检查
-- `docker-compose.dev.yml:90` - 后端健康检查
-- `docker-compose.prod.yml:82` - 后端健康检查
-- `docker-compose.prod.yml:105` - 前端健康检查
+- `docker-compose.app.yml` - 生产环境健康检查
+- `Dockerfile.frontend.prod` - 前端 Dockerfile
 
 ### 问题2: 构建上下文过大 ✅ 已修复
 
@@ -68,45 +86,62 @@ docker pull node:20-alpine
 }
 ```
 
+---
+
+## 配置文件
+
+| 文件 | 用途 |
+|------|------|
+| `docker-compose.infra.yml` | 基础设施（PostgreSQL + Redis） |
+| `docker-compose.app.yml` | 应用服务（Backend + Frontend） |
+| `.env.local` | 本地开发环境变量 |
+| `.env.server` | 生产环境变量 |
+
+---
+
 ## 开发工作流
 
 ### 首次设置
 
 ```bash
 # 1. 预先拉取基础镜像（一次性，约30分钟）
-docker pull maven:3.9-eclipse-temurin-17
+docker pull postgres:14-alpine
+docker pull redis:7-alpine
 docker pull eclipse-temurin:17-jdk
 docker pull node:20-alpine
 
-# 2. 运行健康检查
-./scripts/check-docker-health.sh
-
-# 3. 启动开发环境
-docker-compose -f docker-compose.dev.yml up -d
+# 2. 启动开发环境
+npm run dev
 ```
 
 ### 日常开发
 
 ```bash
-# 启动服务
-docker-compose -f docker-compose.dev.yml up -d
+# 启动所有服务
+npm run dev
 
-# 查看状态（应显示 healthy）
-docker ps
+# 仅启动基础设施（DB + Redis）
+docker-compose -f docker-compose.infra.yml up -d
 
-# 查看日志
-docker-compose -f docker-compose.dev.yml logs -f
+# 停止所有服务
+npm run dev:stop
 ```
 
-### 重建镜像（当依赖变化时）
+### 生产部署
 
 ```bash
-# 前端（约3分钟）
-docker-compose -f docker-compose.dev.yml build nexus-frontend
+# 方式一：使用部署脚本（推荐）
+npm run deploy
 
-# 后端（约10分钟，前提是已预先拉取基础镜像）
-docker-compose -f docker-compose.dev.yml build nexus-backend
+# 方式二：手动部署
+docker-compose -f docker-compose.infra.yml \
+               -f docker-compose.app.yml build
+docker-compose -f docker-compose.infra.yml \
+               -f docker-compose.app.yml \
+               --env-file .env.server up -d
 ```
+
+---
 
 ## 防止问题再次发生
 
@@ -141,7 +176,9 @@ docker-compose -f docker-compose.dev.yml build nexus-backend
 | **健康检查** | 始终使用 `127.0.0.1`，避免 `localhost` |
 | **Docker上下文** | 排除所有 `.log`、`.tar.gz`、测试结果文件 |
 | **镜像拉取** | 首次构建前预先拉取基础镜像 |
-| **代码变更** | 修改代码后，只重建需要的服务 |
+| **代码变更** | 修改代码后，开发环境支持热重载，无需重建 |
+
+---
 
 ## 性能对比
 
@@ -153,6 +190,8 @@ docker-compose -f docker-compose.dev.yml build nexus-backend
 | 前端镜像大小 | 1.81GB | <400MB | ↓78% |
 | 后端首次构建 | 数小时 | ~10分钟 | ↓95% |
 
+---
+
 ## 故障排查
 
 ### 健康检查失败
@@ -162,10 +201,10 @@ docker-compose -f docker-compose.dev.yml build nexus-backend
 docker ps
 
 # 查看健康检查日志
-docker inspect nexus-frontend-dev | grep -A 10 Health
+docker inspect nexus-frontend | grep -A 10 Health
 
 # 手动测试
-docker exec nexus-frontend-dev wget -q --spider http://127.0.0.1:15175
+docker exec nexus-frontend wget -q --spider http://127.0.0.1:80
 ```
 
 ### 构建缓慢
@@ -181,6 +220,21 @@ docker system prune -a
 docker pull maven:3.9-eclipse-temurin-17
 ```
 
+### 开发环境问题
+
+```bash
+# 后端启动失败
+tail -f backend.log
+
+# 前端报 500 错误
+curl http://localhost:19090/api/health
+
+# 数据库连接失败
+docker exec nexus-db pg_isready -U postgres
+```
+
+---
+
 ## 参考资料
 
 - [Docker Compose健康检查文档](https://docs.docker.com/compose/compose-file/compose-file-v3/#healthcheck)
@@ -189,5 +243,8 @@ docker pull maven:3.9-eclipse-temurin-17
 
 ---
 
-**最后更新**: 2026-01-04
-**维护者**: 开发团队
+## 相关文档
+
+- [开发环境指南](docs/deployment/docker-development.md)
+- [生产部署指南](docs/deployment/docker-production.md)
+- [启动指南](docs/deployment/启动指南.md)

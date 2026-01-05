@@ -1,5 +1,13 @@
 # 登录闪退问题修复说明
 
+> **⚠️ 历史文档** - 本文档记录的是历史问题和修复方案，其中使用的命令已更新。
+>
+> **当前启动方式**: `npm run dev` / `npm run dev:stop`
+>
+> **如遇到类似问题**, 请参考：[开发环境指南](../deployment/docker-development.md)
+
+---
+
 ## 问题描述
 
 用户登录后出现闪退（立即跳转回登录页）。
@@ -37,20 +45,20 @@ return null;
 由于后端使用JAR包运行，需要重新构建镜像：
 
 ```bash
-# 重新构建后端镜像
+# 方式一：使用 npm 脚本（推荐）
+npm run dev:stop
+npm run dev
+
+# 方式二：手动重启
+# 停止后端进程
+pkill -f "spring-boot:run"
+
+# 重新启动后端
 cd nexusarchive-java
-docker-compose -f ../docker-compose.dev.yml build nexus-backend
-
-# 重启后端服务
-docker-compose -f ../docker-compose.dev.yml restart nexus-backend
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-或者如果使用 `dev-start.sh` 脚本：
-
-```bash
-./scripts/dev-stop.sh
-./scripts/dev-start.sh
-```
+> **注意**: 旧的 `docker-compose.dev.yml` 已不再使用。开发环境现在采用混合模式（Docker 基础设施 + 本地应用）。
 
 ## 验证修复
 
