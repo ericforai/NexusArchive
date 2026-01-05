@@ -1,4 +1,9 @@
-import { useState, useCallback } from 'react';
+// Input: React hooks, ErpConfig types, ERP API
+// Output: useErpConfigManager hook (state + actions)
+// Pos: src/components/settings/integration/hooks/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { ErpConfig } from '../../../../types';
 import { ErpConfigManagerState, ErpConfigManagerActions } from '../types';
@@ -91,15 +96,18 @@ export function useErpConfigManager(options: UseErpConfigManagerOptions) {
     }
   }, [erpApi, loadConfigs]);
 
-  const deleteConfig = useCallback(async (id: number) => {
+  const deleteConfig = useCallback(async (configId: number) => {
     try {
-      const res = await erpApi.deleteConfig(id);
+      const res = await erpApi.deleteConfig(configId);
       if (res.code === 200) {
-        toast.success('配置删除成功');
-        await loadConfigs();
+        toast.success('已删除连接器');
+        // Refresh the list
+        loadConfigs();
+      } else {
+        toast.error(res.message || '删除失败');
       }
     } catch {
-      toast.error('配置删除失败');
+      toast.error('删除异常');
     }
   }, [erpApi, loadConfigs]);
 
@@ -124,15 +132,26 @@ export function useErpConfigManager(options: UseErpConfigManagerOptions) {
     loading,
   };
 
-  const actions: ErpConfigManagerActions = {
-    loadConfigs,
-    setActiveConfig: setActiveConfigId,
-    toggleTypeExpansion,
-    createConfig,
-    updateConfig,
-    deleteConfig,
-    testConnection,
-  };
+  // Use useMemo to stabilize actions reference and prevent infinite loops
+  const actions: ErpConfigManagerActions = useMemo(
+    () => ({
+      loadConfigs,
+      setActiveConfig: setActiveConfigId,
+      toggleTypeExpansion,
+      createConfig,
+      updateConfig,
+      deleteConfig,
+      testConnection,
+    }),
+    [
+      loadConfigs,
+      toggleTypeExpansion,
+      createConfig,
+      updateConfig,
+      deleteConfig,
+      testConnection,
+    ]
+  );
 
   return { state, actions };
 }

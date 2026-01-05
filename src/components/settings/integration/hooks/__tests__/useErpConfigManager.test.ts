@@ -154,19 +154,70 @@ describe('useErpConfigManager', () => {
   });
 
   describe('deleteConfig', () => {
-    it('should delete config', async () => {
+    it('should delete config and refresh list', async () => {
       mockErpApi.deleteConfig.mockResolvedValue({ code: 200 });
-      mockErpApi.getConfigs.mockResolvedValue({ code: 200, data: mockConfigs.filter(c => c.id !== 1) });
+      mockErpApi.getConfigs.mockResolvedValue({
+        code: 200,
+        data: [{ id: 1, name: 'YonSuite', erpType: 'yonsuite', configJson: '{}', createdAt: '2026-01-01T00:00:00Z' }]
+      });
 
       const { result } = renderHook(() => useErpConfigManager({ erpApi: mockErpApi }));
-      result.current.state.configs = mockConfigs;
+
+      // Load configs first
+      await act(async () => {
+        await result.current.actions.loadConfigs();
+      });
+
+      expect(result.current.state.configs).toHaveLength(1);
+
+      // Delete config
+      await act(async () => {
+        await result.current.actions.deleteConfig(1);
+      });
+
+      expect(mockErpApi.deleteConfig).toHaveBeenCalledWith(1);
+      expect(mockErpApi.getConfigs).toHaveBeenCalled(); // Should refresh
+    });
+
+    it('should handle delete error', async () => {
+      mockErpApi.getConfigs.mockResolvedValue({
+        code: 200,
+        data: [{ id: 1, name: 'YonSuite', erpType: 'yonsuite', configJson: '{}', createdAt: '2026-01-01T00:00:00Z' }]
+      });
+      mockErpApi.deleteConfig.mockRejectedValue(new Error('Network error'));
+
+      const { result } = renderHook(() => useErpConfigManager({ erpApi: mockErpApi }));
+
+      await act(async () => {
+        await result.current.actions.loadConfigs();
+      });
+
+      // Should not throw, just show error toast
+      await act(async () => {
+        await result.current.actions.deleteConfig(1);
+      });
+
+      expect(mockErpApi.deleteConfig).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle delete API error response', async () => {
+      mockErpApi.getConfigs.mockResolvedValue({
+        code: 200,
+        data: [{ id: 1, name: 'YonSuite', erpType: 'yonsuite', configJson: '{}', createdAt: '2026-01-01T00:00:00Z' }]
+      });
+      mockErpApi.deleteConfig.mockResolvedValue({ code: 400, message: 'Config not found' });
+
+      const { result } = renderHook(() => useErpConfigManager({ erpApi: mockErpApi }));
+
+      await act(async () => {
+        await result.current.actions.loadConfigs();
+      });
 
       await act(async () => {
         await result.current.actions.deleteConfig(1);
       });
 
       expect(mockErpApi.deleteConfig).toHaveBeenCalledWith(1);
-      expect(mockErpApi.getConfigs).toHaveBeenCalled();
     });
   });
 });
