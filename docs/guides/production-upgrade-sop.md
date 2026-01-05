@@ -8,7 +8,7 @@
 
 ### 前提条件
 - SSH 已登录服务器
-- `.env.prod` 已配置好（首次需要设置）
+- `.env.server` 已配置好（首次需要设置）
 
 ### 执行命令
 ```bash
@@ -37,10 +37,10 @@ git clone git@github.com:ericforai/NexusArchive.git /root/nexusarchive
 cd /root/nexusarchive
 ```
 
-### 2. 创建 .env.prod
+### 2. 创建 .env.server
 ```bash
-cp .env.prod.template .env.prod
-nano .env.prod  # 修改密码和密钥
+cp .env.server.template .env.server
+nano .env.server  # 修改密码和密钥
 ```
 
 ### 3. 生成 JWT 密钥
@@ -89,7 +89,7 @@ cp -r backup_xxxx/data/* nexusarchive-java/data/
 |-----|------|
 | 查看后端日志 | `docker logs nexus-backend --tail 50` |
 | 查看前端日志 | `docker logs nexus-frontend --tail 20` |
-| 检查服务状态 | `docker compose -f docker-compose.prod.yml ps` |
+| 检查服务状态 | `docker compose -f docker-compose.infra.yml -f docker-compose.app.yml ps` |
 | 测试 API | `curl http://localhost/api/health` |
 
 ---
