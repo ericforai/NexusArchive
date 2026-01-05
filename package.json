@@ -5,7 +5,13 @@
   "type": "module",
   "scripts": {
     "seed": "npx tsx backend/src/scripts/seed_extended.ts",
-    "dev": "vite",
+    "dev": "bash scripts/dev.sh",
+    "dev:vite": "vite",
+    "dev:stop": "bash scripts/dev-stop.sh",
+    "db:dump": "bash scripts/db-dump.sh",
+    "db:load": "bash scripts/db-load.sh",
+    "db:reset": "bash scripts/db-reset.sh",
+    "deploy": "bash scripts/deploy.sh",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
@@ -59,5 +65,10 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.0.15"
+  },
+  "overrides": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zustand": "^5.0.9"
   }
 }
