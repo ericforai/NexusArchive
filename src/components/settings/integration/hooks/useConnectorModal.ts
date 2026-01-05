@@ -43,11 +43,11 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
       setConfigForm({
         name: config.name || '',
         erpType: config.erpType || 'yonsuite',
-        baseUrl: '',
-        appKey: '',
-        appSecret: '',
-        accbookCode: '',
-        accbookCodes: [],
+        baseUrl: (config as any).baseUrl || '',
+        appKey: (config as any).appKey || '',
+        appSecret: (config as any).appSecret || '',
+        accbookCode: (config as any).accbookCode || '',
+        accbookCodes: (config as any).accbookCodes || [],
       });
     } else {
       setEditingConfig(null);

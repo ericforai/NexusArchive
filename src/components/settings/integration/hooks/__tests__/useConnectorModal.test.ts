@@ -74,6 +74,7 @@ describe('useConnectorModal', () => {
     });
 
     expect(result.current.state.configForm.accbookCodes).toContain('001');
+    expect(result.current.state.newAccbookCode).toBe('');
   });
 
   it('should remove accbook code', () => {
