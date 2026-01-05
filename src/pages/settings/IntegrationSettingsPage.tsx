@@ -4,13 +4,13 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { IntegrationSettingsPage as IntegrationSettingsComponent } from '../../components/settings/integration';
+import { IntegrationSettingsPage } from '../../components/settings';
 import { useIntegrationSettingsApi } from '../../features/settings';
 
-const IntegrationSettingsPage: React.FC = () => {
+const IntegrationSettingsPageWrapper: React.FC = () => {
     const { erpApi } = useIntegrationSettingsApi();
 
-    return <IntegrationSettingsComponent erpApi={erpApi} />;
+    return <IntegrationSettingsPage erpApi={erpApi} />;
 };
 
-export default IntegrationSettingsPage;
+export default IntegrationSettingsPageWrapper;
