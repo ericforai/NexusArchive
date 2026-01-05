@@ -98,6 +98,22 @@ export function useErpConfigManager(options: UseErpConfigManagerOptions) {
 
   const deleteConfig = useCallback(async (configId: number) => {
     try {
+      // Check for active syncs first (if API supports it)
+      try {
+        const activeSyncsRes = await (erpApi as any).getActiveSyncs?.();
+        if (activeSyncsRes?.code === 200) {
+          const hasActiveSync = activeSyncsRes.data.some(
+            (s: any) => s.configId === configId && s.status === 'running'
+          );
+          if (hasActiveSync) {
+            toast.error('该连接器有同步任务正在进行,无法删除');
+            return;
+          }
+        }
+      } catch {
+        // Ignore if getActiveSyncs doesn't exist or fails
+      }
+
       const res = await erpApi.deleteConfig(configId);
       if (res.code === 200) {
         toast.success('已删除连接器');
@@ -106,8 +122,14 @@ export function useErpConfigManager(options: UseErpConfigManagerOptions) {
       } else {
         toast.error(res.message || '删除失败');
       }
-    } catch {
-      toast.error('删除异常');
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        toast.error('连接器不存在');
+      } else if (error.response?.status === 403) {
+        toast.error('没有权限删除此连接器');
+      } else {
+        toast.error('删除异常,请稍后重试');
+      }
     }
   }, [erpApi, loadConfigs]);
 

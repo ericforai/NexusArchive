@@ -29,6 +29,12 @@ export function ErpConfigCard({
   scenarios = []
 }: ErpConfigCardProps) {
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editForm, setEditForm] = React.useState({
+    name: config.name,
+    baseUrl: '',
+    appKey: '',
+  });
   const menuRef = useRef<HTMLDivElement>(null);
 
   const statusConfig = {
@@ -80,7 +86,10 @@ export function ErpConfigCard({
       {/* Action Bar - INSIDE the card as requested */}
       <div className="h-[48px] px-4 border-b border-slate-100 flex items-center gap-2">
         <button
-          onClick={() => onConfig?.(config)}
+          onClick={() => {
+            setIsEditing(!isEditing);
+            onConfig?.(config);
+          }}
           className="h-8 px-3 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5"
         >
           <Settings size={14} className="text-slate-400" />
@@ -150,6 +159,48 @@ export function ErpConfigCard({
           )}
         </div>
       </div>
+
+      {/* Inline Config Form */}
+      {isEditing && (
+        <div className="p-4 bg-slate-50 border-b border-slate-100" data-testid="inline-config-form">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">连接器名称</label>
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">服务地址</label>
+              <input
+                type="text"
+                placeholder="https://api.example.com"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  onConfig?.({ ...config, name: editForm.name });
+                  setIsEditing(false);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+              >
+                保存
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scenario List */}
       <div className="p-4">
