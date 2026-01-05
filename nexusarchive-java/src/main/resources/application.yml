@@ -38,7 +38,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:16379}
+      port: ${REDIS_PORT:16379}  # 默认使用 Docker Redis 端口
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DB:0}
       timeout: 3000ms
@@ -158,10 +158,10 @@ spring:
   config:
     activate:
       on-profile: dev
-  
+
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54321}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     
