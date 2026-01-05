@@ -46,10 +46,6 @@ export function ErpConfigList({
           onReconcile={onReconcile}
           onConfig={onConfig}
           onDelete={onDelete}
-          scenarios={[
-            { id: 1, name: '销售出库单', recordCount: 15, lastSyncTime: new Date().toISOString() },
-            { id: 2, name: '采购入库单', recordCount: 8, lastSyncTime: new Date().toISOString() },
-          ]}
         />
       ))}
     </div>
