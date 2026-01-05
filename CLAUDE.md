@@ -47,8 +47,8 @@ nexusarchive/
 ├── package.json                    # Frontend dependencies
 ├── vite.config.ts                  # Vite configuration
 ├── tsconfig.json                   # TypeScript config
-├── docker-compose.dev.yml          # Dev environment
-└── docker-compose.prod.yml         # Production environment
+├── docker-compose.infra.yml        # Infrastructure (DB + Redis)
+└── docker-compose.app.yml          # Application services (server)
 ```
 
 ## Development Commands
@@ -95,11 +95,24 @@ npm run test:coverage               # Run with coverage report
 ### Docker
 
 ```bash
-# Development
-docker-compose -f docker-compose.dev.yml up -d
+# Development (DB + Redis only)
+docker-compose -f docker-compose.infra.yml up -d
 
-# Production
-docker-compose -f docker-compose.prod.yml up -d
+# Production (DB + Redis + Backend + Frontend)
+docker-compose -f docker-compose.infra.yml \
+               -f docker-compose.app.yml \
+               --env-file .env.server up -d
+```
+
+### NPM Scripts (project root)
+
+```bash
+npm run dev        # Start development environment
+npm run dev:stop   # Stop development environment
+npm run db:dump    # Export database to db/seed-data.sql
+npm run db:load    # Import database from db/seed-data.sql
+npm run db:reset   # Reset database (drop volume and reinit)
+npm run deploy     # Deploy to server
 ```
 
 ## Code Conventions

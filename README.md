@@ -56,13 +56,16 @@
 
 ### 开发环境
 
-#### 方式一：Docker 全栈（推荐）
+#### 一键启动（推荐）
 
 ```bash
-./scripts/dev-start.sh
+npm run dev
 ```
 
-自动完成：构建镜像 → 启动数据库/Redis/后端/前端 → 健康检查
+自动完成：
+- 启动 PostgreSQL + Redis（Docker）
+- 启动后端（本地，支持热重载）
+- 启动前端（本地，支持 HMR）
 
 访问地址：
 - 前端: http://localhost:15175
@@ -72,32 +75,36 @@
 
 停止服务：
 ```bash
-./scripts/dev-stop.sh
+npm run dev:stop
 ```
 
-#### 方式二：手动启动（需本地安装 JDK+Maven+Node）
+#### 数据同步（多台 Mac 间）
 
 ```bash
-# 后端
-cd nexusarchive-java && mvn spring-boot:run
+# 离开公司前 - 导出数据
+npm run db:dump
 
-# 前端（另开终端）
-npm install && npm run dev
+# 回到家后 - 导入数据
+npm run db:load
 ```
 
 ### 生产环境
 
-#### 方式一：Docker 部署（推荐）
+#### 服务器部署（一键）
 
 ```bash
-# 上传配置到服务器
-scp docker-compose.prod.yml .env.prod server:~/nexusarchive/
-
-# SSH 登录后启动
-docker-compose -f docker-compose.prod.yml up -d
+npm run deploy
 ```
 
-#### 方式二：离线安装包
+或手动部署：
+```bash
+# 服务器上启动所有服务（DB + Redis + Backend + Frontend）
+docker-compose -f docker-compose.infra.yml \
+               -f docker-compose.app.yml \
+               --env-file .env.server up -d
+```
+
+#### 离线安装包
 
 ```bash
 cd deploy/offline && ./install.sh
