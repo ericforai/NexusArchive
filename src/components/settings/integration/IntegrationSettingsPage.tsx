@@ -57,23 +57,14 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     configManager.actions.loadConfigs();
   }, [configManager.actions]);
 
-  // Load scenarios for all configs after configs are loaded
+  // Load scenarios for the first config only (to avoid 429 errors)
   useEffect(() => {
     const configs = configManager.state.configs;
     if (configs.length > 0 && scenarioManager.state.scenarios.length === 0) {
-      // Load scenarios for all configs
-      configs.forEach(config => {
-        scenarioManager.actions.loadScenarios(config.id);
-      });
+      // Only load scenarios for the first config to show example
+      scenarioManager.actions.loadScenarios(configs[0].id);
     }
   }, [configManager.state.configs, scenarioManager.actions, scenarioManager.state.scenarios.length]);
-
-  // Also load scenarios when active config changes (for backward compatibility)
-  useEffect(() => {
-    if (configManager.state.activeConfigId) {
-      scenarioManager.actions.loadScenarios(configManager.state.activeConfigId);
-    }
-  }, [configManager.state.activeConfigId, scenarioManager.actions]);
 
   // Create scenarios map for passing to ErpConfigList
   const scenariosMap = useMemo(() => {
