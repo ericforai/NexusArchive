@@ -1037,3 +1037,5 @@ export const ProductWebsite: React.FC = () => {
         </div >
     );
 };
+
+export default ProductWebsite;

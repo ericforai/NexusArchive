@@ -1,3 +1,8 @@
+// Input: None (base type definitions)
+// Output: Type definitions for integration module
+// Pos: src/components/settings/integration//
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 // src/components/settings/integration/types.ts
 
 import { ErpConfig, ErpScenario, ErpSubInterface, IntegrationDiagnosisResult, IntegrationMonitoring, ReconciliationRecord, SyncHistory } from '../../../types';
@@ -40,6 +45,7 @@ export interface ScenarioSyncManagerActions {
   toggleHistoryView: (scenarioId: number | null) => void;
   syncScenario: (scenarioId: number, params?: any) => Promise<void>;
   syncAllScenarios: (configId: number) => Promise<void>;
+  setSyncing: (scenarioId: number | null) => void;
 }
 
 // ============ Connector Modal Types ============

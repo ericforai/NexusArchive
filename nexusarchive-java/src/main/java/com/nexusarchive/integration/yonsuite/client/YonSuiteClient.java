@@ -412,6 +412,58 @@ public class YonSuiteClient {
     }
 
     /**
+     * 批量查询凭证附件 (新 API)
+     * POST /yonbip/EFI/rest/v1/openapi/queryBusinessFiles
+     * 支持一次查询多个凭证的附件列表
+     *
+     * @param accessToken 可选, 为null则自动获取
+     * @param businessIds 凭证ID列表
+     * @return 凭证ID -> 附件列表的映射
+     */
+    public VoucherAttachmentResponse queryBusinessFiles(String accessToken, java.util.List<String> businessIds) {
+        String token = getToken(accessToken);
+        String url = baseUrl + "/yonbip/EFI/rest/v1/openapi/queryBusinessFiles"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        log.info("Calling YonSuite queryBusinessFiles: businessIds count={}", businessIds.size());
+
+        try {
+            VoucherAttachmentRequest request = new VoucherAttachmentRequest();
+            request.setBusinessIds(businessIds);
+
+            String body = objectMapper.writeValueAsString(request);
+            log.debug("Request body: {}", body);
+
+            String respStr = HttpRequest.post(url)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.debug("YonSuite queryBusinessFiles response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                VoucherAttachmentResponse empty = new VoucherAttachmentResponse();
+                empty.setCode("200");
+                empty.setMessage("No data");
+                empty.setData(new java.util.HashMap<>());
+                return empty;
+            }
+
+            VoucherAttachmentResponse response = objectMapper.readValue(respStr, VoucherAttachmentResponse.class);
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite queryBusinessFiles warning: code={}, message={}",
+                        response.getCode(), response.getMessage());
+            }
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryBusinessFiles", e);
+            throw new RuntimeException("Failed to call YonSuite API: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 向 YonSuite 反馈归档状态 (模拟)
      * 
      * Phase 3 增强：返回结构化结果，记录详细日志
@@ -462,6 +514,106 @@ public class YonSuiteClient {
             
             return com.nexusarchive.integration.erp.dto.FeedbackResult.failure(
                     voucherId, archivalCode, "YONSUITE", e.getMessage());
+        }
+    }
+
+    /**
+     * 付款退款单文件下载查询
+     * POST /yonbip/EFI/apRefund/file/url
+     * 文档: 获取付款退款单文件
+     *
+     * @param accessToken 可选, 为null则自动获取
+     * @param request 退款文件下载请求 (fileId 列表, 最多20个)
+     * @return 退款文件下载信息
+     */
+    public YonRefundFileResponse queryRefundFileUrls(String accessToken, YonRefundFileRequest request) {
+        String token = getToken(accessToken);
+        String url = baseUrl + "/yonbip/EFI/apRefund/file/url"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        log.info("Calling YonSuite queryRefundFileUrls: fileIds={}", request.getFileId());
+
+        try {
+            String body = objectMapper.writeValueAsString(request);
+            log.debug("Request body: {}", body);
+
+            String respStr = HttpRequest.post(url)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.info("YonSuite refund file url response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                YonRefundFileResponse emptyResponse = new YonRefundFileResponse();
+                emptyResponse.setCode("200");
+                emptyResponse.setMessage("No data");
+                return emptyResponse;
+            }
+
+            YonRefundFileResponse response = objectMapper.readValue(respStr, YonRefundFileResponse.class);
+
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite refund file url API warning: {} - {}", response.getCode(), response.getMessage());
+            }
+
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryRefundFileUrls", e);
+            throw new RuntimeException("YonSuite API Error", e);
+        }
+    }
+
+    /**
+     * 付款退款单列表查询
+     * POST /yonbip/EFI/apRefund/list
+     * 文档: 付款退款单列表查询
+     *
+     * @param accessToken 可选, 为null则自动获取
+     * @param request 退款单列表查询请求
+     * @return 退款单列表
+     */
+    public YonRefundListResponse queryRefundList(String accessToken, YonRefundListRequest request) {
+        String token = getToken(accessToken);
+        String url = baseUrl + "/yonbip/EFI/apRefund/list"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        log.info("Calling YonSuite queryRefundList: pageIndex={}, pageSize={}",
+                request.getPageIndex(), request.getPageSize());
+
+        try {
+            String body = objectMapper.writeValueAsString(request);
+            log.debug("Request body: {}", body);
+
+            String respStr = HttpRequest.post(url)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.info("YonSuite refund list response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                YonRefundListResponse emptyResponse = new YonRefundListResponse();
+                emptyResponse.setCode("200");
+                emptyResponse.setMessage("No data");
+                emptyResponse.setData(new YonRefundListResponse.PageData());
+                return emptyResponse;
+            }
+
+            YonRefundListResponse response = objectMapper.readValue(respStr, YonRefundListResponse.class);
+
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite refund list API warning: {} - {}", response.getCode(), response.getMessage());
+            }
+
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryRefundList", e);
+            throw new RuntimeException("YonSuite API Error", e);
         }
     }
 }

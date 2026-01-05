@@ -5,6 +5,9 @@
 
 FROM node:20-alpine
 
+# 安装 bash（Alpine 默认只有 sh）
+RUN apk add --no-cache bash
+
 WORKDIR /app
 
 # 复制依赖配置
@@ -19,4 +22,4 @@ COPY . .
 EXPOSE 15175
 
 # 运行开发服务器，监听所有 IP
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev:vite", "--", "--host", "0.0.0.0"]

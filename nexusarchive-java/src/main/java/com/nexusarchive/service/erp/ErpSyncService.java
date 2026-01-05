@@ -237,6 +237,10 @@ public class ErpSyncService {
                 && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
             return ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
                     .syncPaymentFiles(dtoConfig, startDate, endDate);
+        } else if ("REFUND_FILE_SYNC".equals(scenario.getScenarioKey())
+                && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
+            return ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
+                    .syncRefundFiles(dtoConfig, startDate, endDate);
         } else {
             return adapter.syncVouchers(dtoConfig, startDate, endDate);
         }

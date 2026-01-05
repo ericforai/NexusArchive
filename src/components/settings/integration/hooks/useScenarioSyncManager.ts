@@ -1,4 +1,9 @@
-import { useState, useCallback } from 'react';
+// Input: React hooks, ErpScenario types, ERP API
+// Output: useScenarioSyncManager hook (state + actions)
+// Pos: src/components/settings/integration/hooks/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { ErpScenario, ErpSubInterface, SyncHistory } from '../../../../types';
 import { ScenarioSyncManagerState, ScenarioSyncManagerActions } from '../types';
@@ -30,9 +35,12 @@ export function useScenarioSyncManager(options: UseScenarioSyncManagerOptions) {
       const res = await erpApi.getScenarios(configId);
       if (res.code === 200) {
         setScenarios(res.data || []);
+      } else {
+        setScenarios([]);
       }
     } catch {
       toast.error('加载业务场景失败');
+      setScenarios([]);
     } finally {
       setLoading(false);
     }
@@ -55,9 +63,12 @@ export function useScenarioSyncManager(options: UseScenarioSyncManagerOptions) {
       const res = await erpApi.getSubInterfaces(scenarioId);
       if (res.code === 200) {
         setSubInterfaces(prev => ({ ...prev, [scenarioId]: res.data || [] }));
+      } else {
+        setSubInterfaces(prev => ({ ...prev, [scenarioId]: [] }));
       }
     } catch {
       console.error('加载子接口失败');
+      setSubInterfaces(prev => ({ ...prev, [scenarioId]: [] }));
     }
   }, [erpApi]);
 
@@ -66,9 +77,12 @@ export function useScenarioSyncManager(options: UseScenarioSyncManagerOptions) {
       const res = await erpApi.getSyncHistory(scenarioId);
       if (res.code === 200) {
         setSyncHistory(prev => ({ ...prev, [scenarioId]: res.data || [] }));
+      } else {
+        setSyncHistory(prev => ({ ...prev, [scenarioId]: [] }));
       }
     } catch {
       console.error('加载同步历史失败');
+      setSyncHistory(prev => ({ ...prev, [scenarioId]: [] }));
     }
   }, [erpApi]);
 
@@ -118,15 +132,29 @@ export function useScenarioSyncManager(options: UseScenarioSyncManagerOptions) {
     syncing,
   };
 
-  const actions: ScenarioSyncManagerActions = {
-    loadScenarios,
-    toggleScenarioExpansion,
-    loadSubInterfaces,
-    loadSyncHistory,
-    toggleHistoryView,
-    syncScenario,
-    syncAllScenarios,
-  };
+  // Use useMemo to stabilize actions reference and prevent infinite loops
+  const actions: ScenarioSyncManagerActions = useMemo(
+    () => ({
+      loadScenarios,
+      toggleScenarioExpansion,
+      loadSubInterfaces,
+      loadSyncHistory,
+      toggleHistoryView,
+      syncScenario,
+      syncAllScenarios,
+      setSyncing,
+    }),
+    [
+      loadScenarios,
+      toggleScenarioExpansion,
+      loadSubInterfaces,
+      loadSyncHistory,
+      toggleHistoryView,
+      syncScenario,
+      syncAllScenarios,
+      setSyncing,
+    ]
+  );
 
   return { state, actions };
 }

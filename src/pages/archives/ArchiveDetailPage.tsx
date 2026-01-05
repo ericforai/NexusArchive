@@ -5,13 +5,14 @@
  * 职责：提供全屏凭证详情视图，从 Drawer "展开到新页"功能触发
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Tabs, Breadcrumb } from 'antd';
 import type { VoucherDTO } from '../../components/voucher';
 import { VoucherMetadata, VoucherPreviewCanvas, OriginalDocumentPreview } from '../../components/voucher';
 import { useVoucherData } from './hooks/useVoucherData';
+import { archivesApi } from '../../api/archives';
 
 // Simulate row from URL param (in real implementation, fetch data by ID)
 const createMockRowFromId = (id: string): any => ({
@@ -26,6 +27,8 @@ export const ArchiveDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState<TabKey>('metadata');
+  const [archiveAttachments, setArchiveAttachments] = React.useState<any[]>([]);
+  const [attachmentsLoading, setAttachmentsLoading] = React.useState(false);
 
   // Simulate row from URL param
   const row = React.useMemo(() => (id ? createMockRowFromId(id) : null), [id]);
@@ -35,6 +38,28 @@ export const ArchiveDetailPage: React.FC = () => {
     row,
     enabled: !!id,
   });
+
+  // 获取已同步的附件关联数据（从数据库）
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchAttachments = async () => {
+      setAttachmentsLoading(true);
+      try {
+        const response = await archivesApi.getArchiveFiles(id);
+        if (response?.data) {
+          setArchiveAttachments(response.data);
+        }
+      } catch (error) {
+        console.error('获取档案附件失败:', error);
+        setArchiveAttachments([]);
+      } finally {
+        setAttachmentsLoading(false);
+      }
+    };
+
+    fetchAttachments();
+  }, [id]);
 
   const handleBack = () => {
     navigate(-1); // Go back to previous page
@@ -77,10 +102,20 @@ export const ArchiveDetailPage: React.FC = () => {
     },
     {
       key: 'attachments',
-      label: `关联附件${voucherData?.attachments && voucherData.attachments.length > 0 ? ` (${voucherData.attachments.length})` : ''}`,
+      label: `关联附件${archiveAttachments.length > 0 ? ` (${archiveAttachments.length})` : ''}`,
       children: (
         <div className="p-6">
-          <OriginalDocumentPreview files={voucherData?.attachments || []} />
+          {attachmentsLoading ? (
+            <div className="flex items-center justify-center h-64 text-slate-400">
+              <p>加载中...</p>
+            </div>
+          ) : archiveAttachments.length > 0 ? (
+            <OriginalDocumentPreview files={archiveAttachments} />
+          ) : (
+            <div className="flex items-center justify-center h-64 text-slate-400">
+              <p>暂无附件</p>
+            </div>
+          )}
         </div>
       ),
     },

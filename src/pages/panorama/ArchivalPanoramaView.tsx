@@ -3,14 +3,16 @@
 // Pos: src/pages/panorama/ArchivalPanoramaView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArchiveStructureTree } from './ArchiveStructureTree';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
 import { VoucherPlayer } from './VoucherPlayer';
 import { VoucherPreview } from '../../components/voucher';
-import { Maximize2, FileText, Receipt } from 'lucide-react';
+import { Maximize2, FileText, Receipt, CloudDownload } from 'lucide-react';
+import { Collapse, Button, List, Tag, Space, message } from 'antd';
+import { yonsuiteApi, type VoucherAttachment } from '../../api/yonsuite';
 
 interface ArchivalPanoramaViewProps {
     initialVoucherId?: string;
@@ -162,6 +164,11 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
     const [loading, setLoading] = useState(false);
     const [detailViewMode, setDetailViewMode] = useState<'detail' | 'voucher'>('detail');
 
+    // YonSuite attachments state
+    const [yonsuiteAttachments, setYonsuiteAttachments] = useState<VoucherAttachment[]>([]);
+    const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+    const [attachmentsFetched, setAttachmentsFetched] = useState(false);
+
     // 当 URL 参数变化时更新选中状态
     useEffect(() => {
         if (id) {
@@ -198,6 +205,41 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
         };
 
         detectSource();
+    }, [selectedVoucherId]);
+
+    // Fetch YonSuite attachments
+    const handleFetchYonsuiteAttachments = useCallback(async () => {
+        if (!selectedVoucherId) {
+            message.warning('需要凭证ID才能查询附件');
+            return;
+        }
+        setAttachmentsLoading(true);
+        try {
+            const configId = 1;
+            const response = await yonsuiteApi.queryVoucherAttachments(configId, [selectedVoucherId]);
+            if (response && response.data && response.data[selectedVoucherId]) {
+                setYonsuiteAttachments(response.data[selectedVoucherId]);
+                setAttachmentsFetched(true);
+                message.success(`查询到 ${response.data[selectedVoucherId].length} 个附件`);
+            } else {
+                setYonsuiteAttachments([]);
+                setAttachmentsFetched(true);
+                message.info('该凭证在 YonSuite 中没有附件');
+            }
+        } catch (error: any) {
+            console.error('查询 YonSuite 附件失败:', error);
+            message.error(`查询失败: ${error.message || '未知错误'}`);
+            setYonsuiteAttachments([]);
+            setAttachmentsFetched(true);
+        } finally {
+            setAttachmentsLoading(false);
+        }
+    }, [selectedVoucherId]);
+
+    // Reset attachments state when voucher changes
+    useEffect(() => {
+        setAttachmentsFetched(false);
+        setYonsuiteAttachments([]);
     }, [selectedVoucherId]);
 
     const isOriginal = sourceType === 'ORIGINAL';
@@ -269,12 +311,85 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
                         </div>
                     </div>
                     {/* Content */}
-                    <div className="flex-1 overflow-hidden">
-                        {detailViewMode === 'detail' ? (
-                            <VoucherDetailCard voucherId={selectedVoucherId} sourceType={sourceType} />
-                        ) : (
-                            <VoucherPreviewWrapper voucherId={selectedVoucherId} sourceType={sourceType} />
-                        )}
+                    <div className="flex-1 overflow-hidden flex flex-col">
+                        <div className="flex-1 overflow-auto">
+                            {detailViewMode === 'detail' ? (
+                                <VoucherDetailCard voucherId={selectedVoucherId} sourceType={sourceType} />
+                            ) : (
+                                <VoucherPreviewWrapper voucherId={selectedVoucherId} sourceType={sourceType} />
+                            )}
+                        </div>
+                        {/* YonSuite Attachments Panel */}
+                        <div className="border-t border-slate-100 bg-white shrink-0">
+                            <Collapse
+                                size="small"
+                                items={[
+                                    {
+                                        key: 'yonsuite-attachments',
+                                        label: (
+                                            <Space size={4}>
+                                                <CloudDownload size={14} />
+                                                <span>YonSuite 附件</span>
+                                                {attachmentsFetched && (
+                                                    <Tag color={yonsuiteAttachments.length > 0 ? 'success' : 'default'}>
+                                                        {yonsuiteAttachments.length}
+                                                    </Tag>
+                                                )}
+                                            </Space>
+                                        ),
+                                        extra: !attachmentsFetched ? (
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                icon={<CloudDownload size={12} />}
+                                                loading={attachmentsLoading}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleFetchYonsuiteAttachments();
+                                                }}
+                                            >
+                                                查询
+                                            </Button>
+                                        ) : null,
+                                        children: (
+                                            <div className="max-h-48 overflow-auto">
+                                                {attachmentsLoading ? (
+                                                    <div className="flex items-center justify-center h-24 text-slate-400">
+                                                        加载中...
+                                                    </div>
+                                                ) : yonsuiteAttachments.length > 0 ? (
+                                                    <List
+                                                        size="small"
+                                                        dataSource={yonsuiteAttachments}
+                                                        renderItem={(item) => (
+                                                            <List.Item className="!py-2 !px-0">
+                                                                <div className="flex items-center justify-between w-full">
+                                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                        <FileText size={14} className="shrink-0 text-slate-400" />
+                                                                        <span className="text-sm text-slate-700 truncate">
+                                                                            {item.fileName || item.name || '未命名'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <Tag color="blue" className="shrink-0">
+                                                                        {(item.fileSize || 0) > 0
+                                                                            ? `${(item.fileSize / 1024).toFixed(1)} KB`
+                                                                            : '-'}
+                                                                    </Tag>
+                                                                </div>
+                                                            </List.Item>
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center h-24 text-slate-400 text-sm">
+                                                        暂无附件
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                            />
+                        </div>
                     </div>
                 </div>
 

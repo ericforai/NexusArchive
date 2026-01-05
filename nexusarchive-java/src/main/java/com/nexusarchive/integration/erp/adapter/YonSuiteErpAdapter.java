@@ -31,7 +31,7 @@ import java.util.*;
     description = "用友新一代企业云服务平台，支持凭证、附件同步和 Webhook 推送",
     version = "1.0.0",
     erpType = "YONSUITE",
-    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "WEBHOOK"},
+    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "WEBHOOK", "REFUND_FILE_SYNC"},
     supportsWebhook = true,
     priority = 10
 )
@@ -43,6 +43,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     private final YonSuiteClient yonSuiteClient;
     private final YonPaymentFileService yonPaymentFileService;
     private final com.nexusarchive.integration.yonsuite.service.YonPaymentListService yonPaymentListService;
+    private final com.nexusarchive.integration.yonsuite.service.YonRefundListService yonRefundListService;
 
     @Override
     public String getIdentifier() {
@@ -103,6 +104,15 @@ public class YonSuiteErpAdapter implements ErpAdapter {
         paymentFileSync.setIsActive(true);
         paymentFileSync.setSyncStrategy("MANUAL");
         scenarios.add(paymentFileSync);
+
+        // 付款退款单文件获取场景
+        com.nexusarchive.entity.ErpScenario refundFileSync = new com.nexusarchive.entity.ErpScenario();
+        refundFileSync.setScenarioKey("REFUND_FILE_SYNC");
+        refundFileSync.setName("付款退款单文件获取");
+        refundFileSync.setDescription("从YonSuite获取付款退款单文件");
+        refundFileSync.setIsActive(true);
+        refundFileSync.setSyncStrategy("MANUAL");
+        scenarios.add(refundFileSync);
 
         return scenarios;
     }
@@ -527,6 +537,152 @@ public class YonSuiteErpAdapter implements ErpAdapter {
             log.error("Sync Payment Files Logic Error", e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * 同步付款退款单文件（按日期范围查询）
+     *
+     * 此方法会先查询指定日期范围内的退款单列表，获取 ID 后再同步文件
+     *
+     * @param config ERP 配置
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 同步结果
+     */
+    public List<VoucherDTO> syncRefundFiles(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        log.info("执行付款退款单文件同步: startDate={}, endDate={}", startDate, endDate);
+
+        // 1. 查询退款单 ID 列表
+        List<String> refundIds = yonRefundListService.queryRefundIds(config, startDate, endDate);
+
+        if (refundIds.isEmpty()) {
+            log.info("未查询到任何退款单 ID，跳过文件同步");
+            return Collections.emptyList();
+        }
+
+        log.info("查询到 {} 个退款单 ID，开始同步文件", refundIds.size());
+
+        // 2. 调用现有的同步方法
+        return syncRefundFiles(config, refundIds);
+    }
+
+    /**
+     * 同步付款退款单文件
+     *
+     * 注意：此方法需要提供退款单的 fileId 列表
+     * 实际使用时需要先从 YonSuite 查询退款单列表获取 fileId
+     *
+     * @param config ERP 配置
+     * @param fileIds 退款单文件 ID 列表（最多20个）
+     * @return 同步结果
+     */
+    public List<VoucherDTO> syncRefundFiles(ErpConfig config, List<String> fileIds) {
+        log.info("执行付款退款单文件同步: fileIds={}", fileIds);
+
+        if (fileIds == null || fileIds.isEmpty()) {
+            log.info("没有提供文件 ID，跳过退款单文件同步");
+            return Collections.emptyList();
+        }
+
+        // YonSuite API 限制单次最多20个文件ID
+        if (fileIds.size() > 20) {
+            log.warn("文件 ID 数量超过限制(20)，将分批处理");
+            List<VoucherDTO> allResults = new ArrayList<>();
+
+            // 分批处理
+            for (int i = 0; i < fileIds.size(); i += 20) {
+                int end = Math.min(i + 20, fileIds.size());
+                List<String> batch = fileIds.subList(i, end);
+                allResults.addAll(syncRefundFilesBatch(config, batch));
+            }
+
+            return allResults;
+        }
+
+        return syncRefundFilesBatch(config, fileIds);
+    }
+
+    /**
+     * 批量同步退款单文件（单批次）
+     */
+    private List<VoucherDTO> syncRefundFilesBatch(ErpConfig config, List<String> fileIds) {
+        List<VoucherDTO> results = new ArrayList<>();
+
+        try {
+            // 1. 获取 access token
+            String appKey = config.getAppKey();
+            String appSecret = config.getAppSecret();
+            String accessToken = null;
+
+            if (appKey != null && !appKey.isEmpty() && appSecret != null && !appSecret.isEmpty()) {
+                try {
+                    accessToken = yonSuiteClient.getTokenWithCredentials(appKey, appSecret);
+                    log.info("使用配置中的 appKey 获取 token 成功");
+                } catch (Exception e) {
+                    log.warn("使用配置中的 appKey 获取 token 失败: {}", e.getMessage());
+                }
+            }
+
+            // 2. 构建请求
+            com.nexusarchive.integration.yonsuite.dto.YonRefundFileRequest request =
+                new com.nexusarchive.integration.yonsuite.dto.YonRefundFileRequest();
+            request.setFileId(fileIds);
+
+            // 3. 调用 YonSuite API
+            com.nexusarchive.integration.yonsuite.dto.YonRefundFileResponse response =
+                yonSuiteClient.queryRefundFileUrls(accessToken, request);
+
+            if (response == null || !"200".equals(response.getCode()) || response.getData() == null) {
+                log.warn("查询退款单文件失败: {}", response != null ? response.getMessage() : "null response");
+                return Collections.emptyList();
+            }
+
+            // 4. 解析结果
+            for (com.nexusarchive.integration.yonsuite.dto.YonRefundFileResponse.RefundFileInfo fileInfo : response.getData()) {
+                VoucherDTO dto = VoucherDTO.builder()
+                        .voucherId(fileInfo.getId())
+                        .voucherNo(fileInfo.getFileName())
+                        .summary("付款退款单文件: " + fileInfo.getFileName())
+                        .accountPeriod(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                        .status("REFUND_FILE")
+                        .debitTotal(BigDecimal.ZERO)
+                        .creditTotal(BigDecimal.ZERO)
+                        .build();
+
+                // 保存下载 URL 到附件
+                List<AttachmentDTO> attachments = new ArrayList<>();
+                AttachmentDTO attachment = AttachmentDTO.builder()
+                        .attachmentId(fileInfo.getId())
+                        .fileName(fileInfo.getFileName())
+                        .downloadUrl(fileInfo.getDownLoadUrl())
+                        .fileType(getFileExtension(fileInfo.getFileName()))
+                        .build();
+                attachments.add(attachment);
+                dto.setAttachments(attachments);
+
+                results.add(dto);
+                log.info("成功获取退款单文件: fileName={}, downloadUrl={}",
+                        fileInfo.getFileName(), fileInfo.getDownLoadUrl());
+            }
+
+            log.info("付款退款单文件同步完成: 共 {} 个文件", results.size());
+            return results;
+
+        } catch (Exception e) {
+            log.error("同步付款退款单文件异常", e);
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 从文件名提取扩展名
+     */
+    private String getFileExtension(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return "";
+        }
+        int lastDot = fileName.lastIndexOf('.');
+        return lastDot > 0 ? fileName.substring(lastDot + 1) : "";
     }
 
     @Override

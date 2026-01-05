@@ -121,10 +121,96 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "所有主要包都有 @ModuleManifest 注解。" >> $GITHUB_STEP_SUMMARY
 
+  frontend-architecture-check:
+    name: 前端架构检查
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行 dependency-cruiser 架构检查
+        run: |
+          echo "## 🔍 前端架构依赖检查" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 运行架构检查
+          if npm run check:arch 2>&1 | tee arch-output.txt; then
+            echo "✅ 无架构违规" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "所有模块依赖关系符合架构规则。" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ 架构违规检测" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat arch-output.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: 验证 integration 模块 manifest
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Integration 模块 Manifest 验证" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          MANIFEST_FILE="src/components/settings/integration/manifest.config.ts"
+
+          if [ ! -f "$MANIFEST_FILE" ]; then
+            echo "❌ 缺少 manifest.config.ts" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # 验证 manifest 必需字段
+          if grep -q "id:" "$MANIFEST_FILE" && \
+             grep -q "owner:" "$MANIFEST_FILE" && \
+             grep -q "publicApi:" "$MANIFEST_FILE" && \
+             grep -q "canImportFrom:" "$MANIFEST_FILE"; then
+            echo "✅ Manifest 字段完整" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- 模块 ID: $(grep 'id:' "$MANIFEST_FILE" | head -1 | cut -d"'" -f2)" >> $GITHUB_STEP_SUMMARY
+            echo "- 所有者: $(grep 'owner:' "$MANIFEST_FILE" | head -1 | cut -d"'" -f2)" >> $GITHUB_STEP_SUMMARY
+            echo "- 公共 API: $(grep 'publicApi:' "$MANIFEST_FILE" | head -1 | cut -d"'" -f2)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Manifest 缺少必需字段" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: 生成依赖图（可选）
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 依赖关系图" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "生成 integration 模块依赖图..." >> $GITHUB_STEP_SUMMARY
+
+          npm run check:arch:graph -- \
+            --focus src/components/settings/integration/ \
+            --output-type dot \
+            | dot -T svg -o integration-deps.svg
+
+          echo "依赖图已生成: \`integration-deps.svg\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: 上传依赖图
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-dependencies
+          path: integration-deps.svg
+
   architecture-score:
     name: 架构健康评分
     runs-on: ubuntu-latest
-    needs: [architecture-test, module-manifest-check]
+    needs: [architecture-test, module-manifest-check, frontend-architecture-check]
     if: always()
 
     steps:
@@ -137,22 +223,37 @@ jobs:
 
           # 根据作业结果调整评分
           if [ "${{ needs.architecture-test.result }}" != "success" ]; then
-            score=$((score - 30))
+            score=$((score - 25))
           fi
 
           if [ "${{ needs.module-manifest-check.result }}" != "success" ]; then
-            score=$((score - 20))
+            score=$((score - 15))
+          fi
+
+          if [ "${{ needs.frontend-architecture-check.result }}" != "success" ]; then
+            score=$((score - 25))
+          fi
+
+          # 确保评分不低于 0
+          if [ $score -lt 0 ]; then
+            score=0
           fi
 
           echo "## 📊 架构健康评分: $score/100" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 检查结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 后端架构测试: ${{ needs.architecture-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 模块清单检查: ${{ needs.module-manifest-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 前端架构检查: ${{ needs.frontend-architecture-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ $score -eq 100 ]; then
-            echo "🎉 **优秀** - 架构健康状况完美！" >> $GITHUB_STEP_SUMMARY
+            echo "### 🎉 **优秀** - 架构健康状况完美！" >> $GITHUB_STEP_SUMMARY
           elif [ $score -ge 80 ]; then
-            echo "✅ **良好** - 架构健康状况良好，有小幅改进空间" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ **良好** - 架构健康状况良好，有小幅改进空间" >> $GITHUB_STEP_SUMMARY
           elif [ $score -ge 60 ]; then
-            echo "⚠️ **警告** - 架构存在一些问题，需要关注" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ **警告** - 架构存在一些问题，需要关注" >> $GITHUB_STEP_SUMMARY
           else
-            echo "🚨 **严重** - 架构健康状况堪忧，需要立即改进" >> $GITHUB_STEP_SUMMARY
+            echo "### 🚨 **严重** - 架构健康状况堪忧，需要立即改进" >> $GITHUB_STEP_SUMMARY
           fi

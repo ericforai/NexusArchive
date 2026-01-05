@@ -643,6 +643,112 @@ public List<VoucherDTO> syncVouchers(ErpConfig config, LocalDate startDate, Loca
 }
 ```
 
+## Configuration-Driven Approach (YonSuite)
+
+YonSuite 集成采用**配置驱动**架构，而非代码生成：
+
+### 核心思想
+
+```
+数据库配置 → 读取配置 → 调用 API → 存储结果
+```
+
+### 优势
+
+| 对比维度 | 配置驱动 | 代码生成 |
+|---------|---------|---------|
+| 实现复杂度 | 低（一次实现） | 中（需生成代码） |
+| 维护成本 | 低（修改配置即可） | 中（需重新生成） |
+| 扩展性 | 高（通用适配器） | 中（每个 API 需生成） |
+| 部署 | 无需重新部署 | 需要重新编译 |
+
+### Quick Start
+
+**1. 配置数据库**：
+
+```sql
+INSERT INTO sys_erp_config (
+    erp_name, erp_type, config_json, is_active
+) VALUES (
+    '用友 YonSuite',
+    'yonsuite',
+    '{"appKey":"your_app_key","appSecret":"your_app_secret"}',
+    true
+);
+```
+
+**2. 调用同步接口**：
+
+```bash
+# 获取 Token
+TOKEN=$(curl -X POST "http://localhost:19090/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}' \
+  | jq -r '.data.token')
+
+# 同步销售出库单（最近 7 天）
+curl -X POST "http://localhost:19090/api/yonsuite/generic/salesout/sync/recent?configId=1" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**3. 查看同步结果**：
+
+```sql
+SELECT
+    id,
+    business_doc_no,
+    erp_voucher_no,
+    doc_date,
+    pre_archive_status,
+    source_system
+FROM arc_file_content
+WHERE source_system = 'YonSuite'
+ORDER BY doc_date DESC;
+```
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   GenericYonSuiteController                  │
+│  POST /api/yonsuite/generic/salesout/sync/recent             │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   GenericYonSuiteAdapter                     │
+│  - 读取 ErpConfig (appKey, appSecret)                        │
+│  - 获取 access_token (自动缓存)                              │
+│  - 分页调用 YonSuite API                                     │
+│  - 映射数据                                                 │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       SalesOutMapper                          │
+│  - API 响应 → ArcFileContent                                │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    ArcFileContent 表                         │
+│  (电子凭证池)                                                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 支持的接口
+
+| 接口 | 路径 | 说明 |
+|------|------|------|
+| 销售出库单列表 | `/api/yonsuite/generic/salesout/sync` | 同步列表数据 |
+| 快速同步 | `/api/yonsuite/generic/salesout/sync/recent` | 最近 7 天 |
+| 销售出库单详情 | `/api/yonsuite/generic/salesout/detail` | 单条详情 |
+
+### 参考文档
+
+- [YonSuite 集成模块文档](/nexusarchive-java/src/main/java/com/nexusarchive/integration/yonsuite/README.md)
+- [YonSuite Service Layer](/nexusarchive-java/src/main/java/com/nexusarchive/integration/yonsuite/service/README.md)
+
 ## Architecture Tests
 
 ArchUnit automatically verifies:

@@ -12,6 +12,7 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './routes';
 import { ToastContainer } from './components/common/ToastContainer';
+import { DocumentationGuardProvider } from './components/dev/DocumentationGuardProvider';
 
 // Architecture Defense: Initialize runtime introspection in development
 if (import.meta.env.DEV) {
@@ -26,6 +27,8 @@ const router = createBrowserRouter(routes);
 const App: React.FC = () => {
   return (
     <ToastContainer>
+      {/* 文档守卫：开发环境自动监控代码变更，提醒更新文档 */}
+      <DocumentationGuardProvider />
       <RouterProvider router={router} />
     </ToastContainer>
   );

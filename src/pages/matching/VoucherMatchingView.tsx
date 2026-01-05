@@ -6,15 +6,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Card, Button, Tag, Table, Space, Alert, Progress,
-    Modal, message, Spin, Empty, Collapse
+    Modal, message, Spin, Empty, Collapse, List, Tooltip
 } from 'antd';
 import {
     CheckCircleOutlined, ExclamationCircleOutlined,
-    ClockCircleOutlined, SyncOutlined, FileSearchOutlined, FileTextOutlined
+    ClockCircleOutlined, SyncOutlined, FileSearchOutlined, FileTextOutlined,
+    LinkOutlined, DownloadOutlined, CloudDownloadOutlined
 } from '@ant-design/icons';
 import { matchingApi, MatchResult, LinkResult, ScoredCandidate } from '../../api/matching';
 import { VoucherPreview, VoucherDTO } from '../../components/voucher';
 import { archivesApi } from '../../api/archives';
+import { yonsuiteApi } from '../../api/yonsuite';
+import type { VoucherAttachment } from '../../api/yonsuite';
 import './VoucherMatchingView.css';
 
 interface VoucherMatchingViewProps {
@@ -36,6 +39,11 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
         link: LinkResult | null;
     }>({ visible: false, link: null });
     const [voucherData, setVoucherData] = useState<VoucherDTO | null>(null);
+
+    // YonSuite 附件相关状态
+    const [yonsuiteAttachments, setYonsuiteAttachments] = useState<Record<string, VoucherAttachment[]>>({});
+    const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+    const [attachmentsFetched, setAttachmentsFetched] = useState(false);
 
     // 用于跟踪组件是否已卸载，防止内存泄漏
     const mountedRef = useRef(true);
@@ -197,6 +205,40 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
             setMatching(false);
         }
     }, [voucherId, onMatchComplete, clearPollingTimeout, loadExistingResult]);
+
+    // 查询 YonSuite 附件
+    const handleFetchYonsuiteAttachments = useCallback(async () => {
+        if (!voucherId) {
+            message.warning('需要凭证ID才能查询附件');
+            return;
+        }
+
+        setAttachmentsLoading(true);
+        try {
+            // TODO: 这里需要根据实际配置获取 configId
+            // 目前暂时使用默认值 1，实际应该从系统配置或档案记录中获取
+            const configId = 1;
+
+            // 调用 YonSuite API 查询附件
+            const response = await yonsuiteApi.queryVoucherAttachments(configId, [voucherId]);
+
+            if (response && response.data && response.data[voucherId]) {
+                setYonsuiteAttachments({ [voucherId]: response.data[voucherId] });
+                setAttachmentsFetched(true);
+                message.success(`查询到 ${response.data[voucherId].length} 个附件`);
+            } else {
+                setYonsuiteAttachments({ [voucherId]: [] });
+                setAttachmentsFetched(true);
+                message.info('该凭证在 YonSuite 中没有附件');
+            }
+        } catch (error: any) {
+            console.error('查询 YonSuite 附件失败:', error);
+            message.error(`查询失败: ${error.message || '未知错误'}`);
+            setYonsuiteAttachments({ [voucherId]: [] });
+        } finally {
+            setAttachmentsLoading(false);
+        }
+    }, [voucherId]);
 
     // 确认关联
     const handleConfirm = useCallback(async (link: LinkResult, candidate: ScoredCandidate) => {
@@ -379,6 +421,81 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                             children: (
                                 <div className="bg-white p-4">
                                     <VoucherPreview data={voucherData} layout="vertical" size="compact" />
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'yonsuite-attachments',
+                            label: (
+                                <Space>
+                                    <CloudDownloadOutlined />
+                                    <span>YonSuite 附件</span>
+                                    {attachmentsFetched && (
+                                        <Tag color={yonsuiteAttachments[voucherId || '']?.length ? 'success' : 'default'}>
+                                            {yonsuiteAttachments[voucherId || '']?.length || 0} 个
+                                        </Tag>
+                                    )}
+                                </Space>
+                            ),
+                            extra: !attachmentsFetched ? (
+                                <Button
+                                    size="small"
+                                    type="primary"
+                                    icon={<CloudDownloadOutlined />}
+                                    loading={attachmentsLoading}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleFetchYonsuiteAttachments();
+                                    }}
+                                >
+                                    查询附件
+                                </Button>
+                            ) : null,
+                            children: (
+                                <div className="bg-white p-4">
+                                    {attachmentsLoading ? (
+                                        <div className="text-center py-8">
+                                            <Spin tip="查询中..." />
+                                        </div>
+                                    ) : !attachmentsFetched ? (
+                                        <Empty description="点击「查询附件」从 YonSuite 获取凭证附件" />
+                                    ) : yonsuiteAttachments[voucherId || '']?.length ? (
+                                        <List
+                                            dataSource={yonsuiteAttachments[voucherId || '']}
+                                            renderItem={(attachment: VoucherAttachment) => (
+                                                <List.Item
+                                                    actions={[
+                                                        <Tooltip title="下载">
+                                                            <Button
+                                                                type="text"
+                                                                size="small"
+                                                                icon={<DownloadOutlined />}
+                                                                onClick={() => {
+                                                                    message.info(`下载 ${attachment.fileName}`);
+                                                                    // TODO: 实现下载功能
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    ]}
+                                                >
+                                                    <List.Item.Meta
+                                                        avatar={<LinkOutlined className="text-blue-500" />}
+                                                        title={attachment.fileName || attachment.name}
+                                                        description={
+                                                            <Space size="middle">
+                                                                <span>大小: {(attachment.fileSize / 1024).toFixed(2)} KB</span>
+                                                                {attachment.fileExtension && (
+                                                                    <Tag>{attachment.fileExtension}</Tag>
+                                                                )}
+                                                            </Space>
+                                                        }
+                                                    />
+                                                </List.Item>
+                                            )}
+                                        />
+                                    ) : (
+                                        <Empty description="该凭证在 YonSuite 中没有附件" />
+                                    )}
                                 </div>
                             ),
                         },

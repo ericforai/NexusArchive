@@ -329,7 +329,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 fileType={selectedFile.fileType?.toLowerCase()}
                                 fileName={selectedFile.fileName}
                                 className="h-full"
-                                token={token}
+                                token={token ?? undefined}
                             />
                         </div>
                     </div>

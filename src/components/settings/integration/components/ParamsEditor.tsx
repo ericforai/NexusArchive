@@ -1,3 +1,8 @@
+// Input: ParamsEditor State/Actions interfaces
+// Output: ParamsEditor modal component
+// Pos: src/components/settings/integration/components/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 // src/components/settings/integration/components/ParamsEditor.tsx
 
 import React from 'react';

@@ -27,7 +27,8 @@ module.exports = {
           '(^|/)[.][^/]+[.](?:js|cjs|mjs|ts|cts|mts|json)$',                  // dot files
           '[.]d[.]ts$',                                                       // TypeScript declaration files
           '(^|/)tsconfig[.]json$',                                            // TypeScript config
-          '(^|/)(?:babel|webpack)[.]config[.](?:js|cjs|mjs|ts|cts|mts|json)$' // other configs
+          '(^|/)(?:babel|webpack)[.]config[.](?:js|cjs|mjs|ts|cts|mts|json)$', // other configs
+          '(^|/)manifest[.]config[.]ts$'                                      // J1 Self-Description manifests
         ]
       },
       to: {},
@@ -394,6 +395,123 @@ module.exports = {
       to: {
         path: '^\\.\\.[\\/\\\\].*\\.\\.[\\/\\\\]',
         dependencyTypes: ['local']
+      }
+    },
+
+    // ============================================================
+    // Batch Upload Module Rules
+    // J2: Self-Check - Batch upload API architecture validation
+    // ============================================================
+
+    {
+      name: 'batch-upload-api-no-internal-import',
+      comment:
+        'Batch upload API internal implementation cannot be imported directly. ' +
+        'Use the public API (index.ts) instead. ' +
+        'See: src/api/batchUpload.ts',
+      severity: 'error',
+      from: {
+        path: '^src/(?!api/batch/)'
+      },
+      to: {
+        path: '^src/api/batch/.*',
+        pathNot: [
+          '^src/api/batch/index\\.ts$',
+          '^src/api/batch/.*\\.d\\.ts$'  // TypeScript definitions
+        ]
+      }
+    },
+
+    {
+      name: 'batch-upload-restrict-deps',
+      comment:
+        'Batch upload API can only import declared dependencies. ' +
+        'CanImportFrom: src/types.ts, src/api/client, src/utils, axios, antd' +
+        'See: src/api/batchUpload.ts',
+      severity: 'error',
+      from: {
+        path: '^src/api/batch'
+      },
+      to: {
+        path: '^src/',
+        dependencyTypes: ['local'],
+        pathNot: [
+          '^src/api/client\\.ts$',
+          '^src/types\\.ts$',
+          '^src/utils/',
+          '^src/components/',
+          '^src/hooks/'
+        ]
+      }
+    },
+
+    // ============================================================
+    // Integration Settings Module Rules
+    // J2: Self-Check - Module-specific architecture validation
+    // ============================================================
+
+    {
+      name: 'integration-settings-no-internal-import',
+      comment:
+        'Integration Settings internal implementation cannot be imported directly. ' +
+        'Use the public API (index.ts) instead. ' +
+        'See: src/components/settings/integration/manifest.config.ts',
+      severity: 'error',
+      from: {
+        path: '^src/(?!components/settings/integration/)'
+      },
+      to: {
+        path: '^src/components/settings/integration/(hooks|components)/(?!index\\.ts).*',
+        pathNot: '^src/components/settings/integration/(hooks|components)/index\\.ts$'
+      }
+    },
+
+    {
+      name: 'integration-settings-restrict-deps',
+      comment:
+        'Integration Settings module can only import dependencies declared in manifest. ' +
+        'CanImportFrom: react, antd, lucide-react, react-hot-toast, src/types.ts, src/api/**' +
+        'See: src/components/settings/integration/manifest.config.ts',
+      severity: 'error',
+      from: {
+        path: '^src/components/settings/integration/'
+      },
+      to: {
+        path: '^src/',
+        dependencyTypes: ['local'],
+        pathNot: [
+          '^src/types\\.ts$',
+          '^src/api/',
+          '^src/components/settings/integration/'
+        ]
+      }
+    },
+
+    {
+      name: 'integration-settings-no-db',
+      comment:
+        'Integration Settings (UI layer) must not directly import database models or mappers. ' +
+        'Use API layer instead. See: src/components/settings/integration/manifest.config.ts',
+      severity: 'error',
+      from: {
+        path: '^src/components/settings/integration/'
+      },
+      to: {
+        path: '^src/(store|models|entities|mappers)/'
+      }
+    },
+
+    {
+      name: 'integration-settings-test-only-in-tests',
+      comment:
+        'Test utilities must not be imported from production code. ' +
+        'Keep test dependencies in __tests__ directories only.',
+      severity: 'error',
+      from: {
+        path: '^src/components/settings/integration/(?!__tests__|hooks/__tests__|components/__tests__)/'
+      },
+      to: {
+        path: '^src/components/settings/integration/.*__tests__/'
       }
     }
   ],

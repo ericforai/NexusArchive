@@ -61,6 +61,7 @@ public class ApiIntent {
         ATTACHMENT,          // 附件
         ACCOUNT_BALANCE,     // 科目余额
         SALES_OUT,           // 销售出库
+        REFUND,              // 退款单
         UNKNOWN
     }
 

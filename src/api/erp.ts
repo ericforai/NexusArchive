@@ -132,6 +132,18 @@ export const erpApi = {
         return response.data;
     },
 
+    // Alias for triggerSync - used by scenario sync manager hook
+    syncScenario: async (scenarioId: number, params?: any): Promise<ApiResponse<void>> => {
+        const response = await client.post<ApiResponse<void>>(`/erp/scenario/${scenarioId}/sync`, params || {});
+        return response.data;
+    },
+
+    // Batch sync all scenarios for a config
+    syncAllScenarios: async (configId: number): Promise<ApiResponse<void>> => {
+        const response = await client.post<ApiResponse<void>>(`/erp/config/${configId}/sync-all`, {});
+        return response.data;
+    },
+
     // Sub-Interfaces
     getSubInterfaces: async (scenarioId: number): Promise<ApiResponse<ErpSubInterface[]>> => {
         const response = await client.get<ApiResponse<ErpSubInterface[]>>(`/erp/scenario/${scenarioId}/interfaces`);

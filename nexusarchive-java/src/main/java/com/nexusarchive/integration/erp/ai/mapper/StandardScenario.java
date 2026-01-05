@@ -51,6 +51,10 @@ public enum StandardScenario {
                    ApiIntent.OperationType.QUERY,
                    ApiIntent.BusinessObject.ACCOUNT_BALANCE),
 
+    REFUND_FILE_SYNC("refundFileSync", "付款退款单文件获取",
+                      ApiIntent.OperationType.QUERY,
+                      ApiIntent.BusinessObject.REFUND),
+
     UNKNOWN("unknown", "未知场景",
             ApiIntent.OperationType.QUERY,
             ApiIntent.BusinessObject.UNKNOWN);

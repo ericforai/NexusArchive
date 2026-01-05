@@ -16,3 +16,6 @@ export { usePermissions, usePermissionsQuery } from './usePermissions';
 // 集成设置相关 hooks
 export { useMonitoring } from './useMonitoring';
 export { useReconciliation } from './useReconciliation';
+
+// 开发辅助 hooks
+export { useDocumentationGuard, useDocReminder } from './useDocumentationGuard';

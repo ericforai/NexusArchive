@@ -57,7 +57,18 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     configManager.actions.loadConfigs();
   }, [configManager.actions]);
 
-  // Load scenarios when active config changes
+  // Load scenarios for all configs after configs are loaded
+  useEffect(() => {
+    const configs = configManager.state.configs;
+    if (configs.length > 0 && scenarioManager.state.scenarios.length === 0) {
+      // Load scenarios for all configs
+      configs.forEach(config => {
+        scenarioManager.actions.loadScenarios(config.id);
+      });
+    }
+  }, [configManager.state.configs, scenarioManager.actions, scenarioManager.state.scenarios.length]);
+
+  // Also load scenarios when active config changes (for backward compatibility)
   useEffect(() => {
     if (configManager.state.activeConfigId) {
       scenarioManager.actions.loadScenarios(configManager.state.activeConfigId);

@@ -49,3 +49,5 @@ export const ActivationPage: React.FC = () => {
         </div>
     );
 };
+
+export default ActivationPage;

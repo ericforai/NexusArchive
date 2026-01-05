@@ -185,11 +185,23 @@ export default defineConfig(({ mode }) => {
         '@store': path.resolve(__dirname, './src/store'),
         '@utils': path.resolve(__dirname, './src/utils'),
       },
-      // 强制使用单一版本的 React 和 React Router，解决 "Cannot read properties of null (reading 'useContext')" 问题
-      dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
+      // 强制使用单一版本的 React、React Router 和 Zustand，解决 "Cannot read properties of null (reading 'useContext')" 问题
+      dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom', 'zustand'],
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'zustand', 'react-router-dom'],
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'zustand',
+        'react-router-dom',
+        'react-router',
+        '@tanstack/react-query',
+        'antd',
+        '@ant-design/icons',
+        'lucide-react',
+      ],
+      force: true, // 强制重新预构建，确保使用单一 React 副本
     },
     test: {
       globals: true,

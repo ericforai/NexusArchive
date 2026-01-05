@@ -114,17 +114,21 @@ public class ErpAdaptationController {
     public ResponseEntity<ApiResponse> adaptAndDeployErp(
             @RequestParam("files") List<MultipartFile> files,
             @RequestParam("erpType") String erpType,
-            @RequestParam("erpName") String erpName
+            @RequestParam("erpName") String erpName,
+            @RequestParam(value = "targetConfigId", required = false) Long targetConfigId,
+            @RequestParam(value = "fileName", required = false) String fileName
     ) {
         try {
-            log.info("收到 ERP 适配+自动部署请求: erpType={}, erpName={}, fileCount={}",
-                erpType, erpName, files.size());
+            log.info("收到 ERP 适配+自动部署请求: erpType={}, erpName={}, fileCount={}, targetConfigId={}",
+                erpType, erpName, files.size(), targetConfigId);
 
             // 构建请求
             AdaptationRequest request = AdaptationRequest.builder()
                 .erpType(erpType)
                 .erpName(erpName)
                 .apiFiles(files)
+                .targetConfigId(targetConfigId)
+                .fileName(fileName)
                 .build();
 
             // 执行适配+自动部署

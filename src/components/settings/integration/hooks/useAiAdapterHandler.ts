@@ -1,6 +1,11 @@
+// Input: React hooks, File API, AI API
+// Output: useAiAdapterHandler hook (state + actions)
+// Pos: src/components/settings/integration/hooks/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 // src/components/settings/integration/hooks/useAiAdapterHandler.ts
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { AiAdapterState, AiAdapterActions } from '../types';
 
@@ -96,14 +101,25 @@ export function useAiAdapterHandler(options: UseAiAdapterHandlerOptions) {
     selectedTargetConfigId,
   };
 
-  const actions: AiAdapterActions = {
-    openAiAdapter,
-    closeAiAdapter,
-    uploadFiles,
-    removeFile,
-    generatePreview,
-    adaptToConfig,
-  };
+  // Use useMemo to stabilize actions reference and prevent infinite loops
+  const actions: AiAdapterActions = useMemo(
+    () => ({
+      openAiAdapter,
+      closeAiAdapter,
+      uploadFiles,
+      removeFile,
+      generatePreview,
+      adaptToConfig,
+    }),
+    [
+      openAiAdapter,
+      closeAiAdapter,
+      uploadFiles,
+      removeFile,
+      generatePreview,
+      adaptToConfig,
+    ]
+  );
 
   return { state, actions };
 }

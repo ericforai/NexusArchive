@@ -3,12 +3,14 @@
 // Pos: src/pages/panorama/VoucherPreviewDrawer.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React from 'react';
-import { Drawer, Button, Tag } from 'antd';
-import { FileText, X, Maximize2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Drawer, Button, Tag, Collapse, List, Space, message, Spin, Empty } from 'antd';
+import { FileText, X, Fullscreen, CloudDownload, Link, Download } from 'lucide-react';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
 import { useNavigate } from 'react-router-dom';
+import { yonsuiteApi } from '../../api/yonsuite';
+import type { VoucherAttachment } from '../../api/yonsuite';
 
 interface VoucherPreviewDrawerProps {
     voucherId: string | null;
@@ -19,6 +21,52 @@ interface VoucherPreviewDrawerProps {
 export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ voucherId, open, onClose }) => {
     const navigate = useNavigate();
 
+    // DEBUG: 在控制台打印版本标记
+    React.useEffect(() => {
+        console.log('[VoucherPreviewDrawer] Component loaded - VERSION 2025-01-05-12:10');
+        if (voucherId) {
+            console.log('[VoucherPreviewDrawer] Current voucherId:', voucherId);
+        }
+    }, [voucherId]);
+
+    // YonSuite 附件相关状态
+    const [attachments, setAttachments] = useState<VoucherAttachment[]>([]);
+    const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+    const [attachmentsFetched, setAttachmentsFetched] = useState(false);
+
+    // 查询 YonSuite 附件
+    const handleFetchAttachments = async () => {
+        if (!voucherId) return;
+
+        setAttachmentsLoading(true);
+        try {
+            const configId = 1; // TODO: 从系统配置获取
+            const response = await yonsuiteApi.queryVoucherAttachments(configId, [voucherId]);
+
+            if (response && response.data && response.data[voucherId]) {
+                setAttachments(response.data[voucherId]);
+                setAttachmentsFetched(true);
+                message.success(`查询到 ${response.data[voucherId].length} 个附件`);
+            } else {
+                setAttachments([]);
+                setAttachmentsFetched(true);
+                message.info('该凭证在 YonSuite 中没有附件');
+            }
+        } catch (error: any) {
+            console.error('查询 YonSuite 附件失败:', error);
+            message.error(`查询失败: ${error.message || '未知错误'}`);
+            setAttachments([]);
+        } finally {
+            setAttachmentsLoading(false);
+        }
+    };
+
+    // 当 voucherId 变化时重置附件状态
+    useEffect(() => {
+        setAttachments([]);
+        setAttachmentsFetched(false);
+    }, [voucherId]);
+
     const handleFullScreen = () => {
         if (voucherId) {
             navigate(`/system/panorama/${voucherId}`);
@@ -28,6 +76,7 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
 
     return (
         <Drawer
+            style={{ background: '#ff0000' }}
             title={
                 <div className="flex items-center justify-between w-full pr-8">
                     <div className="flex items-center gap-2">
@@ -49,7 +98,7 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                 <div className="flex items-center gap-2">
                     <Button
                         type="text"
-                        icon={<Maximize2 size={16} />}
+                        icon={<Fullscreen size={16} />}
                         onClick={handleFullScreen}
                         className="text-slate-500 hover:text-emerald-600"
                     >
@@ -62,14 +111,112 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
         >
             {voucherId ? (
                 <div className="flex h-full bg-white">
-                    {/* Left: Metadata Details (Minimalist) */}
+                    {/* DEBUG: 明显的红色调试标记 */}
+                    <div className="fixed top-20 right-10 bg-red-600 text-white px-4 py-2 rounded-lg z-50 font-bold">
+                        🔴 DEBUG - VoucherPreviewDrawer v2025-01-05
+                    </div>
+                    {/* Left: Metadata Details + YonSuite Attachments */}
                     <div className="w-[320px] shrink-0 h-full border-r border-slate-100 bg-white overflow-y-auto">
+                        {/* Voucher Detail Card */}
                         <VoucherDetailCard
                             voucherId={voucherId}
                             sourceType="ORIGINAL"
                             compact={true}
                             hideEntries={true}
                         />
+
+                        {/* YonSuite Attachments */}
+                        <div className="border-t border-slate-100 bg-red-50">
+                            <Collapse
+                                defaultActiveKey={[]}
+                                items={[
+                                    {
+                                        key: 'yonsuite-attachments',
+                                        label: (
+                                            <Space>
+                                                <CloudDownload size={14} />
+                                                <span>YonSuite 附件</span>
+                                                {attachmentsFetched && (
+                                                    <Tag color={attachments.length ? 'success' : 'default'}>
+                                                        {attachments.length}
+                                                    </Tag>
+                                                )}
+                                            </Space>
+                                        ),
+                                        extra: !attachmentsFetched ? (
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                icon={<CloudDownload size={12} />}
+                                                loading={attachmentsLoading}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleFetchAttachments();
+                                                }}
+                                            >
+                                                查询
+                                            </Button>
+                                        ) : null,
+                                        children: (
+                                            <div className="p-2">
+                                                {attachmentsLoading ? (
+                                                    <div className="text-center py-4">
+                                                        <Spin size="small" tip="查询中..." />
+                                                    </div>
+                                                ) : !attachmentsFetched ? (
+                                                    <Empty
+                                                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                        description="查询附件"
+                                                    />
+                                                ) : attachments.length > 0 ? (
+                                                    <List
+                                                        size="small"
+                                                        dataSource={attachments}
+                                                        renderItem={(attachment: VoucherAttachment) => (
+                                                            <List.Item
+                                                                className="!px-2 !py-1"
+                                                                actions={[
+                                                                    <Button
+                                                                        type="text"
+                                                                        size="small"
+                                                                        icon={<Download size={12} />}
+                                                                        onClick={() => {
+                                                                            message.info(`下载 ${attachment.fileName}`);
+                                                                            // TODO: 实现下载功能
+                                                                        }}
+                                                                    />
+                                                                ]}
+                                                            >
+                                                                <List.Item.Meta
+                                                                    avatar={<Link size={12} className="text-blue-500" />}
+                                                                    title={
+                                                                        <span className="text-xs truncate max-w-[180px]" title={attachment.fileName || attachment.name}>
+                                                                            {attachment.fileName || attachment.name}
+                                                                        </span>
+                                                                    }
+                                                                    description={
+                                                                        <span className="text-xs text-slate-400">
+                                                                            {(attachment.fileSize / 1024).toFixed(1)} KB
+                                                                        </span>
+                                                                    }
+                                                                />
+                                                            </List.Item>
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <Empty
+                                                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                        description="暂无附件"
+                                                    />
+                                                )}
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                                bordered={false}
+                                size="small"
+                            />
+                        </div>
                     </div>
 
                     {/* Right: File Preview (Direct) */}

@@ -1,4 +1,9 @@
-import { useState, useCallback } from 'react';
+// Input: React hooks, ErpConfig types, ERP API
+// Output: useConnectorModal hook (state + actions)
+// Pos: src/components/settings/integration/hooks/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { ErpConfig } from '../../../../types';
 import { ConnectorModalState, ConnectorModalActions } from '../types';
@@ -144,16 +149,29 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
     testing,
   };
 
-  const actions: ConnectorModalActions = {
-    openModal,
-    closeModal,
-    updateForm,
-    addAccbookCode,
-    removeAccbookCode,
-    detectErpType,
-    testConnection,
-    saveConfig,
-  };
+  // Use useMemo to stabilize actions reference and prevent infinite loops
+  const actions: ConnectorModalActions = useMemo(
+    () => ({
+      openModal,
+      closeModal,
+      updateForm,
+      addAccbookCode,
+      removeAccbookCode,
+      detectErpType,
+      testConnection,
+      saveConfig,
+    }),
+    [
+      openModal,
+      closeModal,
+      updateForm,
+      addAccbookCode,
+      removeAccbookCode,
+      detectErpType,
+      testConnection,
+      saveConfig,
+    ]
+  );
 
   return { state, actions };
 }

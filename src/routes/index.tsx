@@ -33,6 +33,7 @@ const OCRProcessingView = lazy(() => import('../pages/pre-archive/OCRProcessingV
 const AbnormalDataView = lazy(() => import('../pages/pre-archive/AbnormalDataView'));
 const OriginalVoucherListView = lazy(() => import('../pages/archives/OriginalVoucherListView'));
 const OnlineReceptionView = lazy(() => import('../pages/collection/OnlineReceptionView'));
+const BatchUploadView = lazy(() => import('../pages/collection/BatchUploadView'));
 const VolumeManagement = lazy(() => import('../pages/operations/VolumeManagement'));
 const ArchiveApprovalView = lazy(() => import('../pages/operations/ArchiveApprovalView'));
 const OpenAppraisalView = lazy(() => import('../pages/operations/OpenAppraisalView'));
@@ -170,7 +171,7 @@ export const routes: RouteObject[] = [
             { path: 'collection', element: <ArchiveListPage routeConfig="collection" /> },
             { path: 'collection/online', element: withSuspense(OnlineReceptionView) },
             { path: 'collection/scan', element: <ArchiveListPage routeConfig="scan" /> },
-            { path: 'collection/upload', element: <ArchiveListPage routeConfig="collection" /> },
+            { path: 'collection/upload', element: withSuspense(BatchUploadView) },
 
             // ========== 档案管理 (Repository) ==========
             { path: 'archive', element: <ArchiveListPage routeConfig="view" /> },

@@ -3,8 +3,6 @@
 // Pos: src/pages/collection/FourNatureReportView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Shield, FileCheck, Lock, Eye, Printer, X, Loader2 } from 'lucide-react';
 

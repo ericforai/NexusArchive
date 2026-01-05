@@ -1,4 +1,9 @@
-import { useState, useCallback } from 'react';
+// Input: React hooks, IntegrationDiagnosisResult types, ERP API
+// Output: useIntegrationDiagnosis hook (state + actions)
+// Pos: src/components/settings/integration/hooks/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { DiagnosisState, DiagnosisActions } from '../types';
 
@@ -44,10 +49,14 @@ export function useIntegrationDiagnosis(options: UseIntegrationDiagnosisOptions)
     result,
   };
 
-  const actions: DiagnosisActions = {
-    startDiagnosis,
-    closeDiagnosis,
-  };
+  // Use useMemo to stabilize actions reference and prevent infinite loops
+  const actions: DiagnosisActions = useMemo(
+    () => ({
+      startDiagnosis,
+      closeDiagnosis,
+    }),
+    [startDiagnosis, closeDiagnosis]
+  );
 
   return { state, actions };
 }

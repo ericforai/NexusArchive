@@ -1,3 +1,8 @@
+// Input: ErpScenario types, State/Actions interfaces
+// Output: ScenarioCard UI component
+// Pos: src/components/settings/integration/components/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 // src/components/settings/integration/components/ScenarioCard.tsx
 
 import React from 'react';
@@ -15,6 +20,14 @@ interface ScenarioCardProps {
 
 export function ScenarioCard({ scenario, state, actions, onOpenParams, onViewHistory }: ScenarioCardProps) {
   const { expandedScenarios, subInterfaces, syncHistory, showHistoryFor, syncing } = state;
+
+  // DEBUG: Log syncing state
+  console.log('[ScenarioCard DEBUG]', {
+    scenarioId: scenario.id,
+    scenarioName: scenario.name,
+    syncingValue: syncing,
+    isSyncing: syncing === scenario.id
+  });
 
   const isExpanded = expandedScenarios.has(scenario.id);
   const hasHistory = showHistoryFor === scenario.id;
