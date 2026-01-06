@@ -5,10 +5,8 @@
 
 package com.nexusarchive.service.erp;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.entity.ArcFileContent;
-import com.nexusarchive.entity.ArcFileMetadataIndex;
-import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.SyncHistory;
@@ -17,31 +15,32 @@ import com.nexusarchive.integration.erp.adapter.ErpAdapter;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.integration.erp.dto.VoucherDTO;
 import com.nexusarchive.mapper.ArcFileContentMapper;
-import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ErpScenarioMapper;
 import com.nexusarchive.mapper.SyncHistoryMapper;
 import com.nexusarchive.service.AuditLogService;
-import com.nexusarchive.service.VoucherPdfGeneratorService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * ERP 同步执行服务
  * <p>
- * 负责执行 ERP 场景同步，包括数据获取、转换、保存和 PDF 生成。
+ * 负责执行 ERP 场景同步，协调数据获取、转换、保存等流程。
  * </p>
+ *
+ * <p>具体实现已委托给：</p>
+ * <ul>
+ *   <li>{@link ErpConfigDtoBuilder} - 配置 DTO 构建</li>
+ *   <li>{@link VoucherFetcher} - 凭证数据获取</li>
+ *   <li>{@link VoucherPersistenceService} - 凭证持久化</li>
+ *   <li>{@link SyncDateRangeExtractor} - 日期范围提取</li>
+ * </ul>
  */
 @Service
 @RequiredArgsConstructor
@@ -51,17 +50,18 @@ public class ErpSyncService {
     private final ErpScenarioMapper erpScenarioMapper;
     private final ErpConfigMapper erpConfigMapper;
     private final ErpAdapterFactory erpAdapterFactory;
-    private final ArcFileContentMapper arcFileContentMapper;
-    private final ArcFileMetadataIndexMapper arcFileMetadataIndexMapper;
     private final SyncHistoryMapper syncHistoryMapper;
     private final ArchiveMapper archiveMapper;
-    private final VoucherPdfGeneratorService pdfGeneratorService;
-    private final ObjectMapper objectMapper;
     private final AuditLogService auditLogService;
-    private final ErpMappingEngine mappingEngine;
+    private final ArcFileContentMapper arcFileContentMapper;
 
-    @Value("${archive.root.path:./data/archives}")
-    private String archiveRootPath;
+    // 提取的服务
+    private final ErpConfigDtoBuilder configDtoBuilder;
+    private final VoucherFetcher voucherFetcher;
+    private final VoucherPersistenceService voucherPersistence;
+    private final SyncDateRangeExtractor dateRangeExtractor;
+    private final ErpMappingEngine mappingEngine;
+    private final ObjectMapper objectMapper;
 
     /**
      * 执行场景同步
@@ -79,171 +79,71 @@ public class ErpSyncService {
 
         log.info("触发同步场景: {} (Operator: {}, IP: {})", scenario.getName(), operatorId, clientIp);
 
-        // 0. 创建并初始化同步历史记录
+        // 创建并初始化同步历史记录
+        SyncHistory history = createSyncHistory(scenarioId, operatorId, clientIp, scenario.getParamsJson());
+
+        int totalFetched = 0;
+        int savedCount = 0;
+
+        try {
+            // 获取配置和适配器
+            ErpConfig entityConfig = getAndValidateConfig(scenario);
+            ErpAdapter adapter = erpAdapterFactory.getAdapter(entityConfig.getErpType());
+            com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig = configDtoBuilder.buildDtoConfig(entityConfig);
+
+            // 确定同步时间范围
+            SyncDateRangeExtractor.DateRange dateRange = dateRangeExtractor.extractDateRange(scenario);
+
+            // 调用适配器同步数据
+            log.info("调用适配器同步数据: {} - {}", dateRange.startDate(), dateRange.endDate());
+            List<VoucherDTO> vouchers = voucherFetcher.fetchVouchers(adapter, dtoConfig, scenario,
+                    dateRange.startDate(), dateRange.endDate());
+
+            totalFetched = vouchers != null ? vouchers.size() : 0;
+
+            // 保存数据到预归档库
+            if (vouchers != null && !vouchers.isEmpty()) {
+                savedCount = processVouchers(vouchers, scenario, entityConfig, adapter, dateRange.startDate());
+            }
+
+            // 更新状态和历史
+            updateSuccessStatus(scenario, history, totalFetched, savedCount, dateRange);
+
+        } catch (Exception e) {
+            log.error("同步失败", e);
+            updateFailureStatus(scenario, history, e);
+        } finally {
+            erpScenarioMapper.updateById(scenario);
+            syncHistoryMapper.updateById(history);
+            recordAuditLog(scenario, history, scenarioId, operatorId, clientIp);
+        }
+    }
+
+    /**
+     * 创建同步历史记录
+     */
+    private SyncHistory createSyncHistory(Long scenarioId, String operatorId, String clientIp, String paramsJson) {
         SyncHistory history = new SyncHistory();
         history.setScenarioId(scenarioId);
         history.setSyncStartTime(LocalDateTime.now());
         history.setStatus("RUNNING");
         history.setOperatorId(operatorId);
         history.setClientIp(clientIp);
-        history.setSyncParams(scenario.getParamsJson());
+        history.setSyncParams(paramsJson);
         history.setCreatedTime(LocalDateTime.now());
         syncHistoryMapper.insert(history);
-
-        int totalFetched = 0;
-        int savedCount = 0;
-
-        try {
-            // 1. 获取配置和适配器
-            ErpConfig entityConfig = erpConfigMapper.selectById(scenario.getConfigId());
-            if (entityConfig == null || entityConfig.getIsActive() != 1) {
-                throw new RuntimeException("关联的 ERP 配置已禁用或不存在");
-            }
-            ErpAdapter adapter = erpAdapterFactory.getAdapter(entityConfig.getErpType());
-
-            // 转换 Entity -> DTO
-            com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig = buildDtoConfig(entityConfig);
-
-            // 2. 确定同步时间范围
-            SyncDateRange dateRange = extractDateRange(scenario);
-            LocalDate startDate = dateRange.startDate;
-            LocalDate endDate = dateRange.endDate;
-
-            // 3. 调用适配器同步
-            log.info("调用适配器同步数据: {} - {}", startDate, endDate);
-            List<VoucherDTO> vouchers = fetchVouchers(adapter, dtoConfig, scenario, startDate, endDate);
-
-            totalFetched = vouchers != null ? vouchers.size() : 0;
-
-            // 4. 保存数据到预归档库
-            if (vouchers != null && !vouchers.isEmpty()) {
-                savedCount = processVouchers(vouchers, scenario, entityConfig, adapter, startDate, endDate);
-            }
-
-            // 5. 更新状态和历史
-            scenario.setLastSyncTime(LocalDateTime.now());
-            scenario.setLastSyncStatus("SUCCESS");
-            String msg = String.format("同步成功: 获取 %d 条，其中新增 %d 条 (%s至%s)",
-                    totalFetched, savedCount, startDate, endDate);
-            scenario.setLastSyncMsg(msg);
-
-            history.setStatus("SUCCESS");
-            history.setSyncEndTime(LocalDateTime.now());
-            history.setTotalCount(totalFetched);
-            history.setSuccessCount(savedCount);
-            history.setFailCount(totalFetched - savedCount);
-
-        } catch (Exception e) {
-            log.error("同步失败", e);
-            scenario.setLastSyncTime(LocalDateTime.now());
-            scenario.setLastSyncStatus("FAIL");
-            scenario.setLastSyncMsg("同步异常: " + e.getMessage());
-
-            history.setStatus("FAIL");
-            history.setSyncEndTime(LocalDateTime.now());
-            history.setErrorMessage(e.getMessage());
-        } finally {
-            erpScenarioMapper.updateById(scenario);
-            syncHistoryMapper.updateById(history);
-
-            // 记录合规审计日志 (GB/T 39362)
-            recordAuditLog(scenario, history, scenarioId, operatorId, clientIp);
-        }
+        return history;
     }
 
     /**
-     * 构建 ERP 配置 DTO
+     * 获取并验证 ERP 配置
      */
-    private com.nexusarchive.integration.erp.dto.ErpConfig buildDtoConfig(ErpConfig entityConfig) {
-        com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig = new com.nexusarchive.integration.erp.dto.ErpConfig();
-        dtoConfig.setId(String.valueOf(entityConfig.getId()));
-        dtoConfig.setName(entityConfig.getName());
-        dtoConfig.setAdapterType(entityConfig.getErpType());
-
-        // 解析 configJson
-        if (entityConfig.getConfigJson() != null) {
-            cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(entityConfig.getConfigJson());
-            dtoConfig.setBaseUrl(json.getStr("baseUrl"));
-
-            String appKey = json.getStr("appKey");
-            if (appKey == null || appKey.isEmpty()) {
-                appKey = json.getStr("clientId");
-            }
-            dtoConfig.setAppKey(appKey);
-
-            String appSecret = json.getStr("appSecret");
-            if (appSecret == null || appSecret.isEmpty()) {
-                appSecret = json.getStr("clientSecret");
-            }
-            // 使用 SM4 解密 (如果是明文则原样返回)
-            dtoConfig.setAppSecret(com.nexusarchive.util.SM4Utils.decrypt(appSecret));
-            dtoConfig.setAccbookCode(json.getStr("accbookCode"));
-
-            // 解析多组织代码列表
-            cn.hutool.json.JSONArray accbookCodesArray = json.getJSONArray("accbookCodes");
-            if (accbookCodesArray != null && !accbookCodesArray.isEmpty()) {
-                List<String> codes = new java.util.ArrayList<>();
-                for (int i = 0; i < accbookCodesArray.size(); i++) {
-                    codes.add(accbookCodesArray.getStr(i));
-                }
-                dtoConfig.setAccbookCodes(codes);
-            }
-
-            dtoConfig.setExtraConfig(entityConfig.getConfigJson());
+    private ErpConfig getAndValidateConfig(ErpScenario scenario) {
+        ErpConfig entityConfig = erpConfigMapper.selectById(scenario.getConfigId());
+        if (entityConfig == null || entityConfig.getIsActive() != 1) {
+            throw new RuntimeException("关联的 ERP 配置已禁用或不存在");
         }
-
-        return dtoConfig;
-    }
-
-    /**
-     * 提取同步日期范围
-     */
-    private SyncDateRange extractDateRange(ErpScenario scenario) {
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = LocalDate.of(2020, 1, 1);
-
-        if (scenario.getParamsJson() != null) {
-            try {
-                cn.hutool.json.JSONObject params = cn.hutool.json.JSONUtil.parseObj(scenario.getParamsJson());
-                String startStr = params.getStr("startDate");
-                String endStr = params.getStr("endDate");
-                if (cn.hutool.core.util.StrUtil.isNotEmpty(startStr)) {
-                    startDate = LocalDate.parse(startStr);
-                }
-                if (cn.hutool.core.util.StrUtil.isNotEmpty(endStr)) {
-                    endDate = LocalDate.parse(endStr);
-                }
-            } catch (Exception paramEx) {
-                log.warn("解析场景参数失败，使用默认值: {}", paramEx.getMessage());
-            }
-        }
-
-        return new SyncDateRange(startDate, endDate);
-    }
-
-    /**
-     * 调用适配器获取凭证数据
-     */
-    private List<VoucherDTO> fetchVouchers(ErpAdapter adapter,
-                                           com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig,
-                                           ErpScenario scenario,
-                                           LocalDate startDate,
-                                           LocalDate endDate) {
-        if ("COLLECTION_FILE_SYNC".equals(scenario.getScenarioKey())
-                && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
-            return ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
-                    .syncCollectionFiles(dtoConfig, startDate, endDate);
-        } else if ("PAYMENT_FILE_SYNC".equals(scenario.getScenarioKey())
-                && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
-            return ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
-                    .syncPaymentFiles(dtoConfig, startDate, endDate);
-        } else if ("REFUND_FILE_SYNC".equals(scenario.getScenarioKey())
-                && adapter instanceof com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) {
-            return ((com.nexusarchive.integration.erp.adapter.YonSuiteErpAdapter) adapter)
-                    .syncRefundFiles(dtoConfig, startDate, endDate);
-        } else {
-            return adapter.syncVouchers(dtoConfig, startDate, endDate);
-        }
+        return entityConfig;
     }
 
     /**
@@ -253,210 +153,88 @@ public class ErpSyncService {
                                 ErpScenario scenario,
                                 ErpConfig entityConfig,
                                 ErpAdapter adapter,
-                                LocalDate startDate,
-                                LocalDate endDate) {
+                                java.time.LocalDate startDate) {
         int savedCount = 0;
 
         // 解析场景中的映射配置
-        cn.hutool.json.JSONObject mappingConfig = null;
-        if (scenario.getParamsJson() != null) {
-            cn.hutool.json.JSONObject params = cn.hutool.json.JSONUtil.parseObj(scenario.getParamsJson());
-            mappingConfig = params.getJSONObject("mapping");
-        }
+        cn.hutool.json.JSONObject mappingConfig = extractMappingConfig(scenario);
 
         for (VoucherDTO dto : vouchers) {
-            if (isVoucherExist(dto.getVoucherNo(), entityConfig.getId())) {
+            if (voucherPersistence.isVoucherExist(dto.getVoucherNo())) {
                 continue;
             }
 
-            ArcFileContent fileContent = mapToFileContent(dto, mappingConfig, adapter, startDate);
-            fileContent.setSourceSystem(adapter.getName());
+            // 先序列化源数据
+            String voucherJson = serializeVoucherJson(dto);
 
-            setStoragePath(fileContent);
-            setDefaultFields(fileContent, startDate);
+            // 保存凭证
+            ArcFileContent fileContent = voucherPersistence.saveVoucher(dto, mappingConfig, adapter, startDate, entityConfig.getName());
 
-            try {
-                String voucherJson = objectMapper.writeValueAsString(dto);
+            // 更新源数据（如果保存成功）
+            if (voucherJson != null && fileContent != null) {
                 fileContent.setSourceData(voucherJson);
-            } catch (Exception jsonEx) {
-                log.warn("序列化原始数据失败: {}", jsonEx.getMessage());
+                arcFileContentMapper.updateById(fileContent);
             }
 
-            arcFileContentMapper.insert(fileContent);
             savedCount++;
-
-            // 生成 PDF 文件
-            generatePdf(fileContent);
-
-            // 创建档案记录
-            Archive archive = createArchiveFromVoucher(dto, fileContent, entityConfig.getName());
-            archiveMapper.insert(archive);
-            log.info("创建档案记录: archiveCode={}, title={}", archive.getArchiveCode(), archive.getTitle());
-
-            // 保存元数据索引
-            saveMetadataIndex(fileContent, dto);
         }
 
         return savedCount;
     }
 
     /**
-     * 映射 DTO 到文件内容
+     * 提取映射配置
      */
-    private ArcFileContent mapToFileContent(VoucherDTO dto,
-                                            cn.hutool.json.JSONObject mappingConfig,
-                                            ErpAdapter adapter,
-                                            LocalDate startDate) {
-        if (mappingConfig != null) {
-            log.info("提取映射配置，执行动态字段映射...");
-            cn.hutool.json.JSONObject sourceJson = cn.hutool.json.JSONUtil.parseObj(dto);
-            return mappingEngine.mapToArcFileContent(sourceJson, mappingConfig);
-        } else {
-            return VoucherMapper.toArcFileContent(dto);
+    private cn.hutool.json.JSONObject extractMappingConfig(ErpScenario scenario) {
+        if (scenario.getParamsJson() != null) {
+            cn.hutool.json.JSONObject params = cn.hutool.json.JSONUtil.parseObj(scenario.getParamsJson());
+            return params.getJSONObject("mapping");
         }
+        return null;
     }
 
     /**
-     * 设置存储路径
+     * 序列化凭证为 JSON
      */
-    private void setStoragePath(ArcFileContent fileContent) {
-        if (fileContent.getStoragePath() == null || fileContent.getStoragePath().isEmpty()) {
-            String fondsCode = fileContent.getFondsCode() != null ? fileContent.getFondsCode() : "DEFAULT";
-            String fileName = fileContent.getFileName();
-            String storagePath = Paths.get(archiveRootPath, "pre-archive", fondsCode, fileName).toString();
-            fileContent.setStoragePath(storagePath);
-        }
-    }
-
-    /**
-     * 设置默认字段
-     */
-    private void setDefaultFields(ArcFileContent fileContent, LocalDate startDate) {
-        if (fileContent.getFondsCode() == null) {
-            fileContent.setFondsCode("DEFAULT");
-        }
-        if (fileContent.getFiscalYear() == null) {
-            fileContent.setFiscalYear(String.valueOf(startDate.getYear()));
-        }
-    }
-
-    /**
-     * 生成 PDF 文件
-     */
-    private void generatePdf(ArcFileContent fileContent) {
+    private String serializeVoucherJson(VoucherDTO dto) {
         try {
-            String voucherJson = fileContent.getSourceData();
-            if (voucherJson != null && !voucherJson.isEmpty()) {
-                pdfGeneratorService.generatePdfForPreArchive(fileContent.getId(), voucherJson);
-                log.info("PDF 生成成功: {}", fileContent.getErpVoucherNo());
-            }
-        } catch (Exception pdfEx) {
-            log.warn("PDF 生成失败，不影响同步: {}", pdfEx.getMessage());
+            return objectMapper.writeValueAsString(dto);
+        } catch (Exception jsonEx) {
+            log.warn("序列化原始数据失败: {}", jsonEx.getMessage());
+            return null;
         }
     }
 
     /**
-     * 保存元数据索引
+     * 更新成功状态
      */
-    private void saveMetadataIndex(ArcFileContent fileContent, VoucherDTO dto) {
-        BigDecimal amount = dto.getDebitTotal() != null ? dto.getDebitTotal() : dto.getCreditTotal();
-        if (amount != null) {
-            ArcFileMetadataIndex metadataIndex = ArcFileMetadataIndex.builder()
-                    .fileId(fileContent.getId())
-                    .totalAmount(amount)
-                    .invoiceNumber(dto.getVoucherNo())
-                    .issueDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : LocalDate.now())
-                    .parsedTime(LocalDateTime.now())
-                    .parserType("ERP_SYNC")
-                    .build();
-            arcFileMetadataIndexMapper.insert(metadataIndex);
-        }
+    private void updateSuccessStatus(ErpScenario scenario, SyncHistory history,
+                                     int totalFetched, int savedCount,
+                                     SyncDateRangeExtractor.DateRange dateRange) {
+        scenario.setLastSyncTime(LocalDateTime.now());
+        scenario.setLastSyncStatus("SUCCESS");
+        String msg = String.format("同步成功: 获取 %d 条，其中新增 %d 条 (%s至%s)",
+                totalFetched, savedCount, dateRange.startDate(), dateRange.endDate());
+        scenario.setLastSyncMsg(msg);
+
+        history.setStatus("SUCCESS");
+        history.setSyncEndTime(LocalDateTime.now());
+        history.setTotalCount(totalFetched);
+        history.setSuccessCount(savedCount);
+        history.setFailCount(totalFetched - savedCount);
     }
 
     /**
-     * 检查凭证是否已存在
+     * 更新失败状态
      */
-    private boolean isVoucherExist(String voucherNo, Long configId) {
-        // 精确查重：基于 erp_voucher_no 字段进行精确匹配
-        // 避免 LIKE 模糊匹配导致 "记-1" 错误匹配 "记-10", "记-11" 等
-        return arcFileContentMapper.selectCount(
-                new LambdaQueryWrapper<ArcFileContent>()
-                        .eq(ArcFileContent::getErpVoucherNo, voucherNo)) > 0;
-    }
+    private void updateFailureStatus(ErpScenario scenario, SyncHistory history, Exception e) {
+        scenario.setLastSyncTime(LocalDateTime.now());
+        scenario.setLastSyncStatus("FAIL");
+        scenario.setLastSyncMsg("同步异常: " + e.getMessage());
 
-    /**
-     * 从 ERP 凭证 DTO 创建 acc_archive 记录
-     * 使凭证在"凭证关联"页面可见，进入智能匹配流程
-     */
-    private Archive createArchiveFromVoucher(VoucherDTO dto, ArcFileContent fileContent, String sourceSystem) {
-        Archive archive = new Archive();
-        archive.setId(fileContent.getId()); // 使用相同 ID 便于关联
-
-        // 档号
-        archive.setArchiveCode(fileContent.getArchivalCode());
-
-        // 题名
-        String title = "会计凭证-" + dto.getVoucherNo();
-        if (dto.getSummary() != null && !dto.getSummary().isEmpty()) {
-            title = dto.getSummary();
-        }
-        archive.setTitle(title);
-
-        // 摘要
-        archive.setSummary(dto.getSummary());
-
-        // 分类号 (AC01 = 会计凭证)
-        archive.setCategoryCode("AC01");
-
-        // 年度
-        String fiscalYear = fileContent.getFiscalYear();
-        if (fiscalYear == null && dto.getVoucherDate() != null) {
-            fiscalYear = String.valueOf(dto.getVoucherDate().getYear());
-        }
-        if (fiscalYear == null) {
-            fiscalYear = String.valueOf(LocalDate.now().getYear());
-        }
-        archive.setFiscalYear(fiscalYear);
-
-        // 会计期间
-        if (dto.getAccountPeriod() != null) {
-            archive.setFiscalPeriod(dto.getAccountPeriod());
-        }
-
-        // 保管期限 (默认30年)
-        archive.setRetentionPeriod("30Y");
-
-        // 全宗号
-        archive.setFondsNo(fileContent.getFondsCode() != null ? fileContent.getFondsCode() : "DEFAULT");
-
-        // 立档单位
-        archive.setOrgName(sourceSystem);
-
-        // 金额
-        BigDecimal amount = dto.getDebitTotal() != null ? dto.getDebitTotal() : dto.getCreditTotal();
-        archive.setAmount(amount);
-
-        // 凭证日期
-        archive.setDocDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : LocalDate.now());
-
-        // 制单人
-        archive.setCreator(dto.getCreator());
-
-        // 状态: draft (待匹配)
-        archive.setStatus("draft");
-
-        // 唯一业务 ID (防重)
-        archive.setUniqueBizId(sourceSystem + "_" + dto.getVoucherId());
-
-        // 存储凭证分录到 customMetadata (供匹配引擎识别业务场景)
-        try {
-            String entriesJson = objectMapper.writeValueAsString(dto);
-            archive.setCustomMetadata(entriesJson);
-        } catch (Exception e) {
-            log.warn("序列化凭证分录失败: {}", e.getMessage());
-        }
-
-        return archive;
+        history.setStatus("FAIL");
+        history.setSyncEndTime(LocalDateTime.now());
+        history.setErrorMessage(e.getMessage());
     }
 
     /**
@@ -481,18 +259,5 @@ public class ErpSyncService {
                 auditDetails,
                 clientIp
         );
-    }
-
-    /**
-     * 同步日期范围
-     */
-    private static class SyncDateRange {
-        final LocalDate startDate;
-        final LocalDate endDate;
-
-        SyncDateRange(LocalDate startDate, LocalDate endDate) {
-            this.startDate = startDate;
-            this.endDate = endDate;
-        }
     }
 }

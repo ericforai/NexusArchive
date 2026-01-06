@@ -9,17 +9,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.ArcFileMetadataIndex;
 import com.nexusarchive.entity.Archive;
+import com.nexusarchive.engine.ErpMappingEngine;
 import com.nexusarchive.integration.erp.dto.VoucherDTO;
 import com.nexusarchive.integration.erp.adapter.ErpAdapter;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
-import com.nexusarchive.service.pdf.VoucherPdfGeneratorService;
+import com.nexusarchive.service.VoucherPdfGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.nio.file.Paths;
@@ -47,6 +47,7 @@ public class VoucherPersistenceService {
     private final ArchiveMapper archiveMapper;
     private final VoucherPdfGeneratorService pdfGeneratorService;
     private final VoucherMapper voucherMapper;
+    private final ErpMappingEngine mappingEngine;
 
     @Value("${archive.root.path:./data/archives}")
     private String archiveRootPath;
@@ -67,13 +68,12 @@ public class VoucherPersistenceService {
      * @param sourceSystemName 源系统名称
      * @return 保存的文件内容实体
      */
-    @Transactional
     public ArcFileContent saveVoucher(VoucherDTO dto,
                                       cn.hutool.json.JSONObject mappingConfig,
                                       ErpAdapter adapter,
                                       LocalDate startDate,
                                       String sourceSystemName) {
-        ArcFileContent fileContent = mapToFileContent(dto, mappingConfig, adapter, startDate);
+        ArcFileContent fileContent = mapToFileContent(dto, mappingConfig, startDate);
         fileContent.setSourceSystem(adapter.getName());
 
         setStoragePath(fileContent);
@@ -114,12 +114,11 @@ public class VoucherPersistenceService {
      */
     private ArcFileContent mapToFileContent(VoucherDTO dto,
                                             cn.hutool.json.JSONObject mappingConfig,
-                                            ErpAdapter adapter,
                                             LocalDate startDate) {
         if (mappingConfig != null) {
             log.info("提取映射配置，执行动态字段映射...");
             cn.hutool.json.JSONObject sourceJson = cn.hutool.json.JSONUtil.parseObj(dto);
-            return com.nexusarchive.engine.ErpMappingEngine.mapToArcFileContent(sourceJson, mappingConfig);
+            return mappingEngine.mapToArcFileContent(sourceJson, mappingConfig);
         } else {
             return voucherMapper.toArcFileContent(dto);
         }
