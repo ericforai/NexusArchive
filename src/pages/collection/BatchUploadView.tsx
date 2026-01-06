@@ -31,10 +31,11 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { message, Upload, Modal, Progress, Button, Select, Form, Input, Card, Row, Col, Statistic } from 'antd';
+import { message, Upload, Modal, Progress, Button, Select, Form, Input, Card, Row, Col, Statistic, Alert } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
 import { batchUploadApi, ArchivalCategoryLabels } from '../../api/batchUpload';
 import { useFondsStore } from '../../store/useFondsStore';
+import { ComplianceAlert } from './components/ComplianceAlert';
 
 const { Dragger } = Upload;
 
@@ -568,6 +569,9 @@ export const BatchUploadView: React.FC = () => {
         </Col>
       </Row>
 
+      {/* Compliance Alert */}
+      <ComplianceAlert className="mb-6" />
+
       {/* Overall Progress */}
       {step === 'upload' && (
         <Card className="mb-6">
@@ -622,21 +626,38 @@ export const BatchUploadView: React.FC = () => {
 
       {/* Actions for Complete Step */}
       {step === 'complete' && (
-        <div className="mt-6 flex justify-center gap-4">
-          <Button
-            type="primary"
-            icon={<ShieldCheck size={16} />}
-            onClick={handleRunCheck}
-            loading={runCheckMutation.isPending}
-          >
-            执行四性检测
-          </Button>
-          <Button onClick={() => navigate('/system/pre-archive/pool')}>
-            前往预归档库
-          </Button>
-          <Button danger onClick={handleCancelBatch}>
-            取消批次
-          </Button>
+        <div className="mt-6">
+          {/* Completion Summary */}
+          <Alert
+            type="success"
+            showIcon
+            className="mb-4"
+            message="上传完成！"
+            description="已为您创建档案记录，请在凭证关联页面匹配原始凭证。"
+          />
+
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-4">
+            <Button
+              type="primary"
+              onClick={() => navigate('/system/pre-archive/link')}
+            >
+              前往凭证关联
+            </Button>
+            <Button
+              icon={<ShieldCheck size={16} />}
+              onClick={handleRunCheck}
+              loading={runCheckMutation.isPending}
+            >
+              执行四性检测
+            </Button>
+            <Button onClick={() => navigate('/system/collection/upload')}>
+              继续上传
+            </Button>
+            <Button danger onClick={handleCancelBatch}>
+              取消批次
+            </Button>
+          </div>
         </div>
       )}
     </div>
