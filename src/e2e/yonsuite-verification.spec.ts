@@ -26,16 +26,14 @@ test.describe('YonSuite Scenarios - Database Verification', () => {
     const loginData = await loginResponse.json();
     const token = loginData.token;
 
-    // Step 2: Get scenarios for YonSuite (configId=1)
-    const scenariosResponse = await request.get(`${API_BASE}/api/erp/scenarios?configId=1`, {
+    // Step 2: Get scenarios for YonSuite (configId=1) - CORRECTED PATH
+    const scenariosResponse = await request.get(`${API_BASE}/erp/scenario/list/1`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     // Step 3: Verify response
     if (scenariosResponse.status() === 404) {
-      // API endpoint might not exist, log warning
-      console.warn('⚠️ API endpoint /api/erp/scenarios not found (404)');
-      console.warn('This is expected if backend routes are not yet implemented');
+      console.warn('⚠️ API endpoint /erp/scenario/list not found (404)');
       test.skip(true, 'API endpoint not implemented');
       return;
     }
@@ -44,8 +42,8 @@ test.describe('YonSuite Scenarios - Database Verification', () => {
     const scenarios = await scenariosResponse.json();
 
     // Step 4: Verify exactly 5 scenarios (after removing placeholders)
-    expect(scenarios.length).toBe(5);
-    console.log(`✅ Database has ${scenarios.length} scenarios (expected: 5)`);
+    expect(scenarios.data.length).toBe(5);
+    console.log(`✅ Database has ${scenarios.data.length} scenarios (expected: 5)`);
 
     // Step 5: Verify scenario keys
     const expectedKeys = [
@@ -56,7 +54,7 @@ test.describe('YonSuite Scenarios - Database Verification', () => {
       'REFUND_FILE_SYNC'
     ];
 
-    const actualKeys = scenarios.map((s: any) => s.scenario_key);
+    const actualKeys = scenarios.data.map((s: any) => s.scenario_key);
     for (const key of expectedKeys) {
       expect(actualKeys).toContain(key);
       console.log(`✅ Scenario ${key}: verified`);
@@ -118,7 +116,7 @@ test.describe('YonSuite Scenarios - Success Status Verification', () => {
     const loginData = await loginResponse.json();
     const token = loginData.token;
 
-    const scenariosResponse = await request.get(`${API_BASE}/api/erp/scenarios?configId=1`, {
+    const scenariosResponse = await request.get(`${API_BASE}/erp/scenario/list/1`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -128,7 +126,7 @@ test.describe('YonSuite Scenarios - Success Status Verification', () => {
     }
 
     const scenarios = await scenariosResponse.json();
-    const successScenarios = scenarios.filter((s: any) => s.last_sync_status === 'SUCCESS');
+    const successScenarios = scenarios.data.filter((s: any) => s.last_sync_status === 'SUCCESS');
 
     expect(successScenarios.length).toBeGreaterThan(0);
     console.log(`✅ Found ${successScenarios.length} scenarios with SUCCESS status`);
