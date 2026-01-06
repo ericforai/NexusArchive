@@ -1,6 +1,6 @@
 // src/components/settings/integration/components/ErpConfigCard.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Settings, Zap, Activity, ShieldCheck, Sliders, MoreHorizontal, ChevronRight } from 'lucide-react';
+import { Settings, Zap, Activity, ShieldCheck, MoreHorizontal, ChevronRight } from 'lucide-react';
 import { ErpConfig } from '@/types';
 import { ScenarioSummaryCard } from './ScenarioSummaryCard';
 import { ConnectionHealthBadge } from './ConnectionHealthBadge';
@@ -37,8 +37,6 @@ export function ErpConfigCard({
   onViewDetails
 }: ErpConfigCardProps) {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ name: config.name });
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,7 +79,7 @@ export function ErpConfigCard({
         {/* Action Bar - Grid layout */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <button
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => onConfig?.(config)}
             className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
           >
             <Settings size={14} className="text-gray-500 flex-shrink-0" />
@@ -133,17 +131,6 @@ export function ErpConfigCard({
               <button
                 role="menuitem"
                 onClick={() => {
-                  setIsEditing(true);
-                  setShowMoreMenu(false);
-                }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <Sliders size={14} className="text-gray-500" />
-                <span>编辑配置</span>
-              </button>
-              <button
-                role="menuitem"
-                onClick={() => {
                   onDelete?.(config.id);
                   setShowMoreMenu(false);
                 }}
@@ -155,41 +142,6 @@ export function ErpConfigCard({
           )}
         </div>
       </div>
-
-      {/* Inline Edit Form */}
-      {isEditing && (
-        <div className="p-5 bg-blue-50 border-t border-blue-100" data-testid="inline-config-form">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">连接器名称</label>
-              <input
-                type="text"
-                value={editForm.name}
-                onChange={(e) => setEditForm({ name: e.target.value })}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="输入连接器名称"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  onConfig?.({ ...config, name: editForm.name });
-                  setIsEditing(false);
-                }}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                保存
-              </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Summary Section - Fixed Height */}
       <div className="border-t border-gray-100 p-5 space-y-3">
