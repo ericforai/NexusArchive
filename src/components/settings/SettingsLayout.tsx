@@ -37,12 +37,6 @@ export const SettingsLayout: React.FC = () => {
 
     return (
         <div className="min-h-full bg-slate-50">
-            {/* 页面标题 */}
-            <div className="bg-white border-b border-slate-200 px-8 py-6">
-                <h1 className="text-2xl font-bold text-slate-800">系统设置</h1>
-                <p className="text-slate-500 mt-1">配置全局参数、用户权限及安全策略</p>
-            </div>
-
             {/* Tab 导航 */}
             <div className="bg-white border-b border-slate-200 px-8">
                 <nav className="flex space-x-1 overflow-x-auto" aria-label="设置导航">
