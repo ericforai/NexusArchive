@@ -67,7 +67,7 @@ export const SettingsLayout: React.FC = () => {
             </div>
 
             {/* 子路由内容 */}
-            <div className="p-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="px-6 py-6 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <Outlet />
             </div>
         </div>

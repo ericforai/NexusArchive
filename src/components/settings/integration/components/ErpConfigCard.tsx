@@ -68,7 +68,7 @@ export function ErpConfigCard({
             className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
           >
             <Settings size={13} className="text-gray-500 flex-shrink-0" />
-            <span>配置中心</span>
+            <span className="whitespace-nowrap">配置中心</span>
           </button>
 
           <button
@@ -76,7 +76,7 @@ export function ErpConfigCard({
             className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-200 hover:text-blue-600 rounded-lg transition-colors"
           >
             <Zap size={13} className="text-blue-500 flex-shrink-0" />
-            <span>检查连接</span>
+            <span className="whitespace-nowrap">检查连接</span>
           </button>
 
           <button
@@ -84,7 +84,7 @@ export function ErpConfigCard({
             className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
           >
             <Activity size={13} className="text-white flex-shrink-0" />
-            <span>健康检查</span>
+            <span className="whitespace-nowrap">健康检查</span>
           </button>
 
           <button
@@ -92,7 +92,7 @@ export function ErpConfigCard({
             className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
           >
             <ShieldCheck size={13} className="text-emerald-600 flex-shrink-0" />
-            <span>账务核对</span>
+            <span className="whitespace-nowrap">账务核对</span>
           </button>
         </div>
       </div>
