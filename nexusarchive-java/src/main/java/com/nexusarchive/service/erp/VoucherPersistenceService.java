@@ -46,7 +46,6 @@ public class VoucherPersistenceService {
     private final ArcFileMetadataIndexMapper arcFileMetadataIndexMapper;
     private final ArchiveMapper archiveMapper;
     private final VoucherPdfGeneratorService pdfGeneratorService;
-    private final VoucherMapper voucherMapper;
     private final ErpMappingEngine mappingEngine;
 
     @Value("${archive.root.path:./data/archives}")
@@ -120,7 +119,7 @@ public class VoucherPersistenceService {
             cn.hutool.json.JSONObject sourceJson = cn.hutool.json.JSONUtil.parseObj(dto);
             return mappingEngine.mapToArcFileContent(sourceJson, mappingConfig);
         } else {
-            return voucherMapper.toArcFileContent(dto);
+            return VoucherMapper.toArcFileContent(dto);
         }
     }
 
