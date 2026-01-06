@@ -17,6 +17,9 @@ import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.service.BatchToArchiveService;
 import com.nexusarchive.service.CollectionBatchService;
 import com.nexusarchive.service.PreArchiveCheckService;
+import com.nexusarchive.service.collection.BatchFileStorageService;
+import com.nexusarchive.service.collection.BatchFileValidator;
+import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.util.FileHashUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,16 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -63,9 +58,9 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
     private final PreArchiveCheckService preArchiveCheckService;
     private final AuditLogService auditLogService;
     private final BatchToArchiveService batchToArchiveService;
-
-    private static final DateTimeFormatter BATCH_NO_FORMATTER =
-        DateTimeFormatter.ofPattern("yyyyMMdd");
+    private final BatchNumberGenerator batchNumberGenerator;
+    private final BatchFileValidator fileValidator;
+    private final BatchFileStorageService storageService;
 
     // ===== CollectionBatchService Implementation =====
 
@@ -75,7 +70,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         log.info("创建上传批次: userId={}, request={}", userId, request);
 
         // 1. 生成批次编号
-        String batchNo = generateBatchNo();
+        String batchNo = batchNumberGenerator.generateBatchNo();
 
         // 2. 创建批次记录
         CollectionBatch batch = CollectionBatch.builder()
@@ -113,7 +108,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             .batchId(batch.getId())
             .batchNo(batchNo)
             .status(batch.getStatus())
-            .uploadToken(generateUploadToken(batch.getId(), userId))
+            .uploadToken(batchNumberGenerator.generateUploadToken(batch.getId(), userId))
             .totalFiles(request.getTotalFiles())
             .uploadedFiles(0)
             .failedFiles(0)
@@ -149,8 +144,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         }
 
         // 3. 检查重复文件 (同一全宗、同一年度内)
-        // Use fondsCode as the identifier since fondsId may not be populated yet
-        CollectionBatchFile duplicate = batchFileMapper.findDuplicateByHash(
+        CollectionBatchFile duplicate = fileValidator.checkDuplicate(
             fileHash, batch.getFondsCode(), batch.getFiscalYear()
         );
         if (duplicate != null) {
@@ -160,7 +154,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         }
 
         // 4. 确定文件类型
-        String fileType = getFileType(file.getOriginalFilename());
+        String fileType = fileValidator.detectFileType(file.getOriginalFilename());
 
         // 5. 创建批次文件记录
         Long batchIdParam = batchId; // Rename to avoid lambda capture issue
@@ -188,7 +182,9 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         // 6. 保存文件到存储
         String fileId;
         try {
-            fileId = saveFileToStorage(file, batch, batchFile);
+            String fileExtension = fileValidator.getExtension(batchFile.getOriginalFilename());
+            fileId = storageService.saveFile(file, batch.getFondsCode(), batch.getFiscalYear(),
+                                           batch.getBatchNo(), fileExtension);
         } catch (Exception e) {
             log.error("保存文件失败", e);
             batchFile.setUploadStatus(CollectionBatchFile.STATUS_FAILED);
@@ -204,7 +200,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         }
 
         // 7. 创建 arc_file_content 记录
-        ArcFileContent arcFile = createArcFileContent(file, batch, batchFile, fileId, userId);
+        ArcFileContent arcFile = createArcFileContent(batchFile, batch, fileId);
         arcFileContentMapper.insert(arcFile);
 
         // 8. 创建档案记录（符合 DA/T 94-2022 元数据同步捕获要求）
@@ -390,59 +386,13 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     // ===== Private Helper Methods =====
 
-    private String generateBatchNo() {
-        String datePart = LocalDateTime.now().format(BATCH_NO_FORMATTER);
-        String randomPart = String.format("%03d", (int)(Math.random() * 1000));
-        return "COL-" + datePart + "-" + randomPart;
-    }
+    private ArcFileContent createArcFileContent(CollectionBatchFile batchFile, CollectionBatch batch,
+                                                 String fileId) {
+        String fileExtension = fileValidator.getExtension(batchFile.getOriginalFilename());
+        String storagePath = storageService.buildStoragePathString(
+            batch.getFondsCode(), batch.getFiscalYear(), batch.getBatchNo(), fileId, fileExtension
+        );
 
-    private String generateUploadToken(Long batchId, Long userId) {
-        // 简单的令牌生成 (生产环境应使用JWT)
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
-    private String getFileType(String filename) {
-        if (filename == null) return "UNKNOWN";
-        String ext = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-        return switch (ext) {
-            case "pdf" -> "PDF";
-            case "ofd" -> "OFD";
-            case "xml" -> "XML";
-            case "jpg", "jpeg" -> "JPG";
-            case "png" -> "PNG";
-            case "tif", "tiff" -> "TIFF";
-            default -> "UNKNOWN";
-        };
-    }
-
-    private String saveFileToStorage(MultipartFile file, CollectionBatch batch,
-                                      CollectionBatchFile batchFile) throws IOException {
-        // 构建存储路径: /tmp/nexusarchive/uploads/{fondsCode}/{fiscalYear}/{batchNo}/
-        String uploadDir = String.format("/tmp/nexusarchive/uploads/%s/%s/%s",
-            batch.getFondsCode(), batch.getFiscalYear(), batch.getBatchNo());
-        Path uploadPath = Paths.get(uploadDir);
-        Files.createDirectories(uploadPath);
-
-        // 生成唯一文件ID
-        String fileId = UUID.randomUUID().toString();
-        String fileExtension = getFileExtension(batchFile.getOriginalFilename());
-        String targetFileName = fileId + "." + fileExtension;
-        Path targetPath = uploadPath.resolve(targetFileName);
-
-        // 保存文件
-        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-        return fileId;
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || filename.isEmpty()) return "bin";
-        int lastDot = filename.lastIndexOf('.');
-        return lastDot > 0 ? filename.substring(lastDot + 1) : "bin";
-    }
-
-    private ArcFileContent createArcFileContent(MultipartFile file, CollectionBatch batch,
-                                                 CollectionBatchFile batchFile, String fileId, Long userId) {
         return ArcFileContent.builder()
             .id(fileId)
             .archivalCode(batch.getBatchNo() + "-" + batchFile.getUploadOrder())
@@ -451,9 +401,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             .fileSize(batchFile.getFileSizeBytes())
             .fileHash(batchFile.getFileHash())
             .hashAlgorithm(batchFile.getHashAlgorithm())
-            .storagePath(String.format("/tmp/nexusarchive/uploads/%s/%s/%s/%s.%s",
-                batch.getFondsCode(), batch.getFiscalYear(), batch.getBatchNo(),
-                fileId, getFileExtension(batchFile.getOriginalFilename())))
+            .storagePath(storagePath)
             .fiscalYear(batch.getFiscalYear())
             .voucherType(batch.getArchivalCategory())
             .fondsCode(batch.getFondsCode())

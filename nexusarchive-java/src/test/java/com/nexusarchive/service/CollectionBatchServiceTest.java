@@ -11,9 +11,14 @@ import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.CollectionBatch;
 import com.nexusarchive.entity.CollectionBatchFile;
+import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
+import com.nexusarchive.service.collection.BatchFileStorageService;
+import com.nexusarchive.service.collection.BatchFileValidator;
+import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.service.impl.CollectionBatchServiceImpl;
+import com.nexusarchive.util.FileHashUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -62,6 +67,9 @@ class CollectionBatchServiceTest {
     private CollectionBatchFileMapper batchFileMapper;
 
     @Mock
+    private ArcFileContentMapper arcFileContentMapper;
+
+    @Mock
     private PoolService poolService;
 
     @Mock
@@ -69,6 +77,21 @@ class CollectionBatchServiceTest {
 
     @Mock
     private AuditLogService auditLogService;
+
+    @Mock
+    private BatchToArchiveService batchToArchiveService;
+
+    @Mock
+    private FileHashUtil fileHashUtil;
+
+    @Mock
+    private BatchNumberGenerator batchNumberGenerator;
+
+    @Mock
+    private BatchFileValidator fileValidator;
+
+    @Mock
+    private BatchFileStorageService storageService;
 
     @InjectMocks
     private CollectionBatchServiceImpl collectionBatchService;
@@ -124,6 +147,8 @@ class CollectionBatchServiceTest {
                 batch.setId(1L);
                 return 1;
             });
+            when(batchNumberGenerator.generateBatchNo()).thenReturn("COL-20240105-001");
+            when(batchNumberGenerator.generateUploadToken(anyLong(), anyLong())).thenReturn("test-token-123");
 
             // When: 调用创建批次
             BatchUploadResponse response = collectionBatchService.createBatch(testRequest, 1L);
@@ -131,8 +156,7 @@ class CollectionBatchServiceTest {
             // Then: 验证响应
             assertThat(response).isNotNull();
             assertThat(response.getBatchId()).isEqualTo(1L);
-            assertThat(response.getBatchNo()).startsWith("COL-");
-            assertThat(response.getBatchNo()).matches("^COL-\\d{8}-\\d+$"); // COL-YYYYMMDD-NNN
+            assertThat(response.getBatchNo()).isEqualTo("COL-20240105-001");
             assertThat(response.getTotalFiles()).isEqualTo(10);
             assertThat(response.getUploadedFiles()).isEqualTo(0);
             assertThat(response.getProgress()).isEqualTo(0);
@@ -154,13 +178,18 @@ class CollectionBatchServiceTest {
                 batch.setId(1L);
                 return 1;
             });
+            when(batchNumberGenerator.generateBatchNo())
+                .thenReturn("COL-20240105-001")
+                .thenReturn("COL-20240105-002");
+            when(batchNumberGenerator.generateUploadToken(anyLong(), anyLong())).thenReturn("token");
 
             // When: 创建两个批次
             BatchUploadResponse response1 = collectionBatchService.createBatch(testRequest, 1L);
             BatchUploadResponse response2 = collectionBatchService.createBatch(testRequest, 1L);
 
             // Then: 批次号应该不同
-            assertThat(response1.getBatchNo()).isNotEqualTo(response2.getBatchNo());
+            assertThat(response1.getBatchNo()).isEqualTo("COL-20240105-001");
+            assertThat(response2.getBatchNo()).isEqualTo("COL-20240105-002");
         }
     }
 
