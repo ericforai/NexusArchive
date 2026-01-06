@@ -23,6 +23,14 @@ export interface User {
     status?: string;
     roles: string[];
     permissions: string[];
+    // 新增字段：个人资料展示
+    phone?: string;
+    employeeId?: string;
+    jobTitle?: string;
+    orgCode?: string;
+    lastLoginAt?: string;
+    createdTime?: string;
+    roleNames?: string[];
 }
 
 /**

@@ -153,10 +153,12 @@ public class AuthService {
     private LoginResponse.UserInfo buildUserInfo(User user) {
         List<Role> roles = roleMapper.findByUserId(user.getId());
         List<String> roleCodes = new ArrayList<>();
+        List<String> roleNames = new ArrayList<>();
         Set<String> permissions = new HashSet<>();
 
         for (Role role : roles) {
             roleCodes.add(role.getCode());
+            roleNames.add(role.getName());
             if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
                 try {
                     List<String> perms = objectMapper.readValue(role.getPermissions(), new TypeReference<List<String>>() {});
@@ -177,8 +179,18 @@ public class AuthService {
         userInfo.setAvatar(user.getAvatar());
         userInfo.setDepartmentId(user.getOrganizationId()); // 使用 organizationId（已替换 departmentId）
         userInfo.setRoles(roleCodes);
+        userInfo.setRoleNames(roleNames);
         userInfo.setPermissions(new ArrayList<>(permissions));
         userInfo.setStatus(user.getStatus());
+
+        // 新增字段：个人资料展示
+        userInfo.setPhone(user.getPhone());
+        userInfo.setEmployeeId(user.getEmployeeId());
+        userInfo.setJobTitle(user.getJobTitle());
+        userInfo.setOrgCode(user.getOrgCode());
+        userInfo.setLastLoginAt(user.getLastLoginAt());
+        userInfo.setCreatedTime(user.getCreatedTime());
+
         return userInfo;
     }
 }

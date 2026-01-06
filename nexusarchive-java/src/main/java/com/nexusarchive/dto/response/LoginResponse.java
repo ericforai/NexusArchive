@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -42,5 +43,14 @@ public class LoginResponse {
         private String status;
         private List<String> roles;
         private List<String> permissions;
+
+        // 新增字段：个人资料展示
+        private String phone;
+        private String employeeId;
+        private String jobTitle;
+        private String orgCode;
+        private LocalDateTime lastLoginAt;
+        private LocalDateTime createdTime;
+        private List<String> roleNames;
     }
 }
