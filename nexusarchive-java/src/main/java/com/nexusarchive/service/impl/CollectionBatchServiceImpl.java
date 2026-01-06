@@ -6,6 +6,7 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.dto.BatchUploadRequest;
 import com.nexusarchive.dto.BatchUploadResponse;
+import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.CollectionBatch;
 import com.nexusarchive.entity.CollectionBatchFile;
@@ -13,6 +14,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
 import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.service.AuditLogService;
+import com.nexusarchive.service.BatchToArchiveService;
 import com.nexusarchive.service.CollectionBatchService;
 import com.nexusarchive.service.PreArchiveCheckService;
 import com.nexusarchive.util.FileHashUtil;
@@ -37,11 +39,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 资料收集批次服务实现
  *
- * 功能：
- * 1. 批次生命周期管理
- * 2. 文件上传处理 (含幂等性控制)
- * 3. 四性检测协调
- * 4. 审计日志记录
+ * <p>功能：</p>
+ * <ol>
+ *   <li>批次生命周期管理</li>
+ *   <li>文件上传处理 (含幂等性控制)</li>
+ *   <li>档案记录创建（上传后立即创建，符合 DA/T 94-2022）</li>
+ *   <li>四性检测协调</li>
+ *   <li>审计日志记录</li>
+ * </ol>
+ *
+ * <p>合规性：上传的文件作为原始凭证附件处理，上传完成后立即创建 acc_archive 档案记录
+ * (状态为 PENDING_METADATA)，确保元数据与文件同步捕获。</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -54,6 +62,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
     private final FileHashUtil fileHashUtil;
     private final PreArchiveCheckService preArchiveCheckService;
     private final AuditLogService auditLogService;
+    private final BatchToArchiveService batchToArchiveService;
 
     private static final DateTimeFormatter BATCH_NO_FORMATTER =
         DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -198,13 +207,17 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         ArcFileContent arcFile = createArcFileContent(file, batch, batchFile, fileId, userId);
         arcFileContentMapper.insert(arcFile);
 
-        // 8. 更新批次文件状态
+        // 8. 创建档案记录（符合 DA/T 94-2022 元数据同步捕获要求）
+        Archive archive = batchToArchiveService.createArchiveFromBatch(arcFile, batch);
+
+        // 9. 更新批次文件状态，关联档案ID
         batchFile.setFileId(fileId);
+        batchFile.setArchiveId(archive.getId()); // 关联档案记录
         batchFile.setUploadStatus(CollectionBatchFile.STATUS_UPLOADED);
         batchFile.setCompletedTime(LocalDateTime.now());
         batchFileMapper.updateById(batchFile);
 
-        // 9. 更新批次统计
+        // 10. 更新批次统计
         batchMapper.updateStatistics(batchId);
 
         log.info("文件上传成功: fileId={}, batchFileId={}", fileId, batchFile.getId());
