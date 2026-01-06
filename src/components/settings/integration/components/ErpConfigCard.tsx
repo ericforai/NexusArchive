@@ -1,44 +1,44 @@
 // src/components/settings/integration/components/ErpConfigCard.tsx
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Settings, Zap, Activity, ShieldCheck, Sliders, MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { Settings, Zap, Activity, ShieldCheck, Sliders, MoreHorizontal, ChevronRight } from 'lucide-react';
 import { ErpConfig } from '@/types';
+import { ScenarioSummaryCard } from './ScenarioSummaryCard';
+import { ConnectionHealthBadge } from './ConnectionHealthBadge';
 
 interface ErpConfigCardProps {
   config: ErpConfig;
   status: 'connected' | 'disconnected' | 'error';
   scenarioCount?: number;
-  scenarios?: Array<{
-    id: number;
-    name: string;
-    lastSyncTime?: string;
-    recordCount?: number;
-  }>;
-  loadingScenarios?: boolean;
+  runningCount?: number;
+  errorCount?: number;
+  healthStatus?: 'healthy' | 'warning' | 'error';
+  lastHealthCheck?: string;
   onTest?: (configId: number) => void;
   onDiagnose?: (configId: number) => void;
   onReconcile?: (configId: number) => void;
   onConfig?: (config: ErpConfig) => void;
   onDelete?: (configId: number) => void;
-  onLoadScenarios?: (configId: number) => void;
+  onViewDetails?: (configId: number) => void;
 }
 
 export function ErpConfigCard({
   config,
   status,
   scenarioCount = 0,
-  scenarios = [],
-  loadingScenarios = false,
+  runningCount = 0,
+  errorCount = 0,
+  healthStatus,
+  lastHealthCheck,
   onTest,
   onDiagnose,
   onReconcile,
   onConfig,
   onDelete,
-  onLoadScenarios
+  onViewDetails
 }: ErpConfigCardProps) {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: config.name });
-  const [scenariosExpanded, setScenariosExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,15 +51,6 @@ export function ErpConfigCard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formatSyncTime = (dateString?: string) => {
-    if (!dateString) return null;
-    try {
-      return new Date(dateString).toLocaleString('zh-CN');
-    } catch {
-      return '无效日期';
-    }
-  };
-
   const statusConfig = {
     connected: { text: '已连接', color: 'text-green-600', bg: 'bg-green-50', dot: '●' },
     disconnected: { text: '未连接', color: 'text-gray-500', bg: 'bg-gray-50', dot: '○' },
@@ -68,18 +59,10 @@ export function ErpConfigCard({
 
   const { text: statusText, color: statusColor, bg: statusBg, dot: statusDot } = statusConfig[status];
 
-  const handleToggleScenarios = useCallback(() => {
-    if (!scenariosExpanded && scenarios.length === 0 && onLoadScenarios) {
-      // First time expanding - load scenarios
-      onLoadScenarios(config.id);
-    }
-    setScenariosExpanded(!scenariosExpanded);
-  }, [scenariosExpanded, scenarios.length, onLoadScenarios, config.id]);
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Header Section */}
-      <div className="p-5 border-b border-gray-100">
+      <div className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 flex-1">
             <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -96,7 +79,7 @@ export function ErpConfigCard({
         </div>
 
         {/* Action Bar - Grid layout */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mb-3">
           <button
             onClick={() => setIsEditing(!isEditing)}
             className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
@@ -115,9 +98,9 @@ export function ErpConfigCard({
 
           <button
             onClick={() => onDiagnose?.(config.id)}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
           >
-            <Activity size={14} className="text-gray-300 flex-shrink-0" />
+            <Activity size={14} className="text-white flex-shrink-0" />
             <span>健康检查</span>
           </button>
 
@@ -131,7 +114,7 @@ export function ErpConfigCard({
         </div>
 
         {/* More Menu */}
-        <div className="relative mt-2" ref={menuRef}>
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
             aria-label="更多选项"
@@ -175,7 +158,7 @@ export function ErpConfigCard({
 
       {/* Inline Edit Form */}
       {isEditing && (
-        <div className="p-5 bg-blue-50 border-b border-blue-100" data-testid="inline-config-form">
+        <div className="p-5 bg-blue-50 border-t border-blue-100" data-testid="inline-config-form">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">连接器名称</label>
@@ -208,75 +191,33 @@ export function ErpConfigCard({
         </div>
       )}
 
-      {/* Scenarios Section - Lazy Loading */}
-      <div className="border-t border-gray-100">
-        {/* Collapsed State - Show Count */}
-        {!scenariosExpanded && (
-          <button
-            onClick={handleToggleScenarios}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors group"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700 font-medium">场景</span>
-              {scenarioCount > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
-                  {scenarioCount} 个
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1 text-gray-400 group-hover:text-gray-600">
-              <ChevronRight size={16} />
-              <span className="text-xs text-gray-500">点击展开</span>
-            </div>
-          </button>
-        )}
-
-        {/* Expanded State - Show List */}
-        {scenariosExpanded && (
-          <div className="p-5">
-            {/* Loading State */}
-            {loadingScenarios ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent"></div>
-                <span className="ml-3 text-sm text-gray-500">加载场景中...</span>
-              </div>
-            ) : scenarios.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-gray-500">暂无同步场景</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <button
-                  onClick={() => setScenariosExpanded(false)}
-                  className="w-full flex items-center justify-between mb-3 text-sm text-gray-600 hover:text-gray-900 pb-2 border-b border-gray-200"
-                >
-                  <span>收起场景列表</span>
-                  <ChevronDown size={16} />
-                </button>
-                {scenarios.map((scenario) => (
-                  <div
-                    key={scenario.id}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-medium text-gray-900">{scenario.name}</h4>
-                      {scenario.recordCount !== undefined && (
-                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                          已同步 {scenario.recordCount} 条
-                        </span>
-                      )}
-                    </div>
-                    {scenario.lastSyncTime && (
-                      <p className="text-xs text-gray-500">
-                        最后同步: {formatSyncTime(scenario.lastSyncTime)}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+      {/* Summary Section - Fixed Height */}
+      <div className="border-t border-gray-100 p-5 space-y-3">
+        {/* Health Status */}
+        {healthStatus && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">健康状态</span>
+            <ConnectionHealthBadge status={healthStatus} lastCheckTime={lastHealthCheck} />
           </div>
         )}
+
+        {/* Scenario Summary */}
+        {scenarioCount > 0 && (
+          <ScenarioSummaryCard
+            totalScenarios={scenarioCount}
+            runningCount={runningCount}
+            errorCount={errorCount}
+          />
+        )}
+
+        {/* View Details Button */}
+        <button
+          onClick={() => onViewDetails?.(config.id)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+        >
+          <span>查看详情</span>
+          <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+        </button>
       </div>
     </div>
   );

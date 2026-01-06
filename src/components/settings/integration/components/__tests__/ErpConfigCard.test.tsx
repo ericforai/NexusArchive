@@ -66,132 +66,50 @@ describe('ErpConfigCard', () => {
     expect(onDelete).toHaveBeenCalledWith(1);
   });
 
-  it('should render collapsed scenarios section with count', () => {
-    render(<ErpConfigCard config={mockConfig} status="connected" scenarioCount={3} />);
-    expect(screen.getByText('场景')).toBeInTheDocument();
-    expect(screen.getByText('3 个')).toBeInTheDocument();
-    expect(screen.getByText('点击展开')).toBeInTheDocument();
-  });
+  describe('ErpConfigCard - Summary View', () => {
+    it('should show scenario summary instead of expand button', () => {
+      render(
+        <ErpConfigCard
+          config={mockConfig}
+          status="connected"
+          scenarioCount={8}
+          runningCount={2}
+          errorCount={0}
+          onViewDetails={() => {}}
+        />
+      );
+      expect(screen.getByText('场景')).toBeInTheDocument();
+      expect(screen.getByText('8 个')).toBeInTheDocument();
+      expect(screen.getByText('查看详情')).toBeInTheDocument();
+      expect(screen.queryByText(/点击展开/)).toBeNull();
+    });
 
-  it('should expand scenarios and call onLoadScenarios when clicking expand button', () => {
-    const onLoadScenarios = vi.fn();
-    render(<ErpConfigCard config={mockConfig} status="connected" scenarioCount={3} onLoadScenarios={onLoadScenarios} />);
+    it('should call onViewDetails when details button clicked', () => {
+      const onViewDetails = vi.fn();
+      render(
+        <ErpConfigCard
+          config={mockConfig}
+          status="connected"
+          scenarioCount={8}
+          onViewDetails={onViewDetails}
+        />
+      );
+      fireEvent.click(screen.getByText('查看详情'));
+      expect(onViewDetails).toHaveBeenCalledWith(1);
+    });
 
-    // Click expand button
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    // Should call onLoadScenarios since no scenarios are loaded yet
-    expect(onLoadScenarios).toHaveBeenCalledWith(1);
-  });
-
-  it('should not call onLoadScenarios if scenarios already loaded', () => {
-    const onLoadScenarios = vi.fn();
-    const scenarios = [
-      { id: 1, name: '凭证同步', lastSyncTime: '2026-01-01T00:00:00Z', recordCount: 100 }
-    ];
-
-    render(
-      <ErpConfigCard
-        config={mockConfig}
-        status="connected"
-        scenarioCount={1}
-        scenarios={scenarios}
-        onLoadScenarios={onLoadScenarios}
-      />
-    );
-
-    // Click expand button
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    // Should NOT call onLoadScenarios since scenarios are already provided
-    expect(onLoadScenarios).not.toHaveBeenCalled();
-  });
-
-  it('should show loading state when loadingScenarios is true', () => {
-    render(
-      <ErpConfigCard
-        config={mockConfig}
-        status="connected"
-        scenarioCount={3}
-        loadingScenarios={true}
-      />
-    );
-
-    // Expand to show loading state
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    expect(screen.getByText('加载场景中...')).toBeInTheDocument();
-  });
-
-  it('should render scenarios list when expanded', () => {
-    const scenarios = [
-      { id: 1, name: '凭证同步', lastSyncTime: '2026-01-01T00:00:00Z', recordCount: 100 }
-    ];
-
-    const { container } = render(
-      <ErpConfigCard config={mockConfig} status="connected" scenarios={scenarios} />
-    );
-
-    // Initially collapsed, expand it
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    expect(screen.getByText('凭证同步')).toBeInTheDocument();
-    expect(screen.getByText(/已同步 100 条/)).toBeInTheDocument();
-  });
-
-  it('should show collapse button when scenarios are expanded', () => {
-    const scenarios = [
-      { id: 1, name: '凭证同步', lastSyncTime: '2026-01-01T00:00:00Z', recordCount: 100 }
-    ];
-
-    const { container } = render(
-      <ErpConfigCard config={mockConfig} status="connected" scenarios={scenarios} />
-    );
-
-    // Expand scenarios
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    // Should show collapse button
-    expect(screen.getByText('收起场景列表')).toBeInTheDocument();
-  });
-
-  it('should collapse scenarios when clicking collapse button', () => {
-    const scenarios = [
-      { id: 1, name: '凭证同步', lastSyncTime: '2026-01-01T00:00:00Z', recordCount: 100 }
-    ];
-
-    const { container } = render(
-      <ErpConfigCard config={mockConfig} status="connected" scenarios={scenarios} />
-    );
-
-    // Expand scenarios
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    // Should show scenario name
-    expect(screen.getByText('凭证同步')).toBeInTheDocument();
-
-    // Collapse scenarios
-    const collapseButton = screen.getByText('收起场景列表');
-    fireEvent.click(collapseButton);
-
-    // Should show expand button again
-    expect(screen.getByText('点击展开')).toBeInTheDocument();
-  });
-
-  it('should show "no scenarios" message when scenarios array is empty', () => {
-    render(<ErpConfigCard config={mockConfig} status="connected" scenarios={[]} />);
-
-    // Expand to see empty state
-    const expandButton = screen.getByText('点击展开');
-    fireEvent.click(expandButton);
-
-    expect(screen.getByText('暂无同步场景')).toBeInTheDocument();
+    it('should display health badge when provided', () => {
+      render(
+        <ErpConfigCard
+          config={mockConfig}
+          status="connected"
+          scenarioCount={8}
+          healthStatus="healthy"
+          lastHealthCheck="2025-01-06T10:00:00"
+        />
+      );
+      expect(screen.getByText(/正常/)).toBeInTheDocument();
+    });
   });
 
   it('should toggle inline edit form when clicking config button', () => {
