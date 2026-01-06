@@ -9,8 +9,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.dto.request.CreateUserRequest;
 import com.nexusarchive.dto.request.ResetPasswordRequest;
+import com.nexusarchive.dto.request.UpdateUserFondsScopeRequest;
 import com.nexusarchive.dto.request.UpdateUserRequest;
 import com.nexusarchive.dto.request.UpdateUserStatusRequest;
+import com.nexusarchive.dto.response.FondsScopeResponse;
 import com.nexusarchive.dto.response.UserResponse;
 import com.nexusarchive.service.UserService;
 import com.nexusarchive.annotation.ArchivalAudit;
@@ -80,5 +82,27 @@ public class AdminUserController {
     public Result<Void> updateStatus(@PathVariable String id, @Valid @RequestBody UpdateUserStatusRequest request) {
         userService.updateStatus(id, request.getStatus());
         return Result.success("状态已更新", null);
+    }
+
+    /**
+     * 获取用户的全宗权限范围
+     * 返回用户已分配的全宗列表和所有可用的全宗列表
+     */
+    @GetMapping("/{id}/fonds-scope")
+    public Result<FondsScopeResponse> getUserFondsScope(@PathVariable String id) {
+        return Result.success(userService.getUserFondsScope(id));
+    }
+
+    /**
+     * 更新用户的全宗权限范围
+     * 设置用户可以访问哪些全宗的数据
+     */
+    @PutMapping("/{id}/fonds-scope")
+    @ArchivalAudit(operationType = "UPDATE", resourceType = "USER_FONDS_SCOPE", description = "更新用户全宗权限")
+    public Result<Void> updateUserFondsScope(
+            @PathVariable String id,
+            @RequestBody UpdateUserFondsScopeRequest request) {
+        userService.updateUserFondsScope(id, request);
+        return Result.success("全宗权限已更新", null);
     }
 }
