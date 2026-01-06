@@ -1,6 +1,6 @@
 // src/components/settings/integration/components/ErpConfigCard.tsx
-import React, { useRef, useEffect, useState } from 'react';
-import { Settings, Zap, Activity, ShieldCheck, MoreHorizontal, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { Settings, Zap, Activity, ShieldCheck, ChevronRight } from 'lucide-react';
 import { ErpConfig } from '@/types';
 import { ScenarioSummaryCard } from './ScenarioSummaryCard';
 import { ConnectionHealthBadge } from './ConnectionHealthBadge';
@@ -17,7 +17,6 @@ interface ErpConfigCardProps {
   onDiagnose?: (configId: number) => void;
   onReconcile?: (configId: number) => void;
   onConfig?: (config: ErpConfig) => void;
-  onDelete?: (configId: number) => void;
   onViewDetails?: (configId: number) => void;
 }
 
@@ -33,22 +32,8 @@ export function ErpConfigCard({
   onDiagnose,
   onReconcile,
   onConfig,
-  onDelete,
   onViewDetails
 }: ErpConfigCardProps) {
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMoreMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const statusConfig = {
     connected: { text: '已连接', color: 'text-green-600', bg: 'bg-green-50', dot: '●' },
     disconnected: { text: '未连接', color: 'text-gray-500', bg: 'bg-gray-50', dot: '○' },
@@ -109,37 +94,6 @@ export function ErpConfigCard({
             <ShieldCheck size={14} className="text-emerald-600 flex-shrink-0" />
             <span>账务核对</span>
           </button>
-        </div>
-
-        {/* More Menu */}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
-            aria-label="更多选项"
-            aria-expanded={showMoreMenu}
-            aria-haspopup="true"
-            className="absolute right-0 top-0 h-8 w-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <MoreHorizontal size={16} />
-          </button>
-
-          {showMoreMenu && (
-            <div
-              className="absolute right-0 top-full z-50 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
-              role="menu"
-            >
-              <button
-                role="menuitem"
-                onClick={() => {
-                  onDelete?.(config.id);
-                  setShowMoreMenu(false);
-                }}
-                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              >
-                <span>移除此连接器</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
 

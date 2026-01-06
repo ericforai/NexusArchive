@@ -113,29 +113,6 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       });
   }, [drawerConfigId, scenarioManager.state.scenarios]);
 
-  const handleDeleteConfig = useCallback(async (configId: number) => {
-    const config = configManager.state.configs.find(c => c.id === configId);
-    if (!config) return;
-
-    Modal.confirm({
-      title: '确认移除连接器',
-      content: (
-        <div>
-          <p>移除后,该连接器的所有同步记录将被保留,但不会再同步新数据。</p>
-          <p className="font-semibold text-red-600 mt-2">
-            此操作不可撤销,是否继续?
-          </p>
-        </div>
-      ),
-      okText: '确认移除',
-      okType: 'danger',
-      cancelText: '取消',
-      onOk: async () => {
-        await configManager.actions.deleteConfig(configId);
-      },
-    });
-  }, [configManager.actions, configManager.state.configs]);
-
   return (
     <div className="integration-settings p-6">
       {/* Page Header */}
@@ -158,7 +135,6 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
         scenarioCounts={scenarioCounts}
         runningCounts={scenarioStats}
         onConfig={(config) => connectorModal.actions.openModal(config)}
-        onDelete={handleDeleteConfig}
         onTest={configManager.actions.testConnection}
         onDiagnose={diagnosis.actions.startDiagnosis}
         onReconcile={(id) => {

@@ -64,16 +64,6 @@ describe('ErpConfigCard', () => {
     expect(mockOnConfig).toHaveBeenCalledWith(mockConfig);
   });
 
-  it('should call onDelete when clicking delete in more menu', () => {
-    const onDelete = vi.fn();
-    render(<ErpConfigCard config={mockConfig} status="connected" onDelete={onDelete} />);
-    const buttons = screen.getAllByRole('button');
-    const moreButton = buttons.find(btn => btn.className.includes('w-8'));
-    fireEvent.click(moreButton!);
-    fireEvent.click(screen.getByText('移除此连接器'));
-    expect(onDelete).toHaveBeenCalledWith(1);
-  });
-
   describe('ErpConfigCard - Summary View', () => {
     it('should show scenario summary instead of expand button', () => {
       render(

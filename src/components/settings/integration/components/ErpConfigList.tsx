@@ -13,7 +13,6 @@ interface ErpConfigListProps {
   onDiagnose?: (configId: number) => void;
   onReconcile?: (configId: number) => void;
   onConfig?: (config: ErpConfig) => void;
-  onDelete?: (configId: number) => void;
   onViewDetails?: (configId: number) => void;
 }
 
@@ -25,7 +24,6 @@ export function ErpConfigList({
   onDiagnose,
   onReconcile,
   onConfig,
-  onDelete,
   onViewDetails
 }: ErpConfigListProps) {
   if (configs.length === 0) {
@@ -56,7 +54,6 @@ export function ErpConfigList({
             onDiagnose={onDiagnose}
             onReconcile={onReconcile}
             onConfig={onConfig}
-            onDelete={onDelete}
             onViewDetails={onViewDetails}
           />
         );
