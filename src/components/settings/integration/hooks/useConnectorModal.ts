@@ -10,8 +10,7 @@ import { ConnectorModalState, ConnectorModalActions } from '../types';
 
 interface UseConnectorModalOptions {
   erpApi: {
-    createConfig: (config: Partial<ErpConfig>) => Promise<any>;
-    updateConfig: (id: number, config: Partial<ErpConfig>) => Promise<any>;
+    saveConfig: (config: Partial<ErpConfig>) => Promise<any>;
     testConnection: (id: number) => Promise<any>;
   };
   onConfigSaved?: () => void;
@@ -45,14 +44,25 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
   const openModal = useCallback((config?: Partial<ErpConfig>) => {
     if (config) {
       setEditingConfig(config);
+
+      // Parse configJson to get the actual configuration fields
+      let configData = {};
+      try {
+        if (config.configJson) {
+          configData = JSON.parse(config.configJson);
+        }
+      } catch (error) {
+        console.error('Failed to parse configJson:', error);
+      }
+
       setConfigForm({
         name: config.name || '',
         erpType: config.erpType || 'yonsuite',
-        baseUrl: (config as any).baseUrl || '',
-        appKey: (config as any).appKey || '',
-        appSecret: (config as any).appSecret || '',
-        accbookCode: (config as any).accbookCode || '',
-        accbookCodes: (config as any).accbookCodes || [],
+        baseUrl: (configData as any).baseUrl || '',
+        appKey: (configData as any).appKey || '',
+        appSecret: (configData as any).appSecret || '',
+        accbookCode: (configData as any).accbookCode || '',
+        accbookCodes: (configData as any).accbookCodes || [],
       });
     } else {
       setEditingConfig(null);
@@ -126,13 +136,23 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
 
   const saveConfig = useCallback(async () => {
     try {
-      if (editingConfig?.id) {
-        await erpApi.updateConfig(editingConfig.id, configForm);
-        toast.success('配置更新成功');
-      } else {
-        await erpApi.createConfig(configForm);
-        toast.success('配置创建成功');
-      }
+      // Build the config object with configJson as a serialized JSON string
+      const configToSave = {
+        id: editingConfig?.id,
+        name: configForm.name,
+        erpType: configForm.erpType,
+        configJson: JSON.stringify({
+          baseUrl: configForm.baseUrl,
+          appKey: configForm.appKey,
+          appSecret: configForm.appSecret,
+          accbookCode: configForm.accbookCode,
+          accbookCodes: configForm.accbookCodes,
+        }),
+        isActive: 1,
+      };
+
+      await erpApi.saveConfig(configToSave);
+      toast.success(editingConfig?.id ? '配置更新成功' : '配置创建成功');
       closeModal();
       onConfigSaved?.();
     } catch {

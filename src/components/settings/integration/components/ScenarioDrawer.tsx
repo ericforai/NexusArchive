@@ -3,7 +3,7 @@
 // Pos: src/components/settings/integration/components/
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Drawer, Button } from 'antd';
 import { X } from 'lucide-react';
 import { Scenario } from '@/types';
@@ -23,6 +23,22 @@ export function ScenarioDrawer({
   onClose,
   onSync
 }: ScenarioDrawerProps) {
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to make drawer visible when it opens
+  useEffect(() => {
+    if (visible) {
+      // Small delay to ensure drawer is rendered
+      setTimeout(() => {
+        // Scroll to make the drawer visible
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, [visible]);
+
   const formatSyncTime = (dateString?: string) => {
     if (!dateString) return null;
     try {
@@ -47,6 +63,7 @@ export function ScenarioDrawer({
 
   return (
     <Drawer
+      ref={drawerRef}
       title={
         <div className="flex items-center justify-between">
           <span className="text-lg font-semibold">{configName} 场景列表</span>
