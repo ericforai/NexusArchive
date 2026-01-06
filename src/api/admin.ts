@@ -31,6 +31,25 @@ export interface Role {
     createdAt?: string;
 }
 
+// 全宗信息
+export interface FondsInfo {
+    fondsCode: string;
+    fondsName: string;
+    companyName: string;
+}
+
+// 用户全宗权限响应
+export interface FondsScopeResponse {
+    userId: string;
+    assignedFonds: string[];
+    availableFonds: FondsInfo[];
+}
+
+// 更新用户全宗权限请求
+export interface UpdateUserFondsScopeRequest {
+    fondsCodes: string[];
+}
+
 export const adminApi = {
     // 组织架构
     getOrgTree: async () => {
@@ -93,6 +112,16 @@ export const adminApi = {
     },
     toggleUserStatus: async (id: string, status: string) => {
         const response = await client.put<ApiResponse<void>>(`/admin/users/${id}/status`, { status });
+        return response.data;
+    },
+    // 获取用户全宗权限
+    getUserFondsScope: async (id: string) => {
+        const response = await client.get<ApiResponse<FondsScopeResponse>>(`/admin/users/${id}/fonds-scope`);
+        return response.data;
+    },
+    // 更新用户全宗权限
+    updateUserFondsScope: async (id: string, fondsCodes: string[]) => {
+        const response = await client.put<ApiResponse<void>>(`/admin/users/${id}/fonds-scope`, { fondsCodes });
         return response.data;
     },
 
