@@ -18,4 +18,13 @@ public interface SysUserFondsScopeMapper extends BaseMapper<SysUserFondsScope> {
 
     @Select("SELECT fonds_no FROM sys_user_fonds_scope WHERE user_id = #{userId} AND deleted = 0 ORDER BY fonds_no")
     List<String> findFondsNoByUserId(@Param("userId") String userId);
+
+    /**
+     * 逻辑删除用户的所有全宗权限
+     * 使用 MyBatis-Plus 的逻辑删除机制
+     * @param userId 用户ID
+     * @return 删除的记录数
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE sys_user_fonds_scope SET deleted = 1 WHERE user_id = #{userId} AND deleted = 0")
+    int deleteByUserId(@Param("userId") String userId);
 }

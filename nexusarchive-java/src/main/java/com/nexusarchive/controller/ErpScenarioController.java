@@ -30,23 +30,23 @@ public class ErpScenarioController {
     private final ErpScenarioService erpScenarioService;
 
     @GetMapping("/list/{configId}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
     @Operation(summary = "获取指定ERP配置的场景列表")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
     public Result<List<ErpScenario>> listByConfig(@PathVariable Long configId) {
         return Result.success(erpScenarioService.listScenariosByConfigId(configId));
     }
 
     @PutMapping
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @Operation(summary = "更新场景配置")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> update(@Valid @RequestBody ErpScenario scenario) {
         erpScenarioService.updateScenario(scenario);
         return Result.success();
     }
 
     @PostMapping("/{id}/sync")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @Operation(summary = "手动触发同步")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "CAPTURE", resourceType = "ERP_SYNC", description = "手动触发ERP同步场景")
     public Result<Void> triggerSync(@PathVariable Long id, jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
@@ -83,8 +83,8 @@ public class ErpScenarioController {
     }
 
     @GetMapping("/channels")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER', 'AUDITOR')")
     @Operation(summary = "获取所有集成通道（聚合视图）")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER', 'AUDITOR')")
     public Result<List<com.nexusarchive.dto.IntegrationChannelDTO>> listAllChannels() {
         return Result.success(erpScenarioService.listAllChannels());
     }
@@ -92,15 +92,16 @@ public class ErpScenarioController {
     // ============ 子接口管理 API ============
 
     @GetMapping("/{scenarioId}/interfaces")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
     @Operation(summary = "获取场景的子接口列表")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
     public Result<List<ErpSubInterface>> listSubInterfaces(@PathVariable Long scenarioId) {
         return Result.success(erpScenarioService.listSubInterfaces(scenarioId));
     }
 
     @PutMapping("/interface")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @Operation(summary = "更新子接口配置")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
+    @com.nexusarchive.annotation.ArchivalAudit(operationType = "UPDATE", resourceType = "ERP_SUB_INTERFACE", description = "更新ERP子接口配置")
     public Result<Void> updateSubInterface(@Valid @RequestBody ErpSubInterface subInterface,
                                             jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
@@ -110,8 +111,9 @@ public class ErpScenarioController {
     }
 
     @PutMapping("/interface/toggle/{id}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @Operation(summary = "切换子接口启用状态")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
+    @com.nexusarchive.annotation.ArchivalAudit(operationType = "UPDATE", resourceType = "ERP_SUB_INTERFACE", description = "切换ERP子接口启用状态")
     public Result<Void> toggleSubInterface(@PathVariable Long id,
                                            jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
@@ -123,8 +125,8 @@ public class ErpScenarioController {
     // ============ 同步历史 API ============
 
     @GetMapping("/{scenarioId}/history")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER', 'AUDITOR')")
     @Operation(summary = "获取场景的同步历史 (最近10条)")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER', 'AUDITOR')")
     public Result<List<SyncHistory>> getSyncHistory(@PathVariable Long scenarioId) {
         return Result.success(erpScenarioService.getSyncHistory(scenarioId));
     }
@@ -132,8 +134,8 @@ public class ErpScenarioController {
     // ============ 场景参数配置 API ============
 
     @PutMapping("/{id}/params")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @Operation(summary = "更新场景参数配置")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> updateScenarioParams(@PathVariable Long id, @RequestBody Map<String, Object> params) {
         erpScenarioService.updateScenarioParams(id, params);
         return Result.success();
