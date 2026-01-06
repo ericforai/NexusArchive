@@ -41,7 +41,7 @@ export function ErpConfigList({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
       {configs.map((config) => {
         const stats = runningCounts[config.id] || { running: 0, error: 0 };
         return (
