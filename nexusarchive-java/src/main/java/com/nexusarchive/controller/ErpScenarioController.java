@@ -8,6 +8,7 @@ package com.nexusarchive.controller;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.dto.SyncTaskDTO;
 import com.nexusarchive.dto.SyncTaskStatus;
+import com.nexusarchive.dto.request.ScenarioParamsUpdateRequest;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.ErpSubInterface;
 import com.nexusarchive.entity.SyncHistory;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -157,8 +159,27 @@ public class ErpScenarioController {
     @Operation(summary = "更新场景参数配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "UPDATE", resourceType = "ERP_SCENARIO_PARAMS", description = "更新ERP场景参数配置")
-    public Result<Void> updateScenarioParams(@PathVariable Long id, @RequestBody Map<String, Object> params) {
+    public Result<Void> updateScenarioParams(@PathVariable Long id,
+                                        @Valid @RequestBody ScenarioParamsUpdateRequest request) {
+        // Convert validated DTO to Map
+        Map<String, Object> params = convertToParamsMap(request);
         erpScenarioService.updateScenarioParams(id, params);
         return Result.success();
+    }
+
+    private Map<String, Object> convertToParamsMap(ScenarioParamsUpdateRequest request) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("scenarioKey", request.getScenarioKey());
+        params.put("syncStrategy", request.getSyncStrategy());
+        if (request.getPeriodDays() != null) {
+            params.put("periodDays", request.getPeriodDays());
+        }
+        if (request.getMapping() != null) {
+            params.put("mapping", request.getMapping());
+        }
+        if (request.getFilter() != null) {
+            params.put("filter", request.getFilter());
+        }
+        return params;
     }
 }
