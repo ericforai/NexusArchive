@@ -81,24 +81,24 @@ export function ErpConfigCard({
 
           <button
             onClick={() => onDiagnose?.(config.id)}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
           >
-            <Activity size={14} className="text-white flex-shrink-0" />
+            <Activity size={13} className="text-white flex-shrink-0" />
             <span>健康检查</span>
           </button>
 
           <button
             onClick={() => onReconcile?.(config.id)}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
           >
-            <ShieldCheck size={14} className="text-emerald-600 flex-shrink-0" />
+            <ShieldCheck size={13} className="text-emerald-600 flex-shrink-0" />
             <span>账务核对</span>
           </button>
         </div>
       </div>
 
       {/* Summary Section - Fixed Height */}
-      <div className="border-t border-gray-100 p-5 space-y-3">
+      <div className="border-t border-gray-100 p-4 space-y-2">
         {/* Health Status */}
         {healthStatus && (
           <div className="flex items-center justify-between">
@@ -119,7 +119,7 @@ export function ErpConfigCard({
         {/* View Details Button */}
         <button
           onClick={() => onViewDetails?.(config.id)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
         >
           <span>查看详情</span>
           <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
