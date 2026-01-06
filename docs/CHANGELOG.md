@@ -4,6 +4,32 @@
 
 ---
 
+## [Unreleased]
+
+### Added
+- ScenarioDrawer component - right-side slide-in panel for scenario details
+- ScenarioSummaryCard component - displays scenario counts with status
+- ConnectionHealthBadge component - health status with relative time display
+- Three-layer information architecture (Card → Drawer → Page)
+
+### Changed
+- ErpConfigCard redesigned as summary-only view (removed expand/collapse)
+- Health check button style improved (slate-700 + white text for better contrast)
+- Fixed card heights for consistent page layout
+- Better visual hierarchy and spacing
+
+### Removed
+- On-demand scenario loading from cards (moved to drawer)
+- Expand/collapse UI for scenarios
+- Inline scenario list display
+
+### Technical
+- Added new types: ScenarioStatus, ConnectionHealthStatus, ScenarioStatistics
+- Updated component interfaces to support summary view
+- All 219 tests passing
+
+---
+
 ## [2026-01-05] Integration Settings UI Redesign v2.1
 
 ### Breaking Changes
