@@ -10,10 +10,16 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.dto.request.CreateUserRequest;
+import com.nexusarchive.dto.request.UpdateUserFondsScopeRequest;
 import com.nexusarchive.dto.request.UpdateUserRequest;
+import com.nexusarchive.dto.response.FondsScopeResponse;
 import com.nexusarchive.dto.response.UserResponse;
+import com.nexusarchive.entity.BasFonds;
+import com.nexusarchive.entity.SysUserFondsScope;
 import com.nexusarchive.entity.User;
+import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.mapper.RoleMapper;
+import com.nexusarchive.mapper.SysUserFondsScopeMapper;
 import com.nexusarchive.mapper.UserMapper;
 import com.nexusarchive.service.RoleValidationService;
 import com.nexusarchive.util.PasswordPolicyValidator;
@@ -37,6 +43,8 @@ public class UserService {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+    private final SysUserFondsScopeMapper sysUserFondsScopeMapper;
+    private final BasFondsMapper basFondsMapper;
     private final PasswordUtil passwordUtil;
     private final RoleValidationService roleValidationService;
 
@@ -198,5 +206,85 @@ public class UserService {
         user.setStatus(status);
         user.setLastModifiedTime(LocalDateTime.now());
         userMapper.updateById(user);
+    }
+
+    /**
+     * 获取用户的全宗权限范围
+     * 返回已分配的全宗列表和可分配的全宗列表
+     */
+    public FondsScopeResponse getUserFondsScope(String userId) {
+        // 验证用户存在
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        FondsScopeResponse response = new FondsScopeResponse();
+        response.setUserId(userId);
+
+        // 获取已分配的全宗号列表
+        List<String> assignedFonds = sysUserFondsScopeMapper.findFondsNoByUserId(userId);
+        response.setAssignedFonds(assignedFonds);
+
+        // 获取所有可用的全宗列表
+        QueryWrapper<BasFonds> wrapper = new QueryWrapper<>();
+        wrapper.orderByAsc("fonds_code");
+        List<BasFonds> allFonds = basFondsMapper.selectList(wrapper);
+
+        // 转换为 FondsInfo
+        List<FondsScopeResponse.FondsInfo> availableFonds = allFonds.stream()
+            .map(fonds -> {
+                FondsScopeResponse.FondsInfo info = new FondsScopeResponse.FondsInfo();
+                info.setFondsCode(fonds.getFondsCode());
+                info.setFondsName(fonds.getFondsName());
+                info.setCompanyName(fonds.getCompanyName());
+                return info;
+            })
+            .collect(Collectors.toList());
+
+        response.setAvailableFonds(availableFonds);
+        return response;
+    }
+
+    /**
+     * 更新用户的全宗权限范围
+     * 先删除用户的所有全宗权限，再插入新的权限
+     */
+    @Transactional
+    public void updateUserFondsScope(String userId, UpdateUserFondsScopeRequest request) {
+        // 验证用户存在
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        List<String> fondsCodes = request.getFondsCodes();
+        if (fondsCodes == null) {
+            fondsCodes = java.util.Collections.emptyList();
+        }
+
+        // 删除用户的所有现有全宗权限（逻辑删除）
+        sysUserFondsScopeMapper.deleteByUserId(userId);
+
+        // 插入新的全宗权限
+        for (String fondsCode : fondsCodes) {
+            // 验证全宗存在
+            QueryWrapper<BasFonds> wrapper = new QueryWrapper<>();
+            wrapper.eq("fonds_code", fondsCode);
+            BasFonds fonds = basFondsMapper.selectOne(wrapper);
+            if (fonds == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND);
+            }
+
+            SysUserFondsScope scope = new SysUserFondsScope();
+            scope.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+            scope.setUserId(userId);
+            scope.setFondsNo(fondsCode);
+            scope.setScopeType("DIRECT"); // 直接分配
+            scope.setCreatedTime(LocalDateTime.now());
+            scope.setLastModifiedTime(LocalDateTime.now());
+            scope.setDeleted(0);
+            sysUserFondsScopeMapper.insert(scope);
+        }
     }
 }
