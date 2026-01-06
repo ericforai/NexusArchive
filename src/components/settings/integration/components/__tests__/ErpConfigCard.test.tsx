@@ -9,7 +9,7 @@ describe('ErpConfigCard', () => {
     name: 'YonSuite',
     erpType: 'yonsuite',
     configJson: '{}',
-    createdAt: '2026-01-01T00:00:00Z',
+    isActive: 1,
   };
 
   it('should render connector name and status', () => {

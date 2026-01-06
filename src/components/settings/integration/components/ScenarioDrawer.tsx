@@ -1,13 +1,7 @@
 import React from 'react';
 import { Drawer, Button } from 'antd';
 import { X } from 'lucide-react';
-
-interface Scenario {
-  id: number;
-  name: string;
-  status: 'idle' | 'running' | 'success' | 'error';
-  lastSyncTime?: string;
-}
+import { Scenario } from '@/types';
 
 interface ScenarioDrawerProps {
   visible: boolean;

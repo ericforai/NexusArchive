@@ -26,6 +26,7 @@ export function useScenarioSyncManager(options: UseScenarioSyncManagerOptions) {
   const [subInterfaces, setSubInterfaces] = useState<Record<number, ErpSubInterface[]>>({});
   const [syncHistory, setSyncHistory] = useState<Record<number, SyncHistory[]>>({});
   const [showHistoryFor, setShowHistoryFor] = useState<number | null>(null);
+  const [activeScenarioId, setActiveScenarioId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState<number | null>(null);
 
@@ -128,6 +129,7 @@ export function useScenarioSyncManager(options: UseScenarioSyncManagerOptions) {
     subInterfaces,
     syncHistory,
     showHistoryFor,
+    activeScenarioId,
     loading,
     syncing,
   };

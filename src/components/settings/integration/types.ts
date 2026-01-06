@@ -33,6 +33,7 @@ export interface ScenarioSyncManagerState {
   subInterfaces: Record<number, ErpSubInterface[]>;
   syncHistory: Record<number, SyncHistory[]>;
   showHistoryFor: number | null;
+  activeScenarioId: number | null;
   loading: boolean;
   syncing: number | null;
 }

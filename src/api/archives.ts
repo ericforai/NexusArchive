@@ -24,6 +24,10 @@ export interface Archive {
     createdTime?: string;
     creator?: string;
     customMetadata?: string; // JSON 格式的会计分录数据
+    fileName?: string;
+    erpVoucherNo?: string;
+    voucherWord?: string;
+    summary?: string;
 }
 
 export interface ArchiveQuery {

@@ -22,6 +22,7 @@ import { ConnectorForm } from './components/ConnectorForm';
 import { DiagnosisPanel } from './components/DiagnosisPanel';
 import { ParamsEditor } from './components/ParamsEditor';
 import { ScenarioDrawer } from './components/ScenarioDrawer';
+import { ScenarioStatus } from '../../../types';
 
 interface IntegrationSettingsPageProps {
   erpApi: any;
@@ -33,9 +34,6 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
 
   // Hook: Scenario Sync Manager
   const scenarioManager = useScenarioSyncManager({ erpApi });
-
-  // Track loading scenarios per config
-  const [loadingScenarios, setLoadingScenarios] = useState<Record<number, boolean>>({});
 
   // Drawer state
   const [drawerConfigId, setDrawerConfigId] = useState<number | null>(null);
@@ -66,29 +64,6 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
 
   // DO NOT auto-load scenarios anymore - they will be loaded on demand via expand/collapse
 
-  // Create scenarios map for passing to ErpConfigList
-  const scenariosMap = useMemo(() => {
-    const map: Record<number, Array<{
-      id: number;
-      name: string;
-      lastSyncTime?: string;
-      recordCount?: number;
-    }>> = {};
-    scenarioManager.state.scenarios.forEach(s => {
-      if (!map[s.configId]) {
-        map[s.configId] = [];
-      }
-      map[s.configId].push({
-        id: s.id,
-        name: s.name,
-        lastSyncTime: s.lastSyncTime,
-        // recordCount would need to come from sync history or API
-        recordCount: undefined
-      });
-    });
-    return map;
-  }, [scenarioManager.state.scenarios]);
-
   // Calculate scenario counts per config
   const scenarioCounts = useMemo(() => {
     const counts: Record<number, number> = {};
@@ -105,9 +80,11 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       if (!stats[s.configId]) {
         stats[s.configId] = { running: 0, error: 0 };
       }
-      // Note: s.status might need adjustment based on actual data structure
-      if (s.status === 'running') stats[s.configId].running++;
-      if (s.status === 'error') stats[s.configId].error++;
+      // Note: Use lastSyncStatus to determine scenario status
+      const status = s.lastSyncStatus === 'RUNNING' ? 'running' :
+                    s.lastSyncStatus === 'FAIL' ? 'error' : 'idle';
+      if (status === 'running') stats[s.configId].running++;
+      if (status === 'error') stats[s.configId].error++;
     });
     return stats;
   }, [scenarioManager.state.scenarios]);
@@ -123,28 +100,18 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     if (drawerConfigId === null) return [];
     return scenarioManager.state.scenarios
       .filter(s => s.configId === drawerConfigId)
-      .map(s => ({
-        id: s.id,
-        name: s.name,
-        status: s.status || 'idle',
-        lastSyncTime: s.lastSyncTime
-      }));
+      .map(s => {
+        const status: ScenarioStatus = s.lastSyncStatus === 'RUNNING' ? 'running' :
+          s.lastSyncStatus === 'FAIL' ? 'error' :
+          s.lastSyncStatus === 'SUCCESS' ? 'success' : 'idle';
+        return {
+          id: s.id,
+          name: s.name,
+          status,
+          lastSyncTime: s.lastSyncTime
+        };
+      });
   }, [drawerConfigId, scenarioManager.state.scenarios]);
-
-  // Handle loading scenarios for a specific config
-  const handleLoadScenarios = useCallback(async (configId: number) => {
-    // Check if we already loaded scenarios for this config
-    if (scenariosMap[configId] && scenariosMap[configId].length > 0) {
-      return;
-    }
-
-    setLoadingScenarios(prev => ({ ...prev, [configId]: true }));
-    try {
-      await scenarioManager.actions.loadScenarios(configId);
-    } finally {
-      setLoadingScenarios(prev => ({ ...prev, [configId]: false }));
-    }
-  }, [scenarioManager.actions, scenariosMap]);
 
   const handleDeleteConfig = useCallback(async (configId: number) => {
     const config = configManager.state.configs.find(c => c.id === configId);
@@ -188,9 +155,8 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       {/* Connector Grid */}
       <ErpConfigList
         configs={configManager.state.configs}
-        scenarios={scenariosMap}
         scenarioCounts={scenarioCounts}
-        loadingScenarios={loadingScenarios}
+        runningCounts={scenarioStats}
         onConfig={(config) => connectorModal.actions.openModal(config)}
         onDelete={handleDeleteConfig}
         onTest={configManager.actions.testConnection}
@@ -199,12 +165,9 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
           // TODO: implement reconcile
           console.log('Reconcile not implemented yet');
         }}
-        onLoadScenarios={handleLoadScenarios}
         onViewDetails={(configId) => {
           // Load scenarios if not already loaded
-          if (!scenariosMap[configId] || scenariosMap[configId].length === 0) {
-            scenarioManager.actions.loadScenarios(configId);
-          }
+          scenarioManager.actions.loadScenarios(configId);
           setDrawerConfigId(configId);
         }}
       />

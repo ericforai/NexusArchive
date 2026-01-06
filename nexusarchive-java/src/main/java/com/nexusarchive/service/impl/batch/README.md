@@ -7,6 +7,7 @@
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
+| `package-info.java` | 模块清单 | @ModuleManifest 注解，声明模块边界和依赖规则 (J1: Self-Description) |
 | `BatchManager.java` | 批次管理器 | 批次的创建、查询、删除 (~140行) |
 | `BatchItemManager.java` | 条目管理器 | 批次条目的添加、移除、查询 (~140行) |
 | `BatchWorkflowService.java` | 工作流服务 | 提交、审批、驳回、执行归档 (~150行) |

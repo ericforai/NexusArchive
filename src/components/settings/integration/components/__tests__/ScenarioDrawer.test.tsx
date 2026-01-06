@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ScenarioDrawer } from '../ScenarioDrawer';
+import { Scenario } from '@/types';
 
 describe('ScenarioDrawer', () => {
-  const mockScenarios = [
+  const mockScenarios: Scenario[] = [
     { id: 1, name: '凭证同步', status: 'idle', lastSyncTime: '2025-01-06T10:00:00' },
-    { id: 2, name: '附件同步', status: 'running', lastSyncTime: null },
+    { id: 2, name: '附件同步', status: 'running' },
   ];
 
   it('should not render when visible is false', () => {

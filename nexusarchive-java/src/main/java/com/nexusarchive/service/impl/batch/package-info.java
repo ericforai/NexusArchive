@@ -1,6 +1,7 @@
 // Input: 批次档案转换服务模块清单
 // Output: J1 Self-Description - 模块声明边界和所有者
 // Pos: service.impl.batch 包 - 架构防御
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 /**
  * 批次档案转换服务包

@@ -374,6 +374,14 @@ export interface ErpSubInterface {
 // 场景状态类型
 export type ScenarioStatus = 'idle' | 'running' | 'success' | 'error';
 
+// 场景信息
+export interface Scenario {
+  id: number;
+  name: string;
+  status: ScenarioStatus;
+  lastSyncTime?: string;
+}
+
 // 扩展场景摘要信息
 export interface ScenarioSummary {
   id: number;
