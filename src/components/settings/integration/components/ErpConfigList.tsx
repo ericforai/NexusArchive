@@ -21,6 +21,7 @@ interface ErpConfigListProps {
   onConfig?: (config: ErpConfig) => void;
   onDelete?: (configId: number) => void;
   onLoadScenarios?: (configId: number) => void;
+  onViewDetails?: (configId: number) => void;
 }
 
 export function ErpConfigList({
@@ -33,7 +34,8 @@ export function ErpConfigList({
   onReconcile,
   onConfig,
   onDelete,
-  onLoadScenarios
+  onLoadScenarios,
+  onViewDetails
 }: ErpConfigListProps) {
   if (configs.length === 0) {
     return (
@@ -63,6 +65,7 @@ export function ErpConfigList({
           onConfig={onConfig}
           onDelete={onDelete}
           onLoadScenarios={onLoadScenarios}
+          onViewDetails={onViewDetails}
         />
       ))}
     </div>

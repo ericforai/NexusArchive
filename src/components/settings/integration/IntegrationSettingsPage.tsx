@@ -21,6 +21,7 @@ import { ErpConfigList } from './components/ErpConfigList';
 import { ConnectorForm } from './components/ConnectorForm';
 import { DiagnosisPanel } from './components/DiagnosisPanel';
 import { ParamsEditor } from './components/ParamsEditor';
+import { ScenarioDrawer } from './components/ScenarioDrawer';
 
 interface IntegrationSettingsPageProps {
   erpApi: any;
@@ -35,6 +36,9 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
 
   // Track loading scenarios per config
   const [loadingScenarios, setLoadingScenarios] = useState<Record<number, boolean>>({});
+
+  // Drawer state
+  const [drawerConfigId, setDrawerConfigId] = useState<number | null>(null);
 
   // Hook: Params Editor
   const paramsEditor = useParamsEditor({
@@ -93,6 +97,39 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
     });
     return counts;
   }, [scenarioManager.state.scenarios]);
+
+  // Calculate scenario statistics (running and error counts)
+  const scenarioStats = useMemo(() => {
+    const stats: Record<number, { running: number; error: number }> = {};
+    scenarioManager.state.scenarios.forEach(s => {
+      if (!stats[s.configId]) {
+        stats[s.configId] = { running: 0, error: 0 };
+      }
+      // Note: s.status might need adjustment based on actual data structure
+      if (s.status === 'running') stats[s.configId].running++;
+      if (s.status === 'error') stats[s.configId].error++;
+    });
+    return stats;
+  }, [scenarioManager.state.scenarios]);
+
+  // Get current drawer config
+  const drawerConfig = useMemo(() => {
+    if (drawerConfigId === null) return null;
+    return configManager.state.configs.find(c => c.id === drawerConfigId);
+  }, [drawerConfigId, configManager.state.configs]);
+
+  // Get current drawer scenarios
+  const drawerScenarios = useMemo(() => {
+    if (drawerConfigId === null) return [];
+    return scenarioManager.state.scenarios
+      .filter(s => s.configId === drawerConfigId)
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        status: s.status || 'idle',
+        lastSyncTime: s.lastSyncTime
+      }));
+  }, [drawerConfigId, scenarioManager.state.scenarios]);
 
   // Handle loading scenarios for a specific config
   const handleLoadScenarios = useCallback(async (configId: number) => {
@@ -163,6 +200,13 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
           console.log('Reconcile not implemented yet');
         }}
         onLoadScenarios={handleLoadScenarios}
+        onViewDetails={(configId) => {
+          // Load scenarios if not already loaded
+          if (!scenariosMap[configId] || scenariosMap[configId].length === 0) {
+            scenarioManager.actions.loadScenarios(configId);
+          }
+          setDrawerConfigId(configId);
+        }}
       />
 
       {/* Modals */}
@@ -184,6 +228,19 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
         <ParamsEditor
           state={paramsEditor.state}
           actions={paramsEditor.actions}
+        />
+      )}
+
+      {/* Scenario Drawer */}
+      {drawerConfig && (
+        <ScenarioDrawer
+          visible={drawerConfigId !== null}
+          configName={drawerConfig.name}
+          scenarios={drawerScenarios}
+          onClose={() => setDrawerConfigId(null)}
+          onSync={(scenarioId) => {
+            scenarioManager.actions.syncScenario(scenarioId);
+          }}
         />
       )}
     </div>
