@@ -4,10 +4,11 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, Plus, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Plus, Loader2, ShieldCheck, CheckCircle2, Shield } from 'lucide-react';
 import { AdminSettingsApi } from './types';
 import { User, Role } from '../../types';
 import { toast } from '../../utils/notificationService';
+import { UserFondsScopeDialog } from './UserFondsScopeDialog';
 
 type UserStatus = 'active' | 'disabled' | 'locked';
 
@@ -52,6 +53,11 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         phone: '',
         roleIds: []
     });
+
+    // 全宗权限对话框状态
+    const [fondsScopeDialogOpen, setFondsScopeDialogOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string>('');
+    const [selectedUsername, setSelectedUsername] = useState<string>('');
 
     const loadUsers = useCallback(async () => {
         setLoading(true);
@@ -146,6 +152,12 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         } finally {
             setActionLoading(null);
         }
+    };
+    // 打开全宗权限对话框
+    const handleOpenFondsScopeDialog = (userId: string, username: string) => {
+        setSelectedUserId(userId);
+        setSelectedUsername(username);
+        setFondsScopeDialogOpen(true);
     };
 
     const formatStatus = (status?: string) => {
@@ -378,6 +390,14 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                                             >
                                                 重置密码
                                             </button>
+                                            <button
+                                                onClick={() => handleOpenFondsScopeDialog(user.id, user.username)}
+                                                disabled={actionLoading === user.id}
+                                                className="text-emerald-600 hover:underline text-xs disabled:opacity-50 flex items-center gap-1"
+                                            >
+                                                <Shield size={12} />
+                                                全宗权限
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -408,6 +428,15 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                     </div>
                 </div>
             </div>
+
+            {/* 全宗权限对话框 */}
+            <UserFondsScopeDialog
+                isOpen={fondsScopeDialogOpen}
+                onClose={() => setFondsScopeDialogOpen(false)}
+                userId={selectedUserId}
+                username={selectedUsername}
+                onSuccess={loadUsers}
+            />
         </div>
     );
 };
