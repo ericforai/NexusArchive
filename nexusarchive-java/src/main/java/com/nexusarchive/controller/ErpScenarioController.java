@@ -6,10 +6,13 @@
 package com.nexusarchive.controller;
 
 import com.nexusarchive.common.result.Result;
+import com.nexusarchive.dto.SyncTaskDTO;
+import com.nexusarchive.dto.SyncTaskStatus;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.ErpSubInterface;
 import com.nexusarchive.entity.SyncHistory;
 import com.nexusarchive.service.ErpScenarioService;
+import com.nexusarchive.service.erp.AsyncErpSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ import jakarta.validation.Valid;
 public class ErpScenarioController {
 
     private final ErpScenarioService erpScenarioService;
+    private final AsyncErpSyncService asyncErpSyncService;
 
     @GetMapping("/list/{configId}")
     @Operation(summary = "获取指定ERP配置的场景列表")
@@ -46,14 +50,29 @@ public class ErpScenarioController {
     }
 
     @PostMapping("/{id}/sync")
-    @Operation(summary = "手动触发同步")
+    @Operation(summary = "手动触发同步（异步）")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "CAPTURE", resourceType = "ERP_SYNC", description = "手动触发ERP同步场景")
-    public Result<Void> triggerSync(@PathVariable Long id, jakarta.servlet.http.HttpServletRequest request) {
+    public Result<SyncTaskDTO> triggerSync(@PathVariable Long id, jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
         String clientIp = getClientIp(request);
-        erpScenarioService.syncScenario(id, operatorId, clientIp);
-        return Result.success();
+
+        // Submit async task
+        SyncTaskDTO task = asyncErpSyncService.submitSyncTask(id);
+        asyncErpSyncService.syncScenarioAsync(task.getTaskId(), id, operatorId, clientIp);
+
+        return Result.success(task);
+    }
+
+    @GetMapping("/{id}/sync/status/{taskId}")
+    @Operation(summary = "查询同步任务状态")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
+    public Result<SyncTaskStatus> getSyncStatus(@PathVariable Long id, @PathVariable String taskId) {
+        SyncTaskStatus status = asyncErpSyncService.getTaskStatus(taskId);
+        if (status == null) {
+            return Result.error("任务不存在: " + taskId);
+        }
+        return Result.success(status);
     }
 
     private String resolveUserId(jakarta.servlet.http.HttpServletRequest request) {

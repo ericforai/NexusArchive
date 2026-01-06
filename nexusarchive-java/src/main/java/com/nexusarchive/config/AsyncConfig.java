@@ -49,4 +49,19 @@ public class AsyncConfig {
                     return thread;
                 });
     }
+
+    /**
+     * ERP 同步服务专用线程池
+     */
+    @Bean(name = "erpSyncExecutor")
+    public Executor erpSyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("erp-sync-");
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
 }
