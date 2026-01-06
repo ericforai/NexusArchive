@@ -11,8 +11,8 @@
 
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, DatePicker, message, Spin } from 'antd';
-import type { Archive } from '@/api/types';
-import { archiveApi } from '@/api/archive';
+import type { Archive } from '@/api/archives';
+import { archivesApi } from '@/api/archives';
 
 interface ManualArchiveModalProps {
   visible: boolean;
@@ -64,7 +64,7 @@ export const ManualArchiveModal: React.FC<ManualArchiveModalProps> = ({
       setLoading(true);
 
       // 调用更新档案接口
-      const updatedArchive = await archiveApi.updateArchive(archive.id, {
+      await archivesApi.updateArchive(archive.id, {
         title: values.title,
         erpVoucherNo: values.voucherNo,
         voucherWord: values.voucherWord,
@@ -75,7 +75,7 @@ export const ManualArchiveModal: React.FC<ManualArchiveModalProps> = ({
       });
 
       message.success('元数据已更新，可以提交归档');
-      onSuccess?.(updatedArchive);
+      onSuccess?.({ ...archive, ...values } as Archive);
       handleCancel();
     } catch (error: any) {
       console.error('手动归档失败:', error);

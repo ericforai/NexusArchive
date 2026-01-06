@@ -63,8 +63,8 @@ module.exports = {
           '^domain$',
           '^constants$',
           '^sys$',
-          '^_linklist$',
-          '^_stream_wrap$'
+          '_linklist$',
+          '_stream_wrap$'
         ],
       }
     },
@@ -72,7 +72,7 @@ module.exports = {
       name: 'not-to-deprecated',
       comment:
         'This module uses a (version of an) npm module that has been deprecated. Either upgrade to a later ' +
-        'version of that module, or find an alternative. Deprecated modules are a security risk.',
+        'version of that module or find an alternative. Deprecated modules are a security risk.',
       severity: 'warn',
       from: {},
       to: {
@@ -118,7 +118,7 @@ module.exports = {
       from: {},
       to: {
         moreThanOneDependencyType: true,
-        // as it's pretty common to have a type import be a type only import 
+        // as it's pretty common to have a type import be a type only import
         // _and_ (e.g.) a devDependency - don't consider type-only dependency
         // types for this rule
         dependencyTypesNot: ["type-only"]
@@ -446,6 +446,79 @@ module.exports = {
     },
 
     // ============================================================
+    // Batch Upload Compliance Components (DA/T 94-2022 Fix)
+    // J2: Self-Check - Compliance fix architecture validation
+    // ============================================================
+
+    {
+      name: 'batch-upload-compliance-no-internal-import',
+      comment:
+        'Batch upload compliance components must be imported through parent module public API. ' +
+        'See: src/pages/collection/components/ComplianceAlert.tsx, ' +
+        'src/pages/archives/components/ManualArchiveModal.tsx',
+      severity: 'error',
+      from: {
+        path: '^src/(?!pages/(collection|archives))'
+      },
+      to: {
+        path: [
+          '^src/pages/collection/components/ComplianceAlert\\.tsx$',
+          '^src/pages/archives/components/ManualArchiveModal\\.tsx$'
+        ]
+      }
+    },
+
+    {
+      name: 'compliance-alert-restrict-deps',
+      comment:
+        'ComplianceAlert must remain dependency-free (presentational only). ' +
+        'Allowed: react, antd only. No local imports. ' +
+        'See: src/pages/collection/components/ComplianceAlert.tsx',
+      severity: 'error',
+      from: {
+        path: '^src/pages/collection/components/ComplianceAlert\\.tsx$'
+      },
+      to: {
+        path: '^src/',
+        dependencyTypes: ['local']
+      }
+    },
+
+    {
+      name: 'manual-archive-modal-restrict-deps',
+      comment:
+        'ManualArchiveModal can only use: src/api/archives, src/types. ' +
+        'See: src/pages/archives/components/ManualArchiveModal.tsx',
+      severity: 'error',
+      from: {
+        path: '^src/pages/archives/components/ManualArchiveModal\\.tsx$'
+      },
+      to: {
+        path: '^src/',
+        dependencyTypes: ['local'],
+        pathNot: [
+          '^src/api/archives\\.ts$',
+          '^src/api/types\\.ts$',
+          '^src/types\\.ts$'
+        ]
+      }
+    },
+
+    {
+      name: 'batch-upload-view-restrict-api',
+      comment:
+        'BatchUploadView must use collection or batchUpload API for uploads. ' +
+        'See: src/pages/collection/BatchUploadView.tsx',
+      severity: 'error',
+      from: {
+        path: '^src/pages/collection/BatchUploadView\\.tsx$'
+      },
+      to: {
+        path: '^src/api/(?!collection|archive|batchUpload|client|types)[^/]+\\.ts$'
+      }
+    },
+
+    // ============================================================
     // Integration Settings Module Rules
     // J2: Self-Check - Module-specific architecture validation
     // ============================================================
@@ -532,7 +605,7 @@ module.exports = {
     exclude : {
       /* path: an array of regular expressions in strings to match against */
       path: [
-        // antd 按需导入在运行时有效，但静态分析可能无法解析
+        // antd 按需导入在运行时有效，但静态分析时可能无法解析
         '^antd/es/',
         '^antd/locale/',
         // dayjs 也是有效的运行时依赖
@@ -550,19 +623,19 @@ module.exports = {
        module systems it knows of. It's the default because it's the safe option
        It might come at a performance penalty, though.
        moduleSystems: ['amd', 'cjs', 'es6', 'tsd']
-      
+
        As in practice only commonjs ('cjs') and ecmascript modules ('es6')
        are widely used, you can limit the moduleSystems to those.
      */
-    
+
     // moduleSystems: ['cjs', 'es6'],
 
-    /* 
+    /*
       false: don't look at JSDoc imports (the default)
       true: dependency-cruiser will detect dependencies in JSDoc-style
       import statements. Implies "parser": "tsc", so the dependency-cruiser
       will use the typescript parser for JavaScript files.
-     
+
       For this to work the typescript compiler will need to be installed in the
       same spot as you're running dependency-cruiser from.
      */
@@ -576,7 +649,7 @@ module.exports = {
     detectProcessBuiltinModuleCalls: true,
 
     /* prefix for links in html and svg output (e.g. 'https://github.com/you/yourrepo/blob/main/'
-       to open it on your online repo or `vscode://file/${process.cwd()}/` to 
+       to open it on your online repo or `vscode://file/${process.cwd()}/` to
        open it in visual studio code),
      */
     // prefix: `vscode://file/${process.cwd()}/`,
@@ -586,7 +659,7 @@ module.exports = {
        "specify": for each dependency identify whether it only exists before compilation or also after
      */
     tsPreCompilationDeps: true,
-    
+
     /* list of extensions to scan that aren't javascript or compile-to-javascript.
        Empty by default. Only put extensions in here that you want to take into
        account that are _not_ parsable.
@@ -617,11 +690,11 @@ module.exports = {
     /* Webpack configuration to use to get resolve options from.
 
        The (optional) fileName attribute specifies which file to take (relative
-       to dependency-cruiser's current working directory. When not provided defaults
+       to dependency-cruiser's current working directory). When not provided defaults
        to './webpack.conf.js'.
 
        The (optional) `env` and `arguments` attributes contain the parameters
-       to be passed if your webpack config is a function and takes them (see 
+       to be passed if your webpack config is a function and takes them (see
         webpack documentation for details)
      */
     // webpackConfig: {
@@ -643,7 +716,7 @@ module.exports = {
        a hack.
     */
     // exoticRequireStrings: [],
-    
+
     /* options to pass on to enhanced-resolve, the package dependency-cruiser
        uses to resolve module references to disk. The values below should be
        suitable for most situations
@@ -652,7 +725,7 @@ module.exports = {
        there will override the ones specified here.
      */
     enhancedResolveOptions: {
-      /* What to consider as an 'exports' field in package.jsons */ 
+      /* What to consider as an 'exports' field in package.jsons */
       exportsFields: ["exports"],
       /* List of conditions to check for in the exports field.
          Only works when the 'exportsFields' array is non-empty.
@@ -668,24 +741,24 @@ module.exports = {
       /* What to consider a 'main' field in package.json */
       mainFields: ["module", "main", "types", "typings"],
       /* A list of alias fields in package.jsons
-        
+
          See [this specification](https://github.com/defunctzombie/package-browser-field-spec) and
          the webpack [resolve.alias](https://webpack.js.org/configuration/resolve/#resolvealiasfields)
          documentation.
-         
+
          Defaults to an empty array (= don't use alias fields).
        */
       // aliasFields: ["browser"],
     },
 
-    /* skipAnalysisNotInRules will make dependency-cruiser execute 
-       analysis strictly necessary for checking the rule set only. 
+    /* skipAnalysisNotInRules will make dependency-cruiser execute
+       analysis strictly necessary for checking the rule set only.
 
        See https://github.com/sverweij/dependency-cruiser/blob/main/doc/options-reference.md#skipanalysisnotinrules
        for details
      */
     skipAnalysisNotInRules: true,
-    
+
     reporterOptions: {
       dot: {
         /* pattern of modules that can be consolidated in the detailed
@@ -729,4 +802,6 @@ module.exports = {
     }
   }
 };
-// generated: dependency-cruiser@17.3.5 on 2026-01-01T00:40:14.354Z
+// Generated for NexusArchive - Architecture Defense System
+// J2: Self-Check - Automated architecture validation
+// Last updated: 2025-01-06 - Batch Upload Compliance (DA/T 94-2022)

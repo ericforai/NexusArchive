@@ -11,17 +11,13 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip
 } from 'recharts';
 import {
-  MoreHorizontal,
-
   FileUp,
   Bell,
-  ExternalLink,
   CheckCircle2,
   AlertTriangle,
   Loader2
 } from 'lucide-react';
 import { statsApi } from '../../api/stats';
-import { archivesApiEx, Archive } from '../../api/archives';
 import { notificationsApi, NotificationItem } from '../../api/notifications';
 import { ROUTE_PATHS } from '../../routes/paths';
 
@@ -56,7 +52,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   const routerNavigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [trend, setTrend] = useState<{ date: string; count: number }[]>([]);
-  const [recent, setRecent] = useState<Archive[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [notifRefreshing, setNotifRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -66,10 +61,9 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     setLoading(true);
     setError(null);
     try {
-      const [statsRes, trendRes, recentRes, notifRes] = await Promise.all([
+      const [statsRes, trendRes, notifRes] = await Promise.all([
         statsApi.getDashboard(),
         statsApi.getTrend(),
-        archivesApiEx.getRecent(5),
         notificationsApi.list()
       ]);
 
@@ -88,12 +82,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         setTrend(trendRes.data || []);
       } else if (trendRes.code !== 200) {
         errors.push('趋势数据加载失败');
-      }
-
-      if (recentRes.code === 200) {
-        setRecent(recentRes.data || []);
-      } else {
-        errors.push('最近档案加载失败');
       }
 
       if (notifRes.code === 200) {
@@ -136,35 +124,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     { label: '待处理任务', value: stats?.pendingTasks ?? '--', color: 'bg-amber-500', icon: AlertTriangle },
     { label: '今日入库', value: stats?.todayIngest ?? '--', color: 'bg-purple-500', icon: AlertTriangle }
   ];
-
-  const formatAmount = (amount?: number | string) => {
-    if (amount === undefined || amount === null || amount === '') return '--';
-    const num = typeof amount === 'string' ? Number(amount) : amount;
-    return isNaN(num) ? amount : `¥${num.toLocaleString()}`;
-  };
-
-  const renderStatusTag = (status?: string) => {
-    const normalized = (status || '').toLowerCase();
-    if (normalized === 'archived') {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-          <CheckCircle2 size={12} /> 已归档
-        </span>
-      );
-    }
-    if (normalized === 'failed') {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100">
-          <AlertTriangle size={12} /> 处理失败
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-        {status || '处理中'}
-      </span>
-    );
-  };
 
   return (
     <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
@@ -287,98 +246,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
               {notifRefreshing ? '刷新中...' : '查看全部通知（刷新）'}
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* Recent Documents Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-slate-800">最近归档记录</h3>
-          <button onClick={() => routerNavigate(ROUTE_PATHS.QUERY)} className="text-slate-400 hover:text-primary-600 transition-colors">
-            <ExternalLink size={18} />
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
-                <th className="p-4 font-medium">档案编号</th>
-                <th className="p-4 font-medium">名称/摘要</th>
-                <th className="p-4 font-medium">类别</th>
-                <th className="p-4 font-medium">金额</th>
-                <th className="p-4 font-medium">业务日期</th>
-                <th className="p-4 font-medium">创建时间</th>
-                <th className="p-4 font-medium">状态</th>
-                <th className="p-4 font-medium text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
-              {recent.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">{loading ? '加载中...' : '暂无归档记录'}</td>
-                </tr>
-              ) : recent.map((doc) => (
-                <tr
-                  key={doc.id || doc.archiveCode}
-                  className="hover:bg-slate-50 transition-colors group cursor-pointer"
-                  onClick={() => routerNavigate(ROUTE_PATHS.QUERY)}
-                >
-                  <td className="p-4 font-mono text-slate-600">{doc.archiveCode || '--'}</td>
-                  <td className="p-4 font-medium text-slate-800">
-                    {(() => {
-                      if (doc.customMetadata) {
-                        try {
-                          const meta = JSON.parse(doc.customMetadata);
-                          // Handle array format (e.g. accounting entries)
-                          if (Array.isArray(meta) && meta.length > 0 && meta[0].description) {
-                            return meta[0].description;
-                          }
-                          // Handle object format
-                          if (!Array.isArray(meta) && meta.description) {
-                            return meta.description;
-                          }
-                        } catch {
-                          // ignore
-                        }
-                      }
-                      return doc.title || doc.archiveCode || '--';
-                    })()}
-                  </td>
-                  <td className="p-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                      {doc.categoryCode || '--'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-600 font-mono">{formatAmount(doc.amount)}</td>
-                  <td className="p-4 text-slate-500">{doc.docDate || '--'}</td>
-                  <td className="p-4 text-slate-500">{(() => {
-                    const time = doc.createdTime || doc.createdAt;
-                    if (!time) return '--';
-                    let timeStr: string;
-                    if (typeof time === 'string') {
-                      timeStr = time;
-                    } else if (typeof time === 'number') {
-                      timeStr = new Date(time).toISOString();
-                    } else if ((time as any) instanceof Date) {
-                      timeStr = (time as Date).toISOString();
-                    } else {
-                      timeStr = String(time);
-                    }
-                    return timeStr.split('T')[0] || '--';
-                  })()}</td>
-                  <td className="p-4">{renderStatusTag(doc.status)}</td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); routerNavigate(ROUTE_PATHS.QUERY); }}
-                      className="p-1 text-slate-400 hover:text-primary-600 rounded hover:bg-primary-50 transition-all"
-                    >
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
