@@ -124,6 +124,33 @@ docker-compose -f docker-compose.dev.yml up -d
 
 ---
 
+## 🏗️ 部署到服务器 (Production)
+
+当需要将系统部署到客户私有服务器时，请遵循以下流程：
+
+### 1. 首次配置
+
+```bash
+# 1. 复制服务器环境变量模板
+cp .env.example .env.server
+
+# 2. 编辑配置文件
+# 必填项：数据库密码、Redis 密码、存储路径等
+vi .env.server
+```
+
+### 2. 执行部署
+
+```bash
+# 执行自动化部署脚本
+npm run deploy
+```
+
+> [!NOTE]
+> `npm run deploy` 会自动拉取最新代码、重建镜像并重启服务容器。该过程依赖 `.env.server` 配置文件。
+
+---
+
 ## 与生产环境对比
 
 | 项目 | 开发环境 | 生产环境 |
