@@ -1,9 +1,9 @@
 # Module Manifest（模块清单）
 
 > 本清单是模块边界与依赖关系的单一事实来源（SSOT）。
-> **版本**: 2.4.0
-> **更新日期**: 2026-01-02
-> **自动生成**: 通过 scripts/discover-frontend-modules.js + ModuleGovernanceService
+> **版本**: 2.5.0
+> **更新日期**: 2026-01-06
+> **自动生成**: 通过 scripts/discover-frontend-modules.js + ModuleDiscoveryService
 
 ---
 
@@ -11,10 +11,10 @@
 
 | 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
-| FE.PAGES | 页面容器层 | src/pages/Auth, src/pages/admin, src/pages/archives, src/pages/audit, src/pages/collection, src/pages/debug, src/pages/demo, src/pages/matching, src/pages/operations, src/pages/panorama, src/pages/portal, src/pages/pre-archive, src/pages/security, src/pages/settings, src/pages/stats, src/pages/utilization | 页面级容器组件 | 82 files | ✅ ACTIVE |
-| FE.COMPONENTS | 通用组件层 | src/components/auth, src/components/common, src/components/layout, src/components/modals, src/components/org, src/components/preview, src/components/settings, src/components/table, src/components/voucher, src/components/watermark | 可复用 UI 组件 | 68 files | ✅ ACTIVE |
-| FE.STORE | 状态管理层 | src/store/__tests__ | Zustand 全局状态 | 7 files | ✅ ACTIVE |
-| FE.API | API 客户端层 | src/src/api | 后端 API 调用封装 | 37 files | ✅ ACTIVE |
+| FE.PAGES | 页面容器层 | src/pages/* | 页面级容器组件 | 112 files | ✅ ACTIVE |
+| FE.COMPONENTS | 通用组件层 | src/components/* | 可复用 UI 组件 | 142 files | ✅ ACTIVE |
+| FE.STORE | 状态管理层 | src/store/* | Zustand 全局状态 | 12 files | ✅ ACTIVE |
+| FE.API | API 客户端层 | src/api/* | 后端 API 调用封装 | 41 files | ✅ ACTIVE |
 | FE.HOOKS | 自定义 Hooks | src/src/hooks | React 自定义 Hooks | 5 files | ✅ ACTIVE |
 | FE.UTILS | 工具函数层 | src/src/utils | 通用工具函数 | 5 files | ✅ ACTIVE |
 
@@ -65,7 +65,7 @@
 | BE.CONTROLLER | Controller Layer | `com.nexusarchive.controller` | REST API 端点 | `com.nexusarchive.service..`, `com.nexusarchive.dto..` | ✅ 活跃 |
 | BE.SERVICE | Service Layer | `com.nexusarchive.service` | 业务逻辑实现 | `com.nexusarchive.mapper..`, `com.nexusarchive.entity..`, `com.nexusarchive.dto..` | ✅ 活跃 |
 | BE.MAPPER | Mapper Layer | `com.nexusarchive.mapper` | 数据访问层 (MyBatis-Plus) | `com.nexusarchive.entity..` | ✅ 活跃 |
-| BE.ENTITY | Entity Layer | `com.nexusarchive.entity` | 数据模型定义 | 通用库 | ✅ 活跃 |
+| BE.ENTITY | Entity Layer | `com.nexusarchive.entity` | 数据模型定义 | 通用库 | 64 files | ✅ 活跃 |
 | BE.DTO | DTO Layer | `com.nexusarchive.dto` | 数据传输对象 | `com.nexusarchive.entity..` | ✅ 活跃 |
 | BE.CONFIG | Config Layer | `com.nexusarchive.config` | 系统配置 | Spring 生态 | ✅ 活跃 |
 | BE.SECURITY | Security Layer | `com.nexusarchive.security` | 安全认证授权 | Spring Security | ✅ 活跃 |
@@ -134,6 +134,7 @@
 
 ## 更新日志
 
+- **2026-01-06 v2.5.0**: 同步 2026-01-05 重大重构后的文件统计，补全后端核心实体清单
 - **2026-01-02 v2.4.0**: ERP 模块重构 - 统一 Adapter 架构，添加注解驱动的元数据系统
 - **2026-01-02 v2.2.0**: 新增凭证预览抽屉系统模块（FE.ARCHIVES, FE.DRAWER, FE.VOUCHER_PREVIEW, FE.DRAWER_STORE）
 - **2026-01-01 v2.1.0**: 添加模块化组件 (INGEST, VOUCHER, MATCHING)、基础设施模块、集成层

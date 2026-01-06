@@ -88,8 +88,10 @@ public class Borrowing {
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime lastModifiedTime;
+    // TODO: updated_at 列需要在数据库中添加
+    // 暂时禁用此字段以避免 SQL 错误
+    // @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    // private LocalDateTime lastModifiedTime;
 
     @TableLogic
     private Integer deleted;

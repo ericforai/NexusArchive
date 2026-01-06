@@ -30,3 +30,5 @@ public interface SysEntityMapper extends BaseMapper<SysEntity> {
 
 
 
+
+

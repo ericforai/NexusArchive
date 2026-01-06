@@ -3,23 +3,53 @@
 // Pos: src/pages/panorama/VoucherPlayer.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, X, ShieldCheck } from 'lucide-react';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
+import { archivesApi } from '../../api/archives';
 
 interface VoucherPlayerProps {
     initialVoucherId: string;
     onClose: () => void;
+    sourceType?: 'ARCHIVE' | 'ORIGINAL' | null;
 }
 
-export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, onClose }) => {
+export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, onClose, sourceType }) => {
     const [currentVoucherId, setCurrentVoucherId] = useState(initialVoucherId);
     const [hoveredField, setHoveredField] = useState<string | null>(null);
 
-    // Mock list of vouchers for "Flip" navigation
-    // In a real app, this would be passed in or fetched based on the current list context
-    const voucherList = useMemo(() => ['V-202511-TEST', 'V-202311-001'], []);
+    const [voucherList, setVoucherList] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch voucher list dynamically (e.g., from archives API)
+    useEffect(() => {
+        const fetchVouchers = async () => {
+            if (sourceType === 'ARCHIVE') {
+                setLoading(true);
+                setError(null);
+                try {
+                    const res = await archivesApi.getArchives({ page: 1, limit: 100, categoryCode: 'AC01' });
+                    if (res && res.code === 200 && res.data) {
+                        const records = (res.data as any).records || [];
+                        setVoucherList(records.map((r: any) => r.id));
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch voucher list in Player:', e);
+                    setError('无法获取凭证列表');
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                // For ORIGINAL or other modes, use a fallback list or just the initial ID
+                setVoucherList([initialVoucherId]);
+            }
+        };
+
+        fetchVouchers();
+    }, [initialVoucherId, sourceType]);
+
     const currentIndex = voucherList.indexOf(currentVoucherId);
 
     const handlePrev = useCallback(() => {
@@ -84,6 +114,7 @@ export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, 
                         compact={true}
                         onFieldHover={setHoveredField}
                         activeField={hoveredField}
+                        sourceType={sourceType}
                     />
                 </div>
 
@@ -93,6 +124,7 @@ export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, 
                         voucherId={currentVoucherId}
                         highlightField={hoveredField}
                         onInteract={(field) => setHoveredField(field)}
+                        sourceType={sourceType}
                     />
                 </div>
             </div>

@@ -16,7 +16,7 @@ import {
   Upload,
   Shield,
 } from 'lucide-react';
-import { NavItem, ViewState, ArchiveStat, Notification, ModuleConfig } from './types';
+import { NavItem, ViewState, ArchiveStat, AppNotification, ModuleConfig } from './types.ts';
 
 export const NAV_ITEMS: NavItem[] = [
   { id: ViewState.PORTAL, label: '档案门户', icon: LayoutDashboard, permission: 'nav:portal' },
@@ -55,7 +55,7 @@ export const NAV_ITEMS: NavItem[] = [
           { id: '单据池:其他', label: '其他', path: '单据池:其他' }
         ]
       },
-      { id: 'OCR识别', label: 'OCR识别', path: 'OCR识别' },
+      // { id: 'OCR识别', label: 'OCR识别', path: 'OCR识别' }, // 待开发：后端 OCR 服务未实现，详见 docs/plans/2026-01-06-ocr-service-design.md
       { id: '凭证关联', label: '凭证关联', path: '凭证关联' },
       { id: '异常数据', label: '异常数据', path: '异常数据' }
     ]
@@ -183,7 +183,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 // NOTIFICATIONS 已移除 - 通知数据通过 /api/notifications 获取真实数据
-export const NOTIFICATIONS: Notification[] = [];
+export const NOTIFICATIONS: AppNotification[] = [];
 
 // RECENT_DOCS 已移除 - 最近归档记录已从档案门户移除
 export const RECENT_DOCS = [];

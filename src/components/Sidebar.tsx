@@ -4,9 +4,9 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useMemo, useState, useCallback } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { NAV_ITEMS } from '../constants';
-import { NavItem, ViewState } from '../types';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NAV_ITEMS } from '../constants.tsx';
+import { NavItem, ViewState } from '../types.ts';
 import { ChevronDown, ChevronsLeft, ChevronsRight, Command, FolderOpen } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../routes/paths';
@@ -66,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { hasPermission } = usePermissions();
   const location = useLocation();
+  const navigate = useNavigate();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [collapsedTopLevel, setCollapsedTopLevel] = useState<Set<string>>(new Set());
 
@@ -174,10 +175,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     // Determine the main link path (if it's a leaf or clickable parent)
     let mainPath = '#';
+    // 即使有子菜单，如果项目有 path 并能映射到 SUBITEM_TO_PATH，也支持导航
+    // 例如：单据池 既有子菜单又有自己的 path
     if (!hasChildren) {
       if (VIEW_TO_PATH[item.id]) mainPath = VIEW_TO_PATH[item.id];
       else if (item.path && SUBITEM_TO_PATH[item.path]) mainPath = SUBITEM_TO_PATH[item.path];
       else if (item.path) mainPath = item.path;
+    } else if (item.path && SUBITEM_TO_PATH[item.path]) {
+      // 有子菜单但也有可导航的 path（如单据池）
+      mainPath = SUBITEM_TO_PATH[item.path];
     }
 
     // Indentation based on level - 不同层级需要不同的缩进以区分层次
@@ -197,9 +203,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return (
       <div key={item.id} className="group relative">
         {hasChildren ? (
-          // Parent Node: Button to toggle
+          // Parent Node: Button to toggle (may also navigate if has path)
           <button
-            onClick={() => handleToggle(item.id, siblings, level === 0)}
+            onClick={() => {
+              handleToggle(item.id, siblings, level === 0);
+              // 如果父级菜单有可导航的路径（如单据池），点击时同时导航
+              if (mainPath !== '#') {
+                navigate(mainPath);
+              }
+            }}
             className={`${commonClasses} ${isItemActive(item) && collapsed ? activeClasses : filterActiveParent(isActive, isExpanded) ? 'text-white' : inactiveClasses}`}
             title={collapsed ? item.label : ''}
           >

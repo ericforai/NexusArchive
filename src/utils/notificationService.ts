@@ -3,7 +3,7 @@
 // Pos: 前端通知服务工具（包含 localStorage 持久化与 Toast 通知）
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { EnhancedNotification, NotificationRule } from '../types';
+import { EnhancedNotification, NotificationRule } from '../types.ts';
 import { safeStorage } from './storage';
 import { message } from 'antd';
 
@@ -221,66 +221,66 @@ export type ToastNotificationType = 'success' | 'info' | 'warning' | 'error';
  * Supports both simple usage and options object pattern for toasts by ID
  */
 export const toast = {
-    success: (content: string, options?: { id?: string; duration?: number }) => {
-        if (options?.id) {
-            // Dismiss previous message with this ID
-            activeMessages.get(options.id)?.();
-            activeMessages.delete(options.id);
-        }
-        const duration = options?.duration ?? 3;
-        return message.success(content, duration);
-    },
-    error: (content: string, options?: { id?: string; duration?: number }) => {
-        if (options?.id) {
-            activeMessages.get(options.id)?.();
-            activeMessages.delete(options.id);
-        }
-        const duration = options?.duration ?? 5;
-        return message.error(content, duration);
-    },
-    info: (content: string, options?: { id?: string; duration?: number }) => {
-        if (options?.id) {
-            activeMessages.get(options.id)?.();
-            activeMessages.delete(options.id);
-        }
-        const duration = options?.duration ?? 3;
-        return message.info(content, duration);
-    },
-    warning: (content: string, options?: { id?: string; duration?: number }) => {
-        if (options?.id) {
-            activeMessages.get(options.id)?.();
-            activeMessages.delete(options.id);
-        }
-        const duration = options?.duration ?? 3;
-        return message.warning(content, duration);
-    },
-    loading: (content: string, options?: { id?: string; duration?: number }) => {
-        const duration = options?.duration ?? 0;
-        const msgInstance = message.loading(content, duration);
+  success: (content: string, options?: { id?: string; duration?: number }) => {
+    if (options?.id) {
+      // Dismiss previous message with this ID
+      activeMessages.get(options.id)?.();
+      activeMessages.delete(options.id);
+    }
+    const duration = options?.duration ?? 3;
+    return message.success(content, duration);
+  },
+  error: (content: string, options?: { id?: string; duration?: number }) => {
+    if (options?.id) {
+      activeMessages.get(options.id)?.();
+      activeMessages.delete(options.id);
+    }
+    const duration = options?.duration ?? 5;
+    return message.error(content, duration);
+  },
+  info: (content: string, options?: { id?: string; duration?: number }) => {
+    if (options?.id) {
+      activeMessages.get(options.id)?.();
+      activeMessages.delete(options.id);
+    }
+    const duration = options?.duration ?? 3;
+    return message.info(content, duration);
+  },
+  warning: (content: string, options?: { id?: string; duration?: number }) => {
+    if (options?.id) {
+      activeMessages.get(options.id)?.();
+      activeMessages.delete(options.id);
+    }
+    const duration = options?.duration ?? 3;
+    return message.warning(content, duration);
+  },
+  loading: (content: string, options?: { id?: string; duration?: number }) => {
+    const duration = options?.duration ?? 0;
+    const msgInstance = message.loading(content, duration);
 
-        // Store the instance if an ID is provided
-        if (options?.id) {
-            activeMessages.set(options.id, msgInstance);
-        }
+    // Store the instance if an ID is provided
+    if (options?.id) {
+      activeMessages.set(options.id, msgInstance);
+    }
 
-        return msgInstance;
-    },
-    // Dismiss method to close specific messages by ID or all messages
-    dismiss: (key?: string) => {
-        if (key) {
-            // Dismiss specific message by ID
-            const msgInstance = activeMessages.get(key);
-            if (msgInstance) {
-                msgInstance();
-                activeMessages.delete(key);
-            }
-            // Also try to destroy any message with this key
-            message.destroy(key);
-        } else {
-            // Dismiss all messages
-            message.destroy();
-            activeMessages.clear();
-        }
-    },
+    return msgInstance;
+  },
+  // Dismiss method to close specific messages by ID or all messages
+  dismiss: (key?: string) => {
+    if (key) {
+      // Dismiss specific message by ID
+      const msgInstance = activeMessages.get(key);
+      if (msgInstance) {
+        msgInstance();
+        activeMessages.delete(key);
+      }
+      // Also try to destroy any message with this key
+      message.destroy(key);
+    } else {
+      // Dismiss all messages
+      message.destroy();
+      activeMessages.clear();
+    }
+  },
 };
 

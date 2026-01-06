@@ -124,6 +124,11 @@ export const adminApi = {
         const response = await client.put<ApiResponse<void>>(`/admin/users/${id}/fonds-scope`, { fondsCodes });
         return response.data;
     },
+    // 获取全宗列表（用于创建用户时选择）
+    getFondsList: async () => {
+        const response = await client.get<ApiResponse<any[]>>('/bas/fonds/list');
+        return response.data;
+    },
 
     // 角色管理
     getRoles: async (params?: any) => {
@@ -206,4 +211,18 @@ export const adminApi = {
         void id;
         return Promise.resolve({ data: {} });
     }, // client.delete(`/admin/workflows/${id}`),
+
+    // Certificate Management
+    getCertificates: async () => {
+        const response = await client.get<ApiResponse<any[]>>('/admin/certificates');
+        return response.data;
+    },
+    getCertificate: async (alias: string) => {
+        const response = await client.get<ApiResponse<any>>(`/admin/certificates/${alias}`);
+        return response.data;
+    },
+    verifyCertificate: async (alias: string) => {
+        const response = await client.post<ApiResponse<any>>(`/admin/certificates/${alias}/verify`);
+        return response.data;
+    },
 };

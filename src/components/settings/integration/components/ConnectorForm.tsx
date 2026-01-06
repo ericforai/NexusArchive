@@ -43,7 +43,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         </div>
       }
       placement="right"
-      width={560}
+      size="default"
       open={show}
       onClose={actions.closeModal}
       destroyOnClose={true}

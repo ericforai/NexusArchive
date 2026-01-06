@@ -59,38 +59,75 @@ public class AbnormalVoucherServiceImpl implements AbnormalVoucherService {
             throw new BusinessException(404, "Abnormal record not found");
         }
         
+        // 保留原始失败原因用于追踪
+        String originalReason = abnormal.getFailReason();
+        int retryCount = parseRetryCount(originalReason);
+        
         try {
             AccountingSipDto sipDto = objectMapper.readValue(abnormal.getSipData(), AccountingSipDto.class);
             
-            // Update status to RETRYING
+            // [FIX] 生成新的 RequestId 后缀，避免 IngestRequestStatus 表主键冲突
+            // 格式: 原始ID-R{重试次数}
+            String originalRequestId = sipDto.getRequestId();
+            String newRequestId = originalRequestId + "-R" + (retryCount + 1);
+            sipDto.setRequestId(newRequestId);
+            
+            log.info("Retrying abnormal voucher: id={}, originalRequestId={}, newRequestId={}", 
+                    id, originalRequestId, newRequestId);
+            
+            // 更新状态为 RETRYING（重试中）
             abnormal.setStatus("RETRYING");
             abnormal.setUpdateTime(LocalDateTime.now());
+            // [FIX] 保留原始原因 + 追加重试信息
+            abnormal.setFailReason(String.format("[重试#%d] %s | 原因: %s", 
+                    retryCount + 1, 
+                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    originalReason));
             abnormalVoucherMapper.updateById(abnormal);
             
-            // Re-submit to IngestService
-            // Note: This will start a new async process. 
-            // Ideally we should link the new request ID or keep the old one.
-            // For simplicity, we reuse the SIP DTO which has the original Request ID.
-            // But IngestService might complain if Request ID already exists in status table?
-            // Let's assume IngestService handles re-submission or we generate a new Request ID suffix.
-            // For now, just call ingest.
+            // 重新提交到 IngestService
             ingestService.ingestSip(sipDto);
             
-            // If ingest throws no immediate error, we mark as RESOLVED (or wait for callback?)
-            // Since ingest is async, we can't know for sure if it passed checks yet.
-            // But we can mark this abnormal record as "RESOLVED" assuming the new flow takes over.
-            // Or better, keep it as RETRYING until we get a success event? 
-            // For MVP, mark as RESOLVED to clear the queue.
-            abnormal.setStatus("RESOLVED");
-            abnormalVoucherMapper.updateById(abnormal);
+            // [FIX] 不再立即标记 RESOLVED
+            // 异步归档流程会在成功后通过事件机制更新状态
+            // 保持 RETRYING 状态，等待 ComplianceListener 的处理结果
+            // 如果二次归档成功，ComplianceListener 不会再调用 saveAbnormal
+            // 如果二次归档失败，ComplianceListener 会创建新的异常记录
+            log.info("Retry submitted for abnormal voucher: id={}, status remains RETRYING until async completion", id);
             
         } catch (Exception e) {
             log.error("Retry failed for abnormal voucher: " + id, e);
-            abnormal.setStatus("PENDING"); // Revert to PENDING
-            abnormal.setFailReason("Retry failed: " + e.getMessage());
+            abnormal.setStatus("PENDING"); // 回退到 PENDING 状态
+            // [FIX] 保留原始原因 + 追加重试失败信息
+            abnormal.setFailReason(String.format("[重试#%d失败] %s | 错误: %s | 原因: %s",
+                    retryCount + 1,
+                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    e.getMessage(),
+                    originalReason));
+            abnormal.setUpdateTime(LocalDateTime.now());
             abnormalVoucherMapper.updateById(abnormal);
             throw new BusinessException(500, "Retry failed: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 从失败原因中解析重试次数
+     */
+    private int parseRetryCount(String failReason) {
+        if (failReason == null) {
+            return 0;
+        }
+        // 匹配 [重试#N] 模式
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\[重试#(\\d+)");
+        java.util.regex.Matcher matcher = pattern.matcher(failReason);
+        int maxCount = 0;
+        while (matcher.find()) {
+            int count = Integer.parseInt(matcher.group(1));
+            if (count > maxCount) {
+                maxCount = count;
+            }
+        }
+        return maxCount;
     }
 
     @Override

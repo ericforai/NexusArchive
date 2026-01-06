@@ -76,7 +76,6 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
 
     return (
         <Drawer
-            style={{ background: '#ff0000' }}
             title={
                 <div className="flex items-center justify-between w-full pr-8">
                     <div className="flex items-center gap-2">
@@ -93,7 +92,7 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
             placement="right"
             onClose={onClose}
             open={open}
-            width="85%"
+            size="large"
             extra={
                 <div className="flex items-center gap-2">
                     <Button
@@ -107,14 +106,10 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                 </div>
             }
             closeIcon={<X size={20} className="text-slate-400" />}
-            bodyStyle={{ padding: 0, overflow: 'hidden' }}
+            styles={{ body: { padding: 0, overflow: 'hidden' } }}
         >
             {voucherId ? (
                 <div className="flex h-full bg-white">
-                    {/* DEBUG: 明显的红色调试标记 */}
-                    <div className="fixed top-20 right-10 bg-red-600 text-white px-4 py-2 rounded-lg z-50 font-bold">
-                        🔴 DEBUG - VoucherPreviewDrawer v2025-01-05
-                    </div>
                     {/* Left: Metadata Details + YonSuite Attachments */}
                     <div className="w-[320px] shrink-0 h-full border-r border-slate-100 bg-white overflow-y-auto">
                         {/* Voucher Detail Card */}
@@ -126,7 +121,7 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                         />
 
                         {/* YonSuite Attachments */}
-                        <div className="border-t border-slate-100 bg-red-50">
+                        <div className="border-t border-slate-100">
                             <Collapse
                                 defaultActiveKey={[]}
                                 items={[

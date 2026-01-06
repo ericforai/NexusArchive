@@ -54,3 +54,5 @@ COMMENT ON COLUMN legacy_import_task.completed_at IS '完成时间';
 COMMENT ON COLUMN legacy_import_task.created_at IS '创建时间';
 
 
+
+

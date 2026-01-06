@@ -55,3 +55,5 @@ CREATE TRIGGER trigger_update_entity_config_updated_time
     EXECUTE FUNCTION update_sys_entity_config_updated_time();
 
 
+
+

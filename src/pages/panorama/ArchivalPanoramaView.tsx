@@ -288,22 +288,20 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
                         <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
                             <button
                                 onClick={() => setDetailViewMode('detail')}
-                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
-                                    detailViewMode === 'detail'
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${detailViewMode === 'detail'
                                         ? 'bg-white text-primary-700 shadow-sm'
                                         : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                    }`}
                             >
                                 <FileText size={12} />
                                 <span>详情</span>
                             </button>
                             <button
                                 onClick={() => setDetailViewMode('voucher')}
-                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
-                                    detailViewMode === 'voucher'
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${detailViewMode === 'voucher'
                                         ? 'bg-white text-primary-700 shadow-sm'
                                         : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                    }`}
                             >
                                 <Receipt size={12} />
                                 <span>凭证预览</span>
@@ -404,6 +402,7 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
                 <VoucherPlayer
                     initialVoucherId={selectedVoucherId}
                     onClose={() => setIsPlayerOpen(false)}
+                    sourceType={sourceType}
                 />
             )}
         </div>

@@ -37,8 +37,10 @@ if [ ! -f .env.local ]; then
     echo -e "${YELLOW}⚠️  请根据需要修改配置${NC}"
 fi
 
-# 加载环境变量
+# 加载环境变量（导出到子进程）
+set -a  # 自动导出所有后续变量
 source .env.local
+set +a  # 停止自动导出
 
 # ==============================================================================
 # 2. 启动基础设施（DB + Redis）
@@ -150,7 +152,7 @@ if [ -f .frontend.pid ]; then
 fi
 
 if [ ! -f .frontend.pid ]; then
-    npm run dev &
+    npm run dev:vite > frontend.log 2>&1 &
     FRONTEND_PID=$!
     echo $FRONTEND_PID > .frontend.pid
     echo -e "${GREEN}✅ 前端启动中 (PID: $FRONTEND_PID)${NC}"

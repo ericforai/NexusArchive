@@ -8,7 +8,7 @@ import { RefreshCw, Plus, Loader2, ShieldCheck, CheckCircle2, Shield } from 'luc
 import { AdminSettingsApi } from './types';
 import { User, Role } from '../../types';
 import { toast } from '../../utils/notificationService';
-import { UserFondsScopeDialog } from './UserFondsScopeDialog';
+import { UserFondsScopeDrawer } from './UserFondsScopeDrawer';
 
 type UserStatus = 'active' | 'disabled' | 'locked';
 
@@ -19,15 +19,11 @@ interface CreateUserForm {
     email: string;
     phone: string;
     roleIds: string[];
+    fondsCodes: string[];
 }
 
 const EXCLUSIVE_ROLE_CODES = ['system_admin', 'security_admin', 'audit_admin'];
 
-/**
- * 用户管理页面
- * 
- * 包含用户创建和用户列表管理
- */
 interface UserSettingsProps {
     adminApi: AdminSettingsApi;
 }
@@ -51,11 +47,13 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         fullName: '',
         email: '',
         phone: '',
-        roleIds: []
+        roleIds: [],
+        fondsCodes: []
     });
 
-    // 全宗权限对话框状态
-    const [fondsScopeDialogOpen, setFondsScopeDialogOpen] = useState(false);
+    const [availableFonds, setAvailableFonds] = useState<Array<{fondsCode: string; fondsName: string; companyName: string}>>([]);
+
+    const [fondsScopeDrawerOpen, setFondsScopeDrawerOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string>('');
     const [selectedUsername, setSelectedUsername] = useState<string>('');
 
@@ -96,12 +94,29 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         loadRoles();
     }, [adminApi]);
 
+    useEffect(() => {
+        const loadAvailableFonds = async () => {
+            try {
+                const res = await adminApi.getFondsList();
+                if (res.code === 200 && res.data) {
+                    setAvailableFonds(res.data.map((f: any) => ({
+                        fondsCode: f.fondsCode,
+                        fondsName: f.fondsName,
+                        companyName: f.companyName
+                    })));
+                }
+            } catch (e) {
+                console.error('Failed to load fonds list:', e);
+            }
+        };
+        loadAvailableFonds();
+    }, [adminApi]);
+
     const handleResetPassword = async (id: string) => {
         const hint = '密码要求：至少8位，必须包含大写字母、小写字母、数字和特殊字符';
         const newPwd = window.prompt(`请输入新密码：\n\n${hint}`);
         if (!newPwd) return;
 
-        // 前端验证密码策略
         if (newPwd.length < 8) {
             toast.warning('密码至少需要8位');
             return;
@@ -153,11 +168,11 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
             setActionLoading(null);
         }
     };
-    // 打开全宗权限对话框
-    const handleOpenFondsScopeDialog = (userId: string, username: string) => {
+
+    const handleOpenFondsScopeDrawer = (userId: string, username: string) => {
         setSelectedUserId(userId);
         setSelectedUsername(username);
-        setFondsScopeDialogOpen(true);
+        setFondsScopeDrawerOpen(true);
     };
 
     const formatStatus = (status?: string) => {
@@ -191,11 +206,12 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                 email: createForm.email,
                 phone: createForm.phone,
                 roleIds: createForm.roleIds,
+                fondsCodes: createForm.fondsCodes,
                 status: 'active'
             });
             if (res.code === 200) {
                 setCreateSuccess(true);
-                setCreateForm({ username: '', password: '', fullName: '', email: '', phone: '', roleIds: [] });
+                setCreateForm({ username: '', password: '', fullName: '', email: '', phone: '', roleIds: [], fondsCodes: [] });
                 loadUsers();
             } else {
                 toast.error(res.message || '创建失败');
@@ -220,9 +236,26 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         });
     };
 
+    const toggleFondsSelection = (fondsCode: string) => {
+        setCreateForm((prev) => {
+            const exists = prev.fondsCodes.includes(fondsCode);
+            const nextFonds = exists ? prev.fondsCodes.filter((c) => c !== fondsCode) : [...prev.fondsCodes, fondsCode];
+            return { ...prev, fondsCodes: nextFonds };
+        });
+    };
+
+    const toggleAllFonds = () => {
+        setCreateForm((prev) => {
+            if (prev.fondsCodes.length === availableFonds.length) {
+                return { ...prev, fondsCodes: [] };
+            } else {
+                return { ...prev, fondsCodes: availableFonds.map(f => f.fondsCode) };
+            }
+        });
+    };
+
     return (
         <div className="space-y-6">
-            {/* 创建用户 */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-4">
                     <div>
@@ -236,7 +269,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                     )}
                 </div>
 
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleCreateUser}>
+                <form className="grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleCreateUser}>
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-slate-700 mb-1">用户名 *</label>
                         <input
@@ -257,16 +290,18 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                         />
                     </div>
                     <div className="flex flex-col">
-                        <label className="text-sm font-medium text-slate-700 mb-1">姓名</label>
+                        <label className="text-sm font-medium text-slate-700 mb-1">姓名 *</label>
                         <input
                             className="border border-slate-300 rounded-lg p-2 text-sm"
                             value={createForm.fullName}
                             onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
+                            required
                         />
                     </div>
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-slate-700 mb-1">邮箱</label>
                         <input
+                            type="email"
                             className="border border-slate-300 rounded-lg p-2 text-sm"
                             value={createForm.email}
                             onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
@@ -281,29 +316,78 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                         />
                     </div>
                     <div className="flex flex-col md:col-span-2">
-                        <label className="text-sm font-medium text-slate-700 mb-1">分配角色</label>
-                        <div className="flex flex-wrap gap-2">
-                            {roleLoading && <span className="text-xs text-slate-500">加载角色...</span>}
-                            {!roleLoading &&
-                                roles.map((role) => (
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="text-sm font-medium text-slate-700">全宗权限</label>
+                            {availableFonds.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={toggleAllFonds}
+                                    className="text-xs text-blue-600 hover:text-blue-700"
+                                >
+                                    {createForm.fondsCodes.length === availableFonds.length ? '取消全选' : '全选'}
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto border border-slate-200 rounded-lg p-2">
+                            {availableFonds.length === 0 ? (
+                                <span className="text-xs text-slate-500">暂无可用全宗</span>
+                            ) : (
+                                availableFonds.map((fonds) => (
+                                    <label
+                                        key={fonds.fondsCode}
+                                        className="inline-flex items-center space-x-1 px-2 py-1 border border-slate-200 rounded text-xs cursor-pointer hover:bg-blue-50 hover:border-blue-300"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={createForm.fondsCodes.includes(fonds.fondsCode)}
+                                            onChange={() => toggleFondsSelection(fonds.fondsCode)}
+                                        />
+                                        <span>{fonds.fondsName}</span>
+                                    </label>
+                                ))
+                            )}
+                        </div>
+                        {availableFonds.length > 0 && (
+                            <p className="text-xs text-slate-500 mt-1">
+                                已选择 {createForm.fondsCodes.length} / {availableFonds.length} 个全宗
+                            </p>
+                        )}
+                    </div>
+                    <div className="md:col-span-3">
+                        <label className="text-sm font-medium text-slate-700 mb-2 block">角色</label>
+                        {roleLoading ? (
+                            <div className="flex items-center text-sm text-slate-500">
+                                <Loader2 size={16} className="animate-spin mr-2" />
+                                加载角色中...
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap gap-2">
+                                {roles.map((role) => (
                                     <label
                                         key={role.id}
-                                        className="inline-flex items-center space-x-1 px-2 py-1 border border-slate-200 rounded text-xs cursor-pointer hover:bg-slate-50"
+                                        className={`inline-flex items-center space-x-2 px-3 py-1.5 border rounded-lg cursor-pointer transition-all ${
+                                            createForm.roleIds.includes(role.id)
+                                                ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                                : 'bg-white border-slate-200 hover:border-blue-300'
+                                        }`}
                                     >
                                         <input
                                             type="checkbox"
                                             checked={createForm.roleIds.includes(role.id)}
                                             onChange={() => toggleRoleSelection(role.id)}
+                                            className="sr-only"
                                         />
+                                        <Shield size={14} className={createForm.roleIds.includes(role.id) ? 'text-blue-600' : 'text-slate-400'} />
                                         <span>{role.name}</span>
                                     </label>
                                 ))}
-                            {!roleLoading && roles.length === 0 && (
-                                <span className="text-xs text-slate-500">暂无角色，请先创建角色。</span>
-                            )}
-                        </div>
+                                {roles.length === 0 && (
+                                    <span className="text-xs text-slate-500">暂无角色，请先创建角色。</span>
+                                )}
+                            </div>
+                        )}
                     </div>
-                    <div className="md:col-span-2 flex justify-end">
+                    <div className="md:col-span-3 flex justify-end">
                         <button
                             type="submit"
                             disabled={createLoading}
@@ -316,7 +400,6 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                 </form>
             </div>
 
-            {/* 用户列表 */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-4">
                     <div>
@@ -361,43 +444,55 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                                 </tr>
                             ) : (
                                 users.map((user) => (
-                                    <tr key={user.id} className="border-b last:border-0">
-                                        <td className="py-2 pr-4">{user.username}</td>
-                                        <td className="py-2 pr-4">{user.fullName || '-'}</td>
-                                        <td className="py-2 pr-4">{user.email || '-'}</td>
-                                        <td className="py-2 pr-4">{user.phone || '-'}</td>
-                                        <td className="py-2 pr-4">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700">
-                                                <ShieldCheck size={12} className="mr-1" />
+                                    <tr key={user.id} className="border-b hover:bg-slate-50">
+                                        <td className="py-3 pr-4 font-medium">{user.username}</td>
+                                        <td className="py-3 pr-4">{user.fullName || '-'}</td>
+                                        <td className="py-3 pr-4">{user.email || '-'}</td>
+                                        <td className="py-3 pr-4">{user.phone || '-'}</td>
+                                        <td className="py-3 pr-4">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
+                                                user.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                user.status === 'disabled' ? 'bg-gray-100 text-gray-700' :
+                                                'bg-red-100 text-red-700'
+                                            }`}>
                                                 {formatStatus(user.status)}
                                             </span>
                                         </td>
-                                        <td className="py-2 pr-4 space-x-2">
-                                            <select
-                                                className="border border-slate-200 rounded px-2 py-1 text-xs"
-                                                value={user.status || 'active'}
-                                                disabled={actionLoading === user.id}
-                                                onChange={(e) => handleStatusChange(user.id, e.target.value as UserStatus)}
-                                            >
-                                                <option value="active">启用</option>
-                                                <option value="disabled">禁用</option>
-                                                <option value="locked">锁定</option>
-                                            </select>
-                                            <button
-                                                onClick={() => handleResetPassword(user.id)}
-                                                disabled={actionLoading === user.id}
-                                                className="text-blue-600 hover:underline text-xs disabled:opacity-50"
-                                            >
-                                                重置密码
-                                            </button>
-                                            <button
-                                                onClick={() => handleOpenFondsScopeDialog(user.id, user.username)}
-                                                disabled={actionLoading === user.id}
-                                                className="text-emerald-600 hover:underline text-xs disabled:opacity-50 flex items-center gap-1"
-                                            >
-                                                <Shield size={12} />
-                                                全宗权限
-                                            </button>
+                                        <td className="py-3 pr-4">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleOpenFondsScopeDrawer(user.id, user.username)}
+                                                    className="text-blue-600 hover:text-blue-700 text-xs flex items-center"
+                                                    title="设置全宗权限"
+                                                >
+                                                    <ShieldCheck size={14} className="mr-1" />
+                                                    全宗权限
+                                                </button>
+                                                <button
+                                                    onClick={() => handleResetPassword(user.id)}
+                                                    disabled={actionLoading === user.id}
+                                                    className="text-slate-600 hover:text-slate-800 text-xs"
+                                                >
+                                                    重置密码
+                                                </button>
+                                                {user.status === 'active' ? (
+                                                    <button
+                                                        onClick={() => handleStatusChange(user.id, 'disabled')}
+                                                        disabled={actionLoading === user.id}
+                                                        className="text-orange-600 hover:text-orange-700 text-xs"
+                                                    >
+                                                        禁用
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleStatusChange(user.id, 'active')}
+                                                        disabled={actionLoading === user.id}
+                                                        className="text-green-600 hover:text-green-700 text-xs"
+                                                    >
+                                                        启用
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -406,33 +501,34 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                     </table>
                 </div>
 
-                <div className="flex items-center justify-between mt-4 text-xs text-slate-600">
-                    <div>
-                        第 {page} / {totalPages} 页（共 {total} 条）
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                        <span className="text-sm text-slate-500">
+                            共 {total} 条记录，第 {page} / {totalPages} 页
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="px-3 py-1 text-sm border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                上一页
+                            </button>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="px-3 py-1 text-sm border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                下一页
+                            </button>
+                        </div>
                     </div>
-                    <div className="space-x-2">
-                        <button
-                            className="px-3 py-1 border rounded disabled:opacity-40"
-                            disabled={page <= 1 || loading}
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        >
-                            上一页
-                        </button>
-                        <button
-                            className="px-3 py-1 border rounded disabled:opacity-40"
-                            disabled={page >= totalPages || loading}
-                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        >
-                            下一页
-                        </button>
-                    </div>
-                </div>
+                )}
             </div>
 
-            {/* 全宗权限对话框 */}
-            <UserFondsScopeDialog
-                isOpen={fondsScopeDialogOpen}
-                onClose={() => setFondsScopeDialogOpen(false)}
+            <UserFondsScopeDrawer
+                isOpen={fondsScopeDrawerOpen}
+                onClose={() => setFondsScopeDrawerOpen(false)}
                 userId={selectedUserId}
                 username={selectedUsername}
                 onSuccess={loadUsers}

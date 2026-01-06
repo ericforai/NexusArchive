@@ -151,12 +151,18 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
         isActive: 1,
       };
 
-      await erpApi.saveConfig(configToSave);
-      toast.success(editingConfig?.id ? '配置更新成功' : '配置创建成功');
-      closeModal();
-      onConfigSaved?.();
-    } catch {
-      toast.error('保存失败');
+      const res = await erpApi.saveConfig(configToSave);
+      if (res.code === 200) {
+        toast.success(editingConfig?.id ? '配置更新成功' : '配置创建成功');
+        closeModal();
+        onConfigSaved?.();
+      } else {
+        toast.error(res.message || '保存失败');
+      }
+    } catch (e: any) {
+      const errorMsg = e?.response?.data?.message || e?.message || '保存失败，请稍后重试';
+      toast.error(errorMsg);
+      console.error('Save config error:', e);
     }
   }, [erpApi, editingConfig, configForm, closeModal, onConfigSaved]);
 

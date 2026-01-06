@@ -10,9 +10,20 @@
  */
 
 import type { ModuleConfig } from '../../types';
+import {
+    PRE_ARCHIVE_POOL_CONFIG,
+    PRE_ARCHIVE_LINK_CONFIG,
+    ACCOUNTING_VOUCHER_CONFIG,
+    ACCOUNTING_LEDGER_CONFIG,
+    FINANCIAL_REPORT_CONFIG,
+    OTHER_ACCOUNTING_MATERIALS_CONFIG,
+    ARCHIVE_BOX_CONFIG,
+    QUERY_CONFIG,
+    GENERIC_CONFIG,
+} from './columns.config';
 
 // 默认空配置（所有表格数据应从 API 动态获取）
-const DEFAULT_CONFIG: ModuleConfig = { columns: [], data: [] };
+const DEFAULT_CONFIG: ModuleConfig = GENERIC_CONFIG;
 
 /**
  * 路由模式枚举 - 编译期类型检查
@@ -43,22 +54,23 @@ export interface RouteConfigMeta {
 }
 
 /**
- * 路由模式对应的显示标题（用于 UI 显示）
- * 注意：表格列配置应通过 TableFilters 组件动态生成，而非硬编码
+ * 路由配置映射表（强类型）
+ * 
+ * Key 类型为 ArchiveRouteMode，任何不存在的 key 都会编译报错。
  */
-export const ROUTE_TITLES: Record<ArchiveRouteMode, { title: string; subTitle: string }> = {
-    'pool': { title: '预归档库', subTitle: '电子凭证池' },
-    'link': { title: '预归档库', subTitle: '凭证关联' },
-    'collection': { title: '资料收集', subTitle: '概览' },
-    'online': { title: '资料收集', subTitle: '在线接收' },
-    'scan': { title: '资料收集', subTitle: '扫描集成' },
-    'view': { title: '档案管理', subTitle: '归档查看' },
-    'voucher': { title: '档案管理', subTitle: '会计凭证' },
-    'ledger': { title: '档案管理', subTitle: '会计账簿' },
-    'report': { title: '档案管理', subTitle: '财务报告' },
-    'other': { title: '档案管理', subTitle: '其他会计资料' },
-    'box': { title: '档案管理', subTitle: '档案装盒' },
-    'query': { title: '档案查询', subTitle: '全文检索' },
+export const ROUTE_CONFIG_MAP: Record<ArchiveRouteMode, RouteConfigMeta> = {
+    'pool': { config: PRE_ARCHIVE_POOL_CONFIG, title: '预归档库', subTitle: '电子凭证池' },
+    'link': { config: PRE_ARCHIVE_LINK_CONFIG, title: '预归档库', subTitle: '凭证关联' },
+    'collection': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '概览' },
+    'online': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '在线接收' },
+    'scan': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '扫描集成' },
+    'view': { config: GENERIC_CONFIG, title: '档案管理', subTitle: '归档查看' },
+    'voucher': { config: ACCOUNTING_VOUCHER_CONFIG, title: '档案管理', subTitle: '会计凭证' },
+    'ledger': { config: ACCOUNTING_LEDGER_CONFIG, title: '档案管理', subTitle: '会计账簿' },
+    'report': { config: FINANCIAL_REPORT_CONFIG, title: '档案管理', subTitle: '财务报告' },
+    'other': { config: OTHER_ACCOUNTING_MATERIALS_CONFIG, title: '档案管理', subTitle: '其他会计资料' },
+    'box': { config: ARCHIVE_BOX_CONFIG, title: '档案管理', subTitle: '档案装盒' },
+    'query': { config: QUERY_CONFIG, title: '档案查询', subTitle: '全文检索' },
 };
 
 /**
@@ -69,9 +81,7 @@ export const ROUTE_TITLES: Record<ArchiveRouteMode, { title: string; subTitle: s
  */
 export function resolveRouteConfig(routeConfig: ArchiveRouteMode | undefined): RouteConfigMeta | undefined {
     if (!routeConfig) return undefined;
-    const meta = ROUTE_TITLES[routeConfig];
-    if (!meta) return undefined;
-    return { config: DEFAULT_CONFIG, ...meta };
+    return ROUTE_CONFIG_MAP[routeConfig];
 }
 
 /**

@@ -107,12 +107,12 @@ docker-compose -f docker-compose.infra.yml \
 ### NPM Scripts (project root)
 
 ```bash
-npm run dev        # Start development environment
-npm run dev:stop   # Stop development environment
-npm run db:dump    # Export database to db/seed-data.sql
-npm run db:load    # Import database from db/seed-data.sql
-npm run db:reset   # Reset database (drop volume and reinit)
-npm run deploy     # Deploy to server
+npm run dev        # 启动开发环境 (Docker 跑 DB，本地跑前后端)
+npm run dev:stop   # 停止本地环境 (停止应用进程，可选停止 Docker)
+npm run db:dump    # 导出数据快照 (离开公司前执行，保存到 db/seed-data.sql)
+npm run db:load    # 导入数据快照 (回到家后执行，从 db/seed-data.sql 恢复)
+npm run db:reset   # 重置数据库 (清空并重新初始化)
+npm run deploy     # 部署到预发/生产服务器
 ```
 
 ## Code Conventions

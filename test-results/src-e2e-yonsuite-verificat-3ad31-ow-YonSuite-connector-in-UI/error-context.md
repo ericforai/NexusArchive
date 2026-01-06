@@ -1,0 +1,461 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img [ref=e8]
+        - generic [ref=e10]: DigiVoucher数凭档案
+      - button "立即体验" [ref=e12] [cursor=pointer]
+  - generic [ref=e13]:
+    - img [ref=e16]
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - img [ref=e22]
+        - text: 符合 DA/T 94-2022 国家标准
+      - heading "让每一张凭证都成为 合法的数字资产" [level=1] [ref=e24]:
+        - text: 让每一张凭证都成为
+        - text: 合法的数字资产
+      - paragraph [ref=e25]:
+        - text: 告别纸质档案库房，开启单套制归档新时代。
+        - text: 专为大型企业打造，从 ERP 到档案库，实现全链路自动化、无纸化、合规化。
+      - generic [ref=e26]:
+        - button "立即体验" [ref=e27] [cursor=pointer]:
+          - text: 立即体验
+          - img [ref=e28]
+        - button "预约专家顾问" [ref=e30] [cursor=pointer]
+  - generic [ref=e33]:
+    - generic [ref=e34]:
+      - heading "为什么选择 DigiVoucher?" [level=2] [ref=e35]
+      - paragraph [ref=e36]: 直击传统档案管理痛点，提供现代化解决方案
+    - generic [ref=e37]:
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - heading "传统纸质归档" [level=3] [ref=e46]
+        - generic [ref=e48]:
+          - img [ref=e50]
+          - heading "DigiVoucher 模式" [level=3] [ref=e53]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - heading "查找困难" [level=4] [ref=e58]
+              - img [ref=e59]
+            - paragraph [ref=e61]: 翻箱倒柜找凭证，耗时耗力，效率极低
+          - img [ref=e64]
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - img [ref=e69]
+              - heading "秒级检索" [level=4] [ref=e72]
+            - paragraph [ref=e73]: 亿级数据毫秒响应，支持穿透式联查
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - heading "风险高企" [level=4] [ref=e77]
+              - img [ref=e78]
+            - paragraph [ref=e80]: 面临发霉、虫蛀、火灾等物理损毁风险
+          - img [ref=e83]
+          - generic [ref=e85]:
+            - generic [ref=e86]:
+              - img [ref=e88]
+              - heading "永久安全" [level=4] [ref=e90]
+            - paragraph [ref=e91]: 四性检测 + 异地备份 + 国密加密，数据万无一失
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - heading "成本惊人" [level=4] [ref=e95]
+              - img [ref=e96]
+            - paragraph [ref=e98]: 库房租金、打印耗材、人工管理费用高昂
+          - img [ref=e101]
+          - generic [ref=e103]:
+            - generic [ref=e104]:
+              - img [ref=e106]
+              - heading "零成本存储" [level=4] [ref=e110]
+            - paragraph [ref=e111]: 无纸化存储，节省 90% 以上物理空间与耗材
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - generic [ref=e114]:
+              - heading "审计繁琐" [level=4] [ref=e115]
+              - img [ref=e116]
+            - paragraph [ref=e118]: 审计进场需搬运大量案卷，配合工作量大
+          - img [ref=e121]
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - img [ref=e126]
+              - heading "远程审计" [level=4] [ref=e129]
+            - paragraph [ref=e130]: 授权账号在线调阅，轻松应对内外部审计
+  - generic [ref=e132]:
+    - generic [ref=e133]:
+      - generic [ref=e134]:
+        - generic [ref=e135]:
+          - img [ref=e136]
+          - text: 存储成本降低
+        - generic [ref=e139]: 90%
+      - generic [ref=e140]:
+        - generic [ref=e141]:
+          - img [ref=e142]
+          - text: 单套制合规
+        - generic [ref=e145]: 100%
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - img [ref=e148]
+          - text: 归档效率提升
+        - generic [ref=e150]: 10x
+      - generic [ref=e151]:
+        - generic [ref=e152]:
+          - img [ref=e153]
+          - text: 纸质凭证打印
+        - generic [ref=e156]: "0"
+    - generic [ref=e157]:
+      - generic [ref=e158]:
+        - img [ref=e160]
+        - heading "智能 OCR 识别" [level=3] [ref=e163]
+        - paragraph [ref=e164]: 高精度识别发票、银行回单，自动提取关键元数据，准确率高达 99.9%。
+      - generic [ref=e165]:
+        - img [ref=e167]
+        - heading "四性检测引擎" [level=3] [ref=e169]
+        - paragraph [ref=e170]: 自动进行真实性、完整性、可用性、安全性检测，确保归档数据合规。
+      - generic [ref=e171]:
+        - img [ref=e173]
+        - heading "穿透式联查" [level=3] [ref=e177]
+        - paragraph [ref=e178]: 打破数据孤岛，实现从报表到账簿、凭证、原始单据的全链路穿透。
+  - generic [ref=e183]:
+    - generic [ref=e184]:
+      - generic [ref=e185]:
+        - img [ref=e186]
+        - text: 电子会计档案核心体系
+      - heading "从法规到技术的 完整闭环" [level=2] [ref=e188]
+      - paragraph [ref=e189]: 基于《会计档案管理办法》(79号令)构建的四层防护体系,确保每一份电子档案都具备法律效力
+    - generic [ref=e193]:
+      - generic [ref=e194]:
+        - img [ref=e196]
+        - generic [ref=e199]:
+          - generic [ref=e200]: 核心法规基础
+          - heading "财政部 79号令" [level=3] [ref=e201]
+      - generic [ref=e202]:
+        - generic [ref=e204]:
+          - img [ref=e206]
+          - generic [ref=e208]:
+            - heading "单套制合法地位" [level=4] [ref=e209]
+            - paragraph [ref=e210]: 满足条件的电子会计档案可仅以电子形式保存,形成唯一法定档案,无需同时保存纸质档案
+        - generic [ref=e212]:
+          - img [ref=e214]
+          - generic [ref=e216]:
+            - heading "法律效力保障" [level=4] [ref=e217]
+            - paragraph [ref=e218]: 通过电子签名+可靠时间戳,电子档案与纸质档案具有同等法律效力,可用于审计、诉讼等场景
+    - generic [ref=e219]:
+      - generic [ref=e220]:
+        - heading "四大护法 · 四性检测" [level=3] [ref=e221]
+        - paragraph [ref=e222]: 系统建设的验收标准,每一项都是合规的必要条件
+      - generic [ref=e223]:
+        - generic [ref=e224]:
+          - img [ref=e227]
+          - heading "真实性" [level=4] [ref=e229]
+          - generic [ref=e230]: Authenticity
+          - generic [ref=e231]:
+            - generic [ref=e232]: 哈希值校验
+            - generic [ref=e234]: 数字签名验证
+            - generic [ref=e236]: 来源系统追溯
+        - generic [ref=e238]:
+          - img [ref=e241]
+          - heading "完整性" [level=4] [ref=e245]
+          - generic [ref=e246]: Integrity
+          - generic [ref=e247]:
+            - generic [ref=e248]: 元数据完整
+            - generic [ref=e250]: 附件齐全
+            - generic [ref=e252]: 关联关系完整
+        - generic [ref=e254]:
+          - img [ref=e257]
+          - heading "可用性" [level=4] [ref=e260]
+          - generic [ref=e261]: Usability
+          - generic [ref=e262]:
+            - generic [ref=e263]: 格式可读
+            - generic [ref=e265]: 长期保存
+            - generic [ref=e267]: 随时调阅
+        - generic [ref=e269]:
+          - img [ref=e272]
+          - heading "安全性" [level=4] [ref=e275]
+          - generic [ref=e276]: Security
+          - generic [ref=e277]:
+            - generic [ref=e278]: 权限控制
+            - generic [ref=e280]: 审计日志
+            - generic [ref=e282]: 备份恢复
+    - generic [ref=e284]:
+      - generic [ref=e285]:
+        - heading "技术三件套" [level=3] [ref=e286]
+        - paragraph [ref=e287]: 构建不可篡改、不可抵赖、可追溯的数据信任链
+      - generic [ref=e288]:
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - img [ref=e292]
+            - heading "哈希值 (SM3/SHA256)" [level=4] [ref=e296]
+            - generic [ref=e297]: 防篡改
+          - paragraph [ref=e298]: 为每个文件生成唯一数字指纹,任何微小改动都会导致哈希值完全不同
+          - generic [ref=e299]:
+            - img [ref=e300]
+            - text: 国密SM3算法
+        - generic [ref=e303]:
+          - generic [ref=e304]:
+            - img [ref=e306]
+            - heading "CA证书 (电子签名)" [level=4] [ref=e308]
+            - generic [ref=e309]: 防抵赖 / 定身份
+          - paragraph [ref=e310]: 通过权威CA机构颁发的数字证书,确保签名人身份真实且不可否认
+          - generic [ref=e311]:
+            - img [ref=e312]
+            - text: PKI公钥基础设施
+        - generic [ref=e315]:
+          - generic [ref=e316]:
+            - img [ref=e318]
+            - heading "可靠时间戳 (TSA)" [level=4] [ref=e320]
+            - generic [ref=e321]: 定时间
+          - paragraph [ref=e322]: 由国家授时中心提供的可信时间证明,精确记录档案形成时刻
+          - generic [ref=e323]:
+            - img [ref=e324]
+            - text: RFC3161标准
+    - generic [ref=e331]:
+      - generic [ref=e332]:
+        - generic [ref=e333]:
+          - img [ref=e334]
+          - text: 最终形态
+        - heading "归档信息包 (AIP Package)" [level=3] [ref=e338]
+        - paragraph [ref=e339]: 一个合规的电子档案不是散乱的文件,而是结构化的"包"
+      - generic [ref=e340]:
+        - generic [ref=e341]:
+          - generic [ref=e342]:
+            - img [ref=e344]
+            - generic [ref=e348]:
+              - heading "元数据 (XML)" [level=4] [ref=e349]
+              - generic [ref=e350]: Metadata
+          - list [ref=e351]:
+            - listitem [ref=e352]:
+              - img [ref=e353]
+              - text: 档案编号、题名、日期
+            - listitem [ref=e355]:
+              - img [ref=e356]
+              - text: 保管期限、密级、全宗号
+            - listitem [ref=e358]:
+              - img [ref=e359]
+              - text: 业务字段(金额、科目等)
+        - generic [ref=e361]:
+          - generic [ref=e362]:
+            - img [ref=e364]
+            - generic [ref=e367]:
+              - heading "版式文件" [level=4] [ref=e368]
+              - generic [ref=e369]: Content
+          - list [ref=e370]:
+            - listitem [ref=e371]:
+              - img [ref=e372]
+              - text: OFD格式(国产版式标准)
+            - listitem [ref=e374]:
+              - img [ref=e375]
+              - text: PDF/A(长期保存格式)
+            - listitem [ref=e377]:
+              - img [ref=e378]
+              - text: 原始附件(发票、回单等)
+        - generic [ref=e380]:
+          - generic [ref=e381]:
+            - img [ref=e383]
+            - generic [ref=e386]:
+              - heading "电子签名" [level=4] [ref=e387]
+              - generic [ref=e388]: Signature
+          - list [ref=e389]:
+            - listitem [ref=e390]:
+              - img [ref=e391]
+              - text: 归档人员数字签名
+            - listitem [ref=e393]:
+              - img [ref=e394]
+              - text: 可靠时间戳(TSA)
+            - listitem [ref=e396]:
+              - img [ref=e397]
+              - text: SM3哈希值封装
+      - generic [ref=e399]:
+        - generic [ref=e400]:
+          - img [ref=e401]
+          - text: /AIP_Root/ARC-2024-001.zip
+        - generic [ref=e404]:
+          - generic [ref=e405]:
+            - generic [ref=e407]: /Metadata
+            - generic [ref=e408]: → metadata.xml (DA/T 94标准)
+          - generic [ref=e409]:
+            - generic [ref=e411]: /Content
+            - generic [ref=e412]: → voucher_001.ofd, invoice_001.pdf
+          - generic [ref=e413]:
+            - generic [ref=e415]: /Signature
+            - generic [ref=e416]: → signature.p7s, timestamp.tsr
+          - generic [ref=e417]:
+            - generic [ref=e419]: /Logs
+            - generic [ref=e420]: → audit_trail.log
+  - generic [ref=e422]:
+    - generic [ref=e424]:
+      - heading "沉浸式管理体验" [level=2] [ref=e425]
+      - paragraph [ref=e426]: 专为财务人员设计的现代化工作台
+    - generic [ref=e431]:
+      - generic [ref=e437]:
+        - img [ref=e438]
+        - text: DigiVoucher.internal/dashboard
+      - generic [ref=e441]:
+        - generic [ref=e442]:
+          - generic [ref=e443]:
+            - img [ref=e445]
+            - generic [ref=e447]: DigiVoucher
+          - generic [ref=e448]:
+            - button "工作台" [ref=e449] [cursor=pointer]
+            - button "档案收集" [ref=e450] [cursor=pointer]
+            - button "档案管理" [ref=e451] [cursor=pointer]
+            - button "借阅中心" [ref=e452] [cursor=pointer]
+            - button "系统设置" [ref=e453] [cursor=pointer]
+        - generic [ref=e455]:
+          - generic [ref=e456]:
+            - heading "DigiVoucher 智能归档" [level=3] [ref=e457]
+            - generic [ref=e459]: 系统运行正常
+          - generic [ref=e461]:
+            - generic [ref=e462]:
+              - generic [ref=e463]: 待归档凭证
+              - generic [ref=e464]: 1,284
+            - generic [ref=e465]:
+              - generic [ref=e466]: 本月新增
+              - generic [ref=e467]: "456"
+            - generic [ref=e468]:
+              - generic [ref=e469]: 借阅申请
+              - generic [ref=e470]: "12"
+            - generic [ref=e471]:
+              - generic [ref=e472]: 存储占用
+              - generic [ref=e473]: 2.4 TB
+          - generic [ref=e474]:
+            - generic [ref=e475]:
+              - heading "归档趋势" [level=4] [ref=e476]
+              - generic [ref=e477]:
+                - generic [ref=e479]: "300"
+                - generic [ref=e481]: "450"
+                - generic [ref=e483]: "350"
+                - generic [ref=e485]: "600"
+                - generic [ref=e487]: "500"
+                - generic [ref=e489]: "750"
+                - generic [ref=e491]: "650"
+                - generic [ref=e493]: "800"
+                - generic [ref=e495]: "700"
+                - generic [ref=e497]: "900"
+                - generic [ref=e499]: "850"
+                - generic [ref=e501]: "950"
+            - generic [ref=e502]:
+              - heading "档案构成" [level=4] [ref=e503]
+              - generic [ref=e506]:
+                - generic [ref=e507]: 98%
+                - generic [ref=e508]: 合规率
+              - generic [ref=e509]:
+                - generic [ref=e510]: 凭证
+                - generic [ref=e512]: 账簿
+                - generic [ref=e514]: 报表
+  - generic [ref=e517]:
+    - generic [ref=e518]:
+      - heading "信创合规架构" [level=2] [ref=e519]
+      - paragraph [ref=e520]: 完全符合 DA/T 94-2022 电子会计档案管理规范
+    - generic [ref=e523]:
+      - generic [ref=e524]:
+        - generic [ref=e526]:
+          - heading "业务应用层" [level=3] [ref=e527]:
+            - img [ref=e528]
+            - text: 业务应用层
+          - generic [ref=e532]: Application Layer
+        - generic [ref=e533]:
+          - generic [ref=e534]: 档案采集
+          - generic [ref=e535]: 四性检测
+          - generic [ref=e536]: 借阅利用
+          - generic [ref=e537]: 鉴定销毁
+      - generic [ref=e538]:
+        - generic [ref=e540]:
+          - heading "安全合规层" [level=3] [ref=e541]:
+            - img [ref=e542]
+            - text: 安全合规层
+          - generic [ref=e544]: Security Layer
+        - generic [ref=e545]:
+          - generic [ref=e546]:
+            - img [ref=e548]
+            - generic [ref=e552]: 三员分立
+            - generic [ref=e553]: 系统/安全/审计管理员
+          - generic [ref=e554]:
+            - img [ref=e556]
+            - generic [ref=e559]: SM3 哈希摘要
+            - generic [ref=e560]: 国密算法防篡改
+          - generic [ref=e561]:
+            - img [ref=e563]
+            - generic [ref=e566]: 电子签名
+            - generic [ref=e567]: 法律效力保障
+      - generic [ref=e568]:
+        - generic [ref=e570]:
+          - heading "信创基础设施层" [level=3] [ref=e571]:
+            - img [ref=e572]
+            - text: 信创基础设施层
+          - generic [ref=e575]: Infrastructure Layer
+        - generic [ref=e576]:
+          - generic [ref=e577]:
+            - img [ref=e578]
+            - text: 麒麟/统信 OS
+          - generic [ref=e581]:
+            - img [ref=e582]
+            - text: 达梦/人大金仓
+          - generic [ref=e586]:
+            - img [ref=e587]
+            - text: 鲲鹏/海光 CPU
+  - generic [ref=e590]:
+    - paragraph [ref=e591]: Trusted by Industry Leaders & Xinchuang Ecosystem
+    - generic [ref=e592]:
+      - generic [ref=e593]:
+        - img [ref=e595]
+        - generic [ref=e598]:
+          - generic [ref=e599]: 麒麟软件
+          - generic [ref=e600]: KylinSoft
+      - generic [ref=e601]:
+        - img [ref=e603]
+        - generic [ref=e607]:
+          - generic [ref=e608]: 统信软件
+          - generic [ref=e609]: UnionTech
+      - generic [ref=e610]:
+        - img [ref=e612]
+        - generic [ref=e616]:
+          - generic [ref=e617]: 达梦数据库
+          - generic [ref=e618]: Dameng DB
+      - generic [ref=e619]:
+        - img [ref=e621]
+        - generic [ref=e625]:
+          - generic [ref=e626]: 人大金仓
+          - generic [ref=e627]: Kingbase
+      - generic [ref=e628]:
+        - img [ref=e630]
+        - generic [ref=e633]:
+          - generic [ref=e634]: 华为鲲鹏
+          - generic [ref=e635]: Kunpeng
+      - generic [ref=e636]:
+        - img [ref=e638]
+        - generic [ref=e641]:
+          - generic [ref=e642]: 中科海光
+          - generic [ref=e643]: Hygon
+      - generic [ref=e644]:
+        - img [ref=e646]
+        - generic [ref=e648]:
+          - generic [ref=e649]: 中国电子
+          - generic [ref=e650]: CEC
+  - contentinfo [ref=e651]:
+    - generic [ref=e652]:
+      - generic [ref=e653]:
+        - generic [ref=e654]:
+          - img [ref=e655]
+          - generic [ref=e657]: DigiVoucher
+        - generic [ref=e658]:
+          - link "产品白皮书" [ref=e659] [cursor=pointer]:
+            - /url: "#"
+          - link "技术文档" [ref=e660] [cursor=pointer]:
+            - /url: "#"
+          - link "隐私政策" [ref=e661] [cursor=pointer]:
+            - /url: "#"
+          - link "联系我们" [ref=e662] [cursor=pointer]:
+            - /url: "#"
+        - button "立即咨询专家" [ref=e663] [cursor=pointer]:
+          - img [ref=e664]
+          - text: 立即咨询专家
+      - generic [ref=e666]:
+        - paragraph [ref=e667]: © 2025 DigiVoucher. All rights reserved. | 沪ICP备2025125372号-4
+        - paragraph [ref=e668]: 本系统符合《会计档案管理办法》及 DA/T 94-2022 标准要求。
+```

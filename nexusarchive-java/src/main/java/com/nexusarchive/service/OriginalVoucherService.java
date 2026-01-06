@@ -8,6 +8,7 @@ package com.nexusarchive.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.OriginalVoucherFile;
 import com.nexusarchive.entity.VoucherRelation;
@@ -126,12 +127,12 @@ public class OriginalVoucherService {
     public ResponseEntity<Resource> downloadFile(String fileId) {
         OriginalVoucherFile fileInfo = getFileById(fileId);
         if (fileInfo == null || !StringUtils.hasText(fileInfo.getStoragePath())) {
-            throw new BusinessException("文件不存在: " + fileId);
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, fileId);
         }
 
         Path filePath = fileStorageService.resolvePath(fileInfo.getStoragePath());
         if (!fileStorageService.exists(fileInfo.getStoragePath())) {
-            throw new BusinessException("物理文件不存在: " + fileInfo.getStoragePath());
+            throw new BusinessException(ErrorCode.PHYSICAL_FILE_NOT_FOUND, fileInfo.getStoragePath());
         }
 
         Resource resource = new FileSystemResource(filePath.toFile());

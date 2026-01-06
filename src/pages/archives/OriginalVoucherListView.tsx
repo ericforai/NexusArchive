@@ -83,6 +83,30 @@ interface OriginalVoucherListViewProps {
     poolMode?: boolean;
 }
 
+// 单据类型名称映射表（与侧边栏菜单保持一致）
+const DOC_TYPE_NAME_MAP: Record<string, string> = {
+    // 发票类 (INVOICE)
+    'INV_PAPER': '纸质发票',
+    'INV_VAT_E': '增值税电子发票',
+    'INV_DIGITAL': '数电发票',
+    'INV_RAIL': '数电票（铁路）',
+    'INV_AIR': '数电票（航空）',
+    'INV_GOV': '数电票（财政）',
+    // 银行类 (BANK)
+    'BANK_RECEIPT': '银行回单',
+    'BANK_STATEMENT': '银行对账单',
+    // 单据类 (DOCUMENT)
+    'DOC_PAYMENT': '付款单',
+    'DOC_RECEIPT': '收款单',
+    'DOC_RECEIPT_VOUCHER': '收款单据（收据）',
+    'DOC_PAYROLL': '工资单',
+    // 合同类 (CONTRACT)
+    'CONTRACT': '合同',
+    'AGREEMENT': '协议',
+    // 其他类 (OTHER)
+    'OTHER': '其他',
+};
+
 export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = ({
     title = '原始凭证',
     subTitle = '原始凭证管理',
@@ -93,6 +117,14 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const typeFromUrl = searchParams.get('type');
+
+    // 根据 URL 参数动态计算标题
+    const displayTitle = typeFromUrl && DOC_TYPE_NAME_MAP[typeFromUrl]
+        ? DOC_TYPE_NAME_MAP[typeFromUrl]
+        : title;
+    const displaySubTitle = typeFromUrl && DOC_TYPE_NAME_MAP[typeFromUrl]
+        ? `${DOC_TYPE_NAME_MAP[typeFromUrl]}管理`
+        : subTitle;
 
     // 筛选状态
     const [page, setPage] = useState(1);
@@ -198,8 +230,8 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
             {/* 页头 */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subTitle}</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{displayTitle}</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{displaySubTitle}</p>
                 </div>
                 <div className="flex gap-2">
                     <button

@@ -40,3 +40,5 @@ public interface EntityConfigMapper extends BaseMapper<EntityConfig> {
 
 
 
+
+

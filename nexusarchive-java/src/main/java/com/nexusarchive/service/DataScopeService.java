@@ -11,6 +11,7 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.mapper.RoleMapper;
 import com.nexusarchive.security.CustomUserDetails;
+import com.nexusarchive.security.FondsContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -54,12 +55,12 @@ public class DataScopeService {
 
     /**
      * 应用档案数据权限过滤
-     * 
+     *
      * 数据隔离基于 fonds_no（全宗号）：
      * 1. 如果 context 为 all，不添加过滤条件（可访问所有数据）
      * 2. 如果 context 为 self，只返回当前用户创建的数据
-     * 3. 否则，只返回 allowedFonds 列表中的全宗数据
-     * 
+     * 3. 否则，优先使用当前选中的全宗（FondsContext），如果没有则使用 allowedFonds 列表
+     *
      * 注意：不再使用 department_id 进行数据隔离（违反档案法规要求）
      */
     public void applyArchiveScope(QueryWrapper<Archive> wrapper, DataScopeContext context) {
@@ -76,7 +77,15 @@ public class DataScopeService {
             return;
         }
 
-        // 基于 fonds_no（全宗号）进行数据隔离
+        // 优先使用当前选中的全宗（从 FondsContext 获取）
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (StringUtils.hasText(currentFondsNo)) {
+            // 用户已切换到特定全宗，只返回该全宗的数据
+            wrapper.eq("fonds_no", currentFondsNo);
+            return;
+        }
+
+        // 后备方案：基于 fonds_no（全宗号）列表进行数据隔离
         Set<String> allowedFonds = context.allowedFonds();
         if (!allowedFonds.isEmpty()) {
             wrapper.in("fonds_no", allowedFonds);
@@ -88,11 +97,11 @@ public class DataScopeService {
 
     /**
      * 检查是否可以访问指定档案
-     * 
+     *
      * 数据隔离基于 fonds_no（全宗号）：
      * 1. 如果 context 为 all，可以访问
      * 2. 如果 context 为 self，只能访问自己创建的数据
-     * 3. 否则，检查档案的 fonds_no 是否在 allowedFonds 列表中
+     * 3. 否则，优先检查当前选中的全宗（FondsContext），如果没有则检查 allowedFonds 列表
      */
     public boolean canAccessArchive(Archive archive, DataScopeContext context) {
         if (context == null || context.isAll()) {
@@ -101,13 +110,21 @@ public class DataScopeService {
         if (context.isSelf()) {
             return context.userId() != null && context.userId().equals(archive.getCreatedBy());
         }
-        
-        // 基于 fonds_no（全宗号）进行数据隔离
-        String fondsNo = archive.getFondsNo();
-        if (StringUtils.hasText(fondsNo) && context.allowedFonds().contains(fondsNo)) {
+
+        String archiveFondsNo = archive.getFondsNo();
+
+        // 优先使用当前选中的全宗（从 FondsContext 获取）
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (StringUtils.hasText(currentFondsNo)) {
+            // 用户已切换到特定全宗，只能访问该全宗的数据
+            return currentFondsNo.equals(archiveFondsNo);
+        }
+
+        // 后备方案：基于 fonds_no（全宗号）列表进行数据隔离
+        if (StringUtils.hasText(archiveFondsNo) && context.allowedFonds().contains(archiveFondsNo)) {
             return true;
         }
-        
+
         // 如果没有匹配的全宗，则不允许访问
         return false;
     }

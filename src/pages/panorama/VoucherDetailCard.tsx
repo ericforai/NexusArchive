@@ -122,7 +122,7 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
             code: archive.archiveCode || archive.id,
             summary,
             date: archive.docDate || archive.createdTime || '',
-            amount: archive.amount ? `¥ ${Number(archive.amount).toLocaleString()}` : '-',
+            amount: (archive.amount !== null && archive.amount !== undefined) ? `¥ ${Number(archive.amount).toLocaleString()}` : '-',
             creator,
             status: archive.status || '未知',
             entries
@@ -135,7 +135,7 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
             code: ov.voucherNo,
             summary: ov.summary || '原始凭证',
             date: ov.businessDate || (ov as any).createdTime?.split('T')[0] || '',
-            amount: ov.amount ? `¥ ${Number(ov.amount).toLocaleString()}` : '-',
+            amount: (ov.amount !== null && ov.amount !== undefined) ? `¥ ${Number(ov.amount).toLocaleString()}` : '-',
             creator: ov.creator || (ov as any).createdBy || '上传',
             status: ov.archiveStatus || 'DRAFT',
             entries: [] // 原始凭证暂无分录，待 OCR/关联后产生
@@ -233,7 +233,7 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
         );
     }
 
-    const amountDisplay = typeof voucher.amount === 'string' ? voucher.amount.replace('¥ ', '') : (voucher.amount || '--');
+    const amountDisplay = typeof voucher.amount === 'string' && voucher.amount !== '-' ? voucher.amount.replace('¥ ', '') : '--';
     const statusInfo = formatStatus(voucher.status);
 
     // 计算合计借方/贷方

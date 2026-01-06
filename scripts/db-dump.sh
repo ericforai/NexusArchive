@@ -21,11 +21,15 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# 加载环境变量
+# 加载环境变量（导出到子进程）
 if [ -f .env.local ]; then
+    set -a
     source .env.local
+    set +a
 elif [ -f .env ]; then
+    set -a
     source .env
+    set +a
 fi
 
 # 默认值

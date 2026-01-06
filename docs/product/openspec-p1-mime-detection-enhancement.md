@@ -391,3 +391,5 @@ public class EnhancedFileMagicValidator extends FileMagicValidator {
 
 
 
+
+

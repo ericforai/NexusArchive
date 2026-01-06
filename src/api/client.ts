@@ -26,7 +26,7 @@ client.interceptors.request.use(
             }
 
             if (fondsCode) {
-                config.headers['X-Fonds-Code'] = fondsCode;
+                config.headers['X-Fonds-No'] = fondsCode;
             }
         } catch {
             // Silently fail to add headers

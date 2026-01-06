@@ -91,7 +91,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // 预归档库
     '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL,
     '单据池': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL,
-    'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR,
+    // 'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR, // 待开发
     '凭证关联': ROUTE_PATHS.PRE_ARCHIVE_LINK,
     '异常数据': ROUTE_PATHS.PRE_ARCHIVE_ABNORMAL,
 

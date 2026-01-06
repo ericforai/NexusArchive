@@ -234,7 +234,8 @@ public class BorrowingApplicationService implements BorrowingFacade {
         dto.setStatus(borrowing.getStatus());
         dto.setApprovalComment(borrowing.getApprovalComment());
         dto.setCreatedTime(borrowing.getCreatedTime());
-        dto.setLastModifiedTime(borrowing.getLastModifiedTime());
+        // TODO: 临时禁用，待 updated_at 列添加后恢复
+        // dto.setLastModifiedTime(borrowing.getLastModifiedTime());
         return dto;
     }
 

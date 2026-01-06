@@ -33,12 +33,11 @@ interface ArchiveDetailDrawerProps {
 
 type TabKey = 'metadata' | 'voucher' | 'attachments' | 'yonsuite';
 
-// Responsive width calculation
-const getDrawerWidth = (): string | number => {
+// Responsive size calculation
+const getDrawerSize = (): DrawerProps['size'] => {
   const width = window.innerWidth;
-  if (width >= 1280) return '50vw'; // Large screens
-  if (width >= 768) return '70vw';  // Medium screens
-  return '100vw'; // Small screens (full screen)
+  if (width >= 1280) return 'large'; // Large screens
+  return 'default';  // Medium and small screens
 };
 
 export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
@@ -119,9 +118,9 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
     navigate(`/system/archives/${row.id}`);
   };
 
-  const drawerWidth: string | number = useMemo(() => {
-    if (typeof window === 'undefined') return '50vw';
-    return getDrawerWidth();
+  const drawerSize: DrawerProps['size'] = useMemo(() => {
+    if (typeof window === 'undefined') return 'large';
+    return getDrawerSize();
   }, []);
 
   // Don't render if closed or no row
@@ -253,8 +252,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
       data-testid="archive-detail-drawer"
       open={open}
       onClose={onClose}
-      // eslint-disable-next-line antd/no-deprecated
-      width={drawerWidth}
+      size={drawerSize}
       placement="right"
       maskClosable={true}
       keyboard={true}

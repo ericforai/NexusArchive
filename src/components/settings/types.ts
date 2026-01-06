@@ -32,9 +32,12 @@ export interface AdminSettingsApi {
     getSettings: () => Promise<ApiResponse<AdminSettingItem[]>>;
     updateSettings: (settings: AdminSettingUpdate[]) => Promise<ApiResponse<void>>;
     getUsers: (params?: { page?: number; limit?: number }) => Promise<ApiResponse<PageResult<User>>>;
-    createUser: (data: Partial<User> & { password?: string; roleIds?: string[]; status?: string }) => Promise<ApiResponse<User>>;
+    createUser: (data: Partial<User> & { password?: string; roleIds?: string[]; status?: string; fondsCodes?: string[] }) => Promise<ApiResponse<User>>;
     resetPassword: (id: string, password: string) => Promise<ApiResponse<void>>;
     toggleUserStatus: (id: string, status: string) => Promise<ApiResponse<void>>;
+    getUserFondsScope: (id: string) => Promise<ApiResponse<{ userId: string; assignedFonds: string[]; availableFonds: Array<{ fondsCode: string; fondsName: string; companyName: string }> }>>;
+    updateUserFondsScope: (id: string, fondsCodes: string[]) => Promise<ApiResponse<void>>;
+    getFondsList: () => Promise<ApiResponse<Array<{ fondsCode: string; fondsName: string; companyName: string }>>>;
     getRoles: (params?: { page?: number; limit?: number }) => Promise<ApiResponse<PageResult<Role>>>;
     createRole: (data: Partial<Role>) => Promise<ApiResponse<Role>>;
     updateRole: (id: string, data: Partial<Role>) => Promise<ApiResponse<void>>;

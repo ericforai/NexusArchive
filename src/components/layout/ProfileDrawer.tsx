@@ -37,7 +37,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ open, onClose }) =
     };
 
     return (
-        <Drawer open={open} onClose={onClose} placement="right" width={400}>
+        <Drawer open={open} onClose={onClose} placement="right" size="default">
             <div className="flex flex-col h-full">
                 {/* 标题栏 */}
                 <div className="flex items-center justify-between px-6 py-4 border-b">

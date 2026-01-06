@@ -139,11 +139,19 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
      * @throws BusinessException if not found or access denied
      */
     @Override
-    public Archive getArchiveById(String id) {
-        Archive archive = archiveMapper.selectById(id);
+    public Archive getArchiveById(String idOrCode) {
+        Archive archive = archiveMapper.selectById(idOrCode);
         if (archive == null) {
-            throw new BusinessException(404, "档案不存在");
+            // Fallback: try archive_code lookup (supporting human-readable codes in URLs)
+            QueryWrapper<Archive> wrapper = new QueryWrapper<>();
+            wrapper.eq("archive_code", idOrCode);
+            archive = archiveMapper.selectOne(wrapper);
         }
+
+        if (archive == null) {
+            throw new BusinessException(404, "档案不存在: " + idOrCode);
+        }
+
         DataScopeContext scope = dataScopeService.resolve();
         if (!dataScopeService.canAccessArchive(archive, scope)) {
             throw new BusinessException(ErrorCode.NO_PERMISSION_TO_VIEW_ARCHIVE);

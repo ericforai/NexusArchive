@@ -34,10 +34,10 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/certificates")
+@RequestMapping("/admin/certificates")
 @RequiredArgsConstructor
 @Tag(name = "证书管理", description = "证书查询和管理功能")
-@PreAuthorize("hasAnyRole('SYSTEM_ADMIN','SECURITY_ADMIN')")
+@PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'SECURITY_ADMIN')")
 public class CertificateController {
 
     @Value("${signature.keystore.path:#{null}}")
@@ -55,7 +55,7 @@ public class CertificateController {
         try {
             KeyStore keyStore = loadKeyStore();
             if (keyStore == null) {
-                return Result.fail("密钥库未配置");
+                return Result.fail("密钥库未配置，请在 application-dev.yml 中配置 signature.keystore.path 参数");
             }
 
             List<CertificateInfo> certificates = new ArrayList<>();
@@ -98,7 +98,7 @@ public class CertificateController {
         try {
             KeyStore keyStore = loadKeyStore();
             if (keyStore == null) {
-                return Result.fail("密钥库未配置");
+                return Result.fail("密钥库未配置，请在 application-dev.yml 中配置 signature.keystore.path 参数");
             }
 
             if (!keyStore.containsAlias(alias)) {
@@ -138,7 +138,7 @@ public class CertificateController {
         try {
             KeyStore keyStore = loadKeyStore();
             if (keyStore == null) {
-                return Result.fail("密钥库未配置");
+                return Result.fail("密钥库未配置，请在 application-dev.yml 中配置 signature.keystore.path 参数");
             }
 
             if (!keyStore.containsAlias(alias)) {

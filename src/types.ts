@@ -47,7 +47,7 @@ export interface ArchiveStat {
   color: string;
 }
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   title: string;
   time: string;
@@ -174,7 +174,7 @@ export interface NotificationRule {
   template?: string;
 }
 
-export interface EnhancedNotification extends Notification {
+export interface EnhancedNotification extends AppNotification {
   read: boolean;
   category?: 'task' | 'match' | 'compliance' | 'system';
   actionUrl?: string;

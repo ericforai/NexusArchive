@@ -21,6 +21,7 @@ public class CreateUserRequest {
     private String avatar;
     private String organizationId; // 组织ID（已替换 departmentId）
     private List<String> roleIds;
+    private List<String> fondsCodes; // 可访问的全宗号列表
 
     public String getUsername() { return username; }
     public String getPassword() { return password; }
@@ -30,4 +31,5 @@ public class CreateUserRequest {
     public String getAvatar() { return avatar; }
     public String getOrganizationId() { return organizationId; }
     public List<String> getRoleIds() { return roleIds; }
+    public List<String> getFondsCodes() { return fondsCodes; }
 }

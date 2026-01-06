@@ -59,3 +59,5 @@ CREATE INDEX IF NOT EXISTS idx_storage_capacity_fonds
 
 
 
+
+

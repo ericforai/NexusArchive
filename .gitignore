@@ -155,3 +155,4 @@ backend.log
 
 # Large Binaries
 deploy/offline/bin/*.jar
+skills/

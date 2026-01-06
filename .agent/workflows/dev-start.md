@@ -1,81 +1,81 @@
----
-description: 开发环境启动流程 - Docker 优先，本地备选
----
+# 开发环境启动与运维工作流
 
-# 开发环境启动工作流
+## 1. 环境同步使用方法
 
-## 启动方式对比
+本项目支持"公司至家里"的开发数据无缝同步，解决私有化部署环境下的数据一致性问题。
 
-| 方式 | 命令 | 适用场景 |
-|------|------|---------|
-| **Docker 全栈** | `./scripts/dev-start.sh` | 网络稳定，无需本地环境 |
-| **本地一键** | `./scripts/dev-local.sh` | 网络不稳定，已有 JDK/Node |
+- **在公司/旧设备**：`npm run db:dump` (导出当前数据库快照到 `db/seed-data.sql`)
+- **在家里/新设备**：`npm run db:load` (从 `db/seed-data.sql` 恢复快照)
 
 ---
 
-## 方式一：Docker 全栈（推荐）
+## 2. 核心文件结构
 
-// turbo
-```bash
-./scripts/dev-start.sh
-```
-
-自动完成：构建镜像 → 启动全部服务 → 健康检查
-
-> ⚠️ 首次需拉取 Docker 镜像，网络不稳定时可能失败
-
----
-
-## 方式二：本地一键启动
-
-// turbo
-```bash
-./scripts/dev-local.sh
-```
-
-自动完成：
-1. 启动数据库和 Redis（Docker）
-2. 启动后端（本地 Maven）
-3. 启动前端（本地 npm）
-4. 健康检查
-
-**停止服务**：
-```bash
-./scripts/dev-local-stop.sh
-```
-
----
-
-## 访问地址
-
-| 服务 | 地址 |
+| 文件 | 用途 |
 |------|------|
-| 前端 | http://localhost:15175 |
-| 后端 API | http://localhost:19090/api |
-| 数据库 | localhost:54321 |
-| Redis | localhost:16379 |
+| `docker-compose.infra.yml` | 基础设施（PostgreSQL + Redis），本地开发使用 |
+| `docker-compose.app.yml` | 全栈服务（后端 + 前端 + DB），服务器部署使用 |
+| `scripts/dev.sh` | 本地开发一键启动脚本 |
+| `scripts/dev-stop.sh` | 本地开发一键停止脚本 |
 
 ---
 
-## 常见问题
+## 3. 常用开发命令
 
-### Docker 启动失败（网络超时）
-
-改用本地方式：
+// turbo
 ```bash
-./scripts/dev-local.sh
+npm run dev        # 启动环境（Docker 跑 DB，本地跑前后端）
 ```
 
-### 端口被占用
-
 ```bash
-lsof -ti :19090 | xargs kill -9
-lsof -ti :15175 | xargs kill -9
+npm run dev:stop   # 停止本地开发环境进程及容器
 ```
 
-### 前端报 500 错误
-
-后端未启动。检查：
 ```bash
-curl -s http://localhost:19090/api/health
+npm run db:dump    # 导出本地数据库数据（离开公司前执行）
+```
+
+```bash
+npm run db:load    # 导入数据快照（回到家后在新环境执行）
+```
+
+```bash
+npm run db:reset   # 重置数据库（删除所有数据并重新初始化）
+```
+
+```bash
+npm run deploy     # 部署到预发/生产服务器
+```
+
+---
+
+## 4. 当前服务状态
+
+| 服务 | 运行模式 | 端口 | 访问地址 |
+|------|---------|------|---------|
+| **PostgreSQL** | Docker | 54321 | `localhost:54321` |
+| **Redis** | Docker | 16379 | `localhost:16379` |
+| **后端 API** | 本地 (Maven) | 19090 | `http://localhost:19090/api` |
+| **前端 UI** | 本地 (Vite) | 15175 | `http://localhost:15175` |
+
+---
+
+## 常见操作说明
+
+### 首次克隆项目
+1. 确保已安装 Docker, JDK, Node.js, Maven
+2. 执行 `npm run dev`
+3. 脚本会自动创建 `.env.local` 并初始化数据库
+
+### 端口占用清理
+如果遇到端口被占用的报错，运行 `npm run dev:stop` 会尝试自动强制释放端口。
+手动清理：
+```bash
+lsof -ti :19090,15175 | xargs kill -9
+```
+
+### 查看日志
+后端日志持续输出到根目录下的 `backend.log`：
+```bash
+tail -f backend.log
 ```

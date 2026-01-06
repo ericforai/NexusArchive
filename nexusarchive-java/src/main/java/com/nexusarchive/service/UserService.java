@@ -81,6 +81,21 @@ public class UserService {
         if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
             userMapper.insertUserRoles(user.getId(), request.getRoleIds());
         }
+        // 关联全宗权限
+        List<String> fondsCodes = request.getFondsCodes();
+        if (fondsCodes != null && !fondsCodes.isEmpty()) {
+            for (String fondsCode : fondsCodes) {
+                SysUserFondsScope scope = new SysUserFondsScope();
+                scope.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+                scope.setUserId(user.getId());
+                scope.setFondsNo(fondsCode);
+                scope.setScopeType("DIRECT");
+                scope.setCreatedTime(LocalDateTime.now());
+                scope.setLastModifiedTime(LocalDateTime.now());
+                scope.setDeleted(0);
+                sysUserFondsScopeMapper.insert(scope);
+            }
+        }
         return toResponse(user);
     }
 

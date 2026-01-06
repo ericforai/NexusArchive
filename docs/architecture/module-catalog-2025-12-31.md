@@ -1,7 +1,7 @@
 # NexusArchive 系统模块清单
 
-**版本**: 2.0.0
-**生成日期**: 2025-12-31
+**版本**: 2.1.0
+**生成日期**: 2026-01-06
 **系统名称**: 电子会计档案管理系统
 
 ---
@@ -192,6 +192,7 @@
 | 用友适配器 | WeaverAdapter.java | 用友 ERP 集成 |
 | 用友 E10 适配器 | WeaverE10Adapter.java | 用友 E10 集成 |
 | 云 suite 适配器 | YonSuiteErpAdapter.java | 云 suite 集成 |
+| 云 suite 退款单服务 | YonRefundListService.java | 退款单同步与处理 |
 | **ERP 服务** | | |
 | ERP 渠道服务 | ErpChannelService.java | 渠道聚合 |
 | ERP 同步服务 | ErpSyncService.java | 数据同步 |
@@ -211,13 +212,22 @@
 | **档案核心** | | | |
 | 档案 | Archive.java | acc_archive | 档案主表 |
 | 档案附件 | ArchiveAttachment.java | acc_archive_attachment | 附件关联 |
-| 档案关联 | ArchiveRelation.java | acc_archive_relation | 关联关系 |
 | 档案审批 | ArchiveApproval.java | acc_archive_approval | 审批记录 |
+| 档案内容 | ArcFileContent.java | arc_file_content | 电子文件内容 |
+| 元数据索引 | ArcFileMetadataIndex.java | arc_file_meta_index | 属性加速索引 |
+| 档案哈希日志 | ArcSignatureLog.java | arc_signature_log | 签名验证日志 |
+| 档案关联 | ArchiveRelation.java | acc_archive_relation | 关联关系 |
+| 凭证关联 | VoucherRelation.java | acc_voucher_relation | 凭证间关联 |
 | 档案批次 | ArchiveBatch.java | acc_archive_batch | 批次表 |
 | 批次项 | ArchiveBatchItem.java | acc_archive_batch_item | 批次明细 |
 | 提交批次 | ArchiveSubmitBatch.java | acc_submit_batch | 提交批次 |
-| **认证授权** | | | |
+| 资料采集批次 | CollectionBatch.java | acc_collection_batch | 摄取原始批次 |
+| 资料采集文件 | CollectionBatchFile.java | acc_collection_batch_file | 摄取原始文件 |
+| **认证授权与借阅** | | | |
 | 认证票据 | AuthTicket.java | acc_auth_ticket | 认证票据 |
+| 借阅归档 | BorrowArchive.java | acc_borrow_archive | 借阅档案关联 |
+| 借阅日志 | BorrowLog.java | acc_borrow_log | 借阅操作日志 |
+| 借阅请求 | BorrowRequest.java | acc_borrow_request | 借阅申请单 |
 | 员工生命周期 | EmployeeLifecycleEvent.java | sys_employee_lifecycle_event | 员工事件 |
 | **销毁管理** | | | |
 | 销毁 | Destruction.java | acc_destruction | 销毁计划 |
@@ -227,9 +237,10 @@
 | 原始凭证文件 | OriginalVoucherFile.java | acc_original_voucher_file | 凭证文件 |
 | 原始凭证类型 | OriginalVoucherType.java | acc_original_voucher_type | 凭证类型 |
 | **审计日志** | | | |
-| 审计检查日志 | AuditInspectionLog.java | sys_audit_inspection_log | 检查日志 |
+| 审计验真记录 | AuditInspectionLog.java | sys_audit_inspection_log | 检查日志 |
 | 系统审计日志 | SysAuditLog.java | sys_audit_log | 审计日志 |
 | 同步历史 | SyncHistory.java | erp_sync_history | 同步记录 |
+| 对账记录 | ReconciliationRecord.java | acc_reconciliation_record | 财务对账结果 |
 | 转换日志 | ConvertLog.java | sys_convert_log | 转换记录 |
 | **用户权限** | | | |
 | 用户 | User.java | sys_user | 用户表 |
@@ -257,6 +268,10 @@
 | 全宗 | BasFonds.java | bas_fonds | 全宗表 |
 | 全宗历史 | FondsHistory.java | bas_fonds_history | 全宗历史 |
 | 案卷 | Volume.java | acc_archive_volume | 案卷表 |
+| 鉴定列表 | AppraisalList.java | acc_appraisal_list | 价值鉴定单 |
+| 在线受理 | IngestRequestStatus.java | acc_ingest_request | 受理状态维护 |
+| 开放鉴定 | OpenAppraisal.java | acc_open_appraisal | 开放鉴定记录 |
+| 编号序列 | ArchivalCodeSequence.java | sys_archive_code_seq | 档号生成序列 |
 | 位置 | Location.java | bas_location | 位置表 |
 | 池服务 | PoolService.java | bas_pool_service | 池服务 |
 | 仓库服务 | WarehouseService.java | bas_warehouse_service | 仓库服务 |
@@ -365,10 +380,15 @@
 | 借阅功能 | index.ts | 借阅业务逻辑 |
 | **合规管理** | features/compliance/ | | |
 | 合规功能 | index.ts | 合规检查 |
-| **设置模块** | features/settings/ | | |
-| 应用层 | application/ | 设置 API Hook |
-| 领域层 | domain/ | 设置类型定义 |
-| 基础设施层 | infrastructure/ | 设置 API 客户端 |
+| **设置模块** | features/settings/ | 系统/用户设置核心逻辑 |
+| 设置应用层 | application/ | 设置业务 Hooks |
+| 设置领域层 | domain/ | 设置核心模型与动作 |
+| 设置基础设施层 | infrastructure/ | 设置 API 连接器 |
+| **集成设置重构** | components/settings/integration/ | **v2.1 重大重构 (Compositor 模式)** |
+| 配置管理器 | hooks/useErpConfigManager.ts | ERP 配置 CRUD 与测试 |
+| 场景同步器 | hooks/useScenarioSyncManager.ts | 场景加载与批量同步 |
+| AI 适配处理器 | hooks/useAiAdapterHandler.ts | AI 驱动的适配器生成 |
+| 集成 UI 组件 | components/ | Card, List, Form 等 5 个专用组件 |
 
 **Features 模块总数**: 4 个主要功能模块
 
@@ -382,7 +402,10 @@
 | 全局搜索 | GlobalSearch.tsx | 跨模块搜索 |
 | 侧边栏 | Sidebar.tsx | 导航侧边栏 |
 | 顶部栏 | TopBar.tsx | 顶部导航栏 |
-| 水印覆盖层 | WatermarkOverlay.tsx | 预览水印 |
+| 场景抽屉 | ScenarioDrawer.tsx | 场景详情侧滑面板 |
+| 连接健康徽章 | ConnectionHealthBadge.tsx | API 连通性实时监控 |
+| 表格预览操作 | table/TablePreviewAction.tsx | 统一的表格预览/操作列 |
+| 水印覆盖层 | WatermarkOverlay.tsx | 预览水印 (含防篡改) |
 | 销毁仓库视图 | DestructionRepositoryView.tsx | 销毁仓库 |
 | 开放库存视图 | OpenInventoryView.tsx | 开放档案 |
 | 关联视图 | RelationshipView.tsx | 档案关联 |
@@ -441,6 +464,7 @@
 | 在线受理 | OnlineReceptionView.tsx | /collection/online | 在线数据接收 |
 | **匹配页面** | | | |
 | 凭证匹配 | VoucherMatchingPage.tsx | /matching/vouchers | 凭证智能匹配 |
+| 批量上传 | BatchUploadView.tsx | /collection/batch-upload | 文件批量上传与摄取 |
 | 上向导 | OnboardingWizard.tsx | /matching/onboarding | 配置向导 |
 | **作业管理** | | | |
 | 鉴定列表 | AppraisalListPage.tsx | /operations/appraisals | 鉴定任务列表 |

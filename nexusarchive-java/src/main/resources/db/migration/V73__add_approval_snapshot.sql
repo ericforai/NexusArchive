@@ -13,3 +13,5 @@ COMMENT ON COLUMN biz_destruction.status IS '状态: PENDING(待审批), FIRST_A
 
 
 
+
+

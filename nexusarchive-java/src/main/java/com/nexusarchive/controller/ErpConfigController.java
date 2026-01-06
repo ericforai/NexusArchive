@@ -44,8 +44,16 @@ public class ErpConfigController {
     @Operation(summary = "新增/更新配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     public Result<Void> save(@Valid @RequestBody ErpConfig config) {
-        erpConfigService.saveConfig(config);
-        return Result.success();
+        try {
+            erpConfigService.saveConfig(config);
+            return Result.success();
+        } catch (IllegalArgumentException e) {
+            log.warn("保存ERP配置失败 - 参数错误: {}", e.getMessage());
+            return Result.error("参数错误: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("保存ERP配置失败 - 系统错误: {}", e.getMessage(), e);
+            return Result.error("保存失败: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
