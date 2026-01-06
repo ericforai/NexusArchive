@@ -7,34 +7,25 @@ import { ErpConfig } from '@/types';
 
 interface ErpConfigListProps {
   configs: ErpConfig[];
-  scenarios?: Record<number, Array<{
-    id: number;
-    name: string;
-    lastSyncTime?: string;
-    recordCount?: number;
-  }>>;
   scenarioCounts?: Record<number, number>;
-  loadingScenarios?: Record<number, boolean>;
+  runningCounts?: Record<number, { running: number; error: number }>;
   onTest?: (configId: number) => void;
   onDiagnose?: (configId: number) => void;
   onReconcile?: (configId: number) => void;
   onConfig?: (config: ErpConfig) => void;
   onDelete?: (configId: number) => void;
-  onLoadScenarios?: (configId: number) => void;
   onViewDetails?: (configId: number) => void;
 }
 
 export function ErpConfigList({
   configs,
-  scenarios = {},
   scenarioCounts = {},
-  loadingScenarios = {},
+  runningCounts = {},
   onTest,
   onDiagnose,
   onReconcile,
   onConfig,
   onDelete,
-  onLoadScenarios,
   onViewDetails
 }: ErpConfigListProps) {
   if (configs.length === 0) {
@@ -51,23 +42,25 @@ export function ErpConfigList({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {configs.map((config) => (
-        <ErpConfigCard
-          key={config.id}
-          config={config}
-          status="connected"
-          scenarios={scenarios[config.id] || []}
-          scenarioCount={scenarioCounts[config.id] || 0}
-          loadingScenarios={loadingScenarios[config.id] || false}
-          onTest={onTest}
-          onDiagnose={onDiagnose}
-          onReconcile={onReconcile}
-          onConfig={onConfig}
-          onDelete={onDelete}
-          onLoadScenarios={onLoadScenarios}
-          onViewDetails={onViewDetails}
-        />
-      ))}
+      {configs.map((config) => {
+        const stats = runningCounts[config.id] || { running: 0, error: 0 };
+        return (
+          <ErpConfigCard
+            key={config.id}
+            config={config}
+            status="connected"
+            scenarioCount={scenarioCounts[config.id] || 0}
+            runningCount={stats.running}
+            errorCount={stats.error}
+            onTest={onTest}
+            onDiagnose={onDiagnose}
+            onReconcile={onReconcile}
+            onConfig={onConfig}
+            onDelete={onDelete}
+            onViewDetails={onViewDetails}
+          />
+        );
+      })}
     </div>
   );
 }

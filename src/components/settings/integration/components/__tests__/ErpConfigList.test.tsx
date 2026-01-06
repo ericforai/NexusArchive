@@ -28,3 +28,18 @@ describe('ErpConfigList', () => {
     expect(screen.getByText('还没有配置任何连接器')).toBeInTheDocument();
   });
 });
+
+describe('ErpConfigList with running counts', () => {
+  const mockConfig: ErpConfig = { id: 1, name: 'YonSuite', erpType: 'yonsuite', configJson: '{}', isActive: 1 };
+
+  it('should pass running counts to cards', () => {
+    const { getByText } = render(
+      <ErpConfigList
+        configs={[mockConfig]}
+        scenarioCounts={{ 1: 8 }}
+        runningCounts={{ 1: { running: 2, error: 0 } }}
+      />
+    );
+    expect(getByText(/2.*运行中/)).toBeInTheDocument();
+  });
+});
