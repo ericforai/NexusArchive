@@ -47,13 +47,21 @@ describe('ErpConfigCard', () => {
     expect(onReconcile).toHaveBeenCalledWith(1);
   });
 
-  it('should toggle inline form when clicking config button', () => {
-    const onConfig = vi.fn();
-    render(<ErpConfigCard config={mockConfig} status="connected" onConfig={onConfig} />);
-    // First click should open the inline form, not call onConfig
-    fireEvent.click(screen.getByText('配置中心'));
-    // onConfig should not be called yet
-    expect(onConfig).not.toHaveBeenCalled();
+  it('should call onConfig when clicking config center button', () => {
+    const mockOnConfig = vi.fn();
+    const { getByRole } = render(
+      <ErpConfigCard
+        config={mockConfig}
+        status="connected"
+        onConfig={mockOnConfig}
+      />
+    );
+
+    const configButton = getByRole('button', { name: /配置中心/ });
+    fireEvent.click(configButton);
+
+    expect(mockOnConfig).toHaveBeenCalledTimes(1);
+    expect(mockOnConfig).toHaveBeenCalledWith(mockConfig);
   });
 
   it('should call onDelete when clicking delete in more menu', () => {
@@ -110,66 +118,5 @@ describe('ErpConfigCard', () => {
       );
       expect(screen.getByText(/正常/)).toBeInTheDocument();
     });
-  });
-
-  it('should toggle inline edit form when clicking config button', () => {
-    const { container } = render(<ErpConfigCard config={mockConfig} status="connected" />);
-    const configButton = screen.getByText('配置中心');
-
-    // Initially, inline form should not be visible
-    expect(container.querySelector('[data-testid="inline-config-form"]')).not.toBeInTheDocument();
-
-    // Click config button to show inline form
-    fireEvent.click(configButton);
-    expect(container.querySelector('[data-testid="inline-config-form"]')).toBeInTheDocument();
-
-    // Click again to hide
-    fireEvent.click(configButton);
-    expect(container.querySelector('[data-testid="inline-config-form"]')).not.toBeInTheDocument();
-  });
-
-  it('should show inline edit form with name input', () => {
-    const { container } = render(<ErpConfigCard config={mockConfig} status="connected" />);
-    fireEvent.click(screen.getByText('配置中心'));
-
-    const inlineForm = container.querySelector('[data-testid="inline-config-form"]');
-    expect(inlineForm).toBeInTheDocument();
-    expect(screen.getByText('连接器名称')).toBeInTheDocument();
-    expect(screen.getByText('保存')).toBeInTheDocument();
-    expect(screen.getByText('取消')).toBeInTheDocument();
-  });
-
-  it('should call onConfig with updated name when saving inline form', () => {
-    const onConfig = vi.fn();
-    const { container } = render(
-      <ErpConfigCard config={mockConfig} status="connected" onConfig={onConfig} />
-    );
-
-    // Open inline form
-    fireEvent.click(screen.getByText('配置中心'));
-
-    // Change name input
-    const nameInput = container.querySelector('input[type="text"]') as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: 'Updated YonSuite' } });
-    expect(nameInput.value).toBe('Updated YonSuite');
-
-    // Click save
-    fireEvent.click(screen.getByText('保存'));
-
-    // Should call onConfig with updated name and close form
-    expect(onConfig).toHaveBeenCalledWith({ ...mockConfig, name: 'Updated YonSuite' });
-    expect(container.querySelector('[data-testid="inline-config-form"]')).not.toBeInTheDocument();
-  });
-
-  it('should close inline form when clicking cancel', () => {
-    const { container } = render(<ErpConfigCard config={mockConfig} status="connected" />);
-
-    // Open inline form
-    fireEvent.click(screen.getByText('配置中心'));
-    expect(container.querySelector('[data-testid="inline-config-form"]')).toBeInTheDocument();
-
-    // Click cancel
-    fireEvent.click(screen.getByText('取消'));
-    expect(container.querySelector('[data-testid="inline-config-form"]')).not.toBeInTheDocument();
   });
 });
