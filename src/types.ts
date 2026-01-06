@@ -371,6 +371,29 @@ export interface ErpSubInterface {
   configJson?: string;
 }
 
+// 场景状态类型
+export type ScenarioStatus = 'idle' | 'running' | 'success' | 'error';
+
+// 扩展场景摘要信息
+export interface ScenarioSummary {
+  id: number;
+  configId: number;
+  name: string;
+  status: ScenarioStatus;
+  lastSyncTime?: string;
+  recordCount?: number;
+}
+
+// 连接器健康状态
+export type ConnectionHealthStatus = 'healthy' | 'warning' | 'error';
+
+// 场景统计
+export interface ScenarioStatistics {
+  total: number;
+  running: number;
+  error: number;
+}
+
 export interface SyncHistory {
   id: number;
   scenarioId: number;
