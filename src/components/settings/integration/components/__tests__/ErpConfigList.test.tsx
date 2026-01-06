@@ -40,6 +40,7 @@ describe('ErpConfigList with running counts', () => {
         runningCounts={{ 1: { running: 2, error: 0 } }}
       />
     );
-    expect(getByText(/2.*运行中/)).toBeInTheDocument();
+    // New inline format after Task 5: "场景: 8 / 运行2 / 错误0"
+    expect(getByText(/场景.*8.*运行2.*错误0/)).toBeInTheDocument();
   });
 });

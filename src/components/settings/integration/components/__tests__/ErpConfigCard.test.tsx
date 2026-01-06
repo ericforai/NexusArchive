@@ -76,8 +76,8 @@ describe('ErpConfigCard', () => {
           onViewDetails={() => {}}
         />
       );
-      expect(screen.getByText('场景')).toBeInTheDocument();
-      expect(screen.getByText('8 个')).toBeInTheDocument();
+      // New compact inline format after Task 5: "场景: 8 / 运行2 / 错误0"
+      expect(screen.getByText(/场景.*8.*运行2.*错误0/)).toBeInTheDocument();
       expect(screen.getByText('查看详情')).toBeInTheDocument();
       expect(screen.queryByText(/点击展开/)).toBeNull();
     });
