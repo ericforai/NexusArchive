@@ -1,3 +1,8 @@
+// Input: Scenario statistics (total, running, error counts)
+// Output: Summary card component displaying scenario counts with status
+// Pos: src/components/settings/integration/components/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 
 interface ScenarioSummaryCardProps {

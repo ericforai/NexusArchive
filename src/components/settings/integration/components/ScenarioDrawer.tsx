@@ -1,3 +1,8 @@
+// Input: React, Ant Design Drawer, scenarios data, sync callback
+// Output: Right-side slide-in drawer component for scenario detail view
+// Pos: src/components/settings/integration/components/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 import React from 'react';
 import { Drawer, Button } from 'antd';
 import { X } from 'lucide-react';

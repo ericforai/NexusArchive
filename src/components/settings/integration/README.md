@@ -173,11 +173,15 @@ src/components/settings/integration/
 
 | 文件 | 行数 | 角色 | 能力描述 |
 |------|------|------|----------|
-| `ErpConfigList.tsx` | 79 | **Config List UI** | 按 ERP 类型分组展示配置列表，支持展开/收起 |
-| `ScenarioCard.tsx` | 145 | **Scenario Card UI** | 场景卡片展示，包含同步按钮、子接口、历史记录 |
+| `ErpConfigList.tsx` | 67 | **Config List UI** | 网格布局展示连接器卡片，空状态提示，响应式（1/3 列） |
+| `ErpConfigCard.tsx` | 225 | **Summary Card UI** | 连接器摘要卡片，固定高度，显示状态、健康、场景统计 |
+| `ScenarioDrawer.tsx` | ~100 | **Detail Drawer UI** | 右侧抽屉详情页（480px），显示完整场景列表 |
+| `ScenarioSummaryCard.tsx` | ~50 | **Summary Widget UI** | 场景统计卡片（总数/运行中/失败），带动画状态 |
+| `ConnectionHealthBadge.tsx` | ~60 | **Health Badge UI** | 健康状态徽章，显示状态 + 相对时间 |
 | `ConnectorForm.tsx` | 156 | **Connector Form UI** | 连接器配置表单（名称、类型、URL、密钥、账套） |
 | `DiagnosisPanel.tsx` | 89 | **Diagnosis Panel UI** | 诊断结果面板，显示健康状态和详细检查项 |
 | `ParamsEditor.tsx` | 106 | **Params Editor UI** | 同步参数编辑模态框（日期范围、分页大小） |
+| `ScenarioCard.tsx` | 145 | **Scenario Card UI** | 场景卡片（v2.1，v2.2 由 Drawer 替代） |
 
 ### 测试文件
 
