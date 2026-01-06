@@ -394,7 +394,8 @@ test.describe('YonSuite Placeholders - Should Not Execute', () => {
 
 test('Final invariant: UI count matches database count', async ({ page, request }) => {
   // Count scenarios shown in UI
-  await page.click('button:has-text("查看详情")').first();
+  const viewDetailsBtn = page.locator('button:has-text("查看详情")').first();
+  await viewDetailsBtn.click();
   await page.waitForSelector('.ant-drawer-open');
 
   const uiScenarioCount = await page.locator('.ant-drawer .ant-list-item').count();
