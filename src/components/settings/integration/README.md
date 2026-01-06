@@ -6,13 +6,14 @@ Card-based layout for ERP connector configuration, optimized for finance users.
 ## Key Components
 
 ### ErpConfigCard
-- **Purpose**: Display single connector with inline action bar
+- **Purpose**: Display single connector summary card
 - **Features**:
-  - Inline editing (no modal popups)
-  - Action buttons: 配置中心, 检查连接, 健康检查, 账务核对
-  - More menu with delete option
-  - Scenario list with sync status
-  - Click-outside handler for dropdown
+  - Summary view with connection status
+  - Scenario count badge
+  - Health check button (slate-700 + white text)
+  - Actions: config, test, diagnose, reconcile
+  - "View Details" button opens scenario drawer
+  - Fixed height for consistent layout
 
 ### ErpConfigList
 - **Purpose**: Grid layout for connector cards
@@ -23,18 +24,47 @@ Card-based layout for ERP connector configuration, optimized for finance users.
 - **Purpose**: Main page compositor
 - **Pattern**: Compositor pattern combining specialized hooks
 
-## Architecture Changes (v2.1)
+## Architecture (v2.2 - Summary + Drawer)
 
-### Before
-- 1,709 lines in single file
-- Page-level action bar
-- Modal-based editing
+### Three-Layer Information Architecture
 
-### After
-- 161 lines in IntegrationSettingsPage (91% reduction)
-- Card-based layout with inline actions
-- Inline editing for better UX
-- 6 specialized hooks for state management
+**Layer 1: Summary Card (ErpConfigCard)**
+- Displays summary information only
+- Fixed height for consistent layout
+- Shows: connection status, health, scenario counts
+- Actions: config, test, diagnose, reconcile
+- Entry point: "View Details" button
+
+**Layer 2: Detail Drawer (ScenarioDrawer)**
+- Slides in from right (480px width)
+- Shows full scenario list
+- Per-scenario actions: sync, view history
+- Dismissible with X button or click outside
+
+**Layer 3: Management Page (Future)**
+- Dedicated page for scenario management
+- Advanced features: history, logs, mapping
+- Reached by clicking individual scenario
+
+### Component Structure
+
+```
+IntegrationSettingsPage
+├── ErpConfigList (grid layout)
+│   └── ErpConfigCard (summary view)
+│       ├── ScenarioSummaryCard (counts)
+│       ├── ConnectionHealthBadge (status)
+│       └── [Action Buttons]
+└── ScenarioDrawer (detail view)
+    └── [Scenario List]
+```
+
+### Visual Improvements
+
+- Health check button: slate-700 background + white text (better contrast)
+- Card height: Fixed for consistent layout
+- Spacing: Increased padding and gaps for breathing room
+- Status indicators: Color-coded with icons
 
 ## Hooks
 
@@ -74,7 +104,7 @@ npm run test -- ErpConfigList
 本模块实现 ERP 集成设置功能，从原始 1,709 行巨型组件重构为 161 行组合器 + 8 个专用 Hook + 5 个 UI 组件，代码减少 **91.1%**。
 
 **重构日期**: 2026-01-05
-**最新更新**: 2026-01-05 (v2.1 - 卡片式布局优化)
+**最新更新**: 2026-01-06 (v2.2 - Summary + Drawer 三层架构)
 **设计模式**: Compositor 组合器模式 + React Hooks
 **测试覆盖**: 44 个测试用例，100% 通过率
 
@@ -213,6 +243,8 @@ IntegrationSettingsPage (Compositor)
 
 | 日期 | 版本 | 变更内容 |
 |------|------|----------|
+| 2026-01-06 | v2.2 | 三层信息架构：Summary Card + Detail Drawer + Management Page |
+| 2026-01-05 | v2.1 | 卡片式布局优化，移除展开/收起功能 |
 | 2026-01-05 | v2.0 | 从 1,709 行巨型组件重构为 161 行组合器 + 8 Hooks + 5 Components |
 | 2025-XX-XX | v1.0 | 原始单体组件实现 |
 
