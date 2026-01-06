@@ -39,6 +39,7 @@ public class ErpScenarioController {
     @PutMapping
     @Operation(summary = "更新场景配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
+    @com.nexusarchive.annotation.ArchivalAudit(operationType = "UPDATE", resourceType = "ERP_SCENARIO", description = "更新ERP场景配置")
     public Result<Void> update(@Valid @RequestBody ErpScenario scenario) {
         erpScenarioService.updateScenario(scenario);
         return Result.success();
@@ -136,6 +137,7 @@ public class ErpScenarioController {
     @PutMapping("/{id}/params")
     @Operation(summary = "更新场景参数配置")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
+    @com.nexusarchive.annotation.ArchivalAudit(operationType = "UPDATE", resourceType = "ERP_SCENARIO_PARAMS", description = "更新ERP场景参数配置")
     public Result<Void> updateScenarioParams(@PathVariable Long id, @RequestBody Map<String, Object> params) {
         erpScenarioService.updateScenarioParams(id, params);
         return Result.success();
