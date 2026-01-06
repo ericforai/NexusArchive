@@ -21,8 +21,8 @@ export interface User {
     avatar?: string;
     departmentId?: string;
     status?: string;
-    roles: string[];
-    permissions: string[];
+    roles?: string[];
+    permissions?: string[];
     // 新增字段：个人资料展示
     phone?: string;
     employeeId?: string;

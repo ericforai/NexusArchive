@@ -45,11 +45,11 @@ export function ErpConfigCard({
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Header Section */}
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-4">
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3 flex-1">
-            <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <Settings size={20} className="text-blue-600" />
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Settings size={18} className="text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-semibold text-gray-900 truncate">{config.name}</h3>
@@ -62,20 +62,20 @@ export function ErpConfigCard({
         </div>
 
         {/* Action Bar - Grid layout */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="grid grid-cols-2 gap-1.5 mb-2">
           <button
             onClick={() => onConfig?.(config)}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
           >
-            <Settings size={14} className="text-gray-500 flex-shrink-0" />
+            <Settings size={13} className="text-gray-500 flex-shrink-0" />
             <span>配置中心</span>
           </button>
 
           <button
             onClick={() => onTest?.(config.id)}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-200 hover:text-blue-600 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-200 hover:text-blue-600 rounded-lg transition-colors"
           >
-            <Zap size={14} className="text-blue-500 flex-shrink-0" />
+            <Zap size={13} className="text-blue-500 flex-shrink-0" />
             <span>检查连接</span>
           </button>
 

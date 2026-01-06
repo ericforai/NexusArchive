@@ -6,8 +6,8 @@
 // src/components/settings/integration/components/ConnectorForm.tsx
 
 import React from 'react';
-import { X, Plus, Trash2, Loader2, CheckCircle } from 'lucide-react';
-import { Drawer, Button } from 'antd';
+import { X, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Drawer, Button, Input, Select, Space, Alert } from 'antd';
 import { ConnectorModalState, ConnectorModalActions } from '../types';
 
 interface ConnectorFormProps {
@@ -39,18 +39,14 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
             type="text"
             icon={<X size={18} />}
             onClick={actions.closeModal}
-            className="hover:bg-gray-100"
           />
         </div>
       }
       placement="right"
-      width={640}
+      width={560}
       open={show}
       onClose={actions.closeModal}
       destroyOnClose={true}
-      styles={{
-        body: { padding: '16px' },
-      }}
       footer={
         <div className="flex justify-end gap-3">
           <Button onClick={actions.closeModal}>
@@ -66,159 +62,146 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         </div>
       }
     >
-      {/* Form */}
-      <div className="space-y-4">
-        {/* Config Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            配置名称 <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={configForm.name}
-            onChange={e => actions.updateForm('name', e.target.value)}
-            placeholder="例如: 用友YonSuite生产环境"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      {/* Config Name */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+          配置名称 <span style={{ color: '#ef4444' }}>*</span>
+        </label>
+        <Input
+          value={configForm.name}
+          onChange={e => actions.updateForm('name', e.target.value)}
+          placeholder="例如: 用友YonSuite生产环境"
+        />
+      </div>
 
-        {/* ERP Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            ERP类型 <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={configForm.erpType}
-            onChange={e => actions.updateForm('erpType', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* ERP Type */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+          ERP类型 <span style={{ color: '#ef4444' }}>*</span>
+        </label>
+        <Select
+          value={configForm.erpType || undefined}
+          onChange={value => actions.updateForm('erpType', value)}
+          placeholder="请选择ERP类型"
+          style={{ width: '100%' }}
+        >
+          <Select.Option value="yonsuite">用友 YonSuite</Select.Option>
+          <Select.Option value="kingdee">金蝶云星空</Select.Option>
+          <Select.Option value="weaver">泛微 OA</Select.Option>
+          <Select.Option value="generic">通用 REST API</Select.Option>
+        </Select>
+      </div>
+
+      {/* Base URL */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+          服务地址 <span style={{ color: '#ef4444' }}>*</span>
+        </label>
+        <Space.Compact style={{ width: '100%' }}>
+          <Input
+            type="url"
+            value={configForm.baseUrl}
+            onChange={e => actions.updateForm('baseUrl', e.target.value)}
+            placeholder="https://api.example.com"
+            style={{ flex: 1 }}
+          />
+          <Button
+            onClick={() => actions.detectErpType(configForm.baseUrl)}
+            disabled={!configForm.baseUrl}
           >
-            <option value="">请选择ERP类型</option>
-            <option value="yonsuite">用友 YonSuite</option>
-            <option value="kingdee">金蝶云星空</option>
-            <option value="weaver">泛微 OA</option>
-            <option value="generic">通用 REST API</option>
-          </select>
-        </div>
-
-        {/* Base URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            服务地址 <span className="text-red-500">*</span>
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={configForm.baseUrl}
-              onChange={e => actions.updateForm('baseUrl', e.target.value)}
-              placeholder="https://api.example.com"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={() => actions.detectErpType(configForm.baseUrl)}
-              disabled={!configForm.baseUrl}
-              className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
-            >
-              自动检测
-            </button>
-          </div>
-          {detectedType && (
-            <div className="mt-1 text-sm text-green-600 flex items-center gap-1">
-              <CheckCircle size={14} />
-              检测到: {detectedType}
-            </div>
-          )}
-        </div>
-
-        {/* App Key */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            应用密钥 (App Key) <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={configForm.appKey}
-            onChange={e => actions.updateForm('appKey', e.target.value)}
-            placeholder="您的应用密钥"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            自动检测
+          </Button>
+        </Space.Compact>
+        {detectedType && (
+          <Alert
+            message={`检测到: ${detectedType}`}
+            type="success"
+            showIcon
+            icon={<CheckCircle size={14} />}
+            style={{ marginTop: 8 }}
           />
-        </div>
+        )}
+      </div>
 
-        {/* App Secret */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            应用密钥 <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="password"
-            value={configForm.appSecret}
-            onChange={e => actions.updateForm('appSecret', e.target.value)}
-            placeholder="您的应用密钥"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      {/* App Key */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+          应用ID (App Key) <span style={{ color: '#ef4444' }}>*</span>
+        </label>
+        <Input
+          value={configForm.appKey}
+          onChange={e => actions.updateForm('appKey', e.target.value)}
+          placeholder="您的应用ID"
+        />
+      </div>
 
-        {/* Accbook Codes */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            账套编码
-          </label>
-          <div className="space-y-2">
-            {configForm.accbookCodes.map(code => (
-              <div key={code} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={code}
-                  readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded bg-gray-50"
-                />
-                <button
-                  onClick={() => actions.removeAccbookCode(code)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newAccbookCode}
-                onChange={e => actions.updateForm('newAccbookCode', e.target.value)}
-                placeholder="输入账套编码"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* App Secret */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+          应用密钥 <span style={{ color: '#ef4444' }}>*</span>
+        </label>
+        <Input.Password
+          value={configForm.appSecret}
+          onChange={e => actions.updateForm('appSecret', e.target.value)}
+          placeholder="您的应用密钥"
+        />
+      </div>
+
+      {/* Accbook Codes */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+          账套编码
+        </label>
+        <Space direction="vertical" style={{ width: '100%' }} size="small">
+          {configForm.accbookCodes.map(code => (
+            <Space.Compact key={code} style={{ width: '100%' }}>
+              <Input
+                value={code}
+                readOnly
+                style={{ flex: 1 }}
               />
-              <button
-                onClick={() => actions.addAccbookCode(newAccbookCode)}
-                disabled={!newAccbookCode}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
-              >
-                <Plus size={16} />
-                添加
-              </button>
-            </div>
-          </div>
-        </div>
+              <Button
+                type="text"
+                danger
+                icon={<Trash2 size={16} />}
+                onClick={() => actions.removeAccbookCode(code)}
+              />
+            </Space.Compact>
+          ))}
+          <Space.Compact style={{ width: '100%' }}>
+            <Input
+              value={newAccbookCode}
+              onChange={e => actions.updateForm('newAccbookCode', e.target.value)}
+              placeholder="输入账套编码"
+              style={{ flex: 1 }}
+              onPressEnter={() => newAccbookCode && actions.addAccbookCode(newAccbookCode)}
+            />
+            <Button
+              type="primary"
+              icon={<Plus size={16} />}
+              onClick={() => actions.addAccbookCode(newAccbookCode)}
+              disabled={!newAccbookCode}
+            >
+              添加
+            </Button>
+          </Space.Compact>
+        </Space>
+      </div>
 
-        {/* Connection Test */}
-        <div className="pt-4 border-t">
-          <button
-            onClick={actions.testConnection}
-            disabled={!configForm.baseUrl || !configForm.appKey || !configForm.appSecret || isTesting}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isTesting ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                测试连接中...
-              </>
-            ) : (
-              <>
-                <CheckCircle size={16} />
-                测试连接
-              </>
-            )}
-          </button>
-        </div>
+      {/* Connection Test */}
+      <div style={{ paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+        <Button
+          type="primary"
+          onClick={actions.testConnection}
+          disabled={!configForm.baseUrl || !configForm.appKey || !configForm.appSecret || isTesting}
+          loading={isTesting}
+          icon={!isTesting && <CheckCircle size={16} />}
+          size="large"
+          block
+          style={{ backgroundColor: '#52c41a', color: '#ffffff' }}
+        >
+          {isTesting ? '测试连接中...' : '测试连接'}
+        </Button>
       </div>
     </Drawer>
   );

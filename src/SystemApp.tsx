@@ -96,13 +96,7 @@ export const SystemApp: React.FC = () => {
                 console.log('[SystemApp] Verifying token...');
                 const res = await authApi.getCurrentUser();
                 if (res.code === 200 && res.data) {
-                    login(token, {
-                        id: res.data.id,
-                        username: res.data.username,
-                        realName: res.data.fullName,
-                        roles: res.data.roles || [],
-                        permissions: res.data.permissions || [],
-                    });
+                    login(token, res.data);
                 } else {
                     authLogout();
                 }
@@ -149,13 +143,7 @@ export const SystemApp: React.FC = () => {
     const handleLoginSuccess = (user: any) => {
         console.log('[SystemApp] Login success, setting authenticated');
         const token = useAuthStore.getState().token;
-        login(token || '', {
-            id: user.id,
-            username: user.username,
-            realName: user.fullName || user.realName,
-            roles: user.roles || [],
-            permissions: user.permissions || [],
-        });
+        login(token || '', user);
         appNavigate(ViewState.PORTAL);
     };
 

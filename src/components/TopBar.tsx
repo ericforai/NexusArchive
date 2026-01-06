@@ -3,6 +3,7 @@
 // Pos: 业务页面组件
 
 import React, { useState } from 'react';
+import { Avatar } from 'antd';
 import { GlobalSearch } from './GlobalSearch';
 import { GlobalSearchDTO } from '../types';
 import { FondsSwitcher } from './common/FondsSwitcher';
@@ -30,9 +31,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
 
   // Get user info from auth store
   const { user } = useAuthStore();
-  const mainRole = user?.roleNames?.[0] || '-';
-  const displayName = user?.fullName || '-';
-  const departmentName = '集团财务部'; // TODO: 从组织架构获取
+  const mainRole = user?.roleNames?.[0] || user?.roles?.[0] || '-';
+  const displayName = user?.fullName || user?.username || '-';
 
   const handleClick = (item: string) => {
     if (item === '退出登录' && onLogout) {
@@ -71,17 +71,21 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
         <div className="flex items-center space-x-4 ml-4">
           <div className="h-6 w-px bg-slate-200 mx-2"></div>
 
-          <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity group">
-            <div className="text-right hidden md:block" onClick={() => setProfileOpen(true)}>
-              <p className="text-sm font-bold text-slate-800">{mainRole}</p>
-              <p className="text-xs text-slate-500">{departmentName}</p>
+          <div
+            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setProfileOpen(true)}
+          >
+            <div className="text-right hidden md:block">
+              <p className="text-sm font-bold text-slate-800">{displayName}</p>
+              <p className="text-xs text-slate-500">{mainRole}</p>
             </div>
-            <img
-              src={user?.avatar || 'https://picsum.photos/40/40'}
-              alt="Profile"
-              className="h-9 w-9 rounded-full ring-2 ring-white shadow-sm"
-              onClick={() => setProfileOpen(true)}
-            />
+            <Avatar
+              size={36}
+              src={user?.avatar}
+              className="ring-2 ring-white shadow-sm"
+            >
+              {displayName?.[0]?.toUpperCase()}
+            </Avatar>
           </div>
         </div>
       </header>

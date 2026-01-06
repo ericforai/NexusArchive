@@ -4,8 +4,7 @@
  * Handles route mode resolution and configuration
  */
 import { useCallback } from 'react';
-import { ROUTE_CONFIG_MAP, DEFAULT_ROUTE_CONFIG, ArchiveRouteMode } from '../routeConfigs';
-import { GENERIC_CONFIG } from '../../../constants';
+import { resolveRouteConfig, DEFAULT_ROUTE_CONFIG, ArchiveRouteMode } from '../routeConfigs';
 import { ControllerMode, UseArchiveModeOptions } from './types';
 import type { ModuleConfig } from '../../../types';
 
@@ -13,10 +12,10 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
     const { routeConfig, title: propTitle, subTitle: propSubTitle, config: propConfig } = options;
 
     // Resolve configuration
-    const resolvedConfig = routeConfig ? ROUTE_CONFIG_MAP[routeConfig as ArchiveRouteMode] : undefined;
+    const resolvedConfig = routeConfig ? resolveRouteConfig(routeConfig as ArchiveRouteMode) : undefined;
     const title = resolvedConfig?.title || propTitle || DEFAULT_ROUTE_CONFIG.title;
     const subTitle = resolvedConfig?.subTitle || propSubTitle || DEFAULT_ROUTE_CONFIG.subTitle;
-    const config: ModuleConfig = resolvedConfig?.config || propConfig || GENERIC_CONFIG;
+    const config: ModuleConfig = resolvedConfig?.config || propConfig || DEFAULT_ROUTE_CONFIG.config;
 
     const isPoolView = subTitle === '电子凭证池';
     const isLinkingView = subTitle === '凭证关联';

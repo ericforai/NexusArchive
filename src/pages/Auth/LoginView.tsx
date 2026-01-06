@@ -1,7 +1,6 @@
 // Input: React、react-router-dom 路由、本地模块 api/auth、utils/audit、store
 // Output: React 组件 LoginView
 // Pos: src/pages/Auth/LoginView.tsx
-// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -44,13 +43,26 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
             const res = await authApi.login({ username: username.trim(), password: password.trim() });
             console.log('[LoginView] Login response:', res);
             if (res.code === 200) {
-                // 使用 AuthStore 存储登录状态
+                // 存储完整的用户数据
+                const { user } = res.data;
                 login(res.data.token, {
-                    id: res.data.user.id,
-                    username: res.data.user.username,
-                    realName: res.data.user.fullName,
-                    roles: res.data.user.roles || [],
-                    permissions: res.data.user.permissions || [],
+                    id: user.id,
+                    username: user.username,
+                    fullName: user.fullName,
+                    email: user.email,
+                    avatar: user.avatar,
+                    departmentId: user.departmentId,
+                    status: user.status,
+                    roles: user.roles || [],
+                    permissions: user.permissions || [],
+                    // 新增字段：个人资料展示
+                    phone: user.phone,
+                    employeeId: user.employeeId,
+                    jobTitle: user.jobTitle,
+                    orgCode: user.orgCode,
+                    lastLoginAt: user.lastLoginAt,
+                    createdTime: user.createdTime,
+                    roleNames: user.roleNames,
                 });
 
                 // Dispatch login event for other components
@@ -89,9 +101,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onVisitLan
         // 产品首页现在在应用内的 '/' 路径
         navigate('/');
     };
-
-
-
 
     return (
         <div className="flex items-center justify-center h-screen bg-gray-100">

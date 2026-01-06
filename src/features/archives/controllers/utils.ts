@@ -3,7 +3,6 @@
  */
 
 import { GenericRow } from '../../../types';
-import { GENERIC_CONFIG } from '../../../constants';
 
 const CATEGORY_LABELS: Record<string, string> = {
     AC01: '会计凭证',

@@ -154,3 +154,25 @@ code {
 .toggle-label {
   transition: background-color 0.2s ease-in;
 }
+
+/* Dark Dropdown for ConnectorForm */
+.dark-select-dropdown .ant-select-dropdown {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark-select-dropdown .ant-select-item {
+  color: #e5e7eb !important;
+}
+
+.dark-select-dropdown .ant-select-item-option-selected {
+  background-color: #374151 !important;
+}
+
+.dark-select-dropdown .ant-select-item-option-active {
+  background-color: #4b5563 !important;
+}
+
+.dark-select-dropdown .ant-select-item-option {
+  color: #e5e7eb !important;
+}

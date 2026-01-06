@@ -305,27 +305,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer User Info */}
       <div className="p-4 border-t border-slate-800 bg-slate-900/80 z-10 space-y-2">
-        {!collapsed && (
-          <button
-            onClick={onVisitLanding}
-            className="w-full flex items-center justify-center space-x-2 px-2 py-2 rounded-lg bg-primary-600/20 border border-primary-500/30 text-primary-400 hover:bg-primary-600/30 transition-colors text-xs font-bold"
-          >
-            <span>访问产品官网</span>
-          </button>
-        )}
-
-        <button
-          onClick={() => toast.info('用户个人中心功能开发中')}
-          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-2 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors`}
-        >
-          <img src="https://picsum.photos/32/32" alt="User" className="w-8 h-8 rounded-full ring-2 ring-slate-700 flex-shrink-0" />
-          {!collapsed && (
-            <div className="flex-1 overflow-hidden text-left">
-              <p className="text-sm font-medium text-white truncate">管理员</p>
-              <p className="text-xs text-slate-400 truncate">系统维护部</p>
-            </div>
-          )}
-        </button>
 
         {/* Toggle Button */}
         <button

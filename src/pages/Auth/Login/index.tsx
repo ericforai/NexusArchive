@@ -1,7 +1,6 @@
 // Input: LoginCard 展示组件
 // Output: Login 页面容器（Page 层）
 // Pos: src/pages/Auth/Login/index.tsx
-// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 /**
  * Login Page Container
@@ -36,12 +35,26 @@ const LoginPage: React.FC = () => {
         try {
             const res = await authApi.login({ username: username.trim(), password: password.trim() });
             if (res.code === 200) {
+                // 存储完整的用户数据
+                const { user } = res.data;
                 login(res.data.token, {
-                    id: res.data.user.id,
-                    username: res.data.user.username,
-                    realName: res.data.user.fullName,
-                    roles: res.data.user.roles || [],
-                    permissions: res.data.user.permissions || [],
+                    id: user.id,
+                    username: user.username,
+                    fullName: user.fullName,
+                    email: user.email,
+                    avatar: user.avatar,
+                    departmentId: user.departmentId,
+                    status: user.status,
+                    roles: user.roles || [],
+                    permissions: user.permissions || [],
+                    // 新增字段：个人资料展示
+                    phone: user.phone,
+                    employeeId: user.employeeId,
+                    jobTitle: user.jobTitle,
+                    orgCode: user.orgCode,
+                    lastLoginAt: user.lastLoginAt,
+                    createdTime: user.createdTime,
+                    roleNames: user.roleNames,
                 });
                 window.dispatchEvent(new Event('login'));
                 triggerAuditRefresh();
