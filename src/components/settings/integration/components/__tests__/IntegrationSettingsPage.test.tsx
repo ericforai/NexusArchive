@@ -45,4 +45,28 @@ describe('IntegrationSettingsPage', () => {
       expect(screen.getByText('YonSuite')).toBeInTheDocument();
     });
   });
+
+  it('should open ConnectorForm modal when clicking config center button', async () => {
+    mockErpApi.getConfigs.mockResolvedValue({
+      code: 200,
+      data: [
+        { id: 1, name: 'YonSuite', erpType: 'yonsuite', configJson: '{}', isActive: 1 }
+      ]
+    });
+    render(<IntegrationSettingsPage erpApi={mockErpApi as any} />);
+
+    // Wait for configs to load
+    await waitFor(() => {
+      expect(screen.getByText('YonSuite')).toBeInTheDocument();
+    });
+
+    // Click the "配置中心" button
+    const configButtons = screen.getAllByText('配置中心');
+    fireEvent.click(configButtons[0]);
+
+    // Verify modal opens with edit title
+    await waitFor(() => {
+      expect(screen.getByText('编辑连接器配置')).toBeInTheDocument();
+    });
+  });
 });
