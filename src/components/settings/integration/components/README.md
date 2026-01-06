@@ -22,7 +22,10 @@
 
 | 文件 | 行数 | 角色 | 能力描述 |
 |------|------|------|----------|
-| `ErpConfigCard.tsx` | ~225 | **Summary Card** | 连接器摘要卡片，固定高度，显示状态、健康、场景统计、操作按钮 |
+| `ErpConfigCard.tsx` | ~176 | **Summary Card** | 连接器摘要卡片，固定高度。点击"配置中心"打开 ConnectorForm 模态框编辑完整配置 |
+
+**Note:** "配置中心" button delegates to useConnectorModal hook → ConnectorForm modal
+
 | `ErpConfigList.tsx` | ~67 | **Grid Layout** | 连接器列表网格布局（响应式：移动 1 列，桌面 3 列），空状态提示 |
 | `ConnectorForm.tsx` | ~156 | **Form Modal** | 连接器配置表单模态框（名称、类型、URL、密钥、账套） |
 | `DiagnosisPanel.tsx` | ~89 | **Diagnosis UI** | 诊断结果面板，显示健康状态和详细检查项 |

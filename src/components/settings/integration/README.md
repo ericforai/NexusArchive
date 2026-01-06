@@ -174,7 +174,7 @@ src/components/settings/integration/
 | 文件 | 行数 | 角色 | 能力描述 |
 |------|------|------|----------|
 | `ErpConfigList.tsx` | 67 | **Config List UI** | 网格布局展示连接器卡片，空状态提示，响应式（1/3 列） |
-| `ErpConfigCard.tsx` | 225 | **Summary Card UI** | 连接器摘要卡片，固定高度，显示状态、健康、场景统计 |
+| `ErpConfigCard.tsx` | ~176 | **Summary Card UI** | 连接器摘要卡片，固定高度。"配置中心"按钮打开 ConnectorForm 模态框（完整6字段） |
 | `ScenarioDrawer.tsx` | ~100 | **Detail Drawer UI** | 右侧抽屉详情页（480px），显示完整场景列表 |
 | `ScenarioSummaryCard.tsx` | ~50 | **Summary Widget UI** | 场景统计卡片（总数/运行中/失败），带动画状态 |
 | `ConnectionHealthBadge.tsx` | ~60 | **Health Badge UI** | 健康状态徽章，显示状态 + 相对时间 |
