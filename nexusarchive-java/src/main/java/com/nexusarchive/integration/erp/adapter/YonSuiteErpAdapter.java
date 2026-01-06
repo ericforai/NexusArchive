@@ -28,10 +28,10 @@ import java.util.*;
 @ErpAdapterAnnotation(
     identifier = "yonsuite",
     name = "用友YonSuite",
-    description = "用友新一代企业云服务平台，支持凭证、附件同步和 Webhook 推送",
+    description = "用友新一代企业云服务平台，支持凭证、附件、收款单、付款单、退款单同步和 Webhook 推送",
     version = "1.0.0",
     erpType = "YONSUITE",
-    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "WEBHOOK", "REFUND_FILE_SYNC"},
+    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "COLLECTION_FILE_SYNC", "PAYMENT_FILE_SYNC", "REFUND_FILE_SYNC"},
     supportsWebhook = true,
     priority = 10
 )
