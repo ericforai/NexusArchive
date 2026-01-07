@@ -170,7 +170,7 @@ export const routes: RouteObject[] = [
             // ========== 资料收集 ==========
             { path: 'collection', element: <ArchiveListPage routeConfig="collection" /> },
             { path: 'collection/online', element: withSuspense(OnlineReceptionView) },
-            { path: 'collection/scan', element: <ArchiveListPage routeConfig="scan" /> },
+            { path: 'collection/scan', element: withSuspense(OCRProcessingView) },
             { path: 'collection/upload', element: withSuspense(BatchUploadView) },
 
             // ========== 档案管理 (Repository) ==========
