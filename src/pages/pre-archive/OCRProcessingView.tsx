@@ -1,13 +1,14 @@
-// Input: React、lucide-react 图标、scan API、QRCode
-// Output: React 组件 OCRProcessingView（对接真实 API + 移动端扫码）
+// Input: React、lucide-react 图标、scan API、QRCode、FolderMonitorDialog
+// Output: React 组件 OCRProcessingView（对接真实 API + 移动端扫码 + 监控文件夹）
 // Pos: src/pages/pre-archive/OCRProcessingView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useRef, useEffect } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info, Smartphone, X } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info, Smartphone, X, FolderOpen } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { scanApi, type ScanWorkspaceItem, type OcrField } from '../../api/scan';
 import { toast } from '../../utils/notificationService';
+import { FolderMonitorDialog } from '../../components/scan/FolderMonitorDialog';
 
 const DOC_TYPES = [
   { value: 'invoice', label: '增值税发票', icon: Receipt },
@@ -32,6 +33,9 @@ export const OCRProcessingView: React.FC = () => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrSessionId, setQrSessionId] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+
+  // Folder Monitor Dialog State
+  const [isFolderMonitorOpen, setIsFolderMonitorOpen] = useState(false);
 
   // Ref to track activeTask for interval closure
   const activeTaskRef = useRef(activeTask);
@@ -391,6 +395,17 @@ export const OCRProcessingView: React.FC = () => {
             </button>
           </div>
 
+          {/* Folder Monitor Settings Button */}
+          <div className="px-4 py-3 border-b border-slate-100">
+            <button
+              onClick={() => setIsFolderMonitorOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-300 text-slate-600 rounded-xl hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700 transition-all"
+            >
+              <FolderOpen size={18} />
+              <span>监控文件夹设置</span>
+            </button>
+          </div>
+
           {/* Task List */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-3 space-y-2">
@@ -654,6 +669,13 @@ export const OCRProcessingView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Folder Monitor Dialog */}
+      <FolderMonitorDialog
+        open={isFolderMonitorOpen}
+        onClose={() => setIsFolderMonitorOpen(false)}
+        onSuccess={loadWorkspace}
+      />
     </div>
   );
 };
