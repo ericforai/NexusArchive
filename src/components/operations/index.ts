@@ -10,7 +10,7 @@
  */
 
 // Hooks
-// export { useBatchSelection } from './useBatchSelection';
+export { useBatchSelection, MAX_SELECTION_LIMIT } from './useBatchSelection';
 
 // Components
 // export { BatchOperationBar } from './BatchOperationBar';
@@ -18,7 +18,12 @@
 // export { BatchResultModal } from './BatchResultModal';
 
 // Types
-// export type { BatchSelectionState } from './useBatchSelection';
+export type {
+  BatchSelectionState,
+  SelectionResult,
+  RowSelectionConfig,
+  UseBatchSelectionReturn
+} from './useBatchSelection';
 // export type { Operation, BatchOperationBarProps } from './BatchOperationBar';
 // export type { ApprovalItem, BatchApprovalDialogProps } from './BatchApprovalDialog';
 // export type { BatchResult, BatchResultModalProps } from './BatchResultModal';
