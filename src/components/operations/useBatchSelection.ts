@@ -51,7 +51,7 @@ export interface UseBatchSelectionReturn {
   rowSelection: RowSelectionConfig;
 
   // 操作方法
-  clearSelection: () => void;
+  clearSelection: () => SelectionResult;
   toggleSelection: (id: number) => SelectionResult;
   setSelectedIds: (ids: Set<number> | number[]) => SelectionResult;
   selectAll: (allIds: number[]) => SelectionResult;

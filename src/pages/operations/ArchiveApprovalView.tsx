@@ -24,6 +24,7 @@ export const ArchiveApprovalView: React.FC = () => {
         selectedIds,
         rowSelection,
         clearSelection,
+        selectAll,
         getSelectedCount
     } = useBatchSelection();
 
@@ -138,8 +139,14 @@ export const ArchiveApprovalView: React.FC = () => {
     const handleBatchConfirm = async (comment: string, skipIds: number[]) => {
         const selectedIdArray = Array.from(selectedIds).filter(id => !skipIds.includes(id));
 
+        // 添加边界检查
         if (selectedIdArray.length === 0) {
             toast.warning('请选择至少一条记录');
+            return;
+        }
+
+        if (selectedIdArray.length > 100) {
+            toast.warning('单次最多 100 条，请分批操作');
             return;
         }
 
@@ -224,8 +231,10 @@ export const ArchiveApprovalView: React.FC = () => {
 
     const handleSelectAll = () => {
         const allIds = approvals.map(a => parseInt(a.id));
-        clearSelection();
-        allIds.forEach(id => selectedIds.add(id));
+        const result = selectAll(allIds);
+        if (!result.success) {
+            toast.warning(result.reason || '全选失败');
+        }
     };
 
     // 获取选中的记录列表
