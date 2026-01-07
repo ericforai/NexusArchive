@@ -33,4 +33,11 @@ public interface AbnormalVoucherService {
      * 更新 SIP 数据
      */
     void updateSipData(String id, AccountingSipDto newSipDto);
+    
+    /**
+     * 通过 RequestId 标记重试成功的异常记录为 RESOLVED
+     * 适用于异步归档成功后的回调
+     * @param originalRequestId 原始请求ID（支持带 -R1, -R2 等后缀）
+     */
+    void markResolvedByRequestId(String originalRequestId);
 }

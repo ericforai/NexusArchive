@@ -25,10 +25,11 @@ public interface ArchiveReadService {
      * @param orgId        部门ID
      * @param uniqueBizId  唯一业务ID
      * @param subType      子类型
+     * @param fondsNo      全宗号(显式过滤，可选)
      * @return 分页结果
      */
     Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode,
-                              String orgId, String uniqueBizId, String subType);
+                              String orgId, String uniqueBizId, String subType, String fondsNo);
 
     /**
      * 根据ID获取档案

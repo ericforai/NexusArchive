@@ -145,13 +145,40 @@ public class AbnormalVoucherServiceImpl implements AbnormalVoucherService {
         if (abnormal == null) {
             throw new BusinessException(404, "Abnormal record not found");
         }
-        
+
         try {
             abnormal.setSipData(objectMapper.writeValueAsString(newSipDto));
             abnormal.setUpdateTime(LocalDateTime.now());
             abnormalVoucherMapper.updateById(abnormal);
         } catch (Exception e) {
             throw new BusinessException(500, "Failed to update SIP data");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markResolvedByRequestId(String originalRequestId) {
+        // 支持带 -R1, -R2 等后缀的 requestId（重试场景）
+        // 也支持不带后缀的原始 requestId
+        String baseRequestId = originalRequestId.replaceAll("-R\\d+$", "");
+
+        List<AbnormalVoucher> abnormals = abnormalVoucherMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AbnormalVoucher>()
+                .eq(AbnormalVoucher::getStatus, "RETRYING")
+                .likeRight(AbnormalVoucher::getRequestId, baseRequestId)
+                .orderByDesc(AbnormalVoucher::getUpdateTime)
+        );
+
+        for (AbnormalVoucher abnormal : abnormals) {
+            abnormal.setStatus("RESOLVED");
+            abnormal.setUpdateTime(LocalDateTime.now());
+            abnormalVoucherMapper.updateById(abnormal);
+            log.info("Marked abnormal voucher as RESOLVED: requestId={}, originalRequestId={}",
+                abnormal.getRequestId(), originalRequestId);
+        }
+
+        if (abnormals.isEmpty()) {
+            log.warn("No RETRYING abnormal found for requestId: {}", originalRequestId);
         }
     }
 }

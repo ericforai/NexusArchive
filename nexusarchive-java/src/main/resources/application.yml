@@ -151,6 +151,8 @@ app:
   security:
     cors:
       allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:15175,http://localhost:3000,http://localhost:5173}
+  scan:
+    upload-path: ${APP_SCAN_UPLOAD_PATH:/tmp/nexusarchive/scan}  # 扫描工作区文件上传路径
 
 ---
 # 开发环境 - PostgreSQL
@@ -194,10 +196,10 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
-# 归档临时文件路径 (生产环境)
+# 归档文件路径 (生产环境)
 archive:
   temp:
     path: ${ARCHIVE_TEMP_PATH:/opt/nexusarchive/data/temp}
   root:
-    path: /opt/nexusarchive/data/archives
+    path: ${ARCHIVE_ROOT_PATH:/opt/nexusarchive/data/archives}
 

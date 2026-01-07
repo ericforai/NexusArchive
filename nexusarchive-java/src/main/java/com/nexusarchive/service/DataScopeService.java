@@ -28,12 +28,13 @@ public class DataScopeService {
     private final RoleMapper roleMapper;
     /**
      * 解析数据权限上下文
-     * 
+     *
      * 数据隔离策略：
-     * 1. 系统管理员/拥有 nav:all 权限的用户：可以访问所有数据
+     * 1. 系统管理员（ROLE_SYSTEM_ADMIN）：可以访问所有数据
      * 2. 普通用户：只能访问 allowed_fonds 列表中的全宗数据
-     * 
-     * 注意：数据隔离基于 fonds_no（全宗号），而非 organization_id（组织ID）
+     *
+     * 注意：导航权限（如 nav:all）仅控制 UI 访问，不应影响数据隔离
+     * 数据隔离基于 fonds_no（全宗号），而非 organization_id（组织ID）
      */
     public DataScopeContext resolve() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -41,7 +42,8 @@ public class DataScopeService {
             return DataScopeContext.all();
         }
 
-        if (isSystemAdmin(auth) || hasNavAll(auth)) {
+        // 只有系统管理员角色才能绕过数据隔离，nav:all 权限仅用于 UI 导航
+        if (isSystemAdmin(auth)) {
             return DataScopeContext.all();
         }
 
@@ -49,25 +51,49 @@ public class DataScopeService {
         DataScopeType scopeType = determineScope(userId);
         // 获取用户允许访问的全宗列表（数据隔离键）
         List<String> allowedFonds = userDetails.getAllowedFonds();
-        
+
         return new DataScopeContext(scopeType, userId, allowedFonds != null ? new LinkedHashSet<>(allowedFonds) : Collections.emptySet());
     }
 
     /**
      * 应用档案数据权限过滤
      *
-     * 数据隔离基于 fonds_no（全宗号）：
-     * 1. 如果 context 为 all，不添加过滤条件（可访问所有数据）
-     * 2. 如果 context 为 self，只返回当前用户创建的数据
-     * 3. 否则，优先使用当前选中的全宗（FondsContext），如果没有则使用 allowedFonds 列表
+     * 数据隔离优先级（按优先级从高到低）：
+     * 1. 全宗号过滤（FondsContext）：这是系统的主要数据隔离机制，必须优先应用
+     * 2. allowedFonds 列表过滤：后备的基于全宗号的过滤
+     * 3. 创建者过滤（self scope）：仅在上述两者都不适用时使用
      *
-     * 注意：不再使用 department_id 进行数据隔离（违反档案法规要求）
+     * 重要：fonds_no 过滤必须优先于 created_by 过滤，因为：
+     * - 多用户可以共享同一全宗的数据
+     * - 业务用户需要查看全宗内所有数据，而不仅仅是自己创建的数据
+     * - data_scope=self 的含义在档案系统中应该仅作为后备方案
+     *
+     * @param wrapper MyBatis-Plus 查询条件
+     * @param context 数据权限上下文
      */
     public void applyArchiveScope(QueryWrapper<Archive> wrapper, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return;
         }
 
+        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
+        // 这是系统的核心数据隔离机制，必须优先检查
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (StringUtils.hasText(currentFondsNo)) {
+            // 用户已切换到特定全宗，只返回该全宗的数据
+            wrapper.eq("fonds_no", currentFondsNo);
+            return;
+        }
+
+        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            wrapper.in("fonds_no", allowedFonds);
+            return;
+        }
+
+        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
+        // 这是为了确保用户至少能看到自己创建的数据
         if (context.isSelf()) {
             if (context.userId() != null) {
                 wrapper.eq("created_by", context.userId());
@@ -77,70 +103,54 @@ public class DataScopeService {
             return;
         }
 
-        // 优先使用当前选中的全宗（从 FondsContext 获取）
-        String currentFondsNo = FondsContext.getCurrentFondsNo();
-        if (StringUtils.hasText(currentFondsNo)) {
-            // 用户已切换到特定全宗，只返回该全宗的数据
-            wrapper.eq("fonds_no", currentFondsNo);
-            return;
-        }
-
-        // 后备方案：基于 fonds_no（全宗号）列表进行数据隔离
-        Set<String> allowedFonds = context.allowedFonds();
-        if (!allowedFonds.isEmpty()) {
-            wrapper.in("fonds_no", allowedFonds);
-        } else {
-            // 如果没有允许访问的全宗，则不允许访问任何数据
-            wrapper.eq("1", "0");
-        }
+        // 如果没有任何权限，不允许访问任何数据
+        wrapper.eq("1", "0");
     }
 
     /**
      * 检查是否可以访问指定档案
      *
-     * 数据隔离基于 fonds_no（全宗号）：
-     * 1. 如果 context 为 all，可以访问
-     * 2. 如果 context 为 self，只能访问自己创建的数据
-     * 3. 否则，优先检查当前选中的全宗（FondsContext），如果没有则检查 allowedFonds 列表
+     * 数据隔离优先级（与 applyArchiveScope 保持一致）：
+     * 1. 全宗号过滤（FondsContext）：优先级最高
+     * 2. allowedFonds 列表过滤：后备方案
+     * 3. 创建者过滤（self scope）：仅在没有全宗权限时使用
+     *
+     * 重要：必须与 applyArchiveScope() 的优先级顺序完全一致，否则会出现不一致的访问控制
      */
     public boolean canAccessArchive(Archive archive, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return true;
         }
-        if (context.isSelf()) {
-            return context.userId() != null && context.userId().equals(archive.getCreatedBy());
-        }
 
         String archiveFondsNo = archive.getFondsNo();
 
-        // 优先使用当前选中的全宗（从 FondsContext 获取）
+        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
+        // 这是系统的核心数据隔离机制，必须优先检查
         String currentFondsNo = FondsContext.getCurrentFondsNo();
         if (StringUtils.hasText(currentFondsNo)) {
             // 用户已切换到特定全宗，只能访问该全宗的数据
             return currentFondsNo.equals(archiveFondsNo);
         }
 
-        // 后备方案：基于 fonds_no（全宗号）列表进行数据隔离
-        if (StringUtils.hasText(archiveFondsNo) && context.allowedFonds().contains(archiveFondsNo)) {
-            return true;
+        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            return StringUtils.hasText(archiveFondsNo) && allowedFonds.contains(archiveFondsNo);
         }
 
-        // 如果没有匹配的全宗，则不允许访问
+        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
+        // 这是为了确保用户至少能访问自己创建的数据
+        if (context.isSelf()) {
+            return context.userId() != null && context.userId().equals(archive.getCreatedBy());
+        }
+
+        // 如果没有任何权限，不允许访问
         return false;
     }
 
     private boolean isSystemAdmin(Authentication auth) {
         for (GrantedAuthority authority : auth.getAuthorities()) {
             if ("ROLE_SYSTEM_ADMIN".equals(authority.getAuthority()) || "ROLE_system_admin".equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasNavAll(Authentication auth) {
-        for (GrantedAuthority authority : auth.getAuthorities()) {
-            if ("nav:all".equals(authority.getAuthority())) {
                 return true;
             }
         }

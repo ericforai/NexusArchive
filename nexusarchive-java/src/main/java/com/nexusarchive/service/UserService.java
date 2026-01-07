@@ -77,24 +77,29 @@ public class UserService {
         user.setLastModifiedTime(LocalDateTime.now());
         // 保存用户
         userMapper.insert(user);
-        // 关联角色
-        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
-            userMapper.insertUserRoles(user.getId(), request.getRoleIds());
+        // 关联角色 - 如果没有指定角色，分配默认业务操作员角色
+        List<String> rolesToAssign = request.getRoleIds();
+        if (rolesToAssign == null || rolesToAssign.isEmpty()) {
+            // 分配默认角色: business_user (业务操作员)
+            rolesToAssign = Arrays.asList("role_business_user");
         }
-        // 关联全宗权限
+        userMapper.insertUserRoles(user.getId(), rolesToAssign);
+        // 关联全宗权限 - 如果没有指定全宗，分配默认全宗
         List<String> fondsCodes = request.getFondsCodes();
-        if (fondsCodes != null && !fondsCodes.isEmpty()) {
-            for (String fondsCode : fondsCodes) {
-                SysUserFondsScope scope = new SysUserFondsScope();
-                scope.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
-                scope.setUserId(user.getId());
-                scope.setFondsNo(fondsCode);
-                scope.setScopeType("DIRECT");
-                scope.setCreatedTime(LocalDateTime.now());
-                scope.setLastModifiedTime(LocalDateTime.now());
-                scope.setDeleted(0);
-                sysUserFondsScopeMapper.insert(scope);
-            }
+        if (fondsCodes == null || fondsCodes.isEmpty()) {
+            // 分配默认全宗: BR-GROUP (泊冉集团有限公司)
+            fondsCodes = Arrays.asList("BR-GROUP");
+        }
+        for (String fondsCode : fondsCodes) {
+            SysUserFondsScope scope = new SysUserFondsScope();
+            scope.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+            scope.setUserId(user.getId());
+            scope.setFondsNo(fondsCode);
+            scope.setScopeType("DIRECT");
+            scope.setCreatedTime(LocalDateTime.now());
+            scope.setLastModifiedTime(LocalDateTime.now());
+            scope.setDeleted(0);
+            sysUserFondsScopeMapper.insert(scope);
         }
         return toResponse(user);
     }

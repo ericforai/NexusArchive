@@ -57,11 +57,12 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
      * @param status       状态
      * @param categoryCode 类别号
      * @param orgId        部门ID
+     * @param fondsNo      全宗号(显式过滤，可选)
      * @return 分页结果
      */
     @Override
     public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode,
-            String orgId, String uniqueBizId, String subType) {
+            String orgId, String uniqueBizId, String subType, String fondsNo) {
         Page<Archive> pageObj = new Page<>(page, limit);
         QueryWrapper<Archive> wrapper = new QueryWrapper<>();
 
@@ -122,8 +123,16 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
             }
         }
 
-        DataScopeContext scope = dataScopeService.resolve();
-        dataScopeService.applyArchiveScope(wrapper, scope);
+        // [ENHANCED] 显式全宗过滤：如果前端传递 fondsNo，优先使用
+        // 这提高了代码可读性，使数据隔离逻辑更加明确
+        if (fondsNo != null && !fondsNo.isEmpty()) {
+            wrapper.eq("fonds_no", fondsNo);
+            log.debug("Explicit fondsNo filter applied: {}", fondsNo);
+        } else {
+            // 后备：依赖 DataScopeService 的自动隔离机制
+            DataScopeContext scope = dataScopeService.resolve();
+            dataScopeService.applyArchiveScope(wrapper, scope);
+        }
 
         // Optimize: Use index-friendly sorting
         wrapper.orderByDesc("created_time");
