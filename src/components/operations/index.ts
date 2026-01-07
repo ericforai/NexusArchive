@@ -15,7 +15,7 @@ export { useBatchSelection, MAX_SELECTION_LIMIT } from './useBatchSelection';
 // Components
 export { BatchOperationBar } from './BatchOperationBar';
 export { BatchApprovalDialog } from './BatchApprovalDialog';
-// export { BatchResultModal } from './BatchResultModal';
+export { BatchResultModal } from './BatchResultModal';
 
 // Types
 export type {
@@ -26,7 +26,7 @@ export type {
 } from './useBatchSelection';
 export type { BatchOperationBarProps } from './BatchOperationBar';
 export type { BatchApprovalDialogProps, ApprovalRecord } from './BatchApprovalDialog';
-// export type { BatchResult, BatchResultModalProps } from './BatchResultModal';
+export type { BatchResultModalProps, BatchError } from './BatchResultModal';
 
 /**
  * 使用示例：
