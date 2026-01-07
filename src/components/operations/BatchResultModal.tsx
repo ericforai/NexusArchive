@@ -1,7 +1,6 @@
-// Input: BatchResultModalProps - visible (显示状态), successCount (成功数量), failedCount (失败数量), errors (错误列表), onRetry (重试回调), onClose (关闭回调)
-// Output: BatchResultModal 组件 - 批量操作结果报告弹窗（显示成功/失败统计、失败详情、重试功能）
+// Input: visible, successCount, failedCount, errors, onRetry, onClose, operationType, onExportReport, isRetrying
+// Output: 批量操作结果弹窗（显示成功/失败统计、失败详情、重试功能、导出报告、状态图标、全部成功/失败提示）
 // Pos: src/components/operations/BatchResultModal.tsx
-// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
 import { CheckCircle, XCircle, RotateCcw, X, FileText, Download } from 'lucide-react';

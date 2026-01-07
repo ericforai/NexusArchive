@@ -17,7 +17,7 @@ src/components/operations/
 ├── useBatchSelection.ts          # 批量选择 Hook ✅
 ├── BatchOperationBar.tsx         # 批量操作工具栏 ✅
 ├── BatchApprovalDialog.tsx       # 批量审批弹窗 ✅
-└── BatchResultModal.tsx          # 批量结果报告（待实现）
+└── BatchResultModal.tsx          # 批量结果报告弹窗 ✅
 ```
 
 ## 组件说明
@@ -172,23 +172,116 @@ interface ApprovalRecord {
 
 **位置**: `BatchResultModal.tsx`
 **类型**: React.FC
-**功能**: 批量操作结果报告弹窗
+**功能**: 批量操作结果报告弹窗（已实现 ✅）
 
 #### Props
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `open` | `boolean` | 是否显示对话框 |
-| `result` | `BatchResult` | 批量操作结果 |
-| `onClose` | `() => void` | 关闭回调 |
-| `onRetry` | `(failedItems: string[]) => void` | 重试失败项回调 |
+```typescript
+interface BatchResultModalProps {
+  visible: boolean;                        // 是否显示对话框
+  successCount: number;                    // 成功数量
+  failedCount: number;                     // 失败数量
+  errors?: BatchError[];                   // 错误列表
+  onRetry?: (failedIds: number[]) => void | Promise<void>;  // 重试回调（传入失败的 ID 列表）
+  onClose: () => void;                     // 关闭回调
+  operationType?: 'approval' | 'operation'; // 操作类型（用于标题显示，默认 'operation'）
+  onExportReport?: () => void | Promise<void>;  // 导出失败报告回调
+  isRetrying?: boolean;                    // 重试中状态（默认 false）
+}
 
-#### 功能
+interface BatchError {
+  id: number;                              // 记录 ID
+  reason: string;                          // 失败原因
+}
+```
 
-- 显示操作成功/失败统计
-- 失败项明细列表
-- 导出失败报告
-- 重试失败项功能
+#### 功能特性
+
+- **动态标题切换**：根据 `operationType` 显示"批量审批完成"或"批量操作完成"
+- **成功/失败统计摘要**：
+  - 成功数量统计（emerald 主题）
+  - 失败数量统计（rose 主题，失败数量为 0 时置灰）
+- **状态图标系统**：
+  - 全部成功：CheckCircle（emerald）+ "全部成功"标题
+  - 全部失败：XCircle（rose）+ "全部失败"标题
+  - 部分成功：CheckCircle（amber）+ "部分成功"标题
+- **失败详情列表**：
+  - 可滚动列表（最大高度 240px）
+  - 显示记录 ID 和失败原因
+  - 失败项带 XCircle 图标
+  - 友好提示：支持重试或导出报告
+- **重试功能**：
+  - 仅在有失败项且提供 `onRetry` 回调时显示
+  - 重试中状态：按钮显示旋转图标和"重试中..."文本
+  - 禁用状态：重试中禁用关闭和导出按钮
+- **导出报告功能**：
+  - 仅在有失败项且提供 `onExportReport` 回调时显示
+  - 带下载图标
+- **全部成功提示框**：
+  - 绿色背景提示框
+  - 显示庆祝消息 "🎉 所有记录均已成功处理完成！"
+- **加载状态**：
+  - 重试中禁用所有交互
+  - 禁用点击背景关闭
+  - 隐藏关闭按钮
+- **响应式设计**：
+  - 支持亮色/暗色主题
+  - 自适应布局
+
+#### UI 状态
+
+- **全部成功**（failedCount = 0）：emerald 主题，成功提示框
+- **全部失败**（successCount = 0）：rose 主题，失败详情列表
+- **部分成功**（两者都 > 0）：amber 主题，失败详情列表
+
+#### 使用示例
+
+```typescript
+import { BatchResultModal } from '@components/operations';
+
+function MyBatchView() {
+  const [resultOpen, setResultOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [batchResult, setBatchResult] = useState({
+    successCount: 95,
+    failedCount: 5,
+    errors: [
+      { id: 1, reason: '状态不允许审批' },
+      { id: 2, reason: '网络连接失败' }
+    ]
+  });
+
+  const handleRetry = async (failedIds: number[]) => {
+    setIsRetrying(true);
+    try {
+      // 重试逻辑
+      await retryItems(failedIds);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleExportReport = async () => {
+    // 导出失败报告
+    const report = generateErrorReport(batchResult.errors);
+    downloadFile(report, 'batch-errors.xlsx');
+  };
+
+  return (
+    <BatchResultModal
+      visible={resultOpen}
+      successCount={batchResult.successCount}
+      failedCount={batchResult.failedCount}
+      errors={batchResult.errors}
+      operationType="approval"
+      onRetry={handleRetry}
+      onExportReport={handleExportReport}
+      isRetrying={isRetrying}
+      onClose={() => setResultOpen(false)}
+    />
+  );
+}
+```
 
 ## 使用方式
 
