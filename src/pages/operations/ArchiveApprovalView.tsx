@@ -1,22 +1,50 @@
-// Input: React、lucide-react 图标、本地模块 api/archiveApproval
-// Output: React 组件 ArchiveApprovalView
+// Input: React、lucide-react 图标、本地模块 api/archiveApproval、批量操作组件、Ant Design
+// Output: React 组件 ArchiveApprovalView - 集成批量审批功能
 // Pos: src/pages/operations/ArchiveApprovalView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { archiveApprovalApi, ArchiveApproval } from '../../api/archiveApproval';
+import {
+    BatchOperationBar,
+    BatchApprovalDialog,
+    BatchResultModal,
+    useBatchSelection,
+    type ApprovalRecord,
+    type BatchError
+} from '../../components/operations';
 import { CheckCircle2, XCircle, FileText, Clock, User, Calendar, MessageSquare, AlertCircle } from 'lucide-react';
 import { toast } from '../../utils/notificationService';
 
 export const ArchiveApprovalView: React.FC = () => {
+    // 批量选择状态
+    const {
+        selectedIds,
+        rowSelection,
+        clearSelection,
+        getSelectedCount
+    } = useBatchSelection();
+
+    // 数据状态
     const [approvals, setApprovals] = useState<ArchiveApproval[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('PENDING');
+    const [statusCounts, setStatusCounts] = useState({ PENDING: 0, APPROVED: 0, REJECTED: 0 });
+
+    // 单个审批状态
     const [selectedApproval, setSelectedApproval] = useState<ArchiveApproval | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [comment, setComment] = useState('');
     const [processing, setProcessing] = useState(false);
-    const [statusCounts, setStatusCounts] = useState({ PENDING: 0, APPROVED: 0, REJECTED: 0 });
+
+    // 批量操作状态
+    const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+    const [batchResultOpen, setBatchResultOpen] = useState(false);
+    const [batchAction, setBatchAction] = useState<'approve' | 'reject'>('approve');
+    const [batchResult, setBatchResult] = useState({ success: 0, failed: 0, errors: [] as BatchError[] });
+    const [batchProcessing, setBatchProcessing] = useState(false);
 
     const loadApprovals = useCallback(async () => {
         try {
@@ -96,6 +124,185 @@ export const ArchiveApprovalView: React.FC = () => {
         }
     };
 
+    // 批量操作处理函数
+    const handleBatchApprove = () => {
+        setBatchAction('approve');
+        setBatchDialogOpen(true);
+    };
+
+    const handleBatchReject = () => {
+        setBatchAction('reject');
+        setBatchDialogOpen(true);
+    };
+
+    const handleBatchConfirm = async (comment: string, skipIds: number[]) => {
+        const selectedIdArray = Array.from(selectedIds).filter(id => !skipIds.includes(id));
+
+        if (selectedIdArray.length === 0) {
+            toast.warning('请选择至少一条记录');
+            return;
+        }
+
+        try {
+            setBatchProcessing(true);
+
+            const request = {
+                ids: selectedIdArray.map(String),
+                approverId: 'admin',
+                approverName: '管理员',
+                comment: comment || (batchAction === 'approve' ? '批量批准' : '批量拒绝')
+            };
+
+            const result = batchAction === 'approve'
+                ? await archiveApprovalApi.batchApprove(request)
+                : await archiveApprovalApi.batchReject(request);
+
+            setBatchResult({
+                success: result.success,
+                failed: result.failed,
+                errors: result.errors?.map(e => ({ id: parseInt(e.id), reason: e.reason })) || []
+            });
+
+            setBatchDialogOpen(false);
+            setBatchResultOpen(true);
+            clearSelection();
+            loadApprovals();
+
+            if (result.failed === 0) {
+                toast.success(`批量${batchAction === 'approve' ? '批准' : '拒绝'}成功`);
+            } else if (result.success === 0) {
+                toast.error(`批量${batchAction === 'approve' ? '批准' : '拒绝'}失败`);
+            } else {
+                toast.warning(`部分成功：${result.success}条成功，${result.failed}条失败`);
+            }
+        } catch (error) {
+            console.error('Batch operation failed:', error);
+            toast.error(`批量${batchAction === 'approve' ? '批准' : '拒绝'}失败，请重试`);
+        } finally {
+            setBatchProcessing(false);
+        }
+    };
+
+    const handleBatchRetry = async (failedIds: number[]) => {
+        try {
+            setBatchProcessing(true);
+
+            const request = {
+                ids: failedIds.map(String),
+                approverId: 'admin',
+                approverName: '管理员',
+                comment: batchAction === 'approve' ? '重试批量批准' : '重试批量拒绝'
+            };
+
+            const result = batchAction === 'approve'
+                ? await archiveApprovalApi.batchApprove(request)
+                : await archiveApprovalApi.batchReject(request);
+
+            setBatchResult({
+                success: result.success,
+                failed: result.failed,
+                errors: result.errors?.map(e => ({ id: parseInt(e.id), reason: e.reason })) || []
+            });
+
+            loadApprovals();
+
+            if (result.failed === 0) {
+                toast.success('重试成功');
+                setBatchResultOpen(false);
+            } else if (result.success === 0) {
+                toast.error('重试失败');
+            } else {
+                toast.warning(`部分成功：${result.success}条成功，${result.failed}条失败`);
+            }
+        } catch (error) {
+            console.error('Batch retry failed:', error);
+            toast.error('重试失败，请重试');
+        } finally {
+            setBatchProcessing(false);
+        }
+    };
+
+    const handleSelectAll = () => {
+        const allIds = approvals.map(a => parseInt(a.id));
+        clearSelection();
+        allIds.forEach(id => selectedIds.add(id));
+    };
+
+    // 获取选中的记录列表
+    const selectedRecords = useMemo<ApprovalRecord[]>(() => {
+        return approvals
+            .filter(a => selectedIds.has(parseInt(a.id)))
+            .map(a => ({
+                id: parseInt(a.id),
+                title: a.archiveTitle,
+                code: a.archiveCode
+            }));
+    }, [approvals, selectedIds]);
+
+    // 表格列定义
+    const columns: ColumnsType<ArchiveApproval> = [
+        {
+            title: '档号',
+            dataIndex: 'archiveCode',
+            key: 'archiveCode',
+            width: 150,
+            render: (text) => <span className="font-mono text-slate-600">{text || '-'}</span>
+        },
+        {
+            title: '档案题名',
+            dataIndex: 'archiveTitle',
+            key: 'archiveTitle',
+            ellipsis: true,
+            render: (text) => (
+                <span className="font-medium text-slate-800" title={text}>
+                    {text && text.length > 50 ? text.substring(0, 50) + '...' : (text || '-')}
+                </span>
+            )
+        },
+        {
+            title: '申请人',
+            dataIndex: 'applicantName',
+            key: 'applicantName',
+            width: 120,
+            render: (text) => <span className="text-slate-600">{text || '-'}</span>
+        },
+        {
+            title: '申请时间',
+            dataIndex: 'createdTime',
+            key: 'createdTime',
+            width: 180,
+            render: (text) => (
+                <span className="text-slate-500 font-mono text-xs">
+                    {text ? new Date(text).toLocaleString('zh-CN') : '-'}
+                </span>
+            )
+        },
+        {
+            title: '状态',
+            dataIndex: 'status',
+            key: 'status',
+            width: 120,
+            render: (status) => getStatusBadge(status)
+        },
+        {
+            title: '操作',
+            key: 'action',
+            width: 100,
+            fixed: 'right',
+            render: (_, record) => (
+                <button
+                    onClick={() => {
+                        setSelectedApproval(record);
+                        setShowModal(true);
+                    }}
+                    className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                >
+                    查看详情
+                </button>
+            )
+        }
+    ];
+
     const getStatusBadge = (status: string) => {
         const styles = {
             PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -169,7 +376,10 @@ export const ArchiveApprovalView: React.FC = () => {
                     {['PENDING', 'APPROVED', 'REJECTED'].map(status => (
                         <button
                             key={status}
-                            onClick={() => setStatusFilter(status)}
+                            onClick={() => {
+                                setStatusFilter(status);
+                                clearSelection();
+                            }}
                             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${statusFilter === status
                                 ? 'bg-indigo-600 text-white shadow-md'
                                 : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
@@ -181,6 +391,17 @@ export const ArchiveApprovalView: React.FC = () => {
                         </button>
                     ))}
                 </div>
+
+                {/* Batch Operation Bar */}
+                <BatchOperationBar
+                    selectedCount={getSelectedCount()}
+                    totalCount={approvals.length}
+                    onBatchApprove={handleBatchApprove}
+                    onBatchReject={handleBatchReject}
+                    onSelectAll={handleSelectAll}
+                    onClear={clearSelection}
+                    loading={batchProcessing}
+                />
 
                 {/* Table */}
                 <div className="flex-1 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
@@ -197,46 +418,15 @@ export const ArchiveApprovalView: React.FC = () => {
                         </div>
                     ) : (
                         <div className="flex-1 overflow-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-slate-600 font-medium border-b border-slate-200 sticky top-0">
-                                    <tr>
-                                        <th className="p-4">档号</th>
-                                        <th className="p-4">档案题名</th>
-                                        <th className="p-4">申请人</th>
-                                        <th className="p-4">申请时间</th>
-                                        <th className="p-4">状态</th>
-                                        <th className="p-4">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {approvals.map(approval => (
-                                        <tr key={approval.id} className="hover:bg-slate-50">
-                                            <td className="p-4 font-mono text-slate-600">{approval.archiveCode || '-'}</td>
-                                            <td className="p-4 font-medium text-slate-800" title={approval.archiveTitle}>
-                                                {approval.archiveTitle && approval.archiveTitle.length > 50
-                                                    ? approval.archiveTitle.substring(0, 50) + '...'
-                                                    : (approval.archiveTitle || '-')}
-                                            </td>
-                                            <td className="p-4 text-slate-600">{approval.applicantName || '-'}</td>
-                                            <td className="p-4 text-slate-500 font-mono text-xs">
-                                                {approval.createdTime ? new Date(approval.createdTime).toLocaleString('zh-CN') : '-'}
-                                            </td>
-                                            <td className="p-4">{getStatusBadge(approval.status)}</td>
-                                            <td className="p-4">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedApproval(approval);
-                                                        setShowModal(true);
-                                                    }}
-                                                    className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-                                                >
-                                                    查看详情
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <Table<ArchiveApproval>
+                                columns={columns}
+                                dataSource={approvals}
+                                rowKey={(record) => record.id}
+                                rowSelection={rowSelection}
+                                pagination={false}
+                                scroll={{ y: 'calc(100vh - 500px)' }}
+                                size="middle"
+                            />
                         </div>
                     )}
                 </div>
@@ -371,6 +561,29 @@ export const ArchiveApprovalView: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Batch Approval Dialog */}
+            <BatchApprovalDialog
+                visible={batchDialogOpen}
+                selectedCount={getSelectedCount()}
+                action={batchAction}
+                onConfirm={handleBatchConfirm}
+                onCancel={() => setBatchDialogOpen(false)}
+                selectedRecords={selectedRecords}
+                loading={batchProcessing}
+            />
+
+            {/* Batch Result Modal */}
+            <BatchResultModal
+                visible={batchResultOpen}
+                successCount={batchResult.success}
+                failedCount={batchResult.failed}
+                errors={batchResult.errors}
+                onRetry={handleBatchRetry}
+                onClose={() => setBatchResultOpen(false)}
+                operationType="approval"
+                isRetrying={batchProcessing}
+            />
         </div>
     );
 };

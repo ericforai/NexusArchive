@@ -29,6 +29,19 @@ export interface ApprovalRequest {
     comment: string;
 }
 
+export interface BatchApprovalRequest {
+    ids: string[];
+    approverId: string;
+    approverName: string;
+    comment: string;
+}
+
+export interface BatchApprovalResult {
+    success: number;
+    failed: number;
+    errors?: Array<{ id: string; reason: string }>;
+}
+
 export const archiveApprovalApi = {
     /**
      * 获取审批列表
@@ -65,5 +78,19 @@ export const archiveApprovalApi = {
      */
     rejectArchive: async (request: ApprovalRequest) => {
         return apiClient.post('/archive-approval/reject', request);
+    },
+
+    /**
+     * 批量批准归档
+     */
+    batchApprove: async (request: BatchApprovalRequest): Promise<BatchApprovalResult> => {
+        return apiClient.post('/archive-approval/batch-approve', request);
+    },
+
+    /**
+     * 批量拒绝归档
+     */
+    batchReject: async (request: BatchApprovalRequest): Promise<BatchApprovalResult> => {
+        return apiClient.post('/archive-approval/batch-reject', request);
     },
 };

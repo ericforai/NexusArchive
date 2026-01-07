@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
+import type { Key } from 'react';
 
 /**
  * 批量选择限制
@@ -32,8 +33,8 @@ export interface BatchSelectionState {
  */
 export interface RowSelectionConfig {
   type: 'checkbox';
-  selectedRowKeys: number[];
-  onChange: (selectedRowKeys: number[]) => void;
+  selectedRowKeys: Key[];
+  onChange: (selectedRowKeys: Key[]) => void;
   getCheckboxProps?: (record: any) => { disabled?: boolean };
 }
 
@@ -91,26 +92,30 @@ export function useBatchSelection(): UseBatchSelectionReturn {
 
   /**
    * 处理 Table rowSelection 的 onChange 回调
+   * 接受 React.Key[] 类型，转换为 number[] 处理
    */
-  const handleSelectionChange = useCallback((selectedRowKeys: number[]) => {
+  const handleSelectionChange = useCallback((selectedRowKeys: Key[]) => {
+    // 转换 Key[] 为 number[]
+    const numericKeys = selectedRowKeys.map(key => typeof key === 'number' ? key : parseInt(String(key)));
+
     // 检查是否超出限制
-    if (selectedRowKeys.length > MAX_SELECTION_LIMIT) {
+    if (numericKeys.length > MAX_SELECTION_LIMIT) {
       const error: SelectionResult = {
         success: false,
         reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
       };
       setLastError(error);
       console.warn(
-        `[useBatchSelection] Selection limit exceeded: ${selectedRowKeys.length} > ${MAX_SELECTION_LIMIT}`
+        `[useBatchSelection] Selection limit exceeded: ${numericKeys.length} > ${MAX_SELECTION_LIMIT}`
       );
       return;
     }
 
-    setSelectedIdsState(new Set(selectedRowKeys));
+    setSelectedIdsState(new Set(numericKeys));
     setLastError(undefined); // 清除错误
 
     // 如果当前是全选模式，但选中数量少于实际数量，则退出全选模式
-    if (selectAllMode && selectedRowKeys.length < MAX_SELECTION_LIMIT) {
+    if (selectAllMode && numericKeys.length < MAX_SELECTION_LIMIT) {
       setSelectAllMode(false);
     }
   }, [selectAllMode]);
