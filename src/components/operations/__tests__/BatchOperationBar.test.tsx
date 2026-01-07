@@ -117,4 +117,125 @@ describe('BatchOperationBar', () => {
 
     expect(screen.queryByText('全选所有')).not.toBeInTheDocument();
   });
+
+  // 边界测试：totalCount === 100
+  it('should show select all button when totalCount === 100 and selectedCount < 100', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={50}
+        totalCount={100}
+      />
+    );
+
+    expect(screen.getByText('全选所有')).toBeInTheDocument();
+  });
+
+  // 边界测试：totalCount === 101（超过限制）
+  it('should not show select all button when totalCount === 101', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={50}
+        totalCount={101}
+      />
+    );
+
+    expect(screen.queryByText('全选所有')).not.toBeInTheDocument();
+  });
+
+  // 边界测试：selectedCount === 100（精确边界）
+  it('should enable buttons when selectedCount === 100', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={100}
+        totalCount={100}
+      />
+    );
+
+    const approveButton = screen.getByText('批量批准');
+    const rejectButton = screen.getByText('批量拒绝');
+
+    expect(approveButton).not.toBeDisabled();
+    expect(rejectButton).not.toBeDisabled();
+    expect(screen.queryByText(/批量操作最多支持 100 条记录/)).not.toBeInTheDocument();
+  });
+
+  // 边界测试：selectedCount === 99（未超限）
+  it('should not show warning when selectedCount === 99', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={99}
+        totalCount={100}
+      />
+    );
+
+    expect(screen.queryByText(/批量操作最多支持 100 条记录/)).not.toBeInTheDocument();
+  });
+
+  // 边界测试：selectedCount === 101（刚好超限）
+  it('should show warning and disable buttons when selectedCount === 101', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={101}
+        totalCount={150}
+      />
+    );
+
+    expect(screen.getByText(/批量操作最多支持 100 条记录/)).toBeInTheDocument();
+
+    const approveButton = screen.getByText('批量批准');
+    const rejectButton = screen.getByText('批量拒绝');
+
+    expect(approveButton).toBeDisabled();
+    expect(rejectButton).toBeDisabled();
+  });
+
+  // 边界测试：totalCount === selectedCount（已全选）
+  it('should not show select all button when totalCount === selectedCount', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={20}
+        totalCount={20}
+      />
+    );
+
+    expect(screen.queryByText('全选所有')).not.toBeInTheDocument();
+  });
+
+  // 边界测试：totalCount < selectedCount（异常情况）
+  it('should not show select all button when totalCount < selectedCount', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={50}
+        totalCount={30}
+      />
+    );
+
+    expect(screen.queryByText('全选所有')).not.toBeInTheDocument();
+  });
+
+  // 组合测试：loading + over limit
+  it('should disable buttons when both loading and over limit', () => {
+    render(
+      <BatchOperationBar
+        {...mockProps}
+        selectedCount={150}
+        loading={true}
+      />
+    );
+
+    const processButtons = screen.getAllByText('处理中...');
+    const overLimitButtons = screen.getAllByTitle('超过 100 条限制');
+
+    expect(overLimitButtons).toHaveLength(2);
+    expect(overLimitButtons[0]).toBeDisabled();
+    expect(overLimitButtons[1]).toBeDisabled();
+    expect(processButtons).toHaveLength(2);
+  });
 });

@@ -60,7 +60,10 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
 
   // 检查是否超过限制
   const isOverLimit = selectedCount > 100;
-  const canSelectAll = totalCount !== undefined && totalCount > selectedCount;
+  // 全选按钮仅在总数 > 已选数量 且 总数 ≤ 100 时显示
+  const canSelectAll = totalCount !== undefined
+    && totalCount > selectedCount
+    && totalCount <= 100;
 
   return (
     <div className="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl flex flex-wrap items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-200">
