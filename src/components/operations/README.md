@@ -12,6 +12,7 @@
 ```
 src/components/operations/
 ├── index.ts                      # 公共 API 入口
+├── manifest.config.ts            # 模块清单
 ├── README.md                     # 本文件
 ├── useBatchSelection.ts          # 批量选择 Hook（待实现）
 ├── BatchOperationBar.tsx         # 批量操作工具栏（待实现）
@@ -178,6 +179,7 @@ function MyBatchView() {
 
 ## 架构合规
 
+- ✅ 有 `manifest.config.ts` 模块清单
 - ✅ 有 `README.md` 目录说明
 - ✅ 有 `index.ts` 公共 API 入口
 - ✅ 使用路径别名 `@components/operations` 导入

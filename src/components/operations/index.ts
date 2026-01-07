@@ -1,7 +1,7 @@
 // Input: 批量操作组件导出
 // Output: 批量操作模块公共 API
 // Pos: src/components/operations/index.ts
-// 一旦我所属的文件夹有所变化，请更新我。
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 /**
  * 批量操作组件模块
