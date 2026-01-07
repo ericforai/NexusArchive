@@ -54,7 +54,7 @@ describe('BatchResultModal', () => {
       const props = { ...defaultProps, successCount: 100, failedCount: 0, errors: [] };
       render(<BatchResultModal {...props} />);
 
-      expect(screen.getByText('🎉 所有记录均已成功处理完成！')).toBeInTheDocument();
+      expect(screen.getByText('所有记录均已成功处理完成！')).toBeInTheDocument();
       expect(screen.getByText('所有记录均已成功处理')).toBeInTheDocument();
     });
 
@@ -289,7 +289,7 @@ describe('BatchResultModal', () => {
       render(<BatchResultModal {...props} />);
 
       expect(screen.getByText('所有记录均已成功处理')).toBeInTheDocument();
-      expect(screen.getByText('🎉 所有记录均已成功处理完成！')).toBeInTheDocument();
+      expect(screen.getByText('所有记录均已成功处理完成！')).toBeInTheDocument();
       expect(screen.queryByText('失败详情')).not.toBeInTheDocument();
       expect(screen.queryByText('重试失败项')).not.toBeInTheDocument();
       expect(screen.queryByText('导出报告')).not.toBeInTheDocument();
@@ -334,7 +334,7 @@ describe('BatchResultModal', () => {
 
   describe('异步回调', () => {
     it('应该处理异步 onRetry 回调', async () => {
-      const onRetry = vi.fn(async (ids: number[]) => {
+      const onRetry = vi.fn(async (_ids: number[]) => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       });
 

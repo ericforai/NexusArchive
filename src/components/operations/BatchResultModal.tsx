@@ -2,9 +2,17 @@
 // Output: 批量操作结果弹窗（显示成功/失败统计、失败详情、重试功能、导出报告、状态图标、全部成功/失败提示）
 // Pos: src/components/operations/BatchResultModal.tsx
 
-import React from 'react';
-import { CheckCircle, XCircle, RotateCcw, X, FileText, Download } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { CheckCircle, XCircle, RotateCcw, Download } from 'lucide-react';
 import { BaseModal } from '../modals/BaseModal';
+
+/**
+ * 常量定义
+ */
+const ERROR_LIST_MAX_HEIGHT = 'max-h-60';
+const ICON_SIZE_SM = 16;
+const ICON_SIZE_MD = 20;
+const ICON_SIZE_LG = 24;
 
 /**
  * 批量操作错误项
@@ -93,21 +101,14 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
   };
 
   /**
-   * 获取标题
-   */
-  const getTitle = () => {
-    return operationType === 'approval' ? '批量审批完成' : '批量操作完成';
-  };
-
-  /**
    * 计算总体状态
    */
   const totalStatus = failedCount === 0 ? 'success' : successCount === 0 ? 'error' : 'partial';
 
   /**
-   * 状态配置
+   * 状态配置（使用 useMemo 优化性能）
    */
-  const getStatusConfig = () => {
+  const statusConfig = useMemo(() => {
     switch (totalStatus) {
       case 'success':
         return {
@@ -135,9 +136,15 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
           description: '部分记录处理成功，请检查失败详情',
         };
     }
+  }, [totalStatus]);
+
+  /**
+   * 获取标题
+   */
+  const getTitle = () => {
+    return operationType === 'approval' ? '批量审批完成' : '批量操作完成';
   };
 
-  const statusConfig = getStatusConfig();
   const StatusIcon = statusConfig.icon;
 
   /**
@@ -164,7 +171,7 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
             disabled={isRetrying}
             className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            <Download size={16} />
+            <Download size={ICON_SIZE_SM} />
             导出报告
           </button>
         )}
@@ -179,12 +186,12 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
           >
             {isRetrying ? (
               <>
-                <RotateCcw size={16} className="animate-spin" />
+                <RotateCcw size={ICON_SIZE_SM} className="animate-spin" />
                 重试中...
               </>
             ) : (
               <>
-                <RotateCcw size={16} />
+                <RotateCcw size={ICON_SIZE_SM} />
                 重试失败项
               </>
             )}
@@ -206,7 +213,7 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
       {/* 状态图标和标题 */}
       <div className="flex items-start gap-4 mb-6">
         <div className={`p-3 rounded-lg ${statusConfig.iconBg} ${statusConfig.iconColor} shrink-0`}>
-          <StatusIcon size={24} />
+          <StatusIcon size={ICON_SIZE_LG} />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
@@ -219,12 +226,12 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
       </div>
 
       {/* 统计摘要 */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-6" role="status" aria-live="polite">
         {/* 成功统计 */}
         <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-              <CheckCircle size={20} className="text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle size={ICON_SIZE_MD} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
@@ -250,7 +257,7 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
                 : 'bg-slate-100 dark:bg-slate-700'
             }`}>
               <XCircle
-                size={20}
+                size={ICON_SIZE_MD}
                 className={
                   failedCount > 0
                     ? 'text-rose-600 dark:text-rose-400'
@@ -284,7 +291,7 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
 
       {/* 失败详情列表 */}
       {failedCount > 0 && errors.length > 0 && (
-        <div>
+        <div role="region" aria-label="失败详情区域">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               失败详情
@@ -294,14 +301,19 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
             </span>
           </div>
 
-          <div className="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg divide-y divide-slate-200 dark:divide-slate-700">
+          <div
+            className={`${ERROR_LIST_MAX_HEIGHT} overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg divide-y divide-slate-200 dark:divide-slate-700`}
+            role="list"
+            aria-label="失败详情列表"
+          >
             {errors.map((error) => (
               <div
                 key={error.id}
+                role="listitem"
                 className="flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <div className="p-1.5 bg-rose-100 dark:bg-rose-900/30 rounded-lg shrink-0">
-                  <XCircle size={16} className="text-rose-600 dark:text-rose-400" />
+                  <XCircle size={ICON_SIZE_SM} className="text-rose-600 dark:text-rose-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-800 dark:text-white">
@@ -329,7 +341,7 @@ export const BatchResultModal: React.FC<BatchResultModalProps> = ({
       {totalStatus === 'success' && (
         <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
           <p className="text-sm text-emerald-800 dark:text-emerald-300">
-            🎉 所有记录均已成功处理完成！
+            所有记录均已成功处理完成！
           </p>
         </div>
       )}
