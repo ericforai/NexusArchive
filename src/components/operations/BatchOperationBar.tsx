@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Check, X, Ban, Loader2, CheckSquare } from 'lucide-react';
+import { MAX_SELECTION_LIMIT } from './useBatchSelection';
 
 /**
  * 批量操作工具栏 Props
@@ -59,11 +60,11 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
   }
 
   // 检查是否超过限制
-  const isOverLimit = selectedCount > 100;
-  // 全选按钮仅在总数 > 已选数量 且 总数 ≤ 100 时显示
+  const isOverLimit = selectedCount > MAX_SELECTION_LIMIT;
+  // 全选按钮仅在总数 > 已选数量 且 总数 ≤ MAX_SELECTION_LIMIT 时显示
   const canSelectAll = totalCount !== undefined
     && totalCount > selectedCount
-    && totalCount <= 100;
+    && totalCount <= MAX_SELECTION_LIMIT;
 
   return (
     <div className="mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl flex flex-wrap items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-200">
@@ -87,7 +88,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
       {/* 右侧：操作按钮组 */}
       <div className="flex flex-wrap items-center gap-2">
         {/* 全选所有按钮 */}
-        {canSelectAll && !isOverLimit && (
+        {canSelectAll && (
           <button
             onClick={onSelectAll}
             disabled={loading}
@@ -104,7 +105,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           onClick={onBatchApprove}
           disabled={loading || isOverLimit}
           className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-sm hover:shadow"
-          title={isOverLimit ? '超过 100 条限制' : '批量批准'}
+          title={isOverLimit ? `超过 ${MAX_SELECTION_LIMIT} 条限制` : '批量批准'}
         >
           {loading ? (
             <>
@@ -124,7 +125,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           onClick={onBatchReject}
           disabled={loading || isOverLimit}
           className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-sm hover:shadow"
-          title={isOverLimit ? '超过 100 条限制' : '批量拒绝'}
+          title={isOverLimit ? `超过 ${MAX_SELECTION_LIMIT} 条限制` : '批量拒绝'}
         >
           {loading ? (
             <>
@@ -159,7 +160,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
         <div className="w-full p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-start gap-2 animate-in fade-in duration-200">
           <Ban size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <p className="text-xs text-amber-800 dark:text-amber-300">
-            批量操作最多支持 100 条记录，请减少选择数量
+            批量操作最多支持 {MAX_SELECTION_LIMIT} 条记录，请减少选择数量
           </p>
         </div>
       )}
