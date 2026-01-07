@@ -7,6 +7,8 @@ package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.dto.approval.BatchApprovalRequest;
+import com.nexusarchive.dto.approval.BatchApprovalResponse;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArchiveApproval;
 import com.nexusarchive.annotation.ArchivalAudit;
@@ -18,14 +20,19 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.context.annotation.Lazy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 档案审批服务实现
  */
+@Slf4j
 @Service
 public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
@@ -163,5 +170,89 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
     @Override
     public ArchiveApproval getApprovalById(String id) {
         return approvalMapper.selectById(id);
+    }
+
+    @Override
+    @Transactional
+    @ArchivalAudit(operationType = "BATCH_APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量批准归档申请")
+    public BatchApprovalResponse batchApprove(BatchApprovalRequest request) {
+        BatchApprovalResponse response = new BatchApprovalResponse();
+
+        // 构建跳过ID集合（如果存在）
+        Set<String> skipIdSet = request.getSkipIds() != null
+                ? new HashSet<>(request.getSkipIds())
+                : new HashSet<>();
+
+        // 遍历所有ID进行处理
+        for (String id : request.getIds()) {
+            // 跳过标记为跳过的记录
+            if (skipIdSet.contains(id)) {
+                log.info("Skipping approval record: {}", id);
+                continue;
+            }
+
+            try {
+                // 调用单个审批方法
+                approveArchive(
+                        id,
+                        request.getApproverId(),
+                        request.getApproverName(),
+                        request.getComment()
+                );
+                response.incrementSuccess();
+                log.debug("Successfully approved archive: {}", id);
+            } catch (Exception e) {
+                // 记录失败，继续处理下一条
+                response.addError(id, e.getMessage());
+                log.warn("Failed to approve archive {}: {}", id, e.getMessage());
+            }
+        }
+
+        log.info("Batch approval completed: {} succeeded, {} failed",
+                response.getSuccess(), response.getFailed());
+
+        return response;
+    }
+
+    @Override
+    @Transactional
+    @ArchivalAudit(operationType = "BATCH_REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量拒绝归档申请")
+    public BatchApprovalResponse batchReject(BatchApprovalRequest request) {
+        BatchApprovalResponse response = new BatchApprovalResponse();
+
+        // 构建跳过ID集合（如果存在）
+        Set<String> skipIdSet = request.getSkipIds() != null
+                ? new HashSet<>(request.getSkipIds())
+                : new HashSet<>();
+
+        // 遍历所有ID进行处理
+        for (String id : request.getIds()) {
+            // 跳过标记为跳过的记录
+            if (skipIdSet.contains(id)) {
+                log.info("Skipping approval record: {}", id);
+                continue;
+            }
+
+            try {
+                // 调用单个拒绝方法
+                rejectArchive(
+                        id,
+                        request.getApproverId(),
+                        request.getApproverName(),
+                        request.getComment()
+                );
+                response.incrementSuccess();
+                log.debug("Successfully rejected archive: {}", id);
+            } catch (Exception e) {
+                // 记录失败，继续处理下一条
+                response.addError(id, e.getMessage());
+                log.warn("Failed to reject archive {}: {}", id, e.getMessage());
+            }
+        }
+
+        log.info("Batch rejection completed: {} succeeded, {} failed",
+                response.getSuccess(), response.getFailed());
+
+        return response;
     }
 }

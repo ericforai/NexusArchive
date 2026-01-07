@@ -7,6 +7,8 @@ package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.result.Result;
+import com.nexusarchive.dto.approval.BatchApprovalRequest;
+import com.nexusarchive.dto.approval.BatchApprovalResponse;
 import com.nexusarchive.entity.ArchiveApproval;
 import com.nexusarchive.service.ArchiveApprovalService;
 import lombok.RequiredArgsConstructor;
@@ -110,6 +112,66 @@ public class ArchiveApprovalController {
             request.getComment()
         );
         return Result.success(null);
+    }
+
+    /**
+     * 批量批准归档
+     */
+    @PostMapping("/batch-approve")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "BATCH_APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量批准归档申请")
+    public Result<BatchApprovalResponse> batchApprove(@Valid @RequestBody BatchApprovalRequest request,
+                                                      @AuthenticationPrincipal CustomUserDetails user) {
+        // 从认证上下文获取审批人信息（如果请求中未提供）
+        if (user != null) {
+            if (request.getApproverId() == null) {
+                request.setApproverId(user.getId());
+            }
+            if (request.getApproverName() == null) {
+                request.setApproverName(user.getFullName());
+            }
+        }
+
+        // 设置默认值（系统调用）
+        if (request.getApproverId() == null) {
+            request.setApproverId("system");
+        }
+        if (request.getApproverName() == null) {
+            request.setApproverName("system");
+        }
+
+        BatchApprovalResponse response = approvalService.batchApprove(request);
+        return Result.success(response);
+    }
+
+    /**
+     * 批量拒绝归档
+     */
+    @PostMapping("/batch-reject")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "BATCH_REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量拒绝归档申请")
+    public Result<BatchApprovalResponse> batchReject(@Valid @RequestBody BatchApprovalRequest request,
+                                                     @AuthenticationPrincipal CustomUserDetails user) {
+        // 从认证上下文获取审批人信息（如果请求中未提供）
+        if (user != null) {
+            if (request.getApproverId() == null) {
+                request.setApproverId(user.getId());
+            }
+            if (request.getApproverName() == null) {
+                request.setApproverName(user.getFullName());
+            }
+        }
+
+        // 设置默认值（系统调用）
+        if (request.getApproverId() == null) {
+            request.setApproverId("system");
+        }
+        if (request.getApproverName() == null) {
+            request.setApproverName("system");
+        }
+
+        BatchApprovalResponse response = approvalService.batchReject(request);
+        return Result.success(response);
     }
 
     /**

@@ -6,6 +6,8 @@
 package com.nexusarchive.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.dto.approval.BatchApprovalRequest;
+import com.nexusarchive.dto.approval.BatchApprovalResponse;
 import com.nexusarchive.entity.ArchiveApproval;
 
 /**
@@ -15,7 +17,7 @@ public interface ArchiveApprovalService {
 
     /**
      * 创建审批申请
-     * 
+     *
      * @param approval 审批申请信息
      * @return 创建的审批记录
      */
@@ -23,7 +25,7 @@ public interface ArchiveApprovalService {
 
     /**
      * 批准归档
-     * 
+     *
      * @param id 审批记录ID
      * @param approverId 审批人ID
      * @param approverName 审批人姓名
@@ -33,7 +35,7 @@ public interface ArchiveApprovalService {
 
     /**
      * 拒绝归档
-     * 
+     *
      * @param id 审批记录ID
      * @param approverId 审批人ID
      * @param approverName 审批人姓名
@@ -42,8 +44,24 @@ public interface ArchiveApprovalService {
     void rejectArchive(String id, String approverId, String approverName, String comment);
 
     /**
+     * 批量批准归档
+     *
+     * @param request 批量审批请求
+     * @return 批量审批响应（包含成功/失败统计）
+     */
+    BatchApprovalResponse batchApprove(BatchApprovalRequest request);
+
+    /**
+     * 批量拒绝归档
+     *
+     * @param request 批量审批请求
+     * @return 批量审批响应（包含成功/失败统计）
+     */
+    BatchApprovalResponse batchReject(BatchApprovalRequest request);
+
+    /**
      * 查询审批列表（分页）
-     * 
+     *
      * @param page 页码
      * @param limit 每页数量
      * @param status 状态筛选（可选）
@@ -53,7 +71,7 @@ public interface ArchiveApprovalService {
 
     /**
      * 根据ID查询审批详情
-     * 
+     *
      * @param id 审批记录ID
      * @return 审批记录
      */
