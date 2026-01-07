@@ -243,6 +243,7 @@ export const SystemApp: React.FC = () => {
 
             case ViewState.COLLECTION:
                 if (activeSubItem === '在线接收') return <OnlineReceptionView />;
+                if (activeSubItem === '扫描集成') return <OCRProcessingView />;
                 return <ArchiveListPage routeConfig={resolveArchiveRouteMode()} />;
 
             // --- Accounting Archives (Repository) ---
