@@ -1,5 +1,5 @@
 // Input: React、lucide-react
-// Output: 全宗切换下拉组件 FondsSwitcher
+// Output: 全宗切换下拉组件 FondsSwitcher（自适应：单个全宗显示纯文本，多个全宗显示下拉）
 // Pos: 通用组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -60,9 +60,38 @@ export const FondsSwitcher: React.FC<FondsSwitcherProps> = ({
 
     const [isOpen, setIsOpen] = React.useState(false);
 
-    // 如果只有一个全宗或没有全宗，隐藏切换器
-    if (fondsList.length <= 1) {
-        return null;
+
+    // 加载状态
+    if (isLoading && fondsList.length === 0) {
+        return (
+            <div className="flex items-center px-3 py-1.5 text-sm">
+                <Loader2 size={14} className="animate-spin text-slate-400" />
+            </div>
+        );
+    }
+
+    // 无全宗权限
+    if (fondsList.length === 0 && hasHydrated) {
+        return (
+            <div className="flex items-center px-3 py-1.5 text-sm text-slate-400">
+                暂无全宗权限
+            </div>
+        );
+    }
+
+    // 单个全宗：纯文本显示
+    if (fondsList.length === 1) {
+        const fonds = fondsList[0];
+        return (
+            <div className="flex items-center px-3 py-1.5 text-sm">
+                <span className="text-slate-700 font-medium">
+                    {fonds.fondsName}
+                </span>
+                <span className="ml-2 text-xs text-slate-400 font-mono">
+                    {fonds.fondsCode}
+                </span>
+            </div>
+        );
     }
 
     return (
