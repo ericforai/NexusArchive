@@ -6,6 +6,8 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.dto.BatchUploadRequest;
 import com.nexusarchive.dto.BatchUploadResponse;
+import com.nexusarchive.dto.batch.BatchArchiveRequest;
+import com.nexusarchive.dto.batch.BatchArchiveResponse;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.CollectionBatch;
@@ -21,6 +23,8 @@ import com.nexusarchive.service.collection.BatchFileStorageService;
 import com.nexusarchive.service.collection.BatchFileValidator;
 import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.util.FileHashUtil;
+import com.nexusarchive.security.FondsContext;
+import com.nexusarchive.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -72,11 +78,17 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         // 1. 生成批次编号
         String batchNo = batchNumberGenerator.generateBatchNo();
 
+        // 验证全宗权限
+        String currentFonds = FondsContext.requireCurrentFondsNo();
+        if (request.getFondsCode() != null && !currentFonds.equals(request.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：无法在非当前全宗下创建批次");
+        }
+
         // 2. 创建批次记录
         CollectionBatch batch = CollectionBatch.builder()
             .batchNo(batchNo)
             .batchName(request.getBatchName())
-            .fondsCode(request.getFondsCode())
+            .fondsCode(currentFonds)
             .fiscalYear(request.getFiscalYear())
             .fiscalPeriod(request.getFiscalPeriod())
             .archivalCategory(request.getArchivalCategory())
@@ -128,6 +140,12 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             return new FileUploadResult(null, file.getOriginalFilename(),
                 "FAILED", "批次不存在");
         }
+        
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
+        }
+
         if (!batch.canUpload()) {
             return new FileUploadResult(null, file.getOriginalFilename(),
                 "FAILED", "批次状态不允许上传: " + batch.getStatus());
@@ -231,6 +249,11 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             throw new IllegalArgumentException("批次不存在");
         }
 
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
+        }
+
         // 更新批次状态
         batch.setStatus(CollectionBatch.STATUS_UPLOADED);
         batch.setLastModifiedTime(LocalDateTime.now());
@@ -268,6 +291,11 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             throw new IllegalArgumentException("批次不存在");
         }
 
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
+        }
+
         batch.setStatus(CollectionBatch.STATUS_FAILED);
         batch.setErrorMessage("用户取消");
         batch.setLastModifiedTime(LocalDateTime.now());
@@ -291,6 +319,11 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         CollectionBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在");
+        }
+
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
         }
 
         return new BatchDetailResponse(
@@ -332,6 +365,11 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         CollectionBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在");
+        }
+
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
         }
 
         // 更新批次状态
@@ -384,7 +422,169 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         return new BatchCheckResult(batchId, totalFiles, totalFiles, passedFiles, failedFiles, summary);
     }
 
+    @Override
+    @Transactional
+    public BatchArchiveResponse batchApprove(BatchArchiveRequest request) {
+        log.info("批量批准批次归档: batchCount={}, operator={}",
+                 request.getBatchIds().size(), request.getOperatorId());
+
+        BatchArchiveResponse response = new BatchArchiveResponse();
+
+        // 构建跳过ID集合（如果存在）
+        Set<Long> skipIdSet = request.getSkipBatchIds() != null
+                ? new HashSet<>(request.getSkipBatchIds())
+                : new HashSet<>();
+
+        // 遍历所有批次ID进行处理
+        for (Long batchId : request.getBatchIds()) {
+            // 跳过标记为跳过的记录
+            if (skipIdSet.contains(batchId)) {
+                log.info("Skipping batch: {}", batchId);
+                continue;
+            }
+
+            try {
+                // 调用单个批准方法
+                approveBatch(batchId, request.getOperatorId(), request.getOperatorName(),
+                            request.getComment());
+                response.incrementSuccess();
+                log.debug("Successfully approved batch: {}", batchId);
+            } catch (Exception e) {
+                // 记录失败，继续处理下一条
+                CollectionBatch batch = batchMapper.selectById(batchId);
+                String batchNo = batch != null ? batch.getBatchNo() : "UNKNOWN";
+                response.addError(batchId, batchNo, e.getMessage());
+                log.warn("Failed to approve batch {}: {}", batchId, e.getMessage(), e);
+            }
+        }
+
+        log.info("Batch approval completed: {} succeeded, {} failed",
+                 response.getSuccess(), response.getFailed());
+
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public BatchArchiveResponse batchReject(BatchArchiveRequest request) {
+        log.info("批量拒绝批次归档: batchCount={}, operator={}",
+                 request.getBatchIds().size(), request.getOperatorId());
+
+        BatchArchiveResponse response = new BatchArchiveResponse();
+
+        // 构建跳过ID集合（如果存在）
+        Set<Long> skipIdSet = request.getSkipBatchIds() != null
+                ? new HashSet<>(request.getSkipBatchIds())
+                : new HashSet<>();
+
+        // 遍历所有批次ID进行处理
+        for (Long batchId : request.getBatchIds()) {
+            // 跳过标记为跳过的记录
+            if (skipIdSet.contains(batchId)) {
+                log.info("Skipping batch: {}", batchId);
+                continue;
+            }
+
+            try {
+                // 调用单个拒绝方法
+                rejectBatch(batchId, request.getOperatorId(), request.getOperatorName(),
+                           request.getComment());
+                response.incrementSuccess();
+                log.debug("Successfully rejected batch: {}", batchId);
+            } catch (Exception e) {
+                // 记录失败，继续处理下一条
+                CollectionBatch batch = batchMapper.selectById(batchId);
+                String batchNo = batch != null ? batch.getBatchNo() : "UNKNOWN";
+                response.addError(batchId, batchNo, e.getMessage());
+                log.warn("Failed to reject batch {}: {}", batchId, e.getMessage(), e);
+            }
+        }
+
+        log.info("Batch rejection completed: {} succeeded, {} failed",
+                 response.getSuccess(), response.getFailed());
+
+        return response;
+    }
+
     // ===== Private Helper Methods =====
+
+    /**
+     * 批准单个批次归档
+     */
+    private void approveBatch(Long batchId, String operatorId, String operatorName, String comment) {
+        CollectionBatch batch = batchMapper.selectById(batchId);
+        if (batch == null) {
+            throw new IllegalArgumentException("批次不存在: " + batchId);
+        }
+
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
+        }
+
+        // 验证批次状态：只允许已验证的批次进行归档
+        if (!CollectionBatch.STATUS_VALIDATED.equals(batch.getStatus())) {
+            throw new IllegalStateException("批次状态不允许归档: " + batch.getStatus());
+        }
+
+        // 更新批次状态为已归档
+        batch.setStatus(CollectionBatch.STATUS_ARCHIVED);
+        batch.setLastModifiedTime(LocalDateTime.now());
+        batch.setCompletedTime(LocalDateTime.now());
+        batchMapper.updateById(batch);
+
+        // 记录审计日志
+        String operator = operatorId != null ? operatorId : "system";
+        auditLogService.log(
+            operator,
+            operatorName != null ? operatorName : "system",
+            "APPROVE_BATCH",
+            "COLLECTION_BATCH",
+            String.valueOf(batchId),
+            "SUCCESS",
+            "批准批次归档: " + batch.getBatchNo() + (comment != null ? ", 备注: " + comment : ""),
+            null
+        );
+
+        log.info("批次归档批准成功: batchId={}, batchNo={}", batchId, batch.getBatchNo());
+    }
+
+    /**
+     * 拒绝单个批次归档
+     */
+    private void rejectBatch(Long batchId, String operatorId, String operatorName, String comment) {
+        CollectionBatch batch = batchMapper.selectById(batchId);
+        if (batch == null) {
+            throw new IllegalArgumentException("批次不存在: " + batchId);
+        }
+
+        // 全宗校验
+        if (!FondsContext.requireCurrentFondsNo().equals(batch.getFondsCode())) {
+            throw new BusinessException(403, "越权操作：非当前全宗数据");
+        }
+
+        // 更新批次状态为失败
+        batch.setStatus(CollectionBatch.STATUS_FAILED);
+        batch.setErrorMessage(comment != null ? comment : "归档申请被拒绝");
+        batch.setLastModifiedTime(LocalDateTime.now());
+        batch.setCompletedTime(LocalDateTime.now());
+        batchMapper.updateById(batch);
+
+        // 记录审计日志
+        String operator = operatorId != null ? operatorId : "system";
+        auditLogService.log(
+            operator,
+            operatorName != null ? operatorName : "system",
+            "REJECT_BATCH",
+            "COLLECTION_BATCH",
+            String.valueOf(batchId),
+            "SUCCESS",
+            "拒绝批次归档: " + batch.getBatchNo() + (comment != null ? ", 原因: " + comment : ""),
+            null
+        );
+
+        log.info("批次归档拒绝成功: batchId={}, batchNo={}", batchId, batch.getBatchNo());
+    }
 
     private ArcFileContent createArcFileContent(CollectionBatchFile batchFile, CollectionBatch batch,
                                                  String fileId) {

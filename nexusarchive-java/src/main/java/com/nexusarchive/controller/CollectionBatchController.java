@@ -8,6 +8,8 @@ import com.nexusarchive.common.Result;
 import com.nexusarchive.dto.BatchUploadRequest;
 import com.nexusarchive.dto.BatchUploadResponse;
 import com.nexusarchive.annotation.ArchivalAudit;
+import com.nexusarchive.dto.batch.BatchArchiveRequest;
+import com.nexusarchive.dto.batch.BatchArchiveResponse;
 import com.nexusarchive.service.CollectionBatchService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -28,9 +30,10 @@ import java.util.List;
  * - 完成批次
  * - 查询状态
  * - 四性检测
+ * - 批量审批/拒绝
  */
 @RestController
-@RequestMapping("/api/collection/batch")
+@RequestMapping("/collection/batch")
 @RequiredArgsConstructor
 @Slf4j
 public class CollectionBatchController {
@@ -199,6 +202,58 @@ public class CollectionBatchController {
         Long userId = getUserIdFromRequest(httpRequest);
         // TODO: 实现列表查询
         return Result.success(List.of());
+    }
+
+    /**
+     * 批量批准批次归档
+     *
+     * POST /api/collection/batch/batch-approve
+     */
+    @PostMapping("/batch-approve")
+    @PreAuthorize("hasAnyAuthority('archive:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "BATCH_APPROVE_BATCH", resourceType = "COLLECTION_BATCH",
+                  description = "批量批准批次归档")
+    public Result<BatchArchiveResponse> batchApprove(
+            @Valid @RequestBody BatchArchiveRequest request,
+            HttpServletRequest httpRequest) {
+
+        // 从认证上下文获取操作人信息（如果请求中未提供）
+        Long userId = getUserIdFromRequest(httpRequest);
+        if (request.getOperatorId() == null) {
+            request.setOperatorId(String.valueOf(userId));
+        }
+
+        BatchArchiveResponse response = collectionBatchService.batchApprove(request);
+
+        log.info("批量批准批次完成: succeeded={}, failed={}",
+                 response.getSuccess(), response.getFailed());
+        return Result.success(response);
+    }
+
+    /**
+     * 批量拒绝批次归档
+     *
+     * POST /api/collection/batch/batch-reject
+     */
+    @PostMapping("/batch-reject")
+    @PreAuthorize("hasAnyAuthority('archive:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "BATCH_REJECT_BATCH", resourceType = "COLLECTION_BATCH",
+                  description = "批量拒绝批次归档")
+    public Result<BatchArchiveResponse> batchReject(
+            @Valid @RequestBody BatchArchiveRequest request,
+            HttpServletRequest httpRequest) {
+
+        // 从认证上下文获取操作人信息（如果请求中未提供）
+        Long userId = getUserIdFromRequest(httpRequest);
+        if (request.getOperatorId() == null) {
+            request.setOperatorId(String.valueOf(userId));
+        }
+
+        BatchArchiveResponse response = collectionBatchService.batchReject(request);
+
+        log.info("批量拒绝批次完成: succeeded={}, failed={}",
+                 response.getSuccess(), response.getFailed());
+        return Result.success(response);
     }
 
     // ===== Private Helper Methods =====

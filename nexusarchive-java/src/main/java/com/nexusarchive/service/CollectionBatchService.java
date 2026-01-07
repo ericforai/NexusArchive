@@ -6,6 +6,8 @@ package com.nexusarchive.service;
 
 import com.nexusarchive.dto.BatchUploadRequest;
 import com.nexusarchive.dto.BatchUploadResponse;
+import com.nexusarchive.dto.batch.BatchArchiveRequest;
+import com.nexusarchive.dto.batch.BatchArchiveResponse;
 import com.nexusarchive.entity.CollectionBatch;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -140,4 +142,20 @@ public interface CollectionBatchService {
         int failedFiles,
         String summary
     ) {}
+
+    /**
+     * 批量批准批次归档
+     *
+     * @param request 批量批准请求
+     * @return 批量操作响应
+     */
+    BatchArchiveResponse batchApprove(BatchArchiveRequest request);
+
+    /**
+     * 批量拒绝批次归档
+     *
+     * @param request 批量拒绝请求
+     * @return 批量操作响应
+     */
+    BatchArchiveResponse batchReject(BatchArchiveRequest request);
 }
