@@ -130,7 +130,7 @@ export function useBatchSelection(): UseBatchSelectionReturn {
    * 使用 functional setState 避免竞态条件，使用 flushSync 确保同步返回结果
    */
   const toggleSelection = useCallback((id: number): SelectionResult => {
-    let result: SelectionResult;
+    let result: SelectionResult = { success: false, reason: 'Unknown error' };
 
     flushSync(() => {
       setSelectedIdsState((prev) => {

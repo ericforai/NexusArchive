@@ -13,7 +13,7 @@
 export { useBatchSelection, MAX_SELECTION_LIMIT } from './useBatchSelection';
 
 // Components
-// export { BatchOperationBar } from './BatchOperationBar';
+export { BatchOperationBar } from './BatchOperationBar';
 // export { BatchApprovalDialog } from './BatchApprovalDialog';
 // export { BatchResultModal } from './BatchResultModal';
 
@@ -24,7 +24,7 @@ export type {
   RowSelectionConfig,
   UseBatchSelectionReturn
 } from './useBatchSelection';
-// export type { Operation, BatchOperationBarProps } from './BatchOperationBar';
+export type { BatchOperationBarProps } from './BatchOperationBar';
 // export type { ApprovalItem, BatchApprovalDialogProps } from './BatchApprovalDialog';
 // export type { BatchResult, BatchResultModalProps } from './BatchResultModal';
 

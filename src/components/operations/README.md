@@ -14,8 +14,8 @@ src/components/operations/
 ├── index.ts                      # 公共 API 入口
 ├── manifest.config.ts            # 模块清单
 ├── README.md                     # 本文件
-├── useBatchSelection.ts          # 批量选择 Hook（待实现）
-├── BatchOperationBar.tsx         # 批量操作工具栏（待实现）
+├── useBatchSelection.ts          # 批量选择 Hook ✅
+├── BatchOperationBar.tsx         # 批量操作工具栏 ✅
 ├── BatchApprovalDialog.tsx       # 批量审批弹窗（待实现）
 └── BatchResultModal.tsx          # 批量结果报告（待实现）
 ```
@@ -68,23 +68,41 @@ interface SelectionResult {
 
 **位置**: `BatchOperationBar.tsx`
 **类型**: React.FC
-**功能**: 批量操作工具栏组件
+**功能**: 批量操作工具栏组件（已实现 ✅）
 
 #### Props
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `selectedCount` | `number` | 已选中项数量 |
-| `operations` | `Operation[]` | 可用操作列表 |
-| `onOperation` | `(type: string) => void` | 操作回调 |
-| `onClear` | `() => void` | 清空选择回调 |
+```typescript
+interface BatchOperationBarProps {
+  selectedCount: number;           // 已选中项数量
+  totalCount?: number;             // 筛选结果总数（用于全选）
+  onBatchApprove: () => void;      // 批量批准回调
+  onBatchReject: () => void;       // 批量拒绝回调
+  onSelectAll: () => void;         // 全选所有回调
+  onClear: () => void;             // 清空选择回调
+  loading?: boolean;               // 加载状态
+}
+```
 
-#### 功能
+#### 功能特性
 
-- 显示已选中项数量
-- 提供批量操作按钮组
-- 清空选择功能
-- 操作权限控制
+- 显示选中数量和筛选结果总数
+- 全选所有按钮（当 `totalCount` 存在时显示）
+- 批量批准按钮（主要样式 - emerald）
+- 批量拒绝按钮（危险样式 - rose）
+- 清空选择按钮
+- 超过 100 条时禁用操作并提示
+- 响应式设计，支持暗色模式
+
+#### 样式规范
+
+- 使用 Tailwind CSS 工具类
+- 左侧显示选中信息（图标 + 文本）
+- 右侧显示操作按钮组
+- 主色调：primary-50/600（选中栏背景）
+- 成功操作：emerald-600（批准）
+- 危险操作：rose-600（拒绝）
+- 分隔线：slate-300（按钮组分隔）
 
 ### BatchApprovalDialog
 
@@ -237,15 +255,12 @@ function MyBatchView() {
     <>
       <BatchOperationBar
         selectedCount={getSelectedCount()}
-        operations={[
-          { key: 'approve', label: '批量审批', icon: CheckCircle },
-          { key: 'reject', label: '批量驳回', icon: XCircle },
-          { key: 'export', label: '导出', icon: Download }
-        ]}
-        onOperation={(type) => {
-          if (type === 'approve') handleBatchApprove();
-        }}
+        totalCount={filteredData.length}
+        onBatchApprove={handleBatchApprove}
+        onBatchReject={handleBatchReject}
+        onSelectAll={() => selectAll(filteredData.map(d => d.id))}
         onClear={clearSelection}
+        loading={isProcessing}
       />
 
       <Table rowSelection={rowSelection} dataSource={data} />
