@@ -1,5 +1,5 @@
 // Input: Spring Web, Spring Security, Lombok, Jakarta Validation
-// Output: ScanWorkspaceController
+// Output: ScanWorkspaceController (含移动端会话管理)
 // Pos: Controller Layer
 
 package com.nexusarchive.controller;
@@ -105,16 +105,16 @@ public class ScanWorkspaceController {
     @PreAuthorize("hasAnyAuthority('scan:ocr', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_OCR", resourceType = "SCAN_WORKSPACE",
                   description = "触发OCR识别")
-    public Result<ScanWorkspace> triggerOcr(
+    public Result<Void> triggerOcr(
             @PathVariable Long id,
             @RequestParam(value = "engine", required = false) String engine,
             @AuthenticationPrincipal com.nexusarchive.security.CustomUserDetails user) {
 
         String userId = user != null ? user.getId() : "system";
-        ScanWorkspace workspace = scanWorkspaceService.triggerOcr(id, engine, userId);
+        scanWorkspaceService.triggerOcr(id, engine, userId);
 
         log.info("OCR识别已触发: userId={}, workspaceId={}, engine={}", userId, id, engine);
-        return Result.success("OCR识别已启动", workspace);
+        return Result.success();
     }
 
     /**
@@ -164,7 +164,7 @@ public class ScanWorkspaceController {
         String userId = user != null ? user.getId() : "system";
         ScanWorkspaceService.SubmitResult result = scanWorkspaceService.submitToPreArchive(id, userId);
 
-        log.info("提交到预归档池: userId={}, workspaceId={}, archiveId={}", userId, id, result.getArchiveId());
+        log.info("提交到预归档池: userId={}, workspaceId={}, archiveId={}", userId, id, result.archiveId());
         return Result.success("提交成功", result);
     }
 
@@ -189,6 +189,63 @@ public class ScanWorkspaceController {
         scanWorkspaceService.deleteWorkspace(id, userId);
 
         log.info("工作区项已删除: userId={}, workspaceId={}", userId, id);
-        return Result.success("删除成功");
+        return Result.success();
+    }
+
+    /**
+     * 移动端会话记录
+     */
+    public static class MobileSessionResponse {
+        private String sessionId;
+        private Integer expiresInSeconds;
+
+        public MobileSessionResponse(String sessionId, Integer expiresInSeconds) {
+            this.sessionId = sessionId;
+            this.expiresInSeconds = expiresInSeconds;
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public void setSessionId(String sessionId) {
+            this.sessionId = sessionId;
+        }
+
+        public Integer getExpiresInSeconds() {
+            return expiresInSeconds;
+        }
+
+        public void setExpiresInSeconds(Integer expiresInSeconds) {
+            this.expiresInSeconds = expiresInSeconds;
+        }
+    }
+
+    /**
+     * 创建移动端扫描会话
+     *
+     * POST /api/scan/mobile/session
+     *
+     * 生成唯一的会话ID，供移动端通过扫码上传文件使用。
+     * 会话有效期为 30 分钟。
+     *
+     * @param user 当前认证用户
+     * @return 会话信息（sessionId 和过期时间）
+     */
+    @PostMapping("/mobile/session")
+    @PreAuthorize("hasAnyAuthority('scan:upload', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "SCAN_SESSION_CREATE", resourceType = "SCAN_WORKSPACE",
+                  description = "创建移动端扫描会话")
+    public Result<MobileSessionResponse> createMobileSession(
+            @AuthenticationPrincipal com.nexusarchive.security.CustomUserDetails user) {
+
+        String userId = user != null ? user.getId() : "system";
+        String sessionId = scanWorkspaceService.createSession(userId);
+
+        log.info("创建移动端扫描会话: userId={}, sessionId={}", userId, sessionId);
+
+        // 会话有效期 30 分钟 (1800 秒)
+        MobileSessionResponse response = new MobileSessionResponse(sessionId, 1800);
+        return Result.success("会话创建成功", response);
     }
 }

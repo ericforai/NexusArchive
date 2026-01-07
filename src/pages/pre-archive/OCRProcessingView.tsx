@@ -1,10 +1,11 @@
-// Input: React、lucide-react 图标、scan API
-// Output: React 组件 OCRProcessingView（对接真实 API）
+// Input: React、lucide-react 图标、scan API、QRCode
+// Output: React 组件 OCRProcessingView（对接真实 API + 移动端扫码）
 // Pos: src/pages/pre-archive/OCRProcessingView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useRef, useEffect } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info, Smartphone, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { scanApi, type ScanWorkspaceItem, type OcrField } from '../../api/scan';
 import { toast } from '../../utils/notificationService';
 
@@ -26,6 +27,11 @@ export const OCRProcessingView: React.FC = () => {
   // Auto-save State
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
+
+  // Mobile Scan QR Code State
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrSessionId, setQrSessionId] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   // Ref to track activeTask for interval closure
   const activeTaskRef = useRef(activeTask);
@@ -97,6 +103,32 @@ export const OCRProcessingView: React.FC = () => {
       setIsAutoSaving(false);
     }
   };
+
+  // Mobile Scan QR Code handler
+  const handleOpenMobileScan = async () => {
+    setIsCreatingSession(true);
+    try {
+      const response = await scanApi.createSession();
+      setQrSessionId(response.data.sessionId);
+      setIsQrModalOpen(true);
+      toast.success('会话已创建，请扫码上传');
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      toast.error('创建会话失败，请重试');
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
+  const handleCloseQrModal = () => {
+    setIsQrModalOpen(false);
+    setQrSessionId(null);
+  };
+
+  // Build QR Code URL
+  const qrCodeUrl = qrSessionId
+    ? `${window.location.origin}/mobile/scan?session=${qrSessionId}`
+    : '';
 
   // Parse OCR result to fields
   const parseOcrFields = (ocrResult?: string): OcrField[] => {
@@ -338,6 +370,27 @@ export const OCRProcessingView: React.FC = () => {
             </div>
           </div>
 
+          {/* Mobile Scan Button */}
+          <div className="px-4 py-3 border-b border-slate-100">
+            <button
+              onClick={handleOpenMobileScan}
+              disabled={isCreatingSession}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreatingSession ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>创建会话中...</span>
+                </>
+              ) : (
+                <>
+                  <Smartphone size={18} />
+                  <span>手机扫码上传</span>
+                </>
+              )}
+            </button>
+          </div>
+
           {/* Task List */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-3 space-y-2">
@@ -530,6 +583,77 @@ export const OCRProcessingView: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* QR Code Modal for Mobile Scan */}
+      {isQrModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200" onClick={handleCloseQrModal}>
+          <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Smartphone className="text-primary-600" />
+                手机扫码上传
+              </h3>
+              <button
+                onClick={handleCloseQrModal}
+                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+
+            {/* QR Code */}
+            <div className="bg-slate-50 p-6 rounded-xl flex items-center justify-center mb-4">
+              {qrCodeUrl ? (
+                <QRCodeSVG
+                  value={qrCodeUrl}
+                  size={200}
+                  level="M"
+                  className="rounded-lg"
+                />
+              ) : (
+                <div className="w-[200px] h-[200px] flex items-center justify-center">
+                  <Loader2 size={32} className="animate-spin text-slate-300" />
+                </div>
+              )}
+            </div>
+
+            {/* Instructions */}
+            <div className="space-y-3 mb-6">
+              <p className="text-sm text-slate-600 text-center">
+                使用手机相机扫描二维码，即可直接拍照上传文件
+              </p>
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                <p className="text-xs text-blue-700">
+                  <span className="font-bold">操作步骤：</span>
+                </p>
+                <ol className="text-xs text-blue-600 mt-1 space-y-1 list-decimal list-inside">
+                  <li>打开手机相机或微信扫一扫</li>
+                  <li>对准二维码扫描</li>
+                  <li>在打开的页面中拍照或选择相册</li>
+                  <li>文件将自动上传到工作区</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Session ID Display */}
+            {qrSessionId && (
+              <div className="bg-slate-100 rounded-lg p-2 mb-4">
+                <p className="text-xs text-slate-500 mb-1">会话 ID</p>
+                <p className="text-sm font-mono text-slate-700 break-all">{qrSessionId}</p>
+              </div>
+            )}
+
+            {/* Close Button */}
+            <button
+              onClick={handleCloseQrModal}
+              className="w-full py-3 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300 transition-colors"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

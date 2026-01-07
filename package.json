@@ -34,8 +34,9 @@
     "antd": "^6.1.1",
     "axios": "^1.13.2",
     "lucide-react": "^0.554.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "qrcode.react": "^4.2.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "react-hot-toast": "^2.6.0",
     "react-pdf": "^9.2.1",
     "react-router-dom": "^7.9.6",
@@ -67,8 +68,8 @@
     "vitest": "^4.0.15"
   },
   "overrides": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "zustand": "^5.0.9"
   }
 }
