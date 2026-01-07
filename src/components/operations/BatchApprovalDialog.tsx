@@ -8,6 +8,17 @@ import { CheckCircle, XCircle, AlertTriangle, Loader2, ChevronDown, ChevronUp } 
 import { BaseModal } from '../modals/BaseModal';
 
 /**
+ * 确认阈值常量
+ * 超过此数量时显示确认提示
+ */
+export const CONFIRM_THRESHOLD = 10;
+
+/**
+ * 最大评论长度
+ */
+export const MAX_COMMENT_LENGTH = 500;
+
+/**
  * 待审批记录项
  */
 export interface ApprovalRecord {
@@ -70,9 +81,6 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
   const [skipIds, setSkipIds] = useState<Set<number>>(new Set());
   const [showRecordList, setShowRecordList] = useState(false);
 
-  // 确认阈值（超过此数量时显示确认提示）
-  const CONFIRM_THRESHOLD = 10;
-
   // 重置状态
   const resetState = () => {
     setComment('');
@@ -90,6 +98,11 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
   const handleConfirm = async () => {
     // 拒绝时必须填写审批意见
     if (action === 'reject' && !comment.trim()) {
+      return;
+    }
+
+    // 评论长度验证
+    if (comment.length > MAX_COMMENT_LENGTH) {
       return;
     }
 
@@ -216,12 +229,12 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
               即将{action === 'approve' ? '批准' : '驳回'}以下 {selectedCount} 条记录：
             </p>
             <div className="space-y-1">
-              {selectedRecords.slice(0, 5).map((record) => (
+              {(selectedRecords || []).slice(0, 5).map((record) => (
                 <div key={record.id} className="text-xs text-slate-700 dark:text-slate-300">
                   • {record.code || record.title || `记录 #${record.id}`}
                 </div>
               ))}
-              {selectedRecords.length > 5 && (
+              {(selectedRecords || []).length > 5 && (
                 <div className="text-xs text-slate-500 dark:text-slate-400 italic">
                   ... 等共 {selectedCount} 条
                 </div>
@@ -242,11 +255,12 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
           onChange={(e) => setComment(e.target.value)}
           placeholder={config.commentPlaceholder}
           rows={3}
+          maxLength={MAX_COMMENT_LENGTH}
           className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all bg-white dark:bg-slate-800 text-slate-800 dark:text-white resize-none"
           disabled={loading}
         />
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          {comment.length}/500 字符
+          {comment.length}/{MAX_COMMENT_LENGTH} 字符
         </p>
       </div>
 
