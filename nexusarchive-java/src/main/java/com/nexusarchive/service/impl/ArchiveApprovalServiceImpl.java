@@ -173,7 +173,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
     }
 
     @Override
-    @Transactional
+    // 移除外层 @Transactional，让内部 approveArchive() 方法独立处理事务
     @ArchivalAudit(operationType = "BATCH_APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量批准归档申请")
     public BatchApprovalResponse batchApprove(BatchApprovalRequest request) {
         BatchApprovalResponse response = new BatchApprovalResponse();
@@ -204,7 +204,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             } catch (Exception e) {
                 // 记录失败，继续处理下一条
                 response.addError(id, e.getMessage());
-                log.warn("Failed to approve archive {}: {}", id, e.getMessage());
+                log.warn("Failed to approve archive {}: {}", id, e.getMessage(), e);
             }
         }
 
@@ -215,7 +215,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
     }
 
     @Override
-    @Transactional
+    // 移除外层 @Transactional，让内部 rejectArchive() 方法独立处理事务
     @ArchivalAudit(operationType = "BATCH_REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量拒绝归档申请")
     public BatchApprovalResponse batchReject(BatchApprovalRequest request) {
         BatchApprovalResponse response = new BatchApprovalResponse();
@@ -246,7 +246,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             } catch (Exception e) {
                 // 记录失败，继续处理下一条
                 response.addError(id, e.getMessage());
-                log.warn("Failed to reject archive {}: {}", id, e.getMessage());
+                log.warn("Failed to reject archive {}: {}", id, e.getMessage(), e);
             }
         }
 

@@ -24,7 +24,7 @@ import jakarta.validation.Valid;
  * 档案审批控制器
  */
 @RestController
-@RequestMapping("/archive-approval")
+@RequestMapping("/api/archive-approval")
 @RequiredArgsConstructor
 public class ArchiveApprovalController {
 
@@ -152,6 +152,11 @@ public class ArchiveApprovalController {
     @ArchivalAudit(operationType = "BATCH_REJECT_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批量拒绝归档申请")
     public Result<BatchApprovalResponse> batchReject(@Valid @RequestBody BatchApprovalRequest request,
                                                      @AuthenticationPrincipal CustomUserDetails user) {
+        // 验证拒绝理由必填
+        if (request.getComment() == null || request.getComment().isBlank()) {
+            return Result.error(com.nexusarchive.common.exception.ErrorCode.BAD_REQUEST.getCode(), "拒绝理由不能为空");
+        }
+
         // 从认证上下文获取审批人信息（如果请求中未提供）
         if (user != null) {
             if (request.getApproverId() == null) {
