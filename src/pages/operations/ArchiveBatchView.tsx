@@ -1,9 +1,9 @@
-// Input: React、Ant Design、归档批次 API
-// Output: ArchiveBatchView 组件
+// Input: React、Ant Design、归档批次 API、批量操作组件
+// Output: ArchiveBatchView 组件（集成批量审批功能）
 // Pos: src/pages/operations/ArchiveBatchView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Card, Table, Button, Space, Tag, Modal, Form, DatePicker,
     message, Spin, Empty, Descriptions, Alert, Tabs, Tooltip,
@@ -25,6 +25,15 @@ import {
     IntegrityReport
 } from '../../api/archiveBatch';
 import { useFondsStore } from '../../store/useFondsStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import {
+    BatchOperationBar,
+    BatchApprovalDialog,
+    BatchResultModal,
+    useBatchSelection,
+    type ApprovalRecord,
+    type BatchError
+} from '../../components/operations';
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -42,6 +51,18 @@ const STATUS_CONFIG: Record<BatchStatus, { color: string; text: string }> = {
 const ArchiveBatchView: React.FC = () => {
     // 全宗状态
     const currentFonds = useFondsStore((state) => state.currentFonds);
+
+    // 当前用户
+    const user = useAuthStore((state) => state.user);
+
+    // 批量选择状态
+    const {
+        selectedIds,
+        rowSelection,
+        clearSelection,
+        selectAll,
+        getSelectedCount
+    } = useBatchSelection();
 
     // 状态
     const [loading, setLoading] = useState(false);
@@ -72,6 +93,13 @@ const ArchiveBatchView: React.FC = () => {
         total: 0,
         byStatus: {}
     });
+
+    // 批量操作状态
+    const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+    const [batchResultOpen, setBatchResultOpen] = useState(false);
+    const [batchAction, setBatchAction] = useState<'approve' | 'reject'>('approve');
+    const [batchResult, setBatchResult] = useState({ success: 0, failed: 0, errors: [] as BatchError[] });
+    const [batchProcessing, setBatchProcessing] = useState(false);
 
     const [form] = Form.useForm();
 
@@ -254,6 +282,130 @@ const ArchiveBatchView: React.FC = () => {
             message.error(err.message || '添加失败');
         }
     };
+
+    // ========== 批量操作处理函数 ==========
+
+    const handleBatchApprove = () => {
+        setBatchAction('approve');
+        setBatchDialogOpen(true);
+    };
+
+    const handleBatchReject = () => {
+        setBatchAction('reject');
+        setBatchDialogOpen(true);
+    };
+
+    const handleBatchConfirm = async (comment: string, skipIds: number[]) => {
+        const selectedIdArray = Array.from(selectedIds).filter(id => !skipIds.includes(id));
+
+        // 添加边界检查
+        if (selectedIdArray.length === 0) {
+            message.warning('请选择至少一条记录');
+            return;
+        }
+
+        if (selectedIdArray.length > 100) {
+            message.warning('单次最多 100 条，请分批操作');
+            return;
+        }
+
+        try {
+            setBatchProcessing(true);
+
+            const request = {
+                ids: selectedIdArray,
+                approverId: user?.id || '',
+                approverName: user?.realName || user?.username || '',
+                comment: comment || (batchAction === 'approve' ? '批量批准' : '批量拒绝')
+            };
+
+            const result = batchAction === 'approve'
+                ? await archiveBatchApi.batchApprove(request)
+                : await archiveBatchApi.batchReject(request);
+
+            setBatchResult({
+                success: result.success,
+                failed: result.failed,
+                errors: result.errors || []
+            });
+
+            setBatchDialogOpen(false);
+            setBatchResultOpen(true);
+            clearSelection();
+            loadBatches();
+            loadStats();
+
+            if (result.failed === 0) {
+                message.success(`批量${batchAction === 'approve' ? '批准' : '拒绝'}成功`);
+            } else if (result.success === 0) {
+                message.error(`批量${batchAction === 'approve' ? '批准' : '拒绝'}失败`);
+            } else {
+                message.warning(`部分成功：${result.success}条成功，${result.failed}条失败`);
+            }
+        } catch (err: any) {
+            message.error(err.message || `批量${batchAction === 'approve' ? '批准' : '拒绝'}失败，请重试`);
+        } finally {
+            setBatchProcessing(false);
+        }
+    };
+
+    const handleBatchRetry = async (failedIds: number[]) => {
+        try {
+            setBatchProcessing(true);
+
+            const request = {
+                ids: failedIds,
+                approverId: user?.id || '',
+                approverName: user?.realName || user?.username || '',
+                comment: batchAction === 'approve' ? '重试批量批准' : '重试批量拒绝'
+            };
+
+            const result = batchAction === 'approve'
+                ? await archiveBatchApi.batchApprove(request)
+                : await archiveBatchApi.batchReject(request);
+
+            setBatchResult({
+                success: result.success,
+                failed: result.failed,
+                errors: result.errors || []
+            });
+
+            loadBatches();
+            loadStats();
+
+            if (result.failed === 0) {
+                message.success('重试成功');
+                setBatchResultOpen(false);
+            } else if (result.success === 0) {
+                message.error('重试失败');
+            } else {
+                message.warning(`部分成功：${result.success}条成功，${result.failed}条失败`);
+            }
+        } catch (err: any) {
+            message.error(err.message || '重试失败，请重试');
+        } finally {
+            setBatchProcessing(false);
+        }
+    };
+
+    const handleSelectAll = () => {
+        const allIds = batches.map(b => b.id);
+        const result = selectAll(allIds);
+        if (!result.success) {
+            message.warning(result.reason || '全选失败');
+        }
+    };
+
+    // 获取选中的记录列表
+    const selectedRecords = useMemo<ApprovalRecord[]>(() => {
+        return batches
+            .filter(b => selectedIds.has(b.id))
+            .map(b => ({
+                id: b.id,
+                title: b.batchNo,
+                code: b.batchNo
+            }));
+    }, [batches, selectedIds]);
 
     // 表格列
     const columns: ColumnsType<ArchiveBatch> = [
@@ -499,10 +651,22 @@ const ArchiveBatchView: React.FC = () => {
                     </Space>
                 }
             >
+                {/* 批量操作工具栏 */}
+                <BatchOperationBar
+                    selectedCount={getSelectedCount()}
+                    totalCount={batches.length}
+                    onBatchApprove={handleBatchApprove}
+                    onBatchReject={handleBatchReject}
+                    onSelectAll={handleSelectAll}
+                    onClear={clearSelection}
+                    loading={batchProcessing}
+                />
+
                 <Table
                     columns={columns}
                     dataSource={batches}
                     rowKey="id"
+                    rowSelection={rowSelection}
                     loading={loading}
                     pagination={{
                         current: page,
@@ -733,6 +897,29 @@ const ArchiveBatchView: React.FC = () => {
                     />
                 )}
             </Modal>
+
+            {/* 批量审批弹窗 */}
+            <BatchApprovalDialog
+                visible={batchDialogOpen}
+                selectedCount={getSelectedCount()}
+                action={batchAction}
+                onConfirm={handleBatchConfirm}
+                onCancel={() => setBatchDialogOpen(false)}
+                selectedRecords={selectedRecords}
+                loading={batchProcessing}
+            />
+
+            {/* 批量操作结果弹窗 */}
+            <BatchResultModal
+                visible={batchResultOpen}
+                successCount={batchResult.success}
+                failedCount={batchResult.failed}
+                errors={batchResult.errors}
+                onRetry={handleBatchRetry}
+                onClose={() => setBatchResultOpen(false)}
+                operationType="approval"
+                isRetrying={batchProcessing}
+            />
         </div>
     );
 };

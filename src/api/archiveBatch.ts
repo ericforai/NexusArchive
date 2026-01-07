@@ -238,6 +238,34 @@ export const archiveBatchApi = {
         );
         return response.data.data;
     },
+
+    // ========== 批量审批 ==========
+
+    // 批量审批通过
+    batchApprove: async (request: {
+        ids: number[];
+        approverId: string;
+        approverName: string;
+        comment?: string;
+    }): Promise<{ success: number; failed: number; errors?: Array<{ id: number; reason: string }> }> => {
+        const response = await client.post<
+            ApiResponse<{ success: number; failed: number; errors?: Array<{ id: number; reason: string }> }>
+        >('/archive-batch/batch-approve', request);
+        return response.data.data;
+    },
+
+    // 批量审批驳回
+    batchReject: async (request: {
+        ids: number[];
+        approverId: string;
+        approverName: string;
+        comment: string;
+    }): Promise<{ success: number; failed: number; errors?: Array<{ id: number; reason: string }> }> => {
+        const response = await client.post<
+            ApiResponse<{ success: number; failed: number; errors?: Array<{ id: number; reason: string }> }>
+        >('/archive-batch/batch-reject', request);
+        return response.data.data;
+    },
 };
 
 export default archiveBatchApi;
