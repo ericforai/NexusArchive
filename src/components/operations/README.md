@@ -16,7 +16,7 @@ src/components/operations/
 ├── README.md                     # 本文件
 ├── useBatchSelection.ts          # 批量选择 Hook ✅
 ├── BatchOperationBar.tsx         # 批量操作工具栏 ✅
-├── BatchApprovalDialog.tsx       # 批量审批弹窗（待实现）
+├── BatchApprovalDialog.tsx       # 批量审批弹窗 ✅
 └── BatchResultModal.tsx          # 批量结果报告（待实现）
 ```
 
@@ -115,24 +115,58 @@ interface BatchOperationBarProps {
 
 **位置**: `BatchApprovalDialog.tsx`
 **类型**: React.FC
-**功能**: 批量审批确认弹窗
+**功能**: 批量审批确认弹窗（已实现 ✅）
 
 #### Props
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `open` | `boolean` | 是否显示对话框 |
-| `items` | `ApprovalItem[]` | 待审批项列表 |
-| `operationType` | `string` | 操作类型 |
-| `onConfirm` | `(comment: string) => void` | 确认回调 |
-| `onCancel` | `() => void` | 取消回调 |
+```typescript
+interface BatchApprovalDialogProps {
+  visible: boolean;                        // 是否显示对话框
+  selectedCount: number;                   // 已选中记录数量
+  action: 'approve' | 'reject';            // 操作类型：批准或拒绝
+  onConfirm: (comment: string, skipIds: number[]) => void | Promise<void>;  // 确认回调
+  onCancel: () => void;                    // 取消回调
+  selectedRecords?: ApprovalRecord[];      // 已选中记录列表（用于跳过部分记录）
+  loading?: boolean;                       // 加载状态
+}
 
-#### 功能
+interface ApprovalRecord {
+  id: number;                              // 记录 ID
+  title?: string;                          // 记录标题
+  code?: string;                           // 记录编号
+}
+```
 
-- 显示待审批项摘要
-- 审批意见输入
-- 批量确认/取消
-- 操作前二次确认
+#### 功能特性
+
+- **统一审批意见输入**：
+  - 批准时意见可选
+  - 驳回时意见必填
+  - 500 字符限制，带实时计数器
+- **跳过部分记录**：
+  - 可展开记录列表，选择跳过部分记录单独处理
+  - 显示已跳过数量标签
+  - 无记录时的友好提示
+- **阈值确认提示**（>= 10 条时触发）：
+  - 显示警告提示框
+  - 展示前 5 条记录清单
+  - 超过 5 条时显示总数
+- **实际处理数量提示**：
+  - 跳过记录后显示实际将处理的数量
+  - 蓝色提示框区分于警告提示
+- **加载状态**：
+  - 禁用所有交互元素
+  - 按钮显示加载动画
+- **响应式设计**：
+  - 支持亮色/暗色主题
+  - 自适应布局
+
+#### UI 状态
+
+- **批准模式**：绿色主题 (emerald)，确认按钮为"确认审批"
+- **驳回模式**：红色主题 (rose)，确认按钮为"确认驳回"，意见输入框带必填标记
+- **确认阈值**：10 条记录时显示二次确认提示和记录清单
+- **跳过记录**：可展开/收起的记录列表，支持复选框切换跳过状态
 
 ### BatchResultModal
 
@@ -274,11 +308,13 @@ function MyBatchView() {
 
       {/* 批量审批弹窗 */}
       <BatchApprovalDialog
-        open={approvalOpen}
-        items={Array.from(selectedIds)}
-        operationType="approve"
-        onConfirm={(comment) => handleBatchApprove(selectedIds, comment)}
+        visible={approvalOpen}
+        selectedCount={getSelectedCount()}
+        action="approve"
+        onConfirm={(comment, skipIds) => handleBatchApprove(selectedIds, comment, skipIds)}
         onCancel={() => setApprovalOpen(false)}
+        selectedRecords={selectedRecords}
+        loading={isProcessing}
       />
 
       {/* 批量结果弹窗 */}

@@ -1,5 +1,5 @@
-// Input: React, lucide-react 图标, 批量审批逻辑
-// Output: BatchApprovalDialog 组件 - 批量审批确认弹窗
+// Input: BatchApprovalDialogProps - visible (显示状态), selectedCount (选中数量), action (操作类型), onConfirm (确认回调), onCancel (取消回调), selectedRecords (记录列表), loading (加载状态)
+// Output: BatchApprovalDialog 组件 - 批量审批确认弹窗（支持统一意见、跳过记录、阈值确认提示、记录清单展示）
 // Pos: src/components/operations/BatchApprovalDialog.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -144,8 +144,8 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
 
   const Icon = config.icon;
 
-  // 是否显示确认提示
-  const showConfirmNotice = selectedCount > CONFIRM_THRESHOLD;
+  // 是否显示确认提示（>= 阈值时显示）
+  const showConfirmNotice = selectedCount >= CONFIRM_THRESHOLD;
 
   // 是否有效（拒绝时需要填写意见）
   const isValid = action === 'approve' || comment.trim().length > 0;
@@ -203,11 +203,31 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
 
       {/* 确认提示（超过阈值） */}
       {showConfirmNotice && (
-        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-start gap-2">
-          <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-800 dark:text-amber-300">
-            即将处理 <span className="font-bold">{selectedCount}</span> 条记录，请确认操作无误
-          </p>
+        <div className="mb-4">
+          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-start gap-2">
+            <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              即将处理 <span className="font-bold">{selectedCount}</span> 条记录，请确认操作无误
+            </p>
+          </div>
+          {/* 记录清单 */}
+          <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
+              即将{action === 'approve' ? '批准' : '驳回'}以下 {selectedCount} 条记录：
+            </p>
+            <div className="space-y-1">
+              {selectedRecords.slice(0, 5).map((record) => (
+                <div key={record.id} className="text-xs text-slate-700 dark:text-slate-300">
+                  • {record.code || record.title || `记录 #${record.id}`}
+                </div>
+              ))}
+              {selectedRecords.length > 5 && (
+                <div className="text-xs text-slate-500 dark:text-slate-400 italic">
+                  ... 等共 {selectedCount} 条
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
