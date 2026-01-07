@@ -4,6 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { useState, useCallback, useMemo } from 'react';
+import { flushSync } from 'react-dom';
 
 /**
  * 批量选择限制
@@ -117,49 +118,51 @@ export function useBatchSelection(): UseBatchSelectionReturn {
   /**
    * 清空选择
    */
-  const clearSelection = useCallback(() => {
+  const clearSelection = useCallback((): SelectionResult => {
     setSelectedIdsState(new Set());
     setSelectAllMode(false);
+    setLastError(undefined);
+    return { success: true };
   }, []);
 
   /**
    * 切换单条选中状态
+   * 使用 functional setState 避免竞态条件，使用 flushSync 确保同步返回结果
    */
   const toggleSelection = useCallback((id: number): SelectionResult => {
-    // 先检查当前状态，决定操作结果
-    const currentIds = selectedIds;
-    const isAlreadySelected = currentIds.has(id);
+    let result: SelectionResult;
 
-    if (isAlreadySelected) {
-      // 取消选中操作
+    flushSync(() => {
       setSelectedIdsState((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        setSelectAllMode(false);
-        setLastError(undefined);
-        return newSet;
-      });
-      return { success: true };
-    } else {
-      // 选中操作：检查是否超出限制
-      if (currentIds.size + 1 > MAX_SELECTION_LIMIT) {
-        const error: SelectionResult = {
-          success: false,
-          reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
-        };
-        setLastError(error);
-        return error;
-      }
+        const isAlreadySelected = prev.has(id);
 
-      setSelectedIdsState((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(id);
-        setLastError(undefined);
-        return newSet;
+        if (isAlreadySelected) {
+          // 取消选中
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          setSelectAllMode(false);
+          setLastError(undefined);
+          result = { success: true };
+          return newSet;
+        } else {
+          // 选中
+          if (prev.size >= MAX_SELECTION_LIMIT) {
+            result = { success: false, reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items` };
+            setLastError(result);
+            return prev; // 保持原状态
+          }
+
+          const newSet = new Set(prev);
+          newSet.add(id);
+          setLastError(undefined);
+          result = { success: true };
+          return newSet;
+        }
       });
-      return { success: true };
-    }
-  }, [selectedIds]);
+    });
+
+    return result;
+  }, []); // 空依赖数组，避免因 selectedIds 变化导致函数重建
 
   /**
    * 设置选中的 ID 集合

@@ -426,5 +426,77 @@ describe('useBatchSelection', () => {
       expect(result.current.getSelectedCount()).toBe(0);
       expect(result.current.selectAllMode).toBe(false);
     });
+
+    it('should handle rapid consecutive toggleSelection calls', () => {
+      const { result } = renderHook(() => useBatchSelection());
+
+      // 快速连续切换同一个 ID 多次（测试竞态条件）
+      act(() => {
+        const result1 = result.current.toggleSelection(1);
+        const result2 = result.current.toggleSelection(1);
+        const result3 = result.current.toggleSelection(1);
+
+        // 每次调用都应该成功
+        expect(result1.success).toBe(true);
+        expect(result2.success).toBe(true);
+        expect(result3.success).toBe(true);
+      });
+
+      // toggle 三次：选中 → 取消 → 选中，最终应该是选中状态
+      expect(result.current.isSelected(1)).toBe(true);
+      expect(result.current.getSelectedCount()).toBe(1);
+    });
+
+    it('should handle rapid toggle on different IDs near limit', () => {
+      const { result } = renderHook(() => useBatchSelection());
+
+      // 先选中 99 个
+      act(() => {
+        for (let i = 1; i <= 99; i++) {
+          result.current.toggleSelection(i);
+        }
+      });
+
+      expect(result.current.getSelectedCount()).toBe(99);
+
+      // 快速连续尝试添加第 100 和 101 个（测试竞态条件）
+      act(() => {
+        const result100 = result.current.toggleSelection(100);
+        const result101 = result.current.toggleSelection(101);
+
+        // 第 100 个应该成功
+        expect(result100.success).toBe(true);
+
+        // 第 101 个应该失败（因为已经达到限制）
+        expect(result101.success).toBe(false);
+        expect(result101.reason).toContain('Cannot select more than');
+      });
+
+      // 最终应该只有 100 个被选中
+      expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT);
+    });
+
+    it('should clear error state when clearSelection is called', () => {
+      const { result } = renderHook(() => useBatchSelection());
+
+      // 先触发错误
+      act(() => {
+        result.current.setSelectedIds(
+          Array.from({ length: MAX_SELECTION_LIMIT + 1 }, (_, i) => i + 1)
+        );
+      });
+
+      expect(result.current.lastError?.success).toBe(false);
+
+      // clearSelection 应该清除错误状态
+      act(() => {
+        const clearResult = result.current.clearSelection();
+        expect(clearResult.success).toBe(true);
+      });
+
+      expect(result.current.lastError).toBeUndefined();
+      expect(result.current.getSelectedCount()).toBe(0);
+      expect(result.current.selectAllMode).toBe(false);
+    });
   });
 });
