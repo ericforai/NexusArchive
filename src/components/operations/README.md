@@ -28,12 +28,41 @@ src/components/operations/
 **类型**: Custom Hook
 **功能**: 批量选择状态管理
 
+#### API
+
+```typescript
+interface UseBatchSelectionReturn {
+  // 状态
+  selectedIds: Set<number>;              // 已选中的 ID 集合
+  selectAllMode: boolean;                // 是否全选模式
+  lastError?: SelectionResult;           // 最后一次操作错误（如果有）
+
+  // Ant Design Table rowSelection 配置
+  rowSelection: RowSelectionConfig;
+
+  // 操作方法
+  clearSelection: () => void;            // 清空选择
+  toggleSelection: (id: number) => SelectionResult;  // 切换单条选中状态
+  setSelectedIds: (ids: Set<number> | number[]) => SelectionResult;  // 设置选中 ID 集合
+  selectAll: (allIds: number[]) => SelectionResult;  // 全选所有记录
+  getSelectedCount: () => number;        // 获取选中数量
+  isSelected: (id: number) => boolean;   // 检查是否选中
+}
+
+interface SelectionResult {
+  success: boolean;
+  reason?: string;  // 失败原因
+}
+```
+
 #### 功能特性
 
 - 跨页选择状态维护
 - 全选/反选控制
 - 选中项数量统计
-- 选择状态持久化（可选）
+- 选择限制（最多 100 条）
+- 错误状态跟踪（通过 `lastError`）
+- `isSelected` 辅助方法（检查特定 ID 是否选中）
 
 ### BatchOperationBar
 
@@ -104,6 +133,76 @@ src/components/operations/
 
 ## 使用方式
 
+### 基础用法
+
+```typescript
+import { useBatchSelection } from '@components/operations';
+
+function MyTable() {
+  const {
+    selectedIds,          // 已选中的 ID 集合
+    selectAllMode,        // 是否全选模式
+    lastError,            // 最后一次操作错误
+    rowSelection,         // Ant Design Table rowSelection 配置
+    clearSelection,       // 清空选择
+    toggleSelection,      // 切换单条选中状态
+    setSelectedIds,       // 设置选中 ID 集合
+    selectAll,            // 全选所有记录
+    getSelectedCount,     // 获取选中数量
+    isSelected            // 检查是否选中
+  } = useBatchSelection();
+
+  // 示例：手动切换选中状态
+  const handleToggle = (id: number) => {
+    const result = toggleSelection(id);
+    if (!result.success) {
+      message.warning(result.reason);  // "Cannot select more than 100 items"
+    }
+  };
+
+  // 示例：全选当前筛选结果
+  const handleSelectAll = () => {
+    const result = selectAll(currentPageIds);
+    if (!result.success) {
+      message.warning(result.reason);
+    }
+  };
+
+  // 示例：设置选中 ID（从外部来源）
+  const handleSetIds = () => {
+    const result = setSelectedIds([1, 2, 3, 4, 5]);
+    if (!result.success) {
+      message.error(result.reason);
+    }
+  };
+
+  // 监听错误状态（可选）
+  useEffect(() => {
+    if (lastError && !lastError.success) {
+      message.error(lastError.reason);
+    }
+  }, [lastError]);
+
+  return (
+    <>
+      {/* 使用 rowSelection 配置 Ant Design Table */}
+      <Table
+        rowSelection={rowSelection}
+        dataSource={data}
+      />
+
+      {/* 显示选中数量 */}
+      <div>已选择 {getSelectedCount()} 条</div>
+
+      {/* 检查特定项是否选中 */}
+      {isSelected(1) && <div>ID 1 已选中</div>}
+    </>
+  );
+}
+```
+
+### 批量操作工具栏集成
+
 ```typescript
 import {
   useBatchSelection,
@@ -114,39 +213,49 @@ import {
 
 function MyBatchView() {
   const {
-    selectedRows,
-    selectedCount,
-    isSelected,
-    toggleSelection,
+    selectedIds,
+    rowSelection,
     clearSelection,
-    selectAll,
-    selectNone
+    getSelectedCount,
+    lastError
   } = useBatchSelection();
 
   const [approvalOpen, setApprovalOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
 
+  const handleBatchApprove = () => {
+    // 检查错误
+    if (lastError && !lastError.success) {
+      message.error(lastError.reason);
+      return;
+    }
+
+    setApprovalOpen(true);
+  };
+
   return (
     <>
       <BatchOperationBar
-        selectedCount={selectedCount}
+        selectedCount={getSelectedCount()}
         operations={[
           { key: 'approve', label: '批量审批', icon: CheckCircle },
           { key: 'reject', label: '批量驳回', icon: XCircle },
           { key: 'export', label: '导出', icon: Download }
         ]}
         onOperation={(type) => {
-          if (type === 'approve') setApprovalOpen(true);
+          if (type === 'approve') handleBatchApprove();
         }}
         onClear={clearSelection}
       />
 
+      <Table rowSelection={rowSelection} dataSource={data} />
+
       {/* 批量审批弹窗 */}
       <BatchApprovalDialog
         open={approvalOpen}
-        items={selectedRows}
+        items={Array.from(selectedIds)}
         operationType="approve"
-        onConfirm={(comment) => handleBatchApprove(selectedRows, comment)}
+        onConfirm={(comment) => handleBatchApprove(selectedIds, comment)}
         onCancel={() => setApprovalOpen(false)}
       />
 

@@ -15,6 +15,7 @@ describe('useBatchSelection', () => {
       expect(result.current.selectedIds).toEqual(new Set());
       expect(result.current.selectAllMode).toBe(false);
       expect(result.current.getSelectedCount()).toBe(0);
+      expect(result.current.lastError).toBeUndefined();
     });
 
     it('should toggle item selection', () => {
@@ -24,14 +25,17 @@ describe('useBatchSelection', () => {
       act(() => {
         const toggleResult = result.current.toggleSelection(1);
         expect(toggleResult.success).toBe(true);
+        expect(toggleResult.reason).toBeUndefined();
       });
 
       expect(result.current.isSelected(1)).toBe(true);
       expect(result.current.getSelectedCount()).toBe(1);
+      expect(result.current.lastError).toBeUndefined();
 
       // 取消选中 ID 1
       act(() => {
-        result.current.toggleSelection(1);
+        const toggleResult = result.current.toggleSelection(1);
+        expect(toggleResult.success).toBe(true);
       });
 
       expect(result.current.isSelected(1)).toBe(false);
@@ -64,20 +68,23 @@ describe('useBatchSelection', () => {
       const { result } = renderHook(() => useBatchSelection());
 
       act(() => {
-        result.current.setSelectedIds([1, 2, 3, 4, 5]);
+        const setResult = result.current.setSelectedIds([1, 2, 3, 4, 5]);
+        expect(setResult.success).toBe(true);
       });
 
       expect(result.current.getSelectedCount()).toBe(5);
       expect(result.current.isSelected(1)).toBe(true);
       expect(result.current.isSelected(3)).toBe(true);
       expect(result.current.isSelected(6)).toBe(false);
+      expect(result.current.lastError).toBeUndefined();
     });
 
     it('should set selected IDs from Set', () => {
       const { result } = renderHook(() => useBatchSelection());
 
       act(() => {
-        result.current.setSelectedIds(new Set([10, 20, 30]));
+        const setResult = result.current.setSelectedIds(new Set([10, 20, 30]));
+        expect(setResult.success).toBe(true);
       });
 
       expect(result.current.getSelectedCount()).toBe(3);
@@ -188,11 +195,14 @@ describe('useBatchSelection', () => {
       const tooManyIds = Array.from({ length: MAX_SELECTION_LIMIT + 10 }, (_, i) => i + 1);
 
       act(() => {
-        result.current.setSelectedIds(tooManyIds);
+        const setResult = result.current.setSelectedIds(tooManyIds);
+        expect(setResult.success).toBe(false);
+        expect(setResult.reason).toContain('Cannot select more than');
       });
 
       // 应该被阻止，保持原状态
       expect(result.current.getSelectedCount()).toBe(0);
+      expect(result.current.lastError?.success).toBe(false);
     });
 
     it('should prevent toggle beyond limit', () => {
@@ -202,23 +212,53 @@ describe('useBatchSelection', () => {
       const ids = Array.from({ length: MAX_SELECTION_LIMIT - 1 }, (_, i) => i + 1);
 
       act(() => {
-        result.current.setSelectedIds(ids);
+        const setResult = result.current.setSelectedIds(ids);
+        expect(setResult.success).toBe(true);
       });
 
       expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT - 1);
 
-      // 再尝试 toggle 一个新的
+      // 再尝试 toggle 一个新的（第 MAX_SELECTION_LIMIT 个）
       act(() => {
-        result.current.toggleSelection(MAX_SELECTION_LIMIT);
+        const toggleResult = result.current.toggleSelection(MAX_SELECTION_LIMIT);
+        expect(toggleResult.success).toBe(true);
       });
 
       expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT);
 
       // 再尝试 toggle 一个新的（应该失败）
       act(() => {
-        result.current.toggleSelection(MAX_SELECTION_LIMIT + 1);
+        const toggleResult = result.current.toggleSelection(MAX_SELECTION_LIMIT + 1);
+        expect(toggleResult.success).toBe(false);
+        expect(toggleResult.reason).toContain('Cannot select more than');
       });
 
+      expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT);
+      expect(result.current.lastError?.success).toBe(false);
+    });
+
+    it('should allow exactly MAX_SELECTION_LIMIT items via toggle', () => {
+      const { result } = renderHook(() => useBatchSelection());
+
+      // 逐个添加到 MAX_SELECTION_LIMIT
+      for (let i = 1; i <= MAX_SELECTION_LIMIT; i++) {
+        act(() => {
+          const toggleResult = result.current.toggleSelection(i);
+          expect(toggleResult.success).toBe(true);
+        });
+      }
+
+      expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT);
+      expect(result.current.lastError).toBeUndefined();
+
+      // 尝试添加第 MAX_SELECTION_LIMIT + 1 个（应该失败）
+      act(() => {
+        const toggleResult = result.current.toggleSelection(MAX_SELECTION_LIMIT + 1);
+        expect(toggleResult.success).toBe(false);
+        expect(toggleResult.reason).toContain('Cannot select more than');
+      });
+
+      // 数量应该保持不变
       expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT);
     });
 
@@ -233,6 +273,7 @@ describe('useBatchSelection', () => {
 
       // 应该被阻止，保持原状态
       expect(result.current.getSelectedCount()).toBe(0);
+      expect(result.current.lastError?.success).toBe(false);
     });
 
     it('should allow exactly MAX_SELECTION_LIMIT items', () => {
@@ -241,10 +282,34 @@ describe('useBatchSelection', () => {
       const exactLimitIds = Array.from({ length: MAX_SELECTION_LIMIT }, (_, i) => i + 1);
 
       act(() => {
-        result.current.setSelectedIds(exactLimitIds);
+        const setResult = result.current.setSelectedIds(exactLimitIds);
+        expect(setResult.success).toBe(true);
       });
 
       expect(result.current.getSelectedCount()).toBe(MAX_SELECTION_LIMIT);
+      expect(result.current.lastError).toBeUndefined();
+    });
+
+    it('should clear error state on successful operation', () => {
+      const { result } = renderHook(() => useBatchSelection());
+
+      // 先触发错误
+      act(() => {
+        const setResult = result.current.setSelectedIds(
+          Array.from({ length: MAX_SELECTION_LIMIT + 1 }, (_, i) => i + 1)
+        );
+        expect(setResult.success).toBe(false);
+      });
+
+      expect(result.current.lastError?.success).toBe(false);
+
+      // 成功操作后应该清除错误
+      act(() => {
+        const setResult = result.current.setSelectedIds([1, 2, 3]);
+        expect(setResult.success).toBe(true);
+      });
+
+      expect(result.current.lastError).toBeUndefined();
     });
   });
 

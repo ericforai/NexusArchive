@@ -43,6 +43,7 @@ export interface UseBatchSelectionReturn {
   // 状态
   selectedIds: Set<number>;
   selectAllMode: boolean;
+  lastError?: SelectionResult; // 最后一次操作错误（如果有）
 
   // Ant Design Table rowSelection 配置
   rowSelection: RowSelectionConfig;
@@ -50,7 +51,7 @@ export interface UseBatchSelectionReturn {
   // 操作方法
   clearSelection: () => void;
   toggleSelection: (id: number) => SelectionResult;
-  setSelectedIds: (ids: Set<number> | number[]) => void;
+  setSelectedIds: (ids: Set<number> | number[]) => SelectionResult;
   selectAll: (allIds: number[]) => SelectionResult;
   getSelectedCount: () => number;
   isSelected: (id: number) => boolean;
@@ -85,6 +86,7 @@ export interface UseBatchSelectionReturn {
 export function useBatchSelection(): UseBatchSelectionReturn {
   const [selectedIds, setSelectedIdsState] = useState<Set<number>>(new Set());
   const [selectAllMode, setSelectAllMode] = useState<boolean>(false);
+  const [lastError, setLastError] = useState<SelectionResult | undefined>();
 
   /**
    * 处理 Table rowSelection 的 onChange 回调
@@ -92,6 +94,11 @@ export function useBatchSelection(): UseBatchSelectionReturn {
   const handleSelectionChange = useCallback((selectedRowKeys: number[]) => {
     // 检查是否超出限制
     if (selectedRowKeys.length > MAX_SELECTION_LIMIT) {
+      const error: SelectionResult = {
+        success: false,
+        reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
+      };
+      setLastError(error);
       console.warn(
         `[useBatchSelection] Selection limit exceeded: ${selectedRowKeys.length} > ${MAX_SELECTION_LIMIT}`
       );
@@ -99,6 +106,7 @@ export function useBatchSelection(): UseBatchSelectionReturn {
     }
 
     setSelectedIdsState(new Set(selectedRowKeys));
+    setLastError(undefined); // 清除错误
 
     // 如果当前是全选模式，但选中数量少于实际数量，则退出全选模式
     if (selectAllMode && selectedRowKeys.length < MAX_SELECTION_LIMIT) {
@@ -118,43 +126,64 @@ export function useBatchSelection(): UseBatchSelectionReturn {
    * 切换单条选中状态
    */
   const toggleSelection = useCallback((id: number): SelectionResult => {
-    setSelectedIdsState((prev) => {
-      const newSet = new Set(prev);
+    // 先检查当前状态，决定操作结果
+    const currentIds = selectedIds;
+    const isAlreadySelected = currentIds.has(id);
 
-      if (newSet.has(id)) {
+    if (isAlreadySelected) {
+      // 取消选中操作
+      setSelectedIdsState((prev) => {
+        const newSet = new Set(prev);
         newSet.delete(id);
-        // 取消选中时退出全选模式
         setSelectAllMode(false);
-      } else {
-        // 检查是否超出限制
-        if (newSet.size >= MAX_SELECTION_LIMIT) {
-          return prev; // 不更新状态
-        }
-        newSet.add(id);
+        setLastError(undefined);
+        return newSet;
+      });
+      return { success: true };
+    } else {
+      // 选中操作：检查是否超出限制
+      if (currentIds.size + 1 > MAX_SELECTION_LIMIT) {
+        const error: SelectionResult = {
+          success: false,
+          reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
+        };
+        setLastError(error);
+        return error;
       }
 
-      return newSet;
-    });
-
-    return { success: true };
-  }, []);
+      setSelectedIdsState((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(id);
+        setLastError(undefined);
+        return newSet;
+      });
+      return { success: true };
+    }
+  }, [selectedIds]);
 
   /**
    * 设置选中的 ID 集合
    */
-  const setSelectedIds = useCallback((ids: Set<number> | number[]) => {
+  const setSelectedIds = useCallback((ids: Set<number> | number[]): SelectionResult => {
     const newIds = ids instanceof Set ? ids : new Set(ids);
 
     // 检查是否超出限制
     if (newIds.size > MAX_SELECTION_LIMIT) {
+      const error: SelectionResult = {
+        success: false,
+        reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
+      };
+      setLastError(error);
       console.warn(
         `[useBatchSelection] Selection limit exceeded: ${newIds.size} > ${MAX_SELECTION_LIMIT}`
       );
-      return;
+      return error;
     }
 
     setSelectedIdsState(newIds);
     setSelectAllMode(false);
+    setLastError(undefined); // 清除错误
+    return { success: true };
   }, []);
 
   /**
@@ -162,14 +191,17 @@ export function useBatchSelection(): UseBatchSelectionReturn {
    */
   const selectAll = useCallback((allIds: number[]): SelectionResult => {
     if (allIds.length > MAX_SELECTION_LIMIT) {
-      return {
+      const error: SelectionResult = {
         success: false,
-        reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items at once`
+        reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
       };
+      setLastError(error);
+      return error;
     }
 
     setSelectedIdsState(new Set(allIds));
     setSelectAllMode(true);
+    setLastError(undefined); // 清除错误
 
     return { success: true };
   }, []);
@@ -204,6 +236,7 @@ export function useBatchSelection(): UseBatchSelectionReturn {
     // 状态
     selectedIds,
     selectAllMode,
+    lastError,
 
     // rowSelection 配置
     rowSelection,
