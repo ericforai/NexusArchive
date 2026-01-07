@@ -16,6 +16,7 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.ArchiveExportService;
+import com.nexusarchive.service.DataScopeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,12 +41,13 @@ import org.springframework.util.FileSystemUtils;
 @Service
 @RequiredArgsConstructor
 public class ArchiveExportServiceImpl implements ArchiveExportService {
-    
+
     @Value("${archive.root.path:/data/archives}")
     private String archiveRootPath;
-    
+
     private final ArcFileContentMapper arcFileContentMapper;
     private final ArchiveMapper archiveMapper;
+    private final DataScopeService dataScopeService;
     
     private final XmlMapper xmlMapper = new XmlMapper();
     
@@ -56,41 +58,48 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
     @Override
     public File exportAipPackage(String archivalCode) throws IOException {
         log.info("开始导出结构化 AIP 包: {}", archivalCode);
-        
+
         // 1. 获取档案信息
         Archive archive = archiveMapper.selectOne(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Archive>()
                 .eq(Archive::getArchiveCode, archivalCode)
         );
-        
+
         if (archive == null) {
             throw new BusinessException("档案不存在: " + archivalCode);
         }
 
-        // 2. 获取文件列表
+        // 2. 数据权限检查 - 防止用户导出无权访问的全宗档案
+        DataScopeService.DataScopeContext scope = dataScopeService.resolve();
+        if (!dataScopeService.canAccessArchive(archive, scope)) {
+            log.warn("用户尝试导出无权访问的档案: archivalCode={}, fondsNo={}", archivalCode, archive.getFondsNo());
+            throw new BusinessException("无权访问该档案");
+        }
+
+        // 3. 获取文件列表
         List<ArcFileContent> files = arcFileContentMapper.selectList(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
                 .eq(ArcFileContent::getArchivalCode, archivalCode)
         );
-        
+
         if (files.isEmpty()) {
             throw new BusinessException("档案没有关联文件: " + archivalCode);
         }
-        
-        // 3. 创建临时工作目录
+
+        // 4. 创建临时工作目录
         Path tempDir = Files.createTempDirectory("AIP_WORK_" + archivalCode + "_");
         log.info("创建临时工作目录: {}", tempDir);
-        
+
         try {
-            // 4. 创建目录结构
+            // 5. 创建目录结构
             Path contentDir = Files.createDirectories(tempDir.resolve("content"));
             Path dataDir = Files.createDirectories(tempDir.resolve("data"));
             Path attachmentDir = Files.createDirectories(tempDir.resolve("attachment"));
             Path signatureDir = Files.createDirectories(tempDir.resolve("signature"));
-            
+
             List<AipIndexFile> indexFiles = new ArrayList<>();
-            
-            // 5. 处理文件并分类
+
+            // 6. 处理文件并分类
             for (ArcFileContent fileContent : files) {
                 Path sourcePath = Paths.get(fileContent.getStoragePath());
                 if (!Files.exists(sourcePath)) {
