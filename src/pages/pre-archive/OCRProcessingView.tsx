@@ -1,28 +1,12 @@
-// Input: React、lucide-react 图标
-// Output: React 组件 OCRProcessingView
+// Input: React、lucide-react 图标、scan API
+// Output: React 组件 OCRProcessingView（对接真实 API）
 // Pos: src/pages/pre-archive/OCRProcessingView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, Eye, Save, RefreshCw, ChevronDown, Tag, Receipt, Building, CreditCard, FileBadge, Cloud, Info } from 'lucide-react';
-
-interface OCRField {
-  name: string;
-  value: string;
-  confidence: number;
-}
-
-interface OCRResult {
-  id: string;
-  fileName: string;
-  fileSize: string;
-  uploadTime: string;
-  status: 'processing' | 'review' | 'completed';
-  type: 'invoice' | 'contract' | 'receipt' | 'id_card' | 'unknown';
-  imageUrl: string;
-  fields: OCRField[];
-  overallScore: number;
-}
+import { scanApi, type ScanWorkspaceItem, type OcrField } from '../../api/scan';
+import { toast } from '../../utils/notificationService';
 
 const DOC_TYPES = [
   { value: 'invoice', label: '增值税发票', icon: Receipt },
@@ -32,15 +16,12 @@ const DOC_TYPES = [
   { value: 'unknown', label: '其他/未知类型', icon: FileText },
 ];
 
-// Mock 数据已移除 - OCR 任务列表初始为空
-const INITIAL_OCR_LIST: OCRResult[] = [];
-
 export const OCRProcessingView: React.FC = () => {
-  const [taskList, setTaskList] = useState<OCRResult[]>(INITIAL_OCR_LIST);
-  const [activeTask, setActiveTask] = useState<OCRResult | null>(null);
+  const [taskList, setTaskList] = useState<ScanWorkspaceItem[]>([]);
+  const [activeTask, setActiveTask] = useState<ScanWorkspaceItem | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Auto-save State
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
@@ -53,23 +34,108 @@ export const OCRProcessingView: React.FC = () => {
     activeTaskRef.current = activeTask;
   }, [activeTask]);
 
+  // Load workspace from backend
+  const loadWorkspace = async () => {
+    try {
+      const items = await scanApi.getWorkspace();
+      setTaskList(items.data);
+      // Auto-select first item if none selected
+      if (items.data.length > 0 && !activeTask) {
+        setActiveTask(items.data[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load workspace:', error);
+      toast.error('加载工作区失败');
+    }
+  };
+
+  // Initial load and polling
+  useEffect(() => {
+    loadWorkspace();
+
+    // Poll for updates every 5 seconds
+    pollingIntervalRef.current = setInterval(() => {
+      loadWorkspace();
+    }, 5000);
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
   // Auto-save Interval
   useEffect(() => {
     const saveInterval = setInterval(() => {
       const currentTask = activeTaskRef.current;
-      if (currentTask && currentTask.status === 'review') {
-        setIsAutoSaving(true);
-        // Simulate API Save Delay
-        setTimeout(() => {
-          const now = new Date();
-          setLastSavedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-          setIsAutoSaving(false);
-        }, 800);
+      if (currentTask && currentTask.ocrStatus === 'review' && currentTask.id) {
+        // Auto-save to backend
+        handleAutoSave(currentTask.id);
       }
     }, 30000); // 30 Seconds
 
     return () => clearInterval(saveInterval);
   }, []);
+
+  // Auto-save handler
+  const handleAutoSave = async (id: number) => {
+    if (!activeTaskRef.current) return;
+
+    setIsAutoSaving(true);
+    try {
+      await scanApi.update(id, {
+        ocrResult: activeTaskRef.current.ocrResult,
+        docType: activeTaskRef.current.docType,
+      });
+      const now = new Date();
+      setLastSavedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      toast.error('自动保存失败');
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
+
+  // Parse OCR result to fields
+  const parseOcrFields = (ocrResult?: string): OcrField[] => {
+    if (!ocrResult) return [];
+
+    try {
+      const parsed = JSON.parse(ocrResult) as Record<string, any>;
+      const fields: OcrField[] = [];
+
+      // Map common OCR fields
+      const fieldMapping: Record<string, string> = {
+        invoiceNumber: '发票号码',
+        invoiceDate: '开票日期',
+        amount: '金额',
+        taxAmount: '税额',
+        totalAmount: '价税合计',
+        sellerName: '销售方名称',
+        sellerTaxId: '销售方税号',
+        buyerName: '购买方名称',
+        buyerTaxId: '购买方税号',
+      };
+
+      Object.entries(parsed).forEach(([key, value]) => {
+        if (value && typeof value === 'string') {
+          fields.push({
+            label: fieldMapping[key] || key,
+            value,
+            confidence: 90, // Default confidence for parsed fields
+            editable: true,
+          });
+        }
+      });
+
+      return fields;
+    } catch (error) {
+      console.error('Failed to parse OCR result:', error);
+      return [];
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -88,75 +154,135 @@ export const OCRProcessingView: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (file: File) => {
-    // Create a temporary mock task
-    const newTask: OCRResult = {
-      id: `ocr-${Date.now()}`,
-      fileName: file.name,
-      fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-      uploadTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'processing',
-      type: 'unknown',
-      imageUrl: URL.createObjectURL(file), // In real app, this would be uploaded URL
-      overallScore: 0,
-      fields: []
-    };
+  const handleFileUpload = async (file: File) => {
+    try {
+      toast.loading('正在上传文件...', { id: 'upload', duration: 0 });
 
-    setTaskList([newTask, ...taskList]);
-    setActiveTask(newTask);
+      // Upload file to backend
+      const uploadedItem = await scanApi.upload(file);
 
-    // Simulate Processing Delay
-    setTimeout(() => {
-      setTaskList(prev => prev.map(t => {
-        if (t.id === newTask.id) {
-          return {
-            ...t,
-            status: 'review',
-            type: 'invoice',
-            overallScore: 88,
-            fields: [
-              { name: '识别结果-字段A', value: '模拟数据 123', confidence: 95 },
-              { name: '识别结果-字段B', value: '模拟金额 ¥500.00', confidence: 85 },
-              { name: '识别结果-字段C', value: '模糊不清', confidence: 45 },
-            ]
-          };
+      toast.dismiss('upload');
+      toast.success('文件上传成功，开始 OCR 识别...');
+
+      // Add to local state
+      setTaskList(prev => [uploadedItem.data, ...prev]);
+      setActiveTask(uploadedItem.data);
+
+      // Auto-trigger OCR
+      if (uploadedItem.data.id) {
+        toast.loading('正在进行 OCR 识别...', { id: 'ocr', duration: 0 });
+        await scanApi.processOcr(uploadedItem.data.id);
+
+        // Poll for OCR completion
+        const checkOcrStatusRef = useRef<NodeJS.Timeout | null>(null);
+        checkOcrStatusRef.current = setInterval(async () => {
+          try {
+            const items = await scanApi.getWorkspace();
+            const updatedItem = items.data.find(i => i.id === uploadedItem.data.id);
+
+            if (updatedItem && updatedItem.ocrStatus === 'review') {
+              if (checkOcrStatusRef.current) clearInterval(checkOcrStatusRef.current);
+              toast.dismiss('ocr');
+              toast.success('OCR 识别完成');
+
+              // Update local state
+              setTaskList(items.data);
+              setActiveTask(updatedItem);
+            } else if (updatedItem && updatedItem.ocrStatus === 'failed') {
+              if (checkOcrStatusRef.current) clearInterval(checkOcrStatusRef.current);
+              toast.dismiss('ocr');
+              toast.error('OCR 识别失败，请重试');
+            }
+          } catch (error) {
+            console.error('Failed to check OCR status:', error);
+          }
+        }, 2000); // Check every 2 seconds
+
+        // Timeout after 60 seconds
+        setTimeout(() => {
+          if (checkOcrStatusRef.current) clearInterval(checkOcrStatusRef.current);
+          toast.dismiss('ocr');
+        }, 60000);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.dismiss('upload');
+      toast.error('文件上传失败');
+    }
+  };
+
+  const handleTypeChange = async (newType: string) => {
+    if (!activeTask || !activeTask.id) return;
+
+    try {
+      const updatedTask = { ...activeTask, docType: newType };
+      setActiveTask(updatedTask);
+      setTaskList(prev => prev.map(t => t.id === activeTask.id ? updatedTask : t));
+
+      // Auto-save to backend
+      await scanApi.update(activeTask.id, { docType: newType });
+    } catch (error) {
+      console.error('Failed to update document type:', error);
+      toast.error('更新文档类型失败');
+    }
+  };
+
+  const handleFieldChange = async (index: number, value: string) => {
+    if (!activeTask || !activeTask.id) return;
+
+    try {
+      // Parse current OCR result
+      const fields = parseOcrFields(activeTask.ocrResult);
+      if (!fields[index]) return;
+
+      // Update field value
+      fields[index].value = value;
+
+      // Convert back to JSON string
+      const updatedOcrResult = JSON.stringify(
+        JSON.parse(activeTask.ocrResult || '{}'),
+        (key, val) => {
+          // Find matching field and update value
+          const field = fields.find(f => f.label === key);
+          if (field) return field.value;
+          return val;
         }
-        return t;
-      }));
-      // Also update active task to reflect changes
-      setActiveTask(prev => prev && prev.id === newTask.id ? {
-        ...prev,
-        status: 'review',
-        type: 'invoice',
-        overallScore: 88,
-        fields: [
-          { name: '识别结果-字段A', value: '模拟数据 123', confidence: 95 },
-          { name: '识别结果-字段B', value: '模拟金额 ¥500.00', confidence: 85 },
-          { name: '识别结果-字段C', value: '模糊不清', confidence: 45 },
-        ]
-      } : prev);
-    }, 3000);
+      );
+
+      const updatedTask = { ...activeTask, ocrResult: updatedOcrResult };
+      setActiveTask(updatedTask);
+      setTaskList(prev => prev.map(t => t.id === activeTask.id ? updatedTask : t));
+
+      // Auto-save to backend
+      await scanApi.update(activeTask.id, { ocrResult: updatedOcrResult });
+    } catch (error) {
+      console.error('Failed to update field:', error);
+      toast.error('更新字段失败');
+    }
   };
 
-  const handleTypeChange = (newType: string) => {
-    if (!activeTask) return;
+  const handleSubmitToArchive = async () => {
+    if (!activeTask || !activeTask.id) return;
 
-    const updatedTask = { ...activeTask, type: newType as any };
+    try {
+      toast.loading('正在提交到预归档池...', { id: 'submit', duration: 0 });
 
-    setActiveTask(updatedTask);
-    setTaskList(prev => prev.map(t => t.id === activeTask.id ? updatedTask : t));
-  };
+      const result = await scanApi.submit(activeTask.id);
 
-  const handleFieldChange = (index: number, value: string) => {
-    if (!activeTask) return;
+      toast.dismiss('submit');
+      toast.success('提交成功！档案 ID: ' + result.data.archiveId);
 
-    const newFields = [...activeTask.fields];
-    newFields[index] = { ...newFields[index], value };
+      // Remove from local list
+      setTaskList(prev => prev.filter(t => t.id !== activeTask.id));
+      setActiveTask(null);
 
-    const updatedTask = { ...activeTask, fields: newFields };
-
-    setActiveTask(updatedTask);
-    setTaskList(prev => prev.map(t => t.id === activeTask.id ? updatedTask : t));
+      // Reload workspace
+      await loadWorkspace();
+    } catch (error) {
+      console.error('Submit failed:', error);
+      toast.dismiss('submit');
+      toast.error('提交失败，请重试');
+    }
   };
 
   const getScoreColor = (score: number) => {
@@ -221,7 +347,7 @@ export const OCRProcessingView: React.FC = () => {
                   onClick={() => setActiveTask(task)}
                   className={`p-3 rounded-lg border cursor-pointer transition-all relative overflow-hidden group ${activeTask?.id === task.id ? 'bg-primary-50 border-primary-200 ring-1 ring-primary-200' : 'bg-white border-slate-100 hover:border-slate-300'}`}
                 >
-                  {task.status === 'processing' && (
+                  {task.ocrStatus === 'processing' && (
                     <div className="absolute bottom-0 left-0 h-1 bg-primary-500 animate-[progress_2s_ease-in-out_infinite] w-full"></div>
                   )}
                   <div className="flex justify-between items-start mb-1">
@@ -229,13 +355,13 @@ export const OCRProcessingView: React.FC = () => {
                       <FileText size={16} className={activeTask?.id === task.id ? 'text-primary-600' : 'text-slate-400'} />
                       <span className="text-sm font-medium text-slate-800 truncate">{task.fileName}</span>
                     </div>
-                    {task.status === 'completed' && <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />}
-                    {task.status === 'review' && <AlertTriangle size={14} className="text-amber-500 shrink-0" />}
-                    {task.status === 'processing' && <Loader2 size={14} className="text-primary-500 animate-spin shrink-0" />}
+                    {task.ocrStatus === 'completed' && <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />}
+                    {task.ocrStatus === 'review' && <AlertTriangle size={14} className="text-amber-500 shrink-0" />}
+                    {task.ocrStatus === 'processing' && <Loader2 size={14} className="text-primary-500 animate-spin shrink-0" />}
                   </div>
                   <div className="flex justify-between items-center text-xs text-slate-400 pl-6">
-                    <span>{task.uploadTime}</span>
-                    <span>{task.fileSize}</span>
+                    <span>{task.createdAt ? new Date(task.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                    <span>{task.fileSize ? `${(task.fileSize / 1024 / 1024).toFixed(2)} MB` : '--'}</span>
                   </div>
                 </div>
               ))}
@@ -254,13 +380,13 @@ export const OCRProcessingView: React.FC = () => {
                 <div className="absolute inset-0 opacity-20 pointer-events-none bg-[linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc),linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc)] [background-size:20px_20px] [background-position:0_0,10px_10px]"></div>
 
                 <img
-                  src={activeTask.imageUrl}
+                  src={activeTask.filePath}
                   alt="Preview"
                   className="max-w-full max-h-full shadow-2xl object-contain transition-transform duration-300"
                 />
 
                 {/* Scanning Overlay Effect */}
-                {activeTask.status === 'processing' && (
+                {activeTask.ocrStatus === 'processing' && (
                   <div className="absolute inset-0 bg-primary-900/10 z-10">
                     <div className="w-full h-1 bg-primary-400 shadow-[0_0_15px_rgba(56,189,248,0.8)] absolute top-0 animate-[scan_3s_linear_infinite]"></div>
                   </div>
@@ -273,8 +399,8 @@ export const OCRProcessingView: React.FC = () => {
                   <div>
                     <h3 className="font-bold text-slate-800">识别结果</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`w-2 h-2 rounded-full ${activeTask.status === 'processing' ? 'bg-slate-300' : getScoreColor(activeTask.overallScore).split(' ')[0]}`}></span>
-                      <span className="text-xs text-slate-500">整体置信度: {activeTask.status === 'processing' ? '--' : `${activeTask.overallScore}%`}</span>
+                      <span className={`w-2 h-2 rounded-full ${activeTask.ocrStatus === 'processing' ? 'bg-slate-300' : getScoreColor(activeTask.overallScore || 0).split(' ')[0]}`}></span>
+                      <span className="text-xs text-slate-500">整体置信度: {activeTask.ocrStatus === 'processing' ? '--' : `${activeTask.overallScore || 0}%`}</span>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -284,7 +410,7 @@ export const OCRProcessingView: React.FC = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  {activeTask.status === 'processing' ? (
+                  {activeTask.ocrStatus === 'processing' ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
                       <Loader2 size={32} className="animate-spin text-primary-500" />
                       <p className="text-sm">AI 引擎正在解析文档结构...</p>
@@ -301,7 +427,7 @@ export const OCRProcessingView: React.FC = () => {
                         </div>
                         <div className="relative">
                           <select
-                            value={activeTask.type}
+                            value={activeTask.docType || 'unknown'}
                             onChange={(e) => handleTypeChange(e.target.value)}
                             className="w-full appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-lg py-2 pl-9 pr-8 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none cursor-pointer shadow-sm"
                           >
@@ -310,7 +436,7 @@ export const OCRProcessingView: React.FC = () => {
                             ))}
                           </select>
                           {(() => {
-                            const TypeIcon = DOC_TYPES.find(d => d.value === activeTask.type)?.icon || FileText;
+                            const TypeIcon = DOC_TYPES.find(d => d.value === (activeTask.docType || 'unknown'))?.icon || FileText;
                             return <TypeIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />;
                           })()}
                           <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -319,12 +445,12 @@ export const OCRProcessingView: React.FC = () => {
 
                       {/* Fields List */}
                       <div className="space-y-4">
-                        {activeTask.fields.map((field, idx) => (
+                        {parseOcrFields(activeTask.ocrResult).map((field, idx) => (
                           <div key={idx} className="group">
                             <div className="flex justify-between mb-1">
-                              <label className="text-xs font-bold text-slate-500 uppercase">{field.name}</label>
-                              <span className={`text-xs font-medium ${field.confidence < 70 ? 'text-rose-500' : 'text-slate-400'}`}>
-                                {field.confidence}%
+                              <label className="text-xs font-bold text-slate-500 uppercase">{field.label}</label>
+                              <span className={`text-xs font-medium ${(field.confidence || 0) < 70 ? 'text-rose-500' : 'text-slate-400'}`}>
+                                {field.confidence || 0}%
                               </span>
                             </div>
                             <div className="relative">
@@ -332,9 +458,9 @@ export const OCRProcessingView: React.FC = () => {
                                 type="text"
                                 value={field.value}
                                 onChange={(e) => handleFieldChange(idx, e.target.value)}
-                                className={`w-full p-2 text-sm border rounded-lg outline-none transition-all ${field.confidence < 70 ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-200 pr-10' : 'border-slate-200 bg-slate-50 text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'}`}
+                                className={`w-full p-2 text-sm border rounded-lg outline-none transition-all ${(field.confidence || 0) < 70 ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-200 pr-10' : 'border-slate-200 bg-slate-50 text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'}`}
                               />
-                              {field.confidence < 70 && (
+                              {(field.confidence || 0) < 70 && (
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                                   <div className="group/info relative">
                                     <Info size={16} className="text-rose-500 cursor-help" />
@@ -355,8 +481,8 @@ export const OCRProcessingView: React.FC = () => {
                             </div>
                             <div className="w-full bg-slate-100 h-1 mt-1.5 rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full ${getScoreColor(field.confidence).split(' ')[0]}`}
-                                style={{ width: `${field.confidence}%` }}
+                                className={`h-full rounded-full ${getScoreColor(field.confidence || 0).split(' ')[0]}`}
+                                style={{ width: `${field.confidence || 0}%` }}
                               ></div>
                             </div>
                           </div>
@@ -387,7 +513,8 @@ export const OCRProcessingView: React.FC = () => {
                   </div>
 
                   <button
-                    disabled={activeTask.status === 'processing'}
+                    disabled={activeTask.ocrStatus === 'processing'}
+                    onClick={handleSubmitToArchive}
                     className="w-full py-2 bg-primary-600 text-white font-bold rounded-lg shadow-lg shadow-primary-500/20 hover:bg-primary-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Save size={16} /> 确认并归档
