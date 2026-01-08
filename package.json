@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "complexity:check": "eslint src --ext .ts,.tsx -c .eslintrc.complexity.cjs",
+    "complexity:check": "ESLINT_COMPLEXITY_MODE=1 eslint src --ext .ts,.tsx",
     "complexity:report": "bash scripts/complexity-report.sh",
     "check:arch": "depcruise src/",
     "check:arch:graph": "depcruise src/ --output-type dot | dot -T svg > arch-dependencies.svg",

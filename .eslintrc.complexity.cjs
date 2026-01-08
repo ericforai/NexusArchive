@@ -75,7 +75,7 @@ module.exports = [
         },
         // 忽略源代码中针对其他 ESLint 插件的禁用注释
         linterOptions: {
-            reportUnusedDisableDirectives: false,
+            reportUnusedDisableDirectives: 'off',
         },
         rules: {
             // ========================================

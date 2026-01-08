@@ -8,4 +8,9 @@ const compat = new FlatCompat({
     allConfig: js.configs.all,
 });
 
-module.exports = [...compat.config(require('./.eslintrc.cjs'))];
+// 复杂度检查模式：只使用复杂度配置，避免插件冲突
+if (process.env.ESLINT_COMPLEXITY_MODE === '1') {
+    module.exports = require('./.eslintrc.complexity.cjs');
+} else {
+    module.exports = [...compat.config(require('./.eslintrc.cjs'))];
+}

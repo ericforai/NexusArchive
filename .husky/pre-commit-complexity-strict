@@ -1,0 +1,20 @@
+#!/bin/sh
+# 严格模式复杂度检查
+echo "🔍 Running complexity check (strict mode)..."
+
+# 运行 ESLint 复杂度检查，仅 src/ 目录
+npm run complexity:check -- --quiet --max-warnings=0
+
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo ""
+    echo "❌ Complexity check failed! Commit blocked."
+    echo ""
+    echo "Run 'npm run complexity:report' for detailed report."
+    echo "Fix issues before committing, or use 'git commit --no-verify' to bypass."
+    exit 1
+fi
+
+echo "✅ Complexity check passed. Generating snapshot..."
+node scripts/complexity-snapshot.cjs
