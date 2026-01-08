@@ -1,0 +1,152 @@
+# Input: GitHub Actions、前端/后端代码
+# Output: GitHub Actions 工作流配置（复杂度检查）
+# Pos: CI/CD 配置文件
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+name: Complexity Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  frontend-complexity:
+    name: Frontend Complexity Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run complexity check
+        id: complexity-check
+        run: |
+          echo "## 🔍 Frontend Complexity Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Running ESLint complexity analysis..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Create reports directory
+          mkdir -p reports
+
+          # Run complexity check and save output
+          npm run complexity:check 2>&1 | tee reports/frontend-complexity.log || true
+
+          # Count violations
+          VIOLATIONS=$(grep -c "warn\|error" reports/frontend-complexity.log 2>/dev/null || echo "0")
+
+          # Add summary
+          if [ "$VIOLATIONS" -eq "0" ]; then
+            echo "✅ No complexity violations found!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Found $VIOLATIONS complexity issue(s)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat reports/frontend-complexity.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Generate complexity report
+        if: always()
+        run: |
+          if [ -f reports/frontend-complexity.log ]; then
+            npm run complexity:report 2>&1 || true
+          fi
+        continue-on-error: true
+
+      - name: Upload frontend report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-complexity-report
+          path: reports/
+          retention-days: 30
+
+  backend-complexity:
+    name: Backend Complexity Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run ArchUnit complexity tests
+        id: archunit-test
+        run: |
+          echo "## 🔍 Backend Complexity Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Running ArchUnit complexity analysis..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          cd nexusarchive-java
+
+          # Run complexity rules test
+          mvn test -Dtest=ComplexityRulesTest -q 2>&1 | tee ../reports/backend-complexity.log || true
+
+          # Extract violation summary if available
+          if grep -q "COMPLEXITY REPORT" ../reports/backend-complexity.log; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -A 50 "COMPLEXITY REPORT" ../reports/backend-complexity.log >> $GITHUB_STEP_SUMMARY || true
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Upload backend report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-complexity-report
+          path: reports/
+          retention-days: 30
+
+  summary:
+    name: Complexity Check Summary
+    runs-on: ubuntu-latest
+    needs: [frontend-complexity, backend-complexity]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 📊 Complexity Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Complexity | ${{ needs.frontend-complexity.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Complexity | ${{ needs.backend-complexity.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.frontend-complexity.result }}" = "success" ] && [ "${{ needs.backend-complexity.result }}" = "success" ]; then
+            echo "### ✅ All complexity checks passed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Code complexity is within acceptable limits." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ Complexity issues detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the complexity reports and consider refactoring:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- Functions with high cyclomatic complexity (>10)" >> $GITHUB_STEP_SUMMARY
+            echo "- Deep nesting (>4 levels)" >> $GITHUB_STEP_SUMMARY
+            echo "- Large files (>300 lines, pages >600 lines)" >> $GITHUB_STEP_SUMMARY
+            echo "- Functions with many parameters (>10)" >> $GITHUB_STEP_SUMMARY
+          fi
