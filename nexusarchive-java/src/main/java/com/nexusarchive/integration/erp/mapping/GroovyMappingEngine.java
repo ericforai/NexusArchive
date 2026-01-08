@@ -28,6 +28,13 @@ public class GroovyMappingEngine {
      * @return 脚本执行结果
      */
     public Object execute(String script, ScriptContext context) {
+        if (script == null || script.isBlank()) {
+            throw new IllegalArgumentException("Script cannot be null or empty");
+        }
+        if (context == null) {
+            throw new IllegalArgumentException("Context cannot be null");
+        }
+
         try {
             Binding binding = new Binding(context.getBindings());
             GroovyShell shell = new GroovyShell(binding);
@@ -35,7 +42,7 @@ public class GroovyMappingEngine {
             log.debug("Script executed successfully: {}", result);
             return result;
         } catch (Exception e) {
-            log.error("Script execution failed: {}", script, e);
+            log.error("Script execution failed: {}", script.substring(0, Math.min(50, script.length())), e);
             throw new MappingScriptException("Script execution failed: " + e.getMessage(), e);
         }
     }
@@ -47,7 +54,7 @@ public class GroovyMappingEngine {
         try {
             return execute(script, context);
         } catch (Exception e) {
-            log.warn("Script failed, returning default value: {}", defaultValue);
+            log.debug("Script failed, returning default value: {}", defaultValue);
             return defaultValue;
         }
     }
