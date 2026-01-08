@@ -14,11 +14,13 @@ import com.nexusarchive.entity.CollectionBatchFile;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
+import com.nexusarchive.security.FondsContext;
 import com.nexusarchive.service.collection.BatchFileStorageService;
 import com.nexusarchive.service.collection.BatchFileValidator;
 import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.service.impl.CollectionBatchServiceImpl;
 import com.nexusarchive.util.FileHashUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -101,6 +103,9 @@ class CollectionBatchServiceTest {
 
     @BeforeEach
     void setUp() {
+        // 设置全宗上下文（CollectionBatchServiceImpl 中使用 FondsContext.requireCurrentFondsNo()）
+        FondsContext.setCurrentFondsNo("001");
+
         // 初始化测试请求数据
         testRequest = new BatchUploadRequest();
         testRequest.setBatchName("测试批次-2024年1月凭证");
@@ -130,6 +135,12 @@ class CollectionBatchServiceTest {
             .createdTime(LocalDateTime.now())
             .lastModifiedTime(LocalDateTime.now())
             .build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // 清理全宗上下文，避免影响其他测试
+        FondsContext.clear();
     }
 
     // ========== 批次创建测试 ==========

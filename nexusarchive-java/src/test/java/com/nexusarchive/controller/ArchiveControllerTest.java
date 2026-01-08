@@ -147,7 +147,7 @@ public class ArchiveControllerTest {
 
                 org.mockito.Mockito
                                 .when(archiveService.createArchive(org.mockito.ArgumentMatchers.any(Archive.class),
-                                                org.mockito.ArgumentMatchers.any()))
+                                                org.mockito.ArgumentMatchers.anyString()))
                                 .thenReturn(createdArchive);
 
                 mockMvc.perform(post("/archives")
@@ -169,12 +169,12 @@ public class ArchiveControllerTest {
                                 org.mockito.ArgumentMatchers.anyInt(),
                                 org.mockito.ArgumentMatchers.anyInt(),
                                 org.mockito.ArgumentMatchers.eq(archiveCode),
-                                org.mockito.ArgumentMatchers.any(),
-                                org.mockito.ArgumentMatchers.any(),
-                                org.mockito.ArgumentMatchers.any(),
-                                org.mockito.ArgumentMatchers.any(),
-                                org.mockito.ArgumentMatchers.any(),
-                                org.mockito.ArgumentMatchers.any()))
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.anyString()))
                                 .thenReturn(page);
 
                 mockMvc.perform(get("/archives")
