@@ -1,6 +1,7 @@
 // Input: Spring Framework、Lombok、YonSuiteClient
 // Output: YonSuiteAuthClient 类
 // Pos: 集成模块 - ERP 适配器客户端
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.integration.erp.adapter.client;
 
