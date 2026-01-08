@@ -98,6 +98,56 @@ class MappingConfigLoaderTest {
     }
 
     @Test
+    @DisplayName("应该成功加载金蝶映射配置")
+    void shouldLoadKingdeeMappingSuccessfully() throws IOException {
+        MappingConfig config = loader.loadMapping("kingdee");
+
+        assertThat(config).isNotNull();
+        assertThat(config.getSourceSystem()).isEqualTo("kingdee");
+        assertThat(config.getTargetModel()).isEqualTo("AccountingSipDto");
+        assertThat(config.getHeaderMappings()).containsKey("voucherNumber");
+        assertThat(config.getEntries()).isNotNull();
+        assertThat(config.getAttachments()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("金蝶配置应该包含凭证头核心字段映射")
+    void shouldContainKingdeeHeaderMappings() throws IOException {
+        MappingConfig config = loader.loadMapping("kingdee");
+
+        assertThat(config.getHeaderMappings()).containsKey("accountPeriod");
+        assertThat(config.getHeaderMappings()).containsKey("voucherNumber");
+        assertThat(config.getHeaderMappings()).containsKey("voucherDate");
+        assertThat(config.getHeaderMappings()).containsKey("issuer");
+        assertThat(config.getHeaderMappings()).containsKey("reviewer");
+    }
+
+    @Test
+    @DisplayName("金蝶配置应该包含分录字段映射")
+    void shouldContainKingdeeEntryMappings() throws IOException {
+        MappingConfig config = loader.loadMapping("kingdee");
+
+        assertThat(config.getEntries()).isNotNull();
+        assertThat(config.getEntries().getSource()).isEqualTo("FEntity");
+        assertThat(config.getEntries().getItem()).containsKey("lineNo");
+        assertThat(config.getEntries().getItem()).containsKey("summary");
+        assertThat(config.getEntries().getItem()).containsKey("debit");
+        assertThat(config.getEntries().getItem()).containsKey("credit");
+    }
+
+    @Test
+    @DisplayName("金蝶配置应该包含附件字段映射")
+    void shouldContainKingdeeAttachmentMappings() throws IOException {
+        MappingConfig config = loader.loadMapping("kingdee");
+
+        assertThat(config.getAttachments()).isNotNull();
+        assertThat(config.getAttachments().getSource()).isEqualTo("FAttachments");
+        assertThat(config.getAttachments().getItem()).containsKey("attachmentId");
+        assertThat(config.getAttachments().getItem()).containsKey("fileName");
+        assertThat(config.getAttachments().getItem()).containsKey("downloadUrl");
+    }
+
+    @Test
     @DisplayName("当配置文件不存在时应该抛出MappingConfigNotFoundException")
     void shouldThrowExceptionWhenConfigNotFound() {
         assertThatThrownBy(() -> loader.loadMapping("non-existent"))

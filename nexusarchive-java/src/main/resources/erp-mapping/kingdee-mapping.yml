@@ -1,0 +1,113 @@
+# 金蝶云星空凭证映射配置
+# Source: Kingdee K3Cloud API (KingdeeVoucherDetailResponse)
+# Target: AccountingSipDto (DA/T 94-2022 会计档案 SIP)
+# Reference: 金蝶云星空 WebAPI 接口规范
+
+sourceSystem: kingdee
+targetModel: AccountingSipDto
+version: 1.0.0
+
+# 凭证头字段映射 (VoucherHeadDto)
+headerMappings:
+  # 会计期间 - 从 FYear + FPeriod 组合生成 "YYYY-MM" (需代码层处理)
+  accountPeriod:
+    field: FYear
+
+  # 凭证号
+  voucherNumber:
+    field: FNumber
+
+  # 凭证日期
+  voucherDate:
+    field: FDate
+    type: date
+    format: yyyy-MM-dd
+
+  # 附件数量
+  attachmentCount:
+    field: FAttachmentCount
+
+  # 制单人 - 优先使用名称
+  issuer:
+    field: FCreatorName
+
+  # 审核人 - 优先使用名称
+  reviewer:
+    field: FAuditorName
+
+  # 备注/摘要 (凭证级)
+  remark:
+    field: FExplanation
+
+  # 凭证总金额 - 取借方合计
+  totalAmount:
+    field: FDebitTotal
+    type: decimal
+
+  # 凭证字 - 映射到 VoucherType (需要额外转换逻辑)
+  voucherType:
+    field: FVoucherGroup
+
+# 分录映射 (VoucherEntryDto)
+entries:
+  source: FEntity
+  item:
+    # 分录行号
+    lineNo:
+      field: FSeq
+      type: integer
+
+    # 摘要
+    summary:
+      field: FExplanation
+
+    # 科目编码
+    subjectCode:
+      field: FAccountCode
+
+    # 科目名称
+    subjectName:
+      field: FAccountName
+
+    # 借方金额
+    debit:
+      field: FDebit
+      type: decimal
+
+    # 贷方金额
+    credit:
+      field: FCredit
+      type: decimal
+
+    # 辅助核算信息
+    auxiliaryInfo:
+      field: FDimension
+
+# 附件映射 (AttachmentDto)
+attachments:
+  source: FAttachments
+  item:
+    # 附件ID
+    attachmentId:
+      field: FAttachmentID
+
+    # 文件名
+    fileName:
+      field: FFileName
+
+    # 文件类型/扩展名
+    fileType:
+      field: FFileExt
+
+    # 文件大小 (字节)
+    fileSize:
+      field: FFileSize
+      type: long
+
+    # 下载URL
+    downloadUrl:
+      field: FDownloadUrl
+
+    # 文件ID (用于后续下载)
+    fileId:
+      field: FFileId
