@@ -22,7 +22,7 @@
     "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "complexity:check": "eslint src --ext .ts,.tsx -c .eslintrc.complexity.cjs",
-    "complexity:report": "eslint src --ext .ts,.tsx -c .eslintrc.complexity.cjs --format json --output-file reports/complexity-report.json",
+    "complexity:report": "bash scripts/complexity-report.sh",
     "check:arch": "depcruise src/",
     "check:arch:graph": "depcruise src/ --output-type dot | dot -T svg > arch-dependencies.svg",
     "modules:discover": "node scripts/discover-frontend-modules.js --discover",
