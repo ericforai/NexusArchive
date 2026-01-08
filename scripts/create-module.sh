@@ -2,7 +2,7 @@
 # Input: 模块名称 (如 borrowing, voucher)
 # Output: 标准四层 DDD 模块目录结构
 # Pos: scripts/ - 开发工具脚本
-# Usage: ./scripts/create-module.sh <ModuleName>
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 set -euo pipefail
 

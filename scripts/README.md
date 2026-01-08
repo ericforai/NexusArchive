@@ -8,6 +8,7 @@
 
 | 文件 | 功能 | 使用场景 |
 | --- | --- | --- |
+| `create-module.sh` | DDD 模块生成 | 自动生成四层模块结构（api/app/domain/infra）|
 | `dev.sh` | 启动开发环境 | 一键启动 DB+Redis+Backend+Frontend |
 | `dev-stop.sh` | 停止开发环境 | 停止所有开发服务 |
 | `dev-logs.sh` | 查看开发日志 | 实时查看应用日志 |
@@ -79,6 +80,10 @@
 ## 快速命令参考
 
 ```bash
+# DDD 模块创建
+./scripts/create-module.sh Payment    # 生成 payment 模块
+./scripts/create-module.sh Voucher    # 生成 voucher 模块
+
 # 开发环境
 npm run dev        # 启动开发环境
 npm run dev:stop   # 停止开发环境
@@ -94,5 +99,7 @@ npm run deploy     # 部署到服务器
 
 ## 相关文档
 
+- [后端模块创建 SOP](../docs/architecture/backend-module-creation-sop.md)
+- [模块边界规范](../docs/architecture/module-boundaries.md)
 - [启动指南](../docs/deployment/启动指南.md)
 - [Docker 开发指南](../docs/deployment/docker-production.md)
