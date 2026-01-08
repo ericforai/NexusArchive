@@ -1,49 +1,101 @@
-# YonSuite ERP 映射配置
+# YonSuite 凭证映射配置
+# Source: YonSuite API (YonVoucherListResponse, YonVoucherDetailResponse)
+# Target: AccountingSipDto (DA/T 94-2022 会计档案 SIP)
+
 sourceSystem: yonsuite
 targetModel: AccountingSipDto
 version: 1.0.0
 
-# 顶层字段映射
+# 凭证头字段映射 (VoucherHeadDto)
 headerMappings:
-  voucherNumber:
-    field: displayname
+  # 会计期间 - YonSuite 格式: "2024-01"
   accountPeriod:
     field: period
+    format: yyyy-MM
+
+  # 凭证号 - 优先使用 displayname，其次 displaybillcode
+  voucherNumber:
+    field: displayname
+
+  # 凭证日期
   voucherDate:
     field: maketime
     type: date
-    format: "yyyy-MM-dd"
+    format: yyyy-MM-dd
+
+  # 附件数量
+  attachmentCount:
+    field: attachmentquantity
+
+  # 制单人
   issuer:
     field: maker.name
-  attachmentCount:
-    field: attachmentCount
 
-# 分录映射
+  # 审核人
+  reviewer:
+    field: auditor.name
+
+  # 备注/摘要
+  remark:
+    field: description
+
+  # 凭证总金额
+  totalAmount:
+    field: totaldebit_org
+    type: decimal
+
+# 分录映射 (VoucherEntryDto)
 entries:
-  source: body
+  source: bodies
   item:
+    # 分录行号
     lineNo:
-      field: lineNo
+      field: recordnumber
+      type: integer
+
+    # 摘要
     summary:
       field: description
-    accountCode:
-      field: accountCode
-    accountName:
-      field: accountName
-    debit:
-      field: debitAmount
-    credit:
-      field: creditAmount
 
-# 附件映射
+    # 科目编码
+    subjectCode:
+      field: accsubject.code
+
+    # 科目名称
+    subjectName:
+      field: accsubject.name
+
+    # 借方金额
+    debit:
+      field: debit_org
+      type: decimal
+
+    # 贷方金额
+    credit:
+      field: credit_org
+      type: decimal
+
+# 附件映射 (AttachmentDto)
 attachments:
-  source: attachments
+  source: data
   item:
-    attachmentId:
-      field: id
+    # 文件名
     fileName:
       field: fileName
+
+    # 文件类型/扩展名
+    fileType:
+      field: fileExtension
+
+    # 文件大小 (字节)
     fileSize:
       field: fileSize
+      type: long
+
+    # 下载 URL
     downloadUrl:
       field: url
+
+    # 附件 ID
+    attachmentId:
+      field: id
