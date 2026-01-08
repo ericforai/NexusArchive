@@ -256,6 +256,14 @@
             <version>2.2.7</version>
         </dependency>
 
+        <!-- Groovy for dynamic mapping scripts -->
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>4.0.15</version>
+            <type>pom</type>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>com.h2database</groupId>
