@@ -1,17 +1,13 @@
-/**
- * ESLint Complexity Rules for NexusArchive
- *
- * Purpose: Enforce code complexity limits to maintain maintainability
- * Input: N/A (configuration file)
- * Pos: project root
- */
-import tsParser from '@typescript-eslint/parser';
+// Input: TypeScript 编译器、ESLint 配置
+// Output: 代码复杂度检查配置（圈复杂度、嵌套深度、函数行数等）
+// Pos: ESLint 配置文件根目录
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-export default [
+module.exports = [
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     languageOptions: {
-      parser: tsParser,
+      parser: require('@typescript-eslint/parser'),
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
