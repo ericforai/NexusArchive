@@ -90,6 +90,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Create reports directory
+        run: mkdir -p reports
+
       - name: Run ArchUnit complexity tests
         id: archunit-test
         run: |
