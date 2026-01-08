@@ -25,7 +25,7 @@ import java.util.*;
  *
  * @author Agent D (基础设施工程师)
  */
-@Component
+@Component("erpAdapterCollectionClient")
 @RequiredArgsConstructor
 @Slf4j
 public class YonSuiteCollectionClient {
