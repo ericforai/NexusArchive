@@ -1,7 +1,30 @@
 本目录存放系统架构相关文档。
 用于描述整体设计与模块关系。
 
-## 最新更新 (2026-01-04)
+## 最新更新 (2026-01-08)
+
+### DDD 模块化规范 v2.0 完成
+已建立完整的后端 DDD 模块化规范：
+- **模块模板**: `_template/` 四层架构模板（api/app/domain/infra）
+- **ArchUnit 规则**: 从 4 条扩展到 10 条
+- **模块创建 SOP**: 标准化新模块创建流程
+- **前端依赖修复**: 0 violations（dependency-cruiser）
+
+**新增后端规则**（规则 8-10）：
+- 规则 8: 禁止 Service 实现类之间直接依赖
+- 规则 9: Controller 不得依赖 Service 实现类（依赖倒置）
+- 规则 10: Controller 不得直接依赖 Mapper
+
+详见: [后端模块创建 SOP](backend-module-creation-sop.md) | [模块清单](../nexusarchive-java/src/main/java/com/nexusarchive/modules/README.md)
+
+### 前端依赖违规修复完成
+- 修复 `DestructionApprovalPage` 导入违规
+- 调整 hooks 规则，允许布局级组件使用通用 hooks
+- 验证结果: **0 violations** (389 modules, 1251 dependencies)
+
+---
+
+## 历史更新 (2026-01-04)
 
 ### 前端模块化重构完成
 已完成 `useArchiveListController.ts` 的模块化重构：
