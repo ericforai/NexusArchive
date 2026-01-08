@@ -67,6 +67,13 @@ public class ErpConfig {
     private java.util.List<String> accbookCodes;
 
     /**
+     * 账套-全宗映射 (JSON 格式)
+     * 存储: {"BR01": "FONDS_A", "BR02": "FONDS_B"}
+     * 合规性要求: 一个全宗只能映射一个账套
+     */
+    private String accbookMapping;
+
+    /**
      * 额外配置 (JSON 格式)
      */
     private String extraConfig;
