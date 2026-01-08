@@ -1,0 +1,49 @@
+# YonSuite ERP 映射配置
+sourceSystem: yonsuite
+targetModel: AccountingSipDto
+version: 1.0.0
+
+# 顶层字段映射
+headerMappings:
+  voucherNumber:
+    field: displayname
+  accountPeriod:
+    field: period
+  voucherDate:
+    field: maketime
+    type: date
+    format: "yyyy-MM-dd"
+  issuer:
+    field: maker.name
+  attachmentCount:
+    field: attachmentCount
+
+# 分录映射
+entries:
+  source: body
+  item:
+    lineNo:
+      field: lineNo
+    summary:
+      field: description
+    accountCode:
+      field: accountCode
+    accountName:
+      field: accountName
+    debit:
+      field: debitAmount
+    credit:
+      field: creditAmount
+
+# 附件映射
+attachments:
+  source: attachments
+  item:
+    attachmentId:
+      field: id
+    fileName:
+      field: fileName
+    fileSize:
+      field: fileSize
+    downloadUrl:
+      field: url
