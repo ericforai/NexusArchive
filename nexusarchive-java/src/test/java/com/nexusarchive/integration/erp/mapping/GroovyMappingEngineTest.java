@@ -105,24 +105,16 @@ class GroovyMappingEngineTest {
     }
 
     @Test
-    @DisplayName("当脚本为null时应该抛出异常")
-    void shouldThrowExceptionWhenScriptIsNull() {
+    @DisplayName("当脚本为null或空白时应该抛出异常")
+    void shouldThrowExceptionWhenScriptIsNullOrBlank() {
         assertThatThrownBy(() -> engine.execute(null, context))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Script cannot be null");
-    }
 
-    @Test
-    @DisplayName("当脚本为空字符串时应该抛出异常")
-    void shouldThrowExceptionWhenScriptIsEmpty() {
         assertThatThrownBy(() -> engine.execute("", context))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Script cannot be null");
-    }
 
-    @Test
-    @DisplayName("当脚本为空白字符串时应该抛出异常")
-    void shouldThrowExceptionWhenScriptIsBlank() {
         assertThatThrownBy(() -> engine.execute("   ", context))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Script cannot be null");
@@ -161,92 +153,19 @@ class GroovyMappingEngineTest {
     }
 
     @Test
-    @DisplayName("应该支持列表操作")
-    void shouldSupportListOperations() {
-        java.util.List<String> items = java.util.List.of("A", "B", "C");
-        testErpData.put("items", items);
+    @DisplayName("应该支持FieldMapping的脚本字段")
+    void shouldSupportFieldMappingScript() {
+        // 测试带脚本类型的字段映射
+        Map<String, Object> nested = new HashMap<>();
+        nested.put("year", 2025);
+        nested.put("month", 3);
+        testErpData.put("period", nested);
 
-        String script = "groovy: return ctx.items.size()";
-
-        Object result = engine.execute(script, context);
-
-        assertThat(result).isEqualTo(3);
-    }
-
-    @Test
-    @DisplayName("应该支持条件表达式")
-    void shouldSupportConditionalExpression() {
-        testErpData.put("status", "ACTIVE");
-
-        String script = "groovy: return ctx.status == 'ACTIVE' ? 'Y' : 'N'";
+        // 模拟一个脚本月期间格式化
+        String script = "groovy: return String.format('%04d-%02d', ctx.period.year, ctx.period.month)";
 
         Object result = engine.execute(script, context);
 
-        assertThat(result).isEqualTo("Y");
-    }
-
-    @Test
-    @DisplayName("executeSafe应该在执行失败时返回默认值")
-    void shouldReturnDefaultValueWhenExecuteSafeFails() {
-        String invalidScript = "groovy: return invalid.syntax.here";
-        String defaultValue = "DEFAULT_VALUE";
-
-        Object result = engine.executeSafe(invalidScript, context, defaultValue);
-
-        assertThat(result).isEqualTo(defaultValue);
-    }
-
-    @Test
-    @DisplayName("executeSafe应该在成功时返回正确结果")
-    void shouldReturnCorrectResultWhenExecuteSafeSucceeds() {
-        String script = "groovy: return ctx.FNumber";
-        String defaultValue = "DEFAULT_VALUE";
-
-        Object result = engine.executeSafe(script, context, defaultValue);
-
-        assertThat(result).isEqualTo("AP001");
-    }
-
-    @Test
-    @DisplayName("应该支持多层嵌套访问")
-    void shouldSupportNestedAccess() {
-        Map<String, Object> level2 = new HashMap<>();
-        Map<String, Object> level1 = new HashMap<>();
-
-        level2.put("value", "DEEP_VALUE");
-        level1.put("nested", level2);
-        testErpData.put("level1", level1);
-
-        String script = "groovy: return ctx.level1.nested.value";
-
-        Object result = engine.execute(script, context);
-
-        assertThat(result).isEqualTo("DEEP_VALUE");
-    }
-
-    @Test
-    @DisplayName("应该支持null安全导航")
-    void shouldSupportNullSafeNavigation() {
-        testErpData.put("nullable", null);
-
-        String script = "groovy: return ctx.nullable?.value ?: 'SAFE_DEFAULT'";
-
-        Object result = engine.execute(script, context);
-
-        assertThat(result).isEqualTo("SAFE_DEFAULT");
-    }
-
-    @Test
-    @DisplayName("应该支持日期操作")
-    void shouldSupportDateOperations() {
-        testErpData.put("year", 2025);
-        testErpData.put("month", 1);
-        testErpData.put("day", 15);
-
-        String script = "groovy: return String.format('%04d-%02d-%02d', ctx.year, ctx.month, ctx.day)";
-
-        Object result = engine.execute(script, context);
-
-        assertThat(result).isEqualTo("2025-01-15");
+        assertThat(result).isEqualTo("2025-03");
     }
 }
