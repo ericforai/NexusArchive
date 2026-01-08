@@ -63,7 +63,6 @@ export function ImageViewer({
   // 重置位置当缩放变为1时
   useEffect(() => {
     if (scale === 1) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPosition({ x: 0, y: 0 });
     }
   }, [scale]);

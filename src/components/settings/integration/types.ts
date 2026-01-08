@@ -59,10 +59,13 @@ export interface ConnectorModalState {
     baseUrl: string;
     appKey: string;
     appSecret: string;
-    accbookCode: string;
-    accbookCodes: string[];
+    accbookMapping: Record<string, string>; // { [accbookCode]: fondsCode } - 账套-全宗映射
+    requireClosedPeriod?: boolean; // 关账检查模式：true=强制，false=提醒（仅YonSuite）
   };
-  newAccbookCode: string;
+  newMappingEntry: {
+    accbookCode: string;
+    fondsCode: string;
+  };
   detectedType: string | null;
   testing: boolean;
 }
@@ -71,8 +74,9 @@ export interface ConnectorModalActions {
   openModal: (config?: Partial<ErpConfig>) => void;
   closeModal: () => void;
   updateForm: (field: string, value: any) => void;
-  addAccbookCode: (code: string) => void;
-  removeAccbookCode: (code: string) => void;
+  updateNewMappingEntry: (field: 'accbookCode' | 'fondsCode', value: string) => void;
+  addMappingEntry: (accbookCode: string, fondsCode: string) => void;
+  removeMappingEntry: (accbookCode: string) => void;
   detectErpType: (url: string) => Promise<string>;
   testConnection: () => Promise<void>;
   saveConfig: () => Promise<void>;

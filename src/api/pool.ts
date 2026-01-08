@@ -45,6 +45,22 @@ interface ApiResponse<T> {
  */
 export const poolApi = {
   /**
+   * 按状态查询预归档列表
+   */
+  getListByStatus: async (status: string): Promise<PoolItem[]> => {
+    try {
+      const response = await client.get<ApiResponse<PoolItem[]>>(`/pool/list/status/${status}`);
+      if (response.data.code === 200) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching pool list by status:', error);
+      return [];
+    }
+  },
+
+  /**
    * 查询电子凭证池列表
    */
   getList: async (): Promise<PoolItem[]> => {

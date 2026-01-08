@@ -5,9 +5,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, FolderOpen, Plus, Trash2, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from '../../utils/notificationService';
+import { scanApi } from '@api/scan';
 
 /**
- * 文件夹监控配置接口
+ * 文件夹监控配置接口（组件内部使用）
  */
 export interface FolderMonitor {
   id?: number;
@@ -49,14 +50,22 @@ export const FolderMonitorDialog: React.FC<FolderMonitorDialogProps> = ({ open, 
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: 从后端 API 加载监控配置
-      // const response = await scanApi.getFolderMonitors();
-      // setMonitors(response.data);
-      // 临时使用空数组，等 Task 11 实现后端 API
-      setMonitors([]);
+      const response = await scanApi.getFolderMonitors();
+      // Transform API response to component format
+      setMonitors(
+        response.map(m => ({
+          id: m.id,
+          folderPath: m.folderPath,
+          isActive: m.isActive ?? true,
+          fileFilter: m.fileFilter || '*.pdf;*.jpg;*.jpeg;*.png',
+          autoDelete: m.autoDelete ?? false,
+          moveToPath: m.moveToPath,
+        }))
+      );
     } catch (err) {
       console.error('Failed to load folder monitors:', err);
       setError('加载监控配置失败');
+      toast.error('加载监控配置失败');
     } finally {
       setIsLoading(false);
     }
@@ -71,17 +80,23 @@ export const FolderMonitorDialog: React.FC<FolderMonitorDialogProps> = ({ open, 
     setIsSaving(true);
     setError(null);
     try {
-      const newMonitor: FolderMonitor = {
+      const response = await scanApi.addFolderMonitor({
         folderPath: newPath,
-        isActive: true,
         fileFilter,
         autoDelete,
-      };
+      });
 
-      // TODO: 调用后端 API 添加监控
-      // await scanApi.addFolderMonitor(newMonitor);
-
-      setMonitors(prev => [...prev, { ...newMonitor, id: Date.now() }]);
+      setMonitors(prev => [
+        ...prev,
+        {
+          id: response.id,
+          folderPath: response.folderPath,
+          isActive: response.isActive ?? true,
+          fileFilter: response.fileFilter || '*.pdf;*.jpg;*.jpeg;*.png',
+          autoDelete: response.autoDelete ?? false,
+          moveToPath: response.moveToPath,
+        },
+      ]);
       setNewPath('');
       setFileFilter('*.pdf;*.jpg;*.jpeg;*.png');
       setAutoDelete(false);
@@ -89,6 +104,7 @@ export const FolderMonitorDialog: React.FC<FolderMonitorDialogProps> = ({ open, 
     } catch (err) {
       console.error('Failed to add folder monitor:', err);
       setError('添加监控文件夹失败');
+      toast.error('添加监控文件夹失败');
     } finally {
       setIsSaving(false);
     }
@@ -96,8 +112,7 @@ export const FolderMonitorDialog: React.FC<FolderMonitorDialogProps> = ({ open, 
 
   const handleDelete = async (id: number) => {
     try {
-      // TODO: 调用后端 API 删除监控
-      // await scanApi.deleteFolderMonitor(id);
+      await scanApi.deleteFolderMonitor(id);
       setMonitors(prev => prev.filter(m => m.id !== id));
       toast.success('监控文件夹已删除');
     } catch (err) {
@@ -108,12 +123,18 @@ export const FolderMonitorDialog: React.FC<FolderMonitorDialogProps> = ({ open, 
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      // TODO: 调用后端 API 切换状态
-      // await scanApi.toggleFolderMonitor(id, isActive);
+      const response = await scanApi.toggleFolderMonitor(id);
       setMonitors(prev =>
-        prev.map(m => (m.id === id ? { ...m, isActive } : m))
+        prev.map(m =>
+          m.id === id
+            ? {
+                ...m,
+                isActive: response.isActive ?? !isActive,
+              }
+            : m
+        )
       );
-      toast.success(isActive ? '监控已启用' : '监控已暂停');
+      toast.success(response.isActive ?? !isActive ? '监控已启用' : '监控已暂停');
     } catch (err) {
       console.error('Failed to toggle folder monitor:', err);
       toast.error('切换状态失败');
@@ -293,7 +314,7 @@ export const FolderMonitorDialog: React.FC<FolderMonitorDialogProps> = ({ open, 
           {/* 说明信息 */}
           <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
             <p className="text-xs text-blue-700">
-              <span className="font-bold">💡 使用说明：</span>
+              <span className="font-bold">使用说明：</span>
             </p>
             <ol className="text-xs text-blue-600 mt-2 space-y-1 list-decimal list-inside">
               <li>配置扫描仪软件，将扫描文件保存到指定文件夹</li>

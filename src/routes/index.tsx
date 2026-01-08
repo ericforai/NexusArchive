@@ -12,6 +12,8 @@ import React, { lazy, Suspense } from 'react';
 import { Navigate, RouteObject } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
+
 
 // 布局组件（非懒加载，因为是框架级别）
 import { SystemLayout } from '../layouts/SystemLayout';
@@ -95,6 +97,9 @@ const ErpPreviewPage = lazy(() => import('../pages/settings/ErpPreviewPage'));
 const FreezeHoldPage = lazy(() => import('../pages/operations/FreezeHoldPage'));
 const FreezeHoldDetailPage = lazy(() => import('../pages/operations/FreezeHoldDetailPage'));
 
+// 扫描模块
+const MobileUploadPage = lazy(() => import('../pages/scan/MobileUploadPage').then(m => ({ default: m.MobileUploadPage })));
+
 // 跨全宗访问授权票据模块
 const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
 const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPage'));
@@ -152,6 +157,7 @@ export const routes: RouteObject[] = [
                 </ErrorBoundary>
             </ProtectedRoute>
         ),
+        errorElement: <RouteErrorBoundary />,
         children: [
             // 门户首页
             { index: true, element: withSuspense(Dashboard) },
@@ -172,6 +178,7 @@ export const routes: RouteObject[] = [
             { path: 'collection/online', element: withSuspense(OnlineReceptionView) },
             { path: 'collection/scan', element: withSuspense(OCRProcessingView) },
             { path: 'collection/upload', element: withSuspense(BatchUploadView) },
+            { path: 'scan/mobile/:sessionId', element: withSuspense(MobileUploadPage) },
 
             // ========== 档案管理 (Repository) ==========
             { path: 'archive', element: <ArchiveListPage routeConfig="view" /> },

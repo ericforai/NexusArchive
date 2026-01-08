@@ -1,4 +1,4 @@
-// Input: React、lucide-react 图标、本地模块 api/archives
+// Input: React、lucide-react 图标、本地模块 api/archives、store/useFondsStore
 // Output: React 组件 ArchiveStructureTree
 // Pos: src/pages/panorama/ArchiveStructureTree.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ChevronRight, ChevronDown, Folder, FileText, Calendar } from 'lucide-react';
 import { archivesApi, Archive } from '../../api/archives';
+import { useFondsStore } from '../../store';
 
 interface ArchiveStructureTreeProps {
     onSelectVoucher: (voucherId: string) => void;
@@ -21,6 +22,9 @@ interface TreeNode {
 // Mock 数据已移除 - 档案树通过 API 动态构建
 
 export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSelectVoucher }) => {
+    // 获取当前全宗（显式依赖，提高代码可读性）
+    const currentFonds = useFondsStore((state) => state.currentFonds);
+
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
     const [expandedNodes, setExpandedNodes] = useState<string[]>([]);
     const [selectedNode, setSelectedNode] = useState<string>('');
@@ -86,8 +90,14 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         setLoading(true);
         setError(null);
         try {
-            const res = await archivesApi.getArchives({ page: 1, limit: 100, categoryCode: 'AC01' });
-            console.log('[ArchiveStructureTree] API response:', res);
+            // 显式传递全宗号，提高代码可读性和数据隔离明确性
+            const res = await archivesApi.getArchives({
+                page: 1,
+                limit: 100,
+                categoryCode: 'AC01',
+                fondsNo: currentFonds?.fondsCode  // 显式全宗过滤
+            });
+            console.log('[ArchiveStructureTree] API response (fondsNo=%s):', currentFonds?.fondsCode, res);
             if (res.code === 200 && res.data) {
                 const records = (res.data as any).records || [];
                 console.log('[ArchiveStructureTree] Records count:', records.length, 'Records:', records.slice(0, 3));
@@ -114,7 +124,7 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         } finally {
             setLoading(false);
         }
-    }, [buildTreeFromArchives]);
+    }, [buildTreeFromArchives, currentFonds?.fondsCode]);  // 全宗切换时自动刷新
 
     useEffect(() => {
         loadTree();

@@ -126,7 +126,6 @@ export const OrgSelector: React.FC<OrgSelectorProps> = ({
                 });
                 return keys;
             };
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setExpandedKeys(getAllKeys(filteredTreeData));
         }
     }, [searchText, filteredTreeData]);
@@ -135,7 +134,6 @@ export const OrgSelector: React.FC<OrgSelectorProps> = ({
     useEffect(() => {
         if (value !== undefined) {
             const newSelectedKeys = Array.isArray(value) ? value : (value ? [value] : []);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedKeys(newSelectedKeys);
         }
     }, [value]);

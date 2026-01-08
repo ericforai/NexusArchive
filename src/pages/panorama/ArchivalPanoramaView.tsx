@@ -177,34 +177,47 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
     }, [id]);
 
     // 探测数据源
+    // 探测数据源
     useEffect(() => {
         if (!selectedVoucherId) return;
+
+        console.log('[ArchivalPanoramaView] Detecting source for voucher:', selectedVoucherId);
 
         const detectSource = async () => {
             setLoading(true);
             try {
+                // Try Archive first
                 const res = await archivesApi.getArchiveById(selectedVoucherId);
                 if (res.code === 200 && res.data) {
+                    console.log('[ArchivalPanoramaView] Found in Archive');
                     setSourceType('ARCHIVE');
-                } else {
-                    const ov = await originalVoucherApi.getOriginalVoucher(selectedVoucherId);
-                    if (ov) {
-                        setSourceType('ORIGINAL');
-                    }
+                    return; // Found, exit early
                 }
-            } catch {
-                try {
-                    const ov = await originalVoucherApi.getOriginalVoucher(selectedVoucherId);
-                    if (ov) setSourceType('ORIGINAL');
-                } catch {
-                    setSourceType(null);
-                }
-            } finally {
-                setLoading(false);
+            } catch (archiveErr) {
+                console.warn('[ArchivalPanoramaView] Not found in Archive:', archiveErr);
             }
+
+            try {
+                // Try Original Voucher
+                const ov = await originalVoucherApi.getOriginalVoucher(selectedVoucherId);
+                if (ov) {
+                    console.log('[ArchivalPanoramaView] Found in OriginalVoucher');
+                    setSourceType('ORIGINAL');
+                    return; // Found
+                }
+            } catch (ovErr) {
+                console.warn('[ArchivalPanoramaView] Not found in OriginalVoucher:', ovErr);
+            }
+
+            // If we reach here, neither was found
+            console.error('[ArchivalPanoramaView] Source not found for id:', selectedVoucherId);
+            setSourceType(null);
+            setLoading(false);
         };
 
-        detectSource();
+        detectSource().finally(() => {
+            setLoading(false);
+        });
     }, [selectedVoucherId]);
 
     // Fetch YonSuite attachments
@@ -289,8 +302,8 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
                             <button
                                 onClick={() => setDetailViewMode('detail')}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${detailViewMode === 'detail'
-                                        ? 'bg-white text-primary-700 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                    ? 'bg-white text-primary-700 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
                                 <FileText size={12} />
@@ -299,8 +312,8 @@ export const ArchivalPanoramaView: React.FC<ArchivalPanoramaViewProps> = ({ init
                             <button
                                 onClick={() => setDetailViewMode('voucher')}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${detailViewMode === 'voucher'
-                                        ? 'bg-white text-primary-700 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                    ? 'bg-white text-primary-700 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
                                 <Receipt size={12} />

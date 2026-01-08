@@ -70,6 +70,26 @@ export interface ScanSubmitResult {
 }
 
 /**
+ * 文件夹监控接口
+ */
+export interface FolderMonitor {
+  id?: number;
+  folderPath: string;
+  isActive?: boolean;
+  fileFilter?: string;
+  autoDelete?: boolean;
+  moveToPath?: string;
+  createdAt?: string;
+}
+
+export interface FolderMonitorRequest {
+  folderPath: string;
+  fileFilter?: string;
+  autoDelete?: boolean;
+  moveToPath?: string;
+}
+
+/**
  * 扫描工作区 API
  */
 export const scanApi = {
@@ -154,12 +174,79 @@ export const scanApi = {
 
   /**
    * 创建移动端扫描会话
-   * POST /api/scan/mobile/session
+   * POST /api/scan/workspace/mobile/session
    */
   createSession: async () => {
     const response = await client.post<ApiResponse<{ sessionId: string }>>(
-      '/scan/mobile/session'
+      '/scan/workspace/mobile/session'
     );
     return response.data;
+  },
+
+  /**
+   * 验证移动端扫描会话
+   * GET /api/scan/workspace/mobile/session/{sessionId}/validate
+   */
+  validateSession: async (sessionId: string): Promise<{ valid: boolean }> => {
+    const response = await client.get<{ valid: boolean }>(`/scan/workspace/mobile/session/${sessionId}/validate`);
+    return response.data;
+  },
+
+  /**
+   * 获取文件夹监控列表
+   * GET /api/scan/folder-monitors
+   */
+  getFolderMonitors: async (): Promise<FolderMonitor[]> => {
+    const response = await client.get<FolderMonitor[]>('/scan/folder-monitors');
+    return response.data;
+  },
+
+  /**
+   * 添加文件夹监控
+   * POST /api/scan/folder-monitors
+   */
+  addFolderMonitor: async (request: FolderMonitorRequest): Promise<FolderMonitor> => {
+    const response = await client.post<FolderMonitor>('/scan/folder-monitors', request);
+    return response.data;
+  },
+
+  /**
+   * 更新文件夹监控
+   * PUT /api/scan/folder-monitors/{id}
+   */
+  updateFolderMonitor: async (id: number, request: FolderMonitorRequest): Promise<FolderMonitor> => {
+    const response = await client.put<FolderMonitor>(`/scan/folder-monitors/${id}`, request);
+    return response.data;
+  },
+
+  /**
+   * 删除文件夹监控
+   * DELETE /api/scan/folder-monitors/{id}
+   */
+  deleteFolderMonitor: async (id: number): Promise<void> => {
+    await client.delete(`/scan/folder-monitors/${id}`);
+  },
+
+  /**
+   * 切换文件夹监控状态
+   * PATCH /api/scan/folder-monitors/{id}/toggle
+   */
+  toggleFolderMonitor: async (id: number): Promise<FolderMonitor> => {
+    const response = await client.patch<FolderMonitor>(`/scan/folder-monitors/${id}/toggle`);
+    return response.data;
+  },
+
+  /**
+   * 获取工作区文件内容 (带认证的 Blob URL)
+   * GET /api/scan/workspace/file/{id}
+   * 
+   * 由于 <img> 标签无法携带 Authorization header，
+   * 需要使用 axios 获取文件并转换为 Blob URL
+   */
+  getFileAsBlob: async (id: number): Promise<string> => {
+    const response = await client.get(`/scan/workspace/file/${id}`, {
+      responseType: 'blob',
+    });
+    return URL.createObjectURL(response.data);
   },
 };

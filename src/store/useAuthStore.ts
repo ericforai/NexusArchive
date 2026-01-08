@@ -23,6 +23,7 @@ export interface User {
     status?: string;
     roles?: string[];
     permissions?: string[];
+    allowedFonds?: string[];  // 允许访问的全宗号列表（数据隔离键）
     // 新增字段：个人资料展示
     phone?: string;
     employeeId?: string;
@@ -220,23 +221,4 @@ if (typeof window !== 'undefined') {
         console.log('[AuthStore] Already hydrated on init');
         useAuthStore.setState({ _hasHydrated: true });
     }
-}
-
-// ==============================================================================
-// 注册 HTTP 客户端状态提供器
-// 用于解耦 client.ts 和 store，避免循环依赖
-// ==============================================================================
-import { registerAuthProvider } from '../api/client.types';
-
-// 在模块初始化时注册状态提供器
-if (typeof window !== 'undefined') {
-    registerAuthProvider({
-        getState: () => {
-            const { token } = useAuthStore.getState();
-            return { token };
-        },
-        logout: () => {
-            useAuthStore.getState().logout();
-        },
-    });
 }

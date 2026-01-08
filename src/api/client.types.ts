@@ -23,12 +23,13 @@ export interface HttpClientState {
  */
 export interface HttpClientStateProvider {
   getState(): Partial<HttpClientState>;
+  clear?(): void;
   logout?(): void;
 }
 
 // 全局状态提供器列表（支持多个提供者）
 let authProvider: HttpClientStateProvider | null = null;
-let fondsProvider: HttpClientStateProvider | null = null;
+let fundsProvider: HttpClientStateProvider | null = null;
 
 /**
  * 注册认证状态提供器
@@ -48,7 +49,7 @@ export function registerAuthProvider(provider: HttpClientStateProvider): void {
  * </p>
  */
 export function registerFondsProvider(provider: HttpClientStateProvider): void {
-  fondsProvider = provider;
+  fundsProvider = provider;
   console.log('[HttpClient] Fonds provider registered');
 }
 
@@ -60,21 +61,56 @@ export function registerFondsProvider(provider: HttpClientStateProvider): void {
  */
 export function getHttpClientState(): HttpClientState {
   const authState = authProvider?.getState() || {};
-  const fondsState = fondsProvider?.getState() || {};
+  const fundsState = fundsProvider?.getState() || {};
 
   return {
     token: authState.token || null,
-    fondsCode: fondsState.fondsCode || null,
+    fondsCode: fundsState.fondsCode || null,
   };
+}
+
+/**
+ * 清除全宗状态
+ * <p>
+ * 用于切换用户时清除上一个用户的全宗选择
+ * 通过已注册的提供器调用，避免循环依赖
+ * </p>
+ */
+export function clearFondsState(): void {
+  if (fundsProvider) {
+    // 添加一个特殊的 clear 方法到提供器
+    const provider = fundsProvider as any;
+    if (provider.clear) {
+      provider.clear();
+      console.log('[HttpClient] Fonds state cleared via provider');
+    }
+  }
+}
+
+/**
+ * 注册清除全宗状态的回调
+ * <p>
+ * 由 FondsStore 初始化时调用，用于 logout 时清除状态
+ * </p>
+ */
+let clearFondsCallback: (() => void) | null = null;
+export function registerClearFondsCallback(callback: () => void): void {
+  clearFondsCallback = callback;
+  // 同时更新 provider 以支持 clear 方法
+  fundsProvider = {
+    ...fundsProvider,
+    clear: callback,
+  } as any;
 }
 
 /**
  * 执行登出操作
  * <p>
- * 通过注册的 auth provider 执行登出
+ * 通过注册的 auth provider 执行登出，同时清除全宗状态
  * </p>
  */
 export function performLogout(): void {
+  clearFondsState();  // 清除全宗状态（防止缓存了其他用户的全宗选择）
   if (authProvider?.logout) {
     authProvider.logout();
   }

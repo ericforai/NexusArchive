@@ -6,8 +6,8 @@
 // src/components/settings/integration/components/ConnectorForm.tsx
 
 import React from 'react';
-import { X, Plus, Trash2, CheckCircle } from 'lucide-react';
-import { Drawer, Button, Input, Select, Space, Alert } from 'antd';
+import { X, Plus, Trash2, CheckCircle, ArrowRight, Building2, ShieldAlert } from 'lucide-react';
+import { Drawer, Button, Input, Select, Space, Alert, Table, Tag, Switch } from 'antd';
 import { ConnectorModalState, ConnectorModalActions } from '../types';
 
 interface ConnectorFormProps {
@@ -20,13 +20,56 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
     show,
     editingConfig,
     configForm,
-    newAccbookCode,
+    newMappingEntry,
     detectedType,
     testing,
   } = state;
 
   const isEdit = !!editingConfig?.id;
   const isTesting = testing;
+
+  // 转换映射为表格数据
+  const mappingData = Object.entries(configForm.accbookMapping || {}).map(
+    ([accbookCode, fondsCode]) => ({
+      key: accbookCode,
+      accbookCode,
+      fondsCode,
+    })
+  );
+
+  const columns = [
+    {
+      title: '账套编码',
+      dataIndex: 'accbookCode',
+      key: 'accbookCode',
+      render: (code: string) => <code className="px-2 py-1 bg-blue-50 text-blue-700 rounded">{code}</code>,
+    },
+    {
+      title: '',
+      key: 'arrow',
+      width: 40,
+      render: () => <ArrowRight size={16} className="text-gray-400 mx-auto" />,
+    },
+    {
+      title: '全宗编码',
+      dataIndex: 'fondsCode',
+      key: 'fondsCode',
+      render: (code: string) => <Tag color="green">{code}</Tag>,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 60,
+      render: (_: unknown, record: { accbookCode: string }) => (
+        <Button
+          type="text"
+          danger
+          icon={<Trash2 size={14} />}
+          onClick={() => actions.removeMappingEntry(record.accbookCode)}
+        />
+      ),
+    },
+  ];
 
   return (
     <Drawer
@@ -43,7 +86,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         </div>
       }
       placement="right"
-      size="default"
+      width={800}
       open={show}
       onClose={actions.closeModal}
       destroyOnClose={true}
@@ -140,52 +183,98 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
           应用密钥 <span style={{ color: '#ef4444' }}>*</span>
         </label>
+        {isEdit && !configForm.appSecret && (
+          <div style={{ marginBottom: 8, padding: '6px 12px', backgroundColor: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: 4, fontSize: 12 }}>
+            📝 应用密钥已保存，无需重新填写（留空则保持原值）
+          </div>
+        )}
         <Input.Password
           value={configForm.appSecret}
           onChange={e => actions.updateForm('appSecret', e.target.value)}
-          placeholder="您的应用密钥"
+          placeholder={isEdit ? "留空保持原密钥，或输入新密钥更新" : "您的应用密钥"}
         />
       </div>
 
-      {/* Accbook Codes */}
+      {/* Close Check Mode (仅 YonSuite 显示) */}
+      {configForm.erpType === 'yonsuite' && (
+        <div style={{ marginBottom: 16, padding: 16, backgroundColor: '#f9fafb', borderRadius: 8 }}>
+          <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500 }}>
+            <div className="flex items-center gap-2">
+              <ShieldAlert size={16} />
+              <span>关账检查模式</span>
+            </div>
+          </label>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm">
+              {configForm.requireClosedPeriod ? (
+                <span className="text-red-600">强制模式：未关账期间将无法同步凭证</span>
+              ) : (
+                <span className="text-amber-600">提醒模式：未关账时警告但允许继续同步</span>
+              )}
+            </span>
+            <Switch
+              checked={configForm.requireClosedPeriod ?? false}
+              onChange={(checked) => actions.updateForm('requireClosedPeriod', checked)}
+              checkedChildren="强制"
+              unCheckedChildren="提醒"
+            />
+          </div>
+          <div className="text-xs text-gray-500">
+            用友 YonSuite 凭证同步前会检查期间关账状态
+          </div>
+        </div>
+      )}
+
+      {/* Accbook-Fonds Mapping */}
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
-          账套编码
+          <div className="flex items-center gap-2">
+            <Building2 size={16} />
+            <span>账套-全宗映射</span>
+            <span className="text-xs text-gray-500 font-normal">(一个账套对应一个全宗)</span>
+          </div>
         </label>
-        <Space direction="vertical" style={{ width: '100%' }} size="small">
-          {configForm.accbookCodes.map(code => (
-            <Space.Compact key={code} style={{ width: '100%' }}>
-              <Input
-                value={code}
-                readOnly
-                style={{ flex: 1 }}
-              />
-              <Button
-                type="text"
-                danger
-                icon={<Trash2 size={16} />}
-                onClick={() => actions.removeAccbookCode(code)}
-              />
-            </Space.Compact>
-          ))}
-          <Space.Compact style={{ width: '100%' }}>
-            <Input
-              value={newAccbookCode}
-              onChange={e => actions.updateForm('newAccbookCode', e.target.value)}
-              placeholder="输入账套编码"
-              style={{ flex: 1 }}
-              onPressEnter={() => newAccbookCode && actions.addAccbookCode(newAccbookCode)}
-            />
-            <Button
-              type="primary"
-              icon={<Plus size={16} />}
-              onClick={() => actions.addAccbookCode(newAccbookCode)}
-              disabled={!newAccbookCode}
-            >
-              添加
-            </Button>
-          </Space.Compact>
-        </Space>
+        
+        {/* 映射列表 */}
+        {mappingData.length > 0 && (
+          <Table
+            columns={columns}
+            dataSource={mappingData}
+            size="small"
+            pagination={false}
+            className="mb-3"
+            style={{ marginBottom: 12 }}
+          />
+        )}
+
+        {/* 添加新映射 */}
+        <Space.Compact style={{ width: '100%' }}>
+          <Input
+            placeholder="账套编码 (如: BR01)"
+            value={newMappingEntry.accbookCode}
+            onChange={e => actions.updateNewMappingEntry('accbookCode', e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <Input
+            placeholder="全宗编码 (如: FONDS_A)"
+            value={newMappingEntry.fondsCode}
+            onChange={e => actions.updateNewMappingEntry('fondsCode', e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <Button
+            type="primary"
+            icon={<Plus size={16} />}
+            onClick={() => actions.addMappingEntry(newMappingEntry.accbookCode, newMappingEntry.fondsCode)}
+            disabled={!newMappingEntry.accbookCode || !newMappingEntry.fondsCode}
+          >
+            添加映射
+          </Button>
+        </Space.Compact>
+
+        {/* 合规性提示 */}
+        <div className="mt-2 p-2 bg-amber-50 text-amber-700 text-xs rounded">
+          合规性要求：一个全宗只能关联一个ERP账套 (1:1严格对应)
+        </div>
       </div>
 
       {/* Connection Test */}
@@ -196,7 +285,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
           disabled={!configForm.baseUrl || !configForm.appKey || !configForm.appSecret || isTesting}
           loading={isTesting}
           icon={!isTesting && <CheckCircle size={16} />}
-          size="large"
+          size="small"
           block
           style={{ backgroundColor: '#52c41a', color: '#ffffff' }}
         >

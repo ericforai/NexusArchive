@@ -119,6 +119,20 @@ export const QUERY_CONFIG: ModuleConfig = {
     data: []
 };
 
+// 2.1 扫描集成（资料收集）
+export const SCAN_CONFIG: ModuleConfig = {
+    columns: [
+        { key: 'title', header: '题名', type: 'text' },
+        { key: 'category', header: '门类', type: 'status' },
+        { key: 'orgName', header: '组织机构', type: 'text' },
+        { key: 'year', header: '年度', type: 'text' },
+        { key: 'period', header: '期间', type: 'text' },
+        { key: 'date', header: '日期', type: 'date' },
+        { key: 'status', header: '状态', type: 'status' },
+    ],
+    data: []
+};
+
 // 默认兜底
 export const GENERIC_CONFIG: ModuleConfig = {
     columns: [{ key: 'info', header: '信息', type: 'text' }],

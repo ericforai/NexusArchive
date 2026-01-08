@@ -17,8 +17,15 @@ import {
 } from '../../components/operations';
 import { CheckCircle2, XCircle, FileText, Clock, User, Calendar, MessageSquare, AlertCircle } from 'lucide-react';
 import { toast } from '../../utils/notificationService';
+import { useAuthStore } from '@/store/useAuthStore';
+
+// Constants
+const PAGE_SIZE = 50;
 
 export const ArchiveApprovalView: React.FC = () => {
+    // Auth store - get current user
+    const user = useAuthStore(state => state.user);
+
     // 批量选择状态
     const {
         selectedIds,
@@ -51,8 +58,8 @@ export const ArchiveApprovalView: React.FC = () => {
         try {
             setLoading(true);
             // 加载当前筛选的数据
-            const response = await archiveApprovalApi.getApprovalList(1, 50, statusFilter);
-            setApprovals(response.data.data.records || []);
+            const response = await archiveApprovalApi.getApprovalList(1, PAGE_SIZE, statusFilter);
+            setApprovals(response?.data?.data?.records || []);
 
             // 加载各状态计数
             const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
@@ -61,9 +68,9 @@ export const ArchiveApprovalView: React.FC = () => {
                 archiveApprovalApi.getApprovalList(1, 1, 'REJECTED'),
             ]);
             setStatusCounts({
-                PENDING: pendingRes.data.data.total || 0,
-                APPROVED: approvedRes.data.data.total || 0,
-                REJECTED: rejectedRes.data.data.total || 0,
+                PENDING: pendingRes?.data?.data?.total || 0,
+                APPROVED: approvedRes?.data?.data?.total || 0,
+                REJECTED: rejectedRes?.data?.data?.total || 0,
             });
         } catch (error) {
             console.error('Failed to load approvals:', error);
@@ -83,8 +90,8 @@ export const ArchiveApprovalView: React.FC = () => {
             setProcessing(true);
             await archiveApprovalApi.approveArchive({
                 id: selectedApproval.id,
-                approverId: 'admin',
-                approverName: '管理员',
+                approverId: user?.id || '',
+                approverName: user?.realName || user?.username || '',
                 comment: comment || '批准归档'
             });
             setShowModal(false);
@@ -110,8 +117,8 @@ export const ArchiveApprovalView: React.FC = () => {
             setProcessing(true);
             await archiveApprovalApi.rejectArchive({
                 id: selectedApproval.id,
-                approverId: 'admin',
-                approverName: '管理员',
+                approverId: user?.id || '',
+                approverName: user?.realName || user?.username || '',
                 comment: comment
             });
             setShowModal(false);
@@ -155,8 +162,8 @@ export const ArchiveApprovalView: React.FC = () => {
 
             const request = {
                 ids: selectedIdArray.map(String),
-                approverId: 'admin',
-                approverName: '管理员',
+                approverId: user?.id || '',
+                approverName: user?.realName || user?.username || '',
                 comment: comment || (batchAction === 'approve' ? '批量批准' : '批量拒绝')
             };
 
@@ -196,8 +203,8 @@ export const ArchiveApprovalView: React.FC = () => {
 
             const request = {
                 ids: failedIds.map(String),
-                approverId: 'admin',
-                approverName: '管理员',
+                approverId: user?.id || '',
+                approverName: user?.realName || user?.username || '',
                 comment: batchAction === 'approve' ? '重试批量批准' : '重试批量拒绝'
             };
 
@@ -248,8 +255,8 @@ export const ArchiveApprovalView: React.FC = () => {
             }));
     }, [approvals, selectedIds]);
 
-    // 表格列定义
-    const columns: ColumnsType<ArchiveApproval> = [
+    // 表格列定义 - useMemo to prevent re-creation
+    const columns: ColumnsType<ArchiveApproval> = useMemo(() => [
         {
             title: '档号',
             dataIndex: 'archiveCode',
@@ -310,7 +317,7 @@ export const ArchiveApprovalView: React.FC = () => {
                 </button>
             )
         }
-    ];
+    ], []);
 
     const getStatusBadge = (status: string) => {
         const styles = {

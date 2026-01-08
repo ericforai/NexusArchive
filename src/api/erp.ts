@@ -118,6 +118,19 @@ export const erpApi = {
         return response.data;
     },
 
+    // Close Check Mode (关账检查模式)
+    getCloseCheckMode: async (configId: number): Promise<ApiResponse<boolean>> => {
+        const response = await client.get<ApiResponse<boolean>>(`/erp/config/${configId}/close-check-mode`);
+        return response.data;
+    },
+
+    updateCloseCheckMode: async (configId: number, requireClosedPeriod: boolean): Promise<ApiResponse<void>> => {
+        const response = await client.put<ApiResponse<void>>(`/erp/config/${configId}/close-check-mode`, {
+            requireClosedPeriod
+        });
+        return response.data;
+    },
+
     // Scenarios
     getScenarios: async (configId: number): Promise<ApiResponse<ErpScenario[]>> => {
         const response = await client.get<ApiResponse<ErpScenario[]>>(`/erp/scenario/list/${configId}`);

@@ -64,6 +64,24 @@ export interface DestructionApprovalRequest {
     approved: boolean;
 }
 
+/**
+ * 批量审批请求
+ */
+export interface BatchDestructionApprovalRequest {
+    ids: string[];
+    comment?: string;
+    approvalType: 'first' | 'second';
+}
+
+/**
+ * 批量审批结果
+ */
+export interface BatchApprovalResult {
+    success: number;
+    failed: number;
+    errors: Array<{ id: string; reason: string }>;
+}
+
 export const destructionApi = {
     /**
      * 获取到期档案列表
@@ -200,6 +218,28 @@ export const destructionApi = {
             activeBatches: number;
             safeDestructionCount: number;
         }>>('/destruction/stats');
+        return response.data;
+    },
+
+    /**
+     * 批量审批销毁申请
+     */
+    batchApprove: async (request: BatchDestructionApprovalRequest): Promise<ApiResponse<BatchApprovalResult>> => {
+        const response = await client.post<ApiResponse<BatchApprovalResult>>(
+            '/destruction/batch-approve',
+            request
+        );
+        return response.data;
+    },
+
+    /**
+     * 批量拒绝销毁申请
+     */
+    batchReject: async (request: BatchDestructionApprovalRequest): Promise<ApiResponse<BatchApprovalResult>> => {
+        const response = await client.post<ApiResponse<BatchApprovalResult>>(
+            '/destruction/batch-reject',
+            { ...request, comment: request.comment || '' } // 拒绝时意见必填
+        );
         return response.data;
     },
 };

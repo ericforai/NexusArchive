@@ -38,6 +38,7 @@ export interface ArchiveQuery {
     categoryCode?: string;
     orgId?: string;
     subType?: string; // Generic sub-type filter (e.g. bookType, reportType)
+    fondsNo?: string; // 全宗号（显式过滤，提高代码可读性）
 }
 
 export const archivesApi = {

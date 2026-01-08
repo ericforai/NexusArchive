@@ -14,6 +14,12 @@ import { BaseModal } from '../modals/BaseModal';
 export const CONFIRM_THRESHOLD = 10;
 
 /**
+ * 后台任务阈值
+ * 超过此数量时将创建后台任务（需要在任务中心查看进度）
+ */
+export const BACKGROUND_TASK_THRESHOLD = 50;
+
+/**
  * 最大评论长度
  */
 export const MAX_COMMENT_LENGTH = 500;
@@ -160,6 +166,9 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
   // 是否显示确认提示（>= 阈值时显示）
   const showConfirmNotice = selectedCount >= CONFIRM_THRESHOLD;
 
+  // 是否显示后台任务提示（>= 后台任务阈值时显示）
+  const showBackgroundTaskNotice = selectedCount >= BACKGROUND_TASK_THRESHOLD;
+
   // 是否有效（拒绝时需要填写意见）
   const isValid = action === 'approve' || comment.trim().length > 0;
 
@@ -239,6 +248,22 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
                   ... 等共 {selectedCount} 条
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 后台任务提示（超过后台任务阈值） */}
+      {showBackgroundTaskNotice && (
+        <div className="mb-4">
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-start gap-2">
+            <AlertTriangle size={18} className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800 dark:text-blue-300">
+              <p className="font-medium mb-1">批量操作将以异步方式执行</p>
+              <p className="text-xs">
+                由于操作数量较多（{selectedCount} 条），系统将在后台创建批量任务。
+                您可以在任务中心查看执行进度和结果。
+              </p>
             </div>
           </div>
         </div>

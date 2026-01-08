@@ -13,6 +13,7 @@ import type { ModuleConfig } from '../../types';
 import {
     PRE_ARCHIVE_POOL_CONFIG,
     PRE_ARCHIVE_LINK_CONFIG,
+    SCAN_CONFIG,
     ACCOUNTING_VOUCHER_CONFIG,
     ACCOUNTING_LEDGER_CONFIG,
     FINANCIAL_REPORT_CONFIG,
@@ -63,7 +64,7 @@ export const ROUTE_CONFIG_MAP: Record<ArchiveRouteMode, RouteConfigMeta> = {
     'link': { config: PRE_ARCHIVE_LINK_CONFIG, title: '预归档库', subTitle: '凭证关联' },
     'collection': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '概览' },
     'online': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '在线接收' },
-    'scan': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '扫描集成' },
+    'scan': { config: SCAN_CONFIG, title: '资料收集', subTitle: '扫描集成' },
     'view': { config: GENERIC_CONFIG, title: '档案管理', subTitle: '归档查看' },
     'voucher': { config: ACCOUNTING_VOUCHER_CONFIG, title: '档案管理', subTitle: '会计凭证' },
     'ledger': { config: ACCOUNTING_LEDGER_CONFIG, title: '档案管理', subTitle: '会计账簿' },

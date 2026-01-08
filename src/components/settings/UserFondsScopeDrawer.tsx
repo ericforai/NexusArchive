@@ -26,7 +26,7 @@ export const UserFondsScopeDrawer: React.FC<UserFondsScopeDrawerProps> = ({
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [assignedFonds, setAssignedFonds] = useState<string[]>([]);
-    const [availableFonds, setAvailableFonds] = useState<Array<{fondsCode: string; fondsName: string; companyName: string}>>([]);
+    const [availableFonds, setAvailableFonds] = useState<Array<{ fondsCode: string; fondsName: string; companyName: string }>>([]);
 
     useEffect(() => {
         if (!isOpen || !userId) return;
@@ -98,9 +98,10 @@ export const UserFondsScopeDrawer: React.FC<UserFondsScopeDrawerProps> = ({
             placement="right"
             open={isOpen}
             onClose={onClose}
-            width={420}
+            size="default"
             styles={{
-                body: { padding: '20px' }
+                body: { padding: '20px' },
+                wrapper: { width: 420 }
             }}
             footer={
                 <div className="flex items-center justify-end gap-3 p-4 border-t">
@@ -143,11 +144,10 @@ export const UserFondsScopeDrawer: React.FC<UserFondsScopeDrawerProps> = ({
                             onClick={toggleAll}
                             className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
                         >
-                            <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${
-                                isAllSelected
+                            <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${isAllSelected
                                     ? 'bg-blue-600 border-blue-600'
                                     : 'border-slate-300'
-                            }`}>
+                                }`}>
                                 {isAllSelected && (
                                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -169,17 +169,15 @@ export const UserFondsScopeDrawer: React.FC<UserFondsScopeDrawerProps> = ({
                                         key={fonds.fondsCode}
                                         type="button"
                                         onClick={() => toggleFonds(fonds.fondsCode)}
-                                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                            isSelected
+                                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${isSelected
                                                 ? 'bg-blue-50 border-blue-200'
                                                 : 'bg-white border-slate-200 hover:border-slate-300'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`w-5 h-5 border rounded flex items-center justify-center transition-colors ${
-                                            isSelected
+                                        <div className={`w-5 h-5 border rounded flex items-center justify-center transition-colors ${isSelected
                                                 ? 'bg-blue-600 border-blue-600'
                                                 : 'border-slate-300'
-                                        }`}>
+                                            }`}>
                                             {isSelected && (
                                                 <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

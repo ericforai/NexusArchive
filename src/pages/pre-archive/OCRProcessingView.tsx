@@ -8,7 +8,7 @@ import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ScanLine, Loader2, 
 import { QRCodeSVG } from 'qrcode.react';
 import { scanApi, type ScanWorkspaceItem, type OcrField } from '../../api/scan';
 import { toast } from '../../utils/notificationService';
-import { FolderMonitorDialog } from '../../components/scan/FolderMonitorDialog';
+import { FolderMonitorDialog } from '@components/scan';
 
 const DOC_TYPES = [
   { value: 'invoice', label: '增值税发票', icon: Receipt },
@@ -37,6 +37,10 @@ export const OCRProcessingView: React.FC = () => {
   // Folder Monitor Dialog State
   const [isFolderMonitorOpen, setIsFolderMonitorOpen] = useState(false);
 
+  // File preview Blob URL (for authenticated file loading)
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
   // Ref to track activeTask for interval closure
   const activeTaskRef = useRef(activeTask);
 
@@ -52,6 +56,12 @@ export const OCRProcessingView: React.FC = () => {
       // Auto-select first item if none selected
       if (items.data.length > 0 && !activeTask) {
         setActiveTask(items.data[0]);
+      } else if (activeTask && items.data.length > 0) {
+        // Update activeTask with fresh data from backend (sync OCR status, results, etc.)
+        const updatedActiveTask = items.data.find(item => item.id === activeTask.id);
+        if (updatedActiveTask) {
+          setActiveTask(updatedActiveTask);
+        }
       }
     } catch (error) {
       console.error('Failed to load workspace:', error);
@@ -74,6 +84,39 @@ export const OCRProcessingView: React.FC = () => {
       }
     };
   }, []);
+
+  // Load file preview as Blob URL when activeTask changes
+  useEffect(() => {
+    const loadPreview = async () => {
+      // Cleanup previous blob URL to prevent memory leaks
+      if (previewBlobUrl) {
+        URL.revokeObjectURL(previewBlobUrl);
+        setPreviewBlobUrl(null);
+      }
+
+      if (!activeTask?.id) return;
+
+      setIsLoadingPreview(true);
+      try {
+        const blobUrl = await scanApi.getFileAsBlob(activeTask.id);
+        setPreviewBlobUrl(blobUrl);
+      } catch (error) {
+        console.error('Failed to load file preview:', error);
+        // Don't show toast for preview errors, just log
+      } finally {
+        setIsLoadingPreview(false);
+      }
+    };
+
+    loadPreview();
+
+    // Cleanup on unmount or when activeTask changes
+    return () => {
+      if (previewBlobUrl) {
+        URL.revokeObjectURL(previewBlobUrl);
+      }
+    };
+  }, [activeTask?.id]);
 
   // Auto-save Interval
   useEffect(() => {
@@ -131,7 +174,7 @@ export const OCRProcessingView: React.FC = () => {
 
   // Build QR Code URL
   const qrCodeUrl = qrSessionId
-    ? `${window.location.origin}/mobile/scan?session=${qrSessionId}`
+    ? `${window.location.origin}/system/scan/mobile/${qrSessionId}`
     : '';
 
   // Parse OCR result to fields
@@ -204,41 +247,16 @@ export const OCRProcessingView: React.FC = () => {
       setTaskList(prev => [uploadedItem.data, ...prev]);
       setActiveTask(uploadedItem.data);
 
-      // Auto-trigger OCR
+      // Auto-trigger OCR (backend will process asynchronously)
+      // Note: Global polling (every 5 seconds) will sync the status automatically
+      // No need for separate polling here to avoid race conditions
       if (uploadedItem.data.id) {
         toast.loading('正在进行 OCR 识别...', { id: 'ocr', duration: 0 });
+
+        // Just trigger OCR, polling will handle status updates
         await scanApi.processOcr(uploadedItem.data.id);
 
-        // Poll for OCR completion
-        const checkOcrStatusRef = useRef<NodeJS.Timeout | null>(null);
-        checkOcrStatusRef.current = setInterval(async () => {
-          try {
-            const items = await scanApi.getWorkspace();
-            const updatedItem = items.data.find(i => i.id === uploadedItem.data.id);
-
-            if (updatedItem && updatedItem.ocrStatus === 'review') {
-              if (checkOcrStatusRef.current) clearInterval(checkOcrStatusRef.current);
-              toast.dismiss('ocr');
-              toast.success('OCR 识别完成');
-
-              // Update local state
-              setTaskList(items.data);
-              setActiveTask(updatedItem);
-            } else if (updatedItem && updatedItem.ocrStatus === 'failed') {
-              if (checkOcrStatusRef.current) clearInterval(checkOcrStatusRef.current);
-              toast.dismiss('ocr');
-              toast.error('OCR 识别失败，请重试');
-            }
-          } catch (error) {
-            console.error('Failed to check OCR status:', error);
-          }
-        }, 2000); // Check every 2 seconds
-
-        // Timeout after 60 seconds
-        setTimeout(() => {
-          if (checkOcrStatusRef.current) clearInterval(checkOcrStatusRef.current);
-          toast.dismiss('ocr');
-        }, 60000);
+        // The global polling will detect when OCR is complete and update the UI
       }
     } catch (error) {
       console.error('Upload failed:', error);
@@ -447,11 +465,30 @@ export const OCRProcessingView: React.FC = () => {
                 {/* Background Grid */}
                 <div className="absolute inset-0 opacity-20 pointer-events-none bg-[linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc),linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc)] [background-size:20px_20px] [background-position:0_0,10px_10px]"></div>
 
-                <img
-                  src={activeTask.filePath}
-                  alt="Preview"
-                  className="max-w-full max-h-full shadow-2xl object-contain transition-transform duration-300"
-                />
+                {/* Loading State */}
+                {isLoadingPreview && (
+                  <div className="flex flex-col items-center justify-center text-slate-400">
+                    <Loader2 size={32} className="animate-spin text-primary-500 mb-2" />
+                    <p className="text-sm">加载预览中...</p>
+                  </div>
+                )}
+
+                {/* Preview Image (using Blob URL for authenticated access) */}
+                {!isLoadingPreview && previewBlobUrl && (
+                  <img
+                    src={previewBlobUrl}
+                    alt="Preview"
+                    className="max-w-full max-h-full shadow-2xl object-contain transition-transform duration-300"
+                  />
+                )}
+
+                {/* Fallback when no preview available */}
+                {!isLoadingPreview && !previewBlobUrl && (
+                  <div className="flex flex-col items-center justify-center text-slate-400">
+                    <FileText size={48} className="mb-2" />
+                    <p className="text-sm">无法加载预览</p>
+                  </div>
+                )}
 
                 {/* Scanning Overlay Effect */}
                 {activeTask.ocrStatus === 'processing' && (

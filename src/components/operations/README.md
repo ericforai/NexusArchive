@@ -448,5 +448,5 @@ function MyBatchView() {
 
 ## 相关文档
 
-- [批量操作设计文档](../../../docs/plans/batch-operations.md)（待创建）
+- [批量操作设计文档](../../../docs/plans/2026-01-07-batch-operations-design.md)
 - [业务操作视图](../../pages/operations/README.md)

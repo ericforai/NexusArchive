@@ -19,7 +19,7 @@ interface FondsState {
     _hasHydrated: boolean;
 
     // Actions
-    setCurrentFonds: (fonds: BasFonds) => void;
+    setCurrentFonds: (fonds: BasFonds | null) => void;
     setFondsList: (list: BasFonds[]) => void;
     loadFondsList: () => Promise<void>;
     setHasHydrated: (hydrated: boolean) => void;
@@ -45,7 +45,7 @@ export const useFondsStore = create<FondsState>()(
 
             // 设置当前全宗
             setCurrentFonds: (fonds) => {
-                console.log('[FondsStore] Switch to:', fonds.fondsCode);
+                console.log('[FondsStore] Switch to:', fonds?.fondsCode || 'none');
                 set({ currentFonds: fonds });
             },
 
@@ -89,7 +89,7 @@ export const useFondsStore = create<FondsState>()(
         }),
         {
             name: 'nexus-fonds', // localStorage key
-            version: 1,
+            version: 2,
             partialize: (state) => ({
                 // 只持久化当前选中的全宗（列表每次从 API 加载）
                 currentFonds: state.currentFonds,
@@ -120,22 +120,4 @@ if (typeof window !== 'undefined') {
         console.log('[FondsStore] Already hydrated on init');
         useFondsStore.setState({ _hasHydrated: true });
     }
-}
-
-// ==============================================================================
-// 注册 HTTP 客户端全宗状态提供器
-// 用于解耦 client.ts 和 store，避免循环依赖
-// ==============================================================================
-import { registerFondsProvider } from '../api/client.types';
-
-// 在模块初始化时注册状态提供器
-if (typeof window !== 'undefined') {
-    registerFondsProvider({
-        getState: () => {
-            const { currentFonds } = useFondsStore.getState();
-            return {
-                fondsCode: currentFonds?.fondsCode || null,
-            };
-        },
-    });
 }

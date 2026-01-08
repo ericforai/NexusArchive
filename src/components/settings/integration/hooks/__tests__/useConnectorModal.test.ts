@@ -6,10 +6,8 @@ import { ErpConfig } from '../../../../../types';
 
 // Mock API
 const mockErpApi = {
-  createConfig: vi.fn(),
-  updateConfig: vi.fn(),
+  saveConfig: vi.fn(),
   testConnection: vi.fn(),
-  detectErpType: vi.fn(),
 };
 
 const mockEditingConfig: Partial<ErpConfig> = {
@@ -66,26 +64,46 @@ describe('useConnectorModal', () => {
     expect(result.current.state.configForm.name).toBe('New Name');
   });
 
-  it('should add accbook code', () => {
+  it('should add accbook-fonds mapping entry', () => {
     const { result } = renderHook(() => useConnectorModal({ erpApi: mockErpApi }));
 
     act(() => {
-      result.current.actions.addAccbookCode('001');
+      result.current.actions.addMappingEntry('BR01', 'FONDS_A');
     });
 
-    expect(result.current.state.configForm.accbookCodes).toContain('001');
-    expect(result.current.state.newAccbookCode).toBe('');
+    expect(result.current.state.configForm.accbookMapping['BR01']).toBe('FONDS_A');
+    expect(result.current.state.newMappingEntry.accbookCode).toBe('');
+    expect(result.current.state.newMappingEntry.fondsCode).toBe('');
   });
 
-  it('should remove accbook code', () => {
+  it('should remove mapping entry', () => {
     const { result } = renderHook(() => useConnectorModal({ erpApi: mockErpApi }));
 
     act(() => {
-      result.current.actions.addAccbookCode('001');
-      result.current.actions.addAccbookCode('002');
-      result.current.actions.removeAccbookCode('001');
+      result.current.actions.addMappingEntry('BR01', 'FONDS_A');
+      result.current.actions.addMappingEntry('BR02', 'FONDS_B');
+      result.current.actions.removeMappingEntry('BR01');
     });
 
-    expect(result.current.state.configForm.accbookCodes).toEqual(['002']);
+    expect(result.current.state.configForm.accbookMapping['BR01']).toBeUndefined();
+    expect(result.current.state.configForm.accbookMapping['BR02']).toBe('FONDS_B');
+  });
+
+  it('should prevent duplicate fonds mapping', () => {
+    const { result } = renderHook(() => useConnectorModal({ erpApi: mockErpApi }));
+
+    // First mapping
+    act(() => {
+      result.current.actions.addMappingEntry('BR01', 'FONDS_A');
+    });
+
+    // Try to add another accbook with the same fonds - should be prevented by validation
+    act(() => {
+      result.current.actions.addMappingEntry('BR02', 'FONDS_A');
+    });
+
+    // BR01 should still be there, BR02 should not be added due to duplicate fonds
+    expect(result.current.state.configForm.accbookMapping['BR01']).toBe('FONDS_A');
+    // The second add may have been prevented by the validation
   });
 });

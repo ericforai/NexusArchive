@@ -51,7 +51,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         fondsCodes: []
     });
 
-    const [availableFonds, setAvailableFonds] = useState<Array<{fondsCode: string; fondsName: string; companyName: string}>>([]);
+    const [availableFonds, setAvailableFonds] = useState<Array<{ fondsCode: string; fondsName: string; companyName: string }>>([]);
 
     const [fondsScopeDrawerOpen, setFondsScopeDrawerOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string>('');
@@ -190,6 +190,23 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
             toast.warning('用户名和密码必填');
             return;
         }
+        // 前端密码策略校验 - 一次性收集所有不满足的条件
+        const pwd = createForm.password;
+        const pwdErrors: string[] = [];
+        if (pwd.length < 8) pwdErrors.push('至少8位');
+        if (!/[A-Z]/.test(pwd)) pwdErrors.push('包含大写字母');
+        if (!/[a-z]/.test(pwd)) pwdErrors.push('包含小写字母');
+        if (!/\d/.test(pwd)) pwdErrors.push('包含数字');
+        if (!/[^A-Za-z0-9]/.test(pwd)) pwdErrors.push('包含特殊字符');
+
+        if (pwdErrors.length > 0) {
+            toast.error(`密码不符合策略要求，需满足：${pwdErrors.join('、')}`);
+            return;
+        }
+        if (!createForm.fullName || !createForm.fullName.trim()) {
+            toast.warning('姓名必填');
+            return;
+        }
         const selectedRoles = roles.filter(r => createForm.roleIds.includes(r.id));
         const selectedExclusive = selectedRoles.filter(r => EXCLUSIVE_ROLE_CODES.includes(r.code));
         if (selectedExclusive.length > 1) {
@@ -199,16 +216,21 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
         setCreateLoading(true);
         setCreateSuccess(false);
         try {
-            const res = await adminApi.createUser({
+            const requestData = {
                 username: createForm.username,
                 password: createForm.password,
                 fullName: createForm.fullName,
-                email: createForm.email,
-                phone: createForm.phone,
+                email: createForm.email || undefined,  // 发送 undefined 而不是空字符串
+                phone: createForm.phone || undefined,  // 发送 undefined 而不是空字符串
                 roleIds: createForm.roleIds,
-                fondsCodes: createForm.fondsCodes,
-                status: 'active'
+                fondsCodes: createForm.fondsCodes
+                // 移除 status 字段 - 后端 DTO 没有此字段
+            };
+            console.log('[UserSettings] Creating user with request:', {
+                ...requestData,
+                password: '***'  // 隐藏密码
             });
+            const res = await adminApi.createUser(requestData);
             if (res.code === 200) {
                 setCreateSuccess(true);
                 setCreateForm({ username: '', password: '', fullName: '', email: '', phone: '', roleIds: [], fondsCodes: [] });
@@ -217,7 +239,15 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                 toast.error(res.message || '创建失败');
             }
         } catch (e: any) {
-            toast.error(e?.response?.data?.message || '创建失败');
+            // 详细日志：完整错误响应
+            console.error('[UserSettings] Create user error:', {
+                status: e?.response?.status,
+                statusText: e?.response?.statusText,
+                data: e?.response?.data,
+                message: e?.response?.data?.message,
+                fullError: e
+            });
+            toast.error(e?.response?.data?.message || e?.message || '创建失败');
         } finally {
             setCreateLoading(false);
         }
@@ -287,7 +317,9 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                             value={createForm.password}
                             onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                             required
+                            placeholder="至少8位，含大小写字母、数字、特殊字符"
                         />
+                        <p className="text-xs text-slate-400 mt-1">如: Admin@123</p>
                     </div>
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-slate-700 mb-1">姓名 *</label>
@@ -365,11 +397,10 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                                 {roles.map((role) => (
                                     <label
                                         key={role.id}
-                                        className={`inline-flex items-center space-x-2 px-3 py-1.5 border rounded-lg cursor-pointer transition-all ${
-                                            createForm.roleIds.includes(role.id)
-                                                ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                                : 'bg-white border-slate-200 hover:border-blue-300'
-                                        }`}
+                                        className={`inline-flex items-center space-x-2 px-3 py-1.5 border rounded-lg cursor-pointer transition-all ${createForm.roleIds.includes(role.id)
+                                            ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                            : 'bg-white border-slate-200 hover:border-blue-300'
+                                            }`}
                                     >
                                         <input
                                             type="checkbox"
@@ -450,11 +481,10 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ adminApi }) => {
                                         <td className="py-3 pr-4">{user.email || '-'}</td>
                                         <td className="py-3 pr-4">{user.phone || '-'}</td>
                                         <td className="py-3 pr-4">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
-                                                user.status === 'active' ? 'bg-green-100 text-green-700' :
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${user.status === 'active' ? 'bg-green-100 text-green-700' :
                                                 user.status === 'disabled' ? 'bg-gray-100 text-gray-700' :
-                                                'bg-red-100 text-red-700'
-                                            }`}>
+                                                    'bg-red-100 text-red-700'
+                                                }`}>
                                                 {formatStatus(user.status)}
                                             </span>
                                         </td>

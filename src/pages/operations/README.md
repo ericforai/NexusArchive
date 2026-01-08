@@ -11,8 +11,24 @@
 
 | 文件 | 类型 | 功能 |
 | --- | --- | --- |
-| `ArchiveApprovalView.tsx` | React组件 | 归档审批视图，处理归档申请的审核流程。 |
-| `ArchiveBatchView.tsx` | React组件 | 归档批次管理，负责批次的创建、校验、提交和归档执行。 |
-| `DestructionView.tsx` | React组件 | 档案销毁管理，处理销毁申请与执行。 |
+| `ArchiveApprovalView.tsx` | React组件 | 归档审批视图，处理归档申请的审核流程。支持批量审批。 |
+| `ArchiveBatchView.tsx` | React组件 | 归档批次管理，负责批次的创建、校验、提交和归档执行。支持批量审批。 |
+| `DestructionApprovalPage.tsx` | React组件 | 档案销毁审批，处理销毁申请的审核。支持批量审批。 |
 | `OpenAppraisalView.tsx` | React组件 | 开放鉴定视图，处理档案的开放范围鉴定。 |
 | `VolumeManagement.tsx` | React组件 | 案卷管理，负责案卷的组卷与维护。 |
+
+## 批量操作功能
+
+以下视图已集成批量操作能力（详见 `src/components/operations/`）：
+
+- **ArchiveApprovalView**: 批量批准/拒绝归档申请
+- **ArchiveBatchView**: 批量批准/拒绝归档批次
+- **DestructionApprovalPage**: 批量批准/拒绝销毁申请
+
+### 批量操作限制
+
+| 限制项 | 值 |
+|--------|-----|
+| 单次最多选择 | 100 条 |
+| 确认阈值 | 10 条（超过时显示清单确认） |
+| 结果展示 | ≤50 条立即弹窗详情；>50 条转后台任务 |

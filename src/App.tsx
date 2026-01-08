@@ -8,7 +8,7 @@
  *
  * 使用 React Router v7 的 createBrowserRouter 实现企业级路由
  */
-import React from 'react';
+import { FC } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './routes';
 import { ToastContainer } from './components/common/ToastContainer';
@@ -24,7 +24,7 @@ if (import.meta.env.DEV) {
 // 创建路由实例
 const router = createBrowserRouter(routes);
 
-const App: React.FC = () => {
+const App: FC = () => {
   return (
     <ToastContainer>
       {/* 文档守卫：开发环境自动监控代码变更，提醒更新文档 */}

@@ -132,13 +132,14 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
       setViewRow(null);
       setActivePreviewId(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   // Link Modal State
   // Helper for rendering cells
   const renderCell = (row: GenericRow, column: any) => {
     const value = row[column.key];
+
+
 
     if (column.key === 'selection') {
       return (

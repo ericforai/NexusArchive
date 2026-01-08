@@ -22,6 +22,18 @@ const ERP_TEMPLATES = [
   { name: '泛微 OA (e-9)', pattern: /weaver|ecology/i, type: 'weaver', defaultUrl: '/weaver/' },
 ];
 
+/**
+ * 解析 accbookMapping 字符串为对象
+ */
+function parseAccbookMapping(mappingJson?: string): Record<string, string> {
+  if (!mappingJson) return {};
+  try {
+    return JSON.parse(mappingJson);
+  } catch {
+    return {};
+  }
+}
+
 export function useConnectorModal(options: UseConnectorModalOptions) {
   const { erpApi, onConfigSaved } = options;
 
@@ -29,7 +41,12 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
   const [editingConfig, setEditingConfig] = useState<Partial<ErpConfig> | null>(null);
   const [testing, setTesting] = useState(false);
   const [detectedType, setDetectedType] = useState<string | null>(null);
-  const [newAccbookCode, setNewAccbookCode] = useState('');
+
+  // 新增映射条目的临时状态
+  const [newMappingEntry, setNewMappingEntry] = useState({
+    accbookCode: '',
+    fondsCode: '',
+  });
 
   const [configForm, setConfigForm] = useState({
     name: '',
@@ -37,8 +54,8 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
     baseUrl: '',
     appKey: '',
     appSecret: '',
-    accbookCode: '',
-    accbookCodes: [] as string[],
+    accbookMapping: {} as Record<string, string>,
+    requireClosedPeriod: false,
   });
 
   const openModal = useCallback((config?: Partial<ErpConfig>) => {
@@ -55,14 +72,17 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
         console.error('Failed to parse configJson:', error);
       }
 
+      // Parse accbookMapping from separate field
+      const mapping = parseAccbookMapping(config.accbookMapping);
+
       setConfigForm({
         name: config.name || '',
-        erpType: config.erpType || 'yonsuite',
+        erpType: (config.erpType || 'yonsuite').toLowerCase(),
         baseUrl: (configData as any).baseUrl || '',
         appKey: (configData as any).appKey || '',
         appSecret: (configData as any).appSecret || '',
-        accbookCode: (configData as any).accbookCode || '',
-        accbookCodes: (configData as any).accbookCodes || [],
+        accbookMapping: mapping,
+        requireClosedPeriod: (configData as any).requireClosedPeriod ?? false,
       });
     } else {
       setEditingConfig(null);
@@ -72,38 +92,61 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
         baseUrl: '',
         appKey: '',
         appSecret: '',
-        accbookCode: '',
-        accbookCodes: [],
+        accbookMapping: {},
+        requireClosedPeriod: false,
       });
     }
     setShow(true);
     setDetectedType(null);
+    setNewMappingEntry({ accbookCode: '', fondsCode: '' });
   }, []);
 
   const closeModal = useCallback(() => {
     setShow(false);
     setEditingConfig(null);
     setTesting(false);
+    setNewMappingEntry({ accbookCode: '', fondsCode: '' });
   }, []);
 
   const updateForm = useCallback((field: string, value: any) => {
     setConfigForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const addAccbookCode = useCallback((code: string) => {
-    if (!code.trim()) return;
-    setConfigForm(prev => ({
-      ...prev,
-      accbookCodes: [...prev.accbookCodes, code.trim()],
-    }));
-    setNewAccbookCode('');
+  // 专门更新新映射条目的函数
+  const updateNewMappingEntry = useCallback((field: 'accbookCode' | 'fondsCode', value: string) => {
+    setNewMappingEntry(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const removeAccbookCode = useCallback((code: string) => {
+  const addMappingEntry = useCallback((accbookCode: string, fondsCode: string) => {
+    if (!accbookCode.trim() || !fondsCode.trim()) return;
+    
+    // 校验：一个全宗只能映射一个账套
+    const currentMapping = configForm.accbookMapping;
+    const existingAccbook = Object.keys(currentMapping).find(
+      key => currentMapping[key] === fondsCode
+    );
+    
+    if (existingAccbook) {
+      toast.error(`全宗 ${fondsCode} 已映射到账套 ${existingAccbook}，一个全宗只能关联一个账套`);
+      return;
+    }
+
     setConfigForm(prev => ({
       ...prev,
-      accbookCodes: prev.accbookCodes.filter(c => c !== code),
+      accbookMapping: {
+        ...prev.accbookMapping,
+        [accbookCode.trim()]: fondsCode.trim(),
+      },
     }));
+    setNewMappingEntry({ accbookCode: '', fondsCode: '' });
+  }, [configForm.accbookMapping]);
+
+  const removeMappingEntry = useCallback((accbookCode: string) => {
+    setConfigForm(prev => {
+      const newMapping = { ...prev.accbookMapping };
+      delete newMapping[accbookCode];
+      return { ...prev, accbookMapping: newMapping };
+    });
   }, []);
 
   const detectErpType = useCallback(async (url: string): Promise<string> => {
@@ -141,13 +184,15 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
         id: editingConfig?.id,
         name: configForm.name,
         erpType: configForm.erpType,
+        // 连接配置
         configJson: JSON.stringify({
           baseUrl: configForm.baseUrl,
           appKey: configForm.appKey,
           appSecret: configForm.appSecret,
-          accbookCode: configForm.accbookCode,
-          accbookCodes: configForm.accbookCodes,
+          requireClosedPeriod: configForm.requireClosedPeriod ?? false,
         }),
+        // 账套-全宗映射（单独字段）
+        accbookMapping: JSON.stringify(configForm.accbookMapping),
         isActive: 1,
       };
 
@@ -170,7 +215,7 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
     show,
     editingConfig,
     configForm,
-    newAccbookCode,
+    newMappingEntry,
     detectedType,
     testing,
   };
@@ -181,8 +226,9 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
       openModal,
       closeModal,
       updateForm,
-      addAccbookCode,
-      removeAccbookCode,
+      updateNewMappingEntry,
+      addMappingEntry,
+      removeMappingEntry,
       detectErpType,
       testConnection,
       saveConfig,
@@ -191,8 +237,9 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
       openModal,
       closeModal,
       updateForm,
-      addAccbookCode,
-      removeAccbookCode,
+      updateNewMappingEntry,
+      addMappingEntry,
+      removeMappingEntry,
       detectErpType,
       testConnection,
       saveConfig,

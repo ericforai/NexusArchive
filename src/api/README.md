@@ -11,8 +11,8 @@
 
 - `admin.ts`: 系统管理接口（用户、角色、组织等）。
 - `archives.ts`: 核心档案操作接口。
-- `archiveBatch.ts`: 归档批次管理接口。
-- `archiveApproval.ts`: 归档审批流程接口。
+- `archiveBatch.ts`: 归档批次管理接口（含批量审批）。
+- `archiveApproval.ts`: 归档审批流程接口（含批量审批）。
 - `abnormal.ts`: 异常档案处理接口。
 - `attachments.ts`: 附件管理接口。
 - `audit.ts`: 审计日志接口。
@@ -20,7 +20,7 @@
 - `autoAssociation.ts`: 自动关联规则接口。
 - `borrowing.ts`: 借阅管理接口。
 - `client.ts`: Axios 实例配置（拦截器、Token 处理）。
-- `destruction.ts`: 档案销毁接口。
+- `destruction.ts`: 档案销毁接口（含批量审批）。
 - `erp.ts`: ERP 集成配置接口。
 - `fonds.ts`: 全宗管理接口。
 - `fondsHistory.ts`: 全宗沿革管理接口（迁移、合并、分立、重命名）。

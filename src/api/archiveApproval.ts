@@ -42,6 +42,15 @@ export interface BatchApprovalResult {
     errors?: Array<{ id: string; reason: string }>;
 }
 
+export interface ApprovalListResponse {
+    data: {
+        data: {
+            records: ArchiveApproval[];
+            total: number;
+        };
+    };
+}
+
 export const archiveApprovalApi = {
     /**
      * 获取审批列表

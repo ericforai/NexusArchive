@@ -26,7 +26,10 @@ client.interceptors.request.use(
             }
 
             if (fondsCode) {
+                console.log('[API-CLIENT] Sending Fonds Header:', fondsCode, 'to', config.url);
                 config.headers['X-Fonds-No'] = fondsCode;
+            } else {
+                console.warn('[API-CLIENT] Fonds code missing in store, sending request without header to', config.url);
             }
         } catch {
             // Silently fail to add headers
@@ -48,9 +51,10 @@ client.interceptors.response.use(
             const { status, data } = error.response;
             const url = error.config?.url || '';
             const isAuthError = status === 401;
-            const isForbidden = status === 403 && !url.includes('/auth/login');
+            // 403 merely means no permission, should not logout
+            const isForbidden = status === 403;
 
-            if (isAuthError || isForbidden) {
+            if (isAuthError) {
                 const { token } = getHttpClientState();
                 if (token) {
                     performLogout();

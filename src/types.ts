@@ -339,10 +339,13 @@ export interface ErpConfig {
   name: string;
   erpType: string;
   configJson: string;
+  accbookMapping?: string;  /* 账套-全宗映射JSON: {"BR01": "FONDS_A", "BR02": "FONDS_B"} */
   isActive: number;
   status?: string;
   createdTime?: string;
   lastModifiedTime?: string;
+  /* 关账检查模式：true=强制模式(未关账时阻止同步)，false=提醒模式(警告但允许继续) */
+  requireClosedPeriod?: boolean;
 }
 
 export interface ErpScenario {

@@ -120,7 +120,6 @@ export const RelationshipQueryView: React.FC = () => {
     if (searchQuery) {
       loadGraph(searchQuery);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {

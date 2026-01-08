@@ -104,7 +104,7 @@ npm run test -- ErpConfigList
 本模块实现 ERP 集成设置功能，从原始 1,709 行巨型组件重构为 161 行组合器 + 8 个专用 Hook + 5 个 UI 组件，代码减少 **91.1%**。
 
 **重构日期**: 2026-01-05
-**最新更新**: 2026-01-06 (v2.2 - Summary + Drawer 三层架构)
+**最新更新**: 2026-01-07 (v2.6 - 关账检查模式)
 **设计模式**: Compositor 组合器模式 + React Hooks
 **测试覆盖**: 44 个测试用例，100% 通过率
 
@@ -156,7 +156,7 @@ src/components/settings/integration/
 
 | 文件 | 行数 | 角色 | 能力描述 |
 |------|------|------|----------|
-| `types.ts` | ~265 | **Type Definitions** | 定义所有 State/Actions 接口、ErpConfig/ErpScenario 相关类型 |
+| `types.ts` | ~265 | **Type Definitions** | 定义所有 State/Actions 接口、ErpConfig/ErpScenario 相关类型（含 accbookMapping 账套-全宗映射、requireClosedPeriod 关账检查模式）|
 
 ### Hooks (业务逻辑层)
 
@@ -164,7 +164,7 @@ src/components/settings/integration/
 |------|------|------|----------|
 | `useErpConfigManager.ts` | 130 | **ERP Config Manager** | ERP 配置 CRUD、加载、类型展开、连接测试 |
 | `useScenarioSyncManager.ts` | 133 | **Scenario Sync Manager** | 场景加载、子接口管理、同步历史记录、批量同步 |
-| `useConnectorModal.ts` | 167 | **Connector Modal** | 连接器创建/编辑模态框状态、表单管理、ERP 类型自动检测 |
+| `useConnectorModal.ts` | 167 | **Connector Modal** | 连接器创建/编辑模态框状态、表单管理、账套-全宗映射配置、ERP 类型自动检测、关账检查模式配置 |
 | `useIntegrationDiagnosis.ts` | 53 | **Diagnosis Handler** | 集成诊断执行、结果展示、健康检查 |
 | `useParamsEditor.ts` | 68 | **Params Editor** | 同步参数编辑（日期范围、分页大小） |
 | `useAiAdapterHandler.ts` | 109 | **AI Adapter Handler** | AI 文件上传、预览生成、配置适配 |
@@ -174,11 +174,11 @@ src/components/settings/integration/
 | 文件 | 行数 | 角色 | 能力描述 |
 |------|------|------|----------|
 | `ErpConfigList.tsx` | 67 | **Config List UI** | 网格布局展示连接器卡片，空状态提示，响应式（1/3 列） |
-| `ErpConfigCard.tsx` | ~176 | **Summary Card UI** | 连接器摘要卡片，固定高度。"配置中心"按钮打开 ConnectorForm 模态框（完整6字段） |
+| `ErpConfigCard.tsx` | ~176 | **Summary Card UI** | 连接器摘要卡片，固定高度。显示账套-全宗映射关系，"配置中心"按钮打开 ConnectorForm 模态框（完整6字段+映射）|
 | `ScenarioDrawer.tsx` | ~100 | **Detail Drawer UI** | 右侧抽屉详情页（480px），显示完整场景列表 |
 | `ScenarioSummaryCard.tsx` | ~50 | **Summary Widget UI** | 场景统计卡片（总数/运行中/失败），带动画状态 |
 | `ConnectionHealthBadge.tsx` | ~60 | **Health Badge UI** | 健康状态徽章，显示状态 + 相对时间 |
-| `ConnectorForm.tsx` | 156 | **Connector Form UI** | 连接器配置表单（名称、类型、URL、密钥、账套） |
+| `ConnectorForm.tsx` | ~293 | **Connector Form UI** | 连接器配置表单（名称、类型、URL、密钥、账套-全宗映射配置、YonSuite 关账检查模式开关）|
 | `DiagnosisPanel.tsx` | 89 | **Diagnosis Panel UI** | 诊断结果面板，显示健康状态和详细检查项 |
 | `ParamsEditor.tsx` | 106 | **Params Editor UI** | 同步参数编辑模态框（日期范围、分页大小） |
 | `ScenarioCard.tsx` | 145 | **Scenario Card UI** | 场景卡片（v2.1，v2.2 由 Drawer 替代） |
@@ -189,7 +189,7 @@ src/components/settings/integration/
 |------|--------|----------|
 | `hooks/__tests__/useErpConfigManager.test.ts` | 10 | 配置加载、创建、删除、状态管理 |
 | `hooks/__tests__/useScenarioSyncManager.test.ts` | 3 | 场景加载、子接口、同步 |
-| `hooks/__tests__/useConnectorModal.test.ts` | 6 | 模态框开关、表单更新、账套管理 |
+| `hooks/__tests__/useConnectorModal.test.ts` | 6 | 模态框开关、表单更新、账套-全宗映射管理 |
 | `hooks/__tests__/useIntegrationDiagnosis.test.ts` | 7 | 诊断执行、状态管理、错误处理 |
 | `hooks/__tests__/useParamsEditor.test.ts` | 8 | 编辑器开关、表单更新、同步提交 |
 | `hooks/__tests__/useAiAdapterHandler.test.ts` | 10 | 文件上传、预览生成、配置适配 |
@@ -247,9 +247,10 @@ IntegrationSettingsPage (Compositor)
 
 | 日期 | 版本 | 变更内容 |
 |------|------|----------|
+| 2026-01-07 | v2.6 | 关账检查模式：YonSuite 新增期间关账检查功能，ConnectorForm 增加"强制/提醒"模式切换开关 |
+| 2026-01-07 | v2.5 | 账套-全宗映射功能：ConnectorForm 新增映射配置表格，ErpConfigCard 显示映射关系，后端强制路由 |
 | 2026-01-06 | v2.2 | 三层信息架构：Summary Card + Detail Drawer + Management Page |
 | 2026-01-05 | v2.1 | 卡片式布局优化，移除展开/收起功能 |
-| 2026-01-05 | v2.0 | 从 1,709 行巨型组件重构为 161 行组合器 + 8 Hooks + 5 Components |
 | 2025-XX-XX | v1.0 | 原始单体组件实现 |
 
 ---

@@ -1,8 +1,12 @@
+// Input: ErpConfig types, State/Actions interfaces
+// Output: ErpConfigCard component with accbook-fonds mapping display
+// Pos: src/components/settings/integration/components/
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 // src/components/settings/integration/components/ErpConfigCard.tsx
 import React from 'react';
-import { Settings, Zap, Activity, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Settings, Zap, Activity, ShieldCheck, ChevronRight, Building2, ArrowRight } from 'lucide-react';
 import { ErpConfig } from '@/types';
-// import { ScenarioSummaryCard } from './ScenarioSummaryCard';
 import { ConnectionHealthBadge } from './ConnectionHealthBadge';
 
 interface ErpConfigCardProps {
@@ -20,6 +24,52 @@ interface ErpConfigCardProps {
   onViewDetails?: (configId: number) => void;
 }
 
+/**
+ * 解析账套-全宗映射
+ * 优先从 accbookMapping 字段读取，兼容旧数据从 configJson 解析
+ */
+function parseAccbookMapping(config: ErpConfig): Record<string, string> {
+  // 新版本：使用独立的 accbookMapping 字段
+  if (config.accbookMapping) {
+    try {
+      const parsed = JSON.parse(config.accbookMapping);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return parsed;
+      }
+    } catch {
+      // 继续尝试从 configJson 读取
+    }
+  }
+
+  // 兼容旧版本：从 configJson 读取 accbookCodes
+  if (config.configJson) {
+    try {
+      const parsed = JSON.parse(config.configJson);
+      // 支持两种格式：
+      // 1. accbookCodes 数组: ["BR01", "BR02"]
+      // 2. accbookMapping 对象: {"BR01": "FONDS_A", "BR02": "FONDS_B"}
+      if (parsed.accbookMapping && typeof parsed.accbookMapping === 'object') {
+        return parsed.accbookMapping;
+      }
+      if (Array.isArray(parsed.accbookCodes) && parsed.accbookCodes.length > 0) {
+        // 旧数据没有全宗信息，用账套编码作为全宗编码
+        const mapping: Record<string, string> = {};
+        parsed.accbookCodes.forEach((code: string) => {
+          mapping[code] = code;
+        });
+        return mapping;
+      }
+      if (parsed.accbookCode) {
+        return { [parsed.accbookCode]: parsed.accbookCode };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return {};
+}
+
 export function ErpConfigCard({
   config,
   status,
@@ -34,6 +84,10 @@ export function ErpConfigCard({
   onConfig,
   onViewDetails
 }: ErpConfigCardProps) {
+  // 解析账套-全宗映射
+  const accbookMapping = parseAccbookMapping(config);
+  const mappingEntries = Object.entries(accbookMapping);
+
   const statusConfig = {
     connected: { text: '已连接', color: 'text-green-600', bg: 'bg-green-50', dot: '●' },
     disconnected: { text: '未连接', color: 'text-gray-500', bg: 'bg-gray-50', dot: '○' },
@@ -114,6 +168,35 @@ export function ErpConfigCard({
             )}
           </div>
         </div>
+        
+        {/* Accbook-Fonds Mapping Row */}
+        {mappingEntries.length > 0 && (
+          <div className="flex flex-col gap-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Building2 size={12} className="text-gray-400" />
+              <span>账套-全宗映射 ({mappingEntries.length})</span>
+            </div>
+            <div className="flex flex-wrap gap-1 ml-4">
+              {mappingEntries.slice(0, 3).map(([accbookCode, fondsCode]) => (
+                <div
+                  key={accbookCode}
+                  className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-100"
+                  title={`${accbookCode} → ${fondsCode}`}
+                >
+                  <code className="text-xs">{accbookCode}</code>
+                  <ArrowRight size={10} className="text-blue-400" />
+                  <span className="text-xs font-medium">{fondsCode}</span>
+                </div>
+              ))}
+              {mappingEntries.length > 3 && (
+                <div className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                  +{mappingEntries.length - 3} 更多
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* View Details Button */}
         <button
           onClick={() => onViewDetails?.(config.id)}

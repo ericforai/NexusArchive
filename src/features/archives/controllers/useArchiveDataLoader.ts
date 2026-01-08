@@ -44,25 +44,23 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         setErrorMessage(null);
         onSelectionClear?.();
         try {
-            const poolItems = await poolApi.getList();
             const activeFilter = filterOverride !== undefined ? filterOverride : poolStatusFilter;
 
-            const filtered = poolItems.filter((item) => {
-                const itemStatus = (item as any).status || 'PENDING_CHECK';
-                if (activeFilter && activeFilter !== 'all') {
-                    if (itemStatus !== activeFilter) return false;
-                } else if (query.statusFilter) {
-                    if (itemStatus !== query.statusFilter) return false;
-                }
-                if (!query.searchTerm) return true;
-                return Object.values(item).some((val) =>
-                    String(val || '').toLowerCase().includes(query.searchTerm.toLowerCase())
-                );
-            });
+            let poolItems = [];
+            // 如果指定了状态，调用特定的状态过滤接口（后端过滤）
+            if (activeFilter && activeFilter !== 'all') {
+                poolItems = await poolApi.getListByStatus(activeFilter);
+            } else {
+                poolItems = await poolApi.getList();
+            }
 
-            const total = filtered.length;
+            // 移除不安全的前端模糊搜索和状态过滤，改为直接展示后端结果
+            // 注意：由于后端列表接口暂时不支持搜索参数，搜索逻辑建议后续在后端 PoolController 完善
+            // 目前至少保证了状态层面的后端过滤
+
+            const total = poolItems.length;
             const start = (pageNum - 1) * page.pageInfo.pageSize;
-            const paged = filtered.slice(start, start + page.pageInfo.pageSize);
+            const paged = poolItems.slice(start, start + page.pageInfo.pageSize);
             const mappedPaged = paged.map((item: any) => ({
                 ...item,
                 rawStatus: item.status
@@ -77,7 +75,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         } finally {
             setIsLoading(false);
         }
-    }, [page.currentPage, page.pageInfo.pageSize, query.searchTerm, query.statusFilter, poolStatusFilter, setRows, setIsLoading, setErrorMessage, setPageInfo, showToast, onSelectionClear]);
+    }, [page.currentPage, page.pageInfo.pageSize, poolStatusFilter, setRows, setIsLoading, setErrorMessage, setPageInfo, showToast, onSelectionClear]);
 
     // Load archive list
     const loadArchiveList = useCallback(async (pageNum = page.currentPage) => {
