@@ -41,7 +41,7 @@ public class ComplexityRulesTest {
     private static final int MAX_ENTITY_LINES = 400;
     private static final int MAX_METHOD_LINES = 50;
 
-    private final LineCounter lineCounter = new LineCounter();
+    private final LineCountCondition lineCountCondition = new LineCountCondition(MAX_SERVICE_LINES);
 
     /**
      * 获取所有需要分析的类
@@ -209,14 +209,14 @@ public class ComplexityRulesTest {
         List<JavaClass> filtered = new ArrayList<>();
         for (JavaClass c : classes) {
             if (matchesPackagePattern(c.getPackageName(), packagePattern)) {
-                int lines = lineCounter.countLines(c);
+                int lines = lineCountCondition.countLines(c);
                 if (lines > maxLines) {
                     filtered.add(c);
                 }
             }
         }
         // Sort by line count descending
-        filtered.sort((a, b) -> Integer.compare(lineCounter.countLines(b), lineCounter.countLines(a)));
+        filtered.sort((a, b) -> Integer.compare(lineCountCondition.countLines(b), lineCountCondition.countLines(a)));
         return filtered;
     }
 
@@ -224,11 +224,11 @@ public class ComplexityRulesTest {
             List<JavaClass> classes, String packagePattern, int maxLines, String type) {
         return classes.stream()
                 .filter(c -> matchesPackagePattern(c.getPackageName(), packagePattern))
-                .filter(c -> lineCounter.countLines(c) > maxLines)
+                .filter(c -> lineCountCondition.countLines(c) > maxLines)
                 .map(c -> new ClassViolation(
                         c.getSimpleName(),
                         c.getPackageName(),
-                        lineCounter.countLines(c),
+                        lineCountCondition.countLines(c),
                         maxLines,
                         type
                 ))
@@ -255,7 +255,7 @@ public class ComplexityRulesTest {
         }
 
         for (JavaClass cls : violations) {
-            int lines = lineCounter.countLines(cls);
+            int lines = lineCountCondition.countLines(cls);
             System.out.println(String.format(
                     "  - %s: %d lines (exceeds limit by %d)",
                     cls.getSimpleName(), lines, lines - maxLines
@@ -284,42 +284,4 @@ public class ComplexityRulesTest {
             String methodName,
             int lineCount
     ) {}
-
-    /**
-     * 源码行数计数器
-     */
-    static class LineCounter {
-        private final Map<String, Integer> cache = new HashMap<>();
-
-        int countLines(JavaClass javaClass) {
-            String fullName = javaClass.getName();
-            if (cache.containsKey(fullName)) {
-                return cache.get(fullName);
-            }
-
-            try {
-                // Try to find the file using relative paths from working directory
-                String packagePath = fullName.replace('.', '/');
-                java.nio.file.Path[] searchPaths = {
-                        java.nio.file.Paths.get("src/main/java", packagePath + ".java"),
-                        java.nio.file.Paths.get("nexusarchive-java/src/main/java", packagePath + ".java"),
-                        java.nio.file.Paths.get("../nexusarchive-java/src/main/java", packagePath + ".java"),
-                        java.nio.file.Paths.get("../../nexusarchive-java/src/main/java", packagePath + ".java")
-                };
-
-                for (java.nio.file.Path path : searchPaths) {
-                    if (java.nio.file.Files.exists(path)) {
-                        int lines = java.nio.file.Files.readAllLines(path).size();
-                        cache.put(fullName, lines);
-                        return lines;
-                    }
-                }
-
-                // Fallback: return 0 if source file not found
-                return 0;
-            } catch (Exception e) {
-                return 0;
-            }
-        }
-    }
 }
