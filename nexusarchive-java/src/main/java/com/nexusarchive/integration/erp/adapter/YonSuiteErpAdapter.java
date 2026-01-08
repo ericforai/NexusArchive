@@ -7,6 +7,7 @@ package com.nexusarchive.integration.erp.adapter;
 
 import com.nexusarchive.integration.erp.adapter.client.*;
 import com.nexusarchive.integration.erp.annotation.ErpAdapterAnnotation;
+import org.springframework.beans.factory.annotation.Qualifier;
 import com.nexusarchive.integration.erp.dto.*;
 import com.nexusarchive.entity.ErpScenario;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,11 @@ public class YonSuiteErpAdapter implements ErpAdapter {
 
     // 专门的客户端（通过依赖注入）
     private final YonSuiteAuthClient authClient;
+    @Qualifier("erpAdapterVoucherClient")
     private final YonSuiteVoucherClient voucherClient;
+    @Qualifier("erpAdapterCollectionClient")
     private final YonSuiteCollectionClient collectionClient;
+    @Qualifier("erpAdapterPaymentClient")
     private final YonSuitePaymentClient paymentClient;
     private final YonSuiteRefundClient refundClient;
     private final YonSuiteFeedbackClient feedbackClient;
@@ -134,9 +138,16 @@ public class YonSuiteErpAdapter implements ErpAdapter {
 
         for (String accbookCode : accbookCodes) {
             try {
-                List<VoucherDTO> vouchers = voucherClient.syncVouchers(accessToken, accbookCode, startDate, endDate);
-                allVouchers.addAll(vouchers);
-                log.info("组织 {} 同步完成: {} 条凭证", accbookCode, vouchers.size());
+                // 使用新的 ErpMapper 接口，返回 AccountingSipDto
+                List<com.nexusarchive.dto.sip.AccountingSipDto> sipDtos =
+                    voucherClient.syncVouchers(accessToken, accbookCode, startDate, endDate, config);
+
+                // 转换 AccountingSipDto 到 VoucherDTO (保持接口兼容性)
+                for (var sipDto : sipDtos) {
+                    VoucherDTO voucherDto = convertSipToVoucherDto(sipDto);
+                    allVouchers.add(voucherDto);
+                }
+                log.info("组织 {} 同步完成: {} 条凭证", accbookCode, sipDtos.size());
             } catch (Exception e) {
                 log.error("组织 {} 同步失败: {}", accbookCode, e.getMessage(), e);
             }
@@ -148,7 +159,65 @@ public class YonSuiteErpAdapter implements ErpAdapter {
 
     @Override
     public VoucherDTO getVoucherDetail(ErpConfig config, String voucherNo) {
-        return voucherClient.getVoucherDetail(null, voucherNo);
+        // 使用新的 ErpMapper 接口
+        com.nexusarchive.dto.sip.AccountingSipDto sipDto =
+            voucherClient.getVoucherDetail(null, voucherNo, config);
+        return sipDto != null ? convertSipToVoucherDto(sipDto) : null;
+    }
+
+    /**
+     * 转换 AccountingSipDto 到 VoucherDTO (保持接口兼容性)
+     *
+     * @param sipDto 标准化 SIP DTO
+     * @return VoucherDTO
+     */
+    private VoucherDTO convertSipToVoucherDto(com.nexusarchive.dto.sip.AccountingSipDto sipDto) {
+        VoucherDTO.VoucherDTOBuilder builder = VoucherDTO.builder()
+            .voucherId(sipDto.getHeader().getVoucherNumber())
+            .voucherNo(sipDto.getHeader().getVoucherNumber())
+            .voucherDate(sipDto.getHeader().getVoucherDate())
+            .accountPeriod(sipDto.getHeader().getAccountPeriod())
+            .summary(sipDto.getHeader().getRemark())
+            .debitTotal(sipDto.getHeader().getTotalAmount())
+            .creditTotal(sipDto.getHeader().getTotalAmount())
+            .creator(sipDto.getHeader().getIssuer())
+            .auditor(sipDto.getHeader().getReviewer());
+
+        // 转换分录
+        if (sipDto.getEntries() != null && !sipDto.getEntries().isEmpty()) {
+            List<VoucherDTO.VoucherEntryDTO> entries = new ArrayList<>();
+            for (var entry : sipDto.getEntries()) {
+                VoucherDTO.VoucherEntryDTO entryDto = VoucherDTO.VoucherEntryDTO.builder()
+                    .lineNo(entry.getLineNo())
+                    .summary(entry.getSummary())
+                    .accountCode(entry.getSubjectCode())
+                    .accountName(entry.getSubjectName())
+                    .debit(entry.getDirection() == com.nexusarchive.common.enums.DirectionType.DEBIT
+                        ? entry.getAmount() : null)
+                    .credit(entry.getDirection() == com.nexusarchive.common.enums.DirectionType.CREDIT
+                        ? entry.getAmount() : null)
+                    .build();
+                entries.add(entryDto);
+            }
+            builder.entries(entries);
+        }
+
+        // 转换附件
+        if (sipDto.getAttachments() != null && !sipDto.getAttachments().isEmpty()) {
+            List<AttachmentDTO> attachments = new ArrayList<>();
+            for (var att : sipDto.getAttachments()) {
+                AttachmentDTO attDto = AttachmentDTO.builder()
+                    .fileName(att.getFileName())
+                    .fileType(att.getFileType())
+                    .fileSize(att.getFileSize())
+                    .build();
+                attachments.add(attDto);
+            }
+            builder.attachments(attachments);
+            builder.attachmentCount(sipDto.getAttachments().size());
+        }
+
+        return builder.build();
     }
 
     @Override
