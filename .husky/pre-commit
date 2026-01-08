@@ -45,3 +45,8 @@ fi
 
 echo ""
 echo "✅ All architecture checks passed!"
+
+# 复杂度检查（非阻塞警告模式）
+if [ -f ".husky/pre-commit-complexity" ]; then
+  ./.husky/pre-commit-complexity || true
+fi

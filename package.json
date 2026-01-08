@@ -27,7 +27,8 @@
     "check:arch:graph": "depcruise src/ --output-type dot | dot -T svg > arch-dependencies.svg",
     "modules:discover": "node scripts/discover-frontend-modules.js --discover",
     "modules:validate": "node scripts/discover-frontend-modules.js --validate",
-    "modules:update": "node scripts/discover-frontend-modules.js --update-manifest"
+    "modules:update": "node scripts/discover-frontend-modules.js --update-manifest",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
@@ -73,5 +74,6 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "zustand": "^5.0.9"
-  }
+  },
+  "postinstall": "husky"
 }
