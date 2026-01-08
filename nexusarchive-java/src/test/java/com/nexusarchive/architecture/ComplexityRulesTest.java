@@ -13,11 +13,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +47,7 @@ public class ComplexityRulesTest {
     private static final int MAX_METHOD_LINES = 50;
 
     private final LineCountCondition lineCountCondition = new LineCountCondition(MAX_SERVICE_LINES);
+    private final MethodLineCountCondition methodLineCountCondition = new MethodLineCountCondition(MAX_METHOD_LINES);
 
     /**
      * 获取所有需要分析的类
@@ -55,86 +61,76 @@ public class ComplexityRulesTest {
     }
 
     /**
+     * 获取所有类的 ArchUnit 集合（用于规则断言）
+     */
+    private com.tngtech.archunit.core.domain.JavaClasses getJavaClasses() {
+        return new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.nexusarchive");
+    }
+
+    /**
      * 规则 1：Service 类不应超过 500 行
      *
      * <p>Service 类包含业务逻辑，应保持精简以利于维护。</p>
+     * <p>违规时测试将失败。</p>
      */
     @Test
     @DisplayName("Service classes should not exceed 500 lines")
     void serviceClassesShouldNotExceed500Lines() {
-        System.out.println("\n=== Service Classes Exceeding " + MAX_SERVICE_LINES + " Lines ===");
-        List<JavaClass> violations = findViolations(
-                getAllClasses(), "..service..", MAX_SERVICE_LINES);
-        reportViolations(violations, MAX_SERVICE_LINES);
+        classes()
+            .that().resideInAPackage("..service..")
+            .should(new LineCountCondition(MAX_SERVICE_LINES))
+            .as("Service classes should not exceed " + MAX_SERVICE_LINES + " lines")
+            .check(getJavaClasses());
     }
 
     /**
      * 规则 2：Controller 类不应超过 600 行
      *
      * <p>Controller 应专注于请求处理，复杂业务逻辑应下沉到 Service 层。</p>
+     * <p>违规时测试将失败。</p>
      */
     @Test
     @DisplayName("Controller classes should not exceed 600 lines")
     void controllerClassesShouldNotExceed600Lines() {
-        System.out.println("\n=== Controller Classes Exceeding " + MAX_CONTROLLER_LINES + " Lines ===");
-        List<JavaClass> violations = findViolations(
-                getAllClasses(), "..controller..", MAX_CONTROLLER_LINES);
-        reportViolations(violations, MAX_CONTROLLER_LINES);
+        classes()
+            .that().resideInAPackage("..controller..")
+            .should(new LineCountCondition(MAX_CONTROLLER_LINES))
+            .as("Controller classes should not exceed " + MAX_CONTROLLER_LINES + " lines")
+            .check(getJavaClasses());
     }
 
     /**
      * 规则 3：Entity 类不应超过 400 行
      *
      * <p>Entity 类应只包含数据定义和基本的 JPA 注解。</p>
+     * <p>违规时测试将失败。</p>
      */
     @Test
     @DisplayName("Entity classes should not exceed 400 lines")
     void entityClassesShouldNotExceed400Lines() {
-        System.out.println("\n=== Entity Classes Exceeding " + MAX_ENTITY_LINES + " Lines ===");
-        List<JavaClass> violations = findViolations(
-                getAllClasses(), "..entity..", MAX_ENTITY_LINES);
-        reportViolations(violations, MAX_ENTITY_LINES);
+        classes()
+            .that().resideInAPackage("..entity..")
+            .should(new LineCountCondition(MAX_ENTITY_LINES))
+            .as("Entity classes should not exceed " + MAX_ENTITY_LINES + " lines")
+            .check(getJavaClasses());
     }
 
     /**
      * 规则 4：方法不应超过 50 行
      *
      * <p>长方法难以理解和测试，应拆分为更小的方法。</p>
+     * <p>违规时测试将失败。</p>
      */
     @Test
     @DisplayName("Methods should not exceed 50 lines")
     void methodsShouldNotExceed50Lines() {
-        System.out.println("\n=== Methods Exceeding " + MAX_METHOD_LINES + " Lines ===");
-        List<MethodViolation> methodViolations = new ArrayList<>();
-
-        for (JavaClass javaClass : getAllClasses()) {
-            for (JavaMethod method : javaClass.getMethods()) {
-                int lineCount = countMethodLines(method);
-                if (lineCount > MAX_METHOD_LINES) {
-                    methodViolations.add(new MethodViolation(
-                            method.getOwner().getSimpleName(),
-                            method.getName(),
-                            lineCount
-                    ));
-                }
-            }
-        }
-
-        if (!methodViolations.isEmpty()) {
-            methodViolations.sort(Comparator.comparingInt(MethodViolation::lineCount).reversed());
-            for (MethodViolation v : methodViolations) {
-                System.out.println(String.format(
-                        "  - %s.%s(): %d lines",
-                        v.className(), v.methodName(), v.lineCount()
-                ));
-            }
-            System.out.println(String.format(
-                    "\nTotal: %d method(s) exceed %d lines",
-                    methodViolations.size(), MAX_METHOD_LINES
-            ));
-        } else {
-            System.out.println("  No methods exceeding the limit found.");
-        }
+        classes()
+            .that().resideInAPackage("com.nexusarchive")
+            .should(methodLineCountCondition)
+            .as("Methods should not exceed " + MAX_METHOD_LINES + " lines")
+            .check(getJavaClasses());
     }
 
     /**
@@ -241,11 +237,152 @@ public class ComplexityRulesTest {
         return packageName.contains(midPart);
     }
 
+    /**
+     * 计算方法的实际行数
+     *
+     * <p>通过读取源码文件并解析方法体来计算行数。
+     * 方法体行数包括方法签名后第一个大括号到最后一个大括号之间的所有非空、非注释行。</p>
+     *
+     * @param method Java 方法
+     * @return 方法的实际行数（不包括空行和注释）
+     */
     private int countMethodLines(JavaMethod method) {
-        // Note: ArchUnit's SourceCodeLocation only provides a single line number,
-        // not a range. Method-level complexity would require bytecode analysis
-        // or source file parsing. For now, return 0 to skip method checks.
-        return 0;
+        try {
+            String className = method.getOwner().getName();
+            String packagePath = className.replace('.', '/');
+            java.nio.file.Path[] searchPaths = {
+                java.nio.file.Paths.get("src/main/java", packagePath + ".java"),
+                java.nio.file.Paths.get("nexusarchive-java/src/main/java", packagePath + ".java"),
+                java.nio.file.Paths.get("../nexusarchive-java/src/main/java", packagePath + ".java"),
+                java.nio.file.Paths.get("../../nexusarchive-java/src/main/java", packagePath + ".java")
+            };
+
+            java.nio.file.Path sourceFile = null;
+            for (java.nio.file.Path path : searchPaths) {
+                if (java.nio.file.Files.exists(path)) {
+                    sourceFile = path;
+                    break;
+                }
+            }
+
+            if (sourceFile == null) {
+                return 0;
+            }
+
+            List<String> lines = java.nio.file.Files.readAllLines(sourceFile);
+            return countMethodLinesInSource(lines, method.getName(), method.getDescription());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /**
+     * 在源码中计算方法行数
+     *
+     * @param lines 源码行列表
+     * @param methodName 方法名
+     * @param methodSignature 方法签名（包含参数类型）
+     * @return 方法体行数（不含空行、注释）
+     */
+    private int countMethodLinesInSource(List<String> lines, String methodName, String methodSignature) {
+        // Build method signature pattern to find method start
+        String simpleName = methodName;
+        // Extract parameter types from method signature like "process(IngestRequest)"
+        String paramPattern = "\\(([^)]*)\\)";
+        Pattern methodPattern = Pattern.compile(
+            "(public|private|protected|\\s)\\s+(static\\s+)?[\\w<>\\[\\]]+\\s+" + Pattern.quote(simpleName) + "\\s*\\([^)]*\\)"
+        );
+
+        int methodStartLine = -1;
+        int openBraceLine = -1;
+        int braceCount = 0;
+        int methodEndLine = -1;
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i).trim();
+
+            // Skip comments
+            if (line.startsWith("//") || line.startsWith("/*") || line.startsWith("*")) {
+                continue;
+            }
+
+            if (methodStartLine == -1) {
+                // Looking for method declaration
+                Matcher matcher = methodPattern.matcher(line);
+                if (matcher.find()) {
+                    methodStartLine = i;
+                    // Check if opening brace is on the same line
+                    if (line.contains("{")) {
+                        openBraceLine = i;
+                        braceCount = countBraces(line, '{') - countBraces(line, '}');
+                    }
+                }
+            } else if (openBraceLine == -1) {
+                // Found method declaration, looking for opening brace
+                if (line.contains("{")) {
+                    openBraceLine = i;
+                    braceCount = countBraces(line, '{') - countBraces(line, '}');
+                }
+                // Skip if we haven't found the opening brace within 5 lines
+                if (i - methodStartLine > 5) {
+                    return 0; // Method pattern not properly matched
+                }
+            } else {
+                // Count braces to find method end
+                braceCount += countBraces(line, '{');
+                braceCount -= countBraces(line, '}');
+
+                if (braceCount == 0) {
+                    methodEndLine = i;
+                    break;
+                }
+            }
+        }
+
+        if (methodStartLine == -1 || openBraceLine == -1 || methodEndLine == -1) {
+            return 0;
+        }
+
+        // Count non-empty, non-comment lines in method body
+        int count = 0;
+        boolean inBlockComment = false;
+
+        for (int i = openBraceLine + 1; i < methodEndLine; i++) {
+            String line = lines.get(i).trim();
+
+            // Handle block comments
+            if (line.contains("/*")) {
+                inBlockComment = true;
+            }
+            if (inBlockComment) {
+                if (line.contains("*/")) {
+                    inBlockComment = false;
+                }
+                continue;
+            }
+
+            // Skip empty lines and line comments
+            if (line.isEmpty() || line.startsWith("//") || line.startsWith("*")) {
+                continue;
+            }
+
+            count++;
+        }
+
+        return count;
+    }
+
+    /**
+     * 统计字符串中某个字符的出现次数
+     */
+    private int countBraces(String line, char brace) {
+        int count = 0;
+        for (char c : line.toCharArray()) {
+            if (c == brace) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void reportViolations(List<JavaClass> violations, int maxLines) {
