@@ -2,13 +2,40 @@
 
 > 本文档描述如何在 NexusArchive 后端创建一个新的 DDD 模块。
 
-## 前置条件
+## 快速开始（推荐）
+
+使用交互式脚本自动生成标准模块结构：
+
+```bash
+./scripts/create-module.sh <ModuleName>
+```
+
+**示例**：
+```bash
+./scripts/create-module.sh Payment    # 生成 payment 模块
+./scripts/create-module.sh Voucher    # 生成 voucher 模块
+./scripts/create-module.sh ArchiveBox # 生成 archive-box 模块
+```
+
+脚本会自动：
+- 创建四层目录结构（api/app/domain/infra）
+- 生成基础代码文件（Controller、Facade、Entity、Repository）
+- 配置正确的包名和依赖关系
+- 给出后续步骤提示
+
+---
+
+## 手动创建步骤
+
+如果需要手动创建或自定义模块，请按照以下步骤：
+
+### 前置条件
 
 1. 模块有明确的业务边界（单一职责）
 2. 模块不会与现有服务产生大量耦合
 3. 已阅读 `modules/_template/README.md`
 
-## 步骤 1：复制模板
+### 步骤 1：复制模板
 
 ```bash
 cd nexusarchive-java/src/main/java/com/nexusarchive/modules/
@@ -97,7 +124,7 @@ mvn clean compile
 mvn test -Dtest=ModuleBoundaryTest
 ```
 
-**预期结果**：所有 7 条规则通过。
+**预期结果**：所有 10 条规则通过。
 
 ### 6.3 单元测试（可选）
 

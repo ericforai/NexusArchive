@@ -6,14 +6,21 @@
 ### DDD 模块化规范 v2.0 完成
 已建立完整的后端 DDD 模块化规范：
 - **模块模板**: `_template/` 四层架构模板（api/app/domain/infra）
-- **ArchUnit 规则**: 从 4 条扩展到 10 条
+- **ArchUnit 规则**: 从 7 条扩展到 10 条
 - **模块创建 SOP**: 标准化新模块创建流程
+- **交互式脚本**: `./scripts/create-module.sh <ModuleName>` 一键生成
 - **前端依赖修复**: 0 violations（dependency-cruiser）
 
 **新增后端规则**（规则 8-10）：
 - 规则 8: 禁止 Service 实现类之间直接依赖
 - 规则 9: Controller 不得依赖 Service 实现类（依赖倒置）
 - 规则 10: Controller 不得直接依赖 Mapper
+
+**快速创建新模块**：
+```bash
+./scripts/create-module.sh Payment    # 生成 payment 模块
+./scripts/create-module.sh Voucher    # 生成 voucher 模块
+```
 
 详见: [后端模块创建 SOP](backend-module-creation-sop.md) | [模块清单](../nexusarchive-java/src/main/java/com/nexusarchive/modules/README.md)
 
