@@ -63,6 +63,7 @@ export const PATH_TO_VIEW: Record<string, ViewState> = {
     '/system/stats': ViewState.STATS,
     '/system/settings': ViewState.SETTINGS,
     '/system/panorama': ViewState.PANORAMA,
+    '/system/quality': ViewState.QUALITY,
 };
 
 /**

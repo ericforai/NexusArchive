@@ -108,6 +108,9 @@ const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPa
 const AuditVerificationPage = lazy(() => import('../pages/audit/AuditVerificationPage'));
 const AuditEvidencePackagePage = lazy(() => import('../pages/audit/AuditEvidencePackagePage'));
 
+// 代码质量监控模块
+const QualityView = lazy(() => import('../pages/quality/QualityView').then(m => ({ default: m.QualityView })));
+
 // 档案销毁流程模块
 const ExpiredArchivesPage = lazy(() => import('../pages/operations/ExpiredArchivesPage'));
 const AppraisalListPage = lazy(() => import('../pages/operations/AppraisalListPage'));
@@ -217,6 +220,9 @@ export const routes: RouteObject[] = [
             // ========== 数据统计 ==========
             { path: 'stats', element: withSuspense(StatsView) },
             { path: 'stats/:drillDown', element: withSuspense(StatsView) },
+
+            // ========== 代码质量监控 ==========
+            { path: 'quality', element: withSuspense(QualityView) },
 
             // ========== 系统设置（Tab 子路由）==========
             {

@@ -25,6 +25,7 @@ export enum ViewState {
   ABNORMAL = 'ABNORMAL',
   COMPLIANCE_REPORT = 'COMPLIANCE_REPORT',
   MATCHING = 'MATCHING', // New: 智能匹配
+  QUALITY = 'QUALITY', // New: 代码质量监控
 }
 
 
