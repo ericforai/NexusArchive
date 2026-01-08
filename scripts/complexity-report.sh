@@ -27,6 +27,33 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# ==============================================================================
+# 辅助函数
+# ==============================================================================
+
+# 跨平台获取文件修改时间
+get_file_timestamp() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        date +"%Y-%m-%d %H:%M:%S"
+        return
+    fi
+
+    # macOS: stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S"
+    # Linux: stat -c "%y" (需要截断小数部分)
+    if stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file" >/dev/null 2>&1; then
+        # macOS
+        stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file"
+    elif stat -c "%y" "$file" >/dev/null 2>&1; then
+        # Linux - 截断小数点后的时间
+        stat -c "%y" "$file" | cut -d'.' -f1
+    else
+        # 回退到当前时间
+        date +"%Y-%m-%d %H:%M:%S"
+    fi
+}
+
+# ==============================================================================
 # 生成时间戳
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 REPORT_DIR="reports"
@@ -67,12 +94,17 @@ if npx eslint src --ext .ts,.tsx -c .eslintrc.complexity.cjs --format json --out
     # 统计违规数量
     if [ -f "$FRONTEND_JSON" ]; then
         FRONTEND_VIOLATIONS=$(node -e "
-            const data = require('./${FRONTEND_JSON}');
-            let count = 0;
-            for (const file of data) {
-                count += (file.messages || []).length;
+            try {
+                const data = require('./${FRONTEND_JSON}');
+                let count = 0;
+                for (const file of data) {
+                    count += (file.messages || []).length;
+                }
+                console.log(count);
+            } catch (e) {
+                console.error('Error:', e.message);
+                process.exit(1);
             }
-            console.log(count);
         " 2>/dev/null || echo "0")
         FRONTEND_WARNINGS=$FRONTEND_VIOLATIONS
     fi
@@ -134,10 +166,13 @@ echo -e "   原始输出: ${BACKEND_OUTPUT}"
 echo ""
 echo -e "${YELLOW}📝 生成综合报告...${NC}"
 
+# 获取文件修改时间（跨平台兼容）
+FILE_TIME=$(get_file_timestamp "$FRONTEND_JSON")
+
 cat > "$MARKDOWN_REPORT" << EOF
 # NexusArchive 复杂度报告
 
-**生成时间**: \`$(date -r "$FRONTEND_JSON" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || date +"%Y-%m-%d %H:%M:%S")\`
+**生成时间**: \`${FILE_TIME}\`
 **报告版本**: \`${TIMESTAMP}\`
 
 ---
@@ -171,30 +206,35 @@ EOF
 # 添加前端违规详情
 if [ "$FRONTEND_VIOLATIONS" -gt 0 ]; then
     node -e "
-        const fs = require('fs');
-        const data = JSON.parse(fs.readFileSync('${FRONTEND_JSON}', 'utf8'));
-        const violations = {};
+        try {
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('${FRONTEND_JSON}', 'utf8'));
+            const violations = {};
 
-        for (const file of data) {
-            if (file.messages && file.messages.length > 0) {
-                const filePath = file.filePath.replace(process.cwd(), '');
-                violations[filePath] = file.messages;
-            }
-        }
-
-        if (Object.keys(violations).length > 0) {
-            console.log('| 文件 | 规则 | 消息 | 行号 |');
-            console.log('|------|------|------|------|');
-            for (const [filePath, messages] of Object.entries(violations)) {
-                for (const msg of messages.slice(0, 10)) { // 最多显示 10 条
-                    console.log(\`|\${filePath}|\${msg.ruleId}|\${msg.message}|\${msg.line}|\`);
-                }
-                if (messages.length > 10) {
-                    console.log(\`|...|\${messages.length - 10} 更多违规|||\`);
+            for (const file of data) {
+                if (file.messages && file.messages.length > 0) {
+                    const filePath = file.filePath.replace(process.cwd(), '');
+                    violations[filePath] = file.messages;
                 }
             }
-        } else {
-            console.log('> 无违规记录 ✅');
+
+            if (Object.keys(violations).length > 0) {
+                console.log('| 文件 | 规则 | 消息 | 行号 |');
+                console.log('|------|------|------|------|');
+                for (const [filePath, messages] of Object.entries(violations)) {
+                    for (const msg of messages.slice(0, 10)) { // 最多显示 10 条
+                        console.log(\`|\${filePath}|\${msg.ruleId}|\${msg.message}|\${msg.line}|\`);
+                    }
+                    if (messages.length > 10) {
+                        console.log(\`|...|\${messages.length - 10} 更多违规|||\`);
+                    }
+                }
+            } else {
+                console.log('> 无违规记录 ✅');
+            }
+        } catch (e) {
+            console.error('Error parsing violations:', e.message);
+            process.exit(1);
         }
     " 2>/dev/null || echo "> 解析失败，请查看 JSON 文件" >> "$MARKDOWN_REPORT"
 else
