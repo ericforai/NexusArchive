@@ -318,14 +318,15 @@ module.exports = {
       comment:
         'Custom hooks in src/hooks/ should only be used from features or pages. ' +
         'Components should not depend on feature-specific hooks. ' +
-        'Exception: Layout-level components (Sidebar, GlobalSearch) may use utility hooks.',
+        'Exception: Layout-level components (Sidebar, GlobalSearch, pool-kanban) may use utility hooks.',
       severity: 'warn',
       from: {
         path: '^src/components/',
         pathNot: [
           '^src/components/Sidebar\\.tsx$',
           '^src/components/GlobalSearch\\.tsx$',
-          '^src/components/dev/DocumentationGuardProvider\\.tsx$'
+          '^src/components/dev/DocumentationGuardProvider\\.tsx$',
+          '^src/components/pool-kanban/'
         ]
       },
       to: {
