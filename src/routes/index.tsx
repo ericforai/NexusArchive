@@ -64,6 +64,9 @@ const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWaterm
 // 凭证预览组件 Demo
 const VoucherPreviewDemo = lazy(() => import('../pages/demo/VoucherPreviewDemo'));
 
+// 预归档池看板视图
+const PoolKanbanPage = lazy(() => import('../pages/pre-archive/PoolKanbanPage').then(m => ({ default: m.PoolKanbanPage })));
+
 // 匹配向导模块（OnboardingWizard 和 ComplianceReport 仍用 withSuspense）
 const OnboardingWizard = lazy(() => import('../pages/matching/OnboardingWizard'));
 const ComplianceReport = lazy(() => import('../pages/matching/ComplianceReport'));
@@ -171,6 +174,7 @@ export const routes: RouteObject[] = [
             // ========== 预归档库 ==========
             { path: 'pre-archive', element: <ArchiveListPage routeConfig="pool" /> },
             { path: 'pre-archive/pool', element: <ArchiveListPage routeConfig="pool" /> },
+            { path: 'pre-archive/pool/kanban', element: withSuspense(PoolKanbanPage) },
             { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }) },
             { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView) },
             { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" /> },
