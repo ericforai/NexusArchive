@@ -1,6 +1,6 @@
 /* src/components/pool-kanban/PoolKanbanView.css */
-/* Input: CSS rules for kanban view component styling */
-/* Output: Styled kanban board with toolbar, columns, and batch operations */
+/* Input: CSS rules for kanban view component styling with responsive layout */
+/* Output: Styled kanban board with toolbar, responsive columns, and batch operations */
 /* Pos: src/components/pool-kanban/PoolKanbanView.css */
 
 .pool-kanban-view {
@@ -47,11 +47,25 @@
   background: #fff;
 }
 
+.pool-kanban-view__title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .pool-kanban-view__title {
   margin: 0;
   font-size: 20px;
   font-weight: 500;
   color: #262626;
+}
+
+.pool-kanban-view__layout-info {
+  padding: 2px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #8c8c8c;
 }
 
 .pool-kanban-view__actions {
@@ -67,6 +81,14 @@
   overflow-y: hidden;
   flex: 1;
   min-height: 0;
+}
+
+/* 动态列宽 - 通过 CSS 变量设置 */
+.pool-kanban-view__board .kanban-column {
+  width: var(--column-width, 320px);
+  min-width: var(--column-width, 320px);
+  max-width: var(--column-width, 320px);
+  flex-shrink: 0;
 }
 
 /* 滚动条样式 */
@@ -86,4 +108,41 @@
 
 .pool-kanban-view__board::-webkit-scrollbar-thumb:hover {
   background: #bfbfbf;
+}
+
+/* 溢出状态样式 */
+.pool-kanban-view__board--overflowing {
+  border-bottom: 1px solid #e6f7ff;
+  background: linear-gradient(to right, transparent, #f0f9ff 2%, #f0f9ff 98%, transparent);
+}
+
+/* 折叠列的动画 */
+.pool-kanban-view__board > * {
+  transition: width 0.2s ease, opacity 0.2s ease;
+}
+
+/* 响应式调整 */
+@media (max-width: 1400px) {
+  .pool-kanban-view__board {
+    padding: 12px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pool-kanban-view__toolbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .pool-kanban-view__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pool-kanban-view__board {
+    padding: 8px;
+    gap: 8px;
+  }
 }
