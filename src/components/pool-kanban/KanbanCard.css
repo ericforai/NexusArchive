@@ -1,0 +1,128 @@
+/* src/components/pool-kanban/KanbanCard.css */
+/* Input: CSS rules for kanban card component styling */
+/* Output: Styled kanban card with selection states and hover effects */
+/* Pos: src/components/pool-kanban/KanbanCard.css */
+
+.kanban-card {
+  display: flex;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.kanban-card--selected {
+  background: #f0f7ff;
+  border-color: #1890ff;
+}
+
+.kanban-card__select-area {
+  width: 6px;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.kanban-card--selected .kanban-card__select-area {
+  background: #1890ff;
+}
+
+.kanban-card__select-indicator {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background: linear-gradient(90deg, #1890ff 0%, transparent 100%);
+  transition: opacity 0.2s;
+}
+
+.kanban-card:hover .kanban-card__select-indicator {
+  opacity: 0.3;
+}
+
+.kanban-card__content {
+  flex: 1;
+  padding: 12px;
+}
+
+.kanban-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kanban-card__title {
+  font-weight: 500;
+  font-size: 14px;
+  color: #262626;
+}
+
+.kanban-card__file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.kanban-card__file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanban-card__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.kanban-card__detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #595959;
+}
+
+.kanban-card__detail--full {
+  width: 100%;
+}
+
+.kanban-card__actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.kanban-card__cancel-select {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.kanban-card__cancel-select:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
