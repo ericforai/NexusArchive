@@ -1,0 +1,87 @@
+/* src/components/pool-kanban/KanbanColumn.css */
+/* Input: CSS rules for kanban column component styling */
+/* Output: Styled kanban column with tabs, actions, and card list */
+/* Pos: src/components/pool-kanban/KanbanColumn.css */
+
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  max-width: 400px;
+  flex: 1;
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 12px;
+  height: 100%;
+}
+
+.kanban-column__header {
+  margin-bottom: 12px;
+}
+
+.kanban-column__title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kanban-column__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.kanban-column__tabs {
+  margin-bottom: 0;
+}
+
+.kanban-column__tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kanban-column__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 12px;
+}
+
+.kanban-column__cards {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+.kanban-column__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+/* Scrollbar styles */
+.kanban-column__cards::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-column__cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-column__cards::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+}
+
+.kanban-column__cards::-webkit-scrollbar-thumb:hover {
+  background: #bfbfbf;
+}
