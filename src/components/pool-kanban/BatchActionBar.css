@@ -1,0 +1,139 @@
+/* src/components/pool-kanban/BatchActionBar.css */
+/* Input: CSS rules for batch action bar component styling */
+/* Output: Fixed bottom bar with responsive layout and animations */
+/* Pos: src/components/pool-kanban/BatchActionBar.css */
+
+.batch-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.batch-action-bar__container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.batch-action-bar__info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.batch-action-bar__count {
+  font-size: 14px;
+  color: #595959;
+}
+
+.batch-action-bar__count strong {
+  color: #1890ff;
+  font-size: 16px;
+  margin: 0 4px;
+}
+
+.batch-action-bar__result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.batch-action-bar__result--success {
+  color: #52c41a;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+}
+
+.batch-action-bar__result--error {
+  color: #ff4d4f;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+}
+
+.batch-action-bar__errors {
+  padding: 0 24px 12px;
+}
+
+.batch-action-bar__error-list {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.batch-action-bar__error-list li {
+  margin-bottom: 4px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .batch-action-bar__container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .batch-action-bar__info {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .batch-action-bar__count {
+    font-size: 12px;
+  }
+
+  .batch-action-bar__result {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .batch-action-bar__errors {
+    padding: 0 16px 8px;
+  }
+}
+
+/* 动画旋转图标（用于加载状态） */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.batch-action-bar .ant-btn .lucide-loader {
+  animation: spin 1s linear infinite;
+}

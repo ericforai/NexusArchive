@@ -12,3 +12,6 @@ export type { KanbanColumnProps } from './KanbanColumn';
 
 export { PoolKanbanView } from './PoolKanbanView';
 export type { PoolKanbanViewProps } from './PoolKanbanView';
+
+export { BatchActionBar } from './BatchActionBar';
+export type { BatchActionBarProps } from './BatchActionBar';
