@@ -30,6 +30,7 @@
 | `ConnectorForm.tsx` | ~156 | **Form Modal** | 连接器配置表单模态框（名称、类型、URL、密钥、账套） |
 | `DiagnosisPanel.tsx` | ~89 | **Diagnosis UI** | 诊断结果面板，显示健康状态和详细检查项 |
 | `ParamsEditor.tsx` | ~106 | **Params Modal** | 同步参数编辑模态框（日期范围、分页大小） |
+| `SapInterfaceTypes.tsx` | ~247 | **Interface Types** | SAP 四种接口类型展示组件（OData 已实现，其他预留） |
 | `ScenarioCard.tsx` | ~145 | **Scenario Item** | 场景卡片组件（v2.1 使用，v2.2 由 Drawer 替代） |
 
 ### 测试文件

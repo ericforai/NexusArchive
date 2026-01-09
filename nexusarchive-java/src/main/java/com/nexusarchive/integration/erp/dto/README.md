@@ -19,3 +19,5 @@
 | `FeedbackResult.java` | Java 类 | FeedbackResult 类 |
 | `IngestResult.java` | Java 类 | IngestResult 类 |
 | `VoucherDTO.java` | DTO | VoucherDTO 数据传输对象 |
+| `kingdee/` | 子目录 | 金蝶云星空 DTO (见子目录 README) |
+| `sap/` | 子目录 | SAP S/4HANA DTO (见子目录 README) |
