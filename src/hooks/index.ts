@@ -12,6 +12,7 @@ export { useArchives, useArchive, useRecentArchives, useCreateArchive, useUpdate
 
 // 预归档池相关 hooks
 export { usePoolKanban } from './usePoolKanban';
+export { usePoolBatchAction } from './usePoolBatchAction';
 
 // 权限相关 hooks
 export { usePermissions, usePermissionsQuery } from './usePermissions';
