@@ -10,6 +10,9 @@ export type { KanbanCardProps } from './KanbanCard';
 export { KanbanColumn } from './KanbanColumn';
 export type { KanbanColumnProps } from './KanbanColumn';
 
+export { CollapsedColumn } from './CollapsedColumn';
+export type { CollapsedColumnProps } from './CollapsedColumn';
+
 export { PoolKanbanView } from './PoolKanbanView';
 export type { PoolKanbanViewProps } from './PoolKanbanView';
 
