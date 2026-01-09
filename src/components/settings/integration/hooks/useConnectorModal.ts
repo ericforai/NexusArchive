@@ -6,7 +6,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { ErpConfig } from '../../../../types';
-import { ConnectorModalState, ConnectorModalActions } from '../types';
+import { ConnectorModalState, ConnectorModalActions, SapInterfaceConfig, SapInterfaceType } from '../types';
 
 interface UseConnectorModalOptions {
   erpApi: {
@@ -56,7 +56,12 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
     appSecret: '',
     accbookMapping: {} as Record<string, string>,
     requireClosedPeriod: false,
+    sapInterfaceType: undefined as SapInterfaceType | undefined,
+    sapConfig: undefined as SapInterfaceConfig | undefined,
   });
+
+  // SAP 接口类型选择器可见性
+  const [sapInterfaceSelectorVisible, setSapInterfaceSelectorVisible] = useState(false);
 
   const openModal = useCallback((config?: Partial<ErpConfig>) => {
     if (config) {
@@ -83,6 +88,8 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
         appSecret: (configData as any).appSecret || '',
         accbookMapping: mapping,
         requireClosedPeriod: (configData as any).requireClosedPeriod ?? false,
+        sapInterfaceType: config.sapInterfaceType || undefined,
+        sapConfig: (configData as any).sapConfig || undefined,
       });
     } else {
       setEditingConfig(null);
@@ -94,6 +101,8 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
         appSecret: '',
         accbookMapping: {},
         requireClosedPeriod: false,
+        sapInterfaceType: undefined,
+        sapConfig: undefined,
       });
     }
     setShow(true);
@@ -211,6 +220,19 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
     }
   }, [erpApi, editingConfig, configForm, closeModal, onConfigSaved]);
 
+  // SAP 接口类型选择
+  const selectSapInterfaceType = useCallback((type: SapInterfaceType) => {
+    setConfigForm(prev => ({ ...prev, sapInterfaceType: type }));
+  }, []);
+
+  // SAP 配置更新
+  const updateSapConfig = useCallback((config: Partial<SapInterfaceConfig>) => {
+    setConfigForm(prev => ({
+      ...prev,
+      sapConfig: { ...prev.sapConfig, ...config } as SapInterfaceConfig,
+    }));
+  }, []);
+
   const state: ConnectorModalState = {
     show,
     editingConfig,
@@ -218,6 +240,7 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
     newMappingEntry,
     detectedType,
     testing,
+    sapInterfaceSelectorVisible,
   };
 
   // Use useMemo to stabilize actions reference and prevent infinite loops
@@ -232,6 +255,8 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
       detectErpType,
       testConnection,
       saveConfig,
+      selectSapInterfaceType,
+      updateSapConfig,
     }),
     [
       openModal,
@@ -243,6 +268,8 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
       detectErpType,
       testConnection,
       saveConfig,
+      selectSapInterfaceType,
+      updateSapConfig,
     ]
   );
 

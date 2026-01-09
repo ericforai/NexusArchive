@@ -347,6 +347,8 @@ export interface ErpConfig {
   lastModifiedTime?: string;
   /* 关账检查模式：true=强制模式(未关账时阻止同步)，false=提醒模式(警告但允许继续) */
   requireClosedPeriod?: boolean;
+  /* SAP 接口类型：仅当 erpType='SAP' 时有效 */
+  sapInterfaceType?: 'ODATA' | 'RFC' | 'IDOC' | 'GATEWAY' | null;
 }
 
 export interface ErpScenario {

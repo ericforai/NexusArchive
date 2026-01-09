@@ -5,7 +5,8 @@
 
 // src/components/settings/integration/components/ErpConfigCard.tsx
 import React from 'react';
-import { Settings, Zap, Activity, ShieldCheck, ChevronRight, Building2, ArrowRight } from 'lucide-react';
+import { Settings, Zap, Activity, ShieldCheck, ChevronRight, Building2, ArrowRight, Server } from 'lucide-react';
+import { Tag } from 'antd';
 import { ErpConfig } from '@/types';
 import { ConnectionHealthBadge } from './ConnectionHealthBadge';
 
@@ -106,7 +107,19 @@ export function ErpConfigCard({
               <Settings size={18} className="text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 truncate">{config.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold text-gray-900 truncate">{config.name}</h3>
+                {/* SAP 接口类型标签 */}
+                {config.erpType === 'SAP' && config.sapInterfaceType && (
+                  <Tag
+                    icon={<Server size={12} />}
+                    color="blue"
+                    className="text-xs"
+                  >
+                    {config.sapInterfaceType}
+                  </Tag>
+                )}
+              </div>
               <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${statusBg} ${statusColor}`}>
                 <span>{statusDot}</span>
                 <span>{statusText}</span>
@@ -168,7 +181,23 @@ export function ErpConfigCard({
             )}
           </div>
         </div>
-        
+
+        {/* SAP 接口类型说明（仅 SAP ERP 显示） */}
+        {config.erpType === 'SAP' && config.sapInterfaceType && (
+          <div className="flex flex-col gap-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Server size={12} className="text-blue-400" />
+              <span>集成接口: {config.sapInterfaceType}</span>
+            </div>
+            <div className="ml-4 text-gray-500">
+              {config.sapInterfaceType === 'ODATA' && 'OData V4 REST 风格集成'}
+              {config.sapInterfaceType === 'RFC' && 'RFC/BAPI 传统集成方式（预留）'}
+              {config.sapInterfaceType === 'IDOC' && 'IDoc 异步批量交换（预留）'}
+              {config.sapInterfaceType === 'GATEWAY' && 'SAP Gateway 自定义服务（预留）'}
+            </div>
+          </div>
+        )}
+
         {/* Accbook-Fonds Mapping Row */}
         {mappingEntries.length > 0 && (
           <div className="flex flex-col gap-1.5 text-xs">

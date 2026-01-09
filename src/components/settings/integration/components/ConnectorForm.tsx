@@ -5,10 +5,12 @@
 
 // src/components/settings/integration/components/ConnectorForm.tsx
 
-import React from 'react';
-import { X, Plus, Trash2, CheckCircle, ArrowRight, Building2, ShieldAlert } from 'lucide-react';
-import { Drawer, Button, Input, Select, Space, Alert, Table, Tag, Switch } from 'antd';
-import { ConnectorModalState, ConnectorModalActions } from '../types';
+import React, { useState } from 'react';
+import { X, Plus, Trash2, CheckCircle, ArrowRight, Building2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
+import { Drawer, Button, Input, Select, Space, Alert, Table, Tag, Switch, Collapse } from 'antd';
+import { ConnectorModalState, ConnectorModalActions, SAP_INTERFACE_TYPES } from '../types';
+import { SapInterfaceTypes, SapInterfaceTypesCard } from './SapInterfaceTypes';
+import { SapInterfaceConfigForm } from './SapInterfaceConfigForm';
 
 interface ConnectorFormProps {
   state: ConnectorModalState;
@@ -131,9 +133,66 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
           <Select.Option value="yonsuite">用友 YonSuite</Select.Option>
           <Select.Option value="kingdee">金蝶云星空</Select.Option>
           <Select.Option value="weaver">泛微 OA</Select.Option>
+          <Select.Option value="SAP">SAP S/4HANA</Select.Option>
           <Select.Option value="generic">通用 REST API</Select.Option>
         </Select>
       </div>
+
+      {/* SAP 接口类型选择（仅当 ERP 类型为 SAP 时显示） */}
+      {configForm.erpType === 'SAP' && (
+        <div style={{ marginBottom: 16 }}>
+          <Collapse
+            defaultActiveKey={['sap-interface']}
+            items={[
+              {
+                key: 'sap-interface',
+                label: (
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert size={16} className="text-blue-600" />
+                    <span className="font-medium">SAP 集成接口类型</span>
+                    {configForm.sapInterfaceType && (
+                      <Tag color="blue">{configForm.sapInterfaceType}</Tag>
+                    )}
+                  </div>
+                ),
+                children: (
+                  <div className="space-y-4">
+                    {/* 接口类型卡片 */}
+                    <SapInterfaceTypesCard
+                      title="选择集成接口类型"
+                      showIcon
+                      showStatus
+                      onInterfaceClick={(key) => {
+                        const selectedType = SAP_INTERFACE_TYPES.find(t => t.key === key);
+                        if (selectedType?.status === 'implemented') {
+                          actions.selectSapInterfaceType?.(key.toUpperCase() as any);
+                          actions.updateSapConfig?.({});
+                        } else {
+                          // 预留类型显示提示
+                          // 使用静态提示，避免 Alert.info 的类型问题
+                          console.log(`${selectedType?.name || key} 接口类型目前为产品能力预留，暂未实现。`);
+                        }
+                      }}
+                    />
+
+                    {/* 选中接口类型的配置表单 */}
+                    {configForm.sapInterfaceType && configForm.sapInterfaceType === 'ODATA' && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <h5 className="text-sm font-semibold mb-3">OData 服务配置</h5>
+                        <SapInterfaceConfigForm
+                          interfaceType={configForm.sapInterfaceType}
+                          config={configForm.sapConfig || {}}
+                          onChange={(config) => actions.updateSapConfig?.(config)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
+      )}
 
       {/* Base URL */}
       <div style={{ marginBottom: 16 }}>

@@ -6,8 +6,7 @@
 // src/components/settings/integration/components/SapInterfaceTypes.tsx
 import React from 'react';
 import { Badge, Tooltip } from 'antd';
-import { Cloud, Server, FileText, Settings } from 'lucide-react';
-import { SAP_INTERFACE_TYPES, SAP_INTERFACE_STATUS } from '@/constants';
+import { SAP_INTERFACE_TYPES, SAP_INTERFACE_STATUS } from '../types';
 
 /**
  * SAP 接口类型状态徽章颜色映射

@@ -6,6 +6,50 @@
 // src/components/settings/integration/types.ts
 
 import { ErpConfig, ErpScenario, ErpSubInterface, IntegrationDiagnosisResult, IntegrationMonitoring, ReconciliationRecord, SyncHistory } from '../../../types';
+import { Cloud, Server, FileText, Settings } from 'lucide-react';
+
+// ============ SAP Interface Types Constants ============
+export type SapInterfaceType = 'ODATA' | 'RFC' | 'IDOC' | 'GATEWAY';
+
+export type SapInterfaceStatus = 'implemented' | 'reserved' | 'planned' | 'deprecated';
+
+export const SAP_INTERFACE_STATUS = {
+  implemented: 'implemented',
+  reserved: 'reserved',
+  planned: 'planned',
+  deprecated: 'deprecated',
+} as const;
+
+export const SAP_INTERFACE_TYPES = [
+  {
+    key: 'odata',
+    name: 'OData 服务',
+    description: '现代化 REST 风格集成，基于 HTTP/JSON',
+    status: 'implemented' as const,
+    icon: Cloud,
+  },
+  {
+    key: 'rfc_bapi',
+    name: 'RFC/BAPI',
+    description: '传统 SAP 集成方式，需要 SAP Java Connector',
+    status: 'reserved' as const,
+    icon: Server,
+  },
+  {
+    key: 'idoc',
+    name: 'IDoc',
+    description: '异步批量数据交换，类似 EDI 格式',
+    status: 'reserved' as const,
+    icon: FileText,
+  },
+  {
+    key: 'gateway',
+    name: 'SAP Gateway',
+    description: '自定义 OData 服务构建',
+    status: 'reserved' as const,
+    icon: Settings,
+  },
+] as const;
 
 // ============ ERP Config Manager Types ============
 export interface ErpConfigManagerState {
@@ -49,6 +93,38 @@ export interface ScenarioSyncManagerActions {
   setSyncing: (scenarioId: number | null) => void;
 }
 
+export interface SapInterfaceConfig {
+  // OData 配置
+  odata?: {
+    serverUrl: string;
+    authType: 'Basic';
+    username: string;
+    password: string;
+    clientNumber?: string; // on-premise only
+    testService?: string;
+  };
+  // RFC/BAPI 配置（预留）
+  rfc?: {
+    ashost: string;
+    sysnr: string;
+    client: string;
+    username: string;
+    password: string;
+    lang?: string;
+  };
+  // IDoc 配置（预留）
+  idoc?: {
+    host: string;
+    port: number;
+    partnerType: string;
+  };
+  // SAP Gateway 配置（预留）
+  gateway?: {
+    serviceUrl: string;
+    apiKey: string;
+  };
+}
+
 // ============ Connector Modal Types ============
 export interface ConnectorModalState {
   show: boolean;
@@ -61,6 +137,8 @@ export interface ConnectorModalState {
     appSecret: string;
     accbookMapping: Record<string, string>; // { [accbookCode]: fondsCode } - 账套-全宗映射
     requireClosedPeriod?: boolean; // 关账检查模式：true=强制，false=提醒（仅YonSuite）
+    sapInterfaceType?: SapInterfaceType; // SAP 接口类型
+    sapConfig?: SapInterfaceConfig; // SAP 接口配置
   };
   newMappingEntry: {
     accbookCode: string;
@@ -68,6 +146,7 @@ export interface ConnectorModalState {
   };
   detectedType: string | null;
   testing: boolean;
+  sapInterfaceSelectorVisible: boolean; // SAP 接口类型选择器是否可见
 }
 
 export interface ConnectorModalActions {
@@ -80,6 +159,9 @@ export interface ConnectorModalActions {
   detectErpType: (url: string) => Promise<string>;
   testConnection: () => Promise<void>;
   saveConfig: () => Promise<void>;
+  // SAP 接口类型相关
+  selectSapInterfaceType: (type: SapInterfaceType) => void;
+  updateSapConfig: (config: Partial<SapInterfaceConfig>) => void;
 }
 
 // ============ Diagnosis Types ============
