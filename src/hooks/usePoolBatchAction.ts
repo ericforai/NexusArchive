@@ -1,6 +1,7 @@
 // Input: Pool API, React state management
 // Output: Batch action hook for pool kanban
-// Pos: 批量操作 Hook
+// Pos: src/hooks/usePoolBatchAction.ts
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { useCallback, useState } from 'react';
 import { poolApi } from '@/api/pool';

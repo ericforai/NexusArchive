@@ -18,6 +18,8 @@ src/hooks/
 ├── index.ts                    # Hook 统一导出
 ├── useArchives.ts              # 档案数据获取
 ├── usePoolKanban.ts            # 预归档池看板数据管理
+├── usePoolBatchAction.ts       # 看板批量操作
+├── useKanbanLayout.ts          # 看板响应式布局
 ├── usePermissions.ts           # 权限检查
 ├── useDocumentationGuard.ts    # 文档自洽性守卫
 ├── useReconciliation.ts        # 对账相关逻辑
@@ -34,6 +36,8 @@ src/hooks/
 | `index.ts` | 聚合入口 | Hook 统一导出 |
 | `useArchives.ts` | Hook | 档案数据获取与状态封装 |
 | `usePoolKanban.ts` | Hook | 预归档池看板数据管理，按列和子状态分组 |
+| `usePoolBatchAction.ts` | Hook | 看板批量操作选择与执行 |
+| `useKanbanLayout.ts` | Hook | 看板响应式布局，支持动态列宽和空列折叠 |
 | `usePermissions.ts` | Hook | 权限检查与权限状态 |
 | `useDocumentationGuard.ts` | Hook | 文档自洽性守卫，代码变更后提醒更新文档 |
 | `useReconciliation.ts` | Hook | 对账相关逻辑 |

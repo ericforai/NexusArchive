@@ -1,6 +1,7 @@
 // Input: React hooks, ResizeObserver API, POOL_COLUMN_GROUPS config
 // Output: useKanbanLayout hook for responsive kanban layout
-// Pos: 看板响应式布局 Hook
+// Pos: src/hooks/useKanbanLayout.ts
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { POOL_COLUMN_GROUPS } from '@/config/pool-columns.config';

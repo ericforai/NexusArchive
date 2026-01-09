@@ -1,9 +1,10 @@
+// Input: PreArchiveStatus (10种预处理状态)
+// Output: ColumnGroupConfig (4个主列)
+// Pos: src/config/pool-columns.config.ts
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 /**
  * 电子凭证池看板列分组配置
- *
- * Input: PreArchiveStatus (10种预处理状态)
- * Output: ColumnGroupConfig (4个主列)
- * Pos: src/config/pool-columns.config.ts
  */
 
 // 状态类型定义（项目中已有的状态）

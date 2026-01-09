@@ -1,6 +1,7 @@
 // Input: React Query hook, pool API, column config
 // Output: usePoolKanban hook for kanban data management
-// Pos: 看板数据管理 Hook
+// Pos: src/hooks/usePoolKanban.ts
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { useQuery } from '@tanstack/react-query';
 import { poolApi } from '@/api/pool';
