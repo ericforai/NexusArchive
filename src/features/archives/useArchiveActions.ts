@@ -181,37 +181,20 @@ export function useArchiveActions(controller: ArchiveListController): UseArchive
         }
     }, [ui, actions, pool]);
 
-    // 归档提交
+    // 归档提交 (使用 poolApi.archiveItems)
     const executeArchiving = useCallback(async () => {
         if (selection.selectedIds.length === 0) return;
 
         setIsArchiving(true);
         try {
-            const response = await client.post('/archives/batch-archive', {
-                ids: selection.selectedIds
-            });
+            await poolApi.archiveItems(selection.selectedIds as string[]);
 
-            if (response.data.code === 200) {
-                const result = response.data.data;
-                const successCount = result.successItems ? result.successItems.length : (Array.isArray(result) ? result.length : 0);
-                const failureCount = result.failures ? Object.keys(result.failures).length : 0;
-
-                if (failureCount === 0 && successCount > 0) {
-                    ui.showToast(`已提交 ${successCount} 个归档申请`, 'success');
-                } else if (successCount > 0) {
-                    ui.showToast(`部分成功: ${successCount}条, 失败 ${failureCount}条`, 'error');
-                } else {
-                    ui.showToast(`提交失败 (${failureCount})`, 'error');
-                }
-
-                if (successCount > 0) {
-                    selection.clear();
-                    actions.reload();
-                    pool.refreshStats();
-                }
-            }
+            ui.showToast(`已提交 ${selection.selectedIds.length} 个归档申请`, 'success');
+            selection.clear();
+            actions.reload();
+            pool.refreshStats();
         } catch (error: any) {
-            ui.showToast('提交归档失败: ' + (error.response?.data?.message || error.message), 'error');
+            ui.showToast('提交归档失败: ' + (error.message || '未知错误'), 'error');
         } finally {
             setIsArchiving(false);
         }

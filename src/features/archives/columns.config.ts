@@ -133,8 +133,17 @@ export const SCAN_CONFIG: ModuleConfig = {
     data: []
 };
 
-// 默认兜底
+// 默认兜底（归档查看 - 支持全类型档案通用显示）
 export const GENERIC_CONFIG: ModuleConfig = {
-    columns: [{ key: 'info', header: '信息', type: 'text' }],
+    columns: [
+        { key: 'archivalCode', header: '档号', type: 'text' },
+        { key: 'title', header: '题名', type: 'text' },
+        { key: 'category', header: '门类', type: 'text' },
+        { key: 'orgName', header: '组织机构', type: 'text' },
+        { key: 'year', header: '年度', type: 'text' },
+        { key: 'period', header: '保管期限', type: 'text' },
+        { key: 'date', header: '业务日期', type: 'date' },
+        { key: 'status', header: '状态', type: 'status' },
+    ],
     data: []
 };
