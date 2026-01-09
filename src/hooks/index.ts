@@ -10,6 +10,9 @@
 // React Query hooks
 export { useArchives, useArchive, useRecentArchives, useCreateArchive, useUpdateArchive, useDeleteArchive, useExportAip } from './useArchives';
 
+// 预归档池相关 hooks
+export { usePoolKanban } from './usePoolKanban';
+
 // 权限相关 hooks
 export { usePermissions, usePermissionsQuery } from './usePermissions';
 
