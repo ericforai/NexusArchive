@@ -7,9 +7,33 @@
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
+| `ErpException.java` | 异常类 | ERP 集成通用异常 |
 | `PeriodNotClosedException.java` | 异常类 | 期间未关账异常（强制模式下抛出）|
 
 ## 异常说明
+
+### ErpException
+
+**用途**: ERP 集成通用异常，当调用 ERP 系统接口失败时抛出。
+
+**字段**:
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| errorCode | String | 错误代码（可选）|
+| erpType | String | ERP 系统类型（如 sap, yonsuite, kingdee）|
+
+**使用场景**:
+- 认证失败
+- API 调用失败
+- 数据格式错误
+- 业务逻辑错误
+
+**使用示例**:
+```java
+// SapHttpClient.handleErrorResponse()
+throw new ErpException("SAP API error: " + error.getMessage()
+    + " (code: " + error.getCode() + ")");
+```
 
 ### PeriodNotClosedException
 
