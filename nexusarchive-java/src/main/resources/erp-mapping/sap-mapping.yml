@@ -1,0 +1,159 @@
+# SAP S/4HANA Journal Entry 映射配置
+# Source: SAP S/4HANA API Journal Entry (OData V4)
+# Target: AccountingSipDto (DA/T 94-2022 会计档案 SIP)
+
+sourceSystem: sap
+targetModel: AccountingSipDto
+version: 1.0.0
+
+# SAP 特定配置
+sapConfig:
+  # 借贷标识映射 (德语缩写)
+  debitCreditMapping:
+    S: DEBIT   # Soll = 借方
+    H: CREDIT  # Haben = 贷方
+
+# 凭证头字段映射
+headerMappings:
+  # 会计期间 - SAP 格式: "2024-01", 从 PostingDate 提取
+  accountPeriod:
+    script: |
+      groovy:
+        import java.time.*
+        def date = LocalDate.parse(ctx.PostingDate)
+        return date.format("yyyy-MM")
+
+  # 凭证号 - 格式: "凭证号-年度"
+  voucherNumber:
+    script: |
+      groovy:
+        return ctx.JournalEntry + "-" + ctx.FiscalYear
+
+  # 凭证类型 - 默认通用类型
+  voucherType:
+    script: "groovy:return 'GENERIC'"
+
+  # 凭证日期
+  voucherDate:
+    field: PostingDate
+    type: date
+    format: yyyy-MM-dd
+
+  # 过账日期
+  postingDate:
+    field: PostingDate
+    type: date
+    format: yyyy-MM-dd
+
+  # 凭证总金额 - 汇总借方金额
+  totalAmount:
+    script: |
+      groovy:
+        if (ctx.to_JournalEntryItem == null) return 0.0
+        def total = 0.0
+        ctx.to_JournalEntryItem.each { item ->
+          if (item.DebitCreditCode == 'S') {
+            def amt = item.AmountInTransactionCurrency ?: '0'
+            total += Double.parseDouble(amt)
+          }
+        }
+        return total
+
+  # 币种
+  currencyCode:
+    script: |
+      groovy:
+        return ctx.to_JournalEntryItem?.getAt(0)?.TransactionCurrency ?: 'CNY'
+
+  # 附件数量
+  attachmentCount:
+    script: "groovy:return ctx.to_Attachment?.size() ?: 0"
+
+  # 制单人
+  issuer:
+    field: CreatedByUser
+
+  # 备注/摘要
+  remark:
+    field: DocumentHeaderText
+
+  # 原始凭证号
+  originalVoucherNumber:
+    field: ReferenceDocument
+
+# 分录映射
+entries:
+  source: to_JournalEntryItem
+  item:
+    # 分录行号
+    lineNo:
+      field: JournalEntryItem
+      type: integer
+
+    # 摘要
+    summary:
+      field: DocumentItemText
+
+    # 科目编码
+    subjectCode:
+      field: GLAccount
+
+    # 科目名称 - SAP 不直接返回，需后续维护
+    subjectName:
+      script: "groovy:return ''"
+
+    # 借贷方向
+    direction:
+      script: |
+        groovy:
+          return ctx.DebitCreditCode == 'S' ? 'DEBIT' : 'CREDIT'
+
+    # 金额
+    amount:
+      field: AmountInTransactionCurrency
+      type: decimal
+
+    # 辅助信息 (JSON 格式)
+    auxiliaryInfo:
+      script: |
+        groovy:
+          import groovy.json.JsonBuilder
+          def info = [:]
+          if (ctx.CostCenter) info.costCenter = ctx.CostCenter
+          if (ctx.ProfitCenter) info.profitCenter = ctx.ProfitCenter
+          if (ctx.TaxCode) info.taxCode = ctx.TaxCode
+          if (ctx.ReferenceKeyByBusinessTransaction) info.refKey = ctx.ReferenceKeyByBusinessTransaction
+          return new JsonBuilder(info).toString()
+
+# 附件映射
+attachments:
+  source: to_Attachment
+  item:
+    # 文件名
+    fileName:
+      field: FileName
+
+    # 文件类型/扩展名
+    fileType:
+      script: |
+        groovy:
+          def name = ctx.FileName ?: ''
+          def dot = name.lastIndexOf('.')
+          return dot > 0 ? name.substring(dot + 1) : 'pdf'
+
+    # 文件大小 (字节)
+    fileSize:
+      field: FileSize
+      type: long
+
+    # 下载 URL
+    downloadUrl:
+      field: URL
+
+    # 业务对象类型
+    businessObjectType:
+      field: BusinessObjectType
+
+    # 文档 ID (用于获取附件内容)
+    documentId:
+      field: DocumentInfoRecordDocType
