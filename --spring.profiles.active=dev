@@ -1,0 +1,245 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< com.nexusarchive:nexusarchive-backend >----------------
+[INFO] Building NexusArchive Backend 2.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.1.6:run (default-cli) > test-compile @ nexusarchive-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ nexusarchive-backend ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] Copying 61 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ nexusarchive-backend ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ nexusarchive-backend ---
+[INFO] Copying 11 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ nexusarchive-backend ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 64 source files with javac [debug release 17] to target/test-classes
+[INFO] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java: Some input files use or override a deprecated API.
+[INFO] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ArchiveServiceTest.java: Some input files use unchecked or unsafe operations.
+[INFO] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ArchiveServiceTest.java: Recompile with -Xlint:unchecked for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/IngestFlowTest.java:[63,25] constructor IngestServiceImpl in class com.nexusarchive.service.impl.IngestServiceImpl cannot be applied to given types;
+  required: com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.service.ErpFeedbackService,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+  found:    com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.mapper.ErpConfigMapper,com.nexusarchive.integration.erp.adapter.ErpAdapterFactory,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[44,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[49,35] cannot find symbol
+  symbol:   method getTargetAccbookCode()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[65,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[70,35] cannot find symbol
+  symbol:   method getTargetAccbookCode()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[85,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[92,21] invalid method reference
+  cannot find symbol
+    symbol:   method getTargetAccbookCode()
+    location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[106,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[111,55] invalid method reference
+  cannot find symbol
+    symbol:   method getTargetAccbookCode()
+    location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[119,21] cannot find symbol
+  symbol:   method accbookMapping(<nulltype>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[124,55] invalid method reference
+  cannot find symbol
+    symbol:   method getTargetAccbookCode()
+    location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[135,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[142,21] invalid method reference
+  cannot find symbol
+    symbol:   method getTargetAccbookCode()
+    location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[156,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[163,21] invalid method reference
+  cannot find symbol
+    symbol:   method getTargetAccbookCode()
+    location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[178,21] cannot find symbol
+  symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[183,35] cannot find symbol
+  symbol:   method getTargetAccbookCode()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[199,21] cannot find symbol
+  symbol:   method accbookMapping(<nulltype>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[205,35] cannot find symbol
+  symbol:   method getTargetAccbookCode()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[216,21] cannot find symbol
+  symbol:   method accbookMapping(<nulltype>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[222,35] cannot find symbol
+  symbol:   method getTargetAccbookCode()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[233,21] cannot find symbol
+  symbol:   method accbookMapping(<nulltype>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[240,35] cannot find symbol
+  symbol:   method getTargetAccbookCode()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[251,21] cannot find symbol
+  symbol:   method accbookMapping(<nulltype>)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[260,21] invalid method reference
+  cannot find symbol
+    symbol:   method getTargetAccbookCode()
+    location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[340,21] cannot find symbol
+  symbol:   method currentFonds(java.lang.String)
+  location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[351,43] cannot find symbol
+  symbol:   method getCurrentFonds()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[371,32] no suitable constructor found for ErpConfig(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.List<java.lang.String>,<nulltype>,java.lang.String,java.lang.String,boolean)
+    constructor com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfig() is not applicable
+      (actual and formal argument lists differ in length)
+    constructor com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfig(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.List<java.lang.String>,java.lang.String,java.lang.Boolean) is not applicable
+      (actual and formal argument lists differ in length)
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[381,41] cannot find symbol
+  symbol:   method getCurrentFonds()
+  location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ArchiveControllerTest.java:[168,56] method getArchives in class com.nexusarchive.service.ArchiveService cannot be applied to given types;
+  required: int,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String
+  found:    int,int,java.lang.String,java.lang.Object,java.lang.Object,java.lang.Object,java.lang.Object,java.lang.Object
+  reason: actual and formal argument lists differ in length
+[INFO] 30 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.593 s
+[INFO] Finished at: 2026-01-08T13:36:14+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:testCompile (default-testCompile) on project nexusarchive-backend: Compilation failure: Compilation failure: 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/IngestFlowTest.java:[63,25] constructor IngestServiceImpl in class com.nexusarchive.service.impl.IngestServiceImpl cannot be applied to given types;
+[ERROR]   required: com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.service.ErpFeedbackService,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+[ERROR]   found:    com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.mapper.ErpConfigMapper,com.nexusarchive.integration.erp.adapter.ErpAdapterFactory,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[44,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[49,35] cannot find symbol
+[ERROR]   symbol:   method getTargetAccbookCode()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[65,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[70,35] cannot find symbol
+[ERROR]   symbol:   method getTargetAccbookCode()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[85,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[92,21] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method getTargetAccbookCode()
+[ERROR]     location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[106,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[111,55] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method getTargetAccbookCode()
+[ERROR]     location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[119,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(<nulltype>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[124,55] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method getTargetAccbookCode()
+[ERROR]     location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[135,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[142,21] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method getTargetAccbookCode()
+[ERROR]     location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[156,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[163,21] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method getTargetAccbookCode()
+[ERROR]     location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[178,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(java.util.Map<java.lang.String,java.lang.String>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[183,35] cannot find symbol
+[ERROR]   symbol:   method getTargetAccbookCode()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[199,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(<nulltype>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[205,35] cannot find symbol
+[ERROR]   symbol:   method getTargetAccbookCode()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[216,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(<nulltype>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[222,35] cannot find symbol
+[ERROR]   symbol:   method getTargetAccbookCode()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[233,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(<nulltype>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[240,35] cannot find symbol
+[ERROR]   symbol:   method getTargetAccbookCode()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[251,21] cannot find symbol
+[ERROR]   symbol:   method accbookMapping(<nulltype>)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[260,21] invalid method reference
+[ERROR]   cannot find symbol
+[ERROR]     symbol:   method getTargetAccbookCode()
+[ERROR]     location: class com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[340,21] cannot find symbol
+[ERROR]   symbol:   method currentFonds(java.lang.String)
+[ERROR]   location: class com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfigBuilder
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[351,43] cannot find symbol
+[ERROR]   symbol:   method getCurrentFonds()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[371,32] no suitable constructor found for ErpConfig(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.List<java.lang.String>,<nulltype>,java.lang.String,java.lang.String,boolean)
+[ERROR]     constructor com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfig() is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR]     constructor com.nexusarchive.integration.erp.dto.ErpConfig.ErpConfig(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.List<java.lang.String>,java.lang.String,java.lang.Boolean) is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/dto/ErpConfigTests.java:[381,41] cannot find symbol
+[ERROR]   symbol:   method getCurrentFonds()
+[ERROR]   location: variable config of type com.nexusarchive.integration.erp.dto.ErpConfig
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ArchiveControllerTest.java:[168,56] method getArchives in class com.nexusarchive.service.ArchiveService cannot be applied to given types;
+[ERROR]   required: int,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String
+[ERROR]   found:    int,int,java.lang.String,java.lang.Object,java.lang.Object,java.lang.Object,java.lang.Object,java.lang.Object
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

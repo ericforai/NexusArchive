@@ -169,7 +169,7 @@ public class UserService {
         if (StringUtils.hasText(status)) {
             wrapper.eq(User::getStatus, status);
         }
-        wrapper.orderByDesc("created_time");
+        wrapper.orderByDesc(User::getCreatedTime);
 
         Page<User> pageObj = new Page<>(page, limit);
         Page<User> userPage = userMapper.selectPage(pageObj, wrapper);

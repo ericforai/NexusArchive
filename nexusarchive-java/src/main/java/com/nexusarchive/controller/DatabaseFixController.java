@@ -14,7 +14,7 @@ import java.util.Map;
  * 临时数据库修复控制器
  */
 @RestController
-@RequestMapping("/api/db-fix")
+@RequestMapping("/db-fix")
 @RequiredArgsConstructor
 public class DatabaseFixController {
 

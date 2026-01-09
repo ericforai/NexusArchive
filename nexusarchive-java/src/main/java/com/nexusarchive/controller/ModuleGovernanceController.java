@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Tag(name = "模块治理", description = "模块发现、验证和导出")
 @RestController
-@RequestMapping("/api/governance")
+@RequestMapping("/governance")
 @RequiredArgsConstructor
 public class ModuleGovernanceController {
 

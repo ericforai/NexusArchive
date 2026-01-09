@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/enterprise-architecture")
+@RequestMapping("/enterprise-architecture")
 @RequiredArgsConstructor
 @Tag(name = "集团架构", description = "集团架构树视图接口")
 public class EnterpriseArchitectureController {

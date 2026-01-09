@@ -101,7 +101,7 @@ public class BorrowingApplicationService implements BorrowingFacade {
         }
         DataScopeContext scope = dataScopeService.resolve();
         borrowingScopePolicy.apply(queryWrapper, scope);
-        queryWrapper.orderByDesc("created_time");
+        queryWrapper.orderByDesc(Borrowing::getCreatedTime);
 
         Page<Borrowing> result = borrowingMapper.selectPage(pageParam, queryWrapper);
         return mapPage(result);

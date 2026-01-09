@@ -1,5 +1,5 @@
 // Input: React、ReactDOM、QueryClientProvider、queryClient 与 App
-// Output: 将应用挂载到 #root 的启动逻辑
+// Output: 将应用挂载到 #root 的启动逻辑 + React 实例诊断
 // Pos: 前端启动入口
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -33,7 +33,20 @@ if (!rootElement) {
 if (typeof window !== 'undefined') {
   const win = window as any;
   win.__REACT_LOG__ = win.__REACT_LOG__ || [];
-  win.__REACT_LOG__.push({ version: React.version, time: new Date().toISOString() });
+  if (!win.__REACT_ROOT_REF__) {
+    win.__REACT_ROOT_REF__ = React;
+    win.__REACT_ROOT_USESTATE__ = React.useState;
+  }
+  const dispatcher =
+    (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      ?.ReactCurrentDispatcher?.current ?? null;
+  win.__REACT_LOG__.push({
+    version: React.version,
+    time: new Date().toISOString(),
+    module: import.meta.url,
+    sameRoot: win.__REACT_ROOT_REF__ === React,
+    dispatcher: dispatcher ? 'set' : 'null',
+  });
   console.log(`%c[Runtime] React v${React.version} | ReactDOM Ready`, 'color: #7c3aed; font-weight: bold; background: #f3e8ff; padding: 2px 5px; border-radius: 4px;');
 
   if (win.__REACT_LOG__.length > 1) {

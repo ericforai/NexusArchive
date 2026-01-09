@@ -4,6 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Building2, FolderOpen, FileText, ChevronRight, ChevronDown, Loader2, Database, HardDrive } from 'lucide-react';
 import { enterpriseArchitectureApi, EnterpriseArchitectureTree, EntityNode, FondsNode } from '../../api/enterpriseArchitecture';
 
@@ -12,6 +13,7 @@ export const EnterpriseArchitecturePage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
     const [expandedFonds, setExpandedFonds] = useState<Set<string>>(new Set());
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadTree();
@@ -111,11 +113,10 @@ export const EnterpriseArchitecturePage: React.FC = () => {
                                                             ({entity.taxId})
                                                         </span>
                                                     )}
-                                                    <span className={`px-2 py-0.5 rounded text-xs ${
-                                                        entity.status === 'ACTIVE'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-slate-100 text-slate-700'
-                                                    }`}>
+                                                    <span className={`px-2 py-0.5 rounded text-xs ${entity.status === 'ACTIVE'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-slate-100 text-slate-700'
+                                                        }`}>
                                                         {entity.status === 'ACTIVE' ? '活跃' : '停用'}
                                                     </span>
                                                 </div>
@@ -148,7 +149,13 @@ export const EnterpriseArchitecturePage: React.FC = () => {
                                                                 <FolderOpen className="w-4 h-4 text-blue-600" />
                                                                 <div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="font-medium text-slate-800">
+                                                                        <span
+                                                                            className="font-medium text-slate-800 cursor-pointer hover:text-primary-600 hover:underline"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                navigate(`/system/archive?fondsId=${fonds.id}&fondsCode=${fonds.fondsCode}`);
+                                                                            }}
+                                                                        >
                                                                             {fonds.fondsName}
                                                                         </span>
                                                                         <span className="text-xs text-slate-500 font-mono">

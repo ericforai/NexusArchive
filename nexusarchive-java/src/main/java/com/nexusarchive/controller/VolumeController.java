@@ -1,4 +1,4 @@
-// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、等
+// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、DtoMapper、VolumeResponse
 // Output: VolumeController 类
 // Pos: 接口层 Controller
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -6,6 +6,9 @@
 package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.dto.mapper.DtoMapper;
+import com.nexusarchive.dto.response.ArchiveResponse;
+import com.nexusarchive.dto.response.VolumeResponse;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.Volume;
 import com.nexusarchive.service.VolumeService;
@@ -18,12 +21,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
 /**
  * 组卷与归档审核 Controller
  * 符合 DA/T 104-2024 组卷规范
+ * 所有返回值使用 DTO，避免直接暴露 Entity
  */
 @RestController
 @RequestMapping("/volumes")
@@ -32,6 +37,7 @@ import jakarta.validation.Valid;
 public class VolumeController {
 
     private final VolumeService volumeService;
+    private final DtoMapper dtoMapper;
 
     /**
      * 按月自动组卷
@@ -40,13 +46,14 @@ public class VolumeController {
     @PostMapping("/assemble")
     public ResponseEntity<Map<String, Object>> assembleByMonth(@Valid @RequestBody AssembleRequest request) {
         log.info("请求组卷: fiscalPeriod={}", request.getFiscalPeriod());
-        
+
         Volume volume = volumeService.assembleByMonth(request.getFiscalPeriod());
-        
+        VolumeResponse response = dtoMapper.toVolumeResponse(volume);
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "组卷成功");
-        result.put("data", volume);
+        result.put("data", response);
         return ResponseEntity.ok(result);
     }
 
@@ -59,17 +66,18 @@ public class VolumeController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(required = false) String status) {
-        
+
         Page<Volume> pageResult = volumeService.getVolumeList(page, limit, status);
-        
+        Page<VolumeResponse> responsePage = dtoMapper.toVolumeResponsePage(pageResult);
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "操作成功");
         result.put("data", Map.of(
-                "records", pageResult.getRecords(),
-                "total", pageResult.getTotal(),
-                "page", pageResult.getCurrent(),
-                "limit", pageResult.getSize()
+                "records", responsePage.getRecords(),
+                "total", responsePage.getTotal(),
+                "page", responsePage.getCurrent(),
+                "limit", responsePage.getSize()
         ));
         return ResponseEntity.ok(result);
     }
@@ -81,11 +89,12 @@ public class VolumeController {
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getVolumeDetail(@PathVariable String id) {
         Volume volume = volumeService.getVolumeById(id);
-        
+        VolumeResponse response = dtoMapper.toVolumeResponse(volume);
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "操作成功");
-        result.put("data", volume);
+        result.put("data", response);
         return ResponseEntity.ok(result);
     }
 
@@ -96,11 +105,12 @@ public class VolumeController {
     @GetMapping("/{id}/files")
     public ResponseEntity<Map<String, Object>> getVolumeFiles(@PathVariable String id) {
         List<Archive> files = volumeService.getVolumeFiles(id);
-        
+        List<ArchiveResponse> responseList = dtoMapper.toArchiveResponseList(files);
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "操作成功");
-        result.put("data", files);
+        result.put("data", responseList);
         return ResponseEntity.ok(result);
     }
 
@@ -111,7 +121,7 @@ public class VolumeController {
     @PostMapping("/{id}/submit-review")
     public ResponseEntity<Map<String, Object>> submitForReview(@PathVariable String id) {
         volumeService.submitForReview(id);
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "已提交审核");
@@ -126,9 +136,9 @@ public class VolumeController {
     public ResponseEntity<Map<String, Object>> approveArchival(
             @PathVariable String id,
             @RequestParam(defaultValue = "system") String reviewerId) {
-        
+
         volumeService.approveArchival(id, reviewerId);
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "归档成功");
@@ -143,9 +153,9 @@ public class VolumeController {
     public ResponseEntity<Map<String, Object>> rejectArchival(
             @PathVariable String id,
             @Valid @RequestBody RejectRequest request) {
-        
+
         volumeService.rejectArchival(id, request.getReviewerId(), request.getReason());
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "已驳回");
@@ -158,9 +168,9 @@ public class VolumeController {
      */
     @PostMapping("/{id}/handover")
     public ResponseEntity<Map<String, Object>> handoverToArchives(@PathVariable String id) {
-        
+
         volumeService.handoverToArchives(id);
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "移交成功");
@@ -174,7 +184,7 @@ public class VolumeController {
     @GetMapping("/{id}/registration-form")
     public ResponseEntity<Map<String, Object>> getRegistrationForm(@PathVariable String id) {
         Map<String, Object> form = volumeService.generateRegistrationForm(id);
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "操作成功");
@@ -189,11 +199,11 @@ public class VolumeController {
     @GetMapping("/{id}/export-aip")
     public ResponseEntity<org.springframework.core.io.Resource> exportAipPackage(@PathVariable String id) throws java.io.IOException {
         java.io.File zipFile = volumeService.exportAipPackage(id);
-        
+
         org.springframework.core.io.InputStreamResource resource = new org.springframework.core.io.InputStreamResource(new java.io.FileInputStream(zipFile));
-        
+
         String filename = zipFile.getName();
-        
+
         return ResponseEntity.ok()
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)

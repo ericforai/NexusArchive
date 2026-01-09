@@ -36,7 +36,7 @@ import jakarta.validation.Valid;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/audit-log")
+@RequestMapping("/audit-log")
 @RequiredArgsConstructor
 @Tag(name = "审计日志验真", description = "审计日志哈希链验真、证据包导出、抽检验真接口")
 public class AuditLogVerificationController {

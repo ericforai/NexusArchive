@@ -153,8 +153,8 @@ public class ArchiveBatchService {
      * @return 最新批次
      */
     public ArchiveBatch getLatestBatch() {
-        QueryWrapper<ArchiveBatch> query = new QueryWrapper<>();
-        query.orderByDesc("created_time").last("LIMIT 1");
+        LambdaQueryWrapper<ArchiveBatch> query = new LambdaQueryWrapper<>();
+        query.orderByDesc(ArchiveBatch::getCreatedTime).last("LIMIT 1");
         return archiveBatchMapper.selectOne(query);
     }
 }

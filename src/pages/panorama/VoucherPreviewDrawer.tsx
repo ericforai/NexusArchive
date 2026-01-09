@@ -1,4 +1,4 @@
-// Input: [voucherId, isOpen, onClose]
+// Input: [voucherId, isOpen, onClose]（Spin tip 嵌套）
 // Output: [Slide-over Drawer with Metadata and File Preview]
 // Pos: src/pages/panorama/VoucherPreviewDrawer.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -156,7 +156,9 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                                             <div className="p-2">
                                                 {attachmentsLoading ? (
                                                     <div className="text-center py-4">
-                                                        <Spin size="small" tip="查询中..." />
+                                                        <Spin size="small" tip="查询中...">
+                                                            <div style={{ minHeight: 24 }} />
+                                                        </Spin>
                                                     </div>
                                                 ) : !attachmentsFetched ? (
                                                     <Empty

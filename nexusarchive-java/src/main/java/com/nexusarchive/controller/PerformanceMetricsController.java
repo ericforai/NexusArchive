@@ -24,7 +24,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/system/metrics")
+@RequestMapping("/system/metrics")
 @RequiredArgsConstructor
 @Tag(name = "性能指标监控", description = "系统性能指标收集和报告")
 public class PerformanceMetricsController {

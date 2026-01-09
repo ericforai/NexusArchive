@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.entity.Archive;
@@ -404,15 +405,15 @@ public class ReconciliationServiceImpl implements ReconciliationService {
             return Collections.emptyList();
         }
 
-        QueryWrapper<ReconciliationRecord> historyByConfig = new QueryWrapper<>();
-        historyByConfig.eq("config_id", configId).orderByDesc("recon_time");
+        LambdaQueryWrapper<ReconciliationRecord> historyByConfig = new LambdaQueryWrapper<>();
+        historyByConfig.eq(ReconciliationRecord::getConfigId, configId).orderByDesc(ReconciliationRecord::getReconTime);
         List<ReconciliationRecord> records = reconciliationRecordMapper.selectList(historyByConfig);
         if (!records.isEmpty()) {
             return records;
         }
 
-        QueryWrapper<ReconciliationRecord> historyBySource = new QueryWrapper<>();
-        historyBySource.eq("source_system", config.getName()).orderByDesc("recon_time");
+        LambdaQueryWrapper<ReconciliationRecord> historyBySource = new LambdaQueryWrapper<>();
+        historyBySource.eq(ReconciliationRecord::getSourceSystem, config.getName()).orderByDesc(ReconciliationRecord::getReconTime);
         return reconciliationRecordMapper.selectList(historyBySource);
     }
 

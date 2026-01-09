@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.dto.request.PageRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -88,6 +90,23 @@ public class ErpScenarioService {
 
         // 3. 如果为空，初始化默认场景
         return initializeScenarios(configId);
+    }
+
+    /**
+     * 分页获取指定配置的所有业务场景
+     */
+    @Transactional
+    public Page<ErpScenario> listScenariosByConfigIdPage(Long configId, PageRequest request) {
+        // 确保数据已初始化
+        listScenariosByConfigId(configId);
+
+        // 构建分页参数
+        Page<ErpScenario> page = new Page<>(request.getPageNum(), request.getPageSize());
+
+        // 执行查询
+        LambdaQueryWrapper<ErpScenario> query = new LambdaQueryWrapper<>();
+        query.eq(ErpScenario::getConfigId, configId);
+        return erpScenarioMapper.selectPage(page, query);
     }
 
     private List<ErpScenario> initializeScenarios(Long configId) {

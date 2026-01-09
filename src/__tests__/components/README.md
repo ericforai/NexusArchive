@@ -8,3 +8,5 @@
 | --- | --- | --- |
 | `ArchiveListView.test.tsx` | 测试用例 | 档案列表组件测试 |
 | `LoginView.test.tsx` | 测试用例 | 登录页面组件测试 |
+| `SettingsNavigation.test.ts` | 测试用例 | 系统设置菜单路径测试 |
+| `AntdWarnings.test.ts` | 测试用例 | antd 告警用法回归测试 |

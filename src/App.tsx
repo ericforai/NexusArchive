@@ -8,10 +8,10 @@
  *
  * 使用 React Router v7 的 createBrowserRouter 实现企业级路由
  */
-import { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { message as antdMessage, notification as antdNotification } from 'antd';
 import { routes } from './routes';
-import { ToastContainer } from './components/common/ToastContainer';
 import { DocumentationGuardProvider } from './components/dev/DocumentationGuardProvider';
 
 // Architecture Defense: Initialize runtime introspection in development
@@ -25,12 +25,33 @@ if (import.meta.env.DEV) {
 const router = createBrowserRouter(routes);
 
 const App: FC = () => {
+  // 将原 ToastContainer 的 logic 移入 App
+  useEffect(() => {
+    try {
+      console.log('[App] Configuring antd global feedback components...');
+      if (antdMessage && typeof antdMessage.config === 'function') {
+        antdMessage.config({
+          duration: 3,
+          maxCount: 3,
+        });
+      }
+      if (antdNotification && typeof antdNotification.config === 'function') {
+        antdNotification.config({
+          placement: 'topRight',
+          maxCount: 3,
+        });
+      }
+    } catch (e) {
+      console.warn('[App] Antd config failed:', e);
+    }
+  }, []);
+
   return (
-    <ToastContainer>
+    <>
       {/* 文档守卫：开发环境自动监控代码变更，提醒更新文档 */}
-      <DocumentationGuardProvider />
+      {/* <DocumentationGuardProvider /> */}
       <RouterProvider router={router} />
-    </ToastContainer>
+    </>
   );
 };
 

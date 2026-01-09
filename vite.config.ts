@@ -67,8 +67,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       hmr: {
         protocol: 'ws',
-        host: '127.0.0.1',
-        port: 15175,
+        // host: '127.0.0.1', // Removed to allow auto-detection from browser URL
+        // port: 15175,
       },
       proxy: {
         '/api': {
@@ -184,6 +184,11 @@ export default defineConfig(({ mode }) => {
         '@hooks': path.resolve(__dirname, './src/hooks'),
         '@store': path.resolve(__dirname, './src/store'),
         '@utils': path.resolve(__dirname, './src/utils'),
+        // 强制所有 React 导入指向根目录 node_modules
+        react: path.resolve(__dirname, 'node_modules/react'),
+        'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+        // 'react-router': path.resolve(__dirname, 'node_modules/react-router'), // Removed to fix subpath resolution
+        // 'react-router-dom': path.resolve(__dirname, 'node_modules/react-router-dom'), // Removed to fix subpath resolution
       },
       // 强制使用单一版本的 React、React Router 和 Zustand，解决 "Cannot read properties of null (reading 'useContext')" 问题
       dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom', 'zustand'],
@@ -194,14 +199,24 @@ export default defineConfig(({ mode }) => {
         'react-dom',
         'react-dom/client',
         'zustand',
+        'zustand/middleware',
         'react-router-dom',
         'react-router',
         '@tanstack/react-query',
         'antd',
         '@ant-design/icons',
         'lucide-react',
+        // 防止运行时重新优化导致页面 reload
+        'react-hot-toast',
+        'axios',
+        'recharts',
+        'dayjs',
+        'clsx',
+        'qrcode.react',
+        '@xyflow/react',
       ],
-      force: true, // 强制重新预构建，确保使用单一 React 副本
+      // 关闭 force，避免每次启动都强制重构建
+      // 如果遇到依赖问题，可临时设为 true 并重启
     },
     test: {
       globals: true,

@@ -1,0 +1,609 @@
+[ERROR] COMPILATION ERROR : 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/verification/VerifySignatureFix.java:[9,32] cannot find symbol
+  symbol:   class DigitalSignatureService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/verification/VerifySignatureFix.java:[29,13] cannot find symbol
+  symbol:   class DigitalSignatureService
+  location: class com.nexusarchive.verification.VerifySignatureFix
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[12,31] cannot find symbol
+  symbol:   class Role
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[13,31] cannot find symbol
+  symbol:   class User
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[14,31] cannot find symbol
+  symbol:   class RoleMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[15,31] cannot find symbol
+  symbol:   class UserMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[16,29] cannot find symbol
+  symbol:   class JwtUtil
+  location: package com.nexusarchive.util
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[55,13] cannot find symbol
+  symbol:   class UserMapper
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[58,13] cannot find symbol
+  symbol:   class RoleMapper
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[61,13] cannot find symbol
+  symbol:   class JwtUtil
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[67,13] cannot find symbol
+  symbol:   class TokenBlacklistService
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[73,13] cannot find symbol
+  symbol:   class LicenseService
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[81,13] cannot find symbol
+  symbol:   class User
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[83,13] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ArchiveServiceTest.java:[11,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ArchiveServiceTest.java:[39,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.service.ArchiveServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[8,31] cannot find symbol
+  symbol:   class Role
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[9,31] cannot find symbol
+  symbol:   class RoleMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[37,19] cannot find symbol
+  symbol:   class RoleMapper
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[46,17] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[57,17] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[65,12] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[73,12] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[84,12] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[95,39] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[95,12] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[107,40] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[107,12] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[34,1] cannot find symbol
+  symbol:   class RoleMapper
+  location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[10,31] cannot find symbol
+  symbol:   class RestAccessDeniedHandler
+  location: package com.nexusarchive.config
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[11,31] cannot find symbol
+  symbol:   class RestAuthenticationEntryPoint
+  location: package com.nexusarchive.config
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[13,31] cannot find symbol
+  symbol:   class UserMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[14,32] cannot find symbol
+  symbol:   class CustomUserDetailsService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[16,32] cannot find symbol
+  symbol:   class LicenseService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[17,32] cannot find symbol
+  symbol:   class TokenBlacklistService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[18,29] cannot find symbol
+  symbol:   class JwtUtil
+  location: package com.nexusarchive.util
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[69,13] cannot find symbol
+  symbol:   class JwtUtil
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[72,13] cannot find symbol
+  symbol:   class CustomUserDetailsService
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[75,13] cannot find symbol
+  symbol:   class TokenBlacklistService
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[78,13] cannot find symbol
+  symbol:   class LicenseService
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[81,13] cannot find symbol
+  symbol:   class UserMapper
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[84,13] cannot find symbol
+  symbol:   class RestAuthenticationEntryPoint
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[87,13] cannot find symbol
+  symbol:   class RestAccessDeniedHandler
+  location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ArchiveExportServiceImplTest.java:[11,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ArchiveExportServiceImplTest.java:[39,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.service.impl.ArchiveExportServiceImplTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[10,31] cannot find symbol
+  symbol:   class Role
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[11,31] cannot find symbol
+  symbol:   class RoleMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[55,13] cannot find symbol
+  symbol:   class RoleMapper
+  location: class com.nexusarchive.cache.CacheIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[63,13] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.CacheIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[64,18] cannot find symbol
+  symbol:   class Role
+  location: class com.nexusarchive.cache.CacheIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ProcessingListenerTest.java:[12,31] cannot find symbol
+  symbol:   class IngestRequestStatus
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ProcessingListenerTest.java:[18,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ProcessingListenerTest.java:[50,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.listener.ProcessingListenerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[8,44] cannot find symbol
+  symbol:   class ScoredCandidate
+  location: package com.nexusarchive.engine.matching.dto
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[9,44] cannot find symbol
+  symbol:   class VoucherData
+  location: package com.nexusarchive.engine.matching.dto
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[10,46] cannot find symbol
+  symbol:   class AccountRole
+  location: package com.nexusarchive.engine.matching.enums
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[165,13] cannot find symbol
+  symbol:   class VoucherData
+  location: class com.nexusarchive.engine.matching.MatchingScorerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[177,13] cannot find symbol
+  symbol:   class ScoredCandidate
+  location: class com.nexusarchive.engine.matching.MatchingScorerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[11,31] cannot find symbol
+  symbol:   class AuditInspectionLogMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[13,32] cannot find symbol
+  symbol:   class ComplianceCheckService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[46,13] cannot find symbol
+  symbol:   class ComplianceCheckService
+  location: class com.nexusarchive.controller.ComplianceControllerIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[55,13] cannot find symbol
+  symbol:   class AuditInspectionLogMapper
+  location: class com.nexusarchive.controller.ComplianceControllerIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[58,34] cannot find symbol
+  symbol:   class JwtUtil
+  location: package com.nexusarchive.util
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[61,37] cannot find symbol
+  symbol:   class TokenBlacklistService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[64,37] cannot find symbol
+  symbol:   class CustomUserDetailsService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[67,37] cannot find symbol
+  symbol:   class LicenseService
+  location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[70,36] cannot find symbol
+  symbol:   class UserMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[7,44] cannot find symbol
+  symbol:   class ErpConfig
+  location: package com.nexusarchive.integration.erp.dto
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[27,13] cannot find symbol
+  symbol:   class GroovyMappingEngine
+  location: class com.nexusarchive.integration.erp.mapping.GroovyMappingEngineTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[28,13] cannot find symbol
+  symbol:   class ScriptContext
+  location: class com.nexusarchive.integration.erp.mapping.GroovyMappingEngineTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[30,13] cannot find symbol
+  symbol:   class ErpConfig
+  location: class com.nexusarchive.integration.erp.mapping.GroovyMappingEngineTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/BatchToArchiveServiceTest.java:[13,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/BatchToArchiveServiceTest.java:[50,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.service.BatchToArchiveServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ReconciliationServiceImplTest.java:[17,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ReconciliationServiceImplTest.java:[55,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.service.impl.ReconciliationServiceImplTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[10,37] cannot find symbol
+  symbol:   class UserResponse
+  location: package com.nexusarchive.dto.response
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[13,31] cannot find symbol
+  symbol:   class ArchiveAttachment
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[18,31] cannot find symbol
+  symbol:   class AuditInspectionLog
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[25,31] cannot find symbol
+  symbol:   class BorrowRequest
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[41,31] cannot find symbol
+  symbol:   class IngestRequestStatus
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[44,31] cannot find symbol
+  symbol:   class Location
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[53,31] cannot find symbol
+  symbol:   class Role
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[57,31] cannot find symbol
+  symbol:   class SysEntity
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[59,31] cannot find symbol
+  symbol:   class SysUserFondsScope
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[63,31] cannot find symbol
+  symbol:   class User
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[776,13] cannot find symbol
+  symbol:   class User
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[799,44] cannot find symbol
+  symbol:   class User
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[799,13] cannot find symbol
+  symbol:   class UserResponse
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[812,59] cannot find symbol
+  symbol:   class User
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[812,18] cannot find symbol
+  symbol:   class UserResponse
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[822,68] cannot find symbol
+  symbol:   class User
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[822,18] cannot find symbol
+  symbol:   class UserResponse
+  location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ComplianceListenerTest.java:[11,31] cannot find symbol
+  symbol:   class IngestRequestStatus
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/GlobalSearchControllerIntegrationTest.java:[12,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/GlobalSearchControllerIntegrationTest.java:[48,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.controller.GlobalSearchControllerIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/AdminRoleControllerTest.java:[10,31] cannot find symbol
+  symbol:   class Role
+  location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/DestructionServiceTest.java:[13,31] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/DestructionServiceTest.java:[55,13] cannot find symbol
+  symbol:   class ArchiveMapper
+  location: class com.nexusarchive.service.DestructionServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ComplianceCheckServiceTest.java:[10,31] cannot find symbol
+  symbol:   class AuditInspectionLogMapper
+  location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ComplianceCheckServiceTest.java:[11,43] cannot find symbol
+  symbol:   class ComplianceCheckFacade
+  location: package com.nexusarchive.service.compliance
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:testCompile (default-testCompile) on project nexusarchive-backend: Compilation failure: Compilation failure: 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/verification/VerifySignatureFix.java:[9,32] cannot find symbol
+[ERROR]   symbol:   class DigitalSignatureService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/verification/VerifySignatureFix.java:[29,13] cannot find symbol
+[ERROR]   symbol:   class DigitalSignatureService
+[ERROR]   location: class com.nexusarchive.verification.VerifySignatureFix
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[12,31] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[13,31] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[14,31] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[15,31] cannot find symbol
+[ERROR]   symbol:   class UserMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[16,29] cannot find symbol
+[ERROR]   symbol:   class JwtUtil
+[ERROR]   location: package com.nexusarchive.util
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[55,13] cannot find symbol
+[ERROR]   symbol:   class UserMapper
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[58,13] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[61,13] cannot find symbol
+[ERROR]   symbol:   class JwtUtil
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[67,13] cannot find symbol
+[ERROR]   symbol:   class TokenBlacklistService
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[73,13] cannot find symbol
+[ERROR]   symbol:   class LicenseService
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[81,13] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/AuthServiceTest.java:[83,13] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.service.AuthServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ArchiveServiceTest.java:[11,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ArchiveServiceTest.java:[39,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.service.ArchiveServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[8,31] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[9,31] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[37,19] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[46,17] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[57,17] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[65,12] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[73,12] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[84,12] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[95,39] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[95,12] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[107,40] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[107,12] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/fixture/CachedRoleService.java:[34,1] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: class com.nexusarchive.cache.fixture.CachedRoleService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[10,31] cannot find symbol
+[ERROR]   symbol:   class RestAccessDeniedHandler
+[ERROR]   location: package com.nexusarchive.config
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[11,31] cannot find symbol
+[ERROR]   symbol:   class RestAuthenticationEntryPoint
+[ERROR]   location: package com.nexusarchive.config
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[13,31] cannot find symbol
+[ERROR]   symbol:   class UserMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[14,32] cannot find symbol
+[ERROR]   symbol:   class CustomUserDetailsService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[16,32] cannot find symbol
+[ERROR]   symbol:   class LicenseService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[17,32] cannot find symbol
+[ERROR]   symbol:   class TokenBlacklistService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[18,29] cannot find symbol
+[ERROR]   symbol:   class JwtUtil
+[ERROR]   location: package com.nexusarchive.util
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[69,13] cannot find symbol
+[ERROR]   symbol:   class JwtUtil
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[72,13] cannot find symbol
+[ERROR]   symbol:   class CustomUserDetailsService
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[75,13] cannot find symbol
+[ERROR]   symbol:   class TokenBlacklistService
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[78,13] cannot find symbol
+[ERROR]   symbol:   class LicenseService
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[81,13] cannot find symbol
+[ERROR]   symbol:   class UserMapper
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[84,13] cannot find symbol
+[ERROR]   symbol:   class RestAuthenticationEntryPoint
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/DestructionControllerTest.java:[87,13] cannot find symbol
+[ERROR]   symbol:   class RestAccessDeniedHandler
+[ERROR]   location: class com.nexusarchive.controller.DestructionControllerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ArchiveExportServiceImplTest.java:[11,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ArchiveExportServiceImplTest.java:[39,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.service.impl.ArchiveExportServiceImplTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[10,31] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[11,31] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[55,13] cannot find symbol
+[ERROR]   symbol:   class RoleMapper
+[ERROR]   location: class com.nexusarchive.cache.CacheIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[63,13] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.CacheIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheIntegrationTest.java:[64,18] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: class com.nexusarchive.cache.CacheIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ProcessingListenerTest.java:[12,31] cannot find symbol
+[ERROR]   symbol:   class IngestRequestStatus
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ProcessingListenerTest.java:[18,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ProcessingListenerTest.java:[50,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.listener.ProcessingListenerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[8,44] cannot find symbol
+[ERROR]   symbol:   class ScoredCandidate
+[ERROR]   location: package com.nexusarchive.engine.matching.dto
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[9,44] cannot find symbol
+[ERROR]   symbol:   class VoucherData
+[ERROR]   location: package com.nexusarchive.engine.matching.dto
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[10,46] cannot find symbol
+[ERROR]   symbol:   class AccountRole
+[ERROR]   location: package com.nexusarchive.engine.matching.enums
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[165,13] cannot find symbol
+[ERROR]   symbol:   class VoucherData
+[ERROR]   location: class com.nexusarchive.engine.matching.MatchingScorerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/engine/matching/MatchingScorerTest.java:[177,13] cannot find symbol
+[ERROR]   symbol:   class ScoredCandidate
+[ERROR]   location: class com.nexusarchive.engine.matching.MatchingScorerTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[11,31] cannot find symbol
+[ERROR]   symbol:   class AuditInspectionLogMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[13,32] cannot find symbol
+[ERROR]   symbol:   class ComplianceCheckService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[46,13] cannot find symbol
+[ERROR]   symbol:   class ComplianceCheckService
+[ERROR]   location: class com.nexusarchive.controller.ComplianceControllerIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[55,13] cannot find symbol
+[ERROR]   symbol:   class AuditInspectionLogMapper
+[ERROR]   location: class com.nexusarchive.controller.ComplianceControllerIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[58,34] cannot find symbol
+[ERROR]   symbol:   class JwtUtil
+[ERROR]   location: package com.nexusarchive.util
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[61,37] cannot find symbol
+[ERROR]   symbol:   class TokenBlacklistService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[64,37] cannot find symbol
+[ERROR]   symbol:   class CustomUserDetailsService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[67,37] cannot find symbol
+[ERROR]   symbol:   class LicenseService
+[ERROR]   location: package com.nexusarchive.service
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ComplianceControllerIntegrationTest.java:[70,36] cannot find symbol
+[ERROR]   symbol:   class UserMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[7,44] cannot find symbol
+[ERROR]   symbol:   class ErpConfig
+[ERROR]   location: package com.nexusarchive.integration.erp.dto
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[27,13] cannot find symbol
+[ERROR]   symbol:   class GroovyMappingEngine
+[ERROR]   location: class com.nexusarchive.integration.erp.mapping.GroovyMappingEngineTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[28,13] cannot find symbol
+[ERROR]   symbol:   class ScriptContext
+[ERROR]   location: class com.nexusarchive.integration.erp.mapping.GroovyMappingEngineTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/integration/erp/mapping/GroovyMappingEngineTest.java:[30,13] cannot find symbol
+[ERROR]   symbol:   class ErpConfig
+[ERROR]   location: class com.nexusarchive.integration.erp.mapping.GroovyMappingEngineTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/BatchToArchiveServiceTest.java:[13,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/BatchToArchiveServiceTest.java:[50,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.service.BatchToArchiveServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ReconciliationServiceImplTest.java:[17,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/ReconciliationServiceImplTest.java:[55,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.service.impl.ReconciliationServiceImplTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[10,37] cannot find symbol
+[ERROR]   symbol:   class UserResponse
+[ERROR]   location: package com.nexusarchive.dto.response
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[13,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveAttachment
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[18,31] cannot find symbol
+[ERROR]   symbol:   class AuditInspectionLog
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[25,31] cannot find symbol
+[ERROR]   symbol:   class BorrowRequest
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[41,31] cannot find symbol
+[ERROR]   symbol:   class IngestRequestStatus
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[44,31] cannot find symbol
+[ERROR]   symbol:   class Location
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[53,31] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[57,31] cannot find symbol
+[ERROR]   symbol:   class SysEntity
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[59,31] cannot find symbol
+[ERROR]   symbol:   class SysUserFondsScope
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[63,31] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[776,13] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[799,44] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[799,13] cannot find symbol
+[ERROR]   symbol:   class UserResponse
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[812,59] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[812,18] cannot find symbol
+[ERROR]   symbol:   class UserResponse
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[822,68] cannot find symbol
+[ERROR]   symbol:   class User
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/dto/DtoMappingTest.java:[822,18] cannot find symbol
+[ERROR]   symbol:   class UserResponse
+[ERROR]   location: class com.nexusarchive.dto.DtoMappingTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/listener/ComplianceListenerTest.java:[11,31] cannot find symbol
+[ERROR]   symbol:   class IngestRequestStatus
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/GlobalSearchControllerIntegrationTest.java:[12,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/GlobalSearchControllerIntegrationTest.java:[48,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.controller.GlobalSearchControllerIntegrationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/AdminRoleControllerTest.java:[10,31] cannot find symbol
+[ERROR]   symbol:   class Role
+[ERROR]   location: package com.nexusarchive.entity
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/DestructionServiceTest.java:[13,31] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/DestructionServiceTest.java:[55,13] cannot find symbol
+[ERROR]   symbol:   class ArchiveMapper
+[ERROR]   location: class com.nexusarchive.service.DestructionServiceTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ComplianceCheckServiceTest.java:[10,31] cannot find symbol
+[ERROR]   symbol:   class AuditInspectionLogMapper
+[ERROR]   location: package com.nexusarchive.mapper
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ComplianceCheckServiceTest.java:[11,43] cannot find symbol
+[ERROR]   symbol:   class ComplianceCheckFacade
+[ERROR]   location: package com.nexusarchive.service.compliance
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

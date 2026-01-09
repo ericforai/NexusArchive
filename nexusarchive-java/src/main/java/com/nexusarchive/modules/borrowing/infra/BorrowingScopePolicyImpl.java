@@ -12,12 +12,13 @@ import com.nexusarchive.modules.borrowing.domain.Borrowing;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
 import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
-
 
     @Override
     public void apply(QueryWrapper<Borrowing> wrapper, DataScopeContext context) {
@@ -25,16 +26,7 @@ public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
             return;
         }
 
-        if (context.isSelf()) {
-            if (context.userId() != null) {
-                wrapper.eq("user_id", context.userId());
-            } else {
-                wrapper.eq("1", "0");
-            }
-            return;
-        }
-
-        // 基于 fonds_no（全宗号）进行数据隔离
+        // 优先级1：基于 fonds_no（全宗号）进行数据隔离
         Set<String> allowedFonds = context.allowedFonds();
         if (!allowedFonds.isEmpty()) {
             // 根据允许的全宗号列表过滤借阅记录
@@ -42,49 +34,39 @@ public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
             return;
         }
 
-        // 如果没有允许访问的全宗，则不允许访问任何数据
+        // 优先级2：没有全宗权限时，回退到只能查看自己的借阅记录
+        // 这确保用户即使没有全宗权限也能使用借阅功能
+        if (context.userId() != null) {
+            wrapper.eq("user_id", context.userId());
+            return;
+        }
+
+        // 如果既没有全宗权限也没有用户ID，则不允许访问任何数据
         wrapper.eq("1", "0");
     }
 
+    @Override
     public void apply(LambdaQueryWrapper<Borrowing> wrapper, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return;
         }
 
-        if (context.isSelf()) {
-            if (context.userId() != null) {
-                wrapper.eq(Borrowing::getUserId, context.userId());
-            } else {
-                wrapper.apply("1 = 0");
-            }
+        // 优先级1：基于 fonds_no（全宗号）进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            // 根据允许的全宗号列表过滤借阅记录
+            wrapper.in(Borrowing::getFondsNo, allowedFonds);
             return;
         }
 
-        Set<String> deptIds = context.departmentIds();
-        if (!deptIds.isEmpty()) {
-            List<String> archiveIds = archiveService.getArchiveIdsByDepartmentIds(deptIds);
-            if (archiveIds.isEmpty()) {
-                wrapper.apply("1 = 0");
-            } else {
-                wrapper.in(Borrowing::getArchiveId, archiveIds);
-            }
-            return;
-        }
-
-        if (StringUtils.hasText(context.departmentId())) {
-            List<String> archiveIds = archiveService.getArchiveIdsByDepartmentIds(Collections.singleton(context.departmentId()));
-            if (archiveIds.isEmpty()) {
-                wrapper.apply("1 = 0");
-            } else {
-                wrapper.in(Borrowing::getArchiveId, archiveIds);
-            }
-            return;
-        }
-
+        // 优先级2：没有全宗权限时，回退到只能查看自己的借阅记录
+        // 这确保用户即使没有全宗权限也能使用借阅功能
         if (context.userId() != null) {
             wrapper.eq(Borrowing::getUserId, context.userId());
-        } else {
-            wrapper.apply("1 = 0");
+            return;
         }
+
+        // 如果既没有全宗权限也没有用户ID，则不允许访问任何数据
+        wrapper.eq(Borrowing::getId, "never-match");
     }
 }

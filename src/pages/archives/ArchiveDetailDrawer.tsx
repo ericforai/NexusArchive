@@ -3,7 +3,7 @@
  * Archive Detail Drawer - 凭证预览抽屉
  *
  * 职责：凭证预览抽屉的 UI 布局和组件组装
- * 变更理由：替换 Modal 为 Drawer，提升 UX
+ * 变更理由：替换 Modal 为 Drawer，提升 UX；Spin tip 采用嵌套写法
  */
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
@@ -193,7 +193,9 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
             <>
               {attachmentsLoading ? (
                 <div className="flex items-center justify-center h-32">
-                  <Spin tip="查询中..." />
+                  <Spin tip="查询中...">
+                    <div style={{ minHeight: 48 }} />
+                  </Spin>
                 </div>
               ) : yonsuiteAttachments.length > 0 ? (
                 <List

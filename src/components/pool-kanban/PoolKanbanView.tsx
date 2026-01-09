@@ -1,5 +1,5 @@
 // src/components/pool-kanban/PoolKanbanView.tsx
-// Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks
+// Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks (loading Spin)
 // Output: Rendered kanban board view with responsive layout and batch operations
 // Pos: src/components/pool-kanban/PoolKanbanView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -284,7 +284,9 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
   if (loading) {
     return (
       <div className="pool-kanban-view pool-kanban-view--loading">
-        <Spin size="large" tip="加载中..." />
+        <Spin size="large" tip="加载中...">
+          <div style={{ minHeight: 120 }} />
+        </Spin>
       </div>
     );
   }

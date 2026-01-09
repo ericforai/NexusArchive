@@ -1,4 +1,4 @@
-// Input: React、Ant Design、匹配 API
+// Input: React、Ant Design（Spin tip 嵌套）、匹配 API
 // Output: ComplianceReport 组件
 // Pos: src/pages/matching/ComplianceReport.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -154,7 +154,11 @@ const ComplianceReport: React.FC = () => {
     ];
 
     if (loading && missingDocs.length === 0) {
-        return <Spin tip="加载报告..." />;
+        return (
+            <Spin tip="加载报告...">
+                <div style={{ minHeight: 120 }} />
+            </Spin>
+        );
     }
 
     return (

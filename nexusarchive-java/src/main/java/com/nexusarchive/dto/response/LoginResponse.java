@@ -19,17 +19,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse {
-    
+
     /**
      * JWT Token
      */
     private String token;
-    
+
     /**
      * 用户信息
      */
     private UserInfo user;
-    
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -52,5 +52,8 @@ public class LoginResponse {
         private LocalDateTime lastLoginAt;
         private LocalDateTime createdTime;
         private List<String> roleNames;
+
+        // 允许访问的全宗号列表（数据隔离键）
+        private List<String> allowedFonds;
     }
 }

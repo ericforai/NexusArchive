@@ -1,4 +1,4 @@
-// Input: Spring Web、EntityService、Result
+// Input: Spring Web、EntityService、Result、DtoMapper、EntityResponse
 // Output: EntityController 类
 // Pos: Web 控制器层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -7,6 +7,8 @@ package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.result.Result;
+import com.nexusarchive.dto.mapper.DtoMapper;
+import com.nexusarchive.dto.response.EntityResponse;
 import com.nexusarchive.entity.SysEntity;
 import com.nexusarchive.service.EntityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,53 +24,58 @@ import jakarta.validation.Valid;
 
 /**
  * 法人实体控制器
- * 
+ *
  * PRD 来源: Section 1.1 - 法人仅管理维度
+ * 所有返回值使用 DTO，避免直接暴露 Entity
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/entity")
+@RequestMapping("/entity")
 @RequiredArgsConstructor
 @Tag(name = "法人管理", description = "法人实体管理接口")
 public class EntityController {
-    
+
     private final EntityService entityService;
-    
+    private final DtoMapper dtoMapper;
+
     @GetMapping("/page")
     @Operation(summary = "分页查询法人列表")
     @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<Page<SysEntity>> getPage(
+    public Result<Page<EntityResponse>> getPage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit) {
-        Page<SysEntity> pageParam = new Page<>(page, limit);
-        return Result.success(entityService.page(pageParam));
+        Page<SysEntity> entityPage = new Page<>(page, limit);
+        Page<SysEntity> result = entityService.page(entityPage);
+        return Result.success(dtoMapper.toEntityResponsePage(result));
     }
-    
+
     @GetMapping("/list")
     @Operation(summary = "查询法人列表")
     @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<List<SysEntity>> list() {
-        return Result.success(entityService.list());
+    public Result<List<EntityResponse>> list() {
+        List<SysEntity> entities = entityService.list();
+        return Result.success(dtoMapper.toEntityResponseList(entities));
     }
-    
+
     @GetMapping("/list/active")
     @Operation(summary = "查询活跃法人列表")
     @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<List<SysEntity>> listActive() {
-        return Result.success(entityService.listActive());
+    public Result<List<EntityResponse>> listActive() {
+        List<SysEntity> entities = entityService.listActive();
+        return Result.success(dtoMapper.toEntityResponseList(entities));
     }
-    
+
     @GetMapping("/{id}")
     @Operation(summary = "查询法人详情")
     @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<SysEntity> getById(@PathVariable String id) {
+    public Result<EntityResponse> getById(@PathVariable String id) {
         SysEntity entity = entityService.getById(id);
         if (entity == null) {
             return Result.error("法人不存在");
         }
-        return Result.success(entity);
+        return Result.success(dtoMapper.toEntityResponse(entity));
     }
-    
+
     @GetMapping("/{id}/fonds")
     @Operation(summary = "查询法人下的全宗列表")
     @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
@@ -76,40 +83,42 @@ public class EntityController {
         List<String> fondsIds = entityService.getFondsIdsByEntityId(id);
         return Result.success(fondsIds);
     }
-    
+
     @GetMapping("/{id}/can-delete")
     @Operation(summary = "检查法人是否可以删除")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
     public Result<Boolean> canDelete(@PathVariable String id) {
         return Result.success(entityService.canDelete(id));
     }
-    
+
     @PostMapping
     @Operation(summary = "创建法人")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<Boolean> save(@Valid @RequestBody SysEntity entity) {
+    public Result<EntityResponse> save(@Valid @RequestBody SysEntity entity) {
         if (entity.getName() == null || entity.getName().trim().isEmpty()) {
             return Result.error("法人名称不能为空");
         }
         if (entity.getStatus() == null) {
             entity.setStatus("ACTIVE");
         }
-        return Result.success(entityService.save(entity));
+        entityService.save(entity);
+        return Result.success(dtoMapper.toEntityResponse(entity));
     }
-    
+
     @PutMapping
     @Operation(summary = "更新法人")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
-    public Result<Boolean> update(@Valid @RequestBody SysEntity entity) {
+    public Result<EntityResponse> update(@Valid @RequestBody SysEntity entity) {
         if (entity.getId() == null) {
             return Result.error("法人ID不能为空");
         }
         if (entity.getName() == null || entity.getName().trim().isEmpty()) {
             return Result.error("法人名称不能为空");
         }
-        return Result.success(entityService.updateById(entity));
+        entityService.updateById(entity);
+        return Result.success(dtoMapper.toEntityResponse(entity));
     }
-    
+
     @DeleteMapping("/{id}")
     @Operation(summary = "删除法人")
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")

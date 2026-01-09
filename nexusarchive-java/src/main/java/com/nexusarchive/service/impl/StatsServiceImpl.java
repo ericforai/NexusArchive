@@ -19,7 +19,10 @@ import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import com.nexusarchive.service.StatsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -32,6 +35,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StatsServiceImpl implements StatsService {
 
@@ -44,6 +48,7 @@ public class StatsServiceImpl implements StatsService {
     private String archiveRootPath;
 
     @Override
+    @Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName()")
     public DashboardStatsDto getDashboardStats() {
         DataScopeContext scope = dataScopeService.resolve();
         QueryWrapper<Archive> totalWrapper = new QueryWrapper<>();
@@ -87,6 +92,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    @Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now()")
     public List<ArchivalTrendDto> getArchivalTrend() {
         // 近 30 天归档趋势，使用 SQL 聚合
         Map<LocalDate, Long> dailyCounts = new LinkedHashMap<>();
@@ -166,5 +172,23 @@ public class StatsServiceImpl implements StatsService {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    /**
+     * 清除仪表盘缓存
+     * 用于数据变更后刷新统计信息
+     */
+    @CacheEvict(value = "stats", allEntries = true)
+    public void evictDashboardCache() {
+        log.debug("Dashboard cache evicted");
+    }
+
+    /**
+     * 清除趋势缓存
+     * 用于数据变更后刷新趋势统计
+     */
+    @CacheEvict(value = "stats", allEntries = true)
+    public void evictTrendCache() {
+        log.debug("Trend cache evicted");
     }
 }

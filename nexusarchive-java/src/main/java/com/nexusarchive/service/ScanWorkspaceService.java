@@ -86,6 +86,15 @@ public interface ScanWorkspaceService {
     String createSession(String userId);
 
     /**
+     * 获取文件（物理文件）
+     * 
+     * @param id 工作区记录ID
+     * @param userId 用户ID
+     * @return 物理文件对象
+     */
+    java.io.File getFile(Long id, String userId);
+
+    /**
      * 提交结果
      *
      * @param archiveId 关联的档案ID

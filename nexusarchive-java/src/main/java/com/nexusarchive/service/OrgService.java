@@ -18,6 +18,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,12 +34,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 组织架构服务
+ * 缓存策略: 使用 orgTree 缓存空间，TTL 30 分钟
+ */
 @Service
 @RequiredArgsConstructor
 public class OrgService {
 
     private final OrgMapper orgMapper;
 
+    /**
+     * 获取组织树
+     * 缓存键: orgTree:tree
+     */
+    @Cacheable(value = "orgTree", key = "'tree'")
     public List<OrgTreeNode> getTree() {
         List<Org> all = orgMapper.selectList(new LambdaQueryWrapper<Org>().eq(Org::getDeleted, 0));
         List<OrgTreeNode> nodes = all.stream().map(this::toNode).collect(Collectors.toList());
@@ -49,7 +60,12 @@ public class OrgService {
         return orgMapper.selectList(new LambdaQueryWrapper<Org>().eq(Org::getDeleted, 0).orderByAsc(Org::getOrderNum));
     }
 
+    /**
+     * 创建组织
+     * 清除缓存: orgTree:tree
+     */
     @Transactional
+    @CacheEvict(value = "orgTree", allEntries = true)
     public Org create(Org org) {
         if (!StringUtils.hasText(org.getName())) {
             throw new BusinessException("组织名称不能为空");
@@ -58,7 +74,12 @@ public class OrgService {
         return org;
     }
 
+    /**
+     * 更新组织
+     * 清除缓存: orgTree:tree
+     */
     @Transactional
+    @CacheEvict(value = "orgTree", allEntries = true)
     public Org update(String id, Org payload) {
         Org existing = orgMapper.selectById(id);
         if (existing == null || existing.getDeleted() != null && existing.getDeleted() == 1) {
@@ -74,7 +95,12 @@ public class OrgService {
         return existing;
     }
 
+    /**
+     * 删除组织
+     * 清除缓存: orgTree:tree
+     */
     @Transactional
+    @CacheEvict(value = "orgTree", allEntries = true)
     public void delete(String id) {
         Org existing = orgMapper.selectById(id);
         if (existing == null) {
@@ -85,7 +111,12 @@ public class OrgService {
         orgMapper.updateById(existing);
     }
 
+    /**
+     * 批量创建组织
+     * 清除缓存: orgTree:tree
+     */
     @Transactional
+    @CacheEvict(value = "orgTree", allEntries = true)
     public void createBatch(List<Org> orgs) {
         if (orgs == null || orgs.isEmpty()) {
             return;
@@ -112,8 +143,10 @@ public class OrgService {
 
     /**
      * 解析上传文件导入组织，支持 Excel(xls/xlsx) 与 CSV
+     * 清除缓存: orgTree:tree
      */
     @Transactional
+    @CacheEvict(value = "orgTree", allEntries = true)
     public com.nexusarchive.dto.request.OrgImportResult importFromFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("文件不能为空");

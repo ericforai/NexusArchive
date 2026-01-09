@@ -39,7 +39,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/signature")
+@RequestMapping("/signature")
 @RequiredArgsConstructor
 @Tag(name = "电子签章", description = "电子签章和验签功能")
 @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','SECURITY_ADMIN')")

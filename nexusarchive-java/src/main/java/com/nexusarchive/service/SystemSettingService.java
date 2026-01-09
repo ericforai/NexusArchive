@@ -11,6 +11,8 @@ import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.entity.SystemSetting;
 import com.nexusarchive.mapper.SystemSettingMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,19 +22,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 系统配置服务
+ * 缓存策略: 使用 systemConfig 缓存空间，TTL 30 分钟
+ */
 @Service
 @RequiredArgsConstructor
 public class SystemSettingService {
 
     private final SystemSettingMapper settingMapper;
 
+    /**
+     * 获取所有系统配置
+     * 缓存键: systemConfig:all
+     */
+    @Cacheable(value = "systemConfig", key = "'all'")
     public List<SystemSetting> listAll() {
         return settingMapper.selectList(new LambdaQueryWrapper<SystemSetting>()
                 .eq(SystemSetting::getDeleted, 0)
                 .orderByAsc(SystemSetting::getCategory, SystemSetting::getConfigKey));
     }
 
+    /**
+     * 保存所有系统配置
+     * 清除缓存: systemConfig:all
+     */
     @Transactional
+    @CacheEvict(value = "systemConfig", allEntries = true)
     public void saveAll(List<SystemSetting> items) {
         if (items == null || items.isEmpty()) {
             throw new BusinessException(ErrorCode.SYSTEM_CONFIG_NOT_FOUND);

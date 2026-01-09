@@ -3,7 +3,7 @@
 // Pos: 前端通知服务工具（包含 localStorage 持久化与 Toast 通知）
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { EnhancedNotification, NotificationRule } from '../types.ts';
+import { EnhancedNotification, NotificationRule } from '../types';
 import { safeStorage } from './storage';
 import { message } from 'antd';
 

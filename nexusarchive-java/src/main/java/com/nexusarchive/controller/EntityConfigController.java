@@ -27,7 +27,7 @@ import jakarta.validation.Valid;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/entity-config")
+@RequestMapping("/entity-config")
 @RequiredArgsConstructor
 @Tag(name = "法人配置管理", description = "法人级别配置管理接口")
 public class EntityConfigController {

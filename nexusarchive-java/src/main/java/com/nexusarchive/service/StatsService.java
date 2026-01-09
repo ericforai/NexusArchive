@@ -17,4 +17,14 @@ public interface StatsService {
     StorageStatsDto getStorageStats();
     List<ArchivalTrendDto> getArchivalTrend();
     TaskStatusStatsDto getTaskStatusStats();
+
+    /**
+     * 清除仪表盘缓存
+     */
+    void evictDashboardCache();
+
+    /**
+     * 清除趋势缓存
+     */
+    void evictTrendCache();
 }

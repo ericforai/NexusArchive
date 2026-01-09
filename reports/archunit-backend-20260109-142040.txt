@@ -1,0 +1,95 @@
+[ERROR] COMPILATION ERROR : 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[129,24] incompatible types: java.lang.String cannot be converted to com.baomidou.mybatisplus.core.toolkit.support.SFunction<com.nexusarchive.entity.Archive,?>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[134,48] incompatible types: com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive> cannot be converted to com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[282,44] incompatible types: com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive> cannot be converted to com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[308,44] incompatible types: com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive> cannot be converted to com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/listener/StatsCacheEventListener.java:[39,21] cannot find symbol
+  symbol:   method evictDashboardCache()
+  location: variable statsService of type com.nexusarchive.service.StatsService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/listener/StatsCacheEventListener.java:[40,21] cannot find symbol
+  symbol:   method evictTrendCache()
+  location: variable statsService of type com.nexusarchive.service.StatsService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/listener/StatsCacheEventListener.java:[51,21] cannot find symbol
+  symbol:   method evictDashboardCache()
+  location: variable statsService of type com.nexusarchive.service.StatsService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[63,38] cannot find symbol
+  symbol:   method departmentIds()
+  location: variable context of type com.nexusarchive.service.DataScopeService.DataScopeContext
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[65,13] cannot find symbol
+  symbol:   class List
+  location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[65,39] cannot find symbol
+  symbol:   variable archiveService
+  location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[74,13] cannot find symbol
+  symbol:   variable StringUtils
+  location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[74,40] cannot find symbol
+  symbol:   method departmentId()
+  location: variable context of type com.nexusarchive.service.DataScopeService.DataScopeContext
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,13] cannot find symbol
+  symbol:   class List
+  location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,39] cannot find symbol
+  symbol:   variable archiveService
+  location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,83] cannot find symbol
+  symbol:   variable Collections
+  location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,112] cannot find symbol
+  symbol:   method departmentId()
+  location: variable context of type com.nexusarchive.service.DataScopeService.DataScopeContext
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ScanWorkspaceServiceImpl.java:[126,52] cannot find symbol
+  symbol:   method builder()
+  location: class com.nexusarchive.entity.ScanWorkspace
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project nexusarchive-backend: Compilation failure: Compilation failure: 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[129,24] incompatible types: java.lang.String cannot be converted to com.baomidou.mybatisplus.core.toolkit.support.SFunction<com.nexusarchive.entity.Archive,?>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[134,48] incompatible types: com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive> cannot be converted to com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[282,44] incompatible types: com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive> cannot be converted to com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveService.java:[308,44] incompatible types: com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive> cannot be converted to com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/listener/StatsCacheEventListener.java:[39,21] cannot find symbol
+[ERROR]   symbol:   method evictDashboardCache()
+[ERROR]   location: variable statsService of type com.nexusarchive.service.StatsService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/listener/StatsCacheEventListener.java:[40,21] cannot find symbol
+[ERROR]   symbol:   method evictTrendCache()
+[ERROR]   location: variable statsService of type com.nexusarchive.service.StatsService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/listener/StatsCacheEventListener.java:[51,21] cannot find symbol
+[ERROR]   symbol:   method evictDashboardCache()
+[ERROR]   location: variable statsService of type com.nexusarchive.service.StatsService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[63,38] cannot find symbol
+[ERROR]   symbol:   method departmentIds()
+[ERROR]   location: variable context of type com.nexusarchive.service.DataScopeService.DataScopeContext
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[65,13] cannot find symbol
+[ERROR]   symbol:   class List
+[ERROR]   location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[65,39] cannot find symbol
+[ERROR]   symbol:   variable archiveService
+[ERROR]   location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[74,13] cannot find symbol
+[ERROR]   symbol:   variable StringUtils
+[ERROR]   location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[74,40] cannot find symbol
+[ERROR]   symbol:   method departmentId()
+[ERROR]   location: variable context of type com.nexusarchive.service.DataScopeService.DataScopeContext
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,13] cannot find symbol
+[ERROR]   symbol:   class List
+[ERROR]   location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,39] cannot find symbol
+[ERROR]   symbol:   variable archiveService
+[ERROR]   location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,83] cannot find symbol
+[ERROR]   symbol:   variable Collections
+[ERROR]   location: class com.nexusarchive.modules.borrowing.infra.BorrowingScopePolicyImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/modules/borrowing/infra/BorrowingScopePolicyImpl.java:[75,112] cannot find symbol
+[ERROR]   symbol:   method departmentId()
+[ERROR]   location: variable context of type com.nexusarchive.service.DataScopeService.DataScopeContext
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ScanWorkspaceServiceImpl.java:[126,52] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.nexusarchive.entity.ScanWorkspace
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

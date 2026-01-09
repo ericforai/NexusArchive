@@ -13,6 +13,7 @@ import com.nexusarchive.dto.response.LoginResponse;
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.entity.User;
 import com.nexusarchive.mapper.RoleMapper;
+import com.nexusarchive.mapper.SysUserFondsScopeMapper;
 import com.nexusarchive.mapper.UserMapper;
 import com.nexusarchive.service.LicenseService;
 import com.nexusarchive.service.LoginAttemptService;
@@ -35,16 +36,17 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    
+
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+    private final SysUserFondsScopeMapper userFondsScopeMapper;
     private final JwtUtil jwtUtil;
     private final PasswordUtil passwordUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final LoginAttemptService loginAttemptService;
     private final ObjectMapper objectMapper;
     private final LicenseService licenseService;
-    
+
     /**
      * 用户登录
      */
@@ -59,12 +61,12 @@ public class AuthService {
             loginAttemptService.recordFailure(request.getUsername());
             throw new BusinessException(401, "用户名或密码错误");
         }
-        
+
         // 2. 检查用户状态
         if (!"active".equals(user.getStatus())) {
             throw new BusinessException(401, "用户已被禁用或锁定");
         }
-        
+
         // 3. 验证密码
         if (!passwordUtil.verifyPassword(user.getPasswordHash(), request.getPassword())) {
             loginAttemptService.recordFailure(request.getUsername());
@@ -76,20 +78,20 @@ public class AuthService {
         }
 
         loginAttemptService.recordSuccess(request.getUsername());
-    
+
     // 4. license 检查 - 移至登录后由 LicenseValidationFilter 统一处理
     // 允许登录以便管理员可以通过 /api/license/load 加载 License
     // licenseService.assertValid(userMapper.countActiveUsers());
         // 5. 生成Token
         String token = jwtUtil.generateToken(user.getUsername(), user.getId());
-        
+
         // 5. 更新最后登录时间
         user.setLastLoginAt(LocalDateTime.now());
         userMapper.updateById(user);
-        
+
         // 6. 构造响应
         LoginResponse.UserInfo userInfo = buildUserInfo(user);
-        
+
         return new LoginResponse(token, userInfo);
     }
 
@@ -120,14 +122,14 @@ public class AuthService {
             // token 已损坏则忽略
         }
     }
-    
+
     /**
      * 验证Token
      */
     public boolean validateToken(String token) {
         return jwtUtil.validateToken(token);
     }
-    
+
     /**
      * 获取当前用户信息（基于Token）
      */
@@ -142,7 +144,7 @@ public class AuthService {
         }
         return buildUserInfo(user);
     }
-    
+
     /**
      * 从Token中获取用户ID
      */
@@ -190,6 +192,10 @@ public class AuthService {
         userInfo.setOrgCode(user.getOrgCode());
         userInfo.setLastLoginAt(user.getLastLoginAt());
         userInfo.setCreatedTime(user.getCreatedTime());
+
+        // 设置允许访问的全宗列表（数据隔离键）
+        List<String> allowedFonds = userFondsScopeMapper.findFondsNoByUserId(user.getId());
+        userInfo.setAllowedFonds(allowedFonds);
 
         return userInfo;
     }

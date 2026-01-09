@@ -1,4 +1,4 @@
-// Input: MyBatis-Plus、Lombok、Spring Framework、Spring Security、等
+// Input: MyBatis-Plus、Lombok、Spring Framework、Spring Security、DtoMapper、DestructionResponse
 // Output: DestructionController 类
 // Pos: 接口层 Controller
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -7,6 +7,8 @@ package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.result.Result;
+import com.nexusarchive.dto.mapper.DtoMapper;
+import com.nexusarchive.dto.response.DestructionResponse;
 import com.nexusarchive.entity.Destruction;
 import com.nexusarchive.service.DestructionService;
 import lombok.RequiredArgsConstructor;
@@ -24,26 +26,29 @@ import jakarta.validation.Valid;
 public class DestructionController {
 
     private final DestructionService destructionService;
+    private final DtoMapper dtoMapper;
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "CREATE_DESTRUCTION", resourceType = "DESTRUCTION", description = "创建销毁申请")
-    public Result<Destruction> createDestruction(@Valid @RequestBody Destruction destruction,
+    public Result<DestructionResponse> createDestruction(@Valid @RequestBody Destruction destruction,
                                                 @AuthenticationPrincipal CustomUserDetails user) {
         if (destruction.getApplicantId() == null && user != null) {
             destruction.setApplicantId(user.getId());
             destruction.setApplicantName(user.getFullName());
         }
-        return Result.success(destructionService.createDestruction(destruction));
+        Destruction created = destructionService.createDestruction(destruction);
+        return Result.success(dtoMapper.toDestructionResponse(created));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('archive:destruction','archive:read','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<Page<Destruction>> getDestructions(
+    public Result<Page<DestructionResponse>> getDestructions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status) {
-        return Result.success(destructionService.getDestructions(page, limit, status));
+        Page<Destruction> entityPage = destructionService.getDestructions(page, limit, status);
+        return Result.success(dtoMapper.toDestructionResponsePage(entityPage));
     }
 
     @PostMapping("/{id}/approve")
@@ -68,19 +73,19 @@ public class DestructionController {
     @PreAuthorize("hasAnyAuthority('archive:destruction','archive:read','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.Map<String, Object>> getStats() {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
-        
+
         // 1. 待鉴定档案 (模拟查询: 真实应查询 acc_archive where retention_period expired)
         stats.put("pendingAppraisal", 0);
-        
+
         // 2. AI 建议销毁
         stats.put("aiSuggested", 0);
-        
+
         // 3. 进行中批次
         stats.put("activeBatches", destructionService.getDestructions(1, 100, "PENDING").getTotal());
-        
+
         // 4. 已安全销毁 (模拟)
         stats.put("safeDestructionCount", 0);
-        
+
         return Result.success(stats);
     }
 }

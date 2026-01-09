@@ -15,7 +15,6 @@
 | `MetadataFormField.tsx` | 通用组件 | 元数据表单字段 |
 | `OfdViewer.tsx` | 通用组件 | OFD 文件预览 |
 | `ReconciliationReport.tsx` | 通用组件 | 对账报告展示 |
-| `ToastContainer.tsx` | 通用组件 | 全局提示容器 |
 | `index.ts` | 聚合入口 | 通用组件导出 |
 
 ---

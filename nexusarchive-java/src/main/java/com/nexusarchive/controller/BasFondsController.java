@@ -5,13 +5,19 @@
 
 package com.nexusarchive.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.BasFonds;
 import com.nexusarchive.service.BasFondsService;
+import com.nexusarchive.service.DataScopeService;
+import com.nexusarchive.service.FondsScopeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -22,6 +28,7 @@ import jakarta.validation.Valid;
 public class BasFondsController {
 
     private final BasFondsService basFondsService;
+    private final FondsScopeService fondsScopeService;
 
     @GetMapping("/page")
     public Result<Page<BasFonds>> getPage(@RequestParam(defaultValue = "1") int page,
@@ -32,7 +39,37 @@ public class BasFondsController {
 
     @GetMapping("/list")
     public Result<List<BasFonds>> list() {
-        return Result.success(basFondsService.list());
+        // 从当前认证用户获取允许访问的全宗号列表
+        List<String> allowedFonds = resolveAllowedFonds();
+
+        // null 表示未认证或无法解析用户，返回空列表
+        if (allowedFonds == null) {
+            return Result.success(Collections.emptyList());
+        }
+
+        // 空列表表示用户没有任何全宗权限，返回空列表
+        if (allowedFonds.isEmpty()) {
+            return Result.success(Collections.emptyList());
+        }
+
+        // 有权限：只返回用户有权限的全宗
+        LambdaQueryWrapper<BasFonds> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(BasFonds::getFondsCode, allowedFonds);
+        return Result.success(basFondsService.list(wrapper));
+    }
+
+    /**
+     * 解析当前用户允许访问的全宗号列表
+     */
+    private List<String> resolveAllowedFonds() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof String userId) {
+                return fondsScopeService.getAllowedFonds((String) userId);
+            }
+        }
+        return null;
     }
 
     /**
@@ -68,4 +105,3 @@ public class BasFondsController {
         return Result.success(basFondsService.removeById(id));
     }
 }
-

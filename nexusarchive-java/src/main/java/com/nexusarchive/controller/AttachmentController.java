@@ -1,4 +1,4 @@
-// Input: io.swagger、Lombok、Spring Security、Spring Framework、等
+// Input: io.swagger、Lombok、Spring Security、Spring Framework、DtoMapper、ArchiveAttachmentResponse
 // Output: AttachmentController 类
 // Pos: 接口层 Controller
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -6,6 +6,9 @@
 package com.nexusarchive.controller;
 
 import com.nexusarchive.common.Result;
+import com.nexusarchive.dto.mapper.DtoMapper;
+import com.nexusarchive.dto.response.ArchiveAttachmentResponse;
+import com.nexusarchive.dto.response.ArchiveFileResponse;
 import com.nexusarchive.entity.ArchiveAttachment;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.security.CustomUserDetails;
@@ -26,6 +29,7 @@ import java.util.Map;
 /**
  * 档案附件关联控制器
  * 支持全景视图中凭证与附件的关联管理
+ * 所有返回值使用 DTO，避免直接暴露 Entity
  */
 @Slf4j
 @RestController
@@ -35,6 +39,7 @@ import java.util.Map;
 public class AttachmentController {
 
     private final AttachmentService attachmentService;
+    private final DtoMapper dtoMapper;
 
     /**
      * 获取档案关联的所有附件
@@ -42,10 +47,10 @@ public class AttachmentController {
     @GetMapping("/by-archive/{archiveId}")
     @Operation(summary = "获取档案附件", description = "获取指定档案关联的所有附件文件列表")
     @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<List<ArcFileContent>> getAttachmentsByArchive(@PathVariable String archiveId) {
+    public Result<List<ArchiveFileResponse>> getAttachmentsByArchive(@PathVariable String archiveId) {
         log.info("获取档案附件: archiveId={}", archiveId);
         List<ArcFileContent> files = attachmentService.getAttachmentsByArchive(archiveId);
-        return Result.success(files);
+        return Result.success(dtoMapper.toArchiveFileResponseList(files));
     }
 
     /**
@@ -54,9 +59,9 @@ public class AttachmentController {
     @GetMapping("/links/{archiveId}")
     @Operation(summary = "获取关联记录", description = "获取档案的附件关联记录详情")
     @PreAuthorize("hasAnyAuthority('archive:read','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<List<ArchiveAttachment>> getAttachmentLinks(@PathVariable String archiveId) {
+    public Result<List<ArchiveAttachmentResponse>> getAttachmentLinks(@PathVariable String archiveId) {
         List<ArchiveAttachment> links = attachmentService.getAttachmentLinks(archiveId);
-        return Result.success(links);
+        return Result.success(dtoMapper.toArchiveAttachmentResponseList(links));
     }
 
     /**
@@ -66,16 +71,16 @@ public class AttachmentController {
     @Operation(summary = "关联附件", description = "将已上传的文件关联到档案")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "LINK_ATTACHMENT", resourceType = "ARCHIVE_ATTACHMENT", description = "关联附件到档案")
-    public Result<ArchiveAttachment> linkAttachment(
+    public Result<ArchiveAttachmentResponse> linkAttachment(
             @RequestBody Map<String, String> request,
             @AuthenticationPrincipal CustomUserDetails user) {
         String archiveId = request.get("archiveId");
         String fileId = request.get("fileId");
         String attachmentType = request.getOrDefault("attachmentType", "other");
-        
+
         String userId = user != null ? user.getId() : "system";
         ArchiveAttachment attachment = attachmentService.linkAttachment(archiveId, fileId, attachmentType, userId);
-        return Result.success("关联成功", attachment);
+        return Result.success("关联成功", dtoMapper.toArchiveAttachmentResponse(attachment));
     }
 
     /**
@@ -85,16 +90,16 @@ public class AttachmentController {
     @Operation(summary = "上传附件", description = "上传文件并自动关联到指定档案")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "UPLOAD_ATTACHMENT", resourceType = "ARCHIVE_ATTACHMENT", description = "上传并关联附件")
-    public Result<ArcFileContent> uploadAndLink(
+    public Result<ArchiveFileResponse> uploadAndLink(
             @RequestParam("file") MultipartFile file,
             @RequestParam("archiveId") String archiveId,
             @RequestParam(value = "attachmentType", defaultValue = "other") String attachmentType,
             @AuthenticationPrincipal CustomUserDetails user) {
         log.info("上传附件: archiveId={}, fileName={}, type={}", archiveId, file.getOriginalFilename(), attachmentType);
-        
+
         String userId = user != null ? user.getId() : "system";
         ArcFileContent fileContent = attachmentService.uploadAndLink(archiveId, file, attachmentType, userId);
-        return Result.success("上传成功", fileContent);
+        return Result.success("上传成功", dtoMapper.toArchiveFileResponse(fileContent));
     }
 
     /**

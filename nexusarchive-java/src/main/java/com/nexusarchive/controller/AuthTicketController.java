@@ -31,7 +31,7 @@ import jakarta.validation.Valid;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/auth-ticket")
+@RequestMapping("/auth-ticket")
 @RequiredArgsConstructor
 @Tag(name = "授权票据管理", description = "跨全宗访问授权票据申请、审批、查询接口")
 public class AuthTicketController {

@@ -112,7 +112,7 @@ if [ -f ../.backend.pid ]; then
 fi
 
 if [ ! -f ../.backend.pid ]; then
-    mvn spring-boot:run > ../backend.log 2>&1 &
+    mvn spring-boot:run -Dmaven.test.skip=true > ../backend.log 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > ../.backend.pid
     echo -e "${GREEN}✅ 后端启动中 (PID: $BACKEND_PID)${NC}"

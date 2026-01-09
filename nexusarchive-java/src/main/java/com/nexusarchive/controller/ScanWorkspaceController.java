@@ -31,7 +31,7 @@ import java.util.List;
  * - 删除工作区项
  */
 @RestController
-@RequestMapping("/api/scan/workspace")
+@RequestMapping("/scan/workspace")
 @Validated
 @RequiredArgsConstructor
 @Slf4j
@@ -57,6 +57,45 @@ public class ScanWorkspaceController {
 
         log.info("查询工作区文件: userId={}, count={}", userId, files.size());
         return Result.success(files);
+    }
+    
+    /**
+     * 获取工作区文件内容 (用于预览)
+     * 
+     * GET /api/scan/workspace/file/{id}
+     * 
+     * @param id 工作区项ID
+     * @param user 当前认证用户
+     * @return 文件流
+     */
+    @GetMapping("/file/{id}")
+    @PreAuthorize("hasAnyAuthority('scan:view', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "SCAN_VIEW_FILE", resourceType = "SCAN_WORKSPACE",
+                  description = "预览工作区文件")
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> getFile(
+            @PathVariable Long id,
+            @AuthenticationPrincipal com.nexusarchive.security.CustomUserDetails user) {
+            
+        String userId = user != null ? user.getId() : "system";
+        java.io.File file = scanWorkspaceService.getFile(id, userId);
+        
+        if (!file.exists()) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+        
+        org.springframework.core.io.FileSystemResource resource = new org.springframework.core.io.FileSystemResource(file);
+        
+        // 自动探测 MIME 类型
+        String contentType = "application/octet-stream";
+        try {
+            contentType = java.nio.file.Files.probeContentType(file.toPath());
+        } catch (java.io.IOException e) {
+            log.warn("无法探测文件类型: {}", file.getName());
+        }
+        
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 
     /**

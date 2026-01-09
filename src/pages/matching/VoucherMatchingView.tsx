@@ -1,4 +1,4 @@
-// Input: React、Ant Design、匹配 API
+// Input: React、Ant Design（Spin tip 嵌套）、匹配 API
 // Output: VoucherMatchingView 组件
 // Pos: src/pages/matching/VoucherMatchingView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -399,7 +399,11 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
     };
 
     if (loading) {
-        return <Spin tip="加载中..." />;
+        return (
+            <Spin tip="加载中...">
+                <div style={{ minHeight: 120 }} />
+            </Spin>
+        );
     }
 
     return (
@@ -455,7 +459,9 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                                 <div className="bg-white p-4">
                                     {attachmentsLoading ? (
                                         <div className="text-center py-8">
-                                            <Spin tip="查询中..." />
+                                            <Spin tip="查询中...">
+                                                <div style={{ minHeight: 24 }} />
+                                            </Spin>
                                         </div>
                                     ) : !attachmentsFetched ? (
                                         <Empty description="点击「查询附件」从 YonSuite 获取凭证附件" />

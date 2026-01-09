@@ -24,7 +24,7 @@ public interface SysEntityMapper extends BaseMapper<SysEntity> {
      * @param entityId 法人ID
      * @return 全宗ID列表
      */
-    @Select("SELECT id FROM bas_fonds WHERE entity_id = #{entityId} AND deleted = 0")
+    @Select("SELECT id FROM bas_fonds WHERE entity_id = #{entityId}")
     List<String> findFondsIdsByEntityId(String entityId);
 }
 

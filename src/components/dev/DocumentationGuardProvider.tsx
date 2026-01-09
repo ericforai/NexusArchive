@@ -3,7 +3,7 @@
 // Pos: 开发辅助组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useDocumentationGuard } from '../../hooks/useDocumentationGuard';
 
 /**
@@ -26,17 +26,19 @@ import { useDocumentationGuard } from '../../hooks/useDocumentationGuard';
  * ```
  */
 export function DocumentationGuardProvider() {
-  // 生产环境直接返回，无任何副作用
-  if (import.meta.env.PROD) {
-    return null;
-  }
+  // 环境标识 - 必须在所有 Hook 之前获取
+  const isProd = import.meta.env.PROD;
 
+  // Hook 必须在组件顶层无条件调用（React Hooks 规则）
   const { state } = useDocumentationGuard({
-    autoCheck: true,
+    autoCheck: !isProd, // 生产环境禁用自动检查
     checkInterval: 30000, // 每 30 秒检查一次
   });
 
   useEffect(() => {
+    // 生产环境跳过日志输出
+    if (isProd) return;
+
     if (state.hasPendingDocs && state.pendingDocs.length > 0) {
       console.group('%c📄 文档更新提醒', 'color: #f5222d; font-size: 16px; font-weight: bold;');
       console.warn('检测到代码变更，请同步更新以下文档：\n');
@@ -59,9 +61,13 @@ export function DocumentationGuardProvider() {
       );
       console.groupEnd();
     }
-  }, [state.hasPendingDocs, state.pendingDocs]);
+  }, [isProd, state.hasPendingDocs, state.pendingDocs]);
 
-  // 渲染不可见的占位符（不影响布局）
+  // 生产环境返回 null，开发环境渲染不可见占位符
+  if (isProd) {
+    return null;
+  }
+
   return <div style={{ display: 'none' }} aria-hidden="true" />;
 }
 
@@ -76,14 +82,19 @@ export function DocumentationGuardProvider() {
  * ```
  */
 export function DocReminder(filePath: string) {
-  if (import.meta.env.PROD) return null;
+  // 环境标识 - 必须在所有 Hook 之前获取
+  const isProd = import.meta.env.PROD;
 
+  // Hook 必须在组件顶层无条件调用（React Hooks 规则）
   const { state } = useDocumentationGuard({
     watchedFiles: [filePath],
-    autoCheck: true,
+    autoCheck: !isProd,
   });
 
   useEffect(() => {
+    // 生产环境跳过
+    if (isProd) return;
+
     if (state.hasPendingDocs && state.pendingDocs.length > 0) {
       const doc = state.pendingDocs[0];
       console.warn(
@@ -91,7 +102,7 @@ export function DocReminder(filePath: string) {
         'color: #faad14; font-weight: bold;'
       );
     }
-  }, [state]);
+  }, [isProd, state]);
 
   return null;
 }

@@ -41,6 +41,15 @@ public class EnterpriseArchitectureServiceImpl implements EnterpriseArchitecture
         
         // 获取所有活跃法人
         List<SysEntity> entities = entityService.listActive();
+        log.info("ArchitectureTree: Found {} active entities", entities.size());
+        if (!entities.isEmpty()) {
+            entities.forEach(e -> log.info("  - Entity: id={}, name={}, status={}", e.getId(), e.getName(), e.getStatus()));
+        } else {
+             // Fallback: Try listing ALL entities to warn if status mismatch
+             log.warn("ArchitectureTree: No ACTIVE entities found. checking all entities...");
+             List<SysEntity> all = entityService.list();
+             all.forEach(e -> log.warn("  - Existing Entity: id={}, name={}, status='{}'", e.getId(), e.getName(), e.getStatus()));
+        }
         
         List<EnterpriseArchitectureTree.EntityNode> entityNodes = entities.stream()
             .map(entity -> {
@@ -52,7 +61,14 @@ public class EnterpriseArchitectureServiceImpl implements EnterpriseArchitecture
                 
                 // 获取法人下的全宗
                 List<String> fondsIds = entityService.getFondsIdsByEntityId(entity.getId());
-                List<BasFonds> fondsList = fondsService.listByIds(fondsIds);
+                log.info("Entity {}: Found {} fonds IDs", entity.getName(), fondsIds.size());
+                
+                List<BasFonds> fondsList;
+                if (fondsIds == null || fondsIds.isEmpty()) {
+                    fondsList = java.util.Collections.emptyList();
+                } else {
+                    fondsList = fondsService.listByIds(fondsIds);
+                }
                 
                 node.setFondsCount(fondsList.size());
                 

@@ -14,6 +14,8 @@ import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.service.ErpConfigService;
 import com.nexusarchive.util.SM4Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import java.util.List;
 
 /**
  * ERP 配置服务实现
+ * 缓存策略: 使用 erpConfig 缓存空间，TTL 30 分钟
  */
 @Slf4j
 @Service
@@ -32,7 +35,12 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         this.erpConfigMapper = erpConfigMapper;
     }
 
+    /**
+     * 根据 ERP 类型查询配置列表
+     * 缓存键: erpConfig:type:{erpType}
+     */
     @Override
+    @Cacheable(value = "erpConfig", key = "'type:' + #erpType")
     public List<ErpConfig> findConfigsByErpType(String erpType) {
         log.debug("查询 ERP 配置: erpType={}", erpType);
 
@@ -48,7 +56,12 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         return configs;
     }
 
+    /**
+     * 根据 ID 查询配置
+     * 缓存键: erpConfig:id:{configId}
+     */
     @Override
+    @Cacheable(value = "erpConfig", key = "'id:' + #configId")
     public ErpConfig findById(Long configId) {
         log.debug("查询 ERP 配置: configId={}", configId);
         ErpConfig config = erpConfigMapper.selectById(configId);
@@ -59,7 +72,12 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         return config;
     }
 
+    /**
+     * 获取所有配置
+     * 缓存键: erpConfig:all
+     */
     @Override
+    @Cacheable(value = "erpConfig", key = "'all'")
     public List<ErpConfig> getAllConfigs() {
         log.debug("获取所有 ERP 配置");
         List<ErpConfig> configs = erpConfigMapper.selectList(null);
@@ -68,8 +86,13 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         return configs;
     }
 
+    /**
+     * 保存或更新配置
+     * 清除缓存: erpConfig:all (全量清除)
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "erpConfig", allEntries = true)
     public void saveConfig(ErpConfig config) {
         // 输入验证
         if (config == null) {
@@ -103,8 +126,13 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         }
     }
 
+    /**
+     * 删除配置
+     * 清除缓存: erpConfig:all
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "erpConfig", allEntries = true)
     public void deleteConfig(Long id) {
         log.info("删除 ERP 配置: id={}", id);
         erpConfigMapper.deleteById(id);

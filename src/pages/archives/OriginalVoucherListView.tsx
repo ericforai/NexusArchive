@@ -1,5 +1,5 @@
-// Input: React, Lucide Icons, originalVoucher API
-// Output: OriginalVoucherListView 组件
+// Input: React, Lucide Icons, originalVoucher API, route path constants, dev debug logging
+// Output: OriginalVoucherListView 组件（支持调试日志）
 // Pos: src/pages/archives/OriginalVoucherListView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -21,6 +21,7 @@ import {
 import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
 import { VoucherPreviewDrawer } from '../../components/pages';
 import { toast } from '../../utils/notificationService';
+import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../../routes/paths';
 
 // 状态徽章组件
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -107,6 +108,19 @@ const DOC_TYPE_NAME_MAP: Record<string, string> = {
     'OTHER': '其他',
 };
 
+const ARCHIVE_ORIGINAL_VOUCHER_TYPE_NAME_MAP: Record<string, string> = Object.entries(SUBITEM_TO_PATH)
+    .reduce((acc, [label, path]) => {
+        if (!path.startsWith(`${ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS}?`)) {
+            return acc;
+        }
+        const [, queryString = ''] = path.split('?');
+        const type = new URLSearchParams(queryString).get('type');
+        if (type) {
+            acc[type] = label;
+        }
+        return acc;
+    }, {} as Record<string, string>);
+
 export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = ({
     title = '原始凭证',
     subTitle = '原始凭证管理',
@@ -117,14 +131,15 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const typeFromUrl = searchParams.get('type');
+    const debugEnabled = import.meta.env.DEV && searchParams.has('debug');
+
+    const typeNameFromUrl = typeFromUrl
+        ? (DOC_TYPE_NAME_MAP[typeFromUrl] || ARCHIVE_ORIGINAL_VOUCHER_TYPE_NAME_MAP[typeFromUrl])
+        : undefined;
 
     // 根据 URL 参数动态计算标题
-    const displayTitle = typeFromUrl && DOC_TYPE_NAME_MAP[typeFromUrl]
-        ? DOC_TYPE_NAME_MAP[typeFromUrl]
-        : title;
-    const displaySubTitle = typeFromUrl && DOC_TYPE_NAME_MAP[typeFromUrl]
-        ? `${DOC_TYPE_NAME_MAP[typeFromUrl]}管理`
-        : subTitle;
+    const displayTitle = typeNameFromUrl ? typeNameFromUrl : title;
+    const displaySubTitle = typeNameFromUrl ? `${typeNameFromUrl}管理` : subTitle;
 
     // 筛选状态
     const [page, setPage] = useState(1);
@@ -164,15 +179,37 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
 
     const { data: vouchersData, isLoading, refetch } = useQuery({
         queryKey: ['originalVouchers', page, limit, search, categoryFilter, typeFilter, statusFilter, poolMode],
-        queryFn: () => getOriginalVouchers({
-            page,
-            limit,
-            search: search || undefined,
-            category: categoryFilter || undefined,
-            type: typeFilter || undefined,
-            status: statusFilter || undefined,
-            poolStatus: poolStatusFilter  // 新增：池状态筛选
-        })
+        queryFn: async () => {
+            const params = {
+                page,
+                limit,
+                search: search || undefined,
+                category: categoryFilter || undefined,
+                type: typeFilter || undefined,
+                status: statusFilter || undefined,
+                poolStatus: poolStatusFilter  // 新增：池状态筛选
+            };
+            if (debugEnabled) {
+                console.debug('[OriginalVouchers] query', {
+                    pathname: location.pathname,
+                    search: location.search,
+                    typeFromUrl,
+                    typeFilter,
+                    categoryFilter,
+                    statusFilter,
+                    poolStatusFilter,
+                    params
+                });
+            }
+            try {
+                return await getOriginalVouchers(params);
+            } catch (error) {
+                if (debugEnabled) {
+                    console.error('[OriginalVouchers] query failed', error);
+                }
+                throw error;
+            }
+        }
     });
 
     // 查询类型列表

@@ -28,7 +28,7 @@ import jakarta.validation.Valid;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/archive/search")
+@RequestMapping("/archive/search")
 @RequiredArgsConstructor
 @Tag(name = "高级档案检索", description = "支持金额范围、摘要搜索等多条件组合查询")
 public class AdvancedArchiveSearchController {

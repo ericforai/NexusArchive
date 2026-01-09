@@ -126,7 +126,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
         // [ENHANCED] 显式全宗过滤：如果前端传递 fondsNo，优先使用
         // 这提高了代码可读性，使数据隔离逻辑更加明确
         if (fondsNo != null && !fondsNo.isEmpty()) {
-            wrapper.eq("fonds_no", fondsNo);
+            wrapper.eq(Archive::getFondsNo, fondsNo);
             log.debug("Explicit fondsNo filter applied: {}", fondsNo);
         } else {
             // 后备：依赖 DataScopeService 的自动隔离机制

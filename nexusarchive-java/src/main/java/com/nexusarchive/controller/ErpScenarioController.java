@@ -15,6 +15,11 @@ import com.nexusarchive.entity.SyncHistory;
 import com.nexusarchive.service.ErpScenarioService;
 import com.nexusarchive.service.erp.AsyncErpSyncService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,24 +31,42 @@ import java.util.Map;
 
 import jakarta.validation.Valid;
 
+/**
+ * ERP 业务场景管理控制器
+ * <p>
+ * 管理 ERP 系统集成业务场景的配置和同步。
+ * 支持手动触发同步、查询同步状态、同步历史等功能。
+ * </p>
+ */
 @RestController
 @RequestMapping("/erp/scenario")
 @RequiredArgsConstructor
-@Tag(name = "ERP业务场景管理")
+@Tag(name = "ERP业务场景管理", description = "ERP集成业务场景的配置、同步和监控")
 public class ErpScenarioController {
 
     private final ErpScenarioService erpScenarioService;
     private final AsyncErpSyncService asyncErpSyncService;
 
     @GetMapping("/list/{configId}")
-    @Operation(summary = "获取指定ERP配置的场景列表")
+    @Operation(summary = "获取指定ERP配置的场景列表", description = "根据ERP配置ID查询其下配置的所有业务场景")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "401", description = "未授权"),
+            @ApiResponse(responseCode = "403", description = "无权限")
+    })
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
-    public Result<List<ErpScenario>> listByConfig(@PathVariable Long configId) {
+    public Result<List<ErpScenario>> listByConfig(
+            @Parameter(description = "ERP配置ID", required = true, example = "1") @PathVariable Long configId) {
         return Result.success(erpScenarioService.listScenariosByConfigId(configId));
     }
 
     @PutMapping
-    @Operation(summary = "更新场景配置")
+    @Operation(summary = "更新场景配置", description = "更新ERP业务场景的配置信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "更新成功"),
+            @ApiResponse(responseCode = "400", description = "参数错误"),
+            @ApiResponse(responseCode = "401", description = "未授权")
+    })
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "UPDATE", resourceType = "ERP_SCENARIO", description = "更新ERP场景配置")
     public Result<Void> update(@Valid @RequestBody ErpScenario scenario) {
@@ -52,24 +75,53 @@ public class ErpScenarioController {
     }
 
     @PostMapping("/{id}/sync")
-    @Operation(summary = "手动触发同步（异步）")
+    @Operation(
+            summary = "手动触发同步（异步）",
+            description = "手动触发指定场景的数据同步任务。任务在后台异步执行，接口立即返回任务ID。可以通过 /sync/status/{taskId} 接口查询任务执行状态。"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "同步任务已提交", content = @Content(schema = @Schema(implementation = SyncTaskDTO.class))),
+            @ApiResponse(responseCode = "401", description = "未授权"),
+            @ApiResponse(responseCode = "404", description = "场景不存在")
+    })
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin')")
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "CAPTURE", resourceType = "ERP_SYNC", description = "手动触发ERP同步场景")
-    public Result<SyncTaskDTO> triggerSync(@PathVariable Long id, jakarta.servlet.http.HttpServletRequest request) {
+    public Result<SyncTaskDTO> triggerSync(
+            @Parameter(description = "场景ID", required = true) @PathVariable Long id,
+            jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
         String clientIp = getClientIp(request);
 
-        // Submit async task
-        SyncTaskDTO task = asyncErpSyncService.submitSyncTask(id);
+        // Submit async task with operator info
+        SyncTaskDTO task = asyncErpSyncService.submitSyncTask(id, operatorId, clientIp);
         asyncErpSyncService.syncScenarioAsync(task.getTaskId(), id, operatorId, clientIp);
 
         return Result.success(task);
     }
 
-    @GetMapping("/{id}/sync/status/{taskId}")
-    @Operation(summary = "查询同步任务状态")
+    @GetMapping("/{id}/sync/tasks")
+    @Operation(summary = "获取场景的同步任务列表", description = "查询指定场景的所有同步任务记录")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "401", description = "未授权")
+    })
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
-    public Result<SyncTaskStatus> getSyncStatus(@PathVariable Long id, @PathVariable String taskId) {
+    public Result<List<com.nexusarchive.entity.SyncTask>> listSyncTasks(
+            @Parameter(description = "场景ID", required = true) @PathVariable Long id) {
+        return Result.success(asyncErpSyncService.getTasksByScenario(id));
+    }
+
+    @GetMapping("/{id}/sync/status/{taskId}")
+    @Operation(summary = "查询同步任务状态", description = "查询指定同步任务的执行状态和进度")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "401", description = "未授权"),
+            @ApiResponse(responseCode = "404", description = "任务不存在")
+    })
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'super_admin', 'ARCHIVE_MANAGER')")
+    public Result<SyncTaskStatus> getSyncStatus(
+            @Parameter(description = "场景ID", required = true) @PathVariable Long id,
+            @Parameter(description = "任务ID", required = true) @PathVariable String taskId) {
         SyncTaskStatus status = asyncErpSyncService.getTaskStatus(taskId);
         if (status == null) {
             return Result.error("任务不存在: " + taskId);

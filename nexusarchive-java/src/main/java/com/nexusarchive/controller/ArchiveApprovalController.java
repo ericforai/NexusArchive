@@ -24,7 +24,7 @@ import jakarta.validation.Valid;
  * 档案审批控制器
  */
 @RestController
-@RequestMapping("/api/archive-approval")
+@RequestMapping("/archive-approval")
 @RequiredArgsConstructor
 public class ArchiveApprovalController {
 

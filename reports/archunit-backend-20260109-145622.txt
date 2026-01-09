@@ -1,0 +1,45 @@
+[ERROR] COMPILATION ERROR : 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[326,31] cannot find symbol
+  symbol:   method getProgress()
+  location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[327,36] cannot find symbol
+  symbol:   method getReceivedCount()
+  location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[328,35] cannot find symbol
+  symbol:   method getSuccessCount()
+  location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[329,35] cannot find symbol
+  symbol:   method getFailureCount()
+  location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[331,32] cannot find symbol
+  symbol:   method getStartedAt()
+  location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[332,34] cannot find symbol
+  symbol:   method getCompletedAt()
+  location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project nexusarchive-backend: Compilation failure: Compilation failure: 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[326,31] cannot find symbol
+[ERROR]   symbol:   method getProgress()
+[ERROR]   location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[327,36] cannot find symbol
+[ERROR]   symbol:   method getReceivedCount()
+[ERROR]   location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[328,35] cannot find symbol
+[ERROR]   symbol:   method getSuccessCount()
+[ERROR]   location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[329,35] cannot find symbol
+[ERROR]   symbol:   method getFailureCount()
+[ERROR]   location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[331,32] cannot find symbol
+[ERROR]   symbol:   method getStartedAt()
+[ERROR]   location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/dto/mapper/DtoMapper.java:[332,34] cannot find symbol
+[ERROR]   symbol:   method getCompletedAt()
+[ERROR]   location: variable entity of type com.nexusarchive.entity.IngestRequestStatus
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

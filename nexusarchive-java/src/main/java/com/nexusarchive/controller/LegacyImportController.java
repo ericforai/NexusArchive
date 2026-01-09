@@ -33,7 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/legacy-import")
+@RequestMapping("/legacy-import")
 @RequiredArgsConstructor
 public class LegacyImportController {
     

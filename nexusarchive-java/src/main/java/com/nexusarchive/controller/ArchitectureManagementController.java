@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Tag(name = "架构管理", description = "Architecture Defense - 架构自省和验证")
 @RestController
-@RequestMapping("/api/architecture")
+@RequestMapping("/architecture")
 public class ArchitectureManagementController {
 
     private static final Logger log = LoggerFactory.getLogger(ArchitectureManagementController.class);

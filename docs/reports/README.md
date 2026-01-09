@@ -1,12 +1,13 @@
 一旦我所属的文件夹有所变化，请更新我。
-本目录存放 Sprint 0 监控与 PRD 对齐报告。
-用于记录每日进展、排雷结论与评审核验。
+本目录存放 Sprint 0 监控、PRD 对齐报告与性能优化总结报告。
+用于记录每日进展、排雷结论、评审核验与优化复盘。
 
 ## 文件清单
 
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
+| `2026-01-09-performance-optimization-summary.md` | 报告 | 性能优化总结报告 |
 | `sprint0-day1-monitor.md` | 报告 | Sprint 0 Day 1 监控记录 |
 | `sprint0-day2-monitor.md` | 报告 | Sprint 0 Day 2 监控记录 |
 | `sprint0-day3-monitor.md` | 报告 | Sprint 0 Day 3 监控记录 |

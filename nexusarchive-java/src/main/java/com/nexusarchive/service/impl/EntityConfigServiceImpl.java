@@ -12,6 +12,8 @@ import com.nexusarchive.mapper.EntityConfigMapper;
 import com.nexusarchive.service.EntityConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 
 /**
  * 法人配置服务实现类
+ * 缓存策略: 使用 entityConfig 缓存空间，TTL 30 分钟
  */
 @Slf4j
 @Service
@@ -29,7 +32,12 @@ public class EntityConfigServiceImpl extends ServiceImpl<EntityConfigMapper, Ent
     
     private final EntityConfigMapper configMapper;
     
+    /**
+     * 获取指定法人的所有配置
+     * 缓存键: entityConfig:entity:{entityId}
+     */
     @Override
+    @Cacheable(value = "entityConfig", key = "'entity:' + #entityId")
     public List<EntityConfig> getConfigsByEntityId(String entityId) {
         return configMapper.findByEntityId(entityId);
     }
@@ -39,15 +47,25 @@ public class EntityConfigServiceImpl extends ServiceImpl<EntityConfigMapper, Ent
         return configMapper.findByEntityIdAndType(entityId, configType);
     }
     
+    /**
+     * 获取指定法人的配置（按类型分组）
+     * 缓存键: entityConfig:grouped:{entityId}
+     */
     @Override
+    @Cacheable(value = "entityConfig", key = "'grouped:' + #entityId")
     public Map<String, List<EntityConfig>> getConfigsGroupedByType(String entityId) {
         List<EntityConfig> configs = getConfigsByEntityId(entityId);
         return configs.stream()
                 .collect(Collectors.groupingBy(EntityConfig::getConfigType));
     }
     
+    /**
+     * 保存或更新配置
+     * 清除缓存: entityConfig:entity:{entityId}
+     */
     @Override
     @Transactional
+    @CacheEvict(value = "entityConfig", key = "'entity:' + #entityId")
     public String saveOrUpdateConfig(String entityId, String configType, String configKey, String configValue, String description) {
         LambdaQueryWrapper<EntityConfig> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(EntityConfig::getEntityId, entityId)
@@ -73,8 +91,13 @@ public class EntityConfigServiceImpl extends ServiceImpl<EntityConfigMapper, Ent
         }
     }
     
+    /**
+     * 删除指定法人的配置
+     * 清除缓存: entityConfig:entity:{entityId}
+     */
     @Override
     @Transactional
+    @CacheEvict(value = "entityConfig", key = "'entity:' + #entityId")
     public void deleteConfigsByEntityId(String entityId, String configType) {
         LambdaQueryWrapper<EntityConfig> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(EntityConfig::getEntityId, entityId);

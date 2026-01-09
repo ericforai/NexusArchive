@@ -6,7 +6,6 @@
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.dto.notification.NotificationDto;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.IngestRequestStatus;
@@ -35,9 +34,11 @@ public class NotificationServiceImpl implements NotificationService {
         List<NotificationDto> items = new ArrayList<>();
 
         // 1) 最新处理任务（待处理/处理中/失败）
-        List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(new QueryWrapper<IngestRequestStatus>()
-                .orderByDesc("COALESCE(updated_time, created_time)")
-                .last("LIMIT 5"));
+        // 使用 LambdaQueryWrapper 避免 empty where 语法错误
+        List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(
+                new LambdaQueryWrapper<IngestRequestStatus>()
+                        .orderByDesc(IngestRequestStatus::getUpdatedTime)
+                        .last("LIMIT 5"));
         for (IngestRequestStatus task : tasks) {
             String type = "info";
             if ("FAILED".equalsIgnoreCase(task.getStatus())) {

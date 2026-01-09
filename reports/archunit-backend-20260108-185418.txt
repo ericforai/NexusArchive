@@ -1,0 +1,15 @@
+18:54:25.976 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 23.0.2
+
+============================================================
+                    COMPLEXITY REPORT
+============================================================
+Total classes analyzed: 1152
+Violations found: 1
+
+Found 1 complexity violation(s):
+
+--- Integration Classes ---
+  YonSuiteClient: 619 lines (limit: 500) - +119 lines over
+
+Summary: 1 violation(s) across 1 type(s)
+============================================================

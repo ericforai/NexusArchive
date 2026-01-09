@@ -3,7 +3,7 @@
 // Pos: 文档自洽性守卫 hooks
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * 目录文档映射关系
@@ -258,21 +258,9 @@ export function useDocumentationGuard(options?: {
  * 获取 Git 变更文件
  */
 async function getChangedFiles(): Promise<string[]> {
-  if (typeof window !== 'undefined') {
-    // 浏览器环境：返回空（需要后端支持）
-    return [];
-  }
-
-  try {
-    const { execSync } = await import('child_process');
-    const output = execSync('git status --porcelain', { encoding: 'utf-8' });
-    return output
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => line.substring(3)); // 跳过状态标识
-  } catch {
-    return [];
-  }
+  // 浏览器环境无法直接访问 Git，始终返回空
+  // 需要后续通过 API 对接后端获取
+  return [];
 }
 
 /**

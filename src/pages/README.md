@@ -12,3 +12,7 @@
 - **路由终点**: `src/routes/index.tsx` 中的组件应统一定位于此。
 - **模块装配**: 页面层只通过 `src/features/<module>/index.ts` 入口引入业务能力。
 - **UI 注入**: 负责把 features 的 application 能力注入到 UI 组件（components）。
+
+## 调试备注
+
+- 开发模式下，`ProductWebsite` 会把 React 实例诊断信息写入 `window.__REACT_PAGE_LOG__` 便于定位 Hook 相关错误。

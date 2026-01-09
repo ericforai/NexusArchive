@@ -11,12 +11,12 @@
 | `__tests__/` | 目录入口 | 前端单元测试与用例集合 |
 | `api/` | 目录入口 | 前端 API 客户端模块 |
 | `components/` | 目录入口 | 业务与通用 UI 组件 |
-| `constants.tsx` | 配置常量 | 视图/模块常量与配置 |
+| `constants.tsx` | 配置常量 | 视图/模块常量与导航路径配置 |
 | `data/` | 目录入口 | 演示数据与本地资源 |
 | `features/` | 目录入口 | 功能模块聚合与导出 |
 | `hooks/` | 目录入口 | 自定义 Hook 集合 |
 | `index.css` | 样式入口 | 全局样式与基础重置 |
-| `index.tsx` | 启动入口 | React 应用挂载与初始化 |
+| `index.tsx` | 启动入口 | React 应用挂载、初始化与 React 实例诊断 |
 | `layouts/` | 目录入口 | 布局组件与页面框架 |
 | `queryClient.ts` | 数据层配置 | React Query 客户端配置 |
 | `routes/` | 目录入口 | 路由配置与路径定义 |

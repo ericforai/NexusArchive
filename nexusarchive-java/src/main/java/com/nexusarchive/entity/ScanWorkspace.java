@@ -6,7 +6,10 @@
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -18,6 +21,9 @@ import java.time.LocalDateTime;
  * 用于存储扫描文档的临时工作区数据，支持OCR识别、人工审核、提交归档等流程
  */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @TableName("scan_workspace")
 public class ScanWorkspace implements Serializable {
 

@@ -26,6 +26,8 @@ export interface UserInfo {
     lastLoginAt?: string;
     createdTime?: string;
     roleNames?: string[];
+    // 允许访问的全宗号列表（数据隔离键）
+    allowedFonds?: string[];
 }
 
 export interface LoginResponse {

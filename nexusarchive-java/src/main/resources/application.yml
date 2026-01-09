@@ -156,6 +156,18 @@ app:
   debug:
     enabled: ${APP_DEBUG_ENABLED:false}  # 调试接口开关 (默认禁用, 生产环境必须保持禁用)
 
+# 异步任务线程池配置
+async:
+  # core-pool-size: ${ASYNC_CORE_POOL_SIZE:}  # 核心线程数（默认：CPU核心数）
+  # max-pool-size: ${ASYNC_MAX_POOL_SIZE:}   # 最大线程数（默认：CPU核心数*2）
+  queue-capacity: ${ASYNC_QUEUE_CAPACITY:100}  # 队列容量
+  thread-name-prefix: ${ASYNC_THREAD_PREFIX:async-}  # 线程名前缀
+  keep-alive-seconds: ${ASYNC_KEEP_ALIVE:60}  # 空闲线程存活时间（秒）
+  monitor:
+    enabled: ${ASYNC_MONITOR_ENABLED:true}  # 监控开关
+    log-interval: ${ASYNC_LOG_INTERVAL:300000}  # 监控日志间隔（毫秒，默认5分钟）
+    alert-threshold: ${ASYNC_ALERT_THRESHOLD:80}  # 使用率告警阈值（百分比）
+
 ---
 # 开发环境 - PostgreSQL
 spring:

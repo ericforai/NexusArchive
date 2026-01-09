@@ -12,10 +12,14 @@
 | 文件 | 功能 |
 | --- | --- |
 | `VoucherMatchingPage.tsx` | 凭证匹配页面容器 |
-| `VoucherMatchingView.tsx` | 匹配视图 |
+| `VoucherMatchingView.tsx` | 匹配视图（2026-01-08: Spin tip 嵌套） |
 | `VoucherMatchingView.css` | 匹配视图样式 |
 | `OnboardingWizard.tsx` | 匹配向导 |
-| `ComplianceReport.tsx` | 匹配合规报告 |
+| `ComplianceReport.tsx` | 匹配合规报告（2026-01-08: Spin tip 嵌套） |
+
+## 2026-01-08 更新
+
+- ✅ Spin tip 采用嵌套写法，避免 antd 告警
 
 ## 架构约束
 

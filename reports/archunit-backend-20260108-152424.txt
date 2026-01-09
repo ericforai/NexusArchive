@@ -1,0 +1,10 @@
+15:24:33.949 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 23.0.2
+
+============================================================
+                    COMPLEXITY REPORT
+============================================================
+Total classes analyzed: 1115
+Violations found: 0
+
+No complexity violations found. Great job!
+============================================================

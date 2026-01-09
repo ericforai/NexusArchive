@@ -9,24 +9,40 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.Permission;
 import com.nexusarchive.mapper.PermissionMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 权限服务
+ * 缓存策略: 使用 permissions 缓存空间，TTL 1 小时
+ */
 @Service
 @RequiredArgsConstructor
 public class PermissionService {
 
     private final PermissionMapper permissionMapper;
 
+    /**
+     * 获取所有权限
+     * 缓存键: permissions:all
+     */
+    @Cacheable(value = "permissions", key = "'all'")
     public List<Permission> listAll() {
         return permissionMapper.selectList(new LambdaQueryWrapper<Permission>()
                 .orderByAsc(Permission::getGroupName)
                 .orderByAsc(Permission::getPermKey));
     }
 
+    /**
+     * 创建权限
+     * 清除缓存: permissions:all
+     */
     @Transactional
+    @CacheEvict(value = "permissions", allEntries = true)
     public Permission create(Permission permission) {
         // Check if key exists
         Long count = permissionMapper.selectCount(new LambdaQueryWrapper<Permission>()
@@ -38,7 +54,12 @@ public class PermissionService {
         return permission;
     }
 
+    /**
+     * 更新权限
+     * 清除缓存: permissions:all
+     */
     @Transactional
+    @CacheEvict(value = "permissions", allEntries = true)
     public Permission update(String id, Permission permission) {
         Permission existing = permissionMapper.selectById(id);
         if (existing == null) {
@@ -52,7 +73,12 @@ public class PermissionService {
         return existing;
     }
 
+    /**
+     * 删除权限
+     * 清除缓存: permissions:all
+     */
     @Transactional
+    @CacheEvict(value = "permissions", allEntries = true)
     public void delete(String id) {
         permissionMapper.deleteById(id);
     }

@@ -1,5 +1,5 @@
 // src/components/pool-kanban/KanbanColumn.tsx
-// Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks
+// Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks (Tabs items)
 // Output: Rendered kanban column with sub-state tabs, action buttons, and card list
 // Pos: src/components/pool-kanban/KanbanColumn.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -78,6 +78,17 @@ export function KanbanColumn({
 
   // Fixed display action buttons (max 3)
   const visibleActions = column.actions.slice(0, 3);
+  const tabItems = useMemo(() => {
+    return column.subStates.map(sub => ({
+      key: sub.value,
+      label: (
+        <span className="kanban-column__tab">
+          {sub.label}
+          <Badge count={subStateCounts.get(sub.value) || 0} />
+        </span>
+      ),
+    }));
+  }, [column.subStates, subStateCounts]);
 
   return (
     <div className="kanban-column">
@@ -94,19 +105,8 @@ export function KanbanColumn({
           onChange={setActiveTab}
           size="small"
           className="kanban-column__tabs"
-        >
-          {column.subStates.map(sub => (
-            <Tabs.TabPane
-              key={sub.value}
-              tab={
-                <span className="kanban-column__tab">
-                  {sub.label}
-                  <Badge count={subStateCounts.get(sub.value) || 0} />
-                </span>
-              }
-            />
-          ))}
-        </Tabs>
+          items={tabItems}
+        />
       </div>
 
       {/* Column action buttons */}

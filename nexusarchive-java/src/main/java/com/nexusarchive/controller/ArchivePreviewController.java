@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/archive")
+@RequestMapping("/archive")
 @RequiredArgsConstructor
 @Tag(name = "档案预览", description = "流式预览、预签名URL、服务端渲染接口")
 public class ArchivePreviewController {

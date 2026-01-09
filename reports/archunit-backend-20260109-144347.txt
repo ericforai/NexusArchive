@@ -1,0 +1,141 @@
+[ERROR] COMPILATION ERROR : 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/IngestFlowTest.java:[61,25] constructor IngestServiceImpl in class com.nexusarchive.service.impl.IngestServiceImpl cannot be applied to given types;
+  required: com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.mapper.ErpConfigMapper,com.nexusarchive.integration.erp.adapter.ErpAdapterFactory,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+  found:    com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.service.ErpFeedbackService,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ErpScenarioControllerTest.java:[82,32] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,java.lang.Object)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ErpScenarioControllerTest.java:[109,32] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,java.lang.Object)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ErpScenarioControllerTest.java:[135,32] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,java.lang.Object)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[64,53] reference to applyArchiveScope is ambiguous
+  both method applyArchiveScope(com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>,com.nexusarchive.service.DataScopeService.DataScopeContext) in com.nexusarchive.service.DataScopeService and method applyArchiveScope(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive>,com.nexusarchive.service.DataScopeService.DataScopeContext) in com.nexusarchive.service.DataScopeService match
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[76,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[97,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[134,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[179,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[205,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[233,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[258,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[289,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[325,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[348,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[389,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[442,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/StatsServiceImplTest.java:[199,46] cannot find symbol
+  symbol:   method evictStatsCache()
+  location: variable statsService of type com.nexusarchive.service.impl.StatsServiceImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/StatsServiceImplTest.java:[214,46] cannot find symbol
+  symbol:   method evictStorageCache()
+  location: variable statsService of type com.nexusarchive.service.impl.StatsServiceImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[135,54] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[166,54] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[210,54] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[235,54] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[261,54] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[287,54] cannot find symbol
+  symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+  location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[90,27] cannot find symbol
+  symbol:   method hasAnnotation(java.lang.Class<org.springframework.cache.annotation.Cacheable>)
+  location: class org.assertj.core.api.ObjectAssert<java.lang.reflect.Method>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[97,27] cannot find symbol
+  symbol:   method hasAnnotation(java.lang.Class<org.springframework.cache.annotation.CacheEvict>)
+  location: class org.assertj.core.api.ObjectAssert<java.lang.reflect.Method>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[104,27] cannot find symbol
+  symbol:   method hasAnnotation(java.lang.Class<org.springframework.cache.annotation.CachePut>)
+  location: class org.assertj.core.api.ObjectAssert<java.lang.reflect.Method>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[207,9] cannot find symbol
+  symbol:   method assertThatCode(()->cached[...]che())
+  location: class com.nexusarchive.cache.CacheAnnotationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[215,9] cannot find symbol
+  symbol:   method assertThatCode(()->cached[...]hes())
+  location: class com.nexusarchive.cache.CacheAnnotationTest
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:testCompile (default-testCompile) on project nexusarchive-backend: Compilation failure: Compilation failure: 
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/IngestFlowTest.java:[61,25] constructor IngestServiceImpl in class com.nexusarchive.service.impl.IngestServiceImpl cannot be applied to given types;
+[ERROR]   required: com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.mapper.ErpConfigMapper,com.nexusarchive.integration.erp.adapter.ErpAdapterFactory,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+[ERROR]   found:    com.nexusarchive.mapper.IngestRequestStatusMapper,org.springframework.context.ApplicationEventPublisher,com.nexusarchive.mapper.ArcFileContentMapper,com.nexusarchive.service.ArchivalPackageService,com.nexusarchive.service.ArchiveService,com.nexusarchive.service.ErpFeedbackService,com.nexusarchive.service.ArchiveSecurityService,com.nexusarchive.util.PathSecurityUtils
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ErpScenarioControllerTest.java:[82,32] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,java.lang.Object)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ErpScenarioControllerTest.java:[109,32] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,java.lang.Object)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/controller/ErpScenarioControllerTest.java:[135,32] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,java.lang.Object)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[64,53] reference to applyArchiveScope is ambiguous
+[ERROR]   both method applyArchiveScope(com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.nexusarchive.entity.Archive>,com.nexusarchive.service.DataScopeService.DataScopeContext) in com.nexusarchive.service.DataScopeService and method applyArchiveScope(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.Archive>,com.nexusarchive.service.DataScopeService.DataScopeContext) in com.nexusarchive.service.DataScopeService match
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[76,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[97,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[134,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[179,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[205,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[233,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[258,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[289,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[325,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[348,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[389,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/GlobalSearchServiceImplTest.java:[442,77] incompatible types: com.nexusarchive.dto.request.GlobalSearchRequest cannot be converted to java.lang.String
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/StatsServiceImplTest.java:[199,46] cannot find symbol
+[ERROR]   symbol:   method evictStatsCache()
+[ERROR]   location: variable statsService of type com.nexusarchive.service.impl.StatsServiceImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/impl/StatsServiceImplTest.java:[214,46] cannot find symbol
+[ERROR]   symbol:   method evictStorageCache()
+[ERROR]   location: variable statsService of type com.nexusarchive.service.impl.StatsServiceImpl
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[135,54] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[166,54] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[210,54] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[235,54] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[261,54] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/service/ErpScenarioServiceTest.java:[287,54] cannot find symbol
+[ERROR]   symbol:   method listScenariosByConfigIdPage(java.lang.Long,com.nexusarchive.dto.request.PageRequest)
+[ERROR]   location: variable erpScenarioService of type com.nexusarchive.service.ErpScenarioService
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[90,27] cannot find symbol
+[ERROR]   symbol:   method hasAnnotation(java.lang.Class<org.springframework.cache.annotation.Cacheable>)
+[ERROR]   location: class org.assertj.core.api.ObjectAssert<java.lang.reflect.Method>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[97,27] cannot find symbol
+[ERROR]   symbol:   method hasAnnotation(java.lang.Class<org.springframework.cache.annotation.CacheEvict>)
+[ERROR]   location: class org.assertj.core.api.ObjectAssert<java.lang.reflect.Method>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[104,27] cannot find symbol
+[ERROR]   symbol:   method hasAnnotation(java.lang.Class<org.springframework.cache.annotation.CachePut>)
+[ERROR]   location: class org.assertj.core.api.ObjectAssert<java.lang.reflect.Method>
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[207,9] cannot find symbol
+[ERROR]   symbol:   method assertThatCode(()->cached[...]che())
+[ERROR]   location: class com.nexusarchive.cache.CacheAnnotationTest
+[ERROR] /Users/user/nexusarchive/nexusarchive-java/src/test/java/com/nexusarchive/cache/CacheAnnotationTest.java:[215,9] cannot find symbol
+[ERROR]   symbol:   method assertThatCode(()->cached[...]hes())
+[ERROR]   location: class com.nexusarchive.cache.CacheAnnotationTest
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

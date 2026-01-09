@@ -7,43 +7,63 @@ package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.common.Result;
+import com.nexusarchive.dto.compliance.AsyncCheckTaskStatus;
+import com.nexusarchive.dto.sip.report.FourNatureReport;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.AuditInspectionLog;
 import com.nexusarchive.service.ArchiveFileContentService;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.ComplianceCheckService;
+import com.nexusarchive.service.compliance.AsyncFourNatureCheckService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 合规性检查控制器
+ * <p>
+ * 提供电子会计档案符合性检查接口，包括：
+ * - 单个档案符合性检查
+ * - 批量档案符合性检查
+ * - 异步四性检测（真实性、完整性、可用性、安全性）
+ * - 符合性检查报告生成
+ * </p>
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/compliance")
+@RequestMapping("/compliance")
 @RequiredArgsConstructor
-@Tag(name = "合规性检查", description = "电子会计档案管理办法符合性检查")
+@Tag(name = "合规性检查", description = "电子会计档案管理办法符合性检查接口")
 public class ComplianceController {
 
     private final ComplianceCheckService complianceCheckService;
     private final ArchiveService archiveService;
     private final ArchiveFileContentService archiveFileContentService;
+    private final AsyncFourNatureCheckService asyncFourNatureCheckService;
 
     /**
      * 检查单个档案的符合性
      */
     @GetMapping("/archives/{archiveId}")
     @Operation(summary = "检查档案符合性", description = "检查指定档案是否符合《会计档案管理办法》")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "检查完成"),
+            @ApiResponse(responseCode = "404", description = "档案不存在")
+    })
     public Result<ComplianceCheckService.ComplianceResult> checkArchiveCompliance(
-            @Parameter(description = "档案ID", required = true) @PathVariable String archiveId) {
+            @Parameter(description = "档案ID", required = true, example = "123456") @PathVariable String archiveId) {
         try {
             // 获取档案信息
             Archive archive = archiveService.getArchiveById(archiveId);
@@ -289,6 +309,211 @@ public class ComplianceController {
             public void setResult(ComplianceCheckService.ComplianceResult result) {
                 this.result = result;
             }
+        }
+    }
+
+    // ==================== 异步四性检测接口 ====================
+
+    /**
+     * 提交异步四性检测任务
+     * <p>
+     * 该接口立即返回任务ID，实际的检测操作在后台异步执行。
+     * 四性检测（真实性、完整性、可用性、安全性）并行执行以提升性能。
+     * </p>
+     *
+     * @param archiveId 档案ID
+     * @return 任务ID
+     */
+    @PostMapping("/four-nature/{archiveId}/async")
+    @Operation(
+            summary = "提交异步四性检测任务",
+            description = "提交四性检测任务，立即返回任务ID，检测在后台异步执行。"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "任务已提交"),
+            @ApiResponse(responseCode = "404", description = "档案不存在")
+    })
+    public Result<AsyncCheckTaskResponse> submitAsyncFourNatureCheck(
+            @Parameter(description = "档案ID", required = true, example = "123456") @PathVariable String archiveId) {
+        try {
+            // 获取档案信息
+            Archive archive = archiveService.getArchiveById(archiveId);
+            if (archive == null) {
+                return Result.fail("档案不存在");
+            }
+
+            // 提交异步检测任务
+            CompletableFuture<String> taskFuture = asyncFourNatureCheckService.submitCheckTask(
+                    archiveId, archive.getArchiveCode());
+
+            // 立即返回任务ID（不等待检测完成）
+            String taskId = taskFuture.join(); // join 只是获取 taskId，不等待检测完成
+
+            return Result.success(new AsyncCheckTaskResponse(taskId, archiveId, archive.getArchiveCode()));
+        } catch (Exception e) {
+            log.error("提交异步四性检测任务失败", e);
+            return Result.fail("提交任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询异步四性检测任务状态
+     *
+     * @param taskId 任务ID
+     * @return 任务状态
+     */
+    @GetMapping("/four-nature/tasks/{taskId}")
+    @Operation(
+            summary = "查询四性检测任务状态",
+            description = "查询异步检测任务的执行状态和进度。状态包括：PENDING（排队中）、RUNNING（执行中）、COMPLETED（已完成）、FAILED（失败）。"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "404", description = "任务不存在")
+    })
+    public Result<AsyncCheckTaskStatus> getAsyncCheckTaskStatus(
+            @Parameter(description = "任务ID", required = true, example = "task-uuid-123") @PathVariable String taskId) {
+        try {
+            AsyncCheckTaskStatus status = asyncFourNatureCheckService.getTaskStatus(taskId);
+            if (status == null) {
+                return Result.fail("任务不存在");
+            }
+            return Result.success(status);
+        } catch (Exception e) {
+            log.error("查询任务状态失败", e);
+            return Result.fail("查询任务状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取异步四性检测结果
+     * <p>
+     * 如果任务已完成，返回检测结果；如果任务未完成，返回 null。
+     * 建议先通过 getAsyncCheckTaskStatus 检查任务状态。
+     * </p>
+     *
+     * @param taskId 任务ID
+     * @return 检测结果
+     */
+    @GetMapping("/four-nature/tasks/{taskId}/result")
+    @Operation(
+            summary = "获取四性检测结果",
+            description = "获取已完成的四性检测结果。建议先通过状态查询接口确认任务完成后再调用此接口。"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "获取成功"),
+            @ApiResponse(responseCode = "400", description = "任务尚未完成"),
+            @ApiResponse(responseCode = "404", description = "任务不存在")
+    })
+    public Result<FourNatureReport> getAsyncCheckResult(
+            @Parameter(description = "任务ID", required = true, example = "task-uuid-123") @PathVariable String taskId) {
+        try {
+            AsyncCheckTaskStatus status = asyncFourNatureCheckService.getTaskStatus(taskId);
+            if (status == null) {
+                return Result.fail("任务不存在");
+            }
+
+            if (status.getStatus() != AsyncCheckTaskStatus.TaskStatus.COMPLETED) {
+                return Result.fail("任务尚未完成，当前状态: " + status.getStatus());
+            }
+
+            FourNatureReport result = asyncFourNatureCheckService.getCheckResult(taskId);
+            if (result == null) {
+                return Result.fail("检测结果不可用");
+            }
+            return Result.success(result);
+        } catch (Exception e) {
+            log.error("获取检测结果失败", e);
+            return Result.fail("获取检测结果失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 取消异步四性检测任务
+     *
+     * @param taskId 任务ID
+     * @return 是否成功取消
+     */
+    @DeleteMapping("/four-nature/tasks/{taskId}")
+    @Operation(
+            summary = "取消四性检测任务",
+            description = "取消正在执行或排队的四性检测任务。已完成的任务无法取消。"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "操作完成"),
+            @ApiResponse(responseCode = "404", description = "任务不存在")
+    })
+    public Result<Boolean> cancelAsyncCheckTask(
+            @Parameter(description = "任务ID", required = true, example = "task-uuid-123") @PathVariable String taskId) {
+        try {
+            boolean cancelled = asyncFourNatureCheckService.cancelTask(taskId);
+            return Result.success(cancelled);
+        } catch (Exception e) {
+            log.error("取消任务失败", e);
+            return Result.fail("取消任务失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据档案ID查询当前检测任务
+     *
+     * @param archiveId 档案ID
+     * @return 当前任务状态
+     */
+    @GetMapping("/four-nature/archives/{archiveId}/task")
+    @Operation(summary = "查询档案的检测任务", description = "查询指定档案当前正在执行的检测任务")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "404", description = "档案不存在或无检测任务")
+    })
+    public Result<AsyncCheckTaskStatus> getArchiveCheckTask(
+            @Parameter(description = "档案ID", required = true, example = "123456") @PathVariable String archiveId) {
+        try {
+            // 注意: 这个方法需要扩展 AsyncCheckTaskManager 或添加到 AsyncFourNatureCheckService
+            // 暂时返回提示信息
+            return Result.fail("请使用任务ID查询");
+        } catch (Exception e) {
+            log.error("查询档案检测任务失败", e);
+            return Result.fail("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 异步检测任务响应
+     */
+    public static class AsyncCheckTaskResponse {
+        private String taskId;
+        private String archiveId;
+        private String archiveCode;
+
+        public AsyncCheckTaskResponse(String taskId, String archiveId, String archiveCode) {
+            this.taskId = taskId;
+            this.archiveId = archiveId;
+            this.archiveCode = archiveCode;
+        }
+
+        public String getTaskId() {
+            return taskId;
+        }
+
+        public void setTaskId(String taskId) {
+            this.taskId = taskId;
+        }
+
+        public String getArchiveId() {
+            return archiveId;
+        }
+
+        public void setArchiveId(String archiveId) {
+            this.archiveId = archiveId;
+        }
+
+        public String getArchiveCode() {
+            return archiveCode;
+        }
+
+        public void setArchiveCode(String archiveCode) {
+            this.archiveCode = archiveCode;
         }
     }
 }

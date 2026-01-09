@@ -346,6 +346,23 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
     }
 
     @Override
+    public java.io.File getFile(Long id, String userId) {
+        // 1. 验证记录存在
+        ScanWorkspace workspace = scanWorkspaceMapper.selectById(id);
+        if (workspace == null) {
+            throw new IllegalArgumentException("工作区记录不存在: id=" + id);
+        }
+
+        // 2. 验证用户权限
+        if (!userId.equals(workspace.getUserId())) {
+            throw new IllegalArgumentException("无权操作该记录");
+        }
+
+        // 3. 返回文件
+        return new java.io.File(workspace.getFilePath());
+    }
+
+    @Override
     public String createSession(String userId) {
         String sessionId = UUID.randomUUID().toString();
         log.info("Created scan session: sessionId={}, userId={}", sessionId, userId);

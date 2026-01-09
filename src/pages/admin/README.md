@@ -17,6 +17,21 @@
 - `FondsHistoryPage.tsx`: 全宗沿革管理页面（迁移、合并、分立、重命名操作）。
 - `FondsHistoryListPage.tsx`: 全宗沿革历史查看页面（查询和展示沿革历史记录）。
 - `PositionManagement.tsx`: 岗位管理页面。
+- `LegacyImportPage/`: 历史数据导入页面（模块化组件目录）。
+  - `index.tsx`: 主组件入口（标签页切换、状态管理、API调用）。
+  - `types.ts`: 类型定义。
+  - `README.md`: 模块说明文档。
+  - `components/`: 子组件目录。
+    - `index.ts`: 组件统一导出。
+    - `FileUploader.tsx`: 文件上传组件（拖拽、选择、验证）。
+    - `ImportTab.tsx`: 导入标签页（合规警告、指南、模板、预览/导入结果）。
+    - `HistoryTab.tsx`: 历史标签页（筛选、列表、分页）。
+  - `hooks/`: 自定义 Hooks。
+    - `index.ts`: Hooks 统一导出。
+    - `useFileUpload.ts`: 文件上传 Hook（验证逻辑）。
+    - `useImportPreview.ts`: 导入预览 Hook（预览、导入逻辑）。
+    - `useImportHistory.ts`: 导入历史 Hook（分页、筛选、下载）。
+    - `useFieldMapping.ts`: 字段映射 Hook（模板下载、字段说明）。
 
 ## 功能说明
 
@@ -53,6 +68,14 @@
 - **全宗分立**: 将一个全宗分立为多个新全宗
 - **全宗重命名**: 修改全宗号（需满足条件）
 - **历史查询**: 查看全宗的沿革历史记录
+
+### 历史数据导入
+- **文件上传**: 支持拖拽上传 CSV、Excel 文件（最大 100MB）
+- **导入预览**: 显示解析结果、验证错误、统计信息
+- **执行导入**: 批量导入历史档案数据
+- **导入历史**: 查询导入记录、下载错误报告
+- **模板下载**: 提供 CSV 和 Excel 导入模板
+- **合规提醒**: 四性检测要求说明
 
 ## 规范
 

@@ -15,6 +15,9 @@ import com.nexusarchive.mapper.RoleMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -22,6 +25,7 @@ import java.util.List;
 
 /**
  * 角色服务
+ * 缓存策略: 使用 roles 缓存空间，TTL 1 小时
  */
 @Service
 @RequiredArgsConstructor
@@ -49,14 +53,18 @@ public class RoleService {
     
     /**
      * 获取所有角色（不分页）
+     * 缓存键: roles:all
      */
+    @Cacheable(value = "roles", key = "'all'")
     public List<Role> getAllRoles() {
         return roleMapper.selectList(null);
     }
-    
+
     /**
      * 根据ID获取角色
+     * 缓存键: roles:id:{id}
      */
+    @Cacheable(value = "roles", key = "'id:' + #id")
     public Role getRoleById(String id) {
         Role role = roleMapper.selectById(id);
         if (role == null) {
@@ -67,14 +75,18 @@ public class RoleService {
     
     /**
      * 根据编码获取角色
+     * 缓存键: roles:code:{code}
      */
+    @Cacheable(value = "roles", key = "'code:' + #code")
     public Role getRoleByCode(String code) {
         return roleMapper.findByCode(code);
     }
-    
+
     /**
      * 创建角色
+     * 清除缓存: roles:all (全量清除)
      */
+    @CacheEvict(value = "roles", allEntries = true)
     public Role createRole(Role role) {
         // 验证角色编码唯一性
         Role existing = roleMapper.findByCode(role.getCode());
@@ -105,7 +117,9 @@ public class RoleService {
     
     /**
      * 更新角色
+     * 清除缓存: roles:all (全量清除)
      */
+    @CacheEvict(value = "roles", allEntries = true)
     public void updateRole(String id, Role role) {
         Role existing = getRoleById(id);
         
@@ -134,7 +148,9 @@ public class RoleService {
     
     /**
      * 删除角色
+     * 清除缓存: roles:all (全量清除)
      */
+    @CacheEvict(value = "roles", allEntries = true)
     public void deleteRole(String id) {
         Role role = getRoleById(id);
         
@@ -150,10 +166,9 @@ public class RoleService {
     
     /**
      * 获取权限列表
+     * 缓存键: permissions:all
      */
-    /**
-     * 获取权限列表
-     */
+    @Cacheable(value = "permissions", key = "'all'")
     public List<Permission> getPermissions() {
         List<com.nexusarchive.entity.Permission> dbPerms = permissionMapper.selectList(null);
         if (dbPerms != null && !dbPerms.isEmpty()) {

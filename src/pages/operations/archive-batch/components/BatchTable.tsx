@@ -1,4 +1,4 @@
-// Input: ArchiveBatch, handlers, Ant Design
+// Input: ArchiveBatch, handlers, Ant Design（Spin tip 嵌套）
 // Output: 批次表格组件
 // Pos: src/pages/operations/archive-batch/components/BatchTable.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -588,7 +588,9 @@ export function BatchTable({
                 </div>
                 {loadingVouchers ? (
                     <div className="text-center py-8">
-                        <Spin tip="加载中..." />
+                        <Spin tip="加载中...">
+                            <div style={{ minHeight: 24 }} />
+                        </Spin>
                     </div>
                 ) : availableVouchers.length === 0 ? (
                     <Empty description='暂无可添加的凭证（需要状态为"准备归档"的凭证）' />

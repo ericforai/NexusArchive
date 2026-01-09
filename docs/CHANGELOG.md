@@ -7,16 +7,54 @@
 ## [Unreleased]
 
 ### Added
+- 性能优化设计文档 (`/docs/plans/2026-01-09-performance-optimization-design.md`)
+  - 24 类性能/安全问题识别与解决方案
+  - 前端、后端数据库、API 安全三维度优化方案
+  - 12 天渐进式交付时间表
+- 性能优化总结报告 (`/docs/reports/2026-01-09-performance-optimization-summary.md`)
+  - 执行摘要与关键指标
+  - 技术债务清单 (P0/P1/P2 分级)
+  - 短期/中期/长期优化建议
+
+### Changed
+- 性能优化设计文档标记为"规划完成"状态
+- 预估工时: 91.5 小时 (~12 个工作日)
+- 优化收益预估: 首屏 < 1s, N+1 查询 -99%, API 响应 +50%
+
+### Planned (待执行优化)
+
+**P0 优先级 (严重/高)**:
+- DebugController 权限校验 (1h) - 严重安全隐患
+- 定时器未清理修复 (1h) - WatermarkOverlay.tsx
+- N+1 查询修复 (3.5h) - IngestServiceImpl
+- 关键数据库索引 (4h) - acc_archive, arc_file_content
+- 虚拟化表格改造 (4h) - BatchTable.tsx (642行)
+
+**P1 优先级 (中)**:
+- Redis 缓存实现 (4h)
+- 分页查询实现 (5h)
+- Entity 转 DTO (8h)
+- 组件拆分重构 (16h) - LegacyImportPage.tsx (822行)
+
+---
+
+## [2025-01-09] Integration Settings UI Redesign v2.2
+
+### Added
 - ScenarioDrawer component - right-side slide-in panel for scenario details
 - ScenarioSummaryCard component - displays scenario counts with status
 - ConnectionHealthBadge component - health status with relative time display
 - Three-layer information architecture (Card → Drawer → Page)
+- OriginalVoucherListView menu-type title/filter tests
+- Route mapping test for bank receipt type
 
 ### Changed
 - ErpConfigCard redesigned as summary-only view (removed expand/collapse)
 - Health check button style improved (slate-700 + white text for better contrast)
 - Fixed card heights for consistent page layout
 - Better visual hierarchy and spacing
+- OriginalVoucherListView now derives archive type titles from menu mapping
+- Archive original voucher bank receipt menu uses BANK_RECEIPT for filtering
 
 ### Removed
 - On-demand scenario loading from cards (moved to drawer)

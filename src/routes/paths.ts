@@ -1,5 +1,5 @@
 // Input: 无外部依赖
-// Output: ROUTE_PATHS 与 SUBITEM_TO_PATH 常量
+// Output: ROUTE_PATHS 与 SUBITEM_TO_PATH 常量（原始凭证类型映射对齐）
 // Pos: 路由路径常量定义
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -61,9 +61,15 @@ export const ROUTE_PATHS = {
     STATS: '/system/stats',
     SETTINGS: '/system/settings',
     SETTINGS_BASIC: '/system/settings/basic',
+    SETTINGS_BASIC_SECURITY: '/system/settings/basic/security',
     SETTINGS_USERS: '/system/settings/users',
     SETTINGS_ROLES: '/system/settings/roles',
     SETTINGS_ORG: '/system/settings/org',
+    SETTINGS_ORG_ENTITY: '/system/settings/org/entity',
+    SETTINGS_ORG_ARCHITECTURE: '/system/settings/org/architecture',
+    SETTINGS_ORG_FONDS: '/system/settings/org/fonds',
+    SETTINGS_ORG_POSITIONS: '/system/settings/org/positions',
+    SETTINGS_ORG_FONDS_HISTORY: '/system/settings/org/fonds-history',
     SETTINGS_FONDS: '/system/settings/fonds',
     SETTINGS_SECURITY: '/system/settings/security',
     SETTINGS_INTEGRATION: '/system/settings/integration',
@@ -90,8 +96,7 @@ export const ROUTE_PATHS = {
  */
 export const SUBITEM_TO_PATH: Record<string, string> = {
     // 预归档库
-    '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL,
-    '看板视图': ROUTE_PATHS.PRE_ARCHIVE_POOL_KANBAN,
+    '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL_KANBAN,  // 看板视图作为电子凭证池默认入口
     '单据池': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL,
     // 'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR, // 待开发
     '凭证关联': ROUTE_PATHS.PRE_ARCHIVE_LINK,
@@ -179,7 +184,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '报销单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=EXPENSE_REPORT',
     '普通发票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=GEN_INVOICE',
     '增值税专票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=VAT_INVOICE',
-    '银行回单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_SLIP',
+    '银行回单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_RECEIPT',
     '银行对账单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_STATEMENT',
     '合同协议': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=CONTRACT',
 

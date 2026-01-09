@@ -12,9 +12,15 @@ import com.nexusarchive.mapper.ArchivalCodeSequenceMapper;
 import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.service.BasFondsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 全宗服务实现类
+ * 缓存策略: 使用 fonds 缓存空间，TTL 30 分钟
+ */
 @Service
 @RequiredArgsConstructor
 public class BasFondsServiceImpl extends ServiceImpl<BasFondsMapper, BasFonds> implements BasFondsService {
@@ -27,14 +33,24 @@ public class BasFondsServiceImpl extends ServiceImpl<BasFondsMapper, BasFonds> i
         sequenceMapper.initSequence(fondsCode, year, category);
     }
 
+    /**
+     * 检查全宗号是否可以修改
+     * 缓存键: fonds:modifiable:{fondsCode}
+     */
     @Override
+    @Cacheable(value = "fonds", key = "'modifiable:' + #fondsCode")
     public boolean canModifyFondsCode(String fondsCode) {
         // 如果全宗号下没有归档档案，则可以修改
         return !baseMapper.hasArchivedRecords(fondsCode);
     }
 
+    /**
+     * 更新全宗信息
+     * 清除缓存: fonds:modifiable:{fonds.fondsCode}
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "fonds", key = "'modifiable:' + #fonds.fondsCode")
     public boolean updateFonds(BasFonds fonds) {
         if (fonds.getId() == null) {
             throw new BusinessException("全宗ID不能为空");

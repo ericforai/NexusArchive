@@ -20,8 +20,8 @@ import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { ActivationPage } from '../pages/ActivationPage';
 
-// ProductWebsite 使用懒加载以确保 Router context 正确初始化
-const ProductWebsite = lazy(() => import('../pages/ProductWebsite').then(m => ({ default: m.ProductWebsite })));
+// ProductWebsite 必须使用懒加载，否则 useNavigate() 会在 Router context 初始化前调用导致 useContext 返回 null
+const ProductWebsite = lazy(() => import('../pages/ProductWebsite'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -47,8 +47,13 @@ const ComplianceReportView = lazy(() => import('../pages/archives/ComplianceRepo
 const ArchiveDetailPage = lazy(() => import('../pages/archives/ArchiveDetailPage'));
 const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
 
-// 系统设置模块（Tab 拆分子路由）
-const SettingsLayout = lazy(() => import('../pages/settings/SettingsLayoutPage'));
+// 系统设置模块（4 个整合版布局）
+const BasicSettingsLayout = lazy(() => import('../pages/settings/BasicSettingsLayout'));
+const OrgSettingsLayout = lazy(() => import('../pages/settings/OrgSettingsLayout'));
+const UserSettingsLayout = lazy(() => import('../pages/settings/UserSettingsLayout'));
+const OpsSettingsLayout = lazy(() => import('../pages/settings/OpsSettingsLayout'));
+
+// 系统设置子页面组件
 const BasicSettings = lazy(() => import('../pages/settings/BasicSettingsPage'));
 const UserSettings = lazy(() => import('../pages/settings/UserSettingsPage'));
 const RoleSettings = lazy(() => import('../pages/settings/RoleSettingsPage'));
@@ -172,8 +177,8 @@ export const routes: RouteObject[] = [
             { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView) },
 
             // ========== 预归档库 ==========
-            { path: 'pre-archive', element: <ArchiveListPage routeConfig="pool" /> },
-            { path: 'pre-archive/pool', element: <ArchiveListPage routeConfig="pool" /> },
+            { path: 'pre-archive', element: <Navigate to="pool/kanban" replace /> },  // 默认进入电子凭证池看板
+            { path: 'pre-archive/pool', element: <Navigate to="kanban" replace /> },  // 重定向到看板视图
             { path: 'pre-archive/pool/kanban', element: withSuspense(PoolKanbanPage) },
             { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }) },
             { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView) },
@@ -228,23 +233,59 @@ export const routes: RouteObject[] = [
             // ========== 代码质量监控 ==========
             { path: 'quality', element: withSuspense(QualityView) },
 
-            // ========== 系统设置（Tab 子路由）==========
+            // ========== 系统设置（4 个整合版布局）==========
+            { path: 'settings', element: <Navigate to="settings/basic" replace /> },
+
+            // 基础配置（基础设置 + 安全合规）
             {
-                path: 'settings',
-                element: withSuspense(SettingsLayout),
+                path: 'settings/basic',
+                element: withSuspense(BasicSettingsLayout),
                 children: [
-                    { index: true, element: <Navigate to="basic" replace /> },
-                    { path: 'basic', element: withSuspense(BasicSettings) },
-                    { path: 'users', element: withSuspense(UserSettings) },
-                    { path: 'roles', element: withSuspense(RoleSettings) },
-                    { path: 'org', element: withSuspense(OrgSettings) },
+                    { index: true, element: withSuspense(BasicSettings) },
                     { path: 'security', element: withSuspense(SecuritySettings) },
-                    { path: 'integration', element: withSuspense(IntegrationSettings) },
-                    { path: 'audit', element: withSuspense(AuditLogView) },
-                    { path: 'data-import', element: withSuspense(DataImportPage) },
-                    { path: 'mfa', element: withSuspense(MfaSettingsPage) },
                 ],
             },
+
+            // 组织管理（法人、架构、全宗、岗位、沿革）
+            {
+                path: 'settings/org',
+                element: withSuspense(OrgSettingsLayout),
+                children: [
+                    { index: true, element: withSuspense(EntityManagementPage) },
+                    { path: 'entity', element: withSuspense(EntityManagementPage) },
+                    { path: 'architecture', element: withSuspense(EnterpriseArchitecturePage) },
+                    { path: 'fonds', element: withSuspense(OrgSettings) },
+                    { path: 'positions', element: withSuspense(OrgSettings) },  // TODO: 岗位管理页面
+                    { path: 'fonds-history', element: withSuspense(FondsHistoryPage) },
+                ],
+            },
+
+            // 用户权限（用户管理 + 角色权限）
+            {
+                path: 'settings/users',
+                element: withSuspense(UserSettingsLayout),
+                children: [
+                    { index: true, element: withSuspense(UserSettings) },
+                    { path: 'roles', element: withSuspense(RoleSettings) },
+                ],
+            },
+            { path: 'settings/roles', element: <Navigate to="/system/settings/users/roles" replace /> },
+
+            // 系统运维（集成中心 + 审计日志 + 数据导入 + 安全合规）
+            {
+                path: 'settings/integration',
+                element: withSuspense(OpsSettingsLayout),
+                children: [
+                    { index: true, element: withSuspense(IntegrationSettings) },
+                    { path: 'audit', element: withSuspense(AuditLogView) },
+                    { path: 'data-import', element: withSuspense(DataImportPage) },
+                    { path: 'security', element: withSuspense(SecuritySettings) },
+                ],
+            },
+            { path: 'settings/audit', element: <Navigate to="/system/settings/integration/audit" replace /> },
+            { path: 'settings/data-import', element: <Navigate to="/system/settings/integration/data-import" replace /> },
+            { path: 'settings/security', element: <Navigate to="/system/settings/basic/security" replace /> },
+            { path: 'settings/mfa', element: withSuspense(MfaSettingsPage) },
 
             // ========== ERP AI 适配器预览 ==========
             { path: 'settings/erp-ai/preview', element: withSuspense(ErpPreviewPage) },

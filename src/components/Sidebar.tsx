@@ -6,7 +6,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { NAV_ITEMS } from '../constants.tsx';
-import { ViewState } from '../types.ts';
+import { ViewState } from '../types';
 import { ChevronsLeft, ChevronsRight, Command } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { ROUTE_PATHS } from '../routes/paths';

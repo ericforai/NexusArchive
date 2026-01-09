@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.enums.DataScopeType;
 import com.nexusarchive.entity.Archive;
@@ -105,6 +106,45 @@ public class DataScopeService {
 
         // 如果没有任何权限，不允许访问任何数据
         wrapper.eq("1", "0");
+    }
+
+    /**
+     * 应用档案数据权限过滤 (LambdaQueryWrapper 版本)
+     *
+     * @param wrapper MyBatis-Plus Lambda查询条件
+     * @param context 数据权限上下文
+     */
+    public void applyArchiveScope(LambdaQueryWrapper<Archive> wrapper, DataScopeContext context) {
+        if (context == null || context.isAll()) {
+            return;
+        }
+
+        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (StringUtils.hasText(currentFondsNo)) {
+            wrapper.eq(Archive::getFondsNo, currentFondsNo);
+            return;
+        }
+
+        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            wrapper.in(Archive::getFondsNo, allowedFonds);
+            return;
+        }
+
+        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
+        if (context.isSelf()) {
+            if (context.userId() != null) {
+                wrapper.eq(Archive::getCreatedBy, context.userId());
+            } else {
+                wrapper.eq(Archive::getId, "never-match");
+            }
+            return;
+        }
+
+        // 如果没有任何权限，不允许访问任何数据
+        wrapper.eq(Archive::getId, "never-match");
     }
 
     /**

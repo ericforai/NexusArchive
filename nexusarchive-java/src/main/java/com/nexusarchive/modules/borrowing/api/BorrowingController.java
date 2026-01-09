@@ -41,7 +41,8 @@ public class BorrowingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('borrowing:view','borrowing:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    // 允许所有已认证用户访问，数据隔离由 BorrowingScopePolicyImpl 处理
+    // 没有全宗权限的用户只能查看自己的借阅记录
     public Result<Page<BorrowingDto>> getBorrowings(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,

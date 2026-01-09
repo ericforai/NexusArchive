@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.dto.approval.BatchApprovalRequest;
@@ -157,13 +158,13 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
     @Override
     public Page<ArchiveApproval> getApprovalList(int page, int limit, String status) {
         Page<ArchiveApproval> pageParam = new Page<>(page, limit);
-        QueryWrapper<ArchiveApproval> queryWrapper = new QueryWrapper<>();
-        
+        LambdaQueryWrapper<ArchiveApproval> queryWrapper = new LambdaQueryWrapper<>();
+
         if (status != null && !status.isEmpty()) {
-            queryWrapper.eq("status", status);
+            queryWrapper.eq(ArchiveApproval::getStatus, status);
         }
-        
-        queryWrapper.orderByDesc("created_time");
+
+        queryWrapper.orderByDesc(ArchiveApproval::getCreatedTime);
         return approvalMapper.selectPage(pageParam, queryWrapper);
     }
 

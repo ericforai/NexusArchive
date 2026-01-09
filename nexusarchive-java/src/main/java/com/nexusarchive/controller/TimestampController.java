@@ -30,7 +30,7 @@ import java.util.Base64;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/timestamp")
+@RequestMapping("/timestamp")
 @RequiredArgsConstructor
 @Tag(name = "时间戳服务", description = "时间戳请求和验证功能")
 @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','SECURITY_ADMIN')")

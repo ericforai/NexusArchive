@@ -88,7 +88,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         </div>
       }
       placement="right"
-      width={800}
+      styles={{ wrapper: { width: 800 } }}
       open={show}
       onClose={actions.closeModal}
       destroyOnClose={true}
@@ -293,7 +293,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
             <span className="text-xs text-gray-500 font-normal">(一个账套对应一个全宗)</span>
           </div>
         </label>
-        
+
         {/* 映射列表 */}
         {mappingData.length > 0 && (
           <Table

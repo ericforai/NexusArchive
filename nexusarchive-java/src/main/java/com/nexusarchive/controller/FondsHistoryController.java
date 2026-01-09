@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/fonds-history")
+@RequestMapping("/fonds-history")
 @RequiredArgsConstructor
 @Tag(name = "全宗沿革管理", description = "全宗迁移、合并、分立、重命名接口")
 public class FondsHistoryController {

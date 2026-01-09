@@ -1,4 +1,4 @@
-// Input: lucide-react 图标与前端类型定义
+// Input: lucide-react 图标、路由路径常量与前端类型定义
 // Output: 导航/模块配置常量集合
 // Pos: 前端菜单与模块配置注册表
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -16,6 +16,7 @@ import {
   Cloud,
   Server,
 } from 'lucide-react';
+import { ROUTE_PATHS } from './routes/paths';
 import { NavItem, ViewState, AppNotification } from './types';
 
 export const NAV_ITEMS: NavItem[] = [
@@ -162,7 +163,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: ViewState.ARCHIVE_UTILIZATION,
     label: '档案利用',
-    icon: Search, // Or BookOpenCheck? Search is broader.
+    icon: Search,
     permission: 'nav:utilization',
     children: [
       { id: '全文检索', label: '全文检索', path: '全文检索' },
@@ -180,10 +181,10 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     permission: 'nav:settings',
     children: [
-      { id: 'settings-basic', label: '基础配置', path: 'settings-basic' },
-      { id: 'settings-org', label: '组织管理', path: 'settings-org' },
-      { id: 'settings-user', label: '用户权限', path: 'settings-user' },
-      { id: 'settings-ops', label: '系统运维', path: 'settings-ops' },
+      { id: 'settings-basic', label: '基础配置', path: ROUTE_PATHS.SETTINGS_BASIC },
+      { id: 'settings-org', label: '组织管理', path: ROUTE_PATHS.SETTINGS_ORG },
+      { id: 'settings-user', label: '用户权限', path: ROUTE_PATHS.SETTINGS_USERS },
+      { id: 'settings-ops', label: '系统运维', path: ROUTE_PATHS.SETTINGS_INTEGRATION },
     ]
   },
 ];
