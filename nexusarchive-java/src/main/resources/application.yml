@@ -51,8 +51,8 @@ spring:
 
 # JWT配置 (RS256)
 jwt:
-  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:}
-  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:}
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:classpath:keystore/jwt_public.pem}
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:classpath:keystore/jwt_private.pem}
   expiration: 86400000 # 24小时 (毫秒)
   header: Authorization
   prefix: "Bearer "
@@ -153,6 +153,8 @@ app:
       allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:15175,http://localhost:3000,http://localhost:5173}
   scan:
     upload-path: ${APP_SCAN_UPLOAD_PATH:/tmp/nexusarchive/scan}  # 扫描工作区文件上传路径
+  debug:
+    enabled: ${APP_DEBUG_ENABLED:false}  # 调试接口开关 (默认禁用, 生产环境必须保持禁用)
 
 ---
 # 开发环境 - PostgreSQL
