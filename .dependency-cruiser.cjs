@@ -444,6 +444,7 @@ module.exports = {
         dependencyTypes: ['local'],
         pathNot: [
           '^src/api/client\\.ts$',
+          '^src/types/',
           '^src/types\\.ts$',
           '^src/utils/',
           '^src/components/',
@@ -560,6 +561,7 @@ module.exports = {
         path: '^src/',
         dependencyTypes: ['local'],
         pathNot: [
+          '^src/types/',
           '^src/types\\.ts$',
           '^src/api/',
           '^src/components/settings/integration/'
@@ -609,7 +611,7 @@ module.exports = {
     },
 
     /* Which modules to exclude */
-    exclude : {
+    exclude: {
       /* path: an array of regular expressions in strings to match against */
       path: [
         // antd 按需导入在运行时有效，但静态分析时可能无法解析
