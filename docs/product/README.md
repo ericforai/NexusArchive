@@ -10,3 +10,4 @@
 | `功能清单.md` | 清单 | 系统功能模块全量清单 |
 | `prd-v1.0.md` | PRD | 电子会计档案系统（集团私有化版）产品需求文档（含现状对齐说明） |
 | `prd-review-v1.0-expert.md` | 评审 | PRD v1.0 专家评审记录 |
+| `sap-journal-entry-api-research.md` | 调研 | SAP S/4HANA Journal Entry OData API 完整调研文档 |
