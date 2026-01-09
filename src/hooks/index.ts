@@ -13,6 +13,8 @@ export { useArchives, useArchive, useRecentArchives, useCreateArchive, useUpdate
 // 预归档池相关 hooks
 export { usePoolKanban } from './usePoolKanban';
 export { usePoolBatchAction } from './usePoolBatchAction';
+export { useKanbanLayout, calculateColumnCardCounts, areAllColumnsEmpty, getFirstNonEmptyColumnId } from './useKanbanLayout';
+export { MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, COLLAPSED_COLUMN_WIDTH } from './useKanbanLayout';
 
 // 权限相关 hooks
 export { usePermissions, usePermissionsQuery } from './usePermissions';
