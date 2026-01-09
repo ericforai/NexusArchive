@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,9 +55,9 @@ public class DestructionServiceImpl implements DestructionService {
     @Override
     public Page<Destruction> getDestructions(int page, int limit, String status) {
         Page<Destruction> pageParam = new Page<>(page, limit);
-        QueryWrapper<Destruction> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Destruction> queryWrapper = new LambdaQueryWrapper<>();
         if (status != null && !status.isEmpty()) {
-            queryWrapper.eq("status", status);
+            queryWrapper.eq(Destruction::getStatus, status);
         }
         queryWrapper.orderByDesc("created_time");
         return destructionMapper.selectPage(pageParam, queryWrapper);

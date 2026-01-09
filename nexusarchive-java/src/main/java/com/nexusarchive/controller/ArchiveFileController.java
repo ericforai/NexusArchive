@@ -212,8 +212,8 @@ public class ArchiveFileController {
         if (archive == null) {
             // 尝试按 archive_code 查找
             archive = archiveMapper.selectOne(
-                    new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive>()
-                            .eq("archive_code", archivalCode)
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Archive>()
+                            .eq(Archive::getArchiveCode, archivalCode)
                             .last("LIMIT 1")
             );
         }

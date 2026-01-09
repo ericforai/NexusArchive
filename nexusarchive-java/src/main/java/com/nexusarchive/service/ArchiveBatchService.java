@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.entity.ArchiveBatch;
 import com.nexusarchive.mapper.ArchiveBatchMapper;
@@ -38,7 +39,7 @@ public class ArchiveBatchService {
      */
     public boolean verifyChain(String batchNo) {
         ArchiveBatch batch = archiveBatchMapper.selectOne(
-            new QueryWrapper<ArchiveBatch>().eq("batch_no", batchNo));
+            new LambdaQueryWrapper<ArchiveBatch>().eq(ArchiveBatch::getBatchNo, batchNo));
         
         if (batch == null) {
             log.warn("批次不存在: batchNo={}", batchNo);
@@ -71,7 +72,7 @@ public class ArchiveBatchService {
      */
     public boolean verifyChainFromBeginning(String batchNo) {
         ArchiveBatch targetBatch = archiveBatchMapper.selectOne(
-            new QueryWrapper<ArchiveBatch>().eq("batch_no", batchNo));
+            new LambdaQueryWrapper<ArchiveBatch>().eq(ArchiveBatch::getBatchNo, batchNo));
         
         if (targetBatch == null) {
             log.warn("目标批次不存在: batchNo={}", batchNo);
@@ -143,7 +144,7 @@ public class ArchiveBatchService {
      */
     public ArchiveBatch getBatch(String batchNo) {
         return archiveBatchMapper.selectOne(
-            new QueryWrapper<ArchiveBatch>().eq("batch_no", batchNo));
+            new LambdaQueryWrapper<ArchiveBatch>().eq(ArchiveBatch::getBatchNo, batchNo));
     }
     
     /**

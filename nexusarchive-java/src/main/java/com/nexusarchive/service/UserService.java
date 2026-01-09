@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
@@ -160,13 +161,13 @@ public class UserService {
      * 分页查询用户（简化实现）
      */
     public Page<UserResponse> listPaged(int page, int limit, String search, String status) {
-        QueryWrapper<User> wrapper = new QueryWrapper<>();
-        wrapper.eq("deleted", 0);
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getDeleted, 0);
         if (StringUtils.hasText(search)) {
-            wrapper.and(w -> w.like("username", search).or().like("full_name", search));
+            wrapper.and(w -> w.like(User::getUsername, search).or().like(User::getFullName, search));
         }
         if (StringUtils.hasText(status)) {
-            wrapper.eq("status", status);
+            wrapper.eq(User::getStatus, status);
         }
         wrapper.orderByDesc("created_time");
 

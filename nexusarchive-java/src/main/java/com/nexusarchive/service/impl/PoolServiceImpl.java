@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.dto.PoolItemDto;
 import com.nexusarchive.dto.search.CandidateSearchRequest;
@@ -67,7 +68,7 @@ public class PoolServiceImpl implements PoolService {
         if (request.getInvoiceCode() != null && !request.getInvoiceCode().isEmpty()) {
             metaQuery.eq(ArcFileMetadataIndex::getInvoiceCode, request.getInvoiceCode());
         }
-        
+
         // 关键字模糊匹配 (发票号或销售方)
         if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
             metaQuery.and(w -> w.like(ArcFileMetadataIndex::getInvoiceNumber, request.getKeyword())
