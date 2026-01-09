@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
  *   <li>Controller 类行数 <= 600</li>
  *   <li>Entity 类行数 <= 400</li>
  *   <li>方法行数 <= 50</li>
+ *   <li>禁止使用 QueryWrapper（强制 LambdaQueryWrapper）</li>
  * </ul>
  *
  * <p>本测试读取源码文件来计算实际行数。</p>
@@ -48,6 +49,7 @@ public class ComplexityRulesTest {
 
     private final LineCountCondition lineCountCondition = new LineCountCondition(MAX_SERVICE_LINES);
     private final MethodLineCountCondition methodLineCountCondition = new MethodLineCountCondition(MAX_METHOD_LINES);
+    private final QueryWrapperUsageCondition queryWrapperCondition = new QueryWrapperUsageCondition();
 
     /**
      * 获取所有需要分析的类
@@ -130,6 +132,46 @@ public class ComplexityRulesTest {
             .that().resideInAPackage("com.nexusarchive")
             .should(methodLineCountCondition)
             .as("Methods should not exceed " + MAX_METHOD_LINES + " lines")
+            .check(getJavaClasses());
+    }
+
+    /**
+     * 规则 5：禁止使用 QueryWrapper，强制使用 LambdaQueryWrapper
+     *
+     * <p>LambdaQueryWrapper 提供编译期类型检查，避免字段名拼写错误。</p>
+     * <p>违规时测试将失败，除非代码中包含白名单注释：</p>
+     * <ul>
+     *   <li>{@code // ALLOW-QUERYWRAPPER} - 允许使用 QueryWrapper</li>
+     *   <li>{@code // DYNAMIC-FIELD} - 动态字段场景</li>
+     * </ul>
+     *
+     * <p>正确示例：</p>
+     * <pre>{@code
+     * // ✅ 使用 LambdaQueryWrapper
+     * LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+     * wrapper.eq(User::getName, "John");
+     *
+     * // ✅ 使用 Wrappers.lambdaQuery()
+     * wrapper = Wrappers.lambdaQuery();
+     * wrapper.like(User::getEmail, "@example.com");
+     * }</pre>
+     *
+     * <p>错误示例：</p>
+     * <pre>{@code
+     * // ❌ 使用 QueryWrapper（字符串方式）
+     * QueryWrapper<User> wrapper = new QueryWrapper<>();
+     * wrapper.eq("name", "John");  // 字段名字符串，易出错
+     * }</pre>
+     */
+    @Test
+    @DisplayName("Should use LambdaQueryWrapper instead of QueryWrapper")
+    void shouldUseLambdaQueryWrapper() {
+        classes()
+            .that().resideInAPackage("..service..")
+            .or().resideInAPackage("..controller..")
+            .or().resideInAPackage("..mapper..")
+            .should(queryWrapperCondition)
+            .as("QueryWrapper should be replaced with LambdaQueryWrapper for type safety")
             .check(getJavaClasses());
     }
 

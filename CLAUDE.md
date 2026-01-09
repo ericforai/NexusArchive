@@ -189,6 +189,12 @@ npm run modules:update   # Update module manifest
 
 - **Package structure**: `com.nexusarchive.<layer>` (controller, service, mapper, entity, dto, config, security, common, integration, util, etc.)
 - **Naming**: PascalCase for classes, camelCase for methods/variables
+- **MyBatis-Plus**: **强制使用 `LambdaQueryWrapper`，禁止使用字符串方式的 `QueryWrapper`**
+  - ✅ 正确: `LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>(); wrapper.eq(User::getName, "John");`
+  - ❌ 错误: `QueryWrapper<User> wrapper = new QueryWrapper<>(); wrapper.eq("name", "John");`
+  - **理由**: 编译期类型检查，IDE 重构支持，避免字段名拼写错误
+  - **例外**: 动态字段场景需添加 `// ALLOW-QUERYWRAPPER` 注释
+  - **强制检测**: 运行 `mvn test -Dtest=ComplexityRulesTest#shouldUseLambdaQueryWrapper`
 - **Entities**: Use Lombok (`@Data`, `@Builder`), MyBatis-Plus annotations
 - **Services**: Interface in `service/`, implementation in `service/impl/`
 - **DTOs**: Separate request/response DTOs, use validation annotations
