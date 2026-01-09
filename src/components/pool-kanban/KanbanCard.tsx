@@ -4,7 +4,7 @@
 // Pos: src/components/pool-kanban/KanbanCard.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { memo } from 'react';
-import { FileText, Calendar, Money, Building } from 'lucide-react';
+import { FileText, Calendar, DollarSign, Building } from 'lucide-react';
 import { Button, Badge } from 'antd';
 import type { PoolItem } from '@/api/pool';
 import { getSubStateLabel } from '@/config/pool-columns.config';
@@ -67,7 +67,7 @@ export const KanbanCard = memo<KanbanCardProps>(({
         <div className="kanban-card__details">
           {card.amount && (
             <div className="kanban-card__detail">
-              <Money size={14} />
+              <DollarSign size={14} />
               <span>¥{Number(card.amount).toLocaleString('zh-CN', { minimumFractionDigits: 2 })}</span>
             </div>
           )}

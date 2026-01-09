@@ -10,7 +10,7 @@ import { KanbanCard } from './KanbanCard';
 vi.mock('lucide-react', () => ({
   FileText: ({ size, children }: any) => <span data-icon="FileText">{children}</span>,
   Calendar: ({ size, children }: any) => <span data-icon="Calendar">{children}</span>,
-  Money: ({ size, children }: any) => <span data-icon="Money">{children}</span>,
+  DollarSign: ({ size, children }: any) => <span data-icon="DollarSign">{children}</span>,
   Building: ({ size, children }: any) => <span data-icon="Building">{children}</span>,
 }));
 
