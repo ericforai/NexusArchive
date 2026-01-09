@@ -2,6 +2,7 @@
 // Input: Batch selection state, action label, execution state, and callbacks
 // Output: Fixed bottom action bar displaying selection count and action buttons
 // Pos: src/components/pool-kanban/BatchActionBar.tsx
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { memo } from 'react';
 import { Button, Space, Alert } from 'antd';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';

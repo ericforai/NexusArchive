@@ -2,6 +2,7 @@
 // Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks
 // Output: Rendered kanban column with sub-state tabs, action buttons, and card list
 // Pos: src/components/pool-kanban/KanbanColumn.tsx
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { useState, useCallback, useMemo } from 'react';
 import { Tabs, Badge, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';

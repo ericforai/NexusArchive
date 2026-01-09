@@ -2,6 +2,7 @@
 // Input: Component exports from pool-kanban module
 // Output: Centralized export barrel for pool-kanban components
 // Pos: src/components/pool-kanban/index.ts
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 // Components
 export { KanbanCard } from './KanbanCard';

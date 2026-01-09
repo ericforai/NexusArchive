@@ -2,6 +2,7 @@
 // Input: ColumnGroupConfig, cardCount, onExpand callback
 // Output: Collapsed kanban column with vertical text and expand button
 // Pos: src/components/pool-kanban/CollapsedColumn.tsx
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { memo } from 'react';
 import { Tooltip } from 'antd';
 import { ChevronRight } from 'lucide-react';

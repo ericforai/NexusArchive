@@ -2,6 +2,7 @@
 // Input: PoolItem object with selection state and action callbacks
 // Output: Rendered kanban card component with interactive elements
 // Pos: src/components/pool-kanban/KanbanCard.tsx
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { memo } from 'react';
 import { FileText, Calendar, Money, Building } from 'lucide-react';
 import { Button, Badge } from 'antd';
