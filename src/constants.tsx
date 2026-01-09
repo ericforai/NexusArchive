@@ -13,10 +13,10 @@ import {
   Settings,
   FileText,
   PanelLeft,
-  Upload,
-  Shield,
+  Cloud,
+  Server,
 } from 'lucide-react';
-import { NavItem, ViewState, ArchiveStat, AppNotification, ModuleConfig } from './types.ts';
+import { NavItem, ViewState, AppNotification } from './types';
 
 export const NAV_ITEMS: NavItem[] = [
   { id: ViewState.PORTAL, label: '档案门户', icon: LayoutDashboard, permission: 'nav:portal' },
@@ -179,6 +179,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: '系统设置',
     icon: Settings,
     permission: 'nav:settings',
+    children: [
+      { id: 'settings-basic', label: '基础配置', path: 'settings-basic' },
+      { id: 'settings-org', label: '组织管理', path: 'settings-org' },
+      { id: 'settings-user', label: '用户权限', path: 'settings-user' },
+      { id: 'settings-ops', label: '系统运维', path: 'settings-ops' },
+    ]
   },
 ];
 
@@ -187,6 +193,55 @@ export const NOTIFICATIONS: AppNotification[] = [];
 
 // RECENT_DOCS 已移除 - 最近归档记录已从档案门户移除
 export const RECENT_DOCS = [];
+
+// ============================================================================
+// SAP 集成接口类型配置
+// ============================================================================
+// SAP S/4HANA 支持多种集成方式，此处定义四种接口类型作为产品能力预留
+// - OData: 已实现的现代化 REST 风格集成
+// - RFC/BAPI: 传统 SAP 集成方式（预留）
+// - IDoc: 异步批量数据交换（预留）
+// - SAP Gateway: 自定义 OData 服务构建（预留）
+// ============================================================================
+
+export const SAP_INTERFACE_TYPES = [
+  {
+    key: 'odata',
+    name: 'OData 服务',
+    description: '现代化 REST 风格集成，基于 HTTP/JSON',
+    status: 'implemented' as const,
+    icon: Cloud,
+  },
+  {
+    key: 'rfc_bapi',
+    name: 'RFC/BAPI',
+    description: '传统 SAP 集成方式，需要 SAP Java Connector',
+    status: 'reserved' as const,
+    icon: Server,
+  },
+  {
+    key: 'idoc',
+    name: 'IDoc',
+    description: '异步批量数据交换，类似 EDI 格式',
+    status: 'reserved' as const,
+    icon: FileText,
+  },
+  {
+    key: 'gateway',
+    name: 'SAP Gateway',
+    description: '自定义 OData 服务构建',
+    status: 'reserved' as const,
+    icon: Settings,
+  },
+] as const;
+
+// SAP 接口类型状态定义
+export const SAP_INTERFACE_STATUS = {
+  implemented: 'implemented',   // 已实现
+  reserved: 'reserved',         // 产品能力预留
+  planned: 'planned',           // 计划中
+  deprecated: 'deprecated',     // 已废弃
+} as const;
 
 // ============================================================================
 // MOCK 数据清理说明
