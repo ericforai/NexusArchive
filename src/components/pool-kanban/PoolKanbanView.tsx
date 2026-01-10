@@ -11,6 +11,7 @@ import { useKanbanLayout } from '@/hooks/useKanbanLayout';
 import { BatchActionBar } from './BatchActionBar';
 import { KanbanColumn } from './KanbanColumn';
 import { CollapsedColumn } from './CollapsedColumn';
+import { PoolItemDetailDialog } from './PoolItemDetailDialog';
 import { Columns3, Expand } from 'lucide-react';
 import type { PoolItem } from '@/api/pool';
 import type { ColumnGroupConfig } from '@/config/pool-columns.config';
@@ -225,6 +226,10 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
   const [pendingAction, setPendingAction] = useState<BatchActionType | null>(null);
   const [pendingActionLabel, setPendingActionLabel] = useState<string>('');
 
+  // 详情对话框状态
+  const [detailItem, setDetailItem] = useState<PoolItem | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
   // 处理卡片选择切换
   const handleSelectionChange = useCallback((cardId: string) => {
     batchAction.toggleSelection(cardId);
@@ -235,14 +240,22 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
     console.log('PoolKanbanView handleColumnAction:', { actionKey, columnCards });
     // 立即执行的操作（不需要批量确认流程）
     if (actionKey === 'view' || actionKey === 'view-detail') {
-      // TODO: 打开详情对话框
-      console.log('查看详情:', columnCards[0]?.id);
+      // 打开详情对话框
+      if (columnCards.length > 0) {
+        setDetailItem(columnCards[0]);
+        setDetailOpen(true);
+      }
       return;
     }
 
     if (actionKey === 'edit' || actionKey === 'edit-metadata') {
       // TODO: 打开编辑对话框
       console.log('编辑元数据:', columnCards[0]?.id);
+      // 暂时也打开详情对话框作为编辑入口
+      if (columnCards.length > 0) {
+        setDetailItem(columnCards[0]);
+        setDetailOpen(true);
+      }
       return;
     }
 
@@ -409,6 +422,13 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
           result={batchAction.state.result}
         />
       )}
+
+      {/* 详情对话框 */}
+      <PoolItemDetailDialog
+        item={detailItem}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+      />
     </div>
   );
 }
