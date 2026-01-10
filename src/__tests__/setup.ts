@@ -116,6 +116,8 @@ vi.mock('antd', () => {
         Progress: createComponentMock('Progress'),
         Typography: createComponentMock('Typography'),
         ConfigProvider: createComponentMock('ConfigProvider'),
+        Tabs: createComponentMock('Tabs'),
+        Segmented: createComponentMock('Segmented'),
     };
 });
 
