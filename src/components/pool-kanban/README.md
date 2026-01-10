@@ -27,3 +27,12 @@
 | `__tests__/KanbanColumn.test.tsx` | 单元测试 | 列组件测试 |
 | `__tests__/CollapsedColumn.test.tsx` | 单元测试 | 折叠列组件测试 |
 | `__tests__/BatchActionBar.test.tsx` | 单元测试 | 批量操作栏测试 |
+
+## 变更记录
+
+### 2026-01-10: UI 优化
+
+- 移除列级操作按钮区域，操作下沉到卡片级
+- 子状态标签从 Tabs 改为 Segmented 组件，内嵌到列标题
+- 批量操作集成到顶部工具栏，选中时替换布局控制按钮
+- 总计徽章颜色从红色改为蓝色，避免与危险操作混淆
