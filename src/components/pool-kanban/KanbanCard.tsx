@@ -1,20 +1,22 @@
 // src/components/pool-kanban/KanbanCard.tsx
-// Input: PoolItem object with selection state and action callbacks
-// Output: Rendered kanban card component with interactive elements
+// Input: PoolItem object with selection state, action callbacks, and column-level actions
+// Output: Rendered kanban card component with interactive elements and dynamic action buttons
 // Pos: src/components/pool-kanban/KanbanCard.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { FileText, Calendar, DollarSign, Building } from 'lucide-react';
 import { Button, Badge } from 'antd';
 import type { PoolItem } from '@/api/pool';
 import { getSubStateLabel } from '@/config/pool-columns.config';
+import type { ColumnAction } from '@/config/pool-columns.config';
 import './KanbanCard.css';
 
 export interface KanbanCardProps {
   card: PoolItem;
   selected: boolean;
   onSelect?: (cardId: string) => void;
-  onAction?: (cardId: string, action: 'view' | 'edit' | 'delete') => void;
+  onAction?: (cardId: string, action: string) => void;
+  columnActions?: ColumnAction[];
 }
 
 export const KanbanCard = memo<KanbanCardProps>(({
@@ -22,6 +24,7 @@ export const KanbanCard = memo<KanbanCardProps>(({
   selected,
   onSelect,
   onAction,
+  columnActions,
 }) => {
   const statusLabel = getSubStateLabel(card.status as any);
 
@@ -29,9 +32,24 @@ export const KanbanCard = memo<KanbanCardProps>(({
     onSelect?.(card.id);
   };
 
-  const handleAction = (action: 'view' | 'edit' | 'delete') => {
+  const handleAction = (action: string) => {
     onAction?.(card.id, action);
   };
+
+  // 计算要显示的操作按钮
+  const displayActions = useMemo(() => {
+    const baseActions = [
+      { key: 'view', label: '查看' },
+      { key: 'edit', label: '编辑' },
+    ];
+    if (columnActions) {
+      const extraActions = columnActions
+        .filter(a => a.key !== 'delete')
+        .map(a => ({ key: a.key, label: a.label, danger: a.danger }));
+      baseActions.push(...extraActions);
+    }
+    return baseActions;
+  }, [columnActions]);
 
   // 使用 summary 作为标题，docDate 作为业务日期
   const title = card.summary || card.code || '未命名凭证';
@@ -89,13 +107,23 @@ export const KanbanCard = memo<KanbanCardProps>(({
 
         {/* 操作按钮 */}
         <div className="kanban-card__actions">
-          <Button size="small" onClick={() => handleAction('view')}>
-            查看
-          </Button>
-          <Button size="small" onClick={() => handleAction('edit')}>
-            编辑
-          </Button>
-          <Button size="small" danger onClick={() => handleAction('delete')}>
+          {displayActions.map(action => (
+            <Button
+              key={action.key}
+              size="small"
+              type="link"
+              danger={action.danger}
+              onClick={() => handleAction(action.key)}
+            >
+              {action.label}
+            </Button>
+          ))}
+          <Button
+            size="small"
+            type="link"
+            danger
+            onClick={() => handleAction('delete')}
+          >
             删除
           </Button>
         </div>

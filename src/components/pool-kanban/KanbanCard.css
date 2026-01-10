@@ -101,9 +101,17 @@
 
 .kanban-card__actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  flex-wrap: wrap;
   padding-top: 8px;
   border-top: 1px solid #f0f0f0;
+}
+
+.kanban-card__actions .ant-btn-link {
+  padding: 0 4px;
+  height: auto;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .kanban-card__cancel-select {
