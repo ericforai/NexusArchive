@@ -1,0 +1,39 @@
+# ==============================================================================
+# 生产环境完整配置
+# ==============================================================================
+# 用途: 生产环境一键部署（包含基础设施 + 应用服务）
+# 启动: docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# 停止: docker compose -f docker-compose.prod.yml down
+# ==============================================================================
+
+# 包含基础设施（DB、Redis）
+include:
+  - docker-compose.infra.yml
+  - docker-compose.app.yml
+
+# 生产环境覆盖配置
+services:
+  nexus-backend:
+    environment:
+      # 生产环境使用 prod profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  nexus-frontend:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  nexus-db-data:
+    name: nexusarchive-prod-db-data
+  nexus-redis-data:
+    name: nexusarchive-prod-redis-data

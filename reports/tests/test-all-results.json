@@ -1,0 +1,2220 @@
+{
+  "config": {
+    "configFile": "/Users/user/nexusarchive/playwright.config.ts",
+    "rootDir": "/Users/user/nexusarchive",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 4
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/user/nexusarchive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/Users/user/nexusarchive",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "tests/playwright/ui/audit_evidence_package.spec.ts",
+      "file": "tests/playwright/ui/audit_evidence_package.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "审计证据包导出 @P0",
+          "file": "tests/playwright/ui/audit_evidence_package.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问审计证据包导出页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6506,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:51.989Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "02cbcdcbfeb532db6d3c-c01b722da70d8ee6933f",
+              "file": "tests/playwright/ui/audit_evidence_package.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该显示导出条件选择（日期范围、全宗）",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4179,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:58.872Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "02cbcdcbfeb532db6d3c-4f56cddf555728ee64de",
+              "file": "tests/playwright/ui/audit_evidence_package.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "应该能够查看导出历史",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30026,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('审计证据包导出 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('审计证据包导出 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:03.060Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-audit_-5652a-ckage-审计证据包导出-P0-应该能够查看导出历史/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "02cbcdcbfeb532db6d3c-38a6e93918b18d8f1177",
+              "file": "tests/playwright/ui/audit_evidence_package.spec.ts",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "应该显示导出按钮",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30029,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('审计证据包导出 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('审计证据包导出 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:33.577Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-audit_-2e849-package-审计证据包导出-P0-应该显示导出按钮/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_evidence_package.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "02cbcdcbfeb532db6d3c-0df9e6e7a24fba4d8095",
+              "file": "tests/playwright/ui/audit_evidence_package.spec.ts",
+              "line": 51,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/audit_verification.spec.ts",
+      "file": "tests/playwright/ui/audit_verification.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "审计证据链验真 @P0",
+          "file": "tests/playwright/ui/audit_verification.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问审计证据链验真页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4753,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:51.983Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00304acaff6f7f0c8cf7-d268bb6a2c8e1c67565e",
+              "file": "tests/playwright/ui/audit_verification.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该显示单条验证、批量验证、链式验证等选项",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4073,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:57.119Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00304acaff6f7f0c8cf7-625fd3a7de91491fea64",
+              "file": "tests/playwright/ui/audit_verification.spec.ts",
+              "line": 22,
+              "column": 3
+            },
+            {
+              "title": "应该能够执行单条审计日志验证",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4686,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:01.202Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "00304acaff6f7f0c8cf7-1ee83cb8e459ec88ffe9",
+              "file": "tests/playwright/ui/audit_verification.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "应该显示验证结果",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 30345,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('审计证据链验真 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('审计证据链验真 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:05.898Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-audit_verification-审计证据链验真-P0-应该显示验证结果/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/audit_verification.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "00304acaff6f7f0c8cf7-b6a104055bc21150141f",
+              "file": "tests/playwright/ui/audit_verification.spec.ts",
+              "line": 51,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/auth_ticket.spec.ts",
+      "file": "tests/playwright/ui/auth_ticket.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "跨全宗访问授权票据 @P0",
+          "file": "tests/playwright/ui/auth_ticket.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问授权票据列表页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 5810,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:51.988Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "55a017c912b3b8f8d881-cd569689d7e019068c7d",
+              "file": "tests/playwright/ui/auth_ticket.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该能够访问授权票据申请页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 5345,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:58.178Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "55a017c912b3b8f8d881-8145b9053d709a281783",
+              "file": "tests/playwright/ui/auth_ticket.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "应该显示授权票据列表",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 30013,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('跨全宗访问授权票据 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('跨全宗访问授权票据 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:03.548Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-auth_ticket-跨全宗访问授权票据-P0-应该显示授权票据列表/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "55a017c912b3b8f8d881-55ef142ad1c41154a7f9",
+              "file": "tests/playwright/ui/auth_ticket.spec.ts",
+              "line": 31,
+              "column": 3
+            },
+            {
+              "title": "应该能够筛选授权票据",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 30015,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('跨全宗访问授权票据 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('跨全宗访问授权票据 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:34.068Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-auth_ticket-跨全宗访问授权票据-P0-应该能够筛选授权票据/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "55a017c912b3b8f8d881-a0081e3b551e533c3d57",
+              "file": "tests/playwright/ui/auth_ticket.spec.ts",
+              "line": 57,
+              "column": 3
+            },
+            {
+              "title": "应该能够查看授权票据详情",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 5173,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:04.676Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "55a017c912b3b8f8d881-63c83489a90d64bb7698",
+              "file": "tests/playwright/ui/auth_ticket.spec.ts",
+              "line": 72,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/destruction_workflow.spec.ts",
+      "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "档案销毁流程 @P0",
+          "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问到期档案识别页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 4506,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:51.987Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fe1e545817f7ba2905eb-ce15304316914e47270d",
+              "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该能够访问鉴定清单页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 3573,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:46:56.873Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fe1e545817f7ba2905eb-7980b27b4643d61eaa7d",
+              "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+              "line": 22,
+              "column": 3
+            },
+            {
+              "title": "应该能够访问销毁审批页面",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 3544,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:00.456Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fe1e545817f7ba2905eb-8a20d4771c1899c8d073",
+              "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+              "line": 27,
+              "column": 3
+            },
+            {
+              "title": "应该能够访问销毁执行页面",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "timedOut",
+                      "duration": 30011,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('档案销毁流程 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('档案销毁流程 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:04.006Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-destru-b0c6d-flow-档案销毁流程-P0-应该能够访问销毁执行页面/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fe1e545817f7ba2905eb-03908b976bf85d7a9939",
+              "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+              "line": 32,
+              "column": 3
+            },
+            {
+              "title": "到期档案页面应该显示筛选选项",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 3,
+                      "status": "timedOut",
+                      "duration": 30014,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('档案销毁流程 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('档案销毁流程 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:34.547Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-destru-175c4-ow-档案销毁流程-P0-到期档案页面应该显示筛选选项/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/destruction_workflow.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fe1e545817f7ba2905eb-a50a9ef6bd83f62a54e4",
+              "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "鉴定清单页面应该显示列表",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 4754,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:05.163Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fe1e545817f7ba2905eb-d2a5c2a5f955eb3672c3",
+              "file": "tests/playwright/ui/destruction_workflow.spec.ts",
+              "line": 49,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/freeze_hold.spec.ts",
+      "file": "tests/playwright/ui/freeze_hold.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "冻结/保全管理 @P1",
+          "file": "tests/playwright/ui/freeze_hold.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问冻结/保全管理页面",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 30022,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('冻结/保全管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('冻结/保全管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:47:37.169Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-freeze_hold-冻结-保全管理-P1-应该能够访问冻结-保全管理页面/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "707cb78e16518bf3d8ff-36ad4bebd2f479da6407",
+              "file": "tests/playwright/ui/freeze_hold.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该显示冻结/保全列表",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4477,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:07.704Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "707cb78e16518bf3d8ff-9ee2eff8a3b4966b270f",
+              "file": "tests/playwright/ui/freeze_hold.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "应该显示申请冻结/保全按钮",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4236,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:12.337Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "707cb78e16518bf3d8ff-4d901e7800772ba1efed",
+              "file": "tests/playwright/ui/freeze_hold.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "应该显示类型和状态筛选",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4210,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:16.583Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "707cb78e16518bf3d8ff-ec737b62c5c0b624b16e",
+              "file": "tests/playwright/ui/freeze_hold.spec.ts",
+              "line": 46,
+              "column": 3
+            },
+            {
+              "title": "应该能够访问冻结/保全详情页面",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 30018,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('冻结/保全管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('冻结/保全管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:20.802Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-freeze_hold-冻结-保全管理-P1-应该能够访问冻结-保全详情页面/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "707cb78e16518bf3d8ff-cc5e28b412ed0a1305f6",
+              "file": "tests/playwright/ui/freeze_hold.spec.ts",
+              "line": 58,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/legacy_import.spec.ts",
+      "file": "tests/playwright/ui/legacy_import.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "历史数据导入 @P0",
+          "file": "tests/playwright/ui/legacy_import.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问历史数据导入页面",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 21173,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /历史数据导入/i }).first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /历史数据导入/i }).first()\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /历史数据导入/i }).first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /历史数据导入/i }).first()\u001b[22m\n\n    at waitForPageTitle (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:97:33)\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:21:5",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                          "column": 33,
+                          "line": 97
+                        },
+                        "snippet": "   at tests/playwright/utils/page-helpers.ts:97\n\n   95 |   // 如果所有选择器都失败，使用更通用的方法\n   96 |   const heading = page.getByRole('heading', { name: titleText });\n>  97 |   await expect(heading.first()).toBeVisible({ timeout });\n      |                                 ^\n   98 | }\n   99 |\n  100 | /**"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 33,
+                            "line": 97
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /历史数据导入/i }).first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /历史数据导入/i }).first()\u001b[22m\n\n\n   at tests/playwright/utils/page-helpers.ts:97\n\n   95 |   // 如果所有选择器都失败，使用更通用的方法\n   96 |   const heading = page.getByRole('heading', { name: titleText });\n>  97 |   await expect(heading.first()).toBeVisible({ timeout });\n      |                                 ^\n   98 | }\n   99 |\n  100 | /**\n    at waitForPageTitle (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:97:33)\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:21:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:04.313Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够访问历史数据导入页面/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                        "column": 33,
+                        "line": 97
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "bc88ee6e69a62de3e810-2d0077c2e996fbd59c3b",
+              "file": "tests/playwright/ui/legacy_import.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该显示导入和历史两个标签页",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30028,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('历史数据导入 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('历史数据导入 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:26.185Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该显示导入和历史两个标签页/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "bc88ee6e69a62de3e810-5c66c9e8464b020167ec",
+              "file": "tests/playwright/ui/legacy_import.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "应该能够上传CSV文件",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30026,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('历史数据导入 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('历史数据导入 @P0', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:56.713Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够上传CSV文件/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "bc88ee6e69a62de3e810-d5bbf7d43bf6f5ad62d4",
+              "file": "tests/playwright/ui/legacy_import.spec.ts",
+              "line": 41,
+              "column": 3
+            },
+            {
+              "title": "应该能够查看导入历史列表",
+              "ok": false,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30027,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts",
+                            "column": 50,
+                            "line": 69
+                          },
+                          "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('tab', { name: /历史/i })\u001b[22m\n\n\n  67 |     \n  68 |     // 切换到历史标签页\n> 69 |     await page.getByRole('tab', { name: /历史/i }).click();\n     |                                                  ^\n  70 |     \n  71 |     // 等待列表加载\n  72 |     await page.waitForTimeout(1000);\n    at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:69:50"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:49:27.287Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该能够查看导入历史列表/error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "bc88ee6e69a62de3e810-2cc212e97150c932829a",
+              "file": "tests/playwright/ui/legacy_import.spec.ts",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "应该显示字段映射配置选项",
+              "ok": true,
+              "tags": [
+                "P0"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 19,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3878,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:49:57.902Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc88ee6e69a62de3e810-08193e581af191921de5",
+              "file": "tests/playwright/ui/legacy_import.spec.ts",
+              "line": 81,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/mfa.spec.ts",
+      "file": "tests/playwright/ui/mfa.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "MFA多因素认证 @P1",
+          "file": "tests/playwright/ui/mfa.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问MFA设置页面",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 3818,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /多因素认证|MFA/i })\nExpected: visible\nError: strict mode violation: getByRole('heading', { name: /多因素认证|MFA/i }) resolved to 2 elements:\n    1) <h2 class=\"text-2xl font-bold text-slate-800 flex items-center\">…</h2> aka getByRole('heading', { name: '多因素认证 (MFA)' })\n    2) <h3 class=\"text-lg font-semibold\">MFA状态</h3> aka getByRole('heading', { name: 'MFA状态' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /多因素认证|MFA/i })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /多因素认证|MFA/i })\nExpected: visible\nError: strict mode violation: getByRole('heading', { name: /多因素认证|MFA/i }) resolved to 2 elements:\n    1) <h2 class=\"text-2xl font-bold text-slate-800 flex items-center\">…</h2> aka getByRole('heading', { name: '多因素认证 (MFA)' })\n    2) <h3 class=\"text-lg font-semibold\">MFA状态</h3> aka getByRole('heading', { name: 'MFA状态' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /多因素认证|MFA/i })\u001b[22m\n\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:19:69",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                          "column": 69,
+                          "line": 19
+                        },
+                        "snippet": "  17 |   test('应该能够访问MFA设置页面', async ({ page }) => {\n  18 |     await page.goto(`${BASE_URL}/system/settings/mfa`);\n> 19 |     await expect(page.getByRole('heading', { name: /多因素认证|MFA/i })).toBeVisible({ timeout: 10000 });\n     |                                                                     ^\n  20 |   });\n  21 |\n  22 |   test('应该显示MFA状态', async ({ page }) => {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                            "column": 69,
+                            "line": 19
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /多因素认证|MFA/i })\nExpected: visible\nError: strict mode violation: getByRole('heading', { name: /多因素认证|MFA/i }) resolved to 2 elements:\n    1) <h2 class=\"text-2xl font-bold text-slate-800 flex items-center\">…</h2> aka getByRole('heading', { name: '多因素认证 (MFA)' })\n    2) <h3 class=\"text-lg font-semibold\">MFA状态</h3> aka getByRole('heading', { name: 'MFA状态' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /多因素认证|MFA/i })\u001b[22m\n\n\n  17 |   test('应该能够访问MFA设置页面', async ({ page }) => {\n  18 |     await page.goto(`${BASE_URL}/system/settings/mfa`);\n> 19 |     await expect(page.getByRole('heading', { name: /多因素认证|MFA/i })).toBeVisible({ timeout: 10000 });\n     |                                                                     ^\n  20 |   });\n  21 |\n  22 |   test('应该显示MFA状态', async ({ page }) => {\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:19:69"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:09.998Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-mfa-MFA多因素认证-P1-应该能够访问MFA设置页面/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                        "column": 69,
+                        "line": 19
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b7c7ea74e492d94496d8-ef330effa06a112e631d",
+              "file": "tests/playwright/ui/mfa.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该显示MFA状态",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 4169,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:14.204Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b7c7ea74e492d94496d8-dbc2343752017e0c0237",
+              "file": "tests/playwright/ui/mfa.spec.ts",
+              "line": 22,
+              "column": 3
+            },
+            {
+              "title": "应该显示启用MFA按钮（如果未启用）",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 30024,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('MFA多因素认证 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('MFA多因素认证 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:18.506Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-mfa-MFA多因素认证-P1-应该显示启用MFA按钮（如果未启用）/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b7c7ea74e492d94496d8-86fe189fe761f942c341",
+              "file": "tests/playwright/ui/mfa.spec.ts",
+              "line": 34,
+              "column": 3
+            },
+            {
+              "title": "应该显示二维码（如果正在设置）",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 30028,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('MFA多因素认证 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('MFA多因素认证 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:48.983Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-mfa-MFA多因素认证-P1-应该显示二维码（如果正在设置）/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b7c7ea74e492d94496d8-bc3f9a8513f39f46927d",
+              "file": "tests/playwright/ui/mfa.spec.ts",
+              "line": 47,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/ui/user_lifecycle.spec.ts",
+      "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "用户生命周期管理 @P1",
+          "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够访问用户生命周期管理页面",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 5526,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:10.065Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3b9c84bbb6382451d9a2-79be52ce02017fcb3002",
+              "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+              "line": 17,
+              "column": 3
+            },
+            {
+              "title": "应该显示入职、离职、调岗三个标签页",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 4220,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:15.600Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3b9c84bbb6382451d9a2-5b6b57b76c50bb1509ec",
+              "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "应该能够访问权限定期复核页面",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 3,
+                      "status": "timedOut",
+                      "duration": 30021,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('用户生命周期管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('用户生命周期管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:19.829Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-user_l-e72b2--用户生命周期管理-P1-应该能够访问权限定期复核页面/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3b9c84bbb6382451d9a2-7be195fea7b342d088c2",
+              "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+              "line": 36,
+              "column": 3
+            },
+            {
+              "title": "权限复核页面应该显示任务列表",
+              "ok": false,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 3,
+                      "status": "timedOut",
+                      "duration": 30025,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:12:8",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts",
+                          "column": 8,
+                          "line": 12
+                        },
+                        "snippet": "  10 |\n  11 | test.describe('用户生命周期管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts",
+                            "column": 8,
+                            "line": 12
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  10 |\n  11 | test.describe('用户生命周期管理 @P1', () => {\n> 12 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  13 |     // 使用优化的登录函数\n  14 |     await login(page);\n  15 |   });\n    at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:12:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts",
+                            "column": 16,
+                            "line": 31
+                          },
+                          "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n   at tests/playwright/utils/page-helpers.ts:31\n\n  29 |   try {\n  30 |     // 首先等待URL变化（主要等待条件）\n> 31 |     await page.waitForURL(url => url.pathname !== '/system/login', { timeout: 30000 });\n     |                ^\n  32 |     \n  33 |     // 等待网络空闲，确保页面完全加载\n  34 |     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {\n    at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:31:16)\n    at /Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts:14:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:48:50.221Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-ui-user_l-4af5f--用户生命周期管理-P1-权限复核页面应该显示任务列表/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/ui/user_lifecycle.spec.ts",
+                        "column": 8,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3b9c84bbb6382451d9a2-efff5a5065b408047cdd",
+              "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+              "line": 43,
+              "column": 3
+            },
+            {
+              "title": "权限复核页面应该显示状态筛选",
+              "ok": true,
+              "tags": [
+                "P1"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 6265,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-31T10:49:20.885Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3b9c84bbb6382451d9a2-4ab4efa00833399f0e80",
+              "file": "tests/playwright/ui/user_lifecycle.spec.ts",
+              "line": 54,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-12-31T10:46:50.730Z",
+    "duration": 191329.668,
+    "expected": 20,
+    "skipped": 0,
+    "unexpected": 18,
+    "flaky": 0
+  }
+}

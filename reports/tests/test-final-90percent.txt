@@ -1,0 +1,141 @@
+
+Running 38 tests using 1 worker
+
+(node:80259) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80259) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/playwright/ui/audit_evidence_package.spec.ts:17:3 › 审计证据包导出 @P0 › 应该能够访问审计证据包导出页面 (5.3s)
+  ✓   2 tests/playwright/ui/audit_evidence_package.spec.ts:24:3 › 审计证据包导出 @P0 › 应该显示导出条件选择（日期范围、全宗） (3.4s)
+  ✓   3 tests/playwright/ui/audit_evidence_package.spec.ts:39:3 › 审计证据包导出 @P0 › 应该能够查看导出历史 (3.8s)
+  ✓   4 tests/playwright/ui/audit_evidence_package.spec.ts:51:3 › 审计证据包导出 @P0 › 应该显示导出按钮 (4.4s)
+  ✓   5 tests/playwright/ui/audit_verification.spec.ts:17:3 › 审计证据链验真 @P0 › 应该能够访问审计证据链验真页面 (3.4s)
+  ✓   6 tests/playwright/ui/audit_verification.spec.ts:22:3 › 审计证据链验真 @P0 › 应该显示单条验证、批量验证、链式验证等选项 (4.0s)
+  ✓   7 tests/playwright/ui/audit_verification.spec.ts:35:3 › 审计证据链验真 @P0 › 应该能够执行单条审计日志验证 (4.1s)
+  ✓   8 tests/playwright/ui/audit_verification.spec.ts:51:3 › 审计证据链验真 @P0 › 应该显示验证结果 (4.5s)
+  ✓   9 tests/playwright/ui/auth_ticket.spec.ts:17:3 › 跨全宗访问授权票据 @P0 › 应该能够访问授权票据列表页面 (4.0s)
+  ✓  10 tests/playwright/ui/auth_ticket.spec.ts:24:3 › 跨全宗访问授权票据 @P0 › 应该能够访问授权票据申请页面 (3.9s)
+  ✘  11 tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 (26.7s)
+(node:80412) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80412) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  12 tests/playwright/ui/auth_ticket.spec.ts:61:3 › 跨全宗访问授权票据 @P0 › 应该能够筛选授权票据 (6.1s)
+  ✓  13 tests/playwright/ui/auth_ticket.spec.ts:76:3 › 跨全宗访问授权票据 @P0 › 应该能够查看授权票据详情 (3.4s)
+  ✓  14 tests/playwright/ui/destruction_workflow.spec.ts:17:3 › 档案销毁流程 @P0 › 应该能够访问到期档案识别页面 (2.8s)
+  ✓  15 tests/playwright/ui/destruction_workflow.spec.ts:22:3 › 档案销毁流程 @P0 › 应该能够访问鉴定清单页面 (2.7s)
+  ✓  16 tests/playwright/ui/destruction_workflow.spec.ts:27:3 › 档案销毁流程 @P0 › 应该能够访问销毁审批页面 (2.8s)
+  ✓  17 tests/playwright/ui/destruction_workflow.spec.ts:32:3 › 档案销毁流程 @P0 › 应该能够访问销毁执行页面 (2.8s)
+  ✓  18 tests/playwright/ui/destruction_workflow.spec.ts:39:3 › 档案销毁流程 @P0 › 到期档案页面应该显示筛选选项 (4.4s)
+  ✓  19 tests/playwright/ui/destruction_workflow.spec.ts:79:3 › 档案销毁流程 @P0 › 鉴定清单页面应该显示列表 (5.5s)
+  ✓  20 tests/playwright/ui/freeze_hold.spec.ts:17:3 › 冻结/保全管理 @P1 › 应该能够访问冻结/保全管理页面 (4.0s)
+  ✓  21 tests/playwright/ui/freeze_hold.spec.ts:24:3 › 冻结/保全管理 @P1 › 应该显示冻结/保全列表 (3.4s)
+  ✘  22 tests/playwright/ui/freeze_hold.spec.ts:35:3 › 冻结/保全管理 @P1 › 应该显示申请冻结/保全按钮 (26.7s)
+(node:80608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  23 tests/playwright/ui/freeze_hold.spec.ts:71:3 › 冻结/保全管理 @P1 › 应该显示类型和状态筛选 (4.5s)
+  -  24 tests/playwright/ui/freeze_hold.spec.ts:111:3 › 冻结/保全管理 @P1 › 应该能够访问冻结/保全详情页面
+  ✓  25 tests/playwright/ui/legacy_import.spec.ts:17:3 › 历史数据导入 @P0 › 应该能够访问历史数据导入页面 (5.4s)
+  ✘  26 tests/playwright/ui/legacy_import.spec.ts:36:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 (4.4s)
+(node:80645) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80645) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -  27 tests/playwright/ui/legacy_import.spec.ts:69:3 › 历史数据导入 @P0 › 应该能够上传CSV文件
+  ✓  28 tests/playwright/ui/legacy_import.spec.ts:116:3 › 历史数据导入 @P0 › 应该能够查看导入历史列表 (6.4s)
+  ✓  29 tests/playwright/ui/legacy_import.spec.ts:166:3 › 历史数据导入 @P0 › 应该显示字段映射配置选项 (2.9s)
+  ✓  30 tests/playwright/ui/mfa.spec.ts:17:3 › MFA多因素认证 @P1 › 应该能够访问MFA设置页面 (3.3s)
+  ✓  31 tests/playwright/ui/mfa.spec.ts:24:3 › MFA多因素认证 @P1 › 应该显示MFA状态 (4.4s)
+  ✓  32 tests/playwright/ui/mfa.spec.ts:61:3 › MFA多因素认证 @P1 › 应该显示启用MFA按钮（如果未启用） (4.4s)
+  ✘  33 tests/playwright/ui/mfa.spec.ts:97:3 › MFA多因素认证 @P1 › 应该显示二维码（如果正在设置） (26.7s)
+(node:80768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  34 tests/playwright/ui/user_lifecycle.spec.ts:17:3 › 用户生命周期管理 @P1 › 应该能够访问用户生命周期管理页面 (5.6s)
+  ✓  35 tests/playwright/ui/user_lifecycle.spec.ts:24:3 › 用户生命周期管理 @P1 › 应该显示入职、离职、调岗三个标签页 (4.1s)
+  ✓  36 tests/playwright/ui/user_lifecycle.spec.ts:36:3 › 用户生命周期管理 @P1 › 应该能够访问权限定期复核页面 (5.7s)
+  ✓  37 tests/playwright/ui/user_lifecycle.spec.ts:43:3 › 用户生命周期管理 @P1 › 权限复核页面应该显示任务列表 (5.1s)
+  ✓  38 tests/playwright/ui/user_lifecycle.spec.ts:82:3 › 用户生命周期管理 @P1 › 权限复核页面应该显示状态筛选 (5.0s)
+
+
+  1) tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 ─────────────────────
+
+    Error: 登录超时：25秒内未能完成登录，当前URL: http://localhost:15175/system/login
+
+       at tests/playwright/utils/page-helpers.ts:69
+
+      67 |     // 如果是超时错误，提供更详细的错误信息
+      68 |     if (error.message && error.message.includes('Timeout')) {
+    > 69 |       throw new Error(`登录超时：25秒内未能完成登录，当前URL: ${currentUrl}`);
+         |             ^
+      70 |     }
+      71 |     throw error;
+      72 |   }
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:69:13)
+        at /Users/user/nexusarchive/tests/playwright/ui/auth_ticket.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-auth_ticket-跨全宗访问授权票据-P0-应该显示授权票据列表/error-context.md
+
+  2) tests/playwright/ui/freeze_hold.spec.ts:35:3 › 冻结/保全管理 @P1 › 应该显示申请冻结/保全按钮 ────────────────────
+
+    Error: 登录超时：25秒内未能完成登录，当前URL: http://localhost:15175/system/login
+
+       at tests/playwright/utils/page-helpers.ts:69
+
+      67 |     // 如果是超时错误，提供更详细的错误信息
+      68 |     if (error.message && error.message.includes('Timeout')) {
+    > 69 |       throw new Error(`登录超时：25秒内未能完成登录，当前URL: ${currentUrl}`);
+         |             ^
+      70 |     }
+      71 |     throw error;
+      72 |   }
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:69:13)
+        at /Users/user/nexusarchive/tests/playwright/ui/freeze_hold.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-freeze_hold-冻结-保全管理-P1-应该显示申请冻结-保全按钮/error-context.md
+
+  3) tests/playwright/ui/legacy_import.spec.ts:36:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 ──────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      64 |     
+      65 |     // 如果找到标签或页面包含相关文本，测试通过
+    > 66 |     expect(foundTab || hasImportText || hasHistoryText).toBeTruthy();
+         |                                                         ^
+      67 |   });
+      68 |
+      69 |   test('应该能够上传CSV文件', async ({ page }) => {
+        at /Users/user/nexusarchive/tests/playwright/ui/legacy_import.spec.ts:66:57
+
+    Error Context: test-results/tests-playwright-ui-legacy_import-历史数据导入-P0-应该显示导入和历史两个标签页/error-context.md
+
+  4) tests/playwright/ui/mfa.spec.ts:97:3 › MFA多因素认证 @P1 › 应该显示二维码（如果正在设置） ─────────────────────────
+
+    Error: 登录超时：25秒内未能完成登录，当前URL: http://localhost:15175/system/login
+
+       at tests/playwright/utils/page-helpers.ts:69
+
+      67 |     // 如果是超时错误，提供更详细的错误信息
+      68 |     if (error.message && error.message.includes('Timeout')) {
+    > 69 |       throw new Error(`登录超时：25秒内未能完成登录，当前URL: ${currentUrl}`);
+         |             ^
+      70 |     }
+      71 |     throw error;
+      72 |   }
+        at login (/Users/user/nexusarchive/tests/playwright/utils/page-helpers.ts:69:13)
+        at /Users/user/nexusarchive/tests/playwright/ui/mfa.spec.ts:14:5
+
+    Error Context: test-results/tests-playwright-ui-mfa-MFA多因素认证-P1-应该显示二维码（如果正在设置）/error-context.md
+
+  4 failed
+    tests/playwright/ui/auth_ticket.spec.ts:31:3 › 跨全宗访问授权票据 @P0 › 应该显示授权票据列表 ──────────────────────
+    tests/playwright/ui/freeze_hold.spec.ts:35:3 › 冻结/保全管理 @P1 › 应该显示申请冻结/保全按钮 ─────────────────────
+    tests/playwright/ui/legacy_import.spec.ts:36:3 › 历史数据导入 @P0 › 应该显示导入和历史两个标签页 ───────────────────
+    tests/playwright/ui/mfa.spec.ts:97:3 › MFA多因素认证 @P1 › 应该显示二维码（如果正在设置） ──────────────────────────
+  2 skipped
+  32 passed (3.9m)

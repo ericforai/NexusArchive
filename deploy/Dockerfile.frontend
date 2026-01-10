@@ -1,0 +1,25 @@
+# Input: 基础镜像与构建上下文
+# Output: 容器镜像构建指令
+# Pos: 容器构建入口
+# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+FROM node:20-alpine
+
+# 安装 bash（Alpine 默认只有 sh）
+RUN apk add --no-cache bash
+
+WORKDIR /app
+
+# 复制依赖配置
+COPY package*.json ./
+
+# 安装依赖
+RUN npm install
+
+# 复制源码
+COPY . .
+
+EXPOSE 15175
+
+# 运行开发服务器，监听所有 IP
+CMD ["npm", "run", "dev:vite", "--", "--host", "0.0.0.0"]
