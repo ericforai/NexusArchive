@@ -255,14 +255,6 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
     }
   }, [pendingAction, batchAction, refetch]);
 
-  // 取消操作
-  const handleCancelBatchAction = useCallback(() => {
-    batchAction.clearSelection();
-    setPendingAction(null);
-    setPendingActionLabel('');
-    batchAction.clearResult();
-  }, [batchAction]);
-
   // 关闭结果提示
   const handleCloseResult = useCallback(() => {
     batchAction.clearResult();
@@ -318,11 +310,8 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
     }
   }, []); // 忽略依赖：仅在组件挂载时执行一次
 
-  // 批量操作栏显示状态
+  // 批量操作选中数量
   const selectedCount = batchAction.getSelectedCount();
-  const showBatchActionBar = useMemo(() => {
-    return selectedCount > 0 || batchAction.state.result !== null;
-  }, [selectedCount, batchAction.state.result]);
 
   // 布局信息
   const layoutInfo = useMemo(() => ({
