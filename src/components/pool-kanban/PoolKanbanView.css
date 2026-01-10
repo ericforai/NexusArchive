@@ -68,6 +68,14 @@
   color: #8c8c8c;
 }
 
+.pool-kanban-view__selection-info {
+  padding: 2px 8px;
+  background: #e6f7ff;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #1890ff;
+}
+
 .pool-kanban-view__actions {
   display: flex;
   gap: 12px;

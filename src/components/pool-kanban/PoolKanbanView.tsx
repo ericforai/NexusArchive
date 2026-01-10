@@ -116,48 +116,83 @@ interface KanbanToolbarProps {
   totalColumns: number;
   visibleColumns: number;
   collapsedColumns: number;
+  selectedCount: number;
+  hasSelection: boolean;
   onExpandAll: () => void;
   onCollapseEmpty: () => void;
+  onBatchAction?: (action: string) => void;
+  onClearSelection?: () => void;
 }
 
 /**
- * 看板工具栏组件 - 包含标题和布局控制按钮
+ * 看板工具栏组件 - 包含标题、布局控制按钮和批量操作按钮
+ * 当有选中项时，显示批量操作按钮；否则显示布局控制按钮
  */
 function KanbanToolbar({
   totalColumns,
   visibleColumns,
   collapsedColumns,
+  selectedCount,
+  hasSelection,
   onExpandAll,
   onCollapseEmpty,
+  onBatchAction,
+  onClearSelection,
 }: KanbanToolbarProps) {
   return (
     <div className="pool-kanban-view__toolbar">
       <div className="pool-kanban-view__title-section">
         <h2 className="pool-kanban-view__title">电子凭证池</h2>
-        {collapsedColumns > 0 && (
+        {collapsedColumns > 0 && !hasSelection && (
           <span className="pool-kanban-view__layout-info">
             {visibleColumns} / {totalColumns} 列
+          </span>
+        )}
+        {hasSelection && (
+          <span className="pool-kanban-view__selection-info">
+            已选 {selectedCount} 项
           </span>
         )}
       </div>
       <div className="pool-kanban-view__actions">
         <Space>
-          {collapsedColumns > 0 && (
-            <Button
-              size="small"
-              icon={<Expand size={14} />}
-              onClick={onExpandAll}
-            >
-              展开全部
-            </Button>
+          {hasSelection ? (
+            /* 批量操作模式 */
+            <>
+              <Button size="small" onClick={() => onBatchAction?.('edit')}>
+                批量编辑
+              </Button>
+              <Button size="small" onClick={() => onBatchAction?.('recheck')}>
+                批量检测
+              </Button>
+              <Button size="small" danger onClick={() => onBatchAction?.('delete')}>
+                批量删除
+              </Button>
+              <Button size="small" onClick={() => onClearSelection?.()}>
+                取消选择
+              </Button>
+            </>
+          ) : (
+            /* 默认布局控制模式 */
+            <>
+              {collapsedColumns > 0 && (
+                <Button
+                  size="small"
+                  icon={<Expand size={14} />}
+                  onClick={onExpandAll}
+                >
+                  展开全部
+                </Button>
+              )}
+              <Button
+                size="small"
+                icon={<Columns3 size={14} />}
+                onClick={onCollapseEmpty}
+              >
+                折叠空列
+              </Button>
+            </>
           )}
-          <Button
-            size="small"
-            icon={<Columns3 size={14} />}
-            onClick={onCollapseEmpty}
-          >
-            折叠空列
-          </Button>
         </Space>
       </div>
     </div>
@@ -260,6 +295,22 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
     layout.toggleCollapse(columnId);
   }, [layout]);
 
+  // 处理工具栏批量操作按钮点击
+  const handleBatchAction = useCallback((action: string) => {
+    const actionType = ACTION_KEY_TO_BATCH_TYPE[action];
+    if (actionType) {
+      setPendingAction(actionType);
+      setPendingActionLabel(ACTION_LABELS[action] || '执行操作');
+    }
+  }, []);
+
+  // 取消选择
+  const handleClearSelection = useCallback(() => {
+    batchAction.clearSelection();
+    setPendingAction(null);
+    setPendingActionLabel('');
+  }, [batchAction]);
+
   // 初始化时自动折叠空列（仅在首次挂载时执行）
   useEffect(() => {
     if (columns.length > 0 && !loading && !error) {
@@ -307,8 +358,12 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
         totalColumns={layoutInfo.totalColumns}
         visibleColumns={layoutInfo.visibleColumns}
         collapsedColumns={layoutInfo.collapsedColumns}
+        selectedCount={selectedCount}
+        hasSelection={selectedCount > 0}
         onExpandAll={handleExpandAll}
         onCollapseEmpty={handleCollapseAllEmpty}
+        onBatchAction={handleBatchAction}
+        onClearSelection={handleClearSelection}
       />
 
       <KanbanBoard
@@ -322,13 +377,13 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
         onToggleCollapse={handleToggleCollapse}
       />
 
-      {showBatchActionBar && (
+      {batchAction.state.result && (
         <BatchActionBar
           selectedCount={selectedCount}
           actionLabel={pendingActionLabel}
           isExecuting={batchAction.state.isExecuting}
           onExecute={handleExecuteBatchAction}
-          onCancel={batchAction.state.result ? handleCloseResult : handleCancelBatchAction}
+          onCancel={handleCloseResult}
           result={batchAction.state.result}
         />
       )}
