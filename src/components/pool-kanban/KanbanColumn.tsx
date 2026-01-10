@@ -52,9 +52,13 @@ export function KanbanColumn({
 
   // Handle card action
   const handleCardAction = useCallback((cardId: string, action: string) => {
-    // Card actions are now handled by KanbanCard component
-    console.log('Card action:', action, 'for card:', cardId);
-  }, []);
+    // 单卡片操作：直接触发
+    // 找到该卡片并执行操作
+    const card = currentCards.find(c => c.id === cardId);
+    if (card) {
+      onAction(action, [card]);
+    }
+  }, [currentCards, onAction]);
 
   // Segmented options with badge counts
   const segmentedOptions = useMemo(() => {
