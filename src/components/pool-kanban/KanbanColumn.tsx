@@ -55,8 +55,11 @@ export function KanbanColumn({
     // 单卡片操作：直接触发
     // 找到该卡片并执行操作
     const card = currentCards.find(c => c.id === cardId);
+    console.log('KanbanColumn handleCardAction:', { cardId, action, card, currentCards });
     if (card) {
       onAction(action, [card]);
+    } else {
+      console.warn('Card not found in currentCards:', cardId, 'currentCards:', currentCards.map(c => c.id));
     }
   }, [currentCards, onAction]);
 

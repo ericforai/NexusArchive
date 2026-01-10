@@ -33,6 +33,7 @@ export const KanbanCard = memo<KanbanCardProps>(({
   };
 
   const handleAction = (action: string) => {
+    console.log('KanbanCard handleAction:', { cardId: card.id, action });
     onAction?.(card.id, action);
   };
 

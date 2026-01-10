@@ -232,6 +232,7 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
 
   // 处理列级操作按钮点击
   const handleColumnAction = useCallback((actionKey: string, columnCards: PoolItem[]) => {
+    console.log('PoolKanbanView handleColumnAction:', { actionKey, columnCards });
     // 立即执行的操作（不需要批量确认流程）
     if (actionKey === 'view' || actionKey === 'view-detail') {
       // TODO: 打开详情对话框
