@@ -76,7 +76,7 @@ vi.mock('../CollapsedColumn', () => ({
       <span>{column.title} ({cardCount})</span>
       <button onClick={onExpand}>展开</button>
     </div>
-  )),
+  )) as any,
 }));
 
 vi.mock('../BatchActionBar', () => ({
@@ -282,13 +282,13 @@ describe('PoolKanbanView', () => {
 
       render(<PoolKanbanView />);
 
-      const calls = (CollapsedColumn as Mock).mock.calls;
+      const calls = (CollapsedColumn as any).mock.calls;
       const collapsedCall = calls.find((call: any[]) => call[0]?.column?.id === 'archived');
 
       expect(collapsedCall).toBeDefined();
-      expect(collapsedCall[0].column.id).toBe('archived');
-      expect(collapsedCall[0].cardCount).toBe(0);
-      expect(typeof collapsedCall[0].onExpand).toBe('function');
+      expect(collapsedCall?.[0].column.id).toBe('archived');
+      expect(collapsedCall?.[0].cardCount).toBe(0);
+      expect(typeof collapsedCall?.[0].onExpand).toBe('function');
     });
 
     it('should show layout info when columns are collapsed', () => {
@@ -357,8 +357,9 @@ describe('PoolKanbanView', () => {
       render(<PoolKanbanView />);
 
       // Get the onExpand callback from the last CollapsedColumn call
-      const lastCall = (CollapsedColumn as Mock).mock.calls[(CollapsedColumn as Mock).mock.calls.length - 1];
-      const onExpand = lastCall[0].onExpand;
+      const calls = (CollapsedColumn as any).mock.calls;
+      const lastCall = calls[calls.length - 1];
+      const onExpand = lastCall?.[0]?.onExpand;
 
       onExpand();
 

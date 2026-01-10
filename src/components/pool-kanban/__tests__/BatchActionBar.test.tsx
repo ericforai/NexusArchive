@@ -14,6 +14,17 @@ vi.mock('lucide-react', () => ({
   Loader2: ({ children }: any) => <span data-icon="Loader2">{children}</span>,
 }));
 
+// Mock Ant Design components to use proper button elements for testing
+vi.mock('antd', async () => {
+  const ActualAntd = await vi.importActual<typeof import('antd')>('antd');
+  return {
+    ...ActualAntd,
+    // Use actual Button and Alert for better testing
+    Button: ActualAntd.Button,
+    Alert: ActualAntd.Alert,
+  };
+});
+
 describe('BatchActionBar', () => {
   const mockOnExecute = vi.fn();
   const mockOnCancel = vi.fn();

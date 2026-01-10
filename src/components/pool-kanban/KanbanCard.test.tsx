@@ -14,6 +14,17 @@ vi.mock('lucide-react', () => ({
   Building: ({ size, children }: any) => <span data-icon="Building">{children}</span>,
 }));
 
+// Mock Ant Design components to use actual components for testing
+vi.mock('antd', async () => {
+  const ActualAntd = await vi.importActual<typeof import('antd')>('antd');
+  return {
+    ...ActualAntd,
+    // Use actual Button and Badge for better testing
+    Button: ActualAntd.Button,
+    Badge: ActualAntd.Badge,
+  };
+});
+
 describe('KanbanCard', () => {
   const mockCard = {
     id: 'test-id',

@@ -102,7 +102,7 @@ export function KanbanColumn({
         {/* Sub-state tabs */}
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={(value) => setActiveTab(value as typeof activeTab)}
           size="small"
           className="kanban-column__tabs"
           items={tabItems}

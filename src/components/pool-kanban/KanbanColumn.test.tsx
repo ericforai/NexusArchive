@@ -9,8 +9,21 @@ import { POOL_COLUMN_GROUPS } from '@/config/pool-columns.config';
 
 // Mock lucide-react
 vi.mock('lucide-react', () => ({
-  MoreHorizontal: ({ size }: any) => <span data-icon="MoreHorizontal" size={size}>›</span>,
+  MoreHorizontal: ({ size }: any) => <span data-icon="MoreHorizontal" data-size={size}>›</span>,
 }));
+
+// Mock Ant Design components to use actual components for testing
+vi.mock('antd', async () => {
+  const ActualAntd = await vi.importActual<typeof import('antd')>('antd');
+  return {
+    ...ActualAntd,
+    // Use actual Tabs, Button, Badge, and Dropdown for better testing
+    Tabs: ActualAntd.Tabs,
+    Button: ActualAntd.Button,
+    Badge: ActualAntd.Badge,
+    Dropdown: ActualAntd.Dropdown,
+  };
+});
 
 // Mock KanbanCard
 vi.mock('./KanbanCard', () => ({
