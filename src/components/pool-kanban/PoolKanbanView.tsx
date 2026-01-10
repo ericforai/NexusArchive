@@ -11,7 +11,7 @@ import { useKanbanLayout } from '@/hooks/useKanbanLayout';
 import { BatchActionBar } from './BatchActionBar';
 import { KanbanColumn } from './KanbanColumn';
 import { CollapsedColumn } from './CollapsedColumn';
-import { PoolItemDetailDialog } from './PoolItemDetailDialog';
+import { FilePreviewModal } from '@/components/preview/FilePreviewModal';
 import { Columns3, Expand } from 'lucide-react';
 import type { PoolItem } from '@/api/pool';
 import type { ColumnGroupConfig } from '@/config/pool-columns.config';
@@ -226,9 +226,9 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
   const [pendingAction, setPendingAction] = useState<BatchActionType | null>(null);
   const [pendingActionLabel, setPendingActionLabel] = useState<string>('');
 
-  // 详情对话框状态
-  const [detailItem, setDetailItem] = useState<PoolItem | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  // 文件预览状态
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
 
   // 处理卡片选择切换
   const handleSelectionChange = useCallback((cardId: string) => {
@@ -239,20 +239,16 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
   const handleColumnAction = useCallback((actionKey: string, columnCards: PoolItem[]) => {
     // 立即执行的操作（不需要批量确认流程）
     if (actionKey === 'view' || actionKey === 'view-detail') {
-      // 打开详情对话框
+      // 打开文件预览
       if (columnCards.length > 0) {
-        setDetailItem(columnCards[0]);
-        setDetailOpen(true);
+        setPreviewFileId(columnCards[0].id);
+        setPreviewOpen(true);
       }
       return;
     }
 
     if (actionKey === 'edit' || actionKey === 'edit-metadata') {
-      // 打开详情对话框（编辑功能待实现）
-      if (columnCards.length > 0) {
-        setDetailItem(columnCards[0]);
-        setDetailOpen(true);
-      }
+      // TODO: 打开编辑对话框
       return;
     }
 
@@ -417,12 +413,15 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
         />
       )}
 
-      {/* 详情对话框 */}
-      <PoolItemDetailDialog
-        item={detailItem}
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-      />
+      {/* 文件预览 Modal */}
+      {previewFileId && (
+        <FilePreviewModal
+          isOpen={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+          fileId={previewFileId}
+          maxWidth="4xl"
+        />
+      )}
     </div>
   );
 }
