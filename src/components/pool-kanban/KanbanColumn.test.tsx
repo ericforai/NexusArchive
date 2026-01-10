@@ -12,16 +12,30 @@ vi.mock('lucide-react', () => ({
   MoreHorizontal: ({ size }: any) => <span data-icon="MoreHorizontal" size={size}>›</span>,
 }));
 
+// Track whether columnActions prop was passed to KanbanCard
+let capturedColumnActions: any = null;
+
 // Mock KanbanCard
 vi.mock('./KanbanCard', () => ({
-  KanbanCard: ({ card, selected, onSelect, onAction }: any) => (
-    <div className="kanban-card" data-card-id={card.id}>
-      <span className="card-title">{card.summary || card.code}</span>
-      <span className="card-status">{card.status}</span>
-      <button onClick={() => onSelect?.(card.id)}>select</button>
-      <button onClick={() => onAction?.(card.id, 'view')}>view</button>
-    </div>
-  ),
+  KanbanCard: ({ card, selected, onSelect, onAction, columnActions }: any) => {
+    // Capture columnActions for testing
+    capturedColumnActions = columnActions;
+    return (
+      <div className="kanban-card" data-card-id={card.id}>
+        <span className="card-title">{card.summary || card.code}</span>
+        <span className="card-status">{card.status}</span>
+        <button onClick={() => onSelect?.(card.id)}>select</button>
+        <button onClick={() => onAction?.(card.id, 'view')}>view</button>
+        {columnActions && (
+          <div className="card-column-actions">
+            {columnActions.map((a: any) => (
+              <span key={a.key} data-action-key={a.key}>{a.label}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  },
 }));
 
 describe('KanbanColumn', () => {
@@ -45,7 +59,7 @@ describe('KanbanColumn', () => {
     expect(screen.getByText('待处理')).toBeInTheDocument();
   });
 
-  it('should render sub-state tabs', () => {
+  it('should render sub-state tabs using Segmented', () => {
     render(
       <KanbanColumn
         column={mockColumn}
@@ -130,8 +144,8 @@ describe('KanbanColumn', () => {
     expect(cardElements).toHaveLength(1);
   });
 
-  it('should render column action buttons', () => {
-    const { container } = render(
+  it('should pass column actions to cards', () => {
+    render(
       <KanbanColumn
         column={mockColumn}
         cards={mockCards}
@@ -141,31 +155,26 @@ describe('KanbanColumn', () => {
       />
     );
 
-    // Find buttons in the actions area
-    const actionButtons = container.querySelectorAll('.kanban-column__actions button');
-    const buttonTexts = Array.from(actionButtons).map(btn => btn.textContent?.trim().replace(/\s+/g, ''));
-
-    expect(buttonTexts.some(t => t === '重新检测')).toBe(true);
-    expect(buttonTexts.some(t => t === '删除')).toBe(true);
+    // Verify columnActions were passed to KanbanCard
+    expect(capturedColumnActions).toBeDefined();
+    expect(capturedColumnActions).toHaveLength(2);
+    expect(capturedColumnActions[0].key).toBe('recheck');
+    expect(capturedColumnActions[0].label).toBe('重新检测');
+    expect(capturedColumnActions[1].key).toBe('delete');
+    expect(capturedColumnActions[1].label).toBe('删除');
   });
 
-  it('should call onAction when column action is clicked', () => {
-    const onAction = vi.fn();
-
+  it('should show empty state when no cards for selected sub-state', () => {
     const { container } = render(
       <KanbanColumn
         column={mockColumn}
-        cards={mockCards}
+        cards={[]}
         selectedIds={new Set()}
         onSelectionChange={vi.fn()}
-        onAction={onAction}
+        onAction={vi.fn()}
       />
     );
 
-    const actionButtons = container.querySelectorAll('.kanban-column__actions button');
-    const recheckButton = Array.from(actionButtons).find(btn => btn.textContent === '重新检测');
-    fireEvent.click(recheckButton!);
-
-    expect(onAction).toHaveBeenCalledWith('recheck', mockCards);
+    expect(screen.getByText('暂无文件')).toBeInTheDocument();
   });
 });

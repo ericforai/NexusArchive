@@ -1,6 +1,6 @@
 // src/components/pool-kanban/KanbanColumn.tsx
 // Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks (Segmented items)
-// Output: Rendered kanban column with Segmented sub-state selector and card list (no column actions)
+// Output: Rendered kanban column with Segmented sub-state selector and card list (with column actions passed to cards)
 // Pos: src/components/pool-kanban/KanbanColumn.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { useState, useCallback, useMemo } from 'react';
@@ -104,6 +104,7 @@ export function KanbanColumn({
               selected={selectedIds.has(card.id)}
               onSelect={handleCardSelect}
               onAction={handleCardAction}
+              columnActions={column.actions}
             />
           ))
         )}
