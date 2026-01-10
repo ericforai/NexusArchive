@@ -397,7 +397,8 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
         onToggleCollapse={handleToggleCollapse}
       />
 
-      {batchAction.state.result && (
+      {/* 显示批量操作栏：当有待执行操作或操作结果时 */}
+      {(pendingAction || batchAction.state.result) && (
         <BatchActionBar
           selectedCount={selectedCount}
           actionLabel={pendingActionLabel}

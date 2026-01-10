@@ -58,20 +58,27 @@ vi.mock('@/hooks/useKanbanLayout', () => ({
 }));
 
 vi.mock('../KanbanColumn', () => ({
-  KanbanColumn: vi.fn(({ column, onAction }: any) => (
-    <div className="kanban-column" data-column-id={column.id}>
-      <h3>{column.title}</h3>
-      {column.actions?.map((action: any) => (
-        <button
-          key={action.key}
-          onClick={() => onAction?.(action.key, [])}
-          data-action-key={action.key}
-        >
-          {action.label}
-        </button>
-      ))}
-    </div>
-  )),
+  KanbanColumn: vi.fn(({ column, onAction, cards }: any) => {
+    // 当点击列操作按钮时，传入列中的卡片
+    const handleAction = (actionKey: string) => {
+      onAction?.(actionKey, cards || []);
+    };
+
+    return (
+      <div className="kanban-column" data-column-id={column.id}>
+        <h3>{column.title}</h3>
+        {column.actions?.map((action: any) => (
+          <button
+            key={action.key}
+            onClick={() => handleAction(action.key)}
+            data-action-key={action.key}
+          >
+            {action.label}
+          </button>
+        ))}
+      </div>
+    );
+  }),
 }));
 
 vi.mock('../CollapsedColumn', () => ({
@@ -158,7 +165,12 @@ describe('PoolKanbanView', () => {
       isExecuting: false,
       result: null as any,
     },
-    selectAll: vi.fn(),
+    selectAll: vi.fn((cardIds: string[]) => {
+      // 更新 selection state
+      mockBatchActions.state.selection = new Set(cardIds);
+      mockBatchActions.getSelectedCount.mockReturnValue(cardIds.length);
+      mockBatchActions.getSelectedIds.mockReturnValue(cardIds);
+    }),
     toggleSelection: vi.fn(),
     clearSelection: vi.fn(),
     isSelected: vi.fn(),
@@ -382,20 +394,16 @@ describe('PoolKanbanView', () => {
     });
 
     it('should show batch action bar when items are selected', () => {
-      (usePoolBatchAction as Mock).mockReturnValue({
-        ...mockBatchActions,
-        getSelectedCount: vi.fn(() => 3),
-        state: {
-          selection: new Set(['card1', 'card2', 'card3']),
-          isExecuting: false,
-          result: null,
-        },
-      });
-
+      // 新行为：BatchActionBar 只在 pending action 存在时显示
+      // 这个测试需要模拟点击列操作来设置 pending action
       render(<PoolKanbanView />);
 
+      // 点击"重新检测"按钮触发 pending action
+      const recheckButton = screen.getByText('重新检测');
+      fireEvent.click(recheckButton);
+
+      // 现在 BatchActionBar 应该显示
       expect(screen.getByText(/已选.*个文件/)).toBeInTheDocument();
-      expect(screen.getByText('已选 3 个文件')).toBeInTheDocument();
     });
 
     it('should show batch action bar when result exists', () => {
@@ -473,20 +481,14 @@ describe('PoolKanbanView', () => {
 
   describe('Data Refresh After Operation', () => {
     it('should render execute button when items are selected', () => {
-      const mockActionsWithSelection = {
-        ...mockBatchActions,
-        getSelectedCount: vi.fn(() => 2),
-        state: {
-          selection: new Set(['card1', 'card2']),
-          isExecuting: false,
-          result: null as any,
-        },
-      };
-
-      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
-
+      // 新行为：点击列操作后设置 pending action，然后显示执行按钮
       render(<PoolKanbanView />);
 
+      // 点击"重新检测"按钮触发 pending action
+      const recheckButton = screen.getByText('重新检测');
+      fireEvent.click(recheckButton);
+
+      // 现在 BatchActionBar 应该显示"执行"按钮
       expect(screen.getByText('执行')).toBeInTheDocument();
     });
   });

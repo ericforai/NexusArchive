@@ -91,7 +91,9 @@ describe('KanbanCard', () => {
       const cardWithoutSummary = { ...mockCard, summary: '' };
       render(<KanbanCard card={cardWithoutSummary as any} selected={false} />);
 
-      expect(screen.getByText('V001.pdf')).toBeInTheDocument();
+      // 当 summary 为空时，标题显示 code，文件名仍显示 fileName
+      expect(screen.getByText('V001')).toBeInTheDocument(); // title
+      expect(screen.getByText('test.pdf')).toBeInTheDocument(); // fileName
     });
   });
 
