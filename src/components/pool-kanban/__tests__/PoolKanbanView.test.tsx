@@ -10,8 +10,12 @@ import type { Mock } from 'vitest';
 // Mock antd components
 vi.mock('antd', () => ({
   Spin: ({ tip }: any) => <div className="ant-spin">{tip || '加载中...'}</div>,
-  Button: ({ children, onClick, ...props }: any) => (
-    <button onClick={onClick} data-button-type={props['data-testid']}>
+  Button: ({ children, onClick, danger, ...props }: any) => (
+    <button
+      onClick={onClick}
+      data-button-type={props['data-testid']}
+      data-danger={danger ? 'true' : 'false'}
+    >
       {children}
     </button>
   ),
@@ -517,6 +521,209 @@ describe('PoolKanbanView', () => {
       const layoutCall = (useKanbanLayout as Mock).mock.calls[0];
       expect(layoutCall[0].containerRef).toBeDefined();
       expect(layoutCall[0].containerRef.current).toBe(viewElement);
+    });
+  });
+
+  describe('Toolbar Batch Action Integration', () => {
+    it('should show selection info in toolbar when items are selected', () => {
+      const mockActionsWithSelection = {
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 5),
+        state: {
+          selection: new Set(['card1', 'card2', 'card3', 'card4', 'card5']),
+          isExecuting: false,
+          result: null,
+        },
+      };
+
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
+
+      render(<PoolKanbanView />);
+
+      expect(screen.getByText('已选 5 项')).toBeInTheDocument();
+    });
+
+    it('should show batch action buttons in toolbar when items are selected', () => {
+      const mockActionsWithSelection = {
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 2),
+        state: {
+          selection: new Set(['card1', 'card2']),
+          isExecuting: false,
+          result: null,
+        },
+      };
+
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
+
+      render(<PoolKanbanView />);
+
+      expect(screen.getByText('批量编辑')).toBeInTheDocument();
+      expect(screen.getByText('批量检测')).toBeInTheDocument();
+      expect(screen.getByText('批量删除')).toBeInTheDocument();
+      expect(screen.getByText('取消选择')).toBeInTheDocument();
+    });
+
+    it('should hide layout info when items are selected', () => {
+      const collapsedLayout = {
+        ...mockLayout,
+        collapsedColumns: new Set(['archived']),
+        getVisibleColumnCount: vi.fn(() => 3),
+      };
+
+      const mockActionsWithSelection = {
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 2),
+        state: {
+          selection: new Set(['card1', 'card2']),
+          isExecuting: false,
+          result: null,
+        },
+      };
+
+      (useKanbanLayout as Mock).mockReturnValue(collapsedLayout);
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
+
+      render(<PoolKanbanView />);
+
+      // Should show selection info instead of layout info
+      expect(screen.getByText('已选 2 项')).toBeInTheDocument();
+      expect(screen.queryByText(/3 \/ 4 列/)).not.toBeInTheDocument();
+    });
+
+    it('should hide layout control buttons when items are selected', () => {
+      const collapsedLayout = {
+        ...mockLayout,
+        collapsedColumns: new Set(['archived']),
+      };
+
+      const mockActionsWithSelection = {
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 1),
+        state: {
+          selection: new Set(['card1']),
+          isExecuting: false,
+          result: null,
+        },
+      };
+
+      (useKanbanLayout as Mock).mockReturnValue(collapsedLayout);
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
+
+      render(<PoolKanbanView />);
+
+      // Layout controls should not be shown when selection exists
+      expect(screen.queryByText('展开全部')).not.toBeInTheDocument();
+      expect(screen.queryByText('折叠空列')).not.toBeInTheDocument();
+    });
+
+    it('should call clearSelection when cancel selection button is clicked', () => {
+      const mockActionsWithSelection = {
+        ...mockBatchActions,
+        clearSelection: vi.fn(),
+        getSelectedCount: vi.fn(() => 1),
+        state: {
+          selection: new Set(['card1']),
+          isExecuting: false,
+          result: null,
+        },
+      };
+
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
+
+      render(<PoolKanbanView />);
+
+      const cancelButton = screen.getByText('取消选择');
+      fireEvent.click(cancelButton);
+
+      expect(mockActionsWithSelection.clearSelection).toHaveBeenCalled();
+    });
+
+    it('should show layout info when no selection exists', () => {
+      const collapsedLayout = {
+        ...mockLayout,
+        collapsedColumns: new Set(['archived', 'ready-to-archive']),
+        getVisibleColumnCount: vi.fn(() => 2),
+      };
+
+      (useKanbanLayout as Mock).mockReturnValue(collapsedLayout);
+      (usePoolBatchAction as Mock).mockReturnValue({
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 0),
+        state: {
+          selection: new Set(),
+          isExecuting: false,
+          result: null,
+        },
+      });
+
+      render(<PoolKanbanView />);
+
+      expect(screen.getByText('2 / 4 列')).toBeInTheDocument();
+      expect(screen.queryByText(/已选.*项/)).not.toBeInTheDocument();
+    });
+
+    it('should show layout control buttons when no selection exists', () => {
+      (usePoolBatchAction as Mock).mockReturnValue({
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 0),
+        state: {
+          selection: new Set(),
+          isExecuting: false,
+          result: null,
+        },
+      });
+
+      render(<PoolKanbanView />);
+
+      expect(screen.getByText('折叠空列')).toBeInTheDocument();
+    });
+  });
+
+  describe('BatchActionBar Visibility', () => {
+    it('should not show BatchActionBar when only items are selected (no result)', () => {
+      const mockActionsWithSelection = {
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 3),
+        state: {
+          selection: new Set(['card1', 'card2', 'card3']),
+          isExecuting: false,
+          result: null,
+        },
+      };
+
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithSelection);
+
+      render(<PoolKanbanView />);
+
+      // BatchActionBar should not be rendered without a result
+      expect(screen.queryByText(/已选.*个文件/)).not.toBeInTheDocument();
+    });
+
+    it('should show BatchActionBar when result exists', () => {
+      const result = {
+        success: true,
+        message: '操作成功',
+        successCount: 3,
+        failCount: 0,
+      };
+
+      const mockActionsWithResult = {
+        ...mockBatchActions,
+        getSelectedCount: vi.fn(() => 0),
+        state: {
+          selection: new Set(),
+          isExecuting: false,
+          result,
+        },
+      };
+
+      (usePoolBatchAction as Mock).mockReturnValue(mockActionsWithResult);
+
+      render(<PoolKanbanView />);
+
+      // BatchActionBar should be rendered when there's a result
+      expect(screen.getByText('操作成功')).toBeInTheDocument();
     });
   });
 });

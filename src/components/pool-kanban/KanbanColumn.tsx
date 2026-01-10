@@ -1,12 +1,10 @@
 // src/components/pool-kanban/KanbanColumn.tsx
-// Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks (Tabs items)
-// Output: Rendered kanban column with sub-state tabs, action buttons, and card list
+// Input: ColumnGroupConfig, PoolItem[], selection state, and action callbacks (Segmented items)
+// Output: Rendered kanban column with Segmented sub-state selector and card list (with column actions passed to cards)
 // Pos: src/components/pool-kanban/KanbanColumn.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 import { useState, useCallback, useMemo } from 'react';
-import { Tabs, Badge, Button, Dropdown } from 'antd';
-import type { MenuProps } from 'antd';
-import { MoreHorizontal } from 'lucide-react';
+import { Badge, Segmented } from 'antd';
 import { KanbanCard } from './KanbanCard';
 import type { ColumnGroupConfig } from '@/config/pool-columns.config';
 import type { PoolItem } from '@/api/pool';
@@ -27,7 +25,7 @@ export function KanbanColumn({
   onSelectionChange,
   onAction,
 }: KanbanColumnProps) {
-  // Current selected sub-state tab
+  // Current selected sub-state
   const [activeTab, setActiveTab] = useState(column.subStates[0].value);
 
   // Calculate card count for each sub-state
@@ -42,7 +40,7 @@ export function KanbanColumn({
     return counts;
   }, [cards, column.subStates]);
 
-  // Get cards for current tab
+  // Get cards for current sub-state
   const currentCards = useMemo(() => {
     return cards.filter(card => card.status === activeTab);
   }, [cards, activeTab]);
@@ -54,81 +52,42 @@ export function KanbanColumn({
 
   // Handle card action
   const handleCardAction = useCallback((cardId: string, action: string) => {
-    // Card actions to be implemented in subsequent tasks
+    // Card actions are now handled by KanbanCard component
     console.log('Card action:', action, 'for card:', cardId);
   }, []);
 
-  // Handle column action click
-  const handleColumnAction = useCallback((actionKey: string) => {
-    // Auto-select all cards in current column
-    currentCards.forEach(card => {
-      onSelectionChange(card.id);
-    });
-    // Trigger action
-    onAction(actionKey, currentCards);
-  }, [currentCards, onSelectionChange, onAction]);
-
-  // More actions menu
-  const moreActionsMenu: MenuProps['items'] = column.actions.slice(3).map(action => ({
-    key: action.key,
-    label: action.label,
-    danger: action.danger,
-    onClick: () => handleColumnAction(action.key),
-  }));
-
-  // Fixed display action buttons (max 3)
-  const visibleActions = column.actions.slice(0, 3);
-  const tabItems = useMemo(() => {
+  // Segmented options with badge counts
+  const segmentedOptions = useMemo(() => {
     return column.subStates.map(sub => ({
-      key: sub.value,
       label: (
-        <span className="kanban-column__tab">
+        <span className="kanban-column__sub-state-option">
           {sub.label}
-          <Badge count={subStateCounts.get(sub.value) || 0} />
+          <Badge count={subStateCounts.get(sub.value) || 0} size="small" showZero />
         </span>
       ),
+      value: sub.value,
     }));
   }, [column.subStates, subStateCounts]);
 
   return (
     <div className="kanban-column">
-      {/* Column header */}
+      {/* Column header with embedded Segmented */}
       <div className="kanban-column__header">
         <div className="kanban-column__title-row">
           <h3 className="kanban-column__title">{column.title}</h3>
-          <Badge count={cards.length} showZero />
+
+          {/* Embedded sub-state selector using Segmented */}
+          <div className="kanban-column__sub-states">
+            <Segmented
+              options={segmentedOptions}
+              value={activeTab}
+              onChange={setActiveTab}
+              size="small"
+            />
+          </div>
+
+          <Badge count={cards.length} showZero className="kanban-column__total-badge" />
         </div>
-
-        {/* Sub-state tabs */}
-        <Tabs
-          activeKey={activeTab}
-          onChange={(value) => setActiveTab(value as typeof activeTab)}
-          size="small"
-          className="kanban-column__tabs"
-          items={tabItems}
-        />
-      </div>
-
-      {/* Column action buttons */}
-      <div className="kanban-column__actions">
-        {visibleActions.map(action => (
-          <Button
-            key={action.key}
-            size="small"
-            danger={action.danger}
-            onClick={() => handleColumnAction(action.key)}
-          >
-            {action.label}
-          </Button>
-        ))}
-
-        {column.actions.length > 3 && (
-          <Dropdown menu={{ items: moreActionsMenu }} trigger={['click']}>
-            <Button size="small" icon={<MoreHorizontal size={14} />}>
-              更多
-            </Button>
-          </Dropdown>
-        )}
       </div>
 
       {/* Card list */}
@@ -145,6 +104,7 @@ export function KanbanColumn({
               selected={selectedIds.has(card.id)}
               onSelect={handleCardSelect}
               onAction={handleCardAction}
+              columnActions={column.actions}
             />
           ))
         )}
