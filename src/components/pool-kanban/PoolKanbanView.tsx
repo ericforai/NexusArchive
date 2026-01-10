@@ -237,7 +237,6 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
 
   // 处理列级操作按钮点击
   const handleColumnAction = useCallback((actionKey: string, columnCards: PoolItem[]) => {
-    console.log('PoolKanbanView handleColumnAction:', { actionKey, columnCards });
     // 立即执行的操作（不需要批量确认流程）
     if (actionKey === 'view' || actionKey === 'view-detail') {
       // 打开详情对话框
@@ -249,9 +248,7 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
     }
 
     if (actionKey === 'edit' || actionKey === 'edit-metadata') {
-      // TODO: 打开编辑对话框
-      console.log('编辑元数据:', columnCards[0]?.id);
-      // 暂时也打开详情对话框作为编辑入口
+      // 打开详情对话框（编辑功能待实现）
       if (columnCards.length > 0) {
         setDetailItem(columnCards[0]);
         setDetailOpen(true);
@@ -261,19 +258,16 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
 
     if (actionKey === 'smart-match' || actionKey === 'manual-link') {
       // TODO: 打开匹配对话框
-      console.log('匹配操作:', columnCards[0]?.id);
       return;
     }
 
     if (actionKey === 'move-to-archive') {
       // TODO: 移入待归档
-      console.log('移入待归档:', columnCards.map(c => c.id));
       return;
     }
 
     if (actionKey === 'batch-approve') {
       // TODO: 批量审批
-      console.log('批量审批:', columnCards.map(c => c.id));
       return;
     }
 
