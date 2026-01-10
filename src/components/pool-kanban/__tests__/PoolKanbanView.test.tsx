@@ -80,7 +80,7 @@ vi.mock('../CollapsedColumn', () => ({
       <span>{column.title} ({cardCount})</span>
       <button onClick={onExpand}>展开</button>
     </div>
-  )) as any,
+  )),
 }));
 
 vi.mock('../BatchActionBar', () => ({

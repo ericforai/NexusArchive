@@ -205,7 +205,7 @@ function KanbanToolbar({
  * 展示档案预处理流程的四列看板，支持批量操作和响应式布局
  */
 export function PoolKanbanView({ className }: PoolKanbanViewProps) {
-  const containerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLElement>;
+  const containerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
   const {
     columns,

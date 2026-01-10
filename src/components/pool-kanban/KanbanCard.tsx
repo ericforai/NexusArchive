@@ -38,7 +38,7 @@ export const KanbanCard = memo<KanbanCardProps>(({
 
   // 计算要显示的操作按钮
   const displayActions = useMemo(() => {
-    const baseActions = [
+    const baseActions: Array<{ key: string; label: string; danger?: boolean }> = [
       { key: 'view', label: '查看' },
       { key: 'edit', label: '编辑' },
     ];
