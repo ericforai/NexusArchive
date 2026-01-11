@@ -17,7 +17,7 @@ export const ROUTE_PATHS = {
     PANORAMA: '/system/panorama',
 
     PRE_ARCHIVE: '/system/pre-archive',
-    PRE_ARCHIVE_POOL: '/system/pre-archive/pool',
+    PRE_ARCHIVE_POOL: '/system/pre-archive/pool',  // 支持 ?view=list|kanban 参数切换视图
     PRE_ARCHIVE_POOL_KANBAN: '/system/pre-archive/pool/kanban',
     PRE_ARCHIVE_DOC_POOL: '/system/pre-archive/doc-pool',
     PRE_ARCHIVE_OCR: '/system/pre-archive/ocr',
@@ -96,7 +96,7 @@ export const ROUTE_PATHS = {
  */
 export const SUBITEM_TO_PATH: Record<string, string> = {
     // 预归档库
-    '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL_KANBAN,  // 看板视图作为电子凭证池默认入口
+    '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL,  // 默认列表视图，支持 ?view=kanban 切换
     '单据池': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL,
     // 'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR, // 待开发
     '凭证关联': ROUTE_PATHS.PRE_ARCHIVE_LINK,
