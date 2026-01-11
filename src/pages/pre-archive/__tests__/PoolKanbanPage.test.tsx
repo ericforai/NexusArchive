@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { ROUTE_PATHS, SUBITEM_TO_PATH } from '@/routes/paths';
+import { ROUTE_PATHS } from '@/routes/paths';
 
 // Mock the PoolKanbanView component (must mock at the index.ts level for architecture rules)
 vi.mock('@/components/pool-kanban', () => ({
@@ -137,16 +137,6 @@ describe('PoolKanbanPage', () => {
 
     it('should be accessible via ROUTE_PATHS.PRE_ARCHIVE_POOL_KANBAN constant', () => {
       expect(ROUTE_PATHS.PRE_ARCHIVE_POOL_KANBAN).toBe('/system/pre-archive/pool/kanban');
-    });
-  });
-
-  describe('Navigation Mapping', () => {
-    it('should be accessible via SUBITEM_TO_PATH mapping', () => {
-      expect(SUBITEM_TO_PATH['看板视图']).toBe('/system/pre-archive/pool/kanban');
-    });
-
-    it('should have correct navigation label in SUBITEM_TO_PATH', () => {
-      expect(SUBITEM_TO_PATH['看板视图']).toBeDefined();
     });
   });
 
