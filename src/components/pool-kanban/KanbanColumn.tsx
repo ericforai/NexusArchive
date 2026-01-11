@@ -61,8 +61,9 @@ export function KanbanColumn({
   }, [currentCards, onAction]);
 
   // Segmented options with badge counts
+  // 注意：Ant Design Segmented 显示方向是从右到左，需要反转顺序
   const segmentedOptions = useMemo(() => {
-    return column.subStates.map(sub => ({
+    return [...column.subStates].reverse().map(sub => ({
       label: (
         <span className="kanban-column__sub-state-option">
           {sub.label}
@@ -75,22 +76,22 @@ export function KanbanColumn({
 
   return (
     <div className="kanban-column">
-      {/* Column header with embedded Segmented */}
+      {/* Column header */}
       <div className="kanban-column__header">
+        {/* Title row with total count */}
         <div className="kanban-column__title-row">
           <h3 className="kanban-column__title">{column.title}</h3>
-
-          {/* Embedded sub-state selector using Segmented */}
-          <div className="kanban-column__sub-states">
-            <Segmented
-              options={segmentedOptions}
-              value={activeTab}
-              onChange={setActiveTab}
-              size="small"
-            />
-          </div>
-
           <Badge count={cards.length} showZero className="kanban-column__total-badge" />
+        </div>
+
+        {/* Sub-state selector using Segmented */}
+        <div className="kanban-column__sub-states">
+          <Segmented
+            options={segmentedOptions}
+            value={activeTab}
+            onChange={setActiveTab}
+            size="small"
+          />
         </div>
       </div>
 

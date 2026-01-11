@@ -73,7 +73,9 @@ describe('PoolColumnsConfig', () => {
       expect(firstGroup).toHaveProperty('title');
       expect(firstGroup).toHaveProperty('subStates');
       expect(firstGroup).toHaveProperty('actions');
-      expect(firstGroup).toHaveProperty('highlight');
+      // Only ready-to-archive group has highlight property
+      const readyToArchiveGroup = POOL_COLUMN_GROUPS.find(g => g.id === 'ready-to-archive');
+      expect(readyToArchiveGroup?.highlight).toBe(true);
     });
 
     it('should have correct subStates for pending group', () => {
