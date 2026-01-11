@@ -87,7 +87,7 @@ public class BatchToArchiveServiceImpl implements BatchToArchiveService {
         archive.setTitle(fileContent.getFileName()); // 初始使用文件名，用户可修改
         archive.setRetentionPeriod("30年"); // 默认保管期限
         archive.setOrgName("上传单位"); // TODO: 从全宗信息获取
-        archive.setStatus(PreArchiveStatus.PENDING_METADATA.getCode());
+        archive.setStatus(PreArchiveStatus.NEEDS_ACTION.getCode());
 
         // 存储文件内容关联
         archive.setFixityValue(fileContent.getFileHash());

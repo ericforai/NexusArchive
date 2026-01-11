@@ -93,7 +93,7 @@ public class PreArchiveSubmitService {
         }
 
         String status = file.getPreArchiveStatus();
-        if (!PreArchiveStatus.PENDING_ARCHIVE.getCode().equals(status)) {
+        if (!PreArchiveStatus.READY_TO_ARCHIVE.getCode().equals(status)) {
             throw new RuntimeException("文件状态不允许提交归档，当前状态: " + status);
         }
 
@@ -135,7 +135,7 @@ public class PreArchiveSubmitService {
 
         // 3. 更新文件的正式档号和状态
         file.setArchivalCode(archive.getArchiveCode());
-        file.setPreArchiveStatus(PreArchiveStatus.PENDING_APPROVAL.getCode()); // Move to pending approval
+        file.setPreArchiveStatus(PreArchiveStatus.COMPLETED.getCode()); // Move to completed
         arcFileContentMapper.updateById(file);
 
         // 4. 创建审批申请
@@ -248,7 +248,7 @@ public class PreArchiveSubmitService {
                  file.setSignValue(("UNSIGNED_DEV_" + java.time.LocalDateTime.now()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }
 
-            file.setPreArchiveStatus(PreArchiveStatus.ARCHIVED.getCode());
+            file.setPreArchiveStatus(PreArchiveStatus.COMPLETED.getCode());
             file.setArchivedTime(LocalDateTime.now());
             arcFileContentMapper.updateById(file);
             log.info("文件已锁定归档: {}", file.getFileName());

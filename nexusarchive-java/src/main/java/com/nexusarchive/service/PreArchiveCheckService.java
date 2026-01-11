@@ -82,7 +82,7 @@ public class PreArchiveCheckService {
                 
                 if (authenticity.getStatus() == OverallStatus.FAIL) {
                     report.setStatus(OverallStatus.FAIL);
-                    updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
+                    updateFileStatus(file, PreArchiveStatus.NEEDS_ACTION.getCode(), report);
                     return report;
                 }
 
@@ -111,7 +111,7 @@ public class PreArchiveCheckService {
                 report.setSafety(safety);
                 if (safety.getStatus() == OverallStatus.FAIL) {
                     report.setStatus(OverallStatus.FAIL);
-                    updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
+                    updateFileStatus(file, PreArchiveStatus.NEEDS_ACTION.getCode(), report);
                     return report;
                 }
 
@@ -128,12 +128,12 @@ public class PreArchiveCheckService {
 
                 // Determine next status (moved inside block)
                 if (report.getStatus() == OverallStatus.FAIL) {
-                    updateFileStatus(file, PreArchiveStatus.CHECK_FAILED.getCode(), report);
-                } else if (integrity.getStatus() == OverallStatus.WARNING || 
+                    updateFileStatus(file, PreArchiveStatus.NEEDS_ACTION.getCode(), report);
+                } else if (integrity.getStatus() == OverallStatus.WARNING ||
                            isMetadataIncomplete(file)) {
-                    updateFileStatus(file, PreArchiveStatus.PENDING_METADATA.getCode(), report);
+                    updateFileStatus(file, PreArchiveStatus.NEEDS_ACTION.getCode(), report);
                 } else {
-                    updateFileStatus(file, PreArchiveStatus.PENDING_ARCHIVE.getCode(), report);
+                    updateFileStatus(file, PreArchiveStatus.READY_TO_ARCHIVE.getCode(), report);
                 }
             }
 

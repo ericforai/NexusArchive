@@ -361,7 +361,7 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
     public void archivePoolItems(java.util.List<String> poolItemIds, String userId) throws java.io.IOException {
         log.info("开始发起异步归档任务 (状态机锁定): count={}, userId={}", poolItemIds.size(), userId);
 
-        // 1. 严格校验状态，仅允许 PENDING_ARCHIVE 进入归档
+        // 1. 严格校验状态，仅允许 READY_TO_ARCHIVE 进入归档
         java.util.List<String> invalidIds = new java.util.ArrayList<>();
         for (String id : poolItemIds) {
             com.nexusarchive.entity.ArcFileContent file = arcFileContentMapper.selectById(id);
@@ -369,7 +369,7 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
                 invalidIds.add(id + "(不存在)");
                 continue;
             }
-            if (!com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode()
+            if (!com.nexusarchive.entity.enums.PreArchiveStatus.READY_TO_ARCHIVE.getCode()
                     .equals(file.getPreArchiveStatus())) {
                 invalidIds.add(id + "(" + file.getPreArchiveStatus() + ")");
             }
@@ -378,14 +378,14 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
             throw new BusinessException(400, "存在不允许归档的记录: " + String.join(", ", invalidIds));
         }
 
-        // 2. 立即锁定状态为 ARCHIVING (正在归档)
+        // 2. 立即锁定状态为 COMPLETED (正在归档)
         // 依据：状态机锁定，防止重复点击或并发冲突
         for (String id : poolItemIds) {
             com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<com.nexusarchive.entity.ArcFileContent> wrapper =
                     new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
             wrapper.eq("id", id)
-                    .eq("pre_archive_status", com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode())
-                    .set("pre_archive_status", com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVING.getCode());
+                    .eq("pre_archive_status", com.nexusarchive.entity.enums.PreArchiveStatus.READY_TO_ARCHIVE.getCode())
+                    .set("pre_archive_status", com.nexusarchive.entity.enums.PreArchiveStatus.COMPLETED.getCode());
             int updated = arcFileContentMapper.update(null, wrapper);
             if (updated == 0) {
                 throw new BusinessException(409, "归档状态冲突，请刷新后重试: " + id);
@@ -415,7 +415,7 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
             try {
                 // 1. 获取最新记录
                 com.nexusarchive.entity.ArcFileContent originalFile = arcFileContentMapper.selectById(poolItemId);
-                if (originalFile == null || !com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVING.getCode()
+                if (originalFile == null || !com.nexusarchive.entity.enums.PreArchiveStatus.COMPLETED.getCode()
                         .equals(originalFile.getPreArchiveStatus())) {
                     continue;
                 }
@@ -452,8 +452,8 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
                 archiveService.createArchive(archive, userId != null ? userId : "user_admin");
                 processedFiles.add(originalFile);
 
-                // 5. 更新预归档文件状态为“已归档”
-                originalFile.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.ARCHIVED.getCode());
+                // 5. 更新预归档文件状态为"已完成"
+                originalFile.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.COMPLETED.getCode());
                 arcFileContentMapper.updateById(originalFile);
 
                 // 6. ERP 异步反馈
@@ -474,10 +474,10 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
                     log.error("回滚档案索引失败: {}", ex.getMessage());
                 }
 
-                // 补偿：恢复状态为待归档，以便重试
+                // 补偿：恢复状态为可归档，以便重试
                 com.nexusarchive.entity.ArcFileContent f = arcFileContentMapper.selectById(poolItemId);
                 if (f != null) {
-                    f.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode());
+                    f.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.READY_TO_ARCHIVE.getCode());
                     arcFileContentMapper.updateById(f);
                 }
             }

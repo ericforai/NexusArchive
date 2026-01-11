@@ -104,8 +104,8 @@ public class PoolFileArchiver {
             Archive archive = createArchiveRecord(archivalCode, poolItemId, originalFile, userId);
             archiveService.createArchive(archive, userId != null ? userId : "user_admin");
 
-            // 5. 更新预归档文件状态为"已归档"
-            originalFile.setPreArchiveStatus(PreArchiveStatus.ARCHIVED.getCode());
+            // 5. 更新预归档文件状态为"已完成"
+            originalFile.setPreArchiveStatus(PreArchiveStatus.COMPLETED.getCode());
             arcFileContentMapper.updateById(originalFile);
 
             // 6. ERP 异步反馈
@@ -138,10 +138,10 @@ public class PoolFileArchiver {
             log.error("回滚档案索引失败: {}", ex.getMessage());
         }
 
-        // 补偿：恢复状态为待归档，以便重试
+        // 补偿：恢复状态为可归档，以便重试
         ArcFileContent f = arcFileContentMapper.selectById(poolItemId);
         if (f != null) {
-            f.setPreArchiveStatus(PreArchiveStatus.PENDING_ARCHIVE.getCode());
+            f.setPreArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode());
             arcFileContentMapper.updateById(f);
         }
     }
