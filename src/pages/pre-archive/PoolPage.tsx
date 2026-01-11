@@ -27,6 +27,7 @@ function ViewSwitcher({ currentMode, onModeChange }: ViewSwitcherProps) {
   return (
     <div className="pool-page__switcher">
       <button
+        type="button"
         className={currentMode === 'list' ? 'active' : ''}
         onClick={() => onModeChange('list')}
         title="列表视图 - 适合查看大量数据和批量操作"
@@ -35,6 +36,7 @@ function ViewSwitcher({ currentMode, onModeChange }: ViewSwitcherProps) {
         列表
       </button>
       <button
+        type="button"
         className={currentMode === 'kanban' ? 'active' : ''}
         onClick={() => onModeChange('kanban')}
         title="看板视图 - 直观展示处理流程"
