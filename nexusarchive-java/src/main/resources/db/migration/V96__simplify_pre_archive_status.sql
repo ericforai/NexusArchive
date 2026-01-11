@@ -9,6 +9,10 @@
 -- Author: Claude Code
 -- Date: 2026-01-11
 -- ================================================================
+-- 注意：此迁移会永久改变 pre_archive_status 的值，执行前请备份数据
+-- 回滚策略：需要从数据库备份恢复
+
+BEGIN;
 
 -- 步骤 1: 添加新的状态列（临时）
 ALTER TABLE public.acc_archive
@@ -60,3 +64,19 @@ CREATE INDEX idx_acc_archive_pre_archive_status
 ON public.acc_archive(pre_archive_status);
 
 COMMENT ON INDEX public.idx_acc_archive_pre_archive_status IS '预归档状态索引 - 用于仪表板统计和筛选';
+
+-- 数据完整性验证：确保所有行都被正确映射
+DO $$
+DECLARE
+    null_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO null_count
+    FROM public.acc_archive
+    WHERE pre_archive_status IS NULL;
+
+    IF null_count > 0 THEN
+        RAISE EXCEPTION '迁移后存在 NULL 状态值，数据完整性验证失败';
+    END IF;
+END $$;
+
+COMMIT;
