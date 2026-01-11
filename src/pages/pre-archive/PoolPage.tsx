@@ -1,13 +1,15 @@
 // src/pages/pre-archive/PoolPage.tsx
-// Input: URL search params, 视图模式状态
-// Output: 带视图切换器的容器页面
+// Input: URL search params, 视图模式状态, 仪表板筛选状态
+// Output: 带视图切换器和仪表板的容器页面
 // Pos: src/pages/pre-archive/PoolPage.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { List, Columns3 } from 'lucide-react';
 import { PoolKanbanView } from '@/components/pool-kanban';
+import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
+import { SimplifiedPreArchiveStatus, DEFAULT_DASHBOARD_FILTER } from '@/config/pool-columns.config';
 import './PoolPage.css';
 
 const VIEW_MODE_STORAGE_KEY = 'pool.viewMode';
@@ -53,9 +55,10 @@ function ViewSwitcher({ currentMode, onModeChange }: ViewSwitcherProps) {
  *
  * 职责：
  * 1. 维护视图模式状态 (list/kanban)
- * 2. 同步 URL query 参数 (?view=list|kanban)
- * 3. 记忆用户的视图偏好
- * 4. 渲染视图切换器和对应的子视图
+ * 2. 维护仪表板筛选状态
+ * 3. 同步 URL query 参数 (?view=list|kanban)
+ * 4. 记忆用户的视图偏好
+ * 5. 渲染仪表板、视图切换器和对应的子视图
  */
 export const PoolPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -77,6 +80,11 @@ export const PoolPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
 
+  // 仪表板筛选状态
+  const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(
+    DEFAULT_DASHBOARD_FILTER // 默认显示"可归档"
+  );
+
   // 同步 URL 参数变化到状态
   useEffect(() => {
     const viewParam = searchParams.get('view') as ViewMode | null;
@@ -91,6 +99,12 @@ export const PoolPage: React.FC = () => {
     setSearchParams({ view: mode });
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
   }, [setSearchParams]);
+
+  // 处理批量归档
+  const handleBatchArchive = useCallback(() => {
+    // TODO: 实现批量归档逻辑
+    console.log('Batch archive for READY_TO_ARCHIVE items');
+  }, []);
 
   // 兼容旧的 /kanban 路由 - 重定向到新格式
   useEffect(() => {
@@ -108,11 +122,19 @@ export const PoolPage: React.FC = () => {
         <ViewSwitcher currentMode={viewMode} onModeChange={handleViewChange} />
       </div>
 
+      {/* 仪表板区域 */}
+      <PoolDashboard
+        activeFilter={dashboardFilter}
+        onFilterChange={setDashboardFilter}
+        showActions={true}
+        onBatchArchive={handleBatchArchive}
+      />
+
       <div className="pool-page__content">
         {viewMode === 'kanban' ? (
-          <PoolKanbanView />
+          <PoolKanbanView filter={dashboardFilter} />
         ) : (
-          <ArchiveListPage routeConfig="pool" />
+          <ArchiveListPage routeConfig="pool" statusFilter={dashboardFilter} />
         )}
       </div>
     </div>
