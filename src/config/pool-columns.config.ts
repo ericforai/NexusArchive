@@ -1,5 +1,5 @@
-// Input: PreArchiveStatus (10种预处理状态)
-// Output: ColumnGroupConfig (4个主列)
+// Input: SimplifiedPreArchiveStatus enum (5种核心状态)
+// Output: ColumnGroupConfig (5个主列)
 // Pos: src/config/pool-columns.config.ts
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -7,21 +7,59 @@
  * 电子凭证池看板列分组配置
  */
 
-// 状态类型定义（项目中已有的状态）
-export type PreArchiveStatus =
-  | 'DRAFT'              // 草稿
-  | 'PENDING_CHECK'      // 待检测
-  | 'CHECK_FAILED'       // 检测失败
-  | 'PENDING_METADATA'   // 待补录
-  | 'MATCH_PENDING'      // 待匹配
-  | 'MATCHED'            // 已匹配
-  | 'PENDING_ARCHIVE'    // 待归档
-  | 'PENDING_APPROVAL'   // 审批中
-  | 'ARCHIVING'          // 归档中
-  | 'ARCHIVED';          // 已归档
+// 简化的预处理状态枚举（5个核心状态）
+export enum SimplifiedPreArchiveStatus {
+  PENDING_CHECK = 'PENDING_CHECK',    // 待检测
+  NEEDS_ACTION = 'NEEDS_ACTION',      // 待处理
+  READY_TO_MATCH = 'READY_TO_MATCH',  // 可匹配
+  READY_TO_ARCHIVE = 'READY_TO_ARCHIVE', // 可归档（核心）
+  COMPLETED = 'COMPLETED',            // 已完成
+}
+
+/**
+ * 状态显示配置
+ * 定义每个状态的视觉呈现（颜色、图标、标签、描述）
+ */
+export const STATUS_CONFIG: Record<SimplifiedPreArchiveStatus, {
+  color: string;
+  icon: string;
+  label: string;
+  description: string;
+}> = {
+  [SimplifiedPreArchiveStatus.PENDING_CHECK]: {
+    color: '#94a3b8',
+    icon: 'circle-dot',
+    label: '待检测',
+    description: '新导入的凭证，等待四性检测',
+  },
+  [SimplifiedPreArchiveStatus.NEEDS_ACTION]: {
+    color: '#f59e0b',
+    icon: 'alert-circle',
+    label: '待处理',
+    description: '检测失败或需要补全信息',
+  },
+  [SimplifiedPreArchiveStatus.READY_TO_MATCH]: {
+    color: '#3b82f6',
+    icon: 'link',
+    label: '可匹配',
+    description: '可以进行凭证关联',
+  },
+  [SimplifiedPreArchiveStatus.READY_TO_ARCHIVE]: {
+    color: '#10b981',
+    icon: 'check-circle-2',
+    label: '可归档',
+    description: '已就绪，可以提交归档',
+  },
+  [SimplifiedPreArchiveStatus.COMPLETED]: {
+    color: '#64748b',
+    icon: 'check-circle',
+    label: '已完成',
+    description: '归档流程已完成',
+  },
+};
 
 export interface SubStateConfig {
-  value: PreArchiveStatus;
+  value: SimplifiedPreArchiveStatus;
   label: string;
 }
 
@@ -37,20 +75,20 @@ export interface ColumnGroupConfig {
   title: string;
   subStates: SubStateConfig[];
   actions: ColumnAction[];
+  highlight?: boolean; // 标记为重点列（如"可归档"）
 }
 
 /**
  * 电子凭证池看板列分组配置
  *
- * 将10种预处理状态分组为4个主列
+ * 将5种简化状态映射为5个主列
  */
 export const POOL_COLUMN_GROUPS: ColumnGroupConfig[] = [
   {
     id: 'pending',
-    title: '待处理',
+    title: '待检测',
     subStates: [
-      { value: 'DRAFT', label: '草稿' },
-      { value: 'PENDING_CHECK', label: '待检测' },
+      { value: SimplifiedPreArchiveStatus.PENDING_CHECK, label: '待检测' },
     ],
     actions: [
       { key: 'recheck', label: '重新检测' },
@@ -58,11 +96,10 @@ export const POOL_COLUMN_GROUPS: ColumnGroupConfig[] = [
     ],
   },
   {
-    id: 'needs-attention',
-    title: '需要处理',
+    id: 'needs-action',
+    title: '待处理',
     subStates: [
-      { value: 'CHECK_FAILED', label: '检测失败' },
-      { value: 'PENDING_METADATA', label: '待补录' },
+      { value: SimplifiedPreArchiveStatus.NEEDS_ACTION, label: '待处理' },
     ],
     actions: [
       { key: 'edit-metadata', label: '编辑元数据' },
@@ -71,57 +108,67 @@ export const POOL_COLUMN_GROUPS: ColumnGroupConfig[] = [
     ],
   },
   {
-    id: 'ready',
-    title: '准备就绪',
+    id: 'ready-to-match',
+    title: '可匹配',
     subStates: [
-      { value: 'MATCH_PENDING', label: '待匹配' },
-      { value: 'MATCHED', label: '已匹配' },
+      { value: SimplifiedPreArchiveStatus.READY_TO_MATCH, label: '可匹配' },
     ],
     actions: [
       { key: 'smart-match', label: '智能匹配' },
       { key: 'manual-link', label: '手动关联' },
-      { key: 'move-to-archive', label: '移入待归档' },
     ],
   },
   {
-    id: 'processing',
-    title: '处理中',
+    id: 'ready-to-archive',
+    title: '可归档',
     subStates: [
-      { value: 'PENDING_ARCHIVE', label: '待归档' },
-      { value: 'PENDING_APPROVAL', label: '审批中' },
-      { value: 'ARCHIVING', label: '归档中' },
-      { value: 'ARCHIVED', label: '已归档' },
+      { value: SimplifiedPreArchiveStatus.READY_TO_ARCHIVE, label: '可归档' },
+    ],
+    highlight: true, // 标记为重点列
+    actions: [
+      { key: 'batch-archive', label: '批量归档' },
+      { key: 'view-detail', label: '查看详情' },
+    ],
+  },
+  {
+    id: 'completed',
+    title: '已完成',
+    subStates: [
+      { value: SimplifiedPreArchiveStatus.COMPLETED, label: '已完成' },
     ],
     actions: [
       { key: 'view-detail', label: '查看详情' },
-      { key: 'cancel-archive', label: '取消归档', danger: true },
-      { key: 'batch-approve', label: '批量审批' },
     ],
   },
 ];
 
 /**
+ * 默认看板筛选状态
+ */
+export const DEFAULT_DASHBOARD_FILTER = SimplifiedPreArchiveStatus.READY_TO_ARCHIVE;
+
+/**
  * 状态到列的映射表
  */
-const STATE_TO_COLUMN_MAP = new Map<PreArchiveStatus, string>(
+const STATE_TO_COLUMN_MAP = new Map<SimplifiedPreArchiveStatus, string>(
   POOL_COLUMN_GROUPS.flatMap(group =>
-    group.subStates.map(sub => [sub.value, group.id] as [PreArchiveStatus, string])
+    group.subStates.map(sub => [sub.value, group.id] as [SimplifiedPreArchiveStatus, string])
   )
 );
 
 /**
  * 状态到标签的映射表
  */
-const STATE_TO_LABEL_MAP = new Map<PreArchiveStatus, string>(
+const STATE_TO_LABEL_MAP = new Map<SimplifiedPreArchiveStatus, string>(
   POOL_COLUMN_GROUPS.flatMap(group =>
-    group.subStates.map(sub => [sub.value, sub.label] as [PreArchiveStatus, string])
+    group.subStates.map(sub => [sub.value, sub.label] as [SimplifiedPreArchiveStatus, string])
   )
 );
 
 /**
  * 根据状态获取所属列配置
  */
-export function getColumnByState(state: PreArchiveStatus): ColumnGroupConfig | null {
+export function getColumnByState(state: SimplifiedPreArchiveStatus): ColumnGroupConfig | null {
   const columnId = STATE_TO_COLUMN_MAP.get(state);
   return POOL_COLUMN_GROUPS.find(g => g.id === columnId) || null;
 }
@@ -129,14 +176,14 @@ export function getColumnByState(state: PreArchiveStatus): ColumnGroupConfig | n
 /**
  * 获取状态的显示标签
  */
-export function getSubStateLabel(state: PreArchiveStatus): string {
+export function getSubStateLabel(state: SimplifiedPreArchiveStatus): string {
   return STATE_TO_LABEL_MAP.get(state) || state;
 }
 
 /**
  * 获取指定列的所有状态值
  */
-export function getColumnStates(columnId: string): PreArchiveStatus[] {
+export function getColumnStates(columnId: string): SimplifiedPreArchiveStatus[] {
   const column = POOL_COLUMN_GROUPS.find(g => g.id === columnId);
   return column?.subStates.map(s => s.value) || [];
 }
