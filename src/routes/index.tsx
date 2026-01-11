@@ -27,6 +27,7 @@ const ProductWebsite = lazy(() => import('../pages/ProductWebsite'));
 import LoginPage from '../pages/Auth/Login';
 import { ArchiveListPage } from '../pages/archives/ArchiveListPage';
 import { VoucherMatchingPage } from '../pages/matching/VoucherMatchingPage';
+import { PoolPage } from '@/pages/pre-archive/PoolPage';
 
 // 懒加载各功能模块（Page 层）
 const Dashboard = lazy(() => import('../pages/portal/Dashboard'));
@@ -68,9 +69,6 @@ const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWaterm
 
 // 凭证预览组件 Demo
 const VoucherPreviewDemo = lazy(() => import('../pages/demo/VoucherPreviewDemo'));
-
-// 预归档池容器组件（支持列表/看板双视图）
-import { PoolPage } from '@/pages/pre-archive/PoolPage';
 
 // 预归档池看板视图
 const PoolKanbanPage = lazy(() => import('../pages/pre-archive/PoolKanbanPage').then(m => ({ default: m.PoolKanbanPage })));
