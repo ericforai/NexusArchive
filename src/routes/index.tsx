@@ -69,6 +69,9 @@ const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWaterm
 // 凭证预览组件 Demo
 const VoucherPreviewDemo = lazy(() => import('../pages/demo/VoucherPreviewDemo'));
 
+// 预归档池容器组件（支持列表/看板双视图）
+import { PoolPage } from '@/pages/pre-archive/PoolPage';
+
 // 预归档池看板视图
 const PoolKanbanPage = lazy(() => import('../pages/pre-archive/PoolKanbanPage').then(m => ({ default: m.PoolKanbanPage })));
 
@@ -177,9 +180,10 @@ export const routes: RouteObject[] = [
             { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView) },
 
             // ========== 预归档库 ==========
-            { path: 'pre-archive', element: <Navigate to="pool/kanban" replace /> },  // 默认进入电子凭证池看板
-            { path: 'pre-archive/pool', element: <Navigate to="kanban" replace /> },  // 重定向到看板视图
-            { path: 'pre-archive/pool/kanban', element: withSuspense(PoolKanbanPage) },
+            // PoolPage 作为容器，支持列表/看板双视图
+            { path: 'pre-archive', element: <PoolPage /> },
+            { path: 'pre-archive/pool', element: <PoolPage /> },
+            { path: 'pre-archive/pool/kanban', element: <PoolPage /> },  // 兼容旧路由
             { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }) },
             { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView) },
             { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" /> },
