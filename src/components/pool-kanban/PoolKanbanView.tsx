@@ -11,15 +11,18 @@ import { useKanbanLayout } from '@/hooks/useKanbanLayout';
 import { BatchActionBar } from './BatchActionBar';
 import { KanbanColumn } from './KanbanColumn';
 import { CollapsedColumn } from './CollapsedColumn';
-import { FilePreviewModal } from '@/components/preview/FilePreviewModal';
+import { ArchiveDetailDrawer } from '@/pages/archives/ArchiveDetailDrawer';
 import { Columns3, Expand } from 'lucide-react';
 import type { PoolItem } from '@/api/pool';
-import type { ColumnGroupConfig } from '@/config/pool-columns.config';
+import type { ColumnGroupConfig, SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
+import type { GenericRow } from '@/types';
 import './PoolKanbanView.css';
 
 export interface PoolKanbanViewProps {
   /** 额外的类名 */
   className?: string;
+  /** 状态筛选（可选） */
+  filter?: SimplifiedPreArchiveStatus | null;
 }
 
 /**
@@ -146,7 +149,7 @@ function KanbanToolbar({
         <h2 className="pool-kanban-view__title">电子凭证池</h2>
         {collapsedColumns > 0 && !hasSelection && (
           <span className="pool-kanban-view__layout-info">
-            {visibleColumns} / {totalColumns} 列
+            {collapsedColumns} / {totalColumns} 列已折叠
           </span>
         )}
         {hasSelection && (
@@ -205,7 +208,7 @@ function KanbanToolbar({
  *
  * 展示档案预处理流程的四列看板，支持批量操作和响应式布局
  */
-export function PoolKanbanView({ className }: PoolKanbanViewProps) {
+export function PoolKanbanView({ className, filter }: PoolKanbanViewProps) {
   const containerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
   const {
@@ -214,7 +217,7 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
     error,
     refetch,
     getCardsForColumn,
-  } = usePoolKanban();
+  } = usePoolKanban({ filter });
 
   const batchAction = usePoolBatchAction();
 
@@ -226,9 +229,9 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
   const [pendingAction, setPendingAction] = useState<BatchActionType | null>(null);
   const [pendingActionLabel, setPendingActionLabel] = useState<string>('');
 
-  // 文件预览状态
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+  // 详情抽屉状态
+  const [detailRow, setDetailRow] = useState<GenericRow | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // 处理卡片选择切换
   const handleSelectionChange = useCallback((cardId: string) => {
@@ -239,10 +242,25 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
   const handleColumnAction = useCallback((actionKey: string, columnCards: PoolItem[]) => {
     // 立即执行的操作（不需要批量确认流程）
     if (actionKey === 'view' || actionKey === 'view-detail') {
-      // 打开文件预览
+      // 打开详情抽屉
       if (columnCards.length > 0) {
-        setPreviewFileId(columnCards[0].id);
-        setPreviewOpen(true);
+        const item = columnCards[0];
+        // 将 PoolItem 转换为 GenericRow
+        const row: GenericRow = {
+          id: item.id,
+          code: item.code,
+          source: item.source,
+          type: item.type,
+          amount: item.amount,
+          date: item.date,
+          status: item.status,
+          fileName: item.fileName,
+          summary: item.summary,
+          docDate: item.docDate,
+          sourceData: item.sourceData,
+        };
+        setDetailRow(row);
+        setDetailOpen(true);
       }
       return;
     }
@@ -413,15 +431,14 @@ export function PoolKanbanView({ className }: PoolKanbanViewProps) {
         />
       )}
 
-      {/* 文件预览 Modal */}
-      {previewFileId && (
-        <FilePreviewModal
-          isOpen={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-          fileId={previewFileId}
-          maxWidth="4xl"
-        />
-      )}
+      {/* 详情抽屉 */}
+      <ArchiveDetailDrawer
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        row={detailRow}
+        config={{ id: 'pool', title: '电子凭证池' } as any}
+        isPoolView={true}
+      />
     </div>
   );
 }

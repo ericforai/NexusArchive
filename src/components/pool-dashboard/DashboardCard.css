@@ -42,6 +42,11 @@
   opacity: 0.9;
 }
 
+.dashboard-card__icon .lucide-icon {
+  width: 24px;
+  height: 24px;
+}
+
 .dashboard-card__count {
   font-size: 32px;
   font-weight: 700;

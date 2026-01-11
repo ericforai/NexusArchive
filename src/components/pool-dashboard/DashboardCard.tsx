@@ -49,7 +49,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
     >
       <div className="dashboard-card__header" style={{ '--card-color': config.color } as React.CSSProperties}>
         <div className="dashboard-card__icon">
-          <IconComponent className="lucide-icon" size={24} />
+          <IconComponent className="lucide-icon" />
         </div>
         <div className="dashboard-card__count">{count}</div>
       </div>
