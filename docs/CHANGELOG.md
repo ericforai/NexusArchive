@@ -7,6 +7,12 @@
 ## [Unreleased]
 
 ### Added
+- **电子凭证池双视图模式** (`/docs/plans/2026-01-11-pool-dual-view-design.md`)
+  - 列表视图（默认）：适合查看大量数据，支持筛选、批量操作
+  - 看板视图：直观展示处理流程（待检测→待补全→待归档）
+  - 视图切换器：页面右上角"列表"/"看板"按钮或 URL 参数 `?view=list|kanban`
+  - 用户偏好记忆：localStorage 保存视图选择
+  - 路由兼容：旧的 `/kanban` 路由自动重定向
 - 性能优化设计文档 (`/docs/plans/2026-01-09-performance-optimization-design.md`)
   - 24 类性能/安全问题识别与解决方案
   - 前端、后端数据库、API 安全三维度优化方案
