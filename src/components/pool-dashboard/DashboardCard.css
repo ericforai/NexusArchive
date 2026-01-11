@@ -1,0 +1,99 @@
+/* src/components/pool-dashboard/DashboardCard.css */
+.dashboard-card {
+  position: relative;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-card:hover {
+  border-color: var(--card-color, #64748b);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.dashboard-card--active {
+  border-color: var(--card-color, #10b981);
+  background: linear-gradient(to bottom, rgba(16, 185, 129, 0.05), white);
+}
+
+.dashboard-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dashboard-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--card-color, #64748b);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+.dashboard-card__count {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--card-color, #64748b);
+  line-height: 1;
+}
+
+.dashboard-card__body {
+  flex: 1;
+}
+
+.dashboard-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.dashboard-card__description {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.dashboard-card__footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.dashboard-card__action {
+  width: 100%;
+  padding: 8px 16px;
+  background: var(--card-color, #10b981);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.dashboard-card__action:hover {
+  opacity: 0.9;
+}
+
+.dashboard-card__indicator {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+}

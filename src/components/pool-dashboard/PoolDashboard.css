@@ -1,0 +1,58 @@
+/* src/components/pool-dashboard/PoolDashboard.css */
+.pool-dashboard {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.pool-dashboard__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+  .pool-dashboard__cards {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pool-dashboard__cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+.pool-dashboard__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.pool-dashboard__total strong {
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.pool-dashboard__clear {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pool-dashboard__clear:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
