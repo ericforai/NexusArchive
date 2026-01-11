@@ -84,7 +84,7 @@ public class PoolServiceImpl implements PoolService {
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> contentQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         
         // 排除已归档
-        contentQuery.ne(ArcFileContent::getPreArchiveStatus, "ARCHIVED");
+        contentQuery.ne(ArcFileContent::getPreArchiveStatus, "COMPLETED");
         
         // 如果有元数据过滤，则限制 ID 范围
         if (!metaMap.isEmpty()) {
@@ -188,8 +188,7 @@ public class PoolServiceImpl implements PoolService {
     @Override
     public Map<String, Long> getStatusStats() {
         Map<String, Long> stats = new HashMap<>();
-        String[] statuses = { "PENDING_CHECK", "CHECK_FAILED", "PENDING_METADATA", "PENDING_ARCHIVE",
-                "PENDING_APPROVAL", "ARCHIVED" };
+        String[] statuses = { "PENDING_CHECK", "NEEDS_ACTION", "READY_TO_MATCH", "READY_TO_ARCHIVE", "COMPLETED" };
 
         for (String status : statuses) {
             QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
@@ -221,7 +220,7 @@ public class PoolServiceImpl implements PoolService {
         fileContent.setPreArchiveStatus(status);
 
         // 记录状态变更时间
-        if ("ARCHIVED".equals(status)) {
+        if ("COMPLETED".equals(status)) {
             fileContent.setArchivedTime(LocalDateTime.now());
         }
 

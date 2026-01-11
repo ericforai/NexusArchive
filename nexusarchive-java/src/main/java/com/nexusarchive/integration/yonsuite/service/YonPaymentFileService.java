@@ -108,7 +108,7 @@ public class YonPaymentFileService {
                 new LambdaQueryWrapper<ArcFileContent>()
                         .eq(ArcFileContent::getBusinessDocNo, businessDocNo));
 
-        if (existing != null && "ARCHIVED".equals(existing.getPreArchiveStatus())) {
+        if (existing != null && "COMPLETED".equals(existing.getPreArchiveStatus())) {
             log.info("付款单已归档，跳过: {}", businessDocNo);
             return null; // Don't process if already archived
         }

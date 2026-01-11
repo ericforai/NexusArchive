@@ -142,7 +142,7 @@ public class ErpMappingEngine {
         com.nexusarchive.entity.ArcFileContent content = new com.nexusarchive.entity.ArcFileContent();
         content.setId(cn.hutool.core.util.IdUtil.fastSimpleUUID());
         content.setCreatedTime(java.time.LocalDateTime.now());
-        content.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode());
+        content.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.READY_TO_ARCHIVE.getCode());
 
         mappingConfig.forEach((key, value) -> {
             String targetField = key;

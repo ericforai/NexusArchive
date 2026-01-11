@@ -145,7 +145,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             java.util.List<com.nexusarchive.entity.ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
             
             for (com.nexusarchive.entity.ArcFileContent file : files) {
-                file.setPreArchiveStatus("PENDING_ARCHIVE"); 
+                file.setPreArchiveStatus("READY_TO_ARCHIVE"); 
                 // Don't clear archival_code yet, as it might be reused or they might verify again.
                 // Actually, if rejected, the Archive record is marked rejected. 
                 // The user might create a NEW application.

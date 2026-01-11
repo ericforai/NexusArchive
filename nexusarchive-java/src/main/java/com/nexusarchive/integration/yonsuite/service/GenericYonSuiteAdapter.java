@@ -338,7 +338,7 @@ public class GenericYonSuiteAdapter {
                         .eq(ArcFileContent::getBusinessDocNo, fileContent.getBusinessDocNo()));
 
         if (existing != null) {
-            if ("ARCHIVED".equals(existing.getPreArchiveStatus())) {
+            if ("COMPLETED".equals(existing.getPreArchiveStatus())) {
                 log.info("销售出库单已归档，跳过: {}", fileContent.getBusinessDocNo());
                 return existing.getId();
             }

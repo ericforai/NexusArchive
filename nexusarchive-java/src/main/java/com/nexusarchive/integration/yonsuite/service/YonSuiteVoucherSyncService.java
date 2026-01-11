@@ -145,7 +145,7 @@ public class YonSuiteVoucherSyncService {
         String fileId;
         if (existing != null) {
             // 已存在，检查状态
-            if ("ARCHIVED".equals(existing.getPreArchiveStatus())) {
+            if ("COMPLETED".equals(existing.getPreArchiveStatus())) {
                 log.info("凭证已归档，跳过更新: {}", voucherId);
                 return existing.getId();
             }
@@ -195,7 +195,7 @@ public class YonSuiteVoucherSyncService {
 
         String fileId;
         if (existing != null) {
-            if ("ARCHIVED".equals(existing.getPreArchiveStatus())) {
+            if ("COMPLETED".equals(existing.getPreArchiveStatus())) {
                 return null; // 已归档，跳过
             }
             fileContent.setId(existing.getId());
@@ -230,7 +230,7 @@ public class YonSuiteVoucherSyncService {
                             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
                                     .eq(ArcFileContent::getBusinessDocNo, attBusinessDocNo));
 
-                    if (existingAtt != null && "ARCHIVED".equals(existingAtt.getPreArchiveStatus())) {
+                    if (existingAtt != null && "COMPLETED".equals(existingAtt.getPreArchiveStatus())) {
                         continue;
                     }
 

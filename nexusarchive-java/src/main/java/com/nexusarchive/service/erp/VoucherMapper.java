@@ -38,7 +38,7 @@ public class VoucherMapper {
         content.setFileSize(1024L); // Mock size, 实际大小由PDF生成后更新
         content.setCreatedTime(LocalDateTime.now());
         content.setCreator(dto.getCreator());
-        content.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_ARCHIVE.getCode());
+        content.setPreArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.READY_TO_ARCHIVE.getCode());
 
         // 设置ERP凭证号 (用户可读的单据编号)
         content.setErpVoucherNo(dto.getVoucherNo());
