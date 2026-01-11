@@ -6,7 +6,13 @@
  */
 import type { ModuleManifest } from '../../types/manifest';
 
-export const moduleManifest: ModuleManifest = {
+export const moduleManifest: ModuleManifest & {
+  exports: Record<string, {
+    role: string;
+    file: string;
+    capabilities: string[];
+  }>;
+} = {
   id: 'page.pre-archive',
   owner: 'platform-team',
   publicApi: './index.ts',
@@ -23,5 +29,14 @@ export const moduleManifest: ModuleManifest = {
     allowSharedDependencies: true
   },
 
-  tags: ['page', 'archive']
+  tags: ['page', 'archive'],
+
+  exports: {
+    // Pool components
+    PoolPage: {
+      role: 'page',
+      file: 'PoolPage.tsx',
+      capabilities: ['view-switch', 'pool-list', 'pool-kanban'],
+    },
+  },
 };
