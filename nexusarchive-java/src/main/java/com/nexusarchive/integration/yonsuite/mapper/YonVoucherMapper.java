@@ -10,6 +10,7 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.integration.yonsuite.dto.YonVoucherDetailResponse;
 import com.nexusarchive.integration.yonsuite.dto.YonVoucherListResponse;
+import com.nexusarchive.service.ErpConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -28,9 +29,28 @@ public class YonVoucherMapper {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ErpConfigService erpConfigService;
 
-    public YonVoucherMapper(com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+    public YonVoucherMapper(com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+                           ErpConfigService erpConfigService) {
         this.objectMapper = objectMapper;
+        this.erpConfigService = erpConfigService;
+    }
+
+    /**
+     * 将 ERP 账套编码转换为系统全宗编码
+     * 使用 accbookMapping 配置进行转换，如果未配置则返回原值
+     *
+     * @param accbookCode ERP 账套编码（如 BR01）
+     * @return 系统全宗编码（如 BR-GROUP）
+     */
+    private String resolveFondsCode(String accbookCode) {
+        if (accbookCode == null || accbookCode.isEmpty()) {
+            return accbookCode;
+        }
+        String fondsCode = erpConfigService.getFondsCodeByAccbook(accbookCode);
+        log.debug("账套编码 {} 映射到全宗编码 {}", accbookCode, fondsCode);
+        return fondsCode;
     }
 
     /**
@@ -65,9 +85,10 @@ public class YonVoucherMapper {
             archive.setCreator(header.getMaker().getName());
         }
 
-        // 账簿信息 -> 全宗号
+        // 账簿信息 -> 全宗号（通过映射转换）
         if (header.getAccbook() != null) {
-            archive.setFondsNo(header.getAccbook().getCode());
+            String accbookCode = header.getAccbook().getCode();
+            archive.setFondsNo(resolveFondsCode(accbookCode));
             if (header.getAccbook().getPkOrg() != null) {
                 archive.setOrgName(header.getAccbook().getPkOrg().getName());
             }
@@ -137,9 +158,10 @@ public class YonVoucherMapper {
             archive.setCreator(detail.getMakerObj().getName());
         }
 
-        // 账簿信息
+        // 账簿信息（通过映射转换）
         if (detail.getAccBookObj() != null) {
-            archive.setFondsNo(detail.getAccBookObj().getCode());
+            String accbookCode = detail.getAccBookObj().getCode();
+            archive.setFondsNo(resolveFondsCode(accbookCode));
         }
 
         // 凭证日期
@@ -234,6 +256,10 @@ public class YonVoucherMapper {
         // 临时存储路径 (PDF 生成后会更新为实际路径)
         String tempStoragePath = "pending/" + sourceSystem + "/" + businessDocNo + ".json";
 
+        // 获取账套编码并转换为全宗编码
+        String accbookCode = detail.getAccBookObj() != null ? detail.getAccBookObj().getCode() : null;
+        String fondsCode = resolveFondsCode(accbookCode);
+
         return ArcFileContent.builder()
                 .archivalCode(archivalCode)
                 .fileName("会计凭证-" + displayName + ".json")
@@ -249,7 +275,7 @@ public class YonVoucherMapper {
                 .fiscalYear(period.length() >= 4 ? period.substring(0, 4) : null)
                 .voucherType("AC01")
                 .creator(detail.getMakerObj() != null ? detail.getMakerObj().getName() : null)
-                .fondsCode(detail.getAccBookObj() != null ? detail.getAccBookObj().getCode() : null)
+                .fondsCode(fondsCode)
                 .createdTime(LocalDateTime.now())
                 .build();
     }
@@ -305,6 +331,13 @@ public class YonVoucherMapper {
             }
         }
 
+        // 获取账套编码并转换为全宗编码
+        String accbookCode = header.getAccbook() != null ? header.getAccbook().getCode() : null;
+        String fondsCode = resolveFondsCode(accbookCode);
+
+        // 从凭证号中提取凭证字 (如 "记-8" -> "记")
+        String voucherWord = extractVoucherWord(displayName);
+
         return ArcFileContent.builder()
                 .archivalCode(archivalCode)
                 .fileName("会计凭证-" + displayName + ".json")
@@ -320,13 +353,60 @@ public class YonVoucherMapper {
                 .fiscalYear(period.length() >= 4 ? period.substring(0, 4) : null)
                 .voucherType("AC01")
                 .creator(header.getMaker() != null ? header.getMaker().getName() : null)
-                .fondsCode(header.getAccbook() != null ? header.getAccbook().getCode() : null)
+                .fondsCode(fondsCode)
                 .createdTime(LocalDateTime.now())
-                // 新增: 显示字段
-                .voucherWord(displayName)  // 凭证字号
-                .summary(summary)          // 摘要
-                .docDate(docDate)          // 业务日期
+                // 显示字段
+                .voucherWord(voucherWord)   // 凭证字 (从displayName提取)
+                .summary(summary)            // 摘要
+                .docDate(docDate)            // 业务日期
                 .build();
+    }
+
+    /**
+     * 从完整凭证号中提取凭证字
+     * <p>
+     * 凭证号格式通常为: {凭证字}-{凭证号}，如 "记-8", "收-5", "付-10"
+     * </p>
+     *
+     * @param voucherNo 完整凭证号，如 "记-8"
+     * @return 凭证字，如 "记"，默认返回 "记"
+     */
+    private static String extractVoucherWord(String voucherNo) {
+        if (voucherNo == null || voucherNo.isEmpty()) {
+            return "记"; // 默认凭证字
+        }
+
+        // 按横线分割: "记-8" -> ["记", "8"]
+        String[] parts = voucherNo.split("-");
+        if (parts.length > 1) {
+            String word = parts[0].trim();
+            // 验证是有效的凭证字
+            if (isValidVoucherWord(word)) {
+                return word;
+            }
+        }
+
+        // 如果没有横线，检查是否以已知凭证字开头
+        if (voucherNo.matches("^[记收付转资产].*")) {
+            return voucherNo.substring(0, 1);
+        }
+
+        // 默认返回 "记"
+        return "记";
+    }
+
+    /**
+     * 验证是否为有效的凭证字
+     *
+     * @param word 待验证的凭证字
+     * @return 是否有效
+     */
+    private static boolean isValidVoucherWord(String word) {
+        if (word == null || word.isEmpty()) {
+            return false;
+        }
+        // 常见凭证字: 记、收、付、转、资、银、现
+        return word.matches("^[记收付转资产银现]$");
     }
 
     /**

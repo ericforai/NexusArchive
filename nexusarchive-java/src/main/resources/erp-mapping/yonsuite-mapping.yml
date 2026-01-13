@@ -57,26 +57,6 @@ entries:
     amount:
       script: "def debit = it.debitOrg ?: 0; def credit = it.creditOrg ?: 0; (debit != null && debit > 0) ? debit : credit"
 
-    # 币种代码
-    currencyCode:
-      field: currency.code
-
-    # 币种名称
-    currencyName:
-      field: currency.name
-
-    # 原币借方金额
-    debitOriginal:
-      field: debit_original
-
-    # 原币贷方金额
-    creditOriginal:
-      field: credit_original
-
-    # 汇率计算: 本位币金额 / 原币金额
-    exchangeRate:
-      script: "def org = it.debitOrg ?: it.creditOrg ?: 0; def orig = it.debit_original ?: it.credit_original ?: 0; (orig != null && orig > 0) ? org / orig : null"
-
 # 附件映射 (AttachmentDto)
 attachments:
   source: header.attachments
