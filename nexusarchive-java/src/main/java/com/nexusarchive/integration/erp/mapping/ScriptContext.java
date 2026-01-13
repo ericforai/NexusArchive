@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -37,10 +38,15 @@ public class ScriptContext {
      * 获取绑定的变量用于 GroovyShell
      */
     public Map<String, Object> getBindings() {
-        return Map.of(
-            "ctx", ctx,
-            "config", config,
-            "utils", utils
-        );
+        Map<String, Object> bindings = new HashMap<>();
+        bindings.put("ctx", ctx);
+        bindings.put("it", ctx);  // it 是 ctx 的别名，方便脚本中使用
+        if (config != null) {
+            bindings.put("config", config);
+        }
+        if (utils != null) {
+            bindings.put("utils", utils);
+        }
+        return bindings;
     }
 }

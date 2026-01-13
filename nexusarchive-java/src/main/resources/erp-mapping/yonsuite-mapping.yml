@@ -18,7 +18,7 @@ headerMappings:
     field: header.maketime
 
   attachmentCount:
-    script: 'ctx[''header''][''attachmentQuantity''] ? Integer.parseInt(ctx[''header''][''attachmentQuantity''].toString()) : 0'
+    script: "ctx['header']['attachmentQuantity'] ? Integer.parseInt(ctx['header']['attachmentQuantity'].toString()) : 0"
 
   issuer:
     field: header.maker.name
@@ -52,10 +52,10 @@ entries:
       field: accsubject.name
 
     direction:
-      script: 'import com.nexusarchive.common.enums.DirectionType; def debit = it[''debitOrg''] ?: 0; def credit = it[''creditOrg''] ?: 0; if (debit != null && debit > 0) DirectionType.DEBIT else if (credit != null && credit > 0) DirectionType.CREDIT else null'
+      script: "import com.nexusarchive.common.enums.DirectionType; def debit = it.debitOrg ?: 0; def credit = it.creditOrg ?: 0; if (debit != null && debit > 0) DirectionType.DEBIT else if (credit != null && credit > 0) DirectionType.CREDIT else null"
 
     amount:
-      script: 'def debit = it[''debitOrg''] ?: 0; def credit = it[''creditOrg''] ?: 0; (debit != null && debit > 0) ? debit : credit'
+      script: "def debit = it.debitOrg ?: 0; def credit = it.creditOrg ?: 0; (debit != null && debit > 0) ? debit : credit"
 
 # 附件映射 (AttachmentDto)
 attachments:
