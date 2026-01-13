@@ -1,0 +1,10 @@
+这是一个非常重要的 Git 状态提示，意思是：
+
+**"Changes to be committed" (绿字部分)**：
+这些文件已经被 `git add` 放入了**暂存区 (Staging Area)**，准备好了被提交，但**还没有**真正生成提交记录 (Commit)。
+这通常是因为上一次执行 `git commit` 时，被自动触发的代码检查（Pre-commit hook）拦截了，或者执行中断了，导致提交动作没有最终完成。
+
+**"Untracked files" (红字部分)**：
+这个文件 (`docs/plans/2026-01-13-documentation-compliance-report.md`) 是完全**新增**的，Git 还没有开始追踪它。需要运行 `git add` 把它也加进去。
+
+**总结**：您的代码目前处于 "已打包但没发货" 的状态。我需要再执行一次提交命令来完成在这个过程。

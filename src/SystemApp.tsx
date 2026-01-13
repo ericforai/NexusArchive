@@ -15,6 +15,9 @@ import { AdminLayout } from './pages/admin/AdminLayout';
 // 状态管理
 import { useAuthStore, useAppStore } from './store';
 
+// 类型
+import { ViewState } from './types';
+
 // 视图常量、渲染器和 Hooks
 import { renderContent, useAuthVerification, useUrlSync, useSystemHandlers } from './pages/system';
 
@@ -30,16 +33,6 @@ export const SystemApp: React.FC = () => {
 
     // 从 AuthStore 获取认证状态
     const { isAuthenticated, isCheckingAuth } = useAuthStore();
-
-    // 从 AppStore 获取应用状态
-    const {
-        activeView,
-        activeSubItem,
-        activeResourceId,
-        sidebarCollapsed,
-        setActiveView,
-        toggleSidebar,
-    } = useAppStore();
 
     // 加载中状态
     if (isCheckingAuth) {
@@ -60,13 +53,39 @@ export const SystemApp: React.FC = () => {
         );
     }
 
+    // 已登录状态
+    return (
+        <AuthenticatedApp
+            navigate={navigate}
+            handleNavigate={handleNavigate}
+            handleLogout={handleLogout}
+            handleNavigateToPanorama={handleNavigateToPanorama}
+        />
+    );
+};
+
+/**
+ * 已认证用户的主应用布局 - 提取以减少主函数行数
+ */
+const AuthenticatedApp: React.FC<{
+    navigate: ReturnType<typeof useNavigate>;
+    handleNavigate: ReturnType<typeof useSystemHandlers>['handleNavigate'];
+    handleLogout: ReturnType<typeof useSystemHandlers>['handleLogout'];
+    handleNavigateToPanorama: ReturnType<typeof useSystemHandlers>['handleNavigateToPanorama'];
+}> = ({ navigate, handleNavigate, handleLogout, handleNavigateToPanorama }) => {
+    const {
+        activeView,
+        activeSubItem,
+        activeResourceId,
+        sidebarCollapsed,
+        setActiveView,
+        toggleSidebar,
+    } = useAppStore();
+
     // 管理员模式
     if (activeView === ViewState.ADMIN) {
         return <AdminLayout onExit={() => setActiveView(ViewState.PORTAL)} />;
     }
-
-    // 导航到设置的包装函数
-    const navigateSettings = () => navigate('/system/settings');
 
     // 渲染主内容
     const content = renderContent({
@@ -74,7 +93,7 @@ export const SystemApp: React.FC = () => {
         activeSubItem,
         activeResourceId,
         onNavigate: handleNavigate,
-        navigateSettings,
+        navigateSettings: () => navigate('/system/settings'),
     });
 
     return (

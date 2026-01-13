@@ -26,10 +26,7 @@ client.interceptors.request.use(
             }
 
             if (fondsCode) {
-                console.log('[API-CLIENT] Sending Fonds Header:', fondsCode, 'to', config.url);
                 config.headers['X-Fonds-No'] = fondsCode;
-            } else {
-                console.warn('[API-CLIENT] Fonds code missing in store, sending request without header to', config.url);
             }
         } catch {
             // Silently fail to add headers
@@ -47,35 +44,44 @@ client.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response) {
-            const { status, data } = error.response;
-            const url = error.config?.url || '';
-            const isAuthError = status === 401;
-            // 403 merely means no permission, should not logout
-            const isForbidden = status === 403;
-
-            if (isAuthError) {
-                const { token } = getHttpClientState();
-                if (token) {
-                    performLogout();
-                }
-
-                if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/activation')) {
-                    const msg = data?.message || '';
-                    if (msg.includes('License') || msg.includes('许可')) {
-                        window.location.href = '/system/activation';
-                    } else {
-                        window.location.href = '/system/login';
-                    }
-                }
-            }
-
-            // Normalize error message for UI consumption
-            // Backend now consistently returns { code, message, data }
-            if (data && data.message) {
-                error.message = data.message;
-            }
-        }
+        handleResponseError(error);
         return Promise.reject(error);
     }
 );
+
+/**
+ * Handle response error - extracted to reduce complexity
+ */
+function handleResponseError(error: unknown): void {
+    if (!error || typeof error !== 'object') return;
+    const axiosError = error as { response?: { status: number; data?: { message?: string } }; config?: { url?: string }; message?: string };
+    if (!axiosError.response) return;
+
+    const { status, data } = axiosError.response;
+    const isAuthError = status === 401;
+
+    if (isAuthError) {
+        const { token } = getHttpClientState();
+        if (token) {
+            performLogout();
+        }
+        redirectToLoginIfNeeded(data?.message);
+    }
+
+    // Normalize error message for UI consumption
+    if (data?.message && axiosError.message !== undefined) {
+        (error as { message: string }).message = data.message;
+    }
+}
+
+/**
+ * Redirect to login or activation page if needed
+ */
+function redirectToLoginIfNeeded(message?: string): void {
+    if (typeof window === 'undefined') return;
+    const { pathname } = window.location;
+    if (pathname.includes('/login') || pathname.includes('/activation')) return;
+
+    const isLicenseError = message?.includes('License') || message?.includes('许可');
+    window.location.href = isLicenseError ? '/system/activation' : '/system/login';
+}

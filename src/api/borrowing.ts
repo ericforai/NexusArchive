@@ -70,7 +70,7 @@ export const borrowingApi = {
     },
 
     // 取消借阅 (Mock)
-    cancelBorrowing: async (id: string): Promise<ApiResponse<void>> => {
+    cancelBorrowing: async (_id: string): Promise<ApiResponse<void>> => {
         // const response = await client.post(`/borrow/requests/${id}/cancel`);
         console.warn('Cancel not implemented in backend yet');
         return { code: 200, message: 'Simulated Cancel Success', data: undefined };

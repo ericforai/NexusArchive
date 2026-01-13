@@ -1,3 +1,5 @@
+一旦我所属的文件夹有所变化，请更新我。
+
 // Input: API 客户端定义
 // Output: 极简架构说明
 // Pos: src/api/README.md

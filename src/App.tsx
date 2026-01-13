@@ -12,12 +12,11 @@ import React, { FC, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { message as antdMessage, notification as antdNotification } from 'antd';
 import { routes } from './routes';
-import { DocumentationGuardProvider } from './components/dev/DocumentationGuardProvider';
 
 // Architecture Defense: Initialize runtime introspection in development
 if (import.meta.env.DEV) {
   import('./lib/architectureIntrospection').then(() => {
-    console.log('✅ Architecture introspection initialized');
+    // Architecture introspection initialized
   });
 }
 
@@ -28,7 +27,7 @@ const App: FC = () => {
   // 将原 ToastContainer 的 logic 移入 App
   useEffect(() => {
     try {
-      console.log('[App] Configuring antd global feedback components...');
+      // Configure antd global feedback components
       if (antdMessage && typeof antdMessage.config === 'function') {
         antdMessage.config({
           duration: 3,

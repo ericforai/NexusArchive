@@ -1,3 +1,5 @@
+一旦我所属的文件夹有所变化，请更新我。
+
 // Input: React 批量操作组件
 // Output: 批量操作通用组件目录说明
 // Pos: src/components/operations/README.md

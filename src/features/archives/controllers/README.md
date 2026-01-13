@@ -1,3 +1,5 @@
+一旦我所属的文件夹有所变化，请更新我。
+
 // Input: 档案控制器模块
 // Output: 极简架构说明
 // Pos: src/features/archives/controllers/README.md

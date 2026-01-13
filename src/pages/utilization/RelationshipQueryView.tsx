@@ -13,7 +13,7 @@ import {
   RotateCcw,
   Info
 } from 'lucide-react';
-import { SimpleGraphView } from '@/components/relation-graph/SimpleGraphView';
+import { SimpleGraphView } from '@/components/relation-graph';
 import { useRelationGraphStore } from '@/store/useRelationGraphStore';
 import type { RelationNodeData } from '@/types/relationGraph';
 import { ARCHIVE_TYPE_STYLES } from '@/types/relationGraph';
@@ -27,35 +27,28 @@ const SearchBar: React.FC<{
   onChange: (value: string) => void;
   onSearch: () => void;
   isLoading: boolean;
-}> = ({ value, onChange, onSearch, isLoading }) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch();
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 w-full max-w-md">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-          placeholder="请输入凭证号 / 发票号 / 合同号..."
-          disabled={isLoading}
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={isLoading || !value.trim()}
-        className="px-6 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30 transition-all flex items-center gap-2"
-      >
-        {isLoading ? <Loader2 size={18} className="animate-spin" /> : '查询'}
-      </button>
-    </form>
-  );
-};
+}> = ({ value, onChange, onSearch, isLoading }) => (
+  <form onSubmit={(e) => { e.preventDefault(); onSearch(); }} className="flex items-center gap-2 w-full max-w-md">
+    <div className="relative flex-1">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+        placeholder="请输入凭证号 / 发票号 / 合同号..."
+        disabled={isLoading}
+      />
+    </div>
+    <button
+      type="submit"
+      disabled={isLoading || !value.trim()}
+      className="px-6 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30 transition-all flex items-center gap-2"
+    >
+      {isLoading ? <Loader2 size={18} className="animate-spin" /> : '查询'}
+    </button>
+  </form>
+);
 
 /**
  * 节点详情抽屉
@@ -94,11 +87,10 @@ const NodeDetailDrawer: React.FC<{
         <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-slate-500">当前状态</span>
-            <span className={`px-2 py-1 text-xs font-bold rounded ${
-              nodeData.status === '已归档' || nodeData.status === 'ARCHIVED'
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-slate-100 text-slate-600'
-            }`}>
+            <span className={`px-2 py-1 text-xs font-bold rounded ${nodeData.status === '已归档' || nodeData.status === 'ARCHIVED'
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-slate-100 text-slate-600'
+              }`}>
               {nodeData.status || '未知'}
             </span>
           </div>
@@ -198,8 +190,7 @@ export const RelationshipQueryView: React.FC = () => {
     if (searchQuery) {
       initializeGraph(searchQuery);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initializeGraph]);
 
   // 搜索处理
   const handleSearch = useCallback(() => {

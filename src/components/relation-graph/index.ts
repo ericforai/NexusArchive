@@ -7,3 +7,4 @@ export { RelationNode } from './RelationNode';
 export { RelationEdge } from './RelationEdge';
 export { RelationGraphCanvas, RelationGraphCanvasWithProvider } from './RelationGraphCanvas';
 export type { RelationGraphCanvasProps } from './RelationGraphCanvas';
+export { SimpleGraphView } from './SimpleGraphView';

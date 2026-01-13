@@ -1,3 +1,5 @@
+一旦我所属的文件夹有所变化，请更新我。
+
 // Input: 无
 // Output: 指标数据目录说明
 // Pos: docs/metrics/

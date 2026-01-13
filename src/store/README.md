@@ -1,3 +1,5 @@
+一旦我所属的文件夹有所变化，请更新我。
+
 // Input: 全局状态管理
 // Output: 极简架构说明
 // Pos: src/store/README.md

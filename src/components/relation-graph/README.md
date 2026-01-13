@@ -1,3 +1,5 @@
+一旦我所属的文件夹有所变化，请更新我。
+
 // Input: React、SVG、Zustand
 // Output: 关系图谱组件说明
 // Pos: src/components/relation-graph/README.md

@@ -28,5 +28,4 @@ export function registerAuthStateProvider(): void {
       useAuthStore.getState().logout();
     },
   });
-  console.log('[AuthProvider] Registered');
 }
