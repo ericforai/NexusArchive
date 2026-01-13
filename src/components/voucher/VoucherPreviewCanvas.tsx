@@ -98,32 +98,52 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
       <table style={voucherTableStyles.table}>
         <thead style={voucherTableStyles.tableHead}>
           <tr>
-            <th style={{ ...voucherTableStyles.tableHeadCell, width: '25%' }}>摘要</th>
-            <th style={{ ...voucherTableStyles.tableHeadCell, width: '35%' }}>科目</th>
-            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '20%' }}>借方</th>
-            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '20%' }}>贷方</th>
+            <th style={{ ...voucherTableStyles.tableHeadCell, width: '22%' }}>摘要</th>
+            <th style={{ ...voucherTableStyles.tableHeadCell, width: '30%' }}>科目</th>
+            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '13%' }}>借方</th>
+            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '13%' }}>贷方</th>
+            <th style={{ ...voucherTableStyles.tableHeadCell, width: '12%' }}>币种</th>
+            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '10%' }}>原币</th>
           </tr>
         </thead>
         <tbody>
           {data.entries && data.entries.length > 0 ? (
-            data.entries.map((entry, index) => (
-              <tr key={entry.lineNo || index} style={voucherTableStyles.tableRow}>
-                <td style={voucherTableStyles.tableCell}>{entry.summary || '-'}</td>
-                <td style={voucherTableStyles.tableCell}>
-                  <div>
-                    <div>{entry.accountName || '-'}</div>
-                    {entry.accountCode && (
-                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>{entry.accountCode}</div>
-                    )}
-                  </div>
-                </td>
-                <td style={voucherTableStyles.tableCellRight}>{formatCurrency(entry.debit)}</td>
-                <td style={voucherTableStyles.tableCellRight}>{formatCurrency(entry.credit)}</td>
-              </tr>
-            ))
+            data.entries.map((entry, index) => {
+              // 判断是否有外币（非本位币）
+              const hasForeignCurrency = entry.currencyCode && entry.currencyCode !== 'CNY';
+              // 获取原币金额
+              const originalDebit = entry.debitOriginal ? Number(entry.debitOriginal) : 0;
+              const originalCredit = entry.creditOriginal ? Number(entry.creditOriginal) : 0;
+
+              return (
+                <tr key={entry.lineNo || index} style={voucherTableStyles.tableRow}>
+                  <td style={voucherTableStyles.tableCell}>{entry.summary || '-'}</td>
+                  <td style={voucherTableStyles.tableCell}>
+                    <div>
+                      <div>{entry.accountName || '-'}</div>
+                      {entry.accountCode && (
+                        <div style={{ fontSize: '11px', color: '#9ca3af' }}>{entry.accountCode}</div>
+                      )}
+                    </div>
+                  </td>
+                  <td style={voucherTableStyles.tableCellRight}>{formatCurrency(entry.debit)}</td>
+                  <td style={voucherTableStyles.tableCellRight}>{formatCurrency(entry.credit)}</td>
+                  <td style={{ ...voucherTableStyles.tableCell, fontSize: '12px' }}>
+                    {entry.currencyName || entry.currencyCode || '-'}
+                  </td>
+                  <td style={{ ...voucherTableStyles.tableCellRight, fontSize: '12px' }}>
+                    {hasForeignCurrency ? (
+                      <span>
+                        {formatCurrency(originalDebit || originalCredit)}
+                      </span>
+                    ) : '-'}
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              <td colSpan={4} style={{ ...voucherTableStyles.tableCell, textAlign: 'center', color: '#9ca3af' }}>
+              <td colSpan={6} style={{ ...voucherTableStyles.tableCell, textAlign: 'center', color: '#9ca3af' }}>
                 暂无分录数据
               </td>
             </tr>
@@ -131,11 +151,12 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
         </tbody>
         <tfoot style={voucherTableStyles.tableFoot}>
           <tr>
-            <td colSpan={2} style={{ ...voucherTableStyles.tableFootCell, textAlign: 'right' }}>
+            <td colSpan={3} style={{ ...voucherTableStyles.tableFootCell, textAlign: 'right' }}>
               合计
             </td>
             <td style={voucherTableStyles.tableFootCell}>{formatCurrency(totalDebit)}</td>
-            <td style={voucherTableStyles.tableFootCell}>{formatCurrency(totalCredit)}</td>
+            <td style={voucherTableStyles.tableFootCell}></td>
+            <td style={voucherTableStyles.tableFootCell}></td>
           </tr>
         </tfoot>
       </table>

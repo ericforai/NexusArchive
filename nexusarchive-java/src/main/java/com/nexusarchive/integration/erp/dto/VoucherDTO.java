@@ -119,5 +119,15 @@ public class VoucherDTO {
         private String accountName;
         private BigDecimal debit;
         private BigDecimal credit;
+        /** 币种代码 (如: CNY, USD, EUR) */
+        private String currencyCode;
+        /** 币种名称 (如: 人民币, 美元, 欧元) */
+        private String currencyName;
+        /** 原币借方金额 */
+        private BigDecimal debitOriginal;
+        /** 原币贷方金额 */
+        private BigDecimal creditOriginal;
+        /** 汇率 (本位币金额 / 原币金额) */
+        private BigDecimal exchangeRate;
     }
 }

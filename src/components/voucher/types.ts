@@ -13,6 +13,16 @@ export interface VoucherEntryDTO {
   accountName?: string;
   debit?: number | string;
   credit?: number | string;
+  /** 币种代码 (如: CNY, USD, EUR) */
+  currencyCode?: string;
+  /** 币种名称 (如: 人民币, 美元, 欧元) */
+  currencyName?: string;
+  /** 原币借方金额 */
+  debitOriginal?: number | string;
+  /** 原币贷方金额 */
+  creditOriginal?: number | string;
+  /** 汇率 (本位币金额 / 原币金额) */
+  exchangeRate?: number | string;
 }
 
 /**

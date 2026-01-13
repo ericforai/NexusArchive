@@ -15,6 +15,16 @@ export interface VoucherEntryDTO {
   accountName?: string;
   debit?: number | string;
   credit?: number | string;
+  /** 币种代码 (如: CNY, USD, EUR) */
+  currencyCode?: string;
+  /** 币种名称 (如: 人民币, 美元, 欧元) */
+  currencyName?: string;
+  /** 原币借方金额 */
+  debitOriginal?: number | string;
+  /** 原币贷方金额 */
+  creditOriginal?: number | string;
+  /** 汇率 (本位币金额 / 原币金额) */
+  exchangeRate?: number | string;
 }
 
 export interface ParseResult {
@@ -66,6 +76,8 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
       .map((body: any, index: number) => {
         const debit = body.debitOrg || body.debit_original || body.debit_org || body.debit || 0;
         const credit = body.creditOrg || body.credit_original || body.credit_org || body.credit || 0;
+        const debitOriginal = body.debitOriginal || body.debit_original || body.debit_original || 0;
+        const creditOriginal = body.creditOriginal || body.credit_original || body.credit_original || 0;
 
         // 获取科目信息 - 支持 YonSuite 原始格式 (accsubject) 和 VoucherDTO 格式 (accountCode/accountName)
         let accountCode = body.accountCode || body.account_code || '';
@@ -81,6 +93,21 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
           }
         }
 
+        // 获取币种信息 - 支持 YonSuite 原始格式 (currency) 和 VoucherDTO 格式 (currencyCode/currencyName)
+        let currencyCode = body.currencyCode || body.currency_code || '';
+        let currencyName = body.currencyName || body.currency_name || '';
+        let exchangeRate = body.exchangeRate || body.exchange_rate || null;
+
+        // 如果还没有币种信息，尝试从 currency 获取 (YonSuite 原始格式)
+        if (!currencyCode && !currencyName && body.currency) {
+          if (typeof body.currency === 'object') {
+            currencyCode = body.currency.code || '';
+            currencyName = body.currency.name || '';
+          } else {
+            currencyCode = body.currency || '';
+          }
+        }
+
         return {
           lineNo: body.recordNumber || body.recordnumber || body.lineNo || index + 1,
           summary: body.description || body.digest || body.summary || '',
@@ -88,6 +115,11 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
           accountName,
           debit: Number(debit) || 0,
           credit: Number(credit) || 0,
+          currencyCode,
+          currencyName,
+          debitOriginal: Number(debitOriginal) || undefined,
+          creditOriginal: Number(creditOriginal) || undefined,
+          exchangeRate: exchangeRate ? Number(exchangeRate) : undefined,
         };
       })
       .filter((e: VoucherEntryDTO) => (Number(e.debit) || 0) > 0 || (Number(e.credit) || 0) > 0);
