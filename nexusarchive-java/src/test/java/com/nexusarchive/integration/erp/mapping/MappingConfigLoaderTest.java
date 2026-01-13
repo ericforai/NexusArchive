@@ -148,6 +148,32 @@ class MappingConfigLoaderTest {
     }
 
     @Test
+    @DisplayName("YonSuite 配置应该包含 direction 脚本映射")
+    void shouldContainYonSuiteDirectionScriptMapping() throws IOException {
+        MappingConfig config = loader.loadMapping("yonsuite");
+
+        FieldMapping directionMapping = config.getEntries().getItem().get("direction");
+        assertThat(directionMapping).isNotNull();
+        assertThat(directionMapping.hasScript()).isTrue();
+        assertThat(directionMapping.getScript()).isNotNull();
+        assertThat(directionMapping.getScript()).contains("DirectionType");
+        assertThat(directionMapping.getScript()).contains("debitOrg");
+    }
+
+    @Test
+    @DisplayName("YonSuite 配置应该包含 amount 脚本映射")
+    void shouldContainYonSuiteAmountScriptMapping() throws IOException {
+        MappingConfig config = loader.loadMapping("yonsuite");
+
+        FieldMapping amountMapping = config.getEntries().getItem().get("amount");
+        assertThat(amountMapping).isNotNull();
+        assertThat(amountMapping.hasScript()).isTrue();
+        assertThat(amountMapping.getScript()).isNotNull();
+        assertThat(amountMapping.getScript()).contains("debitOrg");
+        assertThat(amountMapping.getScript()).contains("creditOrg");
+    }
+
+    @Test
     @DisplayName("当配置文件不存在时应该抛出MappingConfigNotFoundException")
     void shouldThrowExceptionWhenConfigNotFound() {
         assertThatThrownBy(() -> loader.loadMapping("non-existent"))
