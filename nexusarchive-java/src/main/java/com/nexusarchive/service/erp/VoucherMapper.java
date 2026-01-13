@@ -48,7 +48,9 @@ public class VoucherMapper {
         content.setSourceSystem("用友YonSuite");
 
         // 填充显示字段 (凭证字号、摘要、业务日期)
-        content.setVoucherWord(dto.getVoucherNo()); // 凭证字号 = 单据编号
+        // 从凭证号中解析凭证字 (如 "记-8" -> "记")
+        String voucherWord = extractVoucherWord(dto.getVoucherNo());
+        content.setVoucherWord(voucherWord);
         content.setDocDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : LocalDate.now()); // 业务日期
 
         // 生成摘要: 单据类型 + 供应商/客户
@@ -70,5 +72,52 @@ public class VoucherMapper {
         content.setStoragePath(storagePath);
 
         return content;
+    }
+
+    /**
+     * 从完整凭证号中提取凭证字
+     * <p>
+     * 凭证号格式通常为: {凭证字}-{凭证号}，如 "记-8", "收-5", "付-10"
+     * </p>
+     *
+     * @param voucherNo 完整凭证号，如 "记-8"
+     * @return 凭证字，如 "记"，默认返回 "记"
+     */
+    private static String extractVoucherWord(String voucherNo) {
+        if (voucherNo == null || voucherNo.isEmpty()) {
+            return "记"; // 默认凭证字
+        }
+
+        // 按横线分割: "记-8" -> ["记", "8"]
+        String[] parts = voucherNo.split("-");
+        if (parts.length > 1) {
+            String word = parts[0].trim();
+            // 验证是有效的凭证字
+            if (isValidVoucherWord(word)) {
+                return word;
+            }
+        }
+
+        // 如果没有横线，检查是否以已知凭证字开头
+        if (voucherNo.matches("^[记收付转资产].*")) {
+            return voucherNo.substring(0, 1);
+        }
+
+        // 默认返回 "记"
+        return "记";
+    }
+
+    /**
+     * 验证是否为有效的凭证字
+     *
+     * @param word 待验证的凭证字
+     * @return 是否有效
+     */
+    private static boolean isValidVoucherWord(String word) {
+        if (word == null || word.isEmpty()) {
+            return false;
+        }
+        // 常见凭证字: 记、收、付、转、资、银、现、等
+        return word.matches("^[记收付转资产银现]$");
     }
 }
