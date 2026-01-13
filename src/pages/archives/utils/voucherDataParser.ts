@@ -51,10 +51,15 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
     else if (data.body && Array.isArray(data.body)) {
       bodies = data.body;
     }
-
-    if (bodies.length === 0) {
-      return { voucherData: null, error: 'No bodies found' };
+    // 简化格式: data.entries 是数组 (用友等系统)
+    else if (data.entries && Array.isArray(data.entries)) {
+      bodies = data.entries;
     }
+
+    // 即使没有分录数据，也要尝试返回凭证头信息
+    // 因为用户仍需查看凭证的基本信息（编号、日期、金额等）
+
+
 
     // 解析分录数据
     const parsedEntries = bodies
@@ -62,10 +67,12 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
         const debit = body.debitOrg || body.debit_original || body.debit_org || body.debit || 0;
         const credit = body.creditOrg || body.credit_original || body.credit_org || body.credit || 0;
 
-        // 获取科目信息
-        let accountCode = '';
-        let accountName = '';
-        if (body.accsubject) {
+        // 获取科目信息 - 支持 YonSuite 原始格式 (accsubject) 和 VoucherDTO 格式 (accountCode/accountName)
+        let accountCode = body.accountCode || body.account_code || '';
+        let accountName = body.accountName || body.account_name || '';
+
+        // 如果还没有科目信息，尝试从 accsubject 获取 (YonSuite 原始格式)
+        if (!accountCode && !accountName && body.accsubject) {
           if (typeof body.accsubject === 'object') {
             accountCode = body.accsubject.code || '';
             accountName = body.accsubject.name || '';
@@ -75,7 +82,7 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
         }
 
         return {
-          lineNo: body.recordNumber || body.recordnumber || index + 1,
+          lineNo: body.recordNumber || body.recordnumber || body.lineNo || index + 1,
           summary: body.description || body.digest || body.summary || '',
           accountCode,
           accountName,
@@ -85,15 +92,42 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
       })
       .filter((e: VoucherEntryDTO) => (Number(e.debit) || 0) > 0 || (Number(e.credit) || 0) > 0);
 
-    // 计算合计
-    const totalDebit = parsedEntries.reduce((sum: number, e: VoucherEntryDTO) => sum + (Number(e.debit) || 0), 0);
-    const totalCredit = parsedEntries.reduce((sum: number, e: VoucherEntryDTO) => sum + (Number(e.credit) || 0), 0);
+    // 计算合计 - 如果有分录则从分录汇总，否则使用顶层的 debitTotal/creditTotal
+    let totalDebit = parsedEntries.reduce((sum: number, e: VoucherEntryDTO) => sum + (Number(e.debit) || 0), 0);
+    let totalCredit = parsedEntries.reduce((sum: number, e: VoucherEntryDTO) => sum + (Number(e.credit) || 0), 0);
+
+    // 如果分录合计为 0，尝试从顶层字段获取金额
+    if (totalDebit === 0 && totalCredit === 0) {
+      totalDebit = Number(headerData.debitTotal) || Number(headerData.debit_total) || 0;
+      totalCredit = Number(headerData.creditTotal) || Number(headerData.credit_total) || totalDebit; // 通常借贷相等
+    }
 
     // 从 header 数据或 row 获取凭证头信息
+    // 即使没有分录，也要返回凭证基本信息供用户查看
+
+    // 解析凭证号和凭证字，避免重复显示
+    // 例如: voucherNo="记-8", voucherWord="记" → 只显示 "记-8"，不显示 "记-记-8"
+    let voucherNo = headerData.voucherNo || headerData.voucherno || row.code || row.erpVoucherNo || row.id || '';
+    let voucherWord = headerData.voucherWord || headerData.voucherword || row.voucherWord || '';
+
+    // 如果 voucherNo 已经包含凭证字格式（如 "记-8"），且没有单独的 voucherWord，
+    // 则解析出凭证字，避免重复组合
+    if (!voucherWord && voucherNo && /^[记收付转资产]/.test(voucherNo)) {
+      const match = voucherNo.match(/^([记收付转资产])-(.+)$/);
+      if (match) {
+        voucherWord = match[1];  // 解析出凭证字
+        voucherNo = match[2];     // 解析出凭证号
+      }
+    }
+    // 如果仍然没有凭证字，使用默认值
+    if (!voucherWord) {
+      voucherWord = '记';
+    }
+
     const voucherData: VoucherDTO = {
       voucherId: row.id,
-      voucherNo: headerData.voucherNo || headerData.voucherno || row.code || row.id,
-      voucherWord: headerData.voucherWord || headerData.voucherword || '记',
+      voucherNo,
+      voucherWord,
       voucherDate: headerData.voucherDate || headerData.voucherdate || row.date || row.docDate || row.createdTime || '',
       orgName: headerData.orgName || headerData.orgname || row.orgName || '',
       summary: headerData.summary || row.title || row.summary || '',
@@ -102,11 +136,12 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
       creator: headerData.creator || headerData.maker || row.creator || row.createdBy || '',
       auditor: headerData.auditor || headerData.checker || row.auditor || '',
       poster: headerData.poster || headerData.bookkeeper || row.poster || '',
-      entries: parsedEntries,
+      entries: parsedEntries, // 可能是空数组，VoucherPreviewCanvas 会显示"暂无分录数据"
       attachments: row.attachments || [],
       createdTime: row.createdTime || row.date || '',
       id: row.id,
     };
+
 
     return { voucherData };
   } catch (e) {
