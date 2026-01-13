@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.ArchiveService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.*;

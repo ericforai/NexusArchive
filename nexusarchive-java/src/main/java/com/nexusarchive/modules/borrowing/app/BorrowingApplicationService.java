@@ -174,6 +174,19 @@ public class BorrowingApplicationService implements BorrowingFacade {
     }
 
     @Override
+    public boolean checkAccess(String userId, String archiveId, String action) {
+        // 简单实现：检查用户是否有针对该档案的有效借阅记录
+        LambdaQueryWrapper<Borrowing> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Borrowing::getUserId, userId)
+                .eq(Borrowing::getArchiveId, archiveId)
+                .in(Borrowing::getStatus,
+                    BorrowingStatus.APPROVED.getCode(),
+                    BorrowingStatus.BORROWED.getCode(),
+                    BorrowingStatus.OVERDUE.getCode());
+        return borrowingMapper.selectCount(queryWrapper) > 0;
+    }
+
+    @Override
     @Transactional
     public void cancelBorrowing(String id) {
         Borrowing borrowing = getExistingBorrowing(id);

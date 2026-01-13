@@ -88,13 +88,29 @@ public class ErpScenarioController {
     @com.nexusarchive.annotation.ArchivalAudit(operationType = "CAPTURE", resourceType = "ERP_SYNC", description = "手动触发ERP同步场景")
     public Result<SyncTaskDTO> triggerSync(
             @Parameter(description = "场景ID", required = true) @PathVariable Long id,
+            @Parameter(description = "同步参数（可选）", required = false) @RequestBody(required = false) java.util.Map<String, Object> params,
             jakarta.servlet.http.HttpServletRequest request) {
         String operatorId = resolveUserId(request);
         String clientIp = getClientIp(request);
 
+        // 提取可选的日期参数（支持多种参数名以兼容不同前端）
+        String tempStartDate = null;
+        String tempEndDate = null;
+        if (params != null) {
+            // 优先使用 periodStart/periodEnd（前端"在线采集"页面使用）
+            tempStartDate = (String) params.get("periodStart");
+            tempEndDate = (String) params.get("periodEnd");
+            // 如果没有，尝试使用 startDate/endDate
+            if (tempStartDate == null) tempStartDate = (String) params.get("startDate");
+            if (tempEndDate == null) tempEndDate = (String) params.get("endDate");
+        }
+
         // Submit async task with operator info
+        // 获取当前全宗上下文，传递给异步线程（因为异步线程不会继承 ThreadLocal）
+        String currentFonds = com.nexusarchive.security.FondsContext.getCurrentFondsNo();
+
         SyncTaskDTO task = asyncErpSyncService.submitSyncTask(id, operatorId, clientIp);
-        asyncErpSyncService.syncScenarioAsync(task.getTaskId(), id, operatorId, clientIp);
+        asyncErpSyncService.syncScenarioAsync(task.getTaskId(), id, operatorId, clientIp, tempStartDate, tempEndDate, currentFonds);
 
         return Result.success(task);
     }

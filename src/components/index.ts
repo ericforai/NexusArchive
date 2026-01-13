@@ -19,7 +19,6 @@ export { SettingsLayout } from './settings/SettingsLayout';
 export { BasicSettings } from './settings/BasicSettings';
 export { UserSettings } from './settings/UserSettings';
 export { RoleSettings } from './settings/RoleSettings';
-export { OrgSettings } from './settings/OrgSettings';
 export { SecuritySettings } from './settings/SecuritySettings';
 export { IntegrationSettingsPage } from './settings/integration';
 export { LicenseSettings } from './settings/LicenseSettings';

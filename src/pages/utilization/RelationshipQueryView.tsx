@@ -110,7 +110,13 @@ export const RelationshipQueryView: React.FC = () => {
     } catch (e: any) {
       setGraph(null);
       setSelectedNode(null);
-      setError(e?.response?.data?.message || '查询失败，请稍后重试');
+      if (e?.response?.status === 401) {
+        setError('请先登录系统后再查询关系数据');
+      } else if (e?.response?.status === 403) {
+        setError('您没有权限查看此档案的关系数据');
+      } else {
+        setError(e?.response?.data?.message || '查询失败，请稍后重试');
+      }
     } finally {
       setLoading(false);
     }

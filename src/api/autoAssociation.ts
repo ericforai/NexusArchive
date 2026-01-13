@@ -109,10 +109,13 @@ export const autoAssociationApi = {
             if (response.data.code === 200 && response.data.data && response.data.data.length > 0) {
                 return { files: response.data.data };
             }
-        } catch (error) {
-            console.warn('Failed to fetch linked files, using default data', error);
+        } catch (error: any) {
+            console.warn('Failed to fetch linked files', error);
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                throw error;
+            }
         }
-        // 无数据或出错时返回默认数据
+        // 无数据时返回默认数据
         return { files: getDefaultFiles(voucherId) };
     },
 
@@ -122,10 +125,13 @@ export const autoAssociationApi = {
             if (response.data.code === 200 && response.data.data) {
                 return response.data.data;
             }
-        } catch (error) {
-            console.warn('Failed to fetch compliance status, using default data', error);
+        } catch (error: any) {
+            console.warn('Failed to fetch compliance status', error);
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                throw error;
+            }
         }
-        // 无数据或出错时返回默认数据
+        // 无数据时返回默认数据
         return {
             passed: true,
             score: 98,
@@ -145,10 +151,14 @@ export const autoAssociationApi = {
             if (response.data.code === 200 && response.data.data) {
                 return response.data.data;
             }
-        } catch (error) {
-            console.warn('Failed to fetch relation graph, using default data', error);
+        } catch (error: any) {
+            console.warn('Failed to fetch relation graph', error);
+            // 401/403 未认证/无权限时抛出错误，让前端处理
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                throw error;
+            }
         }
-        // 无数据或出错时返回默认数据
+        // 无数据时返回默认数据
         const defaultGraph = getDefaultGraph();
         defaultGraph.centerId = archiveId || defaultGraph.centerId;
         return defaultGraph;

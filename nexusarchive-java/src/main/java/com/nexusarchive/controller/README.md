@@ -8,46 +8,48 @@
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
-| `AbnormalVoucherController.java` | 控制器类 | AbnormalVoucherController 接口控制器 |
-| `AdminOrgController.java` | 控制器类 | AdminOrgController 接口控制器 |
-| `AdminPermissionController.java` | 控制器类 | AdminPermissionController 接口控制器 |
-| `AdminRoleController.java` | 控制器类 | AdminRoleController 接口控制器 |
-| `AdminUserController.java` | 控制器类 | AdminUserController 接口控制器 |
-| `ArchiveApprovalController.java` | 控制器类 | ArchiveApprovalController 接口控制器 |
-| `ArchiveController.java` | 控制器类 | ArchiveController 接口控制器 |
-| `ArchiveExportController.java` | 控制器类 | ArchiveExportController 接口控制器 |
-| `ArchiveFileController.java` | 控制器类 | ArchiveFileController 接口控制器 |
-| `AttachmentController.java` | 控制器类 | AttachmentController 接口控制器 |
-| `AuditLogController.java` | 控制器类 | AuditLogController 接口控制器 |
-| `AuthController.java` | 控制器类 | AuthController 接口控制器 |
-| `BankReceiptController.java` | 控制器类 | BankReceiptController 接口控制器 |
-| `BasFondsController.java` | 控制器类 | BasFondsController 接口控制器 |
-| `CertificateController.java` | 控制器类 | CertificateController 接口控制器 |
-| `ComplianceController.java` | 控制器类 | ComplianceController 接口控制器 |
-| `DestructionController.java` | 控制器类 | DestructionController 接口控制器 |
-| `ErpConfigController.java` | 控制器类 | ErpConfigController 接口控制器 |
-| `ErpScenarioController.java` | 控制器类 | ErpScenarioController 接口控制器 |
-| `GlobalSearchController.java` | 控制器类 | GlobalSearchController 接口控制器 |
-| `HealthController.java` | 控制器类 | HealthController 接口控制器 |
-| `IngestController.java` | 控制器类 | IngestController 接口控制器 |
-| `LicenseController.java` | 控制器类 | LicenseController 接口控制器 |
-| `MonitoringController.java` | 控制器类 | MonitoringController 接口控制器 |
-| `NavController.java` | 控制器类 | NavController 接口控制器 |
-| `NotificationController.java` | 控制器类 | NotificationController 接口控制器 |
-| `OfdConvertController.java` | 控制器类 | OfdConvertController 接口控制器 |
-| `OpenAppraisalController.java` | 控制器类 | OpenAppraisalController 接口控制器 |
-| `OpsController.java` | 控制器类 | OpsController 接口控制器 |
-| `PoolController.java` | 控制器类 | PoolController 接口控制器 |
-| `PositionController.java` | 控制器类 | PositionController 接口控制器 |
-| `ReconciliationController.java` | 控制器类 | ReconciliationController 接口控制器 |
-| `RelationController.java` | 控制器类 | RelationController 接口控制器 |
-| `SignatureController.java` | 控制器类 | SignatureController 接口控制器 |
-| `StatsController.java` | 控制器类 | StatsController 接口控制器 |
-| `SystemConfigController.java` | 控制器类 | SystemConfigController 接口控制器 |
-| `TicketSyncController.java` | 控制器类 | TicketSyncController 接口控制器 |
-| `TimestampController.java` | 控制器类 | TimestampController 接口控制器 |
-| `UserController.java` | 控制器类 | UserController 接口控制器 |
-| `VolumeController.java` | 控制器类 | VolumeController 接口控制器 |
-| `WarehouseController.java` | 控制器类 | WarehouseController 接口控制器 |
-| `WebIngestController.java` | 控制器类 | WebIngestController 接口控制器 |
-| `WorkflowController.java` | 控制器类 | WorkflowController 接口控制器 |
+| `AbnormalVoucherController.java` | 控制器类 | 异常凭证接口 |
+| `AdminPermissionController.java` | 控制器类 | 管理员权限接口 |
+| `AdminRoleController.java` | 控制器类 | 管理员角色接口 |
+| `AdminController.java` | 控制器类 | 管理员接口（含组织架构同步） |
+| `AdminOrgController.java` | 控制器类 | 组织管理控制器（代理到 EntityService 和 ErpOrgSyncService） |
+| `AdminUserController.java` | 控制器类 | 管理员用户接口 |
+| `ArchiveApprovalController.java` | 控制器类 | 归档审批接口 |
+| `ArchiveController.java` | 控制器类 | 档案接口 |
+| `ArchiveExportController.java` | 控制器类 | 档案导出接口 |
+| `ArchiveFileController.java` | 控制器类 | 档案文件接口 |
+| `AttachmentController.java` | 控制器类 | 附件接口 |
+| `AuditLogController.java` | 控制器类 | 审计日志接口 |
+| `AuthController.java` | 控制器类 | 认证接口 |
+| `BankReceiptController.java` | 控制器类 | 银行回单接口 |
+| `BasFondsController.java` | 控制器类 | 全宗接口 |
+| `CertificateController.java` | 控制器类 | 证书接口 |
+| `ComplianceController.java` | 控制器类 | 合规检查接口 |
+| `DestructionController.java` | 控制器类 | 销毁接口 |
+| `EntityController.java` | 控制器类 | 法人接口（含树形结构 API） |
+| `ErpConfigController.java` | 控制器类 | ERP 配置接口 |
+| `ErpScenarioController.java` | 控制器类 | ERP 场景接口 |
+| `GlobalSearchController.java` | 控制器类 | 全局搜索接口 |
+| `HealthController.java` | 控制器类 | 健康检查接口 |
+| `IngestController.java` | 控制器类 | 归档请求接口 |
+| `LicenseController.java` | 控制器类 | License 接口 |
+| `MonitoringController.java` | 控制器类 | 监控接口 |
+| `NavController.java` | 控制器类 | 导航接口 |
+| `NotificationController.java` | 控制器类 | 通知接口 |
+| `OfdConvertController.java` | 控制器类 | OFD 转换接口 |
+| `OpenAppraisalController.java` | 控制器类 | 开放鉴定接口 |
+| `OpsController.java` | 控制器类 | 档案作业接口 |
+| `PoolController.java` | 控制器类 | 凭证池接口 |
+| `PositionController.java` | 控制器类 | 岗位接口 |
+| `ReconciliationController.java` | 控制器类 | 对账接口 |
+| `RelationController.java` | 控制器类 | 关联关系接口 |
+| `SignatureController.java` | 控制器类 | 签章接口 |
+| `StatsController.java` | 控制器类 | 统计接口 |
+| `SystemConfigController.java` | 控制器类 | 系统配置接口 |
+| `TicketSyncController.java` | 控制器类 | 票据同步接口 |
+| `TimestampController.java` | 控制器类 | 时间戳接口 |
+| `UserController.java` | 控制器类 | 用户接口 |
+| `VolumeController.java` | 控制器类 | 案卷接口 |
+| `WarehouseController.java` | 控制器类 | 库房接口 |
+| `WebIngestController.java` | 控制器类 | Web 归档请求接口 |
+| `WorkflowController.java` | 控制器类 | 工作流接口 |

@@ -72,12 +72,28 @@ public class ErpSyncService {
      */
     @Transactional
     public void syncScenario(Long scenarioId, String operatorId, String clientIp) {
+        syncScenario(scenarioId, operatorId, clientIp, null, null);
+    }
+
+    /**
+     * 执行场景同步（支持临时日期参数）
+     *
+     * @param scenarioId 场景 ID
+     * @param operatorId 操作人 ID
+     * @param clientIp 客户端 IP
+     * @param tempStartDate 临时开始日期（格式：yyyy-MM-dd，前端传递时优先使用）
+     * @param tempEndDate 临时结束日期（格式：yyyy-MM-dd，前端传递时优先使用）
+     */
+    @Transactional
+    public void syncScenario(Long scenarioId, String operatorId, String clientIp,
+                             String tempStartDate, String tempEndDate) {
         ErpScenario scenario = erpScenarioMapper.selectById(scenarioId);
         if (scenario == null) {
             throw new RuntimeException("场景不存在");
         }
 
-        log.info("触发同步场景: {} (Operator: {}, IP: {})", scenario.getName(), operatorId, clientIp);
+        log.info("触发同步场景: {} (Operator: {}, IP: {}, 临时日期: {} ~ {})",
+                scenario.getName(), operatorId, clientIp, tempStartDate, tempEndDate);
 
         // 创建并初始化同步历史记录
         SyncHistory history = createSyncHistory(scenarioId, operatorId, clientIp, scenario.getParamsJson());
@@ -91,8 +107,8 @@ public class ErpSyncService {
             ErpAdapter adapter = erpAdapterFactory.getAdapter(entityConfig.getErpType());
             com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig = configDtoBuilder.buildDtoConfig(entityConfig);
 
-            // 确定同步时间范围
-            SyncDateRangeExtractor.DateRange dateRange = dateRangeExtractor.extractDateRange(scenario);
+            // 确定同步时间范围：优先使用临时参数，否则从数据库配置读取
+            SyncDateRangeExtractor.DateRange dateRange = determineDateRange(scenario, tempStartDate, tempEndDate);
 
             // 调用适配器同步数据
             log.info("调用适配器同步数据: {} - {}", dateRange.startDate(), dateRange.endDate());
@@ -117,6 +133,35 @@ public class ErpSyncService {
             syncHistoryMapper.updateById(history);
             recordAuditLog(scenario, history, scenarioId, operatorId, clientIp);
         }
+    }
+
+    /**
+     * 确定同步日期范围
+     * 优先使用临时参数（前端传递），否则从数据库场景配置读取
+     *
+     * @param scenario 场景配置
+     * @param tempStartDate 临时开始日期
+     * @param tempEndDate 临时结束日期
+     * @return 日期范围
+     */
+    private SyncDateRangeExtractor.DateRange determineDateRange(ErpScenario scenario,
+                                                                 String tempStartDate, String tempEndDate) {
+        // 如果前端传了临时日期参数，优先使用
+        if (tempStartDate != null && !tempStartDate.isEmpty() && tempEndDate != null && !tempEndDate.isEmpty()) {
+            try {
+                java.time.LocalDate start = java.time.LocalDate.parse(tempStartDate);
+                java.time.LocalDate end = java.time.LocalDate.parse(tempEndDate);
+                log.info("使用前端传递的临时日期范围: {} ~ {}", tempStartDate, tempEndDate);
+                return new SyncDateRangeExtractor.DateRange(start, end);
+            } catch (Exception e) {
+                log.warn("解析临时日期失败，使用数据库配置: {}", e.getMessage());
+            }
+        }
+
+        // 否则从数据库场景配置读取
+        SyncDateRangeExtractor.DateRange dateRange = dateRangeExtractor.extractDateRange(scenario);
+        log.info("使用数据库配置的日期范围: {} ~ {}", dateRange.startDate(), dateRange.endDate());
+        return dateRange;
     }
 
     /**

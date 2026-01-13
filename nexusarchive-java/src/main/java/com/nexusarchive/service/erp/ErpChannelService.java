@@ -90,7 +90,7 @@ public class ErpChannelService {
                 .description(scenario.getDescription())
                 .apiEndpoint(getApiEndpointForType(config.getErpType(), scenario.getScenarioKey()))
                 .accbookCode(extractAccbookCode(config.getConfigJson()))
-                .accbookCodes(extractAccbookCodes(config.getConfigJson()))
+                .accbookCodes(extractAccbookCodes(config.getConfigJson(), config.getAccbookMapping()))
                 .lastSyncMsg(scenario.getLastSyncMsg())
                 .build();
     }
@@ -227,25 +227,50 @@ public class ErpChannelService {
 
     /**
      * 提取账簿代码列表
+     * 优先从 configJson 读取，如果为空则从 accbookMapping 提取
      */
-    private List<String> extractAccbookCodes(String configJson) {
-        if (configJson == null || configJson.isEmpty()) {
-            return Collections.singletonList("BR01");
-        }
-        try {
-            cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(configJson);
-            cn.hutool.json.JSONArray codesArray = json.getJSONArray("accbookCodes");
-            if (codesArray != null && !codesArray.isEmpty()) {
-                List<String> codes = new ArrayList<>();
-                for (int i = 0; i < codesArray.size(); i++) {
-                    codes.add(codesArray.getStr(i));
+    private List<String> extractAccbookCodes(String configJson, String accbookMapping) {
+        // 首先尝试从 configJson 读取
+        if (configJson != null && !configJson.isEmpty()) {
+            try {
+                cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(configJson);
+                cn.hutool.json.JSONArray codesArray = json.getJSONArray("accbookCodes");
+                if (codesArray != null && !codesArray.isEmpty()) {
+                    List<String> codes = new ArrayList<>();
+                    for (int i = 0; i < codesArray.size(); i++) {
+                        codes.add(codesArray.getStr(i));
+                    }
+                    return codes;
                 }
-                return codes;
+                String singleCode = json.getStr("accbookCode");
+                if (singleCode != null) {
+                    return Collections.singletonList(singleCode);
+                }
+            } catch (Exception e) {
+                log.warn("解析 configJson 中的 accbookCodes 失败: {}", e.getMessage());
             }
-            String singleCode = json.getStr("accbookCode");
-            return singleCode != null ? Collections.singletonList(singleCode) : Collections.singletonList("BR01");
-        } catch (Exception e) {
-            return Collections.singletonList("BR01");
         }
+
+        // configJson 中没有配置，尝试从 accbookMapping 提取账套代码
+        if (accbookMapping != null && !accbookMapping.isEmpty()) {
+            try {
+                cn.hutool.json.JSONObject mapping = cn.hutool.json.JSONUtil.parseObj(accbookMapping);
+                List<String> codes = new ArrayList<>();
+                mapping.forEach((key, value) -> {
+                    if (key != null) {
+                        codes.add(key.toString());
+                    }
+                });
+                if (!codes.isEmpty()) {
+                    log.info("从 accbookMapping 提取到 {} 个账套代码: {}", codes.size(), codes);
+                    return codes;
+                }
+            } catch (Exception e) {
+                log.warn("解析 accbookMapping 失败: {}", e.getMessage());
+            }
+        }
+
+        // 默认返回 BR01
+        return Collections.singletonList("BR01");
     }
 }

@@ -7,6 +7,7 @@
 import React, { useMemo } from 'react';
 import { voucherTableStyles, formatCurrency, numberToChinese, formatDate } from './styles';
 import type { VoucherDTO, VoucherEntryDTO } from './types';
+import { formatVoucherNumber } from '../../utils/voucherNumber';
 
 interface VoucherPreviewCanvasProps {
   data: VoucherDTO;
@@ -58,10 +59,13 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
 
   // 格式化凭证号
   const voucherNumber = useMemo(() => {
-    const word = data.voucherWord || '';
-    const no = data.voucherNo || '';
-    return word && no ? `${word}-${no}` : (no || '-');
-  }, [data.voucherWord, data.voucherNo]);
+    return formatVoucherNumber({
+      displayValue: data.voucherNo,
+      voucherWord: data.voucherWord,
+      voucherNo: data.voucherNo,
+      fallback: data.voucherId || data.id,
+    });
+  }, [data.voucherWord, data.voucherNo, data.voucherId, data.id]);
 
   // 格式化日期
   const displayDate = useMemo(() => {

@@ -42,7 +42,8 @@ public class IngestFlowTest {
     private com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
     private com.nexusarchive.service.ArchivalPackageService archivalPackageService;
     private com.nexusarchive.service.ArchiveService archiveService;
-    private com.nexusarchive.service.ErpFeedbackService erpFeedbackService;
+    private com.nexusarchive.mapper.ErpConfigMapper erpConfigMapper;
+    private com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory;
     private com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
     private PathSecurityUtils pathSecurityUtils;
 
@@ -53,12 +54,13 @@ public class IngestFlowTest {
         arcFileContentMapper = mock(com.nexusarchive.mapper.ArcFileContentMapper.class);
         archivalPackageService = mock(com.nexusarchive.service.ArchivalPackageService.class);
         archiveService = mock(com.nexusarchive.service.ArchiveService.class);
-        erpFeedbackService = mock(com.nexusarchive.service.ErpFeedbackService.class);
+        erpConfigMapper = mock(com.nexusarchive.mapper.ErpConfigMapper.class);
+        erpAdapterFactory = mock(com.nexusarchive.integration.erp.adapter.ErpAdapterFactory.class);
         archiveSecurityService = mock(com.nexusarchive.service.ArchiveSecurityService.class);
         pathSecurityUtils = mock(PathSecurityUtils.class);
         when(pathSecurityUtils.getSafeFileName(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpFeedbackService, archiveSecurityService, pathSecurityUtils);
+        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpConfigMapper, erpAdapterFactory, archiveSecurityService, pathSecurityUtils);
         
         // 注入临时路径配置
         ReflectionTestUtils.setField(ingestService, "tempRootPath", "/tmp/nexus-test");

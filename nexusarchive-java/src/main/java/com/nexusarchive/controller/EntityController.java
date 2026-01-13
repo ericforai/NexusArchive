@@ -124,9 +124,36 @@ public class EntityController {
     @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
     public Result<Boolean> remove(@PathVariable String id) {
         if (!entityService.canDelete(id)) {
-            return Result.error("该法人下存在关联全宗，无法删除");
+            return Result.error("该法人下存在关联全宗或下级法人，无法删除");
         }
         return Result.success(entityService.removeById(id));
+    }
+
+    @GetMapping("/tree")
+    @Operation(summary = "获取法人树形结构")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    public Result<List<EntityService.EntityTreeNode>> getTree() {
+        return Result.success(entityService.getTree());
+    }
+
+    @PutMapping("/{id}/parent")
+    @Operation(summary = "更新法人父节点（调整层级关系）")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    public Result<Void> updateParent(
+            @PathVariable String id,
+            @RequestParam(required = false) String parentId) {
+        entityService.updateParent(id, parentId);
+        return Result.success("层级关系已更新", null);
+    }
+
+    @PutMapping("/{id}/order")
+    @Operation(summary = "更新法人排序")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    public Result<Void> updateOrder(
+            @PathVariable String id,
+            @RequestParam Integer orderNum) {
+        entityService.updateOrder(id, orderNum);
+        return Result.success("排序已更新", null);
     }
 }
 

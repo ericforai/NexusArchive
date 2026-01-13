@@ -45,7 +45,6 @@ import com.nexusarchive.entity.Location;
 import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.OriginalVoucherFile;
 import com.nexusarchive.entity.OriginalVoucherType;
-import com.nexusarchive.entity.Org;
 import com.nexusarchive.entity.Permission;
 import com.nexusarchive.entity.PeriodLock;
 import com.nexusarchive.entity.Position;
@@ -702,7 +701,6 @@ public class DtoMappingTest {
                 new LegacyImportTask();
                 new Location();
                 new OpenAppraisal();
-                new Org();
                 new OriginalVoucher();
                 new OriginalVoucherFile();
                 new OriginalVoucherType();

@@ -13,6 +13,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FondsContextFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(FondsContextFilter.class);
     private static final String CURRENT_FONDS_ATTRIBUTE = "current_fonds_no";
     private static final String ALLOWED_FONDS_ATTRIBUTE = "allowed_fonds";
     private static final String HEADER_NAME = "X-Fonds-No";
@@ -90,6 +93,12 @@ public class FondsContextFilter extends OncePerRequestFilter {
         List<String> allowedFonds = fondsScopeService.getAllowedFonds(userId);
         String path = request.getRequestURI();
 
+        // 调试日志
+        String headerValue = request.getHeader(HEADER_NAME);
+        if (path.contains("relations")) {
+            log.debug("[FondsFilter] Request: {}, X-Fonds-No header: {}, allowedFonds: {}", path, headerValue, allowedFonds);
+        }
+
         // 检查当前路径是否需要全宗权限
         if (requiresFondsPermission(path)) {
             // 需要全宗权限的路径，如果没有全宗则拒绝
@@ -106,6 +115,10 @@ public class FondsContextFilter extends OncePerRequestFilter {
 
             request.setAttribute(CURRENT_FONDS_ATTRIBUTE, currentFonds);
             FondsContext.setCurrentFondsNo(currentFonds);
+
+            if (path.contains("relations")) {
+                log.debug("[FondsFilter] Set currentFonds: {} for path: {}", currentFonds, path);
+            }
         }
 
         // 无论是否有全宗权限，都设置 allowedFonds（可能是空列表）

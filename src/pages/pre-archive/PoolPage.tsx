@@ -134,7 +134,7 @@ export const PoolPage: React.FC = () => {
         {viewMode === 'kanban' ? (
           <PoolKanbanView filter={dashboardFilter} />
         ) : (
-          <ArchiveListPage routeConfig="pool" />
+          <ArchiveListPage routeConfig="pool" statusFilter={dashboardFilter} />
         )}
       </div>
     </div>

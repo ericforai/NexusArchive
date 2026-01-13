@@ -32,6 +32,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import static org.mockito.Mockito.*;
 
 /**
@@ -61,7 +62,7 @@ class GlobalSearchServiceImplTest {
         // Use the all() method instead of mocking the final class
         lenient().when(dataScopeService.resolve()).thenReturn(DataScopeService.DataScopeContext.all());
         // Do nothing when applyArchiveScope is called
-        lenient().doNothing().when(dataScopeService).applyArchiveScope(any(), any());
+        lenient().doNothing().when(dataScopeService).applyArchiveScope(any(QueryWrapper.class), any(DataScopeService.DataScopeContext.class));
     }
 
     @Test

@@ -51,6 +51,13 @@ export interface AdminSettingsApi {
     bulkOrg: (items: Array<Partial<OrgNode>>) => Promise<ApiResponse<void>>;
     importOrg: (file: File) => Promise<ApiResponse<OrgImportResult>>;
     downloadOrgTemplate: () => Promise<ApiResponse<OrgTemplateInfo>>;
+    syncOrgFromErp: () => Promise<ApiResponse<{
+        success: boolean;
+        message: string;
+        successCount: number;
+        errorCount: number;
+        errors: string[];
+    }>>;
 }
 
 export interface IntegrationSettingsApi {

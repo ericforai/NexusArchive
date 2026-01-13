@@ -37,6 +37,7 @@ services:
       # Redis 配置（Docker 内部网络）
       REDIS_HOST: nexus-redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
 
       # Spring Profile
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
@@ -66,7 +67,11 @@ services:
     ports:
       - "${SERVER_PORT:-19090}:19090"
     volumes:
-      - ./nexusarchive-java/data:/app/data
+      # 归档文件存储（生产环境持久化，容器重启不丢失）
+      - ${ARCHIVE_ROOT_PATH:-./data/archives}:/opt/nexusarchive/data/archives
+      # 临时文件存储
+      - ${ARCHIVE_TEMP_PATH:-./data/temp}:/opt/nexusarchive/data/temp
+      # 密钥存储（生产环境应使用独立密钥）
       - ./nexusarchive-java/keystore:/app/keystore
       # AI 生成的适配器代码持久化
       - ./nexusarchive-java/src/main/java/com/nexusarchive/integration/erp/adapter:/app/src/main/java/com/nexusarchive/integration/erp/adapter
@@ -92,10 +97,18 @@ services:
       - "${FRONTEND_PORT:-80}:80"
       - "443:443"
     volumes:
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # Let's Encrypt SSL 证书（宿主机路径映射）
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      # Nginx 配置
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      # ACME Challenge 临时目录
+      - nginx-acme:/var/www/certbot:rw
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+volumes:
+  nginx-acme:
+    name: nexusarchive-nginx-acme

@@ -199,9 +199,12 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
           appKey: configForm.appKey,
           appSecret: configForm.appSecret,
           requireClosedPeriod: configForm.requireClosedPeriod ?? false,
+          sapConfig: configForm.sapConfig, // SAP 接口配置
         }),
         // 账套-全宗映射（单独字段）
         accbookMapping: JSON.stringify(configForm.accbookMapping),
+        // SAP 接口类型
+        sapInterfaceType: configForm.sapInterfaceType,
         isActive: 1,
       };
 

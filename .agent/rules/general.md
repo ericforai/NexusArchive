@@ -187,3 +187,24 @@ COMMENT ON COLUMN {table_name}.{column_name} IS '描述';
 2. 识别受影响的目录与文件。
 3. 更新对应目录下的 `README.md`。
 4. 更新根目录 `README.md` 或 `docs/CHANGELOG.md`。
+
+-----
+
+## 8\. Artifacts 存放规则 (Artifact Storage Rules)
+
+**强制性要求**：所有 AI 产出的文档（artifacts）必须直接存放在项目目录下，而非 `.gemini` 隐藏目录。
+
+### 8.1 存放位置
+
+| Artifact 类型 | 存放路径 |
+|---------------|----------|
+| 实现计划 (Implementation Plan) | `docs/plans/` |
+| 审查报告 (Review Report) | `docs/plans/` |
+| Walkthrough 文档 | `docs/plans/` |
+| 任务清单 (Task List) | `docs/plans/` |
+| 其他设计文档 | `docs/` 相关子目录 |
+
+### 8.2 命名规范
+
+- 格式：`YYYY-MM-DD-<描述性名称>.md`
+- 示例：`2025-01-12-production-deployment-review.md`

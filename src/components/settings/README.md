@@ -9,7 +9,6 @@
 | `BasicSettings.tsx` | 设置组件 | 基础参数设置 |
 | `IntegrationSettings.tsx` | 设置组件 | 集成配置设置 |
 | `LicenseSettings.tsx` | 设置组件 | 授权与许可设置 |
-| `OrgSettings.tsx` | 设置组件 | 组织结构设置 |
 | `RoleSettings.tsx` | 设置组件 | 角色权限设置 |
 | `SecuritySettings.tsx` | 设置组件 | 安全策略设置 |
 | `SettingsLayout.tsx` | 布局组件 | 设置页布局框架 |

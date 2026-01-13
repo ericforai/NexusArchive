@@ -44,14 +44,32 @@ export const OnlineReceptionView: React.FC = () => {
         abnormalCount: 0
     });
 
+    // 计算初始同步期间（最近一年）
+    const getInitialPeriod = () => {
+        const now = new Date();
+        const endYear = now.getFullYear();
+        const endMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const startYear = endYear - 1;
+        return {
+            start: `${startYear}-01`,
+            end: `${endYear}-${endMonth}`
+        };
+    };
+
     // Sync Modal State
     const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
     const [syncChannelId, setSyncChannelId] = useState<number | null>(null);
-    const [syncPeriod, setSyncPeriod] = useState({ start: '2024-01', end: '2024-12' });
+    // 默认同步最近一年的数据
+    const [syncPeriod, setSyncPeriod] = useState(getInitialPeriod());
     // Multi-org sync: available orgs and selected orgs
     const [availableOrgs, setAvailableOrgs] = useState<{ code: string, name: string }[]>([]);
     const [selectedOrgs, setSelectedOrgs] = useState<string[]>([]);
     const [syncError, setSyncError] = useState<string | null>(null);
+
+    // 同步进度状态
+    const [syncTaskId, setSyncTaskId] = useState<string | null>(null);
+    const [syncProgress, setSyncProgress] = useState({ status: '', progress: 0, message: '' });
+    const [isPolling, setIsPolling] = useState(false);
 
     // 加载集成通道数据
     useEffect(() => {
@@ -130,14 +148,14 @@ export const OnlineReceptionView: React.FC = () => {
         const channel = channels.find(c => c.id === syncChannelId);
         if (!channel) return;
 
-        // 更新状态为同步中
-        setChannels(prev => prev.map(c =>
-            c.id === syncChannelId ? { ...c, status: 'syncing' as const } : c
-        ));
+        // 重置进度状态
         setSyncError(null);
+        setSyncProgress({ status: 'SUBMITTED', progress: 0, message: '正在提交同步任务...' });
 
         try {
-            let success = false;
+            let taskId: string | null = null;
+
+            // 提交同步任务
             if (channel.apiEndpoint) {
                 // 有 apiEndpoint：使用统一 client 进行请求
                 const response = await client.post(channel.apiEndpoint, {
@@ -147,33 +165,135 @@ export const OnlineReceptionView: React.FC = () => {
                     periodEnd: syncPeriod.end
                 });
                 const result = response.data;
-                success = response.status === 200 && result.status === 'SUCCESS';
-                if (!success) throw new Error(result.message || '同步失败');
+                if (response.status !== 200) throw new Error(result.message || '同步失败');
+                taskId = result.data?.taskId;
             } else {
-                // 无 apiEndpoint：使用通用触发接口
+                // 无 apiEndpoint：使用通用触发接口，传递日期参数
                 const { erpApi } = await import('@api/erp');
-                const res = await erpApi.triggerSync(syncChannelId);
-                success = res && res.code === 200;
-                if (!success) throw new Error(res?.message || '触发失败');
+                const res = await erpApi.syncScenario(syncChannelId, {
+                    periodStart: syncPeriod.start,
+                    periodEnd: syncPeriod.end
+                });
+                if (res.code !== 200) throw new Error(res?.message || '触发失败');
+                taskId = res.data?.taskId;
             }
 
-            if (success) {
-                // 刷新通道列表
-                const channelsRes = await integrationApi.getChannels();
-                if (channelsRes.code === 200 && channelsRes.data) {
-                    setChannels(channelsRes.data.map(ch => ({
-                        ...ch,
-                        localStatus: ch.status
-                    })));
-                }
-                setIsSyncModalOpen(false);
+            if (taskId) {
+                setSyncTaskId(taskId);
+                setIsPolling(true);
+                // 开始轮询任务状态
+                pollSyncStatus(syncChannelId, taskId);
+            } else {
+                throw new Error('未获取到任务ID');
             }
         } catch (error: any) {
             setSyncError(error.message || '同步请求失败');
             setChannels(prev => prev.map(c =>
                 c.id === syncChannelId ? { ...c, status: 'error' as const } : c
             ));
+            setIsPolling(false);
         }
+    };
+
+    // 轮询同步任务状态
+    const pollSyncStatus = async (scenarioId: number, taskId: string) => {
+        const pollInterval = 2000; // 每2秒轮询一次
+        const maxAttempts = 150; // 最多轮询5分钟
+        let attempts = 0;
+
+        const poll = async () => {
+            if (attempts >= maxAttempts) {
+                setIsPolling(false);
+                setSyncError('同步超时，请稍后查看同步历史');
+                setChannels(prev => prev.map(c =>
+                    c.id === scenarioId ? { ...c, status: 'error' as const } : c
+                ));
+                return;
+            }
+
+            attempts++;
+            try {
+                const { erpApi } = await import('@api/erp');
+                const statusRes = await erpApi.getSyncStatus(scenarioId, taskId);
+
+                if (statusRes.code === 200 && statusRes.data) {
+                    const status = statusRes.data;
+
+                    // 更新进度
+                    setSyncProgress({
+                        status: status.status,
+                        progress: Math.round(status.progress * 100),
+                        message: getStatusMessage(status)
+                    });
+
+                    // 更新通道状态为同步中
+                    if (status.status === 'RUNNING') {
+                        setChannels(prev => prev.map(c =>
+                            c.id === scenarioId ? { ...c, status: 'syncing' as const } : c
+                        ));
+                    }
+
+                    // 检查是否完成
+                    if (status.status === 'SUCCESS') {
+                        setIsPolling(false);
+                        setSyncProgress({
+                            status: 'SUCCESS',
+                            progress: 100,
+                            message: `同步完成！获取 ${status.totalCount} 条，新增 ${status.successCount} 条`
+                        });
+
+                        // 刷新通道列表
+                        const channelsRes = await integrationApi.getChannels();
+                        if (channelsRes.code === 200 && channelsRes.data) {
+                            setChannels(channelsRes.data.map(ch => ({
+                                ...ch,
+                                localStatus: ch.status
+                            })));
+                        }
+
+                        // 2秒后关闭弹窗
+                        setTimeout(() => {
+                            setIsSyncModalOpen(false);
+                            setSyncProgress({ status: '', progress: 0, message: '' });
+                        }, 2000);
+                        return;
+                    }
+
+                    if (status.status === 'FAIL') {
+                        setIsPolling(false);
+                        setSyncError(status.errorMessage || '同步失败');
+                        setChannels(prev => prev.map(c =>
+                            c.id === scenarioId ? { ...c, status: 'error' as const } : c
+                        ));
+                        return;
+                    }
+
+                    // 继续轮询
+                    setTimeout(poll, pollInterval);
+                }
+            } catch (error) {
+                console.error('轮询同步状态失败:', error);
+                // 出错后继续轮询
+                setTimeout(poll, pollInterval);
+            }
+        };
+
+        poll();
+    };
+
+    // 获取状态显示消息
+    const getStatusMessage = (status: any): string => {
+        if (status.status === 'SUBMITTED') return '任务已提交，等待处理...';
+        if (status.status === 'RUNNING') {
+            if (status.totalCount > 0) {
+                return `正在同步... 已获取 ${status.totalCount} 条，新增 ${status.successCount} 条`;
+            }
+            return '正在同步数据，请稍候...';
+        }
+        if (status.status === 'SUCCESS') {
+            return `同步完成！获取 ${status.totalCount} 条，新增 ${status.successCount} 条`;
+        }
+        return status.message || '';
     };
 
     const handleAddChannel = () => {
@@ -537,21 +657,44 @@ export const OnlineReceptionView: React.FC = () => {
                                     ❌ {syncError}
                                 </div>
                             )}
+
+                            {/* Progress Bar - 实时同步进度显示 */}
+                            {isPolling && syncProgress.status !== '' && (
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-medium text-blue-900">同步进度</span>
+                                        <span className="text-sm text-blue-700 font-semibold">{syncProgress.progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-blue-200 rounded-full h-2.5 mb-3 overflow-hidden">
+                                        <div
+                                            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+                                            style={{ width: `${syncProgress.progress}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-sm text-blue-800">{syncProgress.message}</p>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex justify-end gap-3 mt-8">
                             <button
                                 onClick={() => setIsSyncModalOpen(false)}
-                                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-medium"
+                                disabled={isPolling}
+                                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 取消
                             </button>
                             <button
                                 onClick={executeRealSync}
-                                disabled={channels.find(c => c.id === syncChannelId)?.status === 'syncing'}
+                                disabled={isPolling || channels.find(c => c.id === syncChannelId)?.status === 'syncing'}
                                 className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
-                                {channels.find(c => c.id === syncChannelId)?.status === 'syncing' ? (
+                                {isPolling ? (
+                                    <>
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        同步中... {syncProgress.progress > 0 && `${syncProgress.progress}%`}
+                                    </>
+                                ) : channels.find(c => c.id === syncChannelId)?.status === 'syncing' ? (
                                     <>
                                         <RefreshCw className="w-4 h-4 animate-spin" />
                                         同步中...

@@ -4,8 +4,8 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 // src/components/settings/integration/components/ErpConfigCard.tsx
-import React from 'react';
-import { Settings, Zap, Activity, ShieldCheck, ChevronRight, Building2, ArrowRight, Server } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, Zap, Activity, ShieldCheck, ChevronRight, Building2, ArrowRight, Server, ChevronDown, ChevronUp } from 'lucide-react';
 import { Tag } from 'antd';
 import { ErpConfig } from '@/types';
 import { ConnectionHealthBadge } from './ConnectionHealthBadge';
@@ -85,9 +85,17 @@ export function ErpConfigCard({
   onConfig,
   onViewDetails
 }: ErpConfigCardProps) {
+  // 展开/折叠状态
+  const [mappingExpanded, setMappingExpanded] = useState(false);
+
   // 解析账套-全宗映射
   const accbookMapping = parseAccbookMapping(config);
   const mappingEntries = Object.entries(accbookMapping);
+
+  // 显示的映射条目数量（折叠时显示前 3 个，展开时显示全部）
+  const DISPLAY_LIMIT = 3;
+  const displayedEntries = mappingExpanded ? mappingEntries : mappingEntries.slice(0, DISPLAY_LIMIT);
+  const showExpandButton = mappingEntries.length > DISPLAY_LIMIT;
 
   const statusConfig = {
     connected: { text: '已连接', color: 'text-green-600', bg: 'bg-green-50', dot: '●' },
@@ -201,12 +209,32 @@ export function ErpConfigCard({
         {/* Accbook-Fonds Mapping Row */}
         {mappingEntries.length > 0 && (
           <div className="flex flex-col gap-1.5 text-xs">
-            <div className="flex items-center gap-1.5 text-gray-600">
-              <Building2 size={12} className="text-gray-400" />
-              <span>账套-全宗映射 ({mappingEntries.length})</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <Building2 size={12} className="text-gray-400" />
+                <span>账套-全宗映射 ({mappingEntries.length})</span>
+              </div>
+              {showExpandButton && (
+                <button
+                  onClick={() => setMappingExpanded(!mappingExpanded)}
+                  className="flex items-center gap-1 px-2 py-0.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                >
+                  {mappingExpanded ? (
+                    <>
+                      <span>收起</span>
+                      <ChevronUp size={12} />
+                    </>
+                  ) : (
+                    <>
+                      <span>更多</span>
+                      <ChevronDown size={12} />
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap gap-1 ml-4">
-              {mappingEntries.slice(0, 3).map(([accbookCode, fondsCode]) => (
+              {displayedEntries.map(([accbookCode, fondsCode]) => (
                 <div
                   key={accbookCode}
                   className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-100"
@@ -217,11 +245,6 @@ export function ErpConfigCard({
                   <span className="text-xs font-medium">{fondsCode}</span>
                 </div>
               ))}
-              {mappingEntries.length > 3 && (
-                <div className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                  +{mappingEntries.length - 3} 更多
-                </div>
-              )}
             </div>
           </div>
         )}

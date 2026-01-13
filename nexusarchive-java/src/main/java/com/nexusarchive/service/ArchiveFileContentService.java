@@ -11,6 +11,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.security.FondsContext;
 
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class ArchiveFileContentService {
     }
 
     /**
-     * 根据 ID 查询档案文件内容
+     * 根据 ID 查询档案文件内容（应用全宗数据范围过滤）
      *
      * @param fileId 文件 ID
      * @param operatorId 操作人 ID
@@ -69,6 +70,17 @@ public class ArchiveFileContentService {
         if (content == null) {
             log.warn("档案文件不存在: fileId={}", fileId);
             return null;
+        }
+
+        // 数据范围过滤：检查全宗权限
+        String currentFonds = FondsContext.getCurrentFondsNo();
+        if (currentFonds != null && !currentFonds.isEmpty()) {
+            String fondsCode = content.getFondsCode();
+            if (!currentFonds.equals(fondsCode)) {
+                log.warn("全宗权限不匹配: fileId={}, fondsCode={}, currentFonds={}",
+                    fileId, fondsCode, currentFonds);
+                return null;
+            }
         }
 
         // 审计日志

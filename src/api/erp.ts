@@ -15,6 +15,10 @@ export interface ErpConfig {
     status?: string;
     createdTime?: string;
     lastModifiedTime?: string;
+    /* 账套-全宗映射JSON: {"BR01": "FONDS_A", "BR02": "FONDS_B"} */
+    accbookMapping?: string;
+    /* SAP 接口类型：仅当 erpType='SAP' 时有效 */
+    sapInterfaceType?: 'ODATA' | 'RFC' | 'IDOC' | 'GATEWAY' | null;
 }
 
 export interface ErpScenario {
@@ -61,6 +65,25 @@ export interface ConnectionTestResult {
     success: boolean;
     adapterName?: string;
     message: string;
+}
+
+// 同步任务相关类型
+export interface SyncTaskDTO {
+    taskId: string;
+    status: 'SUBMITTED' | 'RUNNING' | 'SUCCESS' | 'FAIL';
+    message: string;
+}
+
+export interface SyncTaskStatus {
+    taskId: string;
+    status: 'SUBMITTED' | 'RUNNING' | 'SUCCESS' | 'FAIL';
+    totalCount: number;
+    successCount: number;
+    failCount: number;
+    errorMessage?: string;
+    startTime?: string;
+    endTime?: string;
+    progress: number; // 0.0 to 1.0
 }
 
 /**
@@ -140,14 +163,20 @@ export const erpApi = {
         const response = await client.put<ApiResponse<void>>('/erp/scenario', data);
         return response.data;
     },
-    triggerSync: async (id: number): Promise<ApiResponse<void>> => {
-        const response = await client.post<ApiResponse<void>>(`/erp/scenario/${id}/sync`, {});
+    triggerSync: async (id: number): Promise<ApiResponse<SyncTaskDTO>> => {
+        const response = await client.post<ApiResponse<SyncTaskDTO>>(`/erp/scenario/${id}/sync`, {});
         return response.data;
     },
 
-    // Alias for triggerSync - used by scenario sync manager hook
-    syncScenario: async (scenarioId: number, params?: any): Promise<ApiResponse<void>> => {
-        const response = await client.post<ApiResponse<void>>(`/erp/scenario/${scenarioId}/sync`, params || {});
+    // Alias for triggerSync - used by scenario sync manager hook and online collection
+    syncScenario: async (scenarioId: number, params?: any): Promise<ApiResponse<SyncTaskDTO>> => {
+        const response = await client.post<ApiResponse<SyncTaskDTO>>(`/erp/scenario/${scenarioId}/sync`, params || {});
+        return response.data;
+    },
+
+    // 查询同步任务状态
+    getSyncStatus: async (scenarioId: number, taskId: string): Promise<ApiResponse<SyncTaskStatus>> => {
+        const response = await client.get<ApiResponse<SyncTaskStatus>>(`/erp/scenario/${scenarioId}/sync/status/${taskId}`);
         return response.data;
     },
 

@@ -9,11 +9,9 @@ import { ModuleConfig } from '../../types';
 // 1.1 电子凭证池
 export const PRE_ARCHIVE_POOL_CONFIG: ModuleConfig = {
     columns: [
-        { key: 'voucherWord', header: '凭证字号', type: 'text' },
-        { key: 'summary', header: '摘要', type: 'text' },
-        { key: 'source', header: '来源系统', type: 'status' },
-        { key: 'type', header: '单据类型', type: 'status' },
-        { key: 'amount', header: '金额', type: 'money' },
+        { key: 'voucherWord', header: '凭证号', type: 'text' },
+        { key: 'source', header: '来源系统', type: 'text' },
+        { key: 'type', header: '单据类型', type: 'text' },
         { key: 'docDate', header: '业务日期', type: 'date' },
         { key: 'date', header: '入池时间', type: 'datetime' },
         { key: 'status', header: '状态', type: 'status' },

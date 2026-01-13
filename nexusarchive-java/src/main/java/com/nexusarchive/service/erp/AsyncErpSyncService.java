@@ -5,6 +5,8 @@
 
 package com.nexusarchive.service.erp;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.SyncTaskDTO;
 import com.nexusarchive.dto.SyncTaskStatus;
@@ -12,6 +14,7 @@ import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.SyncTask;
 import com.nexusarchive.mapper.ErpScenarioMapper;
 import com.nexusarchive.mapper.SyncTaskMapper;
+import com.nexusarchive.security.FondsContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -74,18 +77,29 @@ public class AsyncErpSyncService {
      * @param scenarioId 场景 ID
      * @param operatorId 操作人 ID
      * @param clientIp   客户端 IP
+     * @param tempStartDate 临时开始日期（可选，前端传递的参数优先）
+     * @param tempEndDate   临时结束日期（可选，前端传递的参数优先）
+     * @param fondsCode    全宗代码（从调用线程传递到异步线程）
      */
     @Async("erpSyncExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void syncScenarioAsync(String taskId, Long scenarioId, String operatorId, String clientIp) {
-        log.info("开始异步同步任务: taskId={}, scenarioId={}, operator={}", taskId, scenarioId, operatorId);
+    public void syncScenarioAsync(String taskId, Long scenarioId, String operatorId, String clientIp,
+                                   String tempStartDate, String tempEndDate, String fondsCode) {
+        log.info("开始异步同步任务: taskId={}, scenarioId={}, operator={}, 临时日期: {} ~ {}, 全宗: {}",
+                taskId, scenarioId, operatorId, tempStartDate, tempEndDate, fondsCode);
 
         try {
+            // 在异步线程中设置全宗上下文（因为异步线程不会继承主线程的 ThreadLocal）
+            if (fondsCode != null && !fondsCode.isEmpty()) {
+                FondsContext.setCurrentFondsNo(fondsCode);
+                log.debug("异步同步任务设置全宗上下文: {}", fondsCode);
+            }
+
             // 更新状态为 RUNNING
             updateTaskStatus(taskId, "RUNNING", null, 0.0);
 
-            // 执行同步
-            erpSyncService.syncScenario(scenarioId, operatorId, clientIp);
+            // 执行同步（传递临时日期参数）
+            erpSyncService.syncScenario(scenarioId, operatorId, clientIp, tempStartDate, tempEndDate);
 
             // 获取场景最新状态
             ErpScenario scenario = erpScenarioMapper.selectById(scenarioId);

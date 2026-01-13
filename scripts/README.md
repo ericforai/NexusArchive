@@ -42,7 +42,7 @@
 | `self_check.sh` | 环境自检 | 校验环境配置 |
 | `diagnose_fonds_scope.sh` | 全宗范围诊断 | 诊断全宗配置 |
 | `generate_signature_keys.sh` | 生成签名密钥 | JWT 签名密钥生成 |
-| `validate-schema.sh` | Schema 验证 | 验证数据库 schema |
+| `validate-schema.sh` | Schema 验证 v2.0 | 自动对比 Entity 定义与数据库结构（Maven驱动） |
 
 ### 升级脚本
 

@@ -48,7 +48,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
 
   return (
     <>
-      <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
+      <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-50">
 
         {/* Left: Fonds Switcher */}
         <div className="flex items-center gap-4">

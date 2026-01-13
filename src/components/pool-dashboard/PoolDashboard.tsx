@@ -87,20 +87,6 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
           />
         ))}
       </div>
-
-      <div className="pool-dashboard__summary">
-        <span className="pool-dashboard__total">
-          共 <strong>{totalCount}</strong> 条凭证
-        </span>
-        {activeFilter && (
-          <button
-            className="pool-dashboard__clear"
-            onClick={() => onFilterChange(null)}
-          >
-            清除筛选
-          </button>
-        )}
-      </div>
     </div>
   );
 };

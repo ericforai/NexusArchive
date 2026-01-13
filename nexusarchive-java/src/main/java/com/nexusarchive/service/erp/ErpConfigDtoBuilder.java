@@ -55,6 +55,13 @@ public class ErpConfigDtoBuilder {
             parseConfigJson(dtoConfig, entityConfig.getConfigJson());
         }
 
+        // 从 accbookMapping 提取账套代码列表（如果 configJson 中未配置）
+        if ((dtoConfig.getAccbookCodes() == null || dtoConfig.getAccbookCodes().isEmpty())
+                && (dtoConfig.getAccbookCode() == null || dtoConfig.getAccbookCode().isEmpty())
+                && entityConfig.getAccbookMapping() != null) {
+            parseAccbookMapping(dtoConfig, entityConfig.getAccbookMapping());
+        }
+
         return dtoConfig;
     }
 
@@ -63,7 +70,10 @@ public class ErpConfigDtoBuilder {
      */
     private void parseConfigJson(com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig,
                                  String configJson) {
+        log.info("ErpConfigDtoBuilder: 开始解析 configJson, 长度={}", configJson != null ? configJson.length() : 0);
+
         cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(configJson);
+        log.info("ErpConfigDtoBuilder: JSON 解析成功, 包含字段: {}", json.keySet());
 
         dtoConfig.setBaseUrl(json.getStr(FIELD_BASE_URL));
 
@@ -73,13 +83,32 @@ public class ErpConfigDtoBuilder {
             appKey = json.getStr(FIELD_CLIENT_ID);
         }
         dtoConfig.setAppKey(appKey);
+        log.info("ErpConfigDtoBuilder: appKey={}, 长度={}",
+                appKey != null ? (appKey.substring(0, Math.min(10, appKey.length())) + "...") : "null",
+                appKey != null ? appKey.length() : 0);
 
-        // 支持多种 appSecret 字段名，并解密
+        // 支持多种 appSecret 字段名
         String appSecret = json.getStr(FIELD_APP_SECRET);
         if (appSecret == null || appSecret.isEmpty()) {
             appSecret = json.getStr(FIELD_CLIENT_SECRET);
         }
-        dtoConfig.setAppSecret(SM4Utils.decrypt(appSecret));
+        log.info("ErpConfigDtoBuilder: appSecret原始长度={}", appSecret != null ? appSecret.length() : 0);
+
+        // 检查 appSecret_encrypted 标志
+        // 注意：如果标志不存在，默认为 true（数据库中存储的都是加密的）
+        boolean secretEncrypted = json.getBool("appSecret_encrypted", true);
+        log.info("ErpConfigDtoBuilder: appSecret_encrypted={}", secretEncrypted);
+
+        if (secretEncrypted && appSecret != null && !appSecret.isEmpty()) {
+            try {
+                appSecret = SM4Utils.decrypt(appSecret);
+                log.info("ErpConfigDtoBuilder: appSecret解密成功, 解密后长度={}", appSecret.length());
+            } catch (Exception e) {
+                log.error("ErpConfigDtoBuilder: appSecret解密失败", e);
+                throw new RuntimeException("appSecret 解密失败: " + e.getMessage(), e);
+            }
+        }
+        dtoConfig.setAppSecret(appSecret);
 
         dtoConfig.setAccbookCode(json.getStr(FIELD_ACCBOOK_CODE));
 
@@ -101,6 +130,30 @@ public class ErpConfigDtoBuilder {
                 codes.add(accbookCodesArray.getStr(i));
             }
             dtoConfig.setAccbookCodes(codes);
+        }
+    }
+
+    /**
+     * 从 accbookMapping 提取账套代码列表
+     * accbookMapping 格式: {"001":"BRJT","BR01":"BR-GROUP",...}
+     * 提取其中的 key (账套代码) 作为 accbookCodes
+     */
+    private void parseAccbookMapping(com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig,
+                                     String accbookMapping) {
+        try {
+            cn.hutool.json.JSONObject mapping = cn.hutool.json.JSONUtil.parseObj(accbookMapping);
+            List<String> codes = new ArrayList<>();
+            mapping.forEach((key, value) -> {
+                if (key != null) {
+                    codes.add(key.toString());
+                }
+            });
+            if (!codes.isEmpty()) {
+                dtoConfig.setAccbookCodes(codes);
+                log.info("从 accbookMapping 提取到 {} 个账套代码: {}", codes.size(), codes);
+            }
+        } catch (Exception e) {
+            log.warn("解析 accbookMapping 失败: {}", e.getMessage());
         }
     }
 }

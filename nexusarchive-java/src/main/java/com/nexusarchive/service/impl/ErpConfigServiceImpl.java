@@ -150,6 +150,41 @@ public class ErpConfigServiceImpl implements ErpConfigService {
                         .eq(ErpConfig::getIsActive, 1));
     }
 
+    @Override
+    public String getFondsCodeByAccbook(String accbookCode) {
+        if (accbookCode == null || accbookCode.isEmpty()) {
+            return accbookCode;
+        }
+        java.util.Map<String, String> mapping = getAccbookFondsMapping();
+        return mapping.getOrDefault(accbookCode, accbookCode);
+    }
+
+    @Override
+    public java.util.Map<String, String> getAccbookFondsMapping() {
+        java.util.Map<String, String> result = new java.util.HashMap<>();
+
+        // 查询所有激活的 ERP 配置
+        List<ErpConfig> configs = erpConfigMapper.selectList(
+                new LambdaQueryWrapper<ErpConfig>().eq(ErpConfig::getIsActive, 1));
+
+        for (ErpConfig config : configs) {
+            if (config.getAccbookMapping() != null && !config.getAccbookMapping().isEmpty()) {
+                try {
+                    JSONObject mappingJson = JSONUtil.parseObj(config.getAccbookMapping());
+                    mappingJson.forEach((key, value) -> {
+                        if (value != null) {
+                            result.put(key, value.toString());
+                        }
+                    });
+                } catch (Exception e) {
+                    log.warn("解析 accbookMapping 失败: configId={}, error={}", config.getId(), e.getMessage());
+                }
+            }
+        }
+
+        return result;
+    }
+
     /**
      * 加密敏感字段（如果尚未加密）
      *

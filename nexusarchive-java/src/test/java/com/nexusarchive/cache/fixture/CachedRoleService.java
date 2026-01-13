@@ -7,7 +7,6 @@ package com.nexusarchive.cache.fixture;
 
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.mapper.RoleMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -31,10 +30,17 @@ import java.util.List;
  */
 @Service
 @CacheConfig(cacheNames = "roles")
-@RequiredArgsConstructor
 public class CachedRoleService {
 
     private final RoleMapper roleMapper;
+
+    public CachedRoleService(RoleMapper roleMapper) {
+        this.roleMapper = roleMapper;
+    }
+
+    public CachedRoleService() {
+        this.roleMapper = null;
+    }
 
     /**
      * 获取所有角色（使用默认缓存）

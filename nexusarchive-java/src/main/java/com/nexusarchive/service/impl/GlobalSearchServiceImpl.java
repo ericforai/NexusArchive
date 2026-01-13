@@ -7,6 +7,8 @@ package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.GlobalSearchDTO;
+import com.nexusarchive.dto.request.GlobalSearchRequest;
+import com.nexusarchive.dto.response.PageResponse;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.ArcFileMetadataIndex;
 import com.nexusarchive.entity.Archive;
@@ -56,6 +58,53 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
                         Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(GlobalSearchDTO::getId))),
                         ArrayList::new
                 ));
+    }
+
+    /**
+     * 全局搜索（带分页和筛选支持）
+     *
+     * @param request 搜索请求，包含关键字、分页信息和筛选条件
+     * @return 分页搜索结果
+     */
+    public PageResponse<GlobalSearchDTO> search(GlobalSearchRequest request) {
+        if (request == null || !StringUtils.hasText(request.getQuery())) {
+            return PageResponse.empty();
+        }
+
+        String keyword = request.getQuery().trim();
+        List<GlobalSearchDTO> allResults = new ArrayList<>();
+        DataScopeContext scope = dataScopeService.resolve();
+
+        // 根据 matchType 决定搜索范围
+        String matchType = request.getMatchType();
+        if (matchType == null || "ARCHIVE".equals(matchType)) {
+            searchArchives(keyword, allResults, scope);
+        }
+        if (matchType == null || "METADATA".equals(matchType)) {
+            searchMetadata(keyword, allResults, scope);
+        }
+
+        // Deduplicate results
+        List<GlobalSearchDTO> deduplicatedResults = allResults.stream()
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(GlobalSearchDTO::getId))),
+                        ArrayList::new
+                ));
+
+        // Apply pagination
+        int page = request.getPage() != null ? request.getPage() : 1;
+        int pageSize = request.getPageSize() != null ? request.getPageSize() : 20;
+        int total = deduplicatedResults.size();
+        int totalPages = (int) Math.ceil((double) total / pageSize);
+
+        int fromIndex = (page - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, total);
+
+        List<GlobalSearchDTO> pageItems = fromIndex < total
+                ? deduplicatedResults.subList(fromIndex, toIndex)
+                : Collections.emptyList();
+
+        return PageResponse.of(pageItems, total, page, pageSize);
     }
 
     private void searchArchives(String keyword, List<GlobalSearchDTO> results, DataScopeContext scope) {

@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { matchingApi } from '../../api/matching';
+import type { MatchResult } from '../../api/matching';
 import { toast } from 'react-hot-toast';
 
 // 适配 MatchPreviewModal 的数据结构
@@ -54,22 +55,23 @@ export const useSmartMatching = (onRefresh?: () => void) => {
                     const previewStatus: MatchPreviewRow['_previewStatus'] =
                         score >= 90 ? 'high' : (score > 60 ? 'medium' : undefined);
 
+                    const isoCreatedTime = normalizeMatchCreatedTime(res.createdTime);
                     return {
                         voucherId: res.voucherId,
                         voucherNo: res.voucherNo,
                         // 暂无日期金额等元数据，需从列表获取或 API 返回。
                         // 由于 API 返回可能不全，这里仅依赖 API 返回的 minimal info
                         amount: '待获取',
-                        date: res.createdTime?.substring(0, 10),
+                        date: isoCreatedTime?.substring(0, 10),
                         matchScore: score,
                         _previewStatus: previewStatus,
                         _proposedLinks: res.links?.map(l => ({
-                            code: l.matchedDocNo || '未知单据',
-                            docId: l.matchedDocId || '',
-                            evidenceRole: l.evidenceRole,
-                            linkType: l.linkType
-                        })) || []
-                    };
+                                code: l.matchedDocNo || '未知单据',
+                                docId: l.matchedDocId || '',
+                                evidenceRole: l.evidenceRole,
+                                linkType: l.linkType
+                            })) || []
+                        };
                 })
                 .filter(row => row._previewStatus); // 过滤掉无匹配建议的
 
@@ -144,4 +146,27 @@ export const useSmartMatching = (onRefresh?: () => void) => {
         handleConfirmLinks,
         closeMatchPreview
     };
+};
+
+const normalizeMatchCreatedTime = (value: MatchResult['createdTime']): string | undefined => {
+    if (!value) {
+        return undefined;
+    }
+
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (Array.isArray(value) && value.length >= 3) {
+        const [year, month, day, hour = 0, minute = 0, second = 0, nano = 0] = value;
+        if (year == null || month == null || day == null) {
+            return undefined;
+        }
+
+        const milliseconds = Math.floor((nano ?? 0) / 1_000_000);
+        const parsedDate = new Date(year, month - 1, day, hour ?? 0, minute ?? 0, second ?? 0, milliseconds);
+        return isNaN(parsedDate.getTime()) ? undefined : parsedDate.toISOString();
+    }
+
+    return undefined;
 };

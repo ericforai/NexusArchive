@@ -24,6 +24,20 @@ export interface SysEntity {
     updatedTime?: string;
 }
 
+/**
+ * 法人树节点（用于集团架构视图）
+ */
+export interface EntityTreeNode {
+    id: string;
+    name: string;
+    taxId?: string;
+    parentId?: string;
+    orderNum?: number;
+    status: string;
+    fondsCount: number;
+    children: EntityTreeNode[];
+}
+
 export const entityApi = {
     /**
      * 分页查询法人列表
@@ -96,6 +110,14 @@ export const entityApi = {
      */
     remove: async (id: string) => {
         const response = await client.delete<ApiResponse<boolean>>(`/entity/${id}`);
+        return response.data;
+    },
+
+    /**
+     * 获取法人树形结构
+     */
+    getTree: async () => {
+        const response = await client.get<ApiResponse<EntityTreeNode[]>>(`/entity/tree`);
         return response.data;
     },
 };

@@ -49,3 +49,9 @@ token:
   blacklist:
     fail-open: true  # Redis 不可用时允许令牌通过（开发环境）
 
+# YonSuite 配置（开发环境）
+yonsuite:
+  base-url: https://dbox.yonyoucloud.com/iuap-api-gateway
+  app-key: 96a95c00982446cba484ccc4936b221b
+  app-secret: e9a58fd35f3ca3f0a46d27b8859758b1ed35f0b6
+

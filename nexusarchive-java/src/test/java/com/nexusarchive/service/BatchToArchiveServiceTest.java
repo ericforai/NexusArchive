@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * 测试覆盖:
  * - 从批次文件创建档案记录
  * - 档案记录字段正确性
- * - 状态设置为 PENDING_METADATA
+ * - 状态设置为 NEEDS_ACTION
  * - 根据 fileId 获取 archiveId
  *
  * 合规要求参考: DA/T 94-2022 元数据同步捕获
@@ -132,7 +132,7 @@ class BatchToArchiveServiceTest {
         assertThat(result.getFiscalPeriod()).isEqualTo("01");
         assertThat(result.getTitle()).isEqualTo("invoice-scan-001.pdf"); // 初始使用文件名
         assertThat(result.getRetentionPeriod()).isEqualTo("30年");
-        assertThat(result.getStatus()).isEqualTo(PreArchiveStatus.PENDING_METADATA.getCode());
+        assertThat(result.getStatus()).isEqualTo(PreArchiveStatus.NEEDS_ACTION.getCode());
         assertThat(result.getFixityValue()).isEqualTo("abc123def456");
         assertThat(result.getFixityAlgo()).isEqualTo("SHA-256");
 
@@ -272,7 +272,7 @@ class BatchToArchiveServiceTest {
 
         // Then: 验证档案记录创建成功，期间为null
         assertThat(result.getFiscalPeriod()).isNull();
-        assertThat(result.getStatus()).isEqualTo(PreArchiveStatus.PENDING_METADATA.getCode());
+        assertThat(result.getStatus()).isEqualTo(PreArchiveStatus.NEEDS_ACTION.getCode());
     }
 
     @Test

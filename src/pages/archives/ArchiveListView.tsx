@@ -17,7 +17,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, Filter, Download, Layers, FileText,
   Settings2, Zap, Receipt, Upload, CheckCircle2,
-  ShieldCheck, Trash2, AlertTriangle, Loader2, Eye, X
+  Trash2, AlertTriangle, Loader2, Eye, X
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
@@ -26,6 +26,7 @@ import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useSmartMat
 import ArchiveDetailDrawer from './ArchiveDetailDrawer';
 import MatchPreviewModal from './MatchPreviewModal';
 import { TablePreviewAction } from '../../components/table';
+import { formatVoucherNumber } from '../../utils/voucherNumber';
 
 // 诊断日志：验证模块导入
 console.log('%c[ArchiveListView] ArchiveDetailDrawer imported:', typeof ArchiveDetailDrawer, ArchiveDetailDrawer.name, 'color: #8b5cf6; font-weight: bold;');
@@ -34,7 +35,7 @@ console.log('%c[ArchiveListView] ArchiveDetailDrawer imported:', typeof ArchiveD
 // In a real refactor, these should be imported. For this file update, I will keep necessary imports.
 import { GenericRow, ViewState } from '../../types';
 
-// Local Constants
+// 旧状态标签（用于表格中显示）
 const PRE_ARCHIVE_STATUS_LABELS: any = {
   'PENDING_CHECK': { label: '待检测', color: 'bg-slate-100 text-slate-600', description: '等待执行四性检测' },
   'CHECK_FAILED': { label: '检测失败', color: 'bg-rose-100 text-rose-600', description: '四性检测未通过，需修正' },
@@ -179,17 +180,40 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
 
     // Money Type
     if (column.type === 'money') {
-      if (!value || value === '-') return <span className="text-slate-400 font-mono text-right block">-</span>;
-      return <span className="font-mono font-semibold text-right block text-slate-700">{value}</span>;
+      if (!value || value === '-' || value === '' || value === '0' || value === '0.00') return <span className="text-slate-400 font-mono text-right block">-</span>;
+      const numValue = typeof value === 'number' ? value : parseFloat(value);
+      if (isNaN(numValue)) return <span className="text-slate-400 font-mono text-right block">-</span>;
+      return <span className="font-mono font-semibold text-right block text-slate-700">¥{numValue.toFixed(2)}</span>;
     }
 
-    // Voucher Number (Interactive)
-    if (['erpVoucherNo', 'voucherNo'].includes(column.key)) {
+    // Date Types
+    if (column.type === 'date' || column.type === 'datetime') {
+      if (!value) return <span className="text-slate-400">-</span>;
+      try {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return <span className="text-slate-400">-</span>;
+        if (column.type === 'date') {
+          return <span className="text-slate-700">{date.toLocaleDateString('zh-CN')}</span>;
+        }
+        return <span className="text-slate-700">{date.toLocaleString('zh-CN')}</span>;
+      } catch {
+        return <span className="text-slate-400">-</span>;
+      }
+    }
+
+    if (['erpVoucherNo', 'voucherNo', 'voucherWord'].includes(column.key)) {
+      const voucherNumber = formatVoucherNumber({
+        displayValue: row.erpVoucherNo || row.voucherNo,
+        voucherWord: row.voucherWord,
+        voucherNo: row.voucherNo || row.code || row.id,
+        fallback: row.code || row.id,
+      });
+
       return (
         <button
           className="font-medium text-slate-700 transition-colors text-left"
         >
-          {value}
+          {voucherNumber}
         </button>
       );
     }
@@ -246,26 +270,19 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
 
       {/* Header & Toolbar */}
       <div className="flex flex-col gap-6 mb-8 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
-        <div className="flex justify-between items-end">
-          {/* Title */}
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
-                {mode.title}
-                <span className="text-slate-300 font-light text-2xl">/</span>
-                <span className="text-slate-500 font-semibold text-2xl">{mode.subTitle}</span>
-              </h1>
-            </div>
-            {/* Tabs for Linking View */}
-            {mode.subTitle === '凭证关联' && (
-              <div className="bg-slate-100/80 p-1 rounded-xl inline-flex backdrop-blur-sm border border-slate-200/50">
-                <button className={`px-5 py-2 text-sm font-semibold rounded-lg ${activeLinkTab === 'list' ? 'bg-white text-primary-600 shadow' : 'text-slate-500'}`} onClick={() => setActiveLinkTab('list')}>
-                  <Layers size={16} className="inline mr-2" /> 凭证列表
-                </button>
-                <button className={`px-5 py-2 text-sm font-semibold rounded-lg ${activeLinkTab === 'report' ? 'bg-white text-primary-600 shadow' : 'text-slate-500'}`} onClick={() => setActiveLinkTab('report')}>
-                  <FileText size={16} className="inline mr-2" /> 合规报告
-                </button>
-              </div>
+        <div className="flex justify-between items-center">
+          {/* Title with count */}
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
+              {mode.title}
+              <span className="text-slate-300 font-light text-2xl">/</span>
+              <span className="text-slate-500 font-semibold text-2xl">{mode.subTitle}</span>
+            </h1>
+            {/* 统计数量 - 只在 pool 视图显示 */}
+            {mode.isPoolView && (
+              <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
+                共 <strong className="text-slate-700">{Object.values(pool.statusStats).reduce((sum, count) => sum + count, 0)}</strong> 条
+              </span>
             )}
           </div>
 
@@ -321,42 +338,6 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
           </div>
         </div>
       </div>
-
-      {/* Statistics for Pool View */}
-      {mode.isPoolView && (
-        <div className="px-4 py-2 bg-white border-b border-slate-100 overflow-x-auto">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                console.log('[View] 点击筛选按钮: 全部 (null)');
-                pool.setStatusFilter(null);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium ${pool.statusFilter === null ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}
-            >
-              全部
-            </button>
-            {Object.entries(PRE_ARCHIVE_STATUS_LABELS).map(([key, config]: any) => (
-              <button
-                key={key}
-                onClick={() => {
-                  console.log('[View] 点击筛选按钮:', key);
-                  pool.setStatusFilter(key as any);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${pool.statusFilter === key ? 'ring-2 ring-primary-500 bg-white' : 'bg-white hover:bg-slate-50 border'}`}
-              >
-                <span className={`w-2 h-2 rounded-full ${config.color.replace('text-', 'bg-').split(' ')[0]}`} />
-                {config.label}
-                <span className="bg-slate-100 px-1 rounded text-[10px]">{pool.statusStats[key] || 0}</span>
-              </button>
-            ))}
-
-            <div className="ml-auto w-px h-6 bg-slate-200 mx-2" />
-            <button onClick={() => archiveActions.handlePoolCheck('all')} className="flex items-center gap-1 text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded">
-              <ShieldCheck size={14} /> 全部检测
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Main Table Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px] flex flex-col">
@@ -519,7 +500,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
       />
 
       {/* 匹配规则配置弹窗 */}
-      {isRuleModalOpen && (
+      {isRuleModalOpen && createPortal(
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
@@ -565,7 +546,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
               <button
                 onClick={() => {
                   setIsRuleModalOpen(false);
-                  ui.showToast('规则已保存，稍后请点击“智能匹配”执行', 'success');
+                  ui.showToast('规则已保存，稍后请点击"智能匹配"执行', 'success');
                 }}
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
               >
@@ -573,11 +554,12 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 筛选弹窗 */}
-      {isFilterOpen && (
+      {isFilterOpen && createPortal(
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
@@ -650,7 +632,8 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 匹配结果预览弹窗 (已重构) */}

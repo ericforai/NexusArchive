@@ -15,10 +15,13 @@ import com.nexusarchive.dto.relation.RelationGraphDto;
 import com.nexusarchive.dto.relation.RelationNodeDto;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArchiveRelation;
+import com.nexusarchive.security.FondsContext;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.IAutoAssociationService;
 import com.nexusarchive.service.IArchiveRelationService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +40,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RelationController {
 
+    private static final Logger log = LoggerFactory.getLogger(RelationController.class);
     private final IAutoAssociationService autoAssociationService;
     private final ArchiveService archiveService;
     private final IArchiveRelationService archiveRelationService;
@@ -84,19 +88,31 @@ public class RelationController {
      */
     @GetMapping("/{archiveId}/graph")
     public Result<RelationGraphDto> getRelationGraph(@PathVariable String archiveId) {
-        Archive center = archiveService.getArchiveById(archiveId);
+        String currentFonds = FondsContext.getCurrentFondsNo();
+        log.debug("[RelationController] getRelationGraph called with archiveId: {}, currentFonds: {}", archiveId, currentFonds);
 
+        Archive center = archiveService.getArchiveById(archiveId);
+        log.debug("[RelationController] Center archive found: id={}, fonds_no={}, code={}",
+            center.getId(), center.getFondsNo(), center.getArchiveCode());
+
+        // 使用档案ID查询关联关系，而不是档案编码
+        String centerArchiveId = center.getId();
         List<ArchiveRelation> relations = archiveRelationService.list(new LambdaQueryWrapper<ArchiveRelation>()
-                .eq(ArchiveRelation::getSourceId, archiveId)
+                .eq(ArchiveRelation::getSourceId, centerArchiveId)
                 .or()
-                .eq(ArchiveRelation::getTargetId, archiveId));
+                .eq(ArchiveRelation::getTargetId, centerArchiveId));
+        log.debug("[RelationController] Found {} relations for archiveId: {}", relations.size(), centerArchiveId);
 
         Set<String> relatedIds = relations.stream()
                 .flatMap(r -> java.util.stream.Stream.of(r.getSourceId(), r.getTargetId()))
                 .collect(Collectors.toSet());
-        relatedIds.add(archiveId);
+        relatedIds.add(centerArchiveId);
+        log.debug("[RelationController] Related IDs: {}", relatedIds);
 
-        Map<String, Archive> archiveMap = archiveService.getArchivesByIds(relatedIds).stream()
+        List<Archive> relatedArchives = archiveService.getArchivesByIds(relatedIds);
+        log.debug("[RelationController] getArchivesByIds returned {} archives (after permission filter)", relatedArchives.size());
+
+        Map<String, Archive> archiveMap = relatedArchives.stream()
                 .collect(Collectors.toMap(Archive::getId, a -> a));
         archiveMap.put(center.getId(), center);
 
@@ -112,6 +128,8 @@ public class RelationController {
                         .description(r.getRelationDesc())
                         .build())
                 .toList();
+
+        log.debug("[RelationController] Returning graph with {} nodes and {} edges", nodes.size(), edges.size());
 
         return Result.success(RelationGraphDto.builder()
                 .centerId(center.getId())

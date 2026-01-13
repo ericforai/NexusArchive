@@ -117,15 +117,35 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
     // Get auth token for FileViewer (pages can use store)
     const token = useAuthStore(state => state.token);
 
+    // Track last loaded voucher to prevent duplicate loads
+    const lastLoadedRef = React.useRef<{ voucherId: string; sourceType: string | null } | null>(null);
+
     // 加载附件列表
     const loadFiles = useCallback(async () => {
         if (!voucherId) return;
 
+        // Wait until sourceType is determined before loading files
+        // This prevents double-loading when sourceType changes from null to ARCHIVE/ORIGINAL
+        if (sourceType === null) {
+            console.log('[EvidencePreview] sourceType is null, waiting for detection to complete');
+            return;
+        }
+
+        // Skip if we already loaded the same voucher with the same sourceType
+        if (lastLoadedRef.current?.voucherId === voucherId &&
+            lastLoadedRef.current?.sourceType === sourceType) {
+            console.log('[EvidencePreview] Already loaded, skipping duplicate load');
+            return;
+        }
+
+        console.log('[EvidencePreview] Loading files for voucherId:', voucherId, 'sourceType:', sourceType);
         setLoading(true);
         setError(null);
         try {
             if (sourceType === 'ORIGINAL') {
+                console.log('[EvidencePreview] Fetching ORIGINAL voucher files...');
                 const ovFiles = await originalVoucherApi.getOriginalVoucherFiles(voucherId);
+                console.log('[EvidencePreview] ORIGINAL files response:', ovFiles);
                 if (ovFiles && ovFiles.length > 0) {
                     const converted = ovFiles.map(f => ({
                         id: f.id,
@@ -139,16 +159,22 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                         highlightMeta: (f as any).highlightMeta || null
                     })) as any[];
                     setFiles(converted);
+                    console.log('[EvidencePreview] Loaded ORIGINAL files:', converted.length);
                 } else {
                     setFiles([]);
                     setSelectedFile(null);
+                    console.log('[EvidencePreview] No ORIGINAL files found');
                 }
             } else {
+                console.log('[EvidencePreview] Fetching ARCHIVE attachments...');
                 const attachments = await attachmentsApi.getByArchive(voucherId);
+                console.log('[EvidencePreview] ARCHIVE attachments response:', attachments);
                 if (attachments && attachments.length > 0) {
                     setFiles(attachments);
+                    console.log('[EvidencePreview] Loaded ARCHIVE attachments:', attachments.length);
                 } else if (sourceType === null) {
                     // 降级尝试
+                    console.log('[EvidencePreview] Fallback: trying ORIGINAL voucher...');
                     const ovFiles = await originalVoucherApi.getOriginalVoucherFiles(voucherId);
                     if (ovFiles && ovFiles.length > 0) {
                         const converted = ovFiles.map(f => ({
@@ -161,13 +187,19 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                         })) as any[];
                         setFiles(converted);
                         setSelectedFile(converted[0] || null);
+                        console.log('[EvidencePreview] Fallback loaded files:', converted.length);
                     }
                 } else {
                     setFiles([]);
                     setSelectedFile(null);
+                    console.log('[EvidencePreview] No ARCHIVE attachments found');
                 }
             }
-        } catch {
+
+            // Mark as loaded to prevent duplicate loads
+            lastLoadedRef.current = { voucherId, sourceType: sourceType ?? null };
+        } catch (err) {
+            console.error('[EvidencePreview] Load files error:', err);
             setError('加载附件失败');
         } finally {
             setLoading(false);
@@ -179,9 +211,17 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
     }, [loadFiles]);
 
     // 切换标签时更新选中文件
+    // Only update selectedFile if the file ID actually changed
+    // This prevents unnecessary re-renders that interrupt FileViewer
     useEffect(() => {
         const firstFile = files.find(f => f.docType === activeTab);
-        setSelectedFile(firstFile || null);
+        setSelectedFile(prev => {
+            // If the file ID is the same, keep the previous reference
+            if (prev?.id === firstFile?.id) {
+                return prev;
+            }
+            return firstFile || null;
+        });
     }, [activeTab, files]);
 
     // 构建文件预览 URL

@@ -7,12 +7,117 @@
 ## [Unreleased]
 
 ### Added
+- **YonSuite 组织同步服务** (`ErpOrgSyncService`)
+  - 从 YonSuite ERP 同步组织架构到 `sys_entity` 表
+  - 支持树版本 API (`treeversionsync`) 和组织成员 API (`treemembersync`)
+  - 增量同步机制（基于 `pubts` 时间戳）
+  - 详细的调试日志输出
+- **SysEntity 树形结构支持**
+  - 新增 `parentId` 字段支持层级关系
+  - 新增 `orderNum` 字段支持排序
+  - EntityService 新增树形操作方法
+- **ErpConfig 组织映射功能**
+  - `accbookMapping` 字段存储账套-全宗映射关系
+  - 后端强制路由机制，根据全宗上下文自动选择账套
+
+### Changed
+- **组织管理重构** - 简化组织架构管理
+  - 删除独立的 `Org` 实体，合并到 `SysEntity` 中
+  - 删除 `OrgService`，功能迁移到 `EntityService`
+  - 删除 `OrgMapper`，功能迁移到 `SysEntityMapper`
+  - `AdminOrgController` 改为代理模式，调用 `EntityService` 和 `ErpOrgSyncService`
+- **前端组织设置页面移除**
+  - 删除 `OrgSettings.tsx`，组织管理集成到法人管理页面
+  - 更新相关路由和 API 调用
+- **预归档状态简化** (V96 数据库迁移)
+  - 从 10 种状态简化为 5 种：`PENDING`, `SUPPLEMENTING`, `VERIFYING`, `APPROVED`, `REJECTED`
+  - 更新相关枚举、配置和 API
+
+### Fixed
+- 修复 `BorrowPermissionInterceptor` 借阅权限校验逻辑
+- 更新 `BasFondsController` 全宗接口的权限校验
+- 更新 `EntityController` 法人接口支持树形结构
+
+### Technical
+- 新增 `YonSuiteOrgClient` - YonSuite 组织架构 API 客户端
+- 新增 `YonOrgTreeSyncRequest/Response` DTO
+- 数据库迁移 V97 简化预归档状态
+- 数据库迁移 V98 添加 SAP 接口类型到 ERP 配置
+
+---
+
+## [2025-01-11] Organization Management Refactor
+
+### Added
+- **YonSuite 组织同步服务** (`ErpOrgSyncService`)
+  - 从 YonSuite ERP 同步组织架构到 `sys_entity` 表
+  - 支持树版本 API (`treeversionsync`) 和组织成员 API (`treemembersync`)
+  - 增量同步机制（基于 `pubts` 时间戳）
+  - 详细的调试日志输出
+- **SysEntity 树形结构支持**
+  - 新增 `parentId` 字段支持层级关系
+  - 新增 `orderNum` 字段支持排序
+  - EntityService 新增树形操作方法
+- **ErpConfig 组织映射功能**
+  - `accbookMapping` 字段存储账套-全宗映射关系
+  - 后端强制路由机制，根据全宗上下文自动选择账套
+
+### Changed
+- **组织管理重构** - 简化组织架构管理
+  - 删除独立的 `Org` 实体，合并到 `SysEntity` 中
+  - 删除 `OrgService`，功能迁移到 `EntityService`
+  - 删除 `OrgMapper`，功能迁移到 `SysEntityMapper`
+  - `AdminOrgController` 改为代理模式，调用 `EntityService` 和 `ErpOrgSyncService`
+- **前端组织设置页面移除**
+  - 删除 `OrgSettings.tsx`，组织管理集成到法人管理页面
+  - 更新相关路由和 API 调用
+- **预归档状态简化** (V97 数据库迁移)
+  - 从 10 种状态简化为 5 种：`PENDING`, `SUPPLEMENTING`, `VERIFYING`, `APPROVED`, `REJECTED`
+  - 更新相关枚举、配置和 API
+
+### Fixed
+- 修复 `BorrowPermissionInterceptor` 借阅权限校验逻辑
+- 更新 `BasFondsController` 全宗接口的权限校验
+- 更新 `EntityController` 法人接口支持树形结构
+
+### Technical
+- 新增 `YonSuiteOrgClient` - YonSuite 组织架构 API 客户端
+- 新增 `YonOrgTreeSyncRequest/Response` DTO
+- 数据库迁移 V97 简化预归档状态
+- 数据库迁移 V98 添加 SAP 接口类型到 ERP 配置
+- 数据库迁移 V101 添加 SysEntity.parentId 字段
+
+---
+
+## [2025-01-10] Pool Status Simplification
+
+### Changed
+- **预归档状态简化** (V97 数据库迁移)
+  - 从 10 种状态简化为 5 种：`PENDING`, `SUPPLEMENTING`, `VERIFYING`, `APPROVED`, `REJECTED`
+  - 更新相关枚举、配置和 API
+
+---
+
+## [2025-01-09] Pool Dual View Design
+
+### Added
 - **电子凭证池双视图模式** (`/docs/plans/2026-01-11-pool-dual-view-design.md`)
   - 列表视图（默认）：适合查看大量数据，支持筛选、批量操作
   - 看板视图：直观展示处理流程（待检测→待补全→待归档）
   - 视图切换器：页面右上角"列表"/"看板"按钮或 URL 参数 `?view=list|kanban`
   - 用户偏好记忆：localStorage 保存视图选择
   - 路由兼容：旧的 `/kanban` 路由自动重定向
+
+### Changed
+- 性能优化设计文档标记为"规划完成"状态
+- 预估工时: 91.5 小时 (~12 个工作日)
+- 优化收益预估: 首屏 < 1s, N+1 查询 -99%, API 响应 +50%
+
+---
+
+## [2025-01-08] Performance Optimization Design
+
+### Added
 - 性能优化设计文档 (`/docs/plans/2026-01-09-performance-optimization-design.md`)
   - 24 类性能/安全问题识别与解决方案
   - 前端、后端数据库、API 安全三维度优化方案
@@ -21,11 +126,6 @@
   - 执行摘要与关键指标
   - 技术债务清单 (P0/P1/P2 分级)
   - 短期/中期/长期优化建议
-
-### Changed
-- 性能优化设计文档标记为"规划完成"状态
-- 预估工时: 91.5 小时 (~12 个工作日)
-- 优化收益预估: 首屏 < 1s, N+1 查询 -99%, API 响应 +50%
 
 ### Planned (待执行优化)
 

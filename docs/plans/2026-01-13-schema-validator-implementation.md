@@ -243,7 +243,7 @@ cd ..
 2. [x] 修改 `pom.xml` 添加 exec-maven-plugin
 3. [x] 重构 `validate-schema.sh` 脚本
 4. [x] 本地测试：`mvn compile && ./scripts/validate-schema.sh`
-5. [ ] 提交代码并更新文档
+5. [x] 提交代码并更新文档
 
 ---
 

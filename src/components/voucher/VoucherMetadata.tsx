@@ -2,6 +2,7 @@
 import React from 'react';
 import { formatCurrency, formatDate } from './styles';
 import type { VoucherDTO } from './types';
+import { formatVoucherNumber } from '../../utils/voucherNumber';
 
 interface MetadataField {
   label: string;
@@ -37,13 +38,15 @@ export const VoucherMetadata: React.FC<VoucherMetadataProps> = ({
   const metadataFields: MetadataField[] = React.useMemo(() => {
     const result: MetadataField[] = [];
 
-    // 记账凭证号
     if (shouldIncludeField('voucherNo')) {
-      const voucherNumber = data.voucherWord && data.voucherNo
-        ? `${data.voucherWord}-${data.voucherNo}`
-        : (data.voucherNo || '-');
+      const voucherNumber = formatVoucherNumber({
+        displayValue: data.voucherNo,
+        voucherWord: data.voucherWord,
+        voucherNo: data.voucherNo,
+        fallback: data.voucherId || data.id,
+      });
       result.push({
-        label: '记账凭证号',
+        label: '凭证号',
         value: voucherNumber,
         type: 'text',
       });

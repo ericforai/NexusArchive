@@ -51,7 +51,6 @@ class ErpConfigServiceTest {
         testConfig.setIsActive(1);
         testConfig.setCreatedTime(LocalDateTime.now());
         testConfig.setLastModifiedTime(LocalDateTime.now());
-        testConfig.setOrgId("org-001");
     }
 
     @Test

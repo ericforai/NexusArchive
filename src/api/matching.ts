@@ -40,7 +40,10 @@ export interface MatchResult {
     links: LinkResult[];
     voucherHash?: string;
     configHash?: string;
-    createdTime?: string;
+    /**
+     * LocalDateTime 可能被序列化为字符串或数组（[year, month, day, hour, minute, second, nano]）
+     */
+    createdTime?: string | number[];
 }
 
 export interface LinkResult {

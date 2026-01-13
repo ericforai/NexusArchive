@@ -65,4 +65,19 @@ public interface ErpConfigService {
      * @return 活跃配置数量
      */
     Long countActiveConfigs();
+
+    /**
+     * 根据账套编码获取对应的全宗编码
+     *
+     * @param accbookCode ERP 账套编码（如 BR01）
+     * @return 对应的全宗编码（如 BR-GROUP），如果未找到返回账套编码本身
+     */
+    String getFondsCodeByAccbook(String accbookCode);
+
+    /**
+     * 获取所有账套-全宗映射
+     *
+     * @return 映射关系 Map，Key=账套编码，Value=全宗编码
+     */
+    java.util.Map<String, String> getAccbookFondsMapping();
 }

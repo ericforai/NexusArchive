@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { X, CheckCircle2, Zap, Receipt, AlertTriangle } from 'lucide-react';
+import { formatVoucherNumber } from '../../utils/voucherNumber';
 
 interface MatchPreviewRow {
     voucherId?: string;
@@ -65,7 +66,12 @@ export const MatchPreviewModal: React.FC<MatchPreviewModalProps> = ({
                         <tbody className="divide-y divide-slate-100">
                             {filteredData.map((row, idx) => (
                                 <tr key={idx} className="hover:bg-slate-50">
-                                    <td className="p-4 font-medium text-slate-700">{row.voucherNo}</td>
+                                    <td className="p-4 font-medium text-slate-700">
+                                        {formatVoucherNumber({
+                                            displayValue: row.voucherNo,
+                                            fallback: row.voucherId,
+                                        })}
+                                    </td>
                                     <td className="p-4">
                                         <div className="text-xs text-slate-500">{row.date}</div>
                                         <div className="font-mono font-bold text-slate-700">{row.amount}</div>

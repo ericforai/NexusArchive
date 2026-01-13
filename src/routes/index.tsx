@@ -58,7 +58,6 @@ const OpsSettingsLayout = lazy(() => import('../pages/settings/OpsSettingsLayout
 const BasicSettings = lazy(() => import('../pages/settings/BasicSettingsPage'));
 const UserSettings = lazy(() => import('../pages/settings/UserSettingsPage'));
 const RoleSettings = lazy(() => import('../pages/settings/RoleSettingsPage'));
-const OrgSettings = lazy(() => import('../pages/settings/OrgSettingsPage'));
 const SecuritySettings = lazy(() => import('../pages/settings/SecuritySettingsPage'));
 const AuditLogView = lazy(() => import('../pages/settings/AuditLogView'));
 const IntegrationSettings = lazy(() => import('../pages/settings/IntegrationSettingsPage'));
@@ -88,6 +87,12 @@ const FondsHistoryListPage = lazy(() => import('../pages/admin/FondsHistoryListP
 const EntityManagementPage = lazy(() => import('../pages/admin/EntityManagementPage'));
 const EntityConfigPage = lazy(() => import('../pages/admin/EntityConfigPage'));
 const EnterpriseArchitecturePage = lazy(() => import('../pages/admin/EnterpriseArchitecturePage'));
+
+// 全宗管理模块
+const FondsManagement = lazy(() => import('../pages/admin/FondsManagement'));
+
+// 岗位管理模块
+const PositionManagement = lazy(() => import('../pages/admin/PositionManagement').then(m => ({ default: m.PositionManagement })));
 
 // 历史数据导入模块
 const LegacyImportPage = lazy(() => import('../pages/admin/LegacyImportPage'));
@@ -256,8 +261,8 @@ export const routes: RouteObject[] = [
                     { index: true, element: withSuspense(EntityManagementPage) },
                     { path: 'entity', element: withSuspense(EntityManagementPage) },
                     { path: 'architecture', element: withSuspense(EnterpriseArchitecturePage) },
-                    { path: 'fonds', element: withSuspense(OrgSettings) },
-                    { path: 'positions', element: withSuspense(OrgSettings) },  // TODO: 岗位管理页面
+                    { path: 'fonds', element: withSuspense(FondsManagement) },
+                    { path: 'positions', element: withSuspense(PositionManagement) },
                     { path: 'fonds-history', element: withSuspense(FondsHistoryPage) },
                 ],
             },

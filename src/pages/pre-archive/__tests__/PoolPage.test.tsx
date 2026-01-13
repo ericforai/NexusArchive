@@ -24,6 +24,15 @@ vi.mock('@/components/pool-kanban', () => ({
   PoolKanbanView: () => <div data-testid="kanban-view">Kanban View</div>,
 }));
 
+vi.mock('@/components/pool-dashboard', () => ({
+  PoolDashboard: ({ activeFilter, onFilterChange }: { activeFilter: string | null; onFilterChange: (filter: string | null) => void }) => (
+    <div data-testid="pool-dashboard">
+      <div data-filter={activeFilter || 'none'}>Dashboard</div>
+      <button onClick={() => onFilterChange(null)}>Clear Filter</button>
+    </div>
+  ),
+}));
+
 vi.mock('@/pages/archives/ArchiveListPage', () => ({
   ArchiveListPage: ({ routeConfig }: { routeConfig?: string }) => (
     <div data-testid="list-view" data-route-config={routeConfig}>List View</div>

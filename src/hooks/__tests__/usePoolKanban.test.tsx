@@ -5,7 +5,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePoolKanban } from '../usePoolKanban';
-import { POOL_COLUMN_GROUPS } from '@/config/pool-columns.config';
+import { POOL_COLUMN_GROUPS, SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
 import type { PoolItem } from '@/api/pool';
 
 // Mock API
@@ -50,9 +50,9 @@ describe('usePoolKanban', () => {
 
   it('should group cards by column and sub-state', async () => {
     const mockCards: PoolItem[] = [
-      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: 'DRAFT' },
-      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: 'PENDING_CHECK' },
-      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: 'CHECK_FAILED' },
+      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
+      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: SimplifiedPreArchiveStatus.NEEDS_ACTION },
+      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: SimplifiedPreArchiveStatus.READY_TO_MATCH },
     ];
     mockGetList.mockResolvedValue(mockCards);
 
@@ -62,22 +62,27 @@ describe('usePoolKanban', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Verify pending column has DRAFT cards
-    const pendingCards = result.current.getCardsForColumn('pending', 'DRAFT');
+    // Verify pending column has PENDING_CHECK cards
+    const pendingCards = result.current.getCardsForColumn('pending', SimplifiedPreArchiveStatus.PENDING_CHECK);
     expect(pendingCards).toHaveLength(1);
     expect(pendingCards[0].id).toBe('1');
 
-    // Verify needs-attention column has CHECK_FAILED cards
-    const needsCards = result.current.getCardsForColumn('needs-attention', 'CHECK_FAILED');
+    // Verify needs-action column has NEEDS_ACTION cards
+    const needsCards = result.current.getCardsForColumn('needs-action', SimplifiedPreArchiveStatus.NEEDS_ACTION);
     expect(needsCards).toHaveLength(1);
-    expect(needsCards[0].id).toBe('3');
+    expect(needsCards[0].id).toBe('2');
+
+    // Verify ready-to-match column has READY_TO_MATCH cards
+    const readyToMatchCards = result.current.getCardsForColumn('ready-to-match', SimplifiedPreArchiveStatus.READY_TO_MATCH);
+    expect(readyToMatchCards).toHaveLength(1);
+    expect(readyToMatchCards[0].id).toBe('3');
   });
 
   it('should return count for each sub-state', async () => {
     const mockCards: PoolItem[] = [
-      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: 'DRAFT' },
-      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: 'DRAFT' },
-      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: 'PENDING_CHECK' },
+      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
+      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
+      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: SimplifiedPreArchiveStatus.NEEDS_ACTION },
     ];
     mockGetList.mockResolvedValue(mockCards);
 
@@ -87,18 +92,18 @@ describe('usePoolKanban', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    const draftCount = result.current.getSubStateCount('pending', 'DRAFT');
-    expect(draftCount).toBe(2);
+    const pendingCheckCount = result.current.getSubStateCount('pending', SimplifiedPreArchiveStatus.PENDING_CHECK);
+    expect(pendingCheckCount).toBe(2);
 
-    const pendingCheckCount = result.current.getSubStateCount('pending', 'PENDING_CHECK');
-    expect(pendingCheckCount).toBe(1);
+    const needsActionCount = result.current.getSubStateCount('needs-action', SimplifiedPreArchiveStatus.NEEDS_ACTION);
+    expect(needsActionCount).toBe(1);
   });
 
   it('should return total count for a column', async () => {
     const mockCards: PoolItem[] = [
-      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: 'DRAFT' },
-      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: 'DRAFT' },
-      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: 'PENDING_CHECK' },
+      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
+      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
+      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: SimplifiedPreArchiveStatus.NEEDS_ACTION },
     ];
     mockGetList.mockResolvedValue(mockCards);
 
@@ -109,12 +114,15 @@ describe('usePoolKanban', () => {
     });
 
     const pendingTotal = result.current.getTotalCount('pending');
-    expect(pendingTotal).toBe(3); // 2 DRAFT + 1 PENDING_CHECK
+    expect(pendingTotal).toBe(2); // 2 PENDING_CHECK
+
+    const needsActionTotal = result.current.getTotalCount('needs-action');
+    expect(needsActionTotal).toBe(1); // 1 NEEDS_ACTION
   });
 
   it('should refresh data when refetch is called', async () => {
     const mockCards: PoolItem[] = [
-      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: 'DRAFT' },
+      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
     ];
     mockGetList.mockResolvedValue(mockCards);
 
@@ -143,7 +151,7 @@ describe('usePoolKanban', () => {
     });
 
     expect(result.current.cards).toEqual([]);
-    expect(result.current.getSubStateCount('pending', 'DRAFT')).toBe(0);
+    expect(result.current.getSubStateCount('pending', SimplifiedPreArchiveStatus.PENDING_CHECK)).toBe(0);
     expect(result.current.getTotalCount('pending')).toBe(0);
   });
 
@@ -162,9 +170,11 @@ describe('usePoolKanban', () => {
 
   it('should assign _columnId to each card based on status', async () => {
     const mockCards: PoolItem[] = [
-      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: 'DRAFT' },
-      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: 'CHECK_FAILED' },
-      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: 'MATCHED' },
+      { id: '1', code: 'C001', source: 'test', type: 'invoice', amount: '100', date: '2024-01-01', status: SimplifiedPreArchiveStatus.PENDING_CHECK },
+      { id: '2', code: 'C002', source: 'test', type: 'invoice', amount: '200', date: '2024-01-02', status: SimplifiedPreArchiveStatus.NEEDS_ACTION },
+      { id: '3', code: 'C003', source: 'test', type: 'invoice', amount: '300', date: '2024-01-03', status: SimplifiedPreArchiveStatus.READY_TO_MATCH },
+      { id: '4', code: 'C004', source: 'test', type: 'invoice', amount: '400', date: '2024-01-04', status: SimplifiedPreArchiveStatus.READY_TO_ARCHIVE },
+      { id: '5', code: 'C005', source: 'test', type: 'invoice', amount: '500', date: '2024-01-05', status: SimplifiedPreArchiveStatus.COMPLETED },
     ];
     mockGetList.mockResolvedValue(mockCards);
 
@@ -175,7 +185,9 @@ describe('usePoolKanban', () => {
     });
 
     expect(result.current.cards[0]._columnId).toBe('pending');
-    expect(result.current.cards[1]._columnId).toBe('needs-attention');
-    expect(result.current.cards[2]._columnId).toBe('ready');
+    expect(result.current.cards[1]._columnId).toBe('needs-action');
+    expect(result.current.cards[2]._columnId).toBe('ready-to-match');
+    expect(result.current.cards[3]._columnId).toBe('ready-to-archive');
+    expect(result.current.cards[4]._columnId).toBe('completed');
   });
 });

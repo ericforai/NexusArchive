@@ -27,6 +27,12 @@
 | `test-run.log` | 运行日志 | 测试运行日志（可忽略） |
 | `walkthrough.md` | 文档 | 后端演示与流程说明 |
 
+## 辅助工具
+
+位于 `src/main/java/com/nexusarchive/tools/`：
+
+- **SchemaValidator**: 用于 Entity 与数据库 Schema 一致性检查的工具。通过 Maven 插件运行，配合 `scripts/validate-schema.sh` 使用。
+
 # NexusArchive 电子会计档案管理系统 - Java后端
 
 ## 项目简介

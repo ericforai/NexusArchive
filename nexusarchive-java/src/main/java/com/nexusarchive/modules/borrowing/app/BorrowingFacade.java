@@ -20,4 +20,14 @@ public interface BorrowingFacade {
     void returnArchive(String id);
 
     void cancelBorrowing(String id);
+
+    /**
+     * 检查用户是否有权限访问指定档案
+     *
+     * @param userId 用户ID
+     * @param archiveId 档案ID
+     * @param action 操作类型 (VIEW, BORROW, etc.)
+     * @return 是否有权限
+     */
+    boolean checkAccess(String userId, String archiveId, String action);
 }

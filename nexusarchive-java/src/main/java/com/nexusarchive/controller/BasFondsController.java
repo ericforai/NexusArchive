@@ -65,8 +65,14 @@ public class BasFondsController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof String userId) {
-                return fondsScopeService.getAllowedFonds((String) userId);
+            String userId = null;
+            if (principal instanceof String) {
+                userId = (String) principal;
+            } else if (principal instanceof com.nexusarchive.security.CustomUserDetails userDetails) {
+                userId = userDetails.getId();
+            }
+            if (userId != null) {
+                return fondsScopeService.getAllowedFonds(userId);
             }
         }
         return null;

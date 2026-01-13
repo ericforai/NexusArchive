@@ -13,7 +13,6 @@ export { SettingsLayout } from './SettingsLayout';
 export { BasicSettings } from './BasicSettings';
 export { UserSettings } from './UserSettings';
 export { RoleSettings } from './RoleSettings';
-export { OrgSettings } from './OrgSettings';
 export { SecuritySettings } from './SecuritySettings';
 export { IntegrationSettingsPage } from './integration';
 export { LicenseSettings } from './LicenseSettings';

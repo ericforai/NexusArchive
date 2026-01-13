@@ -26,7 +26,7 @@ describe('VoucherMetadata', () => {
 
   it('应该显示默认字段', () => {
     render(<VoucherMetadata data={mockVoucherData} />);
-    expect(screen.getByText(/记账凭证号/)).toBeTruthy();
+    expect(screen.getByText(/凭证号/)).toBeTruthy();
     expect(screen.getByText(/金额/)).toBeTruthy();
     expect(screen.getByText(/业务日期/)).toBeTruthy();
   });
@@ -53,7 +53,7 @@ describe('VoucherMetadata', () => {
 
   it('应该支持自定义字段', () => {
     render(<VoucherMetadata data={mockVoucherData} fields={['voucherNo', 'debitTotal']} />);
-    expect(screen.getByText(/记账凭证号/)).toBeTruthy();
+    expect(screen.getByText(/凭证号/)).toBeTruthy();
     expect(screen.getByText(/金额/)).toBeTruthy();
     // 其他字段不应该显示
     expect(screen.queryByText(/业务日期/)).toBeFalsy();

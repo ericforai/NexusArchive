@@ -100,7 +100,13 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
           <Button
             type="primary"
             onClick={actions.saveConfig}
-            disabled={!configForm.name || !configForm.erpType || !configForm.baseUrl || !configForm.appKey || !configForm.appSecret}
+            disabled={
+              !configForm.name ||
+              !configForm.erpType ||
+              !configForm.baseUrl ||
+              !configForm.appKey ||
+              (!isEdit && !configForm.appSecret)
+            }
           >
             {isEdit ? '保存' : '创建'}
           </Button>
@@ -341,7 +347,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         <Button
           type="primary"
           onClick={actions.testConnection}
-          disabled={!configForm.baseUrl || !configForm.appKey || !configForm.appSecret || isTesting}
+          disabled={!configForm.baseUrl || !configForm.appKey || (!isEdit && !configForm.appSecret) || isTesting}
           loading={isTesting}
           icon={!isTesting && <CheckCircle size={16} />}
           size="small"

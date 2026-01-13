@@ -191,4 +191,22 @@ public class StatsServiceImpl implements StatsService {
     public void evictTrendCache() {
         log.debug("Trend cache evicted");
     }
+
+    /**
+     * 清除所有统计缓存
+     * 用于数据变更后刷新所有统计信息
+     */
+    @CacheEvict(value = "stats", allEntries = true)
+    public void evictStatsCache() {
+        log.debug("All stats cache evicted");
+    }
+
+    /**
+     * 清除存储统计缓存
+     * 用于存储变更后刷新存储统计信息
+     */
+    @CacheEvict(value = "stats", allEntries = true)
+    public void evictStorageCache() {
+        log.debug("Storage cache evicted");
+    }
 }

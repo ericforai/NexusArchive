@@ -30,7 +30,11 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   showAction = false,
 }) => {
   const config = STATUS_CONFIG[status];
-  const IconComponent = Icons[config.icon as keyof typeof Icons] as React.ComponentType<{ className?: string }>;
+  // 将 kebab-case 转换为 PascalCase (例如: 'alert-circle' -> 'AlertCircle')
+  const iconName = config.icon.split('-').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join('');
+  const IconComponent = Icons[iconName as keyof typeof Icons] as React.ComponentType<{ className?: string }>;
 
   return (
     <div

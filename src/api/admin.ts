@@ -92,6 +92,17 @@ export const adminApi = {
         const response = await client.get<ApiResponse<any>>('/admin/org/import/template');
         return response.data;
     },
+    // 从 ERP 同步组织架构
+    syncOrgFromErp: async () => {
+        const response = await client.post<ApiResponse<{
+            success: boolean;
+            message: string;
+            successCount: number;
+            errorCount: number;
+            errors: string[];
+        }>>('/admin/org/sync');
+        return response.data;
+    },
 
     // 人员管理
     getUsers: async (params?: any) => {

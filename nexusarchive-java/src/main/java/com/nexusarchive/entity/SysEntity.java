@@ -57,6 +57,16 @@ public class SysEntity {
     private String contactEmail;
 
     /**
+     * 父法人ID（用于集团层级：母公司-子公司）
+     */
+    private String parentId;
+
+    /**
+     * 排序号
+     */
+    private Integer orderNum;
+
+    /**
      * 状态: ACTIVE, INACTIVE
      */
     private String status;

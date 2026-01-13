@@ -3,7 +3,7 @@
 // Pos: 通用复用组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 interface FileViewerProps {
     fileUrl: string
@@ -14,17 +14,37 @@ interface FileViewerProps {
     token?: string  // Auth token for fetching files (avoid store coupling)
 }
 
-export function FileViewer({ fileUrl, fileType, fileName, className, style, token }: FileViewerProps) {
+function FileViewerComponent({ fileUrl, fileType, fileName, className, style, token }: FileViewerProps) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [blobUrl, setBlobUrl] = useState<string | null>(null)
     const [detectedType, setDetectedType] = useState<string>('')
+    // Use ref to track the current blob URL for cleanup
+    const blobUrlRef = useRef<string | null>(null)
+
+    // Sync ref with state
+    useEffect(() => {
+        blobUrlRef.current = blobUrl
+    }, [blobUrl])
+
+    console.log('[FileViewer] Render:', { fileUrl, fileType, fileName, hasToken: !!token, currentBlobUrl: blobUrl })
 
     useEffect(() => {
-        let mounted = true
-        let objectUrl: string | null = null
-        setLoading(true)
-        setError(null)
+        // Use a ref to track if this specific effect instance is still valid
+        let isCurrentEffect = true
+        let localObjectUrl: string | null = null
+        let aborted = false
+
+        // Skip if fileUrl is empty
+        if (!fileUrl) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        console.log('[FileViewer] Starting load for:', fileUrl, '| token:', token ? 'present' : 'null/undefined')
 
         async function loadFile() {
             try {
@@ -34,19 +54,57 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
                     headers['Authorization'] = `Bearer ${token}`
                 }
 
-                const response = await fetch(fileUrl, { headers })
+                console.log('[FileViewer] Fetching with headers:', Object.keys(headers))
+
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
+
+                const response = await fetch(fileUrl, {
+                    headers,
+                    signal: controller.signal
+                })
+                clearTimeout(timeoutId)
+
+                console.log('[FileViewer] Response status:', response.status, response.statusText, 'isCurrentEffect:', isCurrentEffect, 'aborted:', aborted)
+
+                if (aborted || !isCurrentEffect) {
+                    console.log('[FileViewer] Request was aborted or effect is stale')
+                    return
+                }
+
                 if (!response.ok) {
                     throw new Error(`Failed to fetch file: ${response.statusText}`)
                 }
 
                 const contentType = response.headers.get('content-type') || ''
-                const blob = await response.blob()
+                console.log('[FileViewer] Content-Type:', contentType, 'isCurrentEffect:', isCurrentEffect)
+
+                if (!isCurrentEffect) {
+                    console.log('[FileViewer] Effect is stale after response')
+                    return
+                }
+
+                console.log('[FileViewer] Calling blob()...')
+
+                // Try with arrayBuffer first, then create blob
+                const arrayBuffer = await response.arrayBuffer()
+                console.log('[FileViewer] ArrayBuffer size:', arrayBuffer.byteLength)
+
+                if (!isCurrentEffect) {
+                    console.log('[FileViewer] Effect is stale after blob')
+                    return
+                }
+
+                console.log('[FileViewer] Creating object URL...')
+                const blob = new Blob([arrayBuffer], { type: contentType })
                 const url = URL.createObjectURL(blob)
-                objectUrl = url
+                localObjectUrl = url
+                console.log('[FileViewer] Object URL created:', url)
 
                 // Detect file type from content-type or file extension
                 let type = ''
                 const inputType = fileType?.toLowerCase() || ''
+                console.log('[FileViewer] Input fileType:', inputType)
 
                 // First check input fileType
                 if (inputType.includes('pdf') || inputType === 'pdf') {
@@ -72,17 +130,27 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
                     }
                 }
 
-                if (mounted) {
+                console.log('[FileViewer] Detected type:', type, 'isCurrentEffect:', isCurrentEffect)
+
+                // Only update state if this effect is still current
+                if (isCurrentEffect && !aborted) {
                     setBlobUrl(url)
                     setDetectedType(type)
+                    setLoading(false)
+                    console.log('[FileViewer] State updated, blobUrl:', url)
+                } else {
+                    URL.revokeObjectURL(url)
+                    console.log('[FileViewer] Revoked URL, effect no longer current')
                 }
             } catch (err: any) {
-                console.error("File load error:", err)
-                if (mounted) {
+                console.error('[FileViewer] Load error:', err, 'isCurrentEffect:', isCurrentEffect)
+                if (err.name === 'AbortError') {
+                    if (isCurrentEffect) {
+                        setError('文件加载超时')
+                        setLoading(false)
+                    }
+                } else if (isCurrentEffect) {
                     setError(err.message || 'Failed to load file')
-                }
-            } finally {
-                if (mounted) {
                     setLoading(false)
                 }
             }
@@ -91,12 +159,24 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
         loadFile()
 
         return () => {
-            mounted = false
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl)
+            console.log('[FileViewer] Cleanup, isCurrentEffect:', isCurrentEffect, 'localObjectUrl:', localObjectUrl)
+            isCurrentEffect = false
+            aborted = true
+            if (localObjectUrl) {
+                URL.revokeObjectURL(localObjectUrl)
             }
         }
-    }, [fileUrl, fileType, fileName])
+    }, [fileUrl, token]) // fileType and fileName are used inside but not as dependencies
+
+    // Cleanup blob URL on unmount
+    useEffect(() => {
+        return () => {
+            if (blobUrlRef.current) {
+                console.log('[FileViewer] Final cleanup on unmount, revoking:', blobUrlRef.current)
+                URL.revokeObjectURL(blobUrlRef.current)
+            }
+        }
+    }, [])
 
     const handleDownload = () => {
         if (blobUrl) {
@@ -108,6 +188,7 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
     }
 
     if (loading) {
+        console.log('[FileViewer] Rendering loading state')
         return (
             <div className={`file-viewer-wrapper ${className || ''}`} style={style}>
                 <div className="p-8 text-center text-gray-500 h-full flex flex-col items-center justify-center">
@@ -119,6 +200,7 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
     }
 
     if (error) {
+        console.log('[FileViewer] Rendering error state:', error)
         return (
             <div className={`file-viewer-wrapper ${className || ''}`} style={style}>
                 <div className="p-8 text-center text-red-500 h-full flex items-center justify-center">
@@ -128,8 +210,11 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
         )
     }
 
+    console.log('[FileViewer] Rendering content, detectedType:', detectedType, 'blobUrl:', blobUrl)
+
     // PDF - Use browser's built-in viewer
     if (detectedType === 'pdf' && blobUrl) {
+        console.log('[FileViewer] Rendering PDF iframe with blobUrl:', blobUrl)
         return (
             <div className={`file-viewer-wrapper ${className || ''}`} style={style}>
                 <iframe
@@ -187,6 +272,9 @@ export function FileViewer({ fileUrl, fileType, fileName, className, style, toke
         </div>
     )
 }
+
+// Wrap with React.memo to prevent unnecessary re-renders
+export const FileViewer = React.memo(FileViewerComponent)
 
 // 保持向后兼容的 OfdViewer 导出
 export function OfdViewer(props: FileViewerProps) {

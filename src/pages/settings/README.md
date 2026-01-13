@@ -19,7 +19,6 @@
 | `BasicSettingsPage.tsx` | 页面容器 | 基础设置 |
 | `UserSettingsPage.tsx` | 页面容器 | 用户管理 |
 | `RoleSettingsPage.tsx` | 页面容器 | 角色权限 |
-| `OrgSettingsPage.tsx` | 页面容器 | 组织架构 |
 | `SecuritySettingsPage.tsx` | 页面容器 | 安全合规 |
 | `IntegrationSettingsPage.tsx` | 页面容器 | 集成中心 |
 | `AuditLogView.tsx` | 页面容器 | 审计日志 |

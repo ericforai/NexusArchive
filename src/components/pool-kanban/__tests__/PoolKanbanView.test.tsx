@@ -104,6 +104,18 @@ vi.mock('../BatchActionBar', () => ({
   }),
 }));
 
+vi.mock('@/pages/archives/ArchiveDetailDrawer', () => ({
+  ArchiveDetailDrawer: vi.fn(({ open, onClose }: any) => {
+    if (!open) return null;
+    return (
+      <div className="archive-detail-drawer" data-open="true">
+        <div>Detail Drawer Content</div>
+        <button onClick={onClose}>关闭</button>
+      </div>
+    );
+  }),
+}));
+
 // Import after mocking
 import { PoolKanbanView } from '../PoolKanbanView';
 import { usePoolKanban } from '@/hooks/usePoolKanban';
@@ -318,7 +330,7 @@ describe('PoolKanbanView', () => {
 
       render(<PoolKanbanView />);
 
-      expect(screen.getByText('2 / 4 列')).toBeInTheDocument();
+      expect(screen.getByText('2 / 4 列已折叠')).toBeInTheDocument();
     });
 
     it('should show "展开全部" button when columns are collapsed', () => {
@@ -661,7 +673,7 @@ describe('PoolKanbanView', () => {
 
       render(<PoolKanbanView />);
 
-      expect(screen.getByText('2 / 4 列')).toBeInTheDocument();
+      expect(screen.getByText('2 / 4 列已折叠')).toBeInTheDocument();
       expect(screen.queryByText(/已选.*项/)).not.toBeInTheDocument();
     });
 

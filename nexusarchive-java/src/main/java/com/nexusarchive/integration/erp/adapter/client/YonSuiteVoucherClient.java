@@ -46,6 +46,15 @@ public class YonSuiteVoucherClient {
     /**
      * 同步指定期间范围的凭证
      *
+     * <p>简化流程：直接使用列表 API 数据，不调用详情 API。</p>
+     * <p>原因分析：</p>
+     * <ul>
+     *   <li>列表 API 的 VoucherBody 已包含 debitOrg/creditOrg 字段（金额）</li>
+     *   <li>列表 API 的 AccSubject 包含 name 字段（科目名称）</li>
+     *   <li>详情 API 反而不返回科目名称（只有科目代码）</li>
+     *   <li>调用详情 API 会造成 N+1 性能问题（100 条凭证 = 101 次 API 调用）</li>
+     * </ul>
+     *
      * @param accessToken 访问令牌（可为空）
      * @param accbookCode 账套代码
      * @param startDate   开始日期
@@ -64,7 +73,28 @@ public class YonSuiteVoucherClient {
                 return Collections.emptyList();
             }
 
-            return convertToSipDtos(response, accbookCode, config);
+            List<AccountingSipDto> vouchers = new ArrayList<>();
+            if (response.getData().getRecordList() != null) {
+                for (var record : response.getData().getRecordList()) {
+                    if (record.getHeader() != null) {
+                        try {
+                            AccountingSipDto dto = erpMapper.mapToSipDto(record, "yonsuite", config);
+                            if (dto != null && dto.getEntries() != null && !dto.getEntries().isEmpty()) {
+                                vouchers.add(dto);
+                                log.debug("凭证映射成功: yonId={}, voucherNo={}",
+                                    record.getHeader().getId(), dto.getHeader().getVoucherNumber());
+                            }
+                        } catch (Exception e) {
+                            log.warn("凭证映射失败 (yonId: {}): {}",
+                                record.getHeader().getId(), e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            log.info("YonSuite 凭证同步完成: 总数={}, 成功={}",
+                response.getData() != null ? response.getData().getRecordCount() : 0, vouchers.size());
+            return vouchers;
         } catch (Exception e) {
             log.error("YonSuite 同步凭证异常 (组织: {})", accbookCode, e);
             return Collections.emptyList();
@@ -87,11 +117,92 @@ public class YonSuiteVoucherClient {
                 return null;
             }
 
-            return erpMapper.mapToSipDto(response.getData(), "yonsuite", config);
+            // 详情 API 返回扁平结构，需要包装为列表 API 的嵌套结构
+            // 这样才能使用相同的映射配置
+            var wrappedDetail = wrapDetailAsRecord(response.getData());
+            return erpMapper.mapToSipDto(wrappedDetail, "yonsuite", config);
         } catch (Exception e) {
             log.error("YonSuite getVoucherDetail error", e);
             return null;
         }
+    }
+
+    /**
+     * 将详情 API 的扁平响应包装为列表 API 的嵌套结构
+     * 详情 API: VoucherDetail { id, displayName, makeTime, bodies }
+     * 列表 API: VoucherRecord { header: VoucherHeader { id, displayName, makeTime }, body: VoucherBody[] }
+     */
+    private Object wrapDetailAsRecord(YonVoucherDetailResponse.VoucherDetail detail) {
+        // 创建一个包装对象，使其结构与列表 API 的 VoucherRecord 一致
+        return new Object() {
+            public final YonVoucherListResponse.VoucherHeader header = toVoucherHeader(detail);
+            public final List<YonVoucherListResponse.VoucherBody> body = toVoucherBodies(detail.getBodies());
+
+            private YonVoucherListResponse.VoucherHeader toVoucherHeader(YonVoucherDetailResponse.VoucherDetail d) {
+                YonVoucherListResponse.VoucherHeader h = new YonVoucherListResponse.VoucherHeader();
+                h.setId(d.getId());
+                h.setBillcode(d.getBillCode());
+                h.setDisplaybillcode(d.getDisplayName());
+                h.setDescription(d.getDescription());
+                h.setPeriod(d.getPeriodUnion());
+                h.setDisplayname(d.getDisplayName());  // 注意：字段名是 displayname
+                h.setSrcsystem(d.getSrcSystem());
+                h.setVoucherstatus(d.getVoucherStatus());
+                h.setTotalDebitOrg(d.getTotalDebitOrg());
+                h.setTotalCreditOrg(d.getTotalCreditOrg());
+                h.setMaketime(d.getMakeTime());  // 注意：字段名是 maketime
+                h.setTs(d.getTs());
+                // 转换 RefObject (不同类型)
+                if (d.getMakerObj() != null) {
+                    YonVoucherListResponse.RefObject maker = new YonVoucherListResponse.RefObject();
+                    maker.setId(d.getMakerObj().getId());
+                    maker.setCode(d.getMakerObj().getCode());
+                    maker.setName(d.getMakerObj().getName());
+                    h.setMaker(maker);
+                }
+                if (d.getAuditorObj() != null) {
+                    YonVoucherListResponse.RefObject auditor = new YonVoucherListResponse.RefObject();
+                    auditor.setId(d.getAuditorObj().getId());
+                    auditor.setCode(d.getAuditorObj().getCode());
+                    auditor.setName(d.getAuditorObj().getName());
+                    h.setAuditor(auditor);
+                }
+                if (d.getTallyManObj() != null) {
+                    YonVoucherListResponse.RefObject tallyman = new YonVoucherListResponse.RefObject();
+                    tallyman.setId(d.getTallyManObj().getId());
+                    tallyman.setCode(d.getTallyManObj().getCode());
+                    tallyman.setName(d.getTallyManObj().getName());
+                    h.setTallyman(tallyman);
+                }
+                return h;
+            }
+
+            @SuppressWarnings("unchecked")
+            private List<YonVoucherListResponse.VoucherBody> toVoucherBodies(List<YonVoucherDetailResponse.VoucherBodyDetail> bodies) {
+                if (bodies == null) {
+                    return new ArrayList<>();
+                }
+                List<YonVoucherListResponse.VoucherBody> result = new ArrayList<>();
+                for (var b : bodies) {
+                    YonVoucherListResponse.VoucherBody body = new YonVoucherListResponse.VoucherBody();
+                    body.setId(b.getId());
+                    body.setVoucherid(b.getId());  // 详情 API 没有直接 voucherid，使用 id
+                    body.setRecordnumber(b.getRecordNumber());
+                    body.setDescription(b.getDescription());
+                    body.setDebitOriginal(b.getDebitOriginal());
+                    body.setCreditOriginal(b.getCreditOriginal());
+                    body.setDebitOrg(b.getDebitOrg());
+                    body.setCreditOrg(b.getCreditOrg());
+                    // 构造 AccSubject 对象
+                    YonVoucherListResponse.AccSubject acc = new YonVoucherListResponse.AccSubject();
+                    acc.setId(b.getAccSubjectVid());
+                    acc.setCode(b.getAccSubject());
+                    body.setAccsubject(acc);
+                    result.add(body);
+                }
+                return result;
+            }
+        };
     }
 
     /**
@@ -173,34 +284,5 @@ public class YonSuiteVoucherClient {
         request.setPager(pager);
 
         return request;
-    }
-
-    /**
-     * 使用 ErpMapper 转换响应为 AccountingSipDto 列表
-     *
-     * @param response    YonSuite 响应对象
-     * @param accbookCode 账套代码
-     * @param config      ERP 配置
-     * @return SIP DTO 列表
-     */
-    private List<AccountingSipDto> convertToSipDtos(YonVoucherListResponse response,
-                                                     String accbookCode, ErpConfig config) {
-        List<AccountingSipDto> vouchers = new ArrayList<>();
-        if (response.getData().getRecordList() != null) {
-            for (var record : response.getData().getRecordList()) {
-                if (record.getHeader() != null) {
-                    try {
-                        // 使用 ErpMapper 框架进行统一转换
-                        AccountingSipDto sipDto = erpMapper.mapToSipDto(
-                            record.getHeader(), "yonsuite", config);
-                        vouchers.add(sipDto);
-                    } catch (Exception e) {
-                        log.warn("转换凭证失败 (ID: {}): {}",
-                            record.getHeader().getId(), e.getMessage());
-                    }
-                }
-            }
-        }
-        return vouchers;
     }
 }

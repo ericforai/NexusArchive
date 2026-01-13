@@ -4,7 +4,7 @@
 -- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 -- ================================================================
--- Migration: V96__simplify_pre_archive_status.sql
+-- Migration: V97__simplify_pre_archive_status.sql
 -- Purpose: 简化预归档状态，从 10 个状态合并为 5 个核心状态
 -- Author: Claude Code
 -- Date: 2026-01-11
@@ -15,13 +15,13 @@
 BEGIN;
 
 -- 步骤 1: 添加新的状态列（临时）
-ALTER TABLE public.acc_archive
+ALTER TABLE public.arc_file_content
 ADD COLUMN pre_archive_status_new VARCHAR(20);
 
-COMMENT ON COLUMN public.acc_archive.pre_archive_status_new IS '简化后的预归档状态：PENDING_CHECK/NEEDS_ACTION/READY_TO_MATCH/READY_TO_ARCHIVE/COMPLETED';
+COMMENT ON COLUMN public.arc_file_content.pre_archive_status_new IS '简化后的预归档状态：PENDING_CHECK/NEEDS_ACTION/READY_TO_MATCH/READY_TO_ARCHIVE/COMPLETED';
 
 -- 步骤 2: 将旧状态映射到新状态
-UPDATE public.acc_archive
+UPDATE public.arc_file_content
 SET pre_archive_status_new = CASE pre_archive_status
     -- PENDING_CHECK: 合并 DRAFT + PENDING_CHECK
     WHEN 'DRAFT' THEN 'PENDING_CHECK'
@@ -49,21 +49,21 @@ END
 WHERE pre_archive_status IS NOT NULL;
 
 -- 步骤 3: 删除旧列，重命名新列
-ALTER TABLE public.acc_archive DROP COLUMN pre_archive_status;
-ALTER TABLE public.acc_archive RENAME COLUMN pre_archive_status_new TO pre_archive_status;
+ALTER TABLE public.arc_file_content DROP COLUMN pre_archive_status;
+ALTER TABLE public.arc_file_content RENAME COLUMN pre_archive_status_new TO pre_archive_status;
 
 -- 步骤 4: 添加 NOT NULL 约束和默认值
-ALTER TABLE public.acc_archive
+ALTER TABLE public.arc_file_content
 ALTER COLUMN pre_archive_status SET NOT NULL;
 
-ALTER TABLE public.acc_archive
+ALTER TABLE public.arc_file_content
 ALTER COLUMN pre_archive_status SET DEFAULT 'PENDING_CHECK';
 
 -- 步骤 5: 创建索引
-CREATE INDEX idx_acc_archive_pre_archive_status
-ON public.acc_archive(pre_archive_status);
+CREATE INDEX idx_arc_file_content_pre_archive_status
+ON public.arc_file_content(pre_archive_status);
 
-COMMENT ON INDEX public.idx_acc_archive_pre_archive_status IS '预归档状态索引 - 用于仪表板统计和筛选';
+COMMENT ON INDEX public.idx_arc_file_content_pre_archive_status IS '预归档状态索引 - 用于仪表板统计和筛选';
 
 -- 数据完整性验证：确保所有行都被正确映射
 DO $$
@@ -71,7 +71,7 @@ DECLARE
     null_count INTEGER;
 BEGIN
     SELECT COUNT(*) INTO null_count
-    FROM public.acc_archive
+    FROM public.arc_file_content
     WHERE pre_archive_status IS NULL;
 
     IF null_count > 0 THEN

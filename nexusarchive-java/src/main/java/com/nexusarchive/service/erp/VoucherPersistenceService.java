@@ -16,6 +16,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.VoucherPdfGeneratorService;
+import com.nexusarchive.security.FondsContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,13 +66,20 @@ public class VoucherPersistenceService {
      * @param adapter 适配器
      * @param startDate 同步开始日期
      * @param sourceSystemName 源系统名称
-     * @return 保存的文件内容实体
+     * @return 保存的文件内容实体，如果凭证已存在则返回 null
      */
     public ArcFileContent saveVoucher(VoucherDTO dto,
                                       cn.hutool.json.JSONObject mappingConfig,
                                       ErpAdapter adapter,
                                       LocalDate startDate,
                                       String sourceSystemName) {
+        // 检查凭证是否已存在（基于 erp_voucher_no）
+        String voucherNo = dto.getVoucherNo();
+        if (isVoucherExist(voucherNo)) {
+            log.info("凭证已存在，跳过保存: voucherNo={}", voucherNo);
+            return null;
+        }
+
         ArcFileContent fileContent = mapToFileContent(dto, mappingConfig, startDate);
         fileContent.setSourceSystem(adapter.getName());
 
@@ -137,10 +145,15 @@ public class VoucherPersistenceService {
 
     /**
      * 设置默认字段
+     * 使用当前全宗上下文（从 FondsContext 获取）而不是硬编码的 DEFAULT
      */
     private void setDefaultFields(ArcFileContent fileContent, LocalDate startDate) {
         if (fileContent.getFondsCode() == null) {
-            fileContent.setFondsCode(DEFAULT_FONDS_CODE);
+            // 优先使用当前全宗上下文，其次使用默认值
+            String currentFonds = FondsContext.getCurrentFondsNo();
+            fileContent.setFondsCode(currentFonds != null ? currentFonds : DEFAULT_FONDS_CODE);
+            log.debug("设置全宗代码: {} (来源: {})", fileContent.getFondsCode(),
+                currentFonds != null ? "FondsContext" : "DEFAULT");
         }
         if (fileContent.getFiscalYear() == null) {
             fileContent.setFiscalYear(String.valueOf(startDate.getYear()));
@@ -189,13 +202,15 @@ public class VoucherPersistenceService {
 
         archive.setArchiveCode(fileContent.getArchivalCode());
 
-        // 题名
+        // 题名：优先使用 fileContent 中已解析好的 summary（如 "收款单: xxx, 客户: xxx"）
+        // 而不是 dto 中的原始哈希字符串
         String title = "会计凭证-" + dto.getVoucherNo();
-        if (dto.getSummary() != null && !dto.getSummary().isEmpty()) {
-            title = dto.getSummary();
+        String contentSummary = fileContent.getSummary();
+        if (contentSummary != null && !contentSummary.isEmpty()) {
+            title = contentSummary;
         }
         archive.setTitle(title);
-        archive.setSummary(dto.getSummary());
+        archive.setSummary(contentSummary);
 
         // 分类号
         archive.setCategoryCode(CATEGORY_CODE_VOUCHER);

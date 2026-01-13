@@ -46,7 +46,7 @@ export const STATUS_CONFIG: Record<SimplifiedPreArchiveStatus, {
   },
   [SimplifiedPreArchiveStatus.READY_TO_ARCHIVE]: {
     color: '#10b981',
-    icon: 'check-circle-2',
+    icon: 'check-circle',
     label: '可归档',
     description: '已就绪，可以提交归档',
   },

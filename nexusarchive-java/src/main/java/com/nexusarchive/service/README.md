@@ -8,69 +8,70 @@
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
-| `AbnormalVoucherService.java` | 服务接口 | AbnormalVoucherService 服务定义 |
+| `AbnormalVoucherService.java` | 服务接口 | 异常凭证服务 |
 | `adapter/` | 目录入口 | adapter 子目录 |
-| `ArchivalCodeGenerator.java` | Java 类 | ArchivalCodeGenerator 类 |
-| `ArchivalPackageService.java` | 服务接口 | ArchivalPackageService 服务定义 |
-| `ArchiveApprovalService.java` | 服务接口 | ArchiveApprovalService 服务定义 |
-| `ArchiveExportService.java` | 服务接口 | ArchiveExportService 服务定义 |
-| `ArchiveHealthCheckService.java` | 服务接口 | ArchiveHealthCheckService 服务定义 |
-| `ArchiveRelationService.java` | 服务接口 | ArchiveRelationService 服务定义 |
-| `ArchiveSearchService.java` | 服务接口 | ArchiveSearchService 服务定义 |
-| `ArchiveSecurityService.java` | 服务接口 | ArchiveSecurityService 服务定义 |
-| `ArchiveService.java` | 服务接口 | ArchiveService 服务定义 |
-| `AttachmentService.java` | 服务接口 | AttachmentService 服务定义 |
-| `AuditLogQueryService.java` | 服务接口 | AuditLogQueryService 服务定义 |
-| `AuditLogService.java` | 服务接口 | AuditLogService 服务定义 |
-| `AuthService.java` | 服务接口 | AuthService 服务定义 |
-| `AutoAssociationService.java` | 服务接口 | AutoAssociationService 服务定义 |
-| `BasFondsService.java` | 服务接口 | BasFondsService 服务定义 |
-| `ComplianceCheckService.java` | 服务接口 | ComplianceCheckService 服务定义 |
+| `ArchivalCodeGenerator.java` | Java 类 | 档案号生成器 |
+| `ArchivalPackageService.java` | 服务接口 | AIP 归档信息包服务 |
+| `ArchiveApprovalService.java` | 服务接口 | 归档审批服务 |
+| `ArchiveExportService.java` | 服务接口 | 档案导出服务 |
+| `ArchiveHealthCheckService.java` | 服务接口 | 档案健康检查服务 |
+| `ArchiveRelationService.java` | 服务接口 | 档案关联关系服务 |
+| `ArchiveSearchService.java` | 服务接口 | 档案搜索服务 |
+| `ArchiveSecurityService.java` | 服务接口 | 档案安全服务 |
+| `ArchiveService.java` | 服务接口 | 档案核心服务 |
+| `AttachmentService.java` | 服务接口 | 附件服务 |
+| `AuditLogQueryService.java` | 服务接口 | 审计日志查询服务 |
+| `AuditLogService.java` | 服务接口 | 审计日志服务 |
+| `AuthService.java` | 服务接口 | 认证服务 |
+| `AutoAssociationService.java` | 服务接口 | 自动关联服务 |
+| `BasFondsService.java` | 服务接口 | 全宗服务 |
+| `ComplianceCheckService.java` | 服务接口 | 合规检查服务 |
 | `converter/` | 目录入口 | converter 子目录 |
-| `CustomUserDetailsService.java` | 服务接口 | CustomUserDetailsService 服务定义 |
-| `DataScopeService.java` | 服务接口 | DataScopeService 服务定义 |
-| `DestructionService.java` | 服务接口 | DestructionService 服务定义 |
-| `DigitalSignatureService.java` | 服务接口 | DigitalSignatureService 服务定义 |
-| `ErpDiagnosisService.java` | 服务接口 | ErpDiagnosisService 服务定义 |
-| `ErpScenarioService.java` | 服务接口 | ERP 场景管理服务（委托协调） |
+| `CustomUserDetailsService.java` | 服务接口 | 自定义用户详情服务 |
+| `DataScopeService.java` | 服务接口 | 数据权限服务 |
+| `DestructionService.java` | 服务接口 | 销毁服务 |
+| `DigitalSignatureService.java` | 服务接口 | 数字签名服务 |
+| `ErpDiagnosisService.java` | 服务接口 | ERP 诊断服务 |
+| `ErpScenarioService.java` | 服务接口 | ERP 场景管理服务 |
 | `ErpSubInterfaceService.java` | 服务接口 | ERP 子接口管理服务 |
+| `ErpOrgSyncService.java` | 服务接口 | ERP 组织同步服务（从 YonSuite 同步组织架构到 sys_entity 表） |
 | `erp/` | 目录入口 | ERP 业务服务子目录 |
-| `FileStorageService.java` | 服务接口 | FileStorageService 服务定义 |
-| `FourNatureCheckService.java` | 服务接口 | FourNatureCheckService 服务定义 |
-| `FourNatureCoreService.java` | 服务接口 | FourNatureCoreService 服务定义 |
-| `GlobalSearchService.java` | 服务接口 | GlobalSearchService 服务定义 |
-| `IArchiveRelationService.java` | 服务接口 | IArchiveRelationService 服务定义 |
-| `IAutoAssociationService.java` | 服务接口 | IAutoAssociationService 服务定义 |
+| `EntityService.java` | 服务接口 | 法人服务（含树形操作方法） |
+| `FileStorageService.java` | 服务接口 | 文件存储服务 |
+| `FourNatureCheckService.java` | 服务接口 | 四性检测服务 |
+| `FourNatureCoreService.java` | 服务接口 | 四性检测核心服务 |
+| `GlobalSearchService.java` | 服务接口 | 全局搜索服务 |
+| `IArchiveRelationService.java` | 服务接口 | 档案关联关系接口 |
+| `IAutoAssociationService.java` | 服务接口 | 自动关联接口 |
 | `impl/` | 目录入口 | impl 子目录 |
-| `IngestService.java` | 服务接口 | IngestService 服务定义 |
-| `LicenseService.java` | 服务接口 | LicenseService 服务定义 |
-| `LoginAttemptService.java` | 服务接口 | LoginAttemptService 服务定义 |
-| `MonitoringService.java` | 服务接口 | MonitoringService 服务定义 |
-| `NotificationService.java` | 服务接口 | NotificationService 服务定义 |
+| `IngestService.java` | 服务接口 | 归档请求服务 |
+| `LicenseService.java` | 服务接口 | License 服务 |
+| `LoginAttemptService.java` | 服务接口 | 登录尝试服务 |
+| `MonitoringService.java` | 服务接口 | 监控服务 |
+| `NotificationService.java` | 服务接口 | 通知服务 |
 | `ofd/` | 目录入口 | ofd 子目录 |
-| `OfdConvertService.java` | 服务接口 | OfdConvertService 服务定义 |
-| `OpenAppraisalService.java` | 服务接口 | OpenAppraisalService 服务定义 |
-| `OrgService.java` | 服务接口 | OrgService 服务定义 |
+| `OfdConvertService.java` | 服务接口 | OFD 转换服务 |
+| `OpenAppraisalService.java` | 服务接口 | 开放鉴定服务 |
 | `parser/` | 目录入口 | parser 子目录 |
-| `PasswordPolicyValidator.java` | Java 类 | PasswordPolicyValidator 类 |
-| `PermissionService.java` | 服务接口 | PermissionService 服务定义 |
-| `PositionService.java` | 服务接口 | PositionService 服务定义 |
-| `PreArchiveCheckService.java` | 服务接口 | PreArchiveCheckService 服务定义 |
-| `PreArchiveSubmitService.java` | 服务接口 | PreArchiveSubmitService 服务定义 |
-| `ReconciliationService.java` | 服务接口 | ReconciliationService 服务定义 |
-| `RoleService.java` | 服务接口 | RoleService 服务定义 |
-| `RoleValidationService.java` | 服务接口 | RoleValidationService 服务定义 |
+| `PasswordPolicyValidator.java` | Java 类 | 密码策略验证器 |
+| `PermissionService.java` | 服务接口 | 权限服务 |
+| `PositionService.java` | 服务接口 | 岗位服务 |
+| `PreArchiveCheckService.java` | 服务接口 | 预归档检查服务 |
+| `PreArchiveSubmitService.java` | 服务接口 | 预归档提交服务 |
+| `ReconciliationService.java` | 服务接口 | 对账服务 |
+| `RoleService.java` | 服务接口 | 角色服务 |
+| `RoleValidationService.java` | 服务接口 | 角色验证服务 |
 | `search/` | 目录入口 | search 子目录 |
 | `signature/` | 目录入口 | signature 子目录 |
-| `SmartParserService.java` | 服务接口 | SmartParserService 服务定义 |
-| `StandardReportGenerator.java` | Java 类 | StandardReportGenerator 类 |
-| `StatsService.java` | 服务接口 | StatsService 服务定义 |
+| `SmartParserService.java` | 服务接口 | 智能解析服务 |
+| `StandardReportGenerator.java` | Java 类 | 标准报表生成器 |
+| `StatsService.java` | 服务接口 | 统计服务 |
 | `strategy/` | 目录入口 | strategy 子目录 |
-| `SystemSettingService.java` | 服务接口 | SystemSettingService 服务定义 |
-| `TimestampService.java` | 服务接口 | TimestampService 服务定义 |
-| `TokenBlacklistService.java` | 服务接口 | TokenBlacklistService 服务定义 |
-| `UserService.java` | 服务接口 | UserService 服务定义 |
-| `VolumeService.java` | 服务接口 | VolumeService 服务定义 |
-| `VoucherPdfGeneratorService.java` | 服务接口 | VoucherPdfGeneratorService 服务定义 |
-| `WarehouseService.java` | 服务接口 | WarehouseService 服务定义 |
-| `WorkflowService.java` | 服务接口 | WorkflowService 服务定义 |
+| `SystemSettingService.java` | 服务接口 | 系统设置服务 |
+| `TimestampService.java` | 服务接口 | 时间戳服务 |
+| `TokenBlacklistService.java` | 服务接口 | Token 黑名单服务 |
+| `UserService.java` | 服务接口 | 用户服务 |
+| `VolumeService.java` | 服务接口 | 案卷服务 |
+| `VoucherPdfGeneratorService.java` | 服务接口 | 凭证 PDF 生成服务 |
+| `WarehouseService.java` | 服务接口 | 库房服务 |
+| `WorkflowService.java` | 服务接口 | 工作流服务 |

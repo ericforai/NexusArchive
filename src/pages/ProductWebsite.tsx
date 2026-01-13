@@ -18,24 +18,29 @@ import {
 } from './product-website/components';
 
 export const ProductWebsite: React.FC = () => {
-  if (import.meta.env.DEV && typeof window !== 'undefined') {
+  // 开发环境 React 诊断（带安全检查）
+  if (import.meta.env.DEV && typeof window !== 'undefined' && React?.useState) {
     const win = window as any;
     win.__REACT_PAGE_LOG__ = win.__REACT_PAGE_LOG__ || [];
-    const dispatcher =
-      (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        ?.ReactCurrentDispatcher?.current ?? null;
-    const entry = {
-      page: 'ProductWebsite',
-      time: new Date().toISOString(),
-      version: React.version,
-      module: import.meta.url,
-      sameRoot: win.__REACT_ROOT_REF__ ? win.__REACT_ROOT_REF__ === React : null,
-      sameUseState: win.__REACT_ROOT_USESTATE__ ? win.__REACT_ROOT_USESTATE__ === React.useState : null,
-      dispatcher: dispatcher ? 'set' : 'null',
-    };
-    win.__REACT_PAGE_LOG__.push(entry);
-    if (entry.sameRoot === false || entry.sameUseState === false || entry.dispatcher === 'null') {
-      console.warn('[ReactDebug] ProductWebsite hook context check', entry);
+    try {
+      const dispatcher =
+        (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+          ?.ReactCurrentDispatcher?.current ?? null;
+      const entry = {
+        page: 'ProductWebsite',
+        time: new Date().toISOString(),
+        version: React.version || 'unknown',
+        module: import.meta.url,
+        sameRoot: win.__REACT_ROOT_REF__ ? win.__REACT_ROOT_REF__ === React : null,
+        sameUseState: win.__REACT_ROOT_USESTATE__ ? win.__REACT_ROOT_USESTATE__ === React.useState : null,
+        dispatcher: dispatcher ? 'set' : 'null',
+      };
+      win.__REACT_PAGE_LOG__.push(entry);
+      if (entry.sameRoot === false || entry.sameUseState === false || entry.dispatcher === 'null') {
+        console.warn('[ReactDebug] ProductWebsite hook context check', entry);
+      }
+    } catch (e) {
+      console.warn('[ReactDebug] Diagnostic error:', e);
     }
   }
   const [scrolled, setScrolled] = useState(false);

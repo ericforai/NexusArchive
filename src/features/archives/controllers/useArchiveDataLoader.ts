@@ -61,6 +61,13 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             const total = poolItems.length;
             const start = (pageNum - 1) * page.pageInfo.pageSize;
             const paged = poolItems.slice(start, start + page.pageInfo.pageSize);
+            // 调试日志：检查 API 返回的数据结构
+            if (paged.length > 0) {
+                console.log('[PoolData] Sample item:', paged[0]);
+                console.log('[PoolData] All fields:', Object.keys(paged[0]));
+                console.log('[PoolData] Field values:', JSON.stringify(paged[0], null, 2));
+            }
+
             const mappedPaged = paged.map((item: any) => ({
                 ...item,
                 rawStatus: item.status

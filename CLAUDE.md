@@ -238,7 +238,8 @@ npm run modules:update   # Update module manifest
 | **审计防篡改** | SM3 哈希链保证日志不可篡改，每条日志记录 `log_hash` 和 `prev_log_hash` |
 | **AIP 导出** | 符合 GB/T 39674 标准的归档信息包，含 index.xml 和结构化数据 |
 | **信创适配** | 支持 SM2/SM3/SM4 国密算法，适配达梦/人大金仓数据库 |
-| **用友集成** | YonSuite 凭证自动同步，支持凭证/退款单/分录映射，账套-全宗强制路由 |
+| **用友集成** | YonSuite 凭证自动同步、组织架构同步，支持凭证/退款单/分录映射，账套-全宗强制路由 |
+| **组织同步** | ERP 组织架构自动同步到 `sys_entity` 表，支持树形结构和增量同步 |
 | **凭证关联** | 支持按金额、日期、发票号进行多维度精准手动关联 |
 | **批量审批** | 归档审批/批次管理/销毁申请的批量批准/拒绝，单次最多 100 条 |
 | **扫描集成** | 扫描工作区、OCR 智能识别、移动端扫码上传、文件夹监控 |
@@ -321,6 +322,30 @@ ERP 集成实现后端强制路由机制：
 - `YonSuiteErpAdapter` 后端强制路由，不信任前端参数
 
 **数据库变更**: V95 迁移添加 `sys_erp_config.accbook_mapping` 字段
+
+### YonSuite 组织同步
+
+ERP 组织架构同步功能实现从 YonSuite 到本地 `sys_entity` 表的自动同步：
+
+| 功能 | 描述 |
+|------|------|
+| **树版本同步** | 调用 `treeversionsync` API 获取最新的组织树版本 |
+| **成员同步** | 调用 `treemembersync` API 获取组织成员数据 |
+| **增量同步** | 基于 `pubts` 时间戳增量获取变更数据 |
+| **树形结构** | 支持通过 `parentId` 和 `orderNum` 构建层级关系 |
+
+**技术实现**:
+- `ErpOrgSyncService` - 组织同步服务，调用 YonSuite API
+- `YonSuiteOrgClient` - YonSuite 组织架构 API 客户端
+- `EntityService` - 法人服务，提供树形操作方法
+- `SysEntity.parentId` - 父节点 ID，支持树形结构
+- `SysEntity.orderNum` - 排序号，控制同级节点顺序
+
+**API 端点**:
+- `/yonbip/digitalModel/openapi/treedatasync/treeversionsync` - 树版本查询
+- `/yonbip/digitalModel/openapi/treedatasync/treemembersync` - 组织成员查询
+
+**数据库变更**: V101 迁移添加 `sys_entity.parent_id` 字段
 
 ### Three-Role Management (三员分立)
 

@@ -99,13 +99,19 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
         let exchangeRate = body.exchangeRate || body.exchange_rate || null;
 
         // 如果还没有币种信息，尝试从 currency 获取 (YonSuite 原始格式)
-        if (!currencyCode && !currencyName && body.currency) {
+        if (!currencyCode && !currencyName) {
           if (typeof body.currency === 'object') {
             currencyCode = body.currency.code || '';
             currencyName = body.currency.name || '';
           } else {
             currencyCode = body.currency || '';
           }
+        }
+        // 兼容 YonSuite 的 currencyMap 结构
+        if (!currencyCode && !currencyName && body.currencyMap) {
+          const map = body.currencyMap;
+          currencyCode = map.code || '';
+          currencyName = map.name || '';
         }
 
         return {

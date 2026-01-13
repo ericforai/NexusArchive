@@ -9,8 +9,18 @@
  * 职责：接收路由 routeConfig，通过 Controller 获取业务数据，传递给 ArchiveListView。
  * View 只负责渲染，所有业务逻辑由 Controller 提供。
  */
-import React, { Suspense, lazy } from 'react';
-import { ArchiveRouteMode, useArchiveActions, useArchiveListController } from '../../features/archives';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { ArchiveRouteMode, useArchiveActions, useArchiveListController, PoolStatusFilter } from '../../features/archives';
+import { SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
+
+// 简化状态到旧状态的映射（用于筛选同步）
+const SIMPLIFIED_TO_OLD_STATUS: Record<SimplifiedPreArchiveStatus, PoolStatusFilter> = {
+    'PENDING_CHECK': 'PENDING_CHECK',
+    'NEEDS_ACTION': 'CHECK_FAILED',
+    'READY_TO_MATCH': 'PENDING_METADATA',
+    'READY_TO_ARCHIVE': 'PENDING_ARCHIVE',
+    'COMPLETED': 'ARCHIVED',
+};
 
 // 诊断：模块加载日志
 console.log('%c[ArchiveListPage] MODULE LOADED', 'color: #ef4444; font-weight: bold; font-size: 18px;');
@@ -23,6 +33,8 @@ const ArchiveListView = lazy(() => {
 
 interface ArchiveListPageProps {
     routeConfig: ArchiveRouteMode;
+    /** 仪表盘筛选状态 (仅用于 pool 视图) */
+    statusFilter?: SimplifiedPreArchiveStatus | null;
 }
 
 const LoadingFallback = () => (
@@ -31,12 +43,21 @@ const LoadingFallback = () => (
     </div>
 );
 
-export const ArchiveListPage: React.FC<ArchiveListPageProps> = ({ routeConfig }) => {
+export const ArchiveListPage: React.FC<ArchiveListPageProps> = ({ routeConfig, statusFilter }) => {
     // 1. 获取核心业务数据与状态
     const controller = useArchiveListController({ routeConfig });
 
     // 2. 获取操作 Action
     const actions = useArchiveActions(controller);
+
+    // 3. 同步仪表盘筛选到列表状态
+    useEffect(() => {
+        if (routeConfig === 'pool' && statusFilter !== undefined) {
+            // 将 SimplifiedPreArchiveStatus 映射到旧状态
+            const targetStatus = statusFilter ? SIMPLIFIED_TO_OLD_STATUS[statusFilter] : null;
+            controller.pool.setStatusFilter(targetStatus);
+        }
+    }, [statusFilter, routeConfig, controller.pool]);
 
     // TODO: 后续 View 重构时，将 controller 和 actions 传递给 View 组件
     // 例如：<ArchiveListView controller={controller} actions={actions} />
