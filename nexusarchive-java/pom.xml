@@ -259,9 +259,8 @@
         <!-- Groovy for dynamic mapping scripts -->
         <dependency>
             <groupId>org.apache.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>4.0.15</version>
-            <type>pom</type>
+            <artifactId>groovy</artifactId>
+            <version>4.0.23</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -420,6 +419,25 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-schema-columns</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.nexusarchive.tools.SchemaValidator</mainClass>
+                            <classpathScope>compile</classpathScope>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
