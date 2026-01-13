@@ -144,9 +144,15 @@ export const BorrowingView: React.FC = () => {
         setCreating(true);
         try {
             const res = await borrowingApi.createBorrowing({
-                archiveId: createForm.archiveId.trim(),
-                reason: createForm.reason.trim(),
-                expectedReturnDate: createForm.expectedReturnDate || undefined
+                applicantId: 'user-1', // Mock user
+                applicantName: '测试用户', // Mock user
+                deptId: 'dept-1', // Mock dept
+                deptName: '研发部', // Mock dept
+                archiveIds: [createForm.archiveId.trim()], // Single to Array
+                purpose: createForm.reason.trim(),
+                borrowType: 'READING', // Default type
+                expectedStartDate: new Date().toISOString().split('T')[0], // Today
+                expectedEndDate: createForm.expectedReturnDate || new Date(Date.now() + 86400000 * 30).toISOString().split('T')[0] // Default 30 days
             });
             if (res.code === 200) {
                 showToast('借阅申请已提交');
@@ -176,7 +182,12 @@ export const BorrowingView: React.FC = () => {
         const comment = prompt('审批意见（可选）', '') || '';
         setRowLoading(id);
         try {
-            const res = await borrowingApi.approveBorrowing(id, { approved, comment });
+            const res = await borrowingApi.approveBorrowing(id, {
+                approverId: 'admin-1', // Mock admin
+                approverName: '管理员',
+                approved,
+                comment: comment || (approved ? '同意' : '拒绝')
+            });
             if (res.code === 200) {
                 showToast(approved ? '已审批通过' : '已拒绝申请');
                 fetchBorrowings();
@@ -200,7 +211,7 @@ export const BorrowingView: React.FC = () => {
         if (!confirm('确认归还此档案吗？')) return;
         setRowLoading(id);
         try {
-            const res = await borrowingApi.returnArchive(id);
+            const res = await borrowingApi.returnArchive(id, 'admin-1');
             if (res.code === 200) {
                 showToast('已归还');
                 fetchBorrowings();
@@ -324,8 +335,8 @@ export const BorrowingView: React.FC = () => {
                                 setPage(1);
                             }}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === status.key
-                                    ? 'bg-slate-900 text-white'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? 'bg-slate-900 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             {status.label}
