@@ -82,7 +82,7 @@ class MappingConfigLoaderTest {
         FieldMapping voucherNumberMapping = config.getHeaderMappings().get("voucherNumber");
         assertThat(voucherNumberMapping).isNotNull();
         assertThat(voucherNumberMapping.getField()).isNotNull();
-        assertThat(voucherNumberMapping.isScript()).isFalse();
+        assertThat(voucherNumberMapping.hasScript()).isFalse();
     }
 
     @Test

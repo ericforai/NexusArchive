@@ -244,7 +244,7 @@ public class DefaultErpMapper implements ErpMapper {
      * @return 提取的值
      */
     private Object extractValue(Object source, FieldMapping mapping, ScriptContext context) {
-        if (mapping.isScript()) {
+        if (mapping.hasScript()) {
             try {
                 return scriptEngine.execute(mapping.getScript(), context);
             } catch (MappingScriptException e) {

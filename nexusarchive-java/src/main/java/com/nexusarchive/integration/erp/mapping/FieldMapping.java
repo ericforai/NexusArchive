@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 /**
  * 字段映射配置
@@ -17,7 +16,6 @@ import lombok.experimental.Accessors;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Accessors(chain = true)  // 支持链式调用
 public class FieldMapping {
     /**
      * 源字段名（简单映射时使用）
@@ -40,9 +38,9 @@ public class FieldMapping {
     private String format;
 
     /**
-     * 是否为复杂脚本（多行）
+     * 是否配置了脚本
      */
-    public boolean isScript() {
+    public boolean hasScript() {
         return script != null && !script.isBlank();
     }
 }

@@ -28,16 +28,16 @@ public class FieldMappingTest {
     @Test
     public void testFieldMappingIsScriptMethod() {
         FieldMapping mapping = new FieldMapping();
-        assertFalse(mapping.isScript()); // null script
+        assertFalse(mapping.hasScript()); // null script
 
         mapping.setScript("return 1;");
-        assertTrue(mapping.isScript()); // has script
+        assertTrue(mapping.hasScript()); // has script
 
         mapping.setScript("");
-        assertFalse(mapping.isScript()); // blank script
+        assertFalse(mapping.hasScript()); // blank script
 
         mapping.setScript("   ");
-        assertFalse(mapping.isScript()); // whitespace only
+        assertFalse(mapping.hasScript()); // whitespace only
     }
 
     @Test
@@ -54,18 +54,6 @@ public class FieldMappingTest {
     }
 
     @Test
-    public void testFieldMappingChainSetters() {
-        FieldMapping mapping = new FieldMapping()
-            .setField("chainField")
-            .setScript("chain script")
-            .setType("string");
-
-        assertEquals("chainField", mapping.getField());
-        assertEquals("chain script", mapping.getScript());
-        assertEquals("string", mapping.getType());
-    }
-
-    @Test
     public void testFieldMappingAllFields() {
         FieldMapping mapping = FieldMapping.builder()
             .field("source.field")
@@ -78,6 +66,20 @@ public class FieldMappingTest {
         assertEquals("return ctx['field'] * 2;", mapping.getScript());
         assertEquals("decimal", mapping.getType());
         assertEquals("#,##0.00", mapping.getFormat());
-        assertTrue(mapping.isScript());
+        assertTrue(mapping.hasScript());
+    }
+
+    @Test
+    public void testFieldMappingSetters() {
+        FieldMapping mapping = new FieldMapping();
+        mapping.setField("testField");
+        mapping.setScript("test script");
+        mapping.setType("string");
+        mapping.setFormat("#,##0.00");
+
+        assertEquals("testField", mapping.getField());
+        assertEquals("test script", mapping.getScript());
+        assertEquals("string", mapping.getType());
+        assertEquals("#,##0.00", mapping.getFormat());
     }
 }
