@@ -12,7 +12,6 @@ import {
     BookOpen,
     CheckCircle,
     XCircle,
-    Clock,
     RotateCcw,
     Loader2,
     ShieldCheck,
@@ -20,6 +19,7 @@ import {
     Download,
     FileSpreadsheet
 } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { triggerAuditRefresh } from '../../utils/audit';
 
 const STATUS_OPTIONS = [

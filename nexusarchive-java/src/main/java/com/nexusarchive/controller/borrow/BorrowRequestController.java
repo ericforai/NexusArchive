@@ -25,6 +25,20 @@ public class BorrowRequestController {
 
     private final BorrowRequestService borrowRequestService;
 
+    @GetMapping
+    public Result<com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequest>> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword) {
+        
+        // 分页参数适配
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> pageParam = 
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, limit);
+            
+        return Result.success(borrowRequestService.list(pageParam, status, keyword));
+    }
+
     @PostMapping
     public Result<BorrowRequest> submit(@RequestBody SubmitBorrowRequestCommand command) {
         return Result.success(borrowRequestService.submit(command));

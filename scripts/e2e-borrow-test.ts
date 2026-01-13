@@ -76,6 +76,13 @@ async function testBorrowFlow() {
         await axiosAuth.post(`/${requestId}/return?operatorId=admin-e2e`);
         console.log('✅ Returned');
 
+        // 5. List Requests
+        console.log('\n[5] Listing Requests...');
+        const listRes = await axiosAuth.get('');
+        console.log('✅ List result code:', listRes.data.code);
+        if (listRes.data.code !== 200) throw new Error('List failed');
+        console.log('✅ Total records:', listRes.data.data.total);
+
         console.log('\n🎉 E2E Test Passed!');
 
     } catch (e: any) {

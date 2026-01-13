@@ -19,11 +19,9 @@ Validated the end-to-end workflow of the refactored Borrow Request module, ensur
 - **Entity Persistence**: Added explicit setting of `createdTime` and `updatedTime` in `BorrowRequestServiceImpl` to resolve PostgreSQL `NOT NULL` constraint violations (Auto-fill handler was missing).
 - **Validation**: Confirmed `ApproveBorrowRequestCommand` requires `requestId` in the body.
 
-### 2.2 Frontend Fixes (`src/api/borrowing.ts` & `BorrowingView.tsx`)
-- **API Endpoint**: Updated base URL to `/borrow/requests`.
-- **Payload Structure**: Adapted `createBorrowing` to send `SubmitBorrowRequestCommand` (inc. `applicantId`, `borrowType`, `archiveIds`).
-- **Approval Payload**: Added `requestId` to the approval payload to match backend command validation.
-- **Mocking**: Temporarily mocked `cancelBorrowing` (backend pending) to resolve frontend compilation errors.
+### 2.3 Additional Fixes (Post-E2E Phase 1)
+- **Missing List Endpoint**: Implemented `GET /borrow/requests` in `BorrowRequestController` and `Service` (was causing 500/405 error on frontend load).
+- **Sequence Collision**: Fixed `duplicate key value violates unique constraint` on `request_no` by implementing DB-aware sequence recovery in `BorrowRequestServiceImpl` (previously reset to 0 on restart).
 
 ## 3. Verification Evidence
 **Script**: `scripts/e2e-borrow-test.ts`
@@ -35,13 +33,16 @@ Validated the end-to-end workflow of the refactored Borrow Request module, ensur
 Login failed with "password", trying "admin123"...
 ✅ Logged in. Token: eyJhbGciOi...
 [1] Submitting Borrow Request...
-✅ Created Request: 2010977274484797441 BR-20260113-0002 PENDING
+✅ Created Request: 2010981186096967682 BR-20260113-0003 PENDING
 [2] Approving Request...
 ✅ Approved
 [3] Confirming Out...
 ✅ Confirmed Out
 [4] Returning...
 ✅ Returned
+[5] Listing Requests...
+✅ List result code: 200
+✅ Total records: 3
 🎉 E2E Test Passed!
 ```
 

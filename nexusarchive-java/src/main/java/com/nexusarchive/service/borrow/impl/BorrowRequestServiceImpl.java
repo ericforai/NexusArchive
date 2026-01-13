@@ -39,6 +39,19 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
     private static final AtomicInteger SEQUENCE = new AtomicInteger(0);
 
     @Override
+    public com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequest> list(com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> page, String status, String keyword) {
+        return borrowRequestMapper.selectPage(page, new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<BorrowRequest>()
+                .eq(status != null && !status.isEmpty() && !"ALL".equalsIgnoreCase(status), BorrowRequest::getStatus, status)
+                .and(keyword != null && !keyword.isEmpty(), w -> w
+                        .like(BorrowRequest::getApplicantName, keyword)
+                        .or()
+                        .like(BorrowRequest::getPurpose, keyword)
+                        .or()
+                        .like(BorrowRequest::getRequestNo, keyword))
+                .orderByDesc(BorrowRequest::getCreatedTime));
+    }
+
+    @Override
     @Transactional
     public BorrowRequest submit(SubmitBorrowRequestCommand command) {
         BorrowRequest request = new BorrowRequest();
@@ -115,10 +128,32 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
         return request;
     }
 
-    private String generateRequestNo() {
+    private synchronized String generateRequestNo() {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        int seq = SEQUENCE.incrementAndGet() % 10000;
-        return String.format("BR-%s-%04d", date, seq);
+        String prefix = "BR-" + date + "-";
+        
+        // If sequence is 0, try to recover from DB
+        if (SEQUENCE.get() == 0) {
+            BorrowRequest lastRequest = borrowRequestMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<BorrowRequest>()
+                    .likeRight(BorrowRequest::getRequestNo, prefix)
+                    .orderByDesc(BorrowRequest::getRequestNo)
+                    .last("LIMIT 1")
+            );
+            
+            if (lastRequest != null) {
+                String lastNo = lastRequest.getRequestNo();
+                try {
+                    int lastSeq = Integer.parseInt(lastNo.substring(prefix.length()));
+                    SEQUENCE.set(lastSeq);
+                } catch (NumberFormatException e) {
+                    log.warn("Failed to parse sequence from request no: {}", lastNo);
+                }
+            }
+        }
+        
+        int seq = SEQUENCE.incrementAndGet();
+        return String.format("%s%04d", prefix, seq);
     }
 
     private String toJson(Object obj) {
