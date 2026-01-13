@@ -20,8 +20,8 @@ import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { ActivationPage } from '../pages/ActivationPage';
 
-// ProductWebsite 必须使用懒加载，否则 useNavigate() 会在 Router context 初始化前调用导致 useContext 返回 null
-const ProductWebsite = lazy(() => import('../pages/ProductWebsite'));
+// ProductWebsite 静态导入测试
+import ProductWebsite from '../pages/ProductWebsite';
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -155,7 +155,7 @@ function withSuspense<P extends object>(
  */
 export const routes: RouteObject[] = [
     // 根路径显示产品首页（公开访问）
-    { path: '/', element: withSuspense(ProductWebsite) },
+    { path: '/', element: <ProductWebsite /> },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },

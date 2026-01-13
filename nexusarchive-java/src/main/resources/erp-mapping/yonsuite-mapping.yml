@@ -57,6 +57,21 @@ entries:
     amount:
       script: "def debit = it.debitOrg ?: 0; def credit = it.creditOrg ?: 0; (debit != null && debit > 0) ? debit : credit"
 
+    currencyCode:
+      field: currency.code
+
+    currencyName:
+      field: currency.name
+
+    debitOriginal:
+      field: debitOriginal
+
+    creditOriginal:
+      field: creditOriginal
+
+    exchangeRate:
+      field: exchangeRate
+
 # 附件映射 (AttachmentDto)
 attachments:
   source: header.attachments

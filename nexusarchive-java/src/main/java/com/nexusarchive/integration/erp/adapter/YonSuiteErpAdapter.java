@@ -196,6 +196,11 @@ public class YonSuiteErpAdapter implements ErpAdapter {
                         ? entry.getAmount() : null)
                     .credit(entry.getDirection() == com.nexusarchive.common.enums.DirectionType.CREDIT
                         ? entry.getAmount() : null)
+                    .currencyCode(entry.getCurrencyCode())
+                    .currencyName(entry.getCurrencyName())
+                    .debitOriginal(entry.getDebitOriginal())
+                    .creditOriginal(entry.getCreditOriginal())
+                    .exchangeRate(entry.getExchangeRate())
                     .build();
                 entries.add(entryDto);
             }

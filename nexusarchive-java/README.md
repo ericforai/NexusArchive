@@ -145,10 +145,12 @@ nexusarchive-java/
 │   │   ├── service/                        # 业务逻辑层
 │   │   │   ├── UserService.java
 │   │   │   ├── RoleService.java
-│   │   │   └── RoleValidationService.java  # 三员互斥校验
+│   │   │   ├── RoleValidationService.java  # 三员互斥校验
+│   │   │   └── borrow/                     # 借阅核心服务 (New)
 │   │   ├── controller/                     # 控制器
 │   │   │   ├── AuthController.java
-│   │   │   └── AdminController.java
+│   │   │   ├── AdminController.java
+│   │   │   └── borrow/                     # 借阅控制器 (New)
 │   │   └── util/                           # 工具类
 │   │       ├── JwtUtil.java
 │   │       └── PasswordUtil.java

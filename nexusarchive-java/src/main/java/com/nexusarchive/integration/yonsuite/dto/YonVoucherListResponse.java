@@ -74,6 +74,9 @@ public class YonVoucherListResponse {
         private BigDecimal creditOrg;
         private AccSubject accsubject;
         private Currency currency;
+        
+        @JsonProperty("exchange_rate")
+        private BigDecimal exchangeRate;
     }
     
     @Data

@@ -39,6 +39,7 @@ export interface ParseResult {
 export function parseVoucherData(sourceData: string, row: any): ParseResult {
   try {
     const data = typeof sourceData === 'string' ? JSON.parse(sourceData) : sourceData;
+    console.log('[Debug] Full Source Data:', JSON.stringify(data));
 
     // 处理不同的数据格式
     let bodies: any[] = [];
@@ -72,12 +73,15 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
 
 
     // 解析分录数据
+    if (bodies.length > 0) {
+      console.log('[Debug] First Body Entry:', JSON.stringify(bodies[0]));
+    }
     const parsedEntries = bodies
       .map((body: any, index: number) => {
         const debit = body.debitOrg || body.debit_original || body.debit_org || body.debit || 0;
         const credit = body.creditOrg || body.credit_original || body.credit_org || body.credit || 0;
-        const debitOriginal = body.debitOriginal || body.debit_original || body.debit_original || 0;
-        const creditOriginal = body.creditOriginal || body.credit_original || body.credit_original || 0;
+        const debitOriginal = body.debitOriginal || body.debit_original || body.amountInTransactionCurrency || 0;
+        const creditOriginal = body.creditOriginal || body.credit_original || 0;
 
         // 获取科目信息 - 支持 YonSuite 原始格式 (accsubject) 和 VoucherDTO 格式 (accountCode/accountName)
         let accountCode = body.accountCode || body.account_code || '';
@@ -98,21 +102,40 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
         let currencyName = body.currencyName || body.currency_name || '';
         let exchangeRate = body.exchangeRate || body.exchange_rate || null;
 
-        // 如果还没有币种信息，尝试从 currency 获取 (YonSuite 原始格式)
+        // 尝试从 YonSuite 的 currency 对象获取
         if (!currencyCode && !currencyName) {
-          if (typeof body.currency === 'object') {
+          if (typeof body.currency === 'object' && body.currency !== null) {
             currencyCode = body.currency.code || '';
             currencyName = body.currency.name || '';
-          } else {
-            currencyCode = body.currency || '';
+            // 有些版本可能是 id/name
+            if (!currencyCode) currencyCode = body.currency.id || '';
+          } else if (typeof body.currency === 'string') {
+            // 有些情况 currency 直接是字符串 (可能是 code 或 id)
+            // 此时尝试从 currency_name 获取名称
+            currencyCode = body.currency;
+            currencyName = body.currencyName || body.currency_name || '';
           }
         }
-        // 兼容 YonSuite 的 currencyMap 结构
+
+        // 尝试从 YonSuite 的 currencyMap 结构获取
         if (!currencyCode && !currencyName && body.currencyMap) {
           const map = body.currencyMap;
           currencyCode = map.code || '';
           currencyName = map.name || '';
         }
+
+        // 尝试从扁平字段获取 (如 currency_id, currency_name)
+        if (!currencyCode) currencyCode = body.currency_id || '';
+        if (!currencyName) currencyName = body.currency_name || '';
+
+        // 尝试从 oriCurrency / oriCurrencyName 变体获取
+        if (!currencyCode) currencyCode = body.oriCurrencyCode || body.oriCurrency || '';
+        if (!currencyName) currencyName = body.oriCurrencyName || '';
+
+        // 默认处理: 如果只有 code 没有 name，name = code
+        if (currencyCode && !currencyName) currencyName = currencyCode;
+        // 如果只有 name 没有 code (比较少见), code = name
+        if (!currencyCode && currencyName) currencyCode = currencyName;
 
         return {
           lineNo: body.recordNumber || body.recordnumber || body.lineNo || index + 1,

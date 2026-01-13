@@ -20,6 +20,7 @@
 | `ArcSignatureLogMapper.java` | Mapper 接口 | 电子签章日志数据访问 |
 | `AuditInspectionLogMapper.java` | Mapper 接口 | 审计验真日志数据访问 |
 | `BasFondsMapper.java` | Mapper 接口 | 全宗数据访问 |
+| `BorrowRequestMapper.java` | Mapper 接口 | 借阅申请数据访问 |
 | `ConvertLogMapper.java` | Mapper 接口 | 格式转换日志数据访问 |
 | `DestructionMapper.java` | Mapper 接口 | 销毁数据访问 |
 | `ErpConfigMapper.java` | Mapper 接口 | ERP 配置数据访问 |

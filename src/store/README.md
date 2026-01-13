@@ -17,6 +17,20 @@
 | `useArchiveStore` | 跨页面的档案筛选与操作缓存 | ✅ 活跃 |
 | `useFondsStore` | 全宗选择器状态 | ✅ 活跃 |
 | `useDrawerStore` | 凭证预览抽屉状态（2026-01-02 新增） | ✅ 活跃 |
+| `useRelationGraphStore` | 关系图谱状态（2026-01-13 新增） | ✅ 活跃 |
+
+## 2026-01-13 更新
+
+- ✅ 新增 `useRelationGraphStore` - 穿透联查关系图谱状态管理
+  - `nodes`: 图谱节点列表
+  - `edges`: 图谱连线列表
+  - `centerNodeId`: 中心节点ID
+  - `expandedNodeIds`: 已展开节点集合
+  - `nodeDepths`: 节点深度映射
+  - `initializeGraph(archiveId)`: 初始化图谱
+  - `expandNode(nodeId)`: 展开节点关联（最多3度）
+  - `collapseNode(nodeId)`: 折叠节点
+  - `resetGraph()`: 重置图谱
 
 ## 2026-01-02 更新
 

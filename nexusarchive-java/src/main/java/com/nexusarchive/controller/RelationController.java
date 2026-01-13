@@ -143,20 +143,27 @@ public class RelationController {
                 .id(archive.getId())
                 .code(archive.getArchiveCode())
                 .name(archive.getTitle())
-                .type(resolveType(archive.getCategoryCode()))
+                .type(resolveType(archive.getArchiveCode()))
                 .amount(formatAmount(archive.getAmount()))
                 .date(resolveDate(archive))
                 .status(archive.getStatus())
                 .build();
     }
 
-    private String resolveType(String categoryCode) {
-        if (categoryCode == null) return "other";
-        return switch (categoryCode.toUpperCase()) {
-            case "AC01" -> "voucher";
-            case "AC02" -> "ledger";
-            case "AC03" -> "report";
-            case "AC04" -> "invoice";
+    /**
+     * 根据档案编码前缀解析文档类型
+     * HT- 合同, FP- 发票, JZ- 凭证, HD- 回单, BB- 报表, ZB- 账簿
+     */
+    private String resolveType(String archiveCode) {
+        if (archiveCode == null) return "other";
+        String prefix = archiveCode.toUpperCase().substring(0, Math.min(2, archiveCode.length()));
+        return switch (prefix) {
+            case "HT" -> "contract";   // 合同
+            case "FP" -> "invoice";    // 发票
+            case "JZ", "PZ" -> "voucher";  // 凭证
+            case "HD" -> "receipt";    // 回单/银行回单
+            case "BB" -> "report";     // 报表
+            case "ZB" -> "ledger";     // 账簿
             default -> "other";
         };
     }

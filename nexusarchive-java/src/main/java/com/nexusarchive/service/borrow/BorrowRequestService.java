@@ -7,6 +7,7 @@ package com.nexusarchive.service.borrow;
 
 import com.nexusarchive.domain.borrow.ApproveBorrowRequestCommand;
 import com.nexusarchive.domain.borrow.SubmitBorrowRequestCommand;
+import com.nexusarchive.domain.borrow.BorrowRequestVO;
 import com.nexusarchive.entity.BorrowRequest;
 
 /**
@@ -45,9 +46,9 @@ public interface BorrowRequestService {
      * @param page 分页对象
      * @param status 状态过滤
      * @param keyword 关键词
-     * @return 分页结果
+     * @return 分页展示对象
      */
-    com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequest> list(com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> page, String status, String keyword);
+    com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequestVO> list(com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> page, String status, String keyword);
 
     void returnArchives(String requestId, String operatorId);
 }

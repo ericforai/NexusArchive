@@ -27,6 +27,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/borrowing")
 @RequiredArgsConstructor
+@Deprecated(since = "2026-01-13", forRemoval = true)
 public class BorrowingController {
 
     private final BorrowingFacade borrowingFacade;

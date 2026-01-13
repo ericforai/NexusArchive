@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Deprecated(since = "2026-01-13", forRemoval = true)
 public class BorrowingApplicationService implements BorrowingFacade {
 
     private final BorrowingMapper borrowingMapper;

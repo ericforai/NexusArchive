@@ -29,18 +29,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * 核心理念：原子性操作，强类型校验，明确的状态机流转。
  */
+import com.nexusarchive.domain.borrow.BorrowRequestVO;
+import com.nexusarchive.entity.Archive;
+import com.nexusarchive.mapper.ArchiveMapper;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BorrowRequestServiceImpl implements BorrowRequestService {
 
     private final BorrowRequestMapper borrowRequestMapper;
+    private final ArchiveMapper archiveMapper;
     private final ObjectMapper objectMapper;
     private static final AtomicInteger SEQUENCE = new AtomicInteger(0);
 
     @Override
-    public com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequest> list(com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> page, String status, String keyword) {
-        return borrowRequestMapper.selectPage(page, new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<BorrowRequest>()
+    public com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequestVO> list(com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> page, String status, String keyword) {
+        // 1. Query raw page
+        com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequest> entityPage = borrowRequestMapper.selectPage(page, new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<BorrowRequest>()
                 .eq(status != null && !status.isEmpty() && !"ALL".equalsIgnoreCase(status), BorrowRequest::getStatus, status)
                 .and(keyword != null && !keyword.isEmpty(), w -> w
                         .like(BorrowRequest::getApplicantName, keyword)
@@ -49,6 +55,40 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
                         .or()
                         .like(BorrowRequest::getRequestNo, keyword))
                 .orderByDesc(BorrowRequest::getCreatedTime));
+        
+        // 2. Convert to VO with titles
+        return entityPage.convert(entity -> {
+            String titles = resolveTitles(entity.getArchiveIds());
+            return BorrowRequestVO.from(entity, titles);
+        });
+    }
+
+    private String resolveTitles(String jsonIds) {
+        try {
+            if (jsonIds == null || jsonIds.isEmpty()) return "-";
+            java.util.List<String> ids = objectMapper.readValue(jsonIds, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {});
+            if (ids.isEmpty()) return "-";
+            
+            // Optimization: If single ID, simple query
+            if (ids.size() == 1) {
+                Archive archive = archiveMapper.selectById(ids.get(0));
+                return archive != null ? archive.getTitle() : "未知档案(" + ids.get(0) + ")";
+            }
+            
+            // If multiple, query batch (but limit title length)
+            java.util.List<Archive> archives = archiveMapper.selectBatchIds(ids);
+            if (archives.isEmpty()) return "未知档案";
+            
+            String firstTitle = archives.get(0).getTitle();
+            if (archives.size() > 1) {
+                return firstTitle + " 等" + archives.size() + "个档案";
+            }
+            return firstTitle;
+            
+        } catch (Exception e) {
+            log.warn("Failed to resolve titles for ids: {}", jsonIds, e);
+            return "解析失败";
+        }
     }
 
     @Override

@@ -7,6 +7,13 @@
 ## [Unreleased]
 
 ### Added
+- **穿透联查功能** (`RelationshipQueryView` + `SimpleGraphView`)
+  - 输入档号查询档案关联关系图谱
+  - 点击节点渐进式展开关联（最多3度）
+  - 纯 CSS + SVG 实现，支持缩放拖拽
+  - 双向箭头连线显示关系类型
+  - 使用 `useRelationGraphStore` 管理图谱状态
+  - 后端 API: `/api/relations/{archiveId}/graph`
 - **YonSuite 组织同步服务** (`ErpOrgSyncService`)
   - 从 YonSuite ERP 同步组织架构到 `sys_entity` 表
   - 支持树版本 API (`treeversionsync`) 和组织成员 API (`treemembersync`)

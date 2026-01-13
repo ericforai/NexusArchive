@@ -8,6 +8,7 @@ package com.nexusarchive.controller.borrow;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.domain.borrow.ApproveBorrowRequestCommand;
 import com.nexusarchive.domain.borrow.SubmitBorrowRequestCommand;
+import com.nexusarchive.domain.borrow.BorrowRequestVO;
 import com.nexusarchive.entity.BorrowRequest;
 import com.nexusarchive.service.borrow.BorrowRequestService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class BorrowRequestController {
     private final BorrowRequestService borrowRequestService;
 
     @GetMapping
-    public Result<com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequest>> list(
+    public Result<com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequestVO>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
