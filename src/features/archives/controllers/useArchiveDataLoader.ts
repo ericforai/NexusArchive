@@ -149,6 +149,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             if (isPoolView) {
                 setCurrentPage(1);
                 loadPoolData(1, poolStatusFilter);
+                isPageChangeFromFilterRef.current = true;
             }
         }
     }, [poolStatusFilter, isPoolView, loadPoolData, setCurrentPage]);
@@ -179,6 +180,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             } else {
                 loadArchiveList(1);
             }
+            isPageChangeFromFilterRef.current = true;
         }
     }, [mode.subTitle, query.searchTerm, query.statusFilter, query.orgFilter, query.subTypeFilter, isPoolView, poolStatusFilter, loadPoolData, loadArchiveList, setCurrentPage]);
 
