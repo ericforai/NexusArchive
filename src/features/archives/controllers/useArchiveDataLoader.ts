@@ -40,16 +40,31 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
 
     // Load pool data
     const loadPoolData = useCallback(async (pageNum = page.currentPage, filterOverride?: PoolStatusFilter) => {
+        const startAt = Date.now();
         setIsLoading(true);
         setErrorMessage(null);
         onSelectionClear?.();
+        let resolvedFilter: PoolStatusFilter | undefined;
         try {
             const activeFilter = filterOverride !== undefined ? filterOverride : poolStatusFilter;
+            resolvedFilter = activeFilter;
+            console.log('[PoolData] load start', { pageNum, filter: activeFilter });
 
             let poolItems = [];
             // 如果指定了状态，调用特定的状态过滤接口（后端过滤）
             if (activeFilter && activeFilter !== 'all') {
-                poolItems = await poolApi.getListByStatus(activeFilter);
+                // 兼容旧后端：将新状态映射回旧状态
+                const LEGACY_STATUS_MAP: Record<string, string> = {
+                    'PENDING_CHECK': 'PENDING_CHECK',
+                    'NEEDS_ACTION': 'CHECK_FAILED',
+                    'READY_TO_MATCH': 'PENDING_METADATA',
+                    'READY_TO_ARCHIVE': 'PENDING_ARCHIVE',
+                    'COMPLETED': 'ARCHIVED',
+                };
+                const queryStatus = LEGACY_STATUS_MAP[activeFilter] || activeFilter;
+                console.log(`[useArchiveDataLoader] Mapping status: ${activeFilter} -> ${queryStatus}`);
+                
+                poolItems = await poolApi.getListByStatus(queryStatus);
             } else {
                 poolItems = await poolApi.getList();
             }
@@ -73,6 +88,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
                 rawStatus: item.status
             }));
 
+            console.log('[PoolData] setRows', { total, pageNum, pageSize: page.pageInfo.pageSize, paged: mappedPaged.length });
             setRows(mappedPaged);
             setPageInfo({ total, page: pageNum, pageSize: page.pageInfo.pageSize });
         } catch (error) {
@@ -80,6 +96,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             setErrorMessage('加载数据失败');
             showToast('加载数据失败', 'error');
         } finally {
+            console.log('[PoolData] load end', { pageNum, filter: resolvedFilter, ms: Date.now() - startAt });
             setIsLoading(false);
         }
     }, [page.currentPage, page.pageInfo.pageSize, poolStatusFilter, setRows, setIsLoading, setErrorMessage, setPageInfo, showToast, onSelectionClear]);
@@ -128,17 +145,21 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         return loadArchiveList(pageNum);
     }, [isPoolView, loadPoolData, loadArchiveList, page.currentPage]);
 
-    // Initial load
+    // Initial load - 只在组件挂载时执行一次，避免依赖数组变化导致重复请求
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (isInitialLoadRef.current) {
-            isInitialLoadRef.current = false;
-            if (isPoolView) {
-                loadPoolData(1, poolStatusFilter);
-            } else {
-                loadArchiveList(1);
-            }
+            isInitialLoadRef.current = false; // 立即设置为 false，防止其他 useEffect 竞态触发
+            const doInitialLoad = async () => {
+                if (isPoolView) {
+                    await loadPoolData(1, poolStatusFilter);
+                } else {
+                    await loadArchiveList(1);
+                }
+            };
+            doInitialLoad();
         }
-    }, [isPoolView, poolStatusFilter, loadPoolData, loadArchiveList]);
+    }, []); // 空依赖数组确保只在挂载时执行一次
 
     // Monitor poolStatusFilter changes
     useEffect(() => {
