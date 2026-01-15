@@ -1,5 +1,5 @@
 // Input: io.swagger、Lombok、Spring Security、Spring Framework、等
-// Output: OfdConvertController 类
+// Output: OfdConvertController 类（OFD 转换已禁用）
 // Pos: 接口层 Controller
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -23,18 +23,20 @@ import java.util.Map;
 public class OfdConvertController {
 
     private final OfdConvertService ofdConvertService;
+    private static final int DISABLED_CODE = 410;
+    private static final String DISABLED_MESSAGE = "OFD 转换已禁用，归档仅保留原始 PDF";
 
     @PostMapping("/{id}/convert-to-ofd")
-    @Operation(summary = "单档案转换为OFD")
+    @Operation(summary = "单档案转换为OFD（已禁用）")
     @PreAuthorize("hasAuthority('archive:edit')")
     public Result<Map<String, Object>> convertToOfd(@PathVariable String id) {
-        return Result.success(ofdConvertService.convertToOfd(id));
+        return Result.error(DISABLED_CODE, DISABLED_MESSAGE);
     }
 
     @PostMapping("/batch-convert-to-ofd")
-    @Operation(summary = "批量转换为OFD")
+    @Operation(summary = "批量转换为OFD（已禁用）")
     @PreAuthorize("hasAuthority('archive:edit')")
     public Result<Integer> batchConvertToOfd(@RequestBody List<String> ids) {
-        return Result.success(ofdConvertService.batchConvert(ids));
+        return Result.error(DISABLED_CODE, DISABLED_MESSAGE);
     }
 }

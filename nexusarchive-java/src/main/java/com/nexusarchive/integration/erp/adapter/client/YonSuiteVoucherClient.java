@@ -193,6 +193,18 @@ public class YonSuiteVoucherClient {
                     body.setCreditOriginal(b.getCreditOriginal());
                     body.setDebitOrg(b.getDebitOrg());
                     body.setCreditOrg(b.getCreditOrg());
+
+                    // 映射币种信息 - 修复前端不显示币种和原币的问题
+                    if (b.getCurrency() != null) {
+                        YonVoucherListResponse.Currency currency = new YonVoucherListResponse.Currency();
+                        // YonSuite API 返回的 currency 字段通常是币种代码 (如 "CNY", "USD")
+                        currency.setCode(b.getCurrency());
+                        currency.setName(b.getCurrency());  // 如果有独立币种名称字段，可后续扩展
+                        body.setCurrency(currency);
+                    }
+                    // 汇率字段 (YonSuite 使用 rateOrg 字段)
+                    body.setExchangeRate(b.getRateOrg());
+
                     // 构造 AccSubject 对象
                     YonVoucherListResponse.AccSubject acc = new YonVoucherListResponse.AccSubject();
                     acc.setId(b.getAccSubjectVid());

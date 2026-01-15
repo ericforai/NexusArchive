@@ -46,7 +46,7 @@ export const BorrowApplicationDialog: React.FC<BorrowApplicationDialogProps> = (
     const [error, setError] = useState<string | null>(null);
 
     // 计算默认归还日期（30天后）
-    const defaultReturnDate = React.useMemo(() => {
+    const _defaultReturnDate = React.useMemo(() => {
         const date = new Date();
         date.setDate(date.getDate() + DEFAULT_EXPIRE_DAYS);
         return date.toISOString().split('T')[0];
@@ -102,13 +102,14 @@ export const BorrowApplicationDialog: React.FC<BorrowApplicationDialogProps> = (
         setSubmitting(true);
         try {
             const res = await borrowingApi.createBorrowing({
-                archiveId: form.archiveId.trim(),
-                reason: form.reason.trim(),
-                expectedReturnDate: form.expectedReturnDate,
-                borrowPurpose: form.borrowPurpose,
-                urgencyLevel: form.urgencyLevel,
-                contactInfo: form.contactInfo.trim()
-            });
+                applicantId: '-', // TODO: 获取当前用户ID
+                applicantName: '-',
+                purpose: form.borrowPurpose,
+                borrowType: 'READING',
+                archiveIds: [form.archiveId.trim()],
+                expectedStartDate: new Date().toISOString().split('T')[0],
+                expectedEndDate: form.expectedReturnDate,
+            } as any);
 
             if (res.code === 200) {
                 // 重置表单
@@ -217,7 +218,7 @@ export const BorrowApplicationDialog: React.FC<BorrowApplicationDialogProps> = (
                             className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
                         >
                             <option value="">请选择借阅用途</option>
-                            {BORROW_PURPOSE_OPTIONS.map((option) => (
+                            {BORROW_PURPOSE_OPTIONS.map((option: any) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
                                 </option>
@@ -231,7 +232,7 @@ export const BorrowApplicationDialog: React.FC<BorrowApplicationDialogProps> = (
                             紧急程度
                         </label>
                         <div className="flex gap-4">
-                            {URGENCY_LEVEL_OPTIONS.map((option) => (
+                            {URGENCY_LEVEL_OPTIONS.map((option: any) => (
                                 <label key={option.value} className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="radio"

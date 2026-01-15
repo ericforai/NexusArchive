@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Loader2, Download, Eye, Calendar, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { FileText, Loader2, Download, Eye, CheckCircle2, Clock } from 'lucide-react';
 import { destructionApi, AppraisalList } from '../../api/destruction';
 import { useFondsStore } from '../../store';
 import { toast } from '../../utils/notificationService';
@@ -20,7 +20,7 @@ import { toast } from '../../utils/notificationService';
  * PRD 来源: Section 13 - 档案销毁
  */
 export const AppraisalListPage: React.FC = () => {
-    const { currentFonds } = useFondsStore();
+    const { currentFonds: _currentFonds } = useFondsStore(); // 预留用于全宗筛选
     const [lists, setLists] = useState<AppraisalList[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
@@ -38,7 +38,7 @@ export const AppraisalListPage: React.FC = () => {
                 size: pageSize,
             };
             if (statusFilter) params.status = statusFilter;
-            
+
             const res = await destructionApi.getAppraisalLists(params);
             if (res.code === 200 && res.data) {
                 setLists(res.data.records || []);

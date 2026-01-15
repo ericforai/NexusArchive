@@ -173,6 +173,12 @@ public class YonSuiteOrgClient {
         record.setCode(node.path("innercode").asText(null));
         record.setName(node.path("innercode").asText(null));
         record.setParentId(node.path("parentId").asText(null));
+        // 映射组织类型（用于过滤部门数据）
+        if (node.has("orgType")) {
+            record.setOrgType(node.path("orgType").asText(null));
+        } else if (node.has("org_type")) {
+            record.setOrgType(node.path("org_type").asText(null));
+        }
         if (node.has("level")) record.setLevel(node.get("level").asInt());
         if (node.has("displayorder")) record.setOrderNum(node.get("displayorder").asInt());
         if (node.has("enable")) record.setEnableStatus(node.get("enable").asInt());

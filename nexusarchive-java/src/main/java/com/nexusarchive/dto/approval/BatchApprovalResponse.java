@@ -19,7 +19,7 @@ public class BatchApprovalResponse {
     /**
      * 成功数量
      */
-    private int success;
+    private int successCount;
 
     /**
      * 失败数量
@@ -64,6 +64,6 @@ public class BatchApprovalResponse {
      * 增加成功计数
      */
     public void incrementSuccess() {
-        this.success++;
+        this.successCount++;
     }
 }

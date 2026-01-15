@@ -40,7 +40,6 @@ export const VoucherMetadata: React.FC<VoucherMetadataProps> = ({
 
     if (shouldIncludeField('voucherNo')) {
       const voucherNumber = formatVoucherNumber({
-        displayValue: data.voucherNo,
         voucherWord: data.voucherWord,
         voucherNo: data.voucherNo,
         fallback: data.voucherId || data.id,

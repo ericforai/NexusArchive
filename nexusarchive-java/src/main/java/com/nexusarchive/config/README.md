@@ -9,6 +9,7 @@
 | `README.md` | 说明文档 | 本目录说明 |
 | `AsyncConfig.java` | 配置类 | AsyncConfig 配置 |
 | `CorsConfig.java` | 配置类 | CorsConfig 配置 |
+| `DataConsistencyValidator.java` | Java 类 | 启动时数据一致性检查器 |
 | `ElasticsearchConfig.java` | 配置类 | ElasticsearchConfig 配置 |
 | `EntitySchemaValidator.java` | Java 类 | EntitySchemaValidator 类 |
 | `GlobalExceptionHandler.java` | Java 类 | GlobalExceptionHandler 类 |

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<checkstyle version="9.3">
-<file name="/Users/user/nexusarchive/nexus-core/src/main/java/com/nexusarchive/core/compliance/DefaultIntegrityChecker.java">
-</file>
-<file name="/Users/user/nexusarchive/nexus-core/src/main/java/com/nexusarchive/core/FondsIsolationInterceptor.java">
-<error line="80" severity="error" message="本行字符数 139个，最多：120个。" source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
-</file>
-</checkstyle>

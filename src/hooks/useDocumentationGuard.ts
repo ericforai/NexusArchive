@@ -3,7 +3,7 @@
 // Pos: 文档自洽性守卫 hooks
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * 目录文档映射关系
@@ -290,7 +290,7 @@ function matchPattern(filePath: string, pattern: string): boolean {
  * ```
  */
 export function useDocReminder(filePath: string) {
-  const { state, actions } = useDocumentationGuard({
+  const { state, actions: _actions } = useDocumentationGuard({
     watchedFiles: [filePath],
     autoCheck: true,
   });

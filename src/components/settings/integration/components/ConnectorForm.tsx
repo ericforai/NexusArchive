@@ -5,11 +5,11 @@
 
 // src/components/settings/integration/components/ConnectorForm.tsx
 
-import React, { useState } from 'react';
-import { X, Plus, Trash2, CheckCircle, ArrowRight, Building2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
+import React from 'react';
+import { X, Plus, Trash2, CheckCircle, ArrowRight, Building2, ShieldAlert } from 'lucide-react';
 import { Drawer, Button, Input, Select, Space, Alert, Table, Tag, Switch, Collapse } from 'antd';
 import { ConnectorModalState, ConnectorModalActions, SAP_INTERFACE_TYPES } from '../types';
-import { SapInterfaceTypes, SapInterfaceTypesCard } from './SapInterfaceTypes';
+import { SapInterfaceTypesCard } from './SapInterfaceTypes';
 import { SapInterfaceConfigForm } from './SapInterfaceConfigForm';
 
 interface ConnectorFormProps {

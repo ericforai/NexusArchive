@@ -28,7 +28,7 @@ export const MAX_COMMENT_LENGTH = 500;
  * 待审批记录项
  */
 export interface ApprovalRecord {
-  id: number;
+  id: string;
   title?: string;
   code?: string;
 }
@@ -44,7 +44,7 @@ export interface BatchApprovalDialogProps {
   /** 操作类型：批准或拒绝 */
   action: 'approve' | 'reject';
   /** 确认回调（审批意见，跳过的记录 ID） */
-  onConfirm: (comment: string, skipIds: number[]) => void | Promise<void>;
+  onConfirm: (comment: string, skipIds: string[]) => void | Promise<void>;
   /** 取消回调 */
   onCancel: () => void;
   /** 已选中记录列表（用于跳过部分记录） */
@@ -84,7 +84,7 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
   loading = false,
 }) => {
   const [comment, setComment] = useState('');
-  const [skipIds, setSkipIds] = useState<Set<number>>(new Set());
+  const [skipIds, setSkipIds] = useState<Set<string>>(new Set());
   const [showRecordList, setShowRecordList] = useState(false);
 
   // 重置状态
@@ -117,7 +117,7 @@ export const BatchApprovalDialog: React.FC<BatchApprovalDialogProps> = ({
   };
 
   // 切换跳过状态
-  const toggleSkip = (id: number) => {
+  const toggleSkip = (id: string) => {
     setSkipIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {

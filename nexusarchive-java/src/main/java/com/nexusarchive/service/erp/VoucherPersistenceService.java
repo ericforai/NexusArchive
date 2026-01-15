@@ -1,4 +1,4 @@
-// Input: VoucherDTO, ArcFileContent, Archive mappers
+// Input: VoucherDTO, ArcFileContent, Archive mappers, voucherJson
 // Output: VoucherPersistenceService
 // Pos: Service Layer
 // 负责凭证持久化操作
@@ -66,13 +66,15 @@ public class VoucherPersistenceService {
      * @param adapter 适配器
      * @param startDate 同步开始日期
      * @param sourceSystemName 源系统名称
+     * @param voucherJson 原始凭证 JSON（用于生成 PDF）
      * @return 保存的文件内容实体，如果凭证已存在则返回 null
      */
     public ArcFileContent saveVoucher(VoucherDTO dto,
                                       cn.hutool.json.JSONObject mappingConfig,
                                       ErpAdapter adapter,
                                       LocalDate startDate,
-                                      String sourceSystemName) {
+                                      String sourceSystemName,
+                                      String voucherJson) {
         // 检查凭证是否已存在（基于 erp_voucher_no）
         String voucherNo = dto.getVoucherNo();
         if (isVoucherExist(voucherNo)) {
@@ -85,6 +87,9 @@ public class VoucherPersistenceService {
 
         setStoragePath(fileContent);
         setDefaultFields(fileContent, startDate);
+        if (voucherJson != null && !voucherJson.isEmpty()) {
+            fileContent.setSourceData(voucherJson);
+        }
 
         // 保存文件内容
         arcFileContentMapper.insert(fileContent);

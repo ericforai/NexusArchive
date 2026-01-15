@@ -39,16 +39,18 @@ public class EnterpriseArchitectureServiceImpl implements EnterpriseArchitecture
     public EnterpriseArchitectureTree getArchitectureTree() {
         EnterpriseArchitectureTree tree = new EnterpriseArchitectureTree();
         
-        // 获取所有活跃法人
+        // 获取所有活跃法人（已自动应用部门过滤）
         List<SysEntity> entities = entityService.listActive();
-        log.info("ArchitectureTree: Found {} active entities", entities.size());
+        log.info("ArchitectureTree: Found {} active entities (after department filter)", entities.size());
         if (!entities.isEmpty()) {
-            entities.forEach(e -> log.info("  - Entity: id={}, name={}, status={}", e.getId(), e.getName(), e.getStatus()));
+            entities.forEach(e -> log.debug("  - Entity: id={}, name={}, status={}, taxId={}", 
+                e.getId(), e.getName(), e.getStatus(), e.getTaxId()));
         } else {
              // Fallback: Try listing ALL entities to warn if status mismatch
              log.warn("ArchitectureTree: No ACTIVE entities found. checking all entities...");
              List<SysEntity> all = entityService.list();
-             all.forEach(e -> log.warn("  - Existing Entity: id={}, name={}, status='{}'", e.getId(), e.getName(), e.getStatus()));
+             all.forEach(e -> log.warn("  - Existing Entity: id={}, name={}, status='{}', taxId='{}'", 
+                 e.getId(), e.getName(), e.getStatus(), e.getTaxId()));
         }
         
         List<EnterpriseArchitectureTree.EntityNode> entityNodes = entities.stream()
@@ -61,13 +63,20 @@ public class EnterpriseArchitectureServiceImpl implements EnterpriseArchitecture
                 
                 // 获取法人下的全宗
                 List<String> fondsIds = entityService.getFondsIdsByEntityId(entity.getId());
-                log.info("Entity {}: Found {} fonds IDs", entity.getName(), fondsIds.size());
+                log.debug("Entity {} (id={}): Found {} fonds IDs", entity.getName(), entity.getId(), 
+                    fondsIds != null ? fondsIds.size() : 0);
                 
                 List<BasFonds> fondsList;
                 if (fondsIds == null || fondsIds.isEmpty()) {
                     fondsList = java.util.Collections.emptyList();
+                    log.debug("Entity {}: No fonds found (entity_id may not be set in bas_fonds table)", entity.getName());
                 } else {
                     fondsList = fondsService.listByIds(fondsIds);
+                    log.debug("Entity {}: Loaded {} fonds from {} IDs", entity.getName(), fondsList.size(), fondsIds.size());
+                    if (fondsList.size() < fondsIds.size()) {
+                        log.warn("Entity {}: Some fonds IDs not found. Expected {}, got {}", 
+                            entity.getName(), fondsIds.size(), fondsList.size());
+                    }
                 }
                 
                 node.setFondsCount(fondsList.size());

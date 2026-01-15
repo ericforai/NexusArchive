@@ -65,15 +65,13 @@ export const FondsDropdown: React.FC<FondsDropdownProps> = React.memo(({
                                         onSelect(fonds);
                                         onToggle();
                                     }}
-                                    className={`w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 transition-colors ${
-                                        currentFonds?.id === fonds.id ? 'bg-primary-50' : ''
-                                    }`}
+                                    className={`w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 transition-colors ${currentFonds?.id === fonds.id ? 'bg-primary-50' : ''
+                                        }`}
                                 >
                                     <div className="flex-1 min-w-0">
                                         <p
-                                            className={`text-sm font-medium truncate ${
-                                                currentFonds?.id === fonds.id ? 'text-primary-600' : 'text-slate-700'
-                                            }`}
+                                            className={`text-sm font-medium truncate ${currentFonds?.id === fonds.id ? 'text-primary-600' : 'text-slate-700'
+                                                }`}
                                         >
                                             {fonds.fondsName}
                                         </p>
@@ -91,3 +89,5 @@ export const FondsDropdown: React.FC<FondsDropdownProps> = React.memo(({
         </div>
     );
 });
+
+FondsDropdown.displayName = 'FondsDropdown';

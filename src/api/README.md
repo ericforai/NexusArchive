@@ -41,6 +41,8 @@
 - `stats.ts`: 统计分析接口。
 - `warehouse.ts`: 库房管理接口。
 - `workflow.ts`: 工作流引擎接口。
+- `yonsuite-payment-apply.ts`: YonSuite 付款申请单接口。
+- `yonsuite-payment-apply-sync.ts`: YonSuite 付款申请同步控制接口。
 
 ## 规范
 

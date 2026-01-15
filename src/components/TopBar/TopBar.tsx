@@ -15,7 +15,7 @@ interface TopBarProps {
     onNavigate?: (item: GlobalSearchDTO) => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
+export const TopBar: React.FC<TopBarProps> = ({ onLogout: _onLogout, onNavigate }) => {
     const [profileOpen, setProfileOpen] = useState(false);
 
     // Get user info from auth store

@@ -6,7 +6,7 @@
 // src/components/settings/integration/components/SapInterfaceTypes.tsx
 import React from 'react';
 import { Badge, Tooltip } from 'antd';
-import { SAP_INTERFACE_TYPES, SAP_INTERFACE_STATUS } from '../types';
+import { SAP_INTERFACE_TYPES } from '../types';
 
 /**
  * SAP 接口类型状态徽章颜色映射
@@ -72,7 +72,7 @@ interface InterfaceTypeItemProps {
 const InterfaceTypeItem: React.FC<InterfaceTypeItemProps> = ({
   type,
   showIcon,
-  showDescription,
+  showDescription: _showDescription,
   showStatus,
   onClick,
 }) => {

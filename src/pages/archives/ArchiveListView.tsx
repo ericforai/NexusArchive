@@ -15,35 +15,25 @@
  */
 import React, { useState, useEffect } from 'react';
 import {
-  Search, Filter, Download, Layers, FileText,
+  Search, Filter, Download, FileText,
   Settings2, Zap, Receipt, Upload, CheckCircle2,
-  Trash2, AlertTriangle, Loader2, Eye, X
+  AlertTriangle, Loader2, X
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 
-import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useSmartMatching } from '../../features/archives';
+import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useArchiveListController, PoolStatusFilter, useSmartMatching } from '../../features/archives';
+import { STATUS_CONFIG, SimplifiedPreArchiveStatus, resolveStatus } from '@/config/pool-columns.config';
 import ArchiveDetailDrawer from './ArchiveDetailDrawer';
 import MatchPreviewModal from './MatchPreviewModal';
 import { TablePreviewAction } from '../../components/table';
 import { formatVoucherNumber } from '../../utils/voucherNumber';
 
-// 诊断日志：验证模块导入
-console.log('%c[ArchiveListView] ArchiveDetailDrawer imported:', typeof ArchiveDetailDrawer, ArchiveDetailDrawer.name, 'color: #8b5cf6; font-weight: bold;');
+// 已移除诊断日志：组件导入验证完成
 
 // Shared Components (Assuming these exist or are local)
 // In a real refactor, these should be imported. For this file update, I will keep necessary imports.
 import { GenericRow, ViewState } from '../../types';
-
-// 旧状态标签（用于表格中显示）
-const PRE_ARCHIVE_STATUS_LABELS: any = {
-  'PENDING_CHECK': { label: '待检测', color: 'bg-slate-100 text-slate-600', description: '等待执行四性检测' },
-  'CHECK_FAILED': { label: '检测失败', color: 'bg-rose-100 text-rose-600', description: '四性检测未通过，需修正' },
-  'PENDING_METADATA': { label: '待补全', color: 'bg-amber-100 text-amber-600', description: '缺少关键元数据' },
-  'PENDING_ARCHIVE': { label: '待归档', color: 'bg-blue-100 text-blue-600', description: '检测通过，等待正式归档' },
-  'MATCHED': { label: '已匹配', color: 'bg-emerald-100 text-emerald-600', description: '已关联记账凭证' },
-  'ARCHIVED': { label: '已归档', color: 'bg-green-100 text-green-600', description: '已完成长期归档' },
-};
 
 // ============ 匹配规则配置 ============
 
@@ -77,10 +67,19 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
   const { mode, query, page, data, selection, pool, ui } = controller;
   const location = useLocation();
 
+  useEffect(() => {
+    console.log('[ArchiveListView] state', {
+      isLoading: data.isLoading,
+      rows: data.rows.length,
+      page: page.pageInfo.page,
+      total: page.pageInfo.total,
+    });
+  }, [data.isLoading, data.rows.length, page.pageInfo.page, page.pageInfo.total]);
+
   // Local UI state (purely presentational)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
-  const [activeLinkTab, setActiveLinkTab] = useState<'list' | 'report'>('list');
+  const [viewTab, _setViewTab] = useState<'list' | 'report'>('list'); // 报告视图待开发
   // 智能匹配 Hook (修复即重构)
   const {
     isMatchPreviewOpen,
@@ -99,6 +98,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
   const [viewRow, setViewRow] = useState<GenericRow | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
+  void activePreviewId; // 联动功能待开发
 
   // 悬停行状态
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
@@ -160,20 +160,36 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
         'pending': 'bg-blue-50 text-blue-700 border-blue-200',
         'archived': 'bg-green-50 text-green-700 border-green-200',
         'rejected': 'bg-rose-50 text-rose-700 border-rose-200',
-        // Pool statuses
-        'PENDING_CHECK': 'bg-slate-100 text-slate-600 border-slate-200',
-        'CHECK_FAILED': 'bg-rose-50 text-rose-700 border-rose-200',
-        'PENDING_METADATA': 'bg-amber-50 text-amber-700 border-amber-200',
-        'PENDING_ARCHIVE': 'bg-blue-50 text-blue-700 border-blue-200',
-        'MATCHED': 'bg-emerald-50 text-emerald-700 border-emerald-200',
       };
 
       const rawStatus = (row as any).rawStatus || row.status;
+
+      // Use centralized resolver to map ANY status (legacy or new) to standard config
+      const standardizedStatus = resolveStatus(rawStatus);
+      const config = STATUS_CONFIG[standardizedStatus];
+
+      if (config) {
+        // Determine bg/text color based on config.color (simplified mapping for now)
+        let colorClass = 'bg-slate-100 text-slate-600 border-slate-200';
+        if (config.color === '#10b981') colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'; // READY_TO_ARCHIVE
+        else if (config.color === '#3b82f6') colorClass = 'bg-blue-50 text-blue-700 border-blue-200'; // READY_TO_MATCH
+        else if (config.color === '#f59e0b') colorClass = 'bg-amber-50 text-amber-700 border-amber-200'; // NEEDS_ACTION
+        else if (config.color === '#94a3b8') colorClass = 'bg-slate-100 text-slate-600 border-slate-200'; // PENDING_CHECK
+        else if (config.color === '#64748b') colorClass = 'bg-slate-100 text-slate-600 border-slate-200'; // COMPLETED
+
+        return (
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${colorClass}`}>
+            {config.label}
+          </span>
+        );
+      }
+
+      // Final fallback for non-pool statuses (like draft/rejected from Archive modules)
       const colorClass = statusColors[rawStatus] || statusColors[String(value)] || 'bg-slate-100 text-slate-600 border-slate-200';
 
       return (
         <span className={`px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${colorClass}`}>
-          {PRE_ARCHIVE_STATUS_LABELS[rawStatus]?.label || value}
+          {value || rawStatus}
         </span>
       );
     }
@@ -359,7 +375,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
         )}
 
         {/* List View Tab */}
-        {activeLinkTab === 'list' ? (
+        {viewTab === 'list' ? (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">

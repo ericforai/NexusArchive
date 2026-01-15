@@ -90,7 +90,7 @@ export const EntityConfigPage: React.FC = () => {
 
     const handleDelete = async (config: EntityConfig) => {
         if (!window.confirm('确定删除该配置吗？')) return;
-        
+
         setLoading(true);
         try {
             const res = await entityConfigApi.deleteByEntityIdAndType(
@@ -196,9 +196,8 @@ export const EntityConfigPage: React.FC = () => {
 
                 {/* Message */}
                 {message && (
-                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${
-                        message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
+                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        }`}>
                         {message.type === 'success' ? (
                             <CheckCircle2 className="w-5 h-5" />
                         ) : (
@@ -233,11 +232,10 @@ export const EntityConfigPage: React.FC = () => {
                                             setActiveTab(type);
                                             setForm({ ...form, configType: type });
                                         }}
-                                        className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-                                            activeTab === type
-                                                ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600'
-                                                : 'text-slate-600 hover:text-slate-900'
-                                        }`}
+                                        className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeTab === type
+                                            ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                            }`}
                                     >
                                         {CONFIG_TYPE_LABELS[type]}
                                     </button>
@@ -254,7 +252,7 @@ export const EntityConfigPage: React.FC = () => {
                             ) : currentConfigs.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                                     <Settings className="w-12 h-12 mb-2" />
-                                    <p>暂无配置，点击"新建配置"添加</p>
+                                    <p>暂无配置，点击&quot;新建配置&quot;添加</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">

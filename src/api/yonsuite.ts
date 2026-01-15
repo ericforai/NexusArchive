@@ -104,3 +104,16 @@ export const yonsuiteApi = {
     return response.data;
   },
 };
+
+// 重新导出付款申请单文件 API
+export { paymentApplyFileApi } from "./yonsuite-payment-apply";
+export type { PaymentApplyFileInfo, PaymentApplyFileQuery } from "./yonsuite-payment-apply";
+
+
+// 重新导出付款申请单同步 API
+export { paymentApplySyncApi } from "./yonsuite-payment-apply-sync";
+export type {
+  PaymentApplyRecord,
+  PaymentApplySyncRequest,
+  PaymentApplyListResponse
+} from "./yonsuite-payment-apply-sync";

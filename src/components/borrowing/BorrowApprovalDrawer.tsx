@@ -15,25 +15,7 @@ import {
     AlertCircle
 } from 'lucide-react';
 import { BorrowStatusTag } from './BorrowStatusTag';
-import { borrowingApi, BORROW_PURPOSE_OPTIONS, URGENCY_LEVEL_OPTIONS } from '../../api/borrowing';
-
-export interface BorrowingRecord {
-    id: string;
-    archiveId: string;
-    archiveTitle: string;
-    userId: string;
-    userName: string;
-    reason: string;
-    borrowDate: string;
-    expectedReturnDate: string;
-    actualReturnDate?: string;
-    status: string;
-    approvalComment?: string;
-    borrowPurpose?: string;
-    urgencyLevel?: string;
-    contactInfo?: string;
-    createdTime: string;
-}
+import { borrowingApi, BORROW_PURPOSE_OPTIONS, URGENCY_LEVEL_OPTIONS, BorrowingRecord } from '../../api/borrowing';
 
 export interface BorrowApprovalDrawerProps {
     open: boolean;

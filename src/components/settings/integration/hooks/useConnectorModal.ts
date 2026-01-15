@@ -50,7 +50,7 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
 
   const [configForm, setConfigForm] = useState({
     name: '',
-    erpType: 'yonsuite',
+    erpType: 'SAP',
     baseUrl: '',
     appKey: '',
     appSecret: '',
@@ -61,7 +61,7 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
   });
 
   // SAP 接口类型选择器可见性
-  const [sapInterfaceSelectorVisible, setSapInterfaceSelectorVisible] = useState(false);
+  const [sapInterfaceSelectorVisible, _setSapInterfaceSelectorVisible] = useState(false);
 
   const openModal = useCallback((config?: Partial<ErpConfig>) => {
     if (config) {
@@ -82,7 +82,7 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
 
       setConfigForm({
         name: config.name || '',
-        erpType: (config.erpType || 'yonsuite').toLowerCase(),
+        erpType: (config.erpType || 'SAP').toLowerCase() === 'sap' ? 'SAP' : (config.erpType || 'yonsuite'),
         baseUrl: (configData as any).baseUrl || '',
         appKey: (configData as any).appKey || '',
         appSecret: (configData as any).appSecret || '',
@@ -95,7 +95,7 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
       setEditingConfig(null);
       setConfigForm({
         name: '',
-        erpType: 'yonsuite',
+        erpType: 'SAP',
         baseUrl: '',
         appKey: '',
         appSecret: '',
@@ -128,13 +128,13 @@ export function useConnectorModal(options: UseConnectorModalOptions) {
 
   const addMappingEntry = useCallback((accbookCode: string, fondsCode: string) => {
     if (!accbookCode.trim() || !fondsCode.trim()) return;
-    
+
     // 校验：一个全宗只能映射一个账套
     const currentMapping = configForm.accbookMapping;
     const existingAccbook = Object.keys(currentMapping).find(
       key => currentMapping[key] === fondsCode
     );
-    
+
     if (existingAccbook) {
       toast.error(`全宗 ${fondsCode} 已映射到账套 ${existingAccbook}，一个全宗只能关联一个账套`);
       return;

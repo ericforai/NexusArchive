@@ -16,6 +16,7 @@
 | `README.md` | 说明文档 | 本目录说明 |
 | `tech_architecture.md` | 文档 | tech_architecture 文档 |
 | `临时文件存储路径问题排查.md` | 文档 | 临时文件存储路径问题排查 文档 |
+| `2026-01-13-attachment-preview-auth-fix.md` | 文档 | 附件预览 404 故障排查与过滤器优化 |
 
 # Knowledge Items (项目知识库)
 
@@ -38,6 +39,11 @@
 4.  [**ERP 集成与电子文件生成 (ERP Integration)**](./erp_integration.md)
     *   **JSON 解析**: 兼容多种字段命名与嵌套结构。
     *   **文件生成**: 确保 PDF 包含完整分录信息，处理好数据库 `NOT NULL` 约束。
+
+5.  [**附件访问与全宗权限隔离 (Attachment Auth Fix)**](./2026-01-13-attachment-preview-auth-fix.md)
+    *   **故障**: 浏览器下载预览无法携带标头导致全宗过滤 404。
+    *   **解决**: 豁免下载路径的强制上下文回退逻辑。
+    *   **经验**: 业务服务应区分“界面上下文”与“总体数据权限”。
 
 
 ## 获取帮助

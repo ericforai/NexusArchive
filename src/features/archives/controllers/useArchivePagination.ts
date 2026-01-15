@@ -8,7 +8,7 @@ import { ControllerPage } from './types';
 
 export function useArchivePagination(initialPageSize = 10): ControllerPage {
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageInfo, setPageInfo] = useState({
+    const [pageInfo, _setPageInfo] = useState({
         total: 0,
         page: 1,
         pageSize: initialPageSize

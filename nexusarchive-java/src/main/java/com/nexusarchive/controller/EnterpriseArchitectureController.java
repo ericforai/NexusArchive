@@ -31,7 +31,7 @@ public class EnterpriseArchitectureController {
     
     @GetMapping("/tree")
     @Operation(summary = "获取完整的集团架构树")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'fonds:view') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'fonds:view') or hasRole('super_admin')")
     public Result<EnterpriseArchitectureTree> getArchitectureTree() {
         try {
             EnterpriseArchitectureTree tree = architectureService.getArchitectureTree();
@@ -44,7 +44,7 @@ public class EnterpriseArchitectureController {
     
     @GetMapping("/tree/entity/{entityId}")
     @Operation(summary = "获取指定法人下的架构树")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'fonds:view') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'fonds:view') or hasRole('super_admin')")
     public Result<EnterpriseArchitectureTree> getArchitectureTreeByEntity(@PathVariable String entityId) {
         try {
             EnterpriseArchitectureTree tree = architectureService.getArchitectureTreeByEntity(entityId);

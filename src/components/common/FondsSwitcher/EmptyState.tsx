@@ -9,3 +9,5 @@ export const EmptyState: React.FC = React.memo(() => {
         <div className="flex items-center px-3 py-1.5 text-sm text-slate-400">暂无全宗权限</div>
     );
 });
+
+EmptyState.displayName = 'EmptyState';

@@ -4,9 +4,9 @@
  * Shared types for archive list controller hooks
  */
 import { ModuleConfig, GenericRow } from '../../../types';
-import { ArchiveRouteMode, RouteConfigMeta } from '../routeConfigs';
+import { ArchiveRouteMode, RouteConfigMeta as _RouteConfigMeta } from '../routeConfigs';
 
-export type PoolStatusFilter = 'all' | 'PENDING_CHECK' | 'CHECK_FAILED' | 'PENDING_METADATA' | 'PENDING_ARCHIVE' | 'PENDING_APPROVAL' | 'ARCHIVED' | null;
+export type PoolStatusFilter = 'all' | 'PENDING_CHECK' | 'NEEDS_ACTION' | 'READY_TO_MATCH' | 'READY_TO_ARCHIVE' | 'COMPLETED' | 'PENDING_APPROVAL' | null;
 
 export interface ControllerMode {
     routeKey: ArchiveRouteMode | undefined;

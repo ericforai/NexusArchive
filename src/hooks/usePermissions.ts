@@ -1,10 +1,10 @@
 // Input: react-query、auth store、client 与 query keys
-// Output: 权限相关 hooks
+// Output: 权限相关 hooks（兼容权限响应格式）
 // Pos: 权限数据访问层 hooks
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { client } from '../api/client';
 import { QUERY_KEYS } from '../queryClient';
 import { useAuthStore } from '../store';
@@ -19,6 +19,24 @@ interface UserPermissions {
     }>;
 }
 
+const normalizePermissionsPayload = (
+    payload: ApiResponse<UserPermissions> | UserPermissions | null | undefined
+): UserPermissions => {
+    if (!payload || typeof payload !== 'object') {
+        return { permissions: [], roles: [] };
+    }
+
+    if ('data' in payload && payload.data) {
+        return payload.data;
+    }
+
+    if ('permissions' in payload || 'roles' in payload) {
+        return payload as UserPermissions;
+    }
+
+    return { permissions: [], roles: [] };
+};
+
 /**
  * 获取用户权限（使用 React Query 缓存）
  */
@@ -28,8 +46,8 @@ export function usePermissionsQuery() {
     const query = useQuery({
         queryKey: QUERY_KEYS.userPermissions,
         queryFn: async () => {
-            const response = await client.get<ApiResponse<UserPermissions>>('/user/permissions');
-            return response.data.data;
+            const response = await client.get<ApiResponse<UserPermissions> | UserPermissions>('/user/permissions');
+            return normalizePermissionsPayload(response.data);
         },
         enabled: isAuthenticated, // 只有登录后才请求
         staleTime: 10 * 60 * 1000, // 权限数据 10 分钟内有效
@@ -48,14 +66,16 @@ export function usePermissionsQuery() {
 
 /**
  * 兼容旧的 usePermissions hook
- * 
+ *
  * 保持与原有 API 兼容，但内部使用 React Query
+ * 修复：使用 useMemo 稳定返回值引用
  */
 export const usePermissions = () => {
     const { user, hasPermission, hasAnyPermission, hasRole, isSuperAdmin } = useAuthStore();
     const { data, isLoading, refetch } = usePermissionsQuery();
 
-    return {
+    // 使用 useMemo 稳定返回值引用
+    return useMemo(() => ({
         permissions: user?.permissions || [],
         roles: data?.roles || [],
         loading: isLoading,
@@ -64,5 +84,5 @@ export const usePermissions = () => {
         hasRole,
         isSuperAdmin,
         reload: refetch,
-    };
+    }), [user, data, isLoading, hasPermission, hasAnyPermission, hasRole, isSuperAdmin, refetch]);
 };

@@ -6,11 +6,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Upload, FileText, CheckCircle, AlertCircle, ChevronRight,
+    Upload, FileText, CheckCircle,
     Loader2, PlusCircle, Database, Zap, Settings, ArrowLeft,
     Download, Eye
 } from 'lucide-react';
-import { erpApi, PreviewResponse, ScenarioPreviewItem, ExistingConfigItem } from '../../api/erp';
+import { erpApi, PreviewResponse } from '../../api/erp';
+// ScenarioPreviewItem, ExistingConfigItem 类型由 response.scenarios/existingConfigs 推断
 import { toast } from 'react-hot-toast';
 
 // Adapter icons (matching IntegrationSettings)

@@ -36,7 +36,7 @@ public class FondsHistoryController {
     
     @PostMapping("/migrate")
     @Operation(summary = "全宗迁移")
-    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('super_admin')")
     public Result<Map<String, String>> migrateFonds(
             @RequestParam String fromFondsNo,
             @RequestParam String toFondsNo,
@@ -57,7 +57,7 @@ public class FondsHistoryController {
     
     @PostMapping("/merge")
     @Operation(summary = "全宗合并")
-    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('super_admin')")
     public Result<Map<String, Object>> mergeFonds(
             @RequestParam List<String> sourceFondsNos,
             @RequestParam String targetFondsNo,
@@ -78,7 +78,7 @@ public class FondsHistoryController {
     
     @PostMapping("/split")
     @Operation(summary = "全宗分立")
-    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('super_admin')")
     public Result<Map<String, Object>> splitFonds(
             @RequestParam String sourceFondsNo,
             @RequestParam List<String> newFondsNos,
@@ -99,7 +99,7 @@ public class FondsHistoryController {
     
     @PostMapping("/rename")
     @Operation(summary = "全宗重命名")
-    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('fonds:manage') or hasRole('super_admin')")
     public Result<Map<String, String>> renameFonds(
             @RequestParam String oldFondsNo,
             @RequestParam String newFondsNo,

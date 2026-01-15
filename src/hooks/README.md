@@ -1,7 +1,7 @@
 <!-- 一旦我所属的文件夹有所变化，请更新我。-->
 <!-- 本目录存放自定义 React Hooks。-->
 <!-- 用于封装数据获取、权限逻辑与文档守卫。-->
-<!-- 最后更新: 2026-01-09 -->
+<!-- 最后更新: 2026-01-14 -->
 
 ## 用途
 
@@ -38,7 +38,7 @@ src/hooks/
 | `usePoolKanban.ts` | Hook | 预归档池看板数据管理，按列和子状态分组 |
 | `usePoolBatchAction.ts` | Hook | 看板批量操作选择与执行 |
 | `useKanbanLayout.ts` | Hook | 看板响应式布局，支持动态列宽和空列折叠 |
-| `usePermissions.ts` | Hook | 权限检查与权限状态 |
+| `usePermissions.ts` | Hook | 权限检查与权限状态（兼容权限返回格式） |
 | `useDocumentationGuard.ts` | Hook | 文档自洽性守卫，代码变更后提醒更新文档 |
 | `useReconciliation.ts` | Hook | 对账相关逻辑 |
 | `useMonitoring.ts` | Hook | 监控数据获取 |

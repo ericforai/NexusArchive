@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Loader2, CheckCircle2, XCircle, Copy, Download, Printer, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Shield, Loader2, CheckCircle2, XCircle, Copy, Download, Printer, AlertCircle } from 'lucide-react';
 import { mfaApi, MfaStatus, MfaSetupResponse } from '../../api/mfa';
 
 /**
@@ -184,11 +184,10 @@ export const MfaSettingsPage: React.FC = () => {
 
             {/* 消息提示 */}
             {message && (
-                <div className={`p-4 rounded-lg flex items-center gap-2 ${
-                    message.type === 'success' 
-                        ? 'bg-green-50 text-green-800 border border-green-200' 
+                <div className={`p-4 rounded-lg flex items-center gap-2 ${message.type === 'success'
+                        ? 'bg-green-50 text-green-800 border border-green-200'
                         : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
+                    }`}>
                     {message.type === 'success' ? (
                         <CheckCircle2 size={20} />
                     ) : (
@@ -210,16 +209,15 @@ export const MfaSettingsPage: React.FC = () => {
                     <div>
                         <h3 className="text-lg font-semibold">MFA状态</h3>
                         <p className="text-sm text-slate-500 mt-1">
-                            {isMfaEnabled 
-                                ? 'MFA已启用，您的账户受到双重保护' 
+                            {isMfaEnabled
+                                ? 'MFA已启用，您的账户受到双重保护'
                                 : 'MFA未启用，建议启用以增强账户安全性'}
                         </p>
                     </div>
-                    <div className={`px-4 py-2 rounded-lg ${
-                        isMfaEnabled 
-                            ? 'bg-green-100 text-green-700' 
+                    <div className={`px-4 py-2 rounded-lg ${isMfaEnabled
+                            ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                        }`}>
                         {isMfaEnabled ? '已启用' : '未启用'}
                     </div>
                 </div>
@@ -262,9 +260,9 @@ export const MfaSettingsPage: React.FC = () => {
                         <h3 className="text-lg font-semibold mb-4">步骤1: 扫描二维码</h3>
                         <div className="flex flex-col items-center space-y-4">
                             <div className="p-4 bg-white border-2 border-slate-200 rounded-lg">
-                                <img 
-                                    src={setupData.qrCodeUrl} 
-                                    alt="MFA QR Code" 
+                                <img
+                                    src={setupData.qrCodeUrl}
+                                    alt="MFA QR Code"
                                     className="w-64 h-64"
                                 />
                             </div>

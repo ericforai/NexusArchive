@@ -333,6 +333,7 @@ export interface IntegrationChannel {
     apiEndpoint: string | null;
     accbookCode: string | null;
     accbookCodes: string[] | null;
+    accbookMapping?: Record<string, string>;
     lastSyncMsg: string | null;
 }
 

@@ -4,14 +4,14 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Shield, Loader2, CheckCircle2, XCircle, Eye, Clock, User, MessageSquare, Check, Square } from 'lucide-react';
+import { Shield, Loader2, CheckCircle2, XCircle, User, Check, Square } from 'lucide-react';
 import { destructionApi, Destruction, DestructionApprovalRequest } from '../../api/destruction';
 import { toast } from '../../utils/notificationService';
 import {
-  BatchOperationBar,
-  BatchApprovalDialog,
-  BatchResultModal,
-  type ApprovalRecord
+    BatchOperationBar,
+    BatchApprovalDialog,
+    BatchResultModal,
+    type ApprovalRecord
 } from '@/components/operations';
 
 /**
@@ -240,13 +240,13 @@ export const DestructionApprovalPage: React.FC = () => {
 
     const canSecondApprove = (destruction: Destruction) => {
         return destruction.status === 'PENDING' &&
-               destruction.firstApproverId &&
-               !destruction.secondApproverId;
+            destruction.firstApproverId &&
+            !destruction.secondApproverId;
     };
 
     // 判断批量操作状态
     const hasFirstApprovable = destructions.some(canFirstApprove);
-    const hasSecondApprovable = destructions.some(canSecondApprove);
+    const _hasSecondApprovable = destructions.some(canSecondApprove); // 预留用于 UI 未来优化
 
     return (
         <div className="p-6 space-y-4">

@@ -9,7 +9,7 @@ import type { RelationGraph, RelationGraphNode, RelationGraphEdge } from '@/api/
 /**
  * 档案类型枚举
  */
-export type ArchiveType = 'contract' | 'invoice' | 'voucher' | 'receipt' | 'report' | 'ledger' | 'other';
+export type ArchiveType = 'contract' | 'invoice' | 'voucher' | 'receipt' | 'report' | 'ledger' | 'payment' | 'reimbursement' | 'application' | 'other';
 
 /**
  * 关系类型枚举
@@ -92,6 +92,10 @@ export interface RelationGraphState {
   isInitialLoading: boolean;
   /** 初始加载错误 */
   initialError: string | null;
+  /** 原始查询档案ID（如果发生了自动转换） */
+  originalQueryId: string | null;
+  /** 自动转换提示信息 */
+  redirectMessage: string | null;
 
   // === 操作 ===
   /** 初始化图谱（设置中心节点） */
@@ -206,6 +210,27 @@ export const ARCHIVE_TYPE_STYLES: Record<ArchiveType, Omit<ArchiveTypeMeta, 'typ
     text: 'text-slate-700',
     icon: 'FileSpreadsheet'
   },
+  payment: {
+    label: '付款单',
+    bg: 'bg-cyan-50',
+    border: 'border-cyan-400',
+    text: 'text-cyan-700',
+    icon: 'Wallet'
+  },
+  reimbursement: {
+    label: '报销单',
+    bg: 'bg-orange-50',
+    border: 'border-orange-400',
+    text: 'text-orange-700',
+    icon: 'FileCheck'
+  },
+  application: {
+    label: '申请单',
+    bg: 'bg-teal-50',
+    border: 'border-teal-400',
+    text: 'text-teal-700',
+    icon: 'ClipboardList'
+  },
   other: {
     label: '其他',
     bg: 'bg-slate-50',
@@ -228,7 +253,10 @@ export function resolveArchiveType(archiveCode: string): ArchiveType {
     'PZ': 'voucher',
     'HD': 'receipt',
     'BB': 'report',
-    'ZB': 'ledger'
+    'ZB': 'ledger',
+    'FK': 'payment',        // 付款单
+    'BX': 'reimbursement',  // 报销单
+    'SQ': 'application'     // 申请单
   };
   return typeMap[prefix] || 'other';
 }

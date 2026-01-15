@@ -7,7 +7,7 @@ import { Avatar } from 'antd';
 import { GlobalSearch } from './GlobalSearch';
 import { GlobalSearchDTO } from '../types';
 import { FondsSwitcher } from './common/FondsSwitcher';
-import { toast } from '../utils/notificationService';
+// toast import removed as it was unused
 import { useFondsStore, useAuthStore } from '../store';
 import { ProfileDrawer } from './layout/ProfileDrawer';
 
@@ -16,7 +16,7 @@ interface TopBarProps {
   onNavigate?: (item: GlobalSearchDTO) => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
+export const TopBar: React.FC<TopBarProps> = ({ onLogout: _onLogout, onNavigate }) => {
   const [profileOpen, setProfileOpen] = useState(false);
 
   // Get fonds state from store
@@ -34,17 +34,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout, onNavigate }) => {
   const mainRole = user?.roleNames?.[0] || user?.roles?.[0] || '-';
   const displayName = user?.fullName || user?.username || '-';
 
-  const handleClick = (item: string) => {
-    if (item === '退出登录' && onLogout) {
-      onLogout();
-      return;
-    }
-    if (item === '用户个人资料') {
-      setProfileOpen(true);
-      return;
-    }
-    toast.info(`${item} 功能开发中`);
-  }
+  // handleClick 已移除，改为直接在 ProfileDrawer 中处理
 
   return (
     <>

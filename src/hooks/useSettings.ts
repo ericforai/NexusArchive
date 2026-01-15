@@ -1,8 +1,9 @@
 // Input: React
 // Output: useSettings Hook
 // Pos: 通用复用组件 - 设置管理 Hook
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export interface SettingsValue<T = any> {
   value: T;
@@ -40,12 +41,13 @@ export interface UseSettingsReturn<T = any> {
  * 设置管理 Hook
  * <p>
  * 封装设置页面的状态管理、验证和保存逻辑
+ * 修复：使用 useMemo 稳定返回值引用
  * </p>
  */
 export function useSettings<T = any>({
   initialValues = {} as Record<string, T>,
   onSave,
-  autoSave = false,
+  autoSave: _autoSave = false,
 }: UseSettingsOptions<T> = {}): UseSettingsReturn<T> {
   const [values, setValues] = useState<Record<string, T>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -108,7 +110,8 @@ export function useSettings<T = any>({
     }
   }, [values, validate, onSave]);
 
-  return {
+  // 使用 useMemo 稳定返回值引用
+  return useMemo(() => ({
     values,
     errors,
     isDirty,
@@ -119,7 +122,7 @@ export function useSettings<T = any>({
     resetAll,
     save,
     validate,
-  };
+  }), [values, errors, isDirty, isSaving, setValue, setValuesMultiple, resetValue, resetAll, save, validate]);
 }
 
 export default useSettings;

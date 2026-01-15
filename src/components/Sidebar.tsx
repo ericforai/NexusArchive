@@ -9,7 +9,8 @@ import { NAV_ITEMS } from '../constants.tsx';
 import { ViewState } from '../types';
 import { ChevronsLeft, ChevronsRight, Command } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
-import { ROUTE_PATHS } from '../routes/paths';
+// ROUTE_PATHS 暂不使用，需要时可恢复
+// import { ROUTE_PATHS } from '../routes/paths';
 import { NavNode } from './Sidebar/NavNode';
 
 interface SidebarProps {
@@ -37,7 +38,7 @@ const PATH_PREFIX_TO_VIEW: Record<string, string> = {
 export const Sidebar: React.FC<SidebarProps> = ({
   collapsed,
   onToggle,
-  onVisitLanding,
+  onVisitLanding: _onVisitLanding, // 预留接口，暂未使用
 }) => {
   const { hasPermission } = usePermissions();
   const location = useLocation();

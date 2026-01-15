@@ -1,7 +1,8 @@
 # NexusArchive 服务器部署完整计划
 
-> **版本**: 1.0
+> **版本**: 2.0
 > **创建日期**: 2025-01-12
+> **更新日期**: 2025-01-12
 > **部署方式**: Docker + HTTPS + Let's Encrypt
 
 ---
@@ -16,7 +17,7 @@
 | 内存 | `free -h` | ≥4GB |
 | 磁盘空间 | `df -h /` | ≥50GB |
 | Docker | `docker --version` | 20.10+ |
-| docker-compose | `docker-compose --version` | 2.0+ |
+| docker-compose | `docker-compose --version` | 2.0+ (或 `docker compose version`) |
 | 端口 80 开放 | `netstat -tlnp \| grep :80` | 监听中 |
 | 端口 443 开放 | `netstat -tlnp \| grep :443` | 监听中 |
 
@@ -45,6 +46,19 @@ sudo ufw enable
 
 ---
 
+## 🎯 部署策略选择
+
+### 镜像构建策略（二选一）
+
+| 策略 | 优点 | 缺点 | 适用场景 |
+|------|------|------|----------|
+| **A: 本地构建镜像** | 快速、无需服务器源码 | 需要传输大镜像 | 开发环境、频繁更新 |
+| **B: 服务器构建镜像** | 无需传输镜像 | 需要完整源码、构建慢 | 正式环境、CI/CD |
+
+**本文档采用策略 A**：本地构建镜像，服务器仅运行预构建镜像。
+
+---
+
 ## 🚀 完整部署流程
 
 ### 阶段 1: 准备部署包（本地执行）
@@ -66,19 +80,28 @@ mvn clean package -DskipTests
 ls -la target/*.jar   # 确认 JAR 文件
 cd ..
 
-# 4. 创建部署包
+# 4. 构建镜像（本地构建，避免服务器需要源码）
+docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
+docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
+
+# 5. 导出镜像为 tar 文件
+docker save nexusarchive-backend:latest | gzip > nexusarchive-backend.tar.gz
+docker save nexusarchive-web:latest | gzip > nexusarchive-web.tar.gz
+
+# 6. 创建部署包
 tar -czf nexusarchive-prod-$(date +%Y%m%d).tar.gz \
     deploy/ \
     docker-compose.infra.yml \
     docker-compose.app.yml \
     docker-compose.prod.yml \
     nginx/nginx.prod.template \
+    nginx/nginx.http.template \
     deploy/.env.prod.example \
-    dist/ \
-    nexusarchive-java/target/*.jar \
+    nexusarchive-backend.tar.gz \
+    nexusarchive-web.tar.gz \
     db/seed-data.sql
 
-# 5. 上传到服务器
+# 7. 上传到服务器
 scp nexusarchive-prod-*.tar.gz user@服务器IP:/tmp/
 ```
 
@@ -106,7 +129,14 @@ cd /opt/nexusarchive
 tar -xzf /tmp/nexusarchive-prod-*.tar.gz
 ls -la
 
-# ========== 步骤 4: 配置环境变量 ==========
+# ========== 步骤 4: 加载 Docker 镜像 ==========
+docker load < nexusarchive-backend.tar.gz
+docker load < nexusarchive-web.tar.gz
+
+# 验证镜像
+docker images | grep nexusarchive
+
+# ========== 步骤 5: 配置环境变量 ==========
 cp deploy/.env.prod.example .env.prod
 vi .env.prod
 
@@ -116,31 +146,37 @@ vi .env.prod
 # SM4_KEY=你的32位hex密钥
 # AUDIT_LOG_HMAC_KEY=你的hmac密钥
 # APP_SECURITY_CORS_ALLOWED_ORIGINS=https://你的域名
+# REDIS_PASSWORD=你的redis密码（可选但推荐）
 
 # 生成密钥的命令：
 # openssl rand -base64 16   # 数据库密码
 # openssl rand -hex 16      # SM4密钥
 # openssl rand -hex 32      # HMAC密钥
+# openssl rand -base64 16   # Redis密码
 
-# ========== 步骤 5: 生成 Nginx 配置 ==========
+# ========== 步骤 6: 生成 Nginx 配置（HTTP 模式，首次部署） ==========
+# ⚠️ 首次部署使用 HTTP 模式，证书获取后再切换 HTTPS
 DOMAIN="你的域名"
-sed "s/{{DOMAIN}}/$DOMAIN/g" nginx/nginx.prod.template > nginx/nginx.prod.conf
+sed "s/{{DOMAIN}}/$DOMAIN/g" nginx/nginx.http.template > nginx/nginx.conf
 
 # 确认生成成功
-grep "server_name" nginx/nginx.prod.conf
+grep "server_name" nginx/nginx.conf
 
-# ========== 步骤 6: 启动服务（HTTP 模式） ==========
-# 注意：首次启动不配置 HTTPS，先验证服务正常运行
+# ========== 步骤 7: 启动服务（HTTP 模式） ==========
+# 修改 docker-compose.app.yml，使用 nginx.conf 而非 nginx.prod.conf
+sed 's|nginx/nginx.prod.conf|nginx/nginx.conf|g' docker-compose.app.yml > docker-compose.app.yml.tmp
+mv docker-compose.app.yml.tmp docker-compose.app.yml
+
 docker-compose -f docker-compose.infra.yml \
                -f docker-compose.app.yml \
                -f docker-compose.prod.yml \
                --env-file .env.prod up -d
 
-# ========== 步骤 7: 等待服务启动 ==========
+# ========== 步骤 8: 等待服务启动 ==========
 echo "等待服务启动..."
 sleep 30
 
-# ========== 步骤 8: 验证服务状态 ==========
+# ========== 步骤 9: 验证服务状态 ==========
 docker-compose -f docker-compose.prod.yml ps
 
 # 测试 HTTP 访问
@@ -149,25 +185,9 @@ curl -I http://localhost/
 # 测试 API
 curl http://localhost/api/health
 
-# ========== 步骤 9: 查看日志（如有问题） ==========
+# ========== 步骤 10: 查看日志（如有问题） ==========
 docker-compose -f docker-compose.prod.yml logs nexus-backend
 docker-compose -f docker-compose.prod.yml logs nexus-frontend
-
-# ========== 步骤 10: 验证数据持久化（重要！） ==========
-# 确认数据库数据卷已创建
-docker volume ls | grep nexusarchive
-
-# 确认数据卷有内容
-docker exec nexus-db ls -la /var/lib/postgresql/data
-
-# 创建测试数据（可选）
-docker exec nexus-db psql -U postgres nexusarchive -c "INSERT INTO test_table VALUES (1);"
-
-# 重启容器验证数据不丢失
-docker-compose -f docker-compose.prod.yml restart nexus-db
-sleep 10
-docker exec nexus-db psql -U postgres nexusarchive -c "SELECT * FROM test_table;"
-# 如果能查到数据，说明持久化配置正确
 ```
 
 ### 阶段 3: 配置 HTTPS（服务器执行）
@@ -177,39 +197,51 @@ docker exec nexus-db psql -U postgres nexusarchive -c "SELECT * FROM test_table;
 sudo apt-get update
 sudo apt-get install -y certbot
 
-# ========== 步骤 2: 获取 SSL 证书 ==========
-# 方法 A: 使用 standalone 模式（推荐）
-# 需要临时停止 443 端口占用
+# ========== 步骤 2: 停止前端容器（释放 443 端口） ==========
 docker-compose -f docker-compose.prod.yml stop nexus-frontend
 
-sudo certbot certonly --standalone -d 你的域名 --email 你的邮箱 --agree-tos
+# ========== 步骤 3: 获取 SSL 证书 ==========
+sudo certbot certonly --standalone \
+  -d 你的域名 \
+  --email 你的邮箱 \
+  --agree-tos \
+  --non-interactive
 
 # 证书将保存在：/etc/letsencrypt/live/你的域名/
 
-# 方法 B: 使用 webroot 模式（如果 80 端口可用）
-# sudo certbot certonly --webroot -w /var/www/html -d 你的域名
-
-# ========== 步骤 3: 验证证书 ==========
+# ========== 步骤 4: 验证证书 ==========
 sudo ls -la /etc/letsencrypt/live/你的域名/
 # 应该看到：fullchain.pem, privkey.pem, chain.pem
 
-# ========== 步骤 4: 检查证书有效期 ==========
+# ========== 步骤 5: 检查证书有效期 ==========
 sudo certbot certificates
 
-# ========== 步骤 5: 重启前端容器 ==========
+# ========== 步骤 6: 切换到 HTTPS 配置 ==========
+DOMAIN="你的域名"
+sed "s/{{DOMAIN}}/$DOMAIN/g" nginx/nginx.prod.template > nginx/nginx.prod.conf
+
+# 恢复使用 nginx.prod.conf
+sed 's|nginx/nginx.conf|nginx/nginx.prod.conf|g' docker-compose.app.yml > docker-compose.app.yml.tmp
+mv docker-compose.app.yml.tmp docker-compose.app.yml
+
+# ========== 步骤 7: 启动前端容器 ==========
 docker-compose -f docker-compose.prod.yml start nexus-frontend
 
-# ========== 步骤 6: 验证 HTTPS 访问 ==========
-curl -I https://localhost/
+# ========== 步骤 8: 验证容器内证书访问 ==========
+docker exec nexus-frontend ls -la /etc/letsencrypt/live/你的域名/
 
-# ========== 步骤 7: 配置自动续期 ==========
+# ========== 步骤 9: 验证 HTTPS 访问 ==========
+curl -I https://localhost/
+curl -I http://localhost/  # 应该返回 301 重定向
+
+# ========== 步骤 10: 配置自动续期 ==========
 # Certbot 会自动添加 systemd timer
 sudo systemctl status certbot.timer
 
 # 手动测试续期
 sudo certbot renew --dry-run
 
-# ========== 步骤 8: 配置续期后自动重启 Nginx ==========
+# 配置续期后自动重启 Nginx
 sudo tee /etc/letsencrypt/renewal-hooks/post/restart-nginx.sh << 'EOF'
 #!/bin/bash
 docker restart nexus-frontend
@@ -253,33 +285,48 @@ crontab -l
 # 5.2 验证备份文件生成
 ls -la /opt/nexusarchive/backups/daily/
 
-# 5.3 验证备份内容
-# 找到最新的备份文件
-LATEST_BACKUP=$(ls -t /opt/nexusarchive/backups/daily/ | head -1)
-cd /opt/nexusarchive/backups/daily/$LATEST_BACKUP
+# 5.3 解压备份进行验证
+LATEST_BACKUP=$(ls -t /opt/nexusarchive/backups/daily/*.tar.gz 2>/dev/null | head -1)
+if [ -z "$LATEST_BACKUP" ]; then
+    echo "错误：没有找到备份文件"
+    exit 1
+fi
 
-# 检查文件清单
+# 创建临时目录
+TEMP_DIR=$(mktemp -d)
+cd $TEMP_DIR
+
+# 解压备份
+tar -xzf $LATEST_BACKUP
+
+BACKUP_DIR=$(basename $LATEST_BACKUP .tar.gz)
+cd $BACKUP_DIR
+
+# 5.4 验证备份内容
 echo "=== 备份文件清单 ==="
 ls -lh
 
 # 验证 checksums
-echo "=== 校验和验证 ==="
-sha256sum -c checksums.txt
+if [ -f checksums.txt ]; then
+    echo "=== 校验和验证 ==="
+    sha256sum -c checksums.txt
+fi
 
-# 验证数据库备份是否完整 SQL
-echo "=== 数据库备份验证 ==="
+# 5.5 验证数据库备份完整性（仅检查，不执行）
+echo "=== 数据库备份完整性检查 ==="
 head -20 database.sql
 tail -20 database.sql
+grep "PostgreSQL database dump" database.sql && echo "✓ 数据库备份格式正确" || echo "✗ 数据库备份格式异常"
 
-# 5.4 模拟恢复测试（不执行实际恢复，仅验证文件可用性）
-echo "=== 数据库恢复测试（干运行）==="
-docker exec -i nexus-db psql -U postgres -f - < database.sql --echo-all --quiet
-
-# 5.5 验证关键配置已备份
+# 5.6 验证关键配置已备份
 echo "=== 关键配置验证 ==="
 grep -q "SM4_KEY" env.prod && echo "✓ SM4_KEY 已备份" || echo "✗ SM4_KEY 缺失"
 grep -q "AUDIT_LOG_HMAC_KEY" env.prod && echo "✓ HMAC_KEY 已备份" || echo "✗ HMAC_KEY 缺失"
 grep -q "DB_PASSWORD" env.prod && echo "✓ DB_PASSWORD 已备份" || echo "✗ DB_PASSWORD 缺失"
+
+# 清理临时目录
+cd /opt/nexusarchive
+rm -rf $TEMP_DIR
 
 echo ""
 echo "=========================================="
@@ -292,10 +339,10 @@ echo "建议每季度进行一次完整的恢复测试。"
 ### 阶段 5: 验证部署（服务器执行）
 
 ```bash
-# ========== 健康检查 ==========
+# ========== 步骤 1: 健康检查 ==========
 /opt/nexusarchive/scripts/health-check.sh
 
-# ========== 手动验证 ==========
+# ========== 步骤 2: 手动验证 ==========
 # 1. 检查前端
 curl -I https://你的域名/
 
@@ -308,6 +355,23 @@ echo | openssl s_client -connect 你的域名:443 2>/dev/null | openssl x509 -no
 # 4. 检查重定向
 curl -I http://你的域名/  # 应该返回 301 重定向到 HTTPS
 
+# ========== 步骤 3: 验证数据持久化 ==========
+# 确认数据库数据卷已创建
+docker volume ls | grep nexusarchive
+
+# 确认数据卷有内容
+docker exec nexus-db ls -la /var/lib/postgresql/data
+
+# 验证 Redis 数据卷
+docker exec nexus-redis ls -la /data
+
+# ========== 步骤 4: 验证证书挂载 ==========
+docker exec nexus-frontend ls -la /etc/letsencrypt/live/你的域名/
+
+# ========== 步骤 5: 内存使用检查 ==========
+docker stats --no-stream
+# 确认内存使用在限制范围内
+
 # ========== 登录测试 ==========
 # 浏览器访问：https://你的域名
 # 默认账号：admin / admin123
@@ -318,46 +382,45 @@ curl -I http://你的域名/  # 应该返回 301 重定向到 HTTPS
 
 ## 🔄 代码更新部署
 
-### 更新流程（服务器有 Git）
+### 更新流程（推荐：本地构建镜像）
 
 ```bash
-# ========== 登录服务器 ==========
-ssh user@服务器IP
-cd /opt/nexusarchive
+# ========== 本地执行 ==========
 
-# ========== 步骤 1: 拉取最新代码 ==========
+# 1. 拉取最新代码
 git pull
-git log -1 --oneline  # 确认版本
+git log -1 --oneline  # 记录版本
 
-# ========== 步骤 2: 重新构建镜像 ==========
-docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
-docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
-
-# ========== 步骤 3: 重启服务 ==========
-docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
-
-# ========== 步骤 4: 验证 ==========
-docker-compose -f docker-compose.prod.yml ps
-curl https://你的域名/api/health
-```
-
-### 更新流程（服务器无 Git）
-
-```bash
-# ========== 本地构建 ==========
+# 2. 构建前端
 npm run build
+
+# 3. 构建后端
 cd nexusarchive-java && mvn package && cd ..
 
-# ========== 上传新文件 ==========
-scp nexusarchive-java/target/*.jar user@服务器IP:/opt/nexusarchive/nexusarchive-java/target/
-scp -r dist/* user@服务器IP:/opt/nexusarchive/dist/
-
-# ========== 服务器重建 ==========
-ssh user@服务器IP
-cd /opt/nexusarchive
+# 4. 构建镜像
 docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
 docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
+
+# 5. 导出镜像
+docker save nexusarchive-backend:latest | gzip > nexusarchive-backend.tar.gz
+docker save nexusarchive-web:latest | gzip > nexusarchive-web.tar.gz
+
+# 6. 上传到服务器
+scp nexusarchive-backend.tar.gz nexusarchive-web.tar.gz user@服务器IP:/opt/nexusarchive/
+
+# ========== 服务器执行 ==========
+ssh user@服务器IP
+cd /opt/nexusarchive
+
+# 加载新镜像
+docker load < nexusarchive-backend.tar.gz
+docker load < nexusarchive-web.tar.gz
+
+# 重启服务
 docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# 验证
+curl https://你的域名/api/health
 ```
 
 ---
@@ -384,21 +447,6 @@ docker exec nexus-frontend ls -la /etc/letsencrypt/live/你的域名/
 # fullchain.pem  -> ../../archive/域名/fullchain2.pem
 # privkey.pem    -> ../../archive/域名/privkey2.pem
 # chain.pem      -> ../../archive/域名/chain2.pem
-
-# 如果文件不存在，说明挂载有问题
-```
-
-**修复挂载问题**：
-```bash
-# 1. 确认宿主机证书存在
-sudo ls -la /etc/letsencrypt/live/你的域名/
-
-# 2. 确认 docker-compose.yml 挂载配置
-grep letsencrypt deploy/docker-compose.app.yml
-# 应该看到：- /etc/letsencrypt:/etc/letsencrypt:ro
-
-# 3. 重启前端容器
-docker restart nexus-frontend
 ```
 
 ### HTTPS 相关问题
@@ -406,10 +454,11 @@ docker restart nexus-frontend
 | 问题 | 症状 | 解决方案 |
 |------|------|----------|
 | SSL 证书不存在 | 502/证书错误 | `certbot certonly --standalone -d 域名` |
-| 证书路径错误 | Nginx 启动失败 | 检查 `nginx/nginx.prod.conf` 中的域名是否正确 |
+| 证书路径错误 | Nginx 启动失败 | `docker exec nexus-frontend ls /etc/letsencrypt/live/域名/` |
 | 证书过期 | 浏览器警告 | `certbot renew && docker restart nexus-frontend` |
 | ACME Challenge 失败 | 证书获取失败 | 确认 80 端口可访问，DNS 解析正确 |
 | HTTP 无法重定向 | HTTP 访问不跳转 | 检查 Nginx 配置的 return 301 指令 |
+| 首次部署无证书 | 容器启动失败 | 使用 `nginx.http.template` 先 HTTP 模式启动 |
 
 ### 快速诊断命令
 
@@ -431,6 +480,25 @@ curl -v http://你的域名/ 2>&1 | grep -E "HTTP|Location"
 
 # 6. 测试 HTTPS 访问
 curl -I https://你的域名/
+
+# 7. 检查容器内证书访问
+docker exec nexus-frontend cat /etc/letsencrypt/live/你的域名/fullchain.pem | head -1
+```
+
+### Redis 密码配置
+
+**注意**：如果配置了 `REDIS_PASSWORD`，需要确保 Redis 启用时启用认证。
+
+```bash
+# 检查 Redis 是否需要密码
+docker exec nexus-redis redis-cli ping
+# 如果返回 (error) NOAUTH Authentication required，说明需要密码
+
+# 测试密码连接
+docker exec nexus-redis redis-cli -a 你的密码 ping
+
+# 如果需要启用 Redis 密码，修改 docker-compose.infra.yml：
+# command: redis-server --requirepass ${REDIS_PASSWORD}
 ```
 
 ---
@@ -446,21 +514,20 @@ curl -I https://你的域名/
 - [ ] 登录功能正常
 
 ### 数据持久化
-- [ ] 数据库数据卷已创建 (`docker volume ls | grep nexusarchive`)
-- [ ] 重启容器后数据不丢失
+- [ ] 数据库数据卷已创建 (`docker volume ls \| grep nexusarchive`)
 - [ ] Redis 数据卷已创建
+- [ ] 重启容器后数据不丢失
 
 ### SSL/HTTPS 配置
 - [ ] SSL 证书文件存在于容器内 (`docker exec nexus-frontend ls /etc/letsencrypt/live/域名/`)
 - [ ] SSL 证书有效期 > 80 天
 - [ ] TLSv1.2/1.3 协议启用
-- [ ] HSTS 已考虑（生产环境建议启用）
 
 ### 安全配置
 - [ ] CORS 仅允许生产域名
 - [ ] 调试模式已关闭 (`APP_DEBUG_ENABLED=false`)
 - [ ] 数据库密码 ≥16 位
-- [ ] Redis 密码已配置（可选但推荐）
+- [ ] Redis 密码已配置（与实际使用一致）
 
 ### 备份与监控
 - [ ] 自动备份任务已配置 (Cron)
@@ -487,6 +554,10 @@ curl -I https://你的域名/
 
 ---
 
-**文档版本**: 1.1
+**文档版本**: 2.0
 **最后更新**: 2025-01-12
-**变更记录**: 添加数据持久化验证、备份恢复测试、证书挂载说明
+**变更记录**:
+- v2.0: 重构部署策略，添加本地构建镜像方案
+- v2.0: 添加 HTTP-only 模式解决首次部署证书问题
+- v2.0: 修复备份验证流程
+- v2.0: 明确 Redis 密码配置

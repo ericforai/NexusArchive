@@ -38,10 +38,38 @@ export function ScenarioDrawer({
     }
   }, [visible]);
 
-  const formatSyncTime = (dateString?: string) => {
+  const formatSyncTime = (dateString?: string | number[]) => {
     if (!dateString) return null;
     try {
-      return new Date(dateString).toLocaleString('zh-CN');
+      // Handle array format [yyyy, MM, dd, HH, mm, ss] (Jackson default for LocalDateTime)
+      if (Array.isArray(dateString)) {
+        if (dateString.length >= 3) {
+          const [year, month, day, hour = 0, minute = 0, second = 0] = dateString;
+          // Note: month is 1-indexed in Java/Jackson array, but 0-indexed in JS Date constructor.
+          // Using string interpolation to ensure correct ISO parsing or manual formatting is safer.
+          // Let's use manual string construction to be safe across browsers.
+          return `${year}/${month}/${day} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
+        }
+        return '无效日期';
+      }
+
+      if (typeof dateString !== 'string') return '无效日期';
+
+      // Fix for Safari/Firefox which might not support "YYYY-MM-DD HH:mm:ss" directly
+      const normalizedDate = dateString.replace(' ', 'T');
+      const date = new Date(normalizedDate);
+
+      // Check for Invalid Date
+      if (isNaN(date.getTime())) {
+        // Try fallback for simple SQL timestamp without replacing (some browsers might prefer space)
+        const fallbackDate = new Date(dateString);
+        if (!isNaN(fallbackDate.getTime())) {
+          return fallbackDate.toLocaleString('zh-CN');
+        }
+        return '无效日期';
+      }
+
+      return date.toLocaleString('zh-CN');
     } catch {
       return '无效日期';
     }

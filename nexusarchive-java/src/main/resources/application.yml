@@ -215,5 +215,4 @@ archive:
   temp:
     path: ${ARCHIVE_TEMP_PATH:/opt/nexusarchive/data/temp}
   root:
-    path: ${ARCHIVE_ROOT_PATH:/opt/nexusarchive/data/archives}
-
+    path: /Users/user/nexusarchive/nexusarchive-java

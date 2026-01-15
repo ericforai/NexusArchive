@@ -7,11 +7,11 @@
  */
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Drawer, Tabs, Collapse, Button, List, Tag, Space, message, Spin, Empty } from 'antd';
+import { Drawer, Tabs, Button, List, Tag, Space, message, Spin, Empty } from 'antd';
 import { FileText, X, ExternalLink, CloudDownload, Link, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { DrawerProps } from 'antd';
-import type { VoucherDTO } from '../../components/voucher';
+// VoucherDTO 已通过 voucherData 推断，无需单独导入
 import { VoucherMetadata, VoucherPreviewCanvas, OriginalDocumentPreview } from '../../components/voucher';
 import type { ModuleConfig, GenericRow } from '../../types';
 import { useVoucherData } from './hooks/useVoucherData';
@@ -44,7 +44,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
   open,
   onClose,
   row,
-  config,
+  config: _config, // 配置预留，未来可用于自定义显示
   isPoolView,
   onAipExport,
   isExporting,
@@ -205,6 +205,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
                       className="!px-2"
                       actions={[
                         <Button
+                          key="download"
                           type="text"
                           size="small"
                           icon={<Download size={14} />}

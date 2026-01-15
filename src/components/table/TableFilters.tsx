@@ -3,7 +3,7 @@
 // Pos: 通用复用组件 - 表格筛选器
 
 import React, { useState } from 'react';
-import { Search, X, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 
 export interface FilterField {
   key: string;

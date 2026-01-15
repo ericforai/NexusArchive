@@ -61,8 +61,8 @@ INSERT INTO sys_audit_log (
     details,
     data_before,
     data_after,
-    ip_address,
-    created_at
+    client_ip,
+    created_time
 )
 SELECT
     gen_random_uuid()::VARCHAR(64),

@@ -10,4 +10,4 @@ export { BorrowApplicationDialog } from './BorrowApplicationDialog';
 export type { BorrowApplicationDialogProps } from './BorrowApplicationDialog';
 
 export { BorrowApprovalDrawer } from './BorrowApprovalDrawer';
-export type { BorrowApprovalDrawerProps, BorrowingRecord } from './BorrowApprovalDrawer';
+export type { BorrowApprovalDrawerProps } from './BorrowApprovalDrawer';

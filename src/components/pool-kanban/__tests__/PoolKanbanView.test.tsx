@@ -187,7 +187,7 @@ describe('PoolKanbanView', () => {
     clearSelection: vi.fn(),
     isSelected: vi.fn(),
     getSelectedCount: vi.fn(() => 0),
-    getSelectedIds: vi.fn(() => []),
+    getSelectedIds: vi.fn(() => [] as string[]),
     executeAction: vi.fn(),
     clearResult: vi.fn(),
   };

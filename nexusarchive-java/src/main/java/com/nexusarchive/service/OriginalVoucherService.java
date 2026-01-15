@@ -60,9 +60,11 @@ public class OriginalVoucherService {
 
     /**
      * 分页查询原始凭证
+     *
+     * @param poolStatus 单据池状态 (ENTRY,PARSED,PARSE_FAILED)，映射到 archiveStatus=DRAFT
      */
     public Page<OriginalVoucher> getVouchers(int page, int limit, String search,
-            String category, String type, String status, String fondsCode, String fiscalYear) {
+            String category, String type, String status, String fondsCode, String fiscalYear, String poolStatus) {
         Page<OriginalVoucher> pageObj = new Page<>(page, limit);
         LambdaQueryWrapper<OriginalVoucher> wrapper = new LambdaQueryWrapper<>();
 
@@ -80,11 +82,29 @@ public class OriginalVoucherService {
             wrapper.eq(OriginalVoucher::getVoucherCategory, category);
         }
         if (StringUtils.hasText(type)) {
-            wrapper.eq(OriginalVoucher::getVoucherType, type);
+            // 类型别名映射：前端使用的类型代码可能和数据库存储的不一致
+            // BANK_RECEIPT → BANK_RECEIPT, BANK_SLIP
+            // INV_VAT_E → INV_VAT_E, VAT_INVOICE
+            List<String> typeAliases = getTypeAliases(type);
+            if (typeAliases.size() == 1) {
+                wrapper.eq(OriginalVoucher::getVoucherType, type);
+            } else {
+                wrapper.in(OriginalVoucher::getVoucherType, typeAliases);
+            }
         }
-        if (StringUtils.hasText(status)) {
+
+        // poolStatus 映射：ENTRY,PARSED,PARSE_FAILED → DRAFT；ARCHIVED → ARCHIVED
+        if (StringUtils.hasText(poolStatus)) {
+            if (poolStatus.contains("ARCHIVED")) {
+                wrapper.eq(OriginalVoucher::getArchiveStatus, "ARCHIVED");
+            } else {
+                // ENTRY, PARSED, PARSE_FAILED 都对应 DRAFT 状态
+                wrapper.eq(OriginalVoucher::getArchiveStatus, "DRAFT");
+            }
+        } else if (StringUtils.hasText(status)) {
             wrapper.eq(OriginalVoucher::getArchiveStatus, status);
         }
+
         if (StringUtils.hasText(fondsCode)) {
             wrapper.eq(OriginalVoucher::getFondsCode, fondsCode);
         }
@@ -655,5 +675,21 @@ public class OriginalVoucherService {
      * 统计数据DTO
      */
     public record OriginalVoucherStats(Long total, Long archived, Long pending, Long draft) {
+    }
+
+    /**
+     * 获取类型别名列表
+     * 用于处理前端类型代码与数据库存储不一致的问题
+     */
+    private List<String> getTypeAliases(String typeCode) {
+        // 定义类型别名映射
+        return switch (typeCode) {
+            // 银行回单的两种表示
+            case "BANK_RECEIPT" -> List.of("BANK_RECEIPT", "BANK_SLIP");
+            // 增值税电子发票的两种表示
+            case "INV_VAT_E" -> List.of("INV_VAT_E", "VAT_INVOICE");
+            // 其他类型直接返回自身
+            default -> List.of(typeCode);
+        };
     }
 }

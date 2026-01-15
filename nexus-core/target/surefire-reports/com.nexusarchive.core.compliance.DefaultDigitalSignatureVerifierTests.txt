@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.nexusarchive.core.compliance.DefaultDigitalSignatureVerifierTests
--------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.924 s - in com.nexusarchive.core.compliance.DefaultDigitalSignatureVerifierTests

@@ -13,7 +13,6 @@ import {
     ErpSubInterface,
     SyncHistory,
     LicenseInfo,
-    AuditLog,
     AdminSettingItem,
     AdminSettingUpdate,
     OrgNode,
@@ -26,7 +25,7 @@ import {
 } from '../../types';
 
 // 导入 AI 适配器相关类型
-import type { ScenarioPreviewItem, ExistingConfigItem, PreviewResponse as PreviewScenariosResponse } from '../../api/erp';
+import type { PreviewResponse as PreviewScenariosResponse } from '../../api/erp';
 
 export interface AdminSettingsApi {
     getSettings: () => Promise<ApiResponse<AdminSettingItem[]>>;

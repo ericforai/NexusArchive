@@ -17,3 +17,5 @@ export const SearchSection: React.FC<SearchSectionProps> = React.memo(({ onNavig
         </div>
     );
 });
+
+SearchSection.displayName = 'SearchSection';

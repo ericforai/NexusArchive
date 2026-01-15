@@ -21,14 +21,12 @@ const STATUS_LABELS: Record<string, string> = {
 
 const PRE_ARCHIVE_STATUS_LABELS: Record<string, { label: string }> = {
     PENDING_CHECK: { label: '待检测' },
-    CHECK_FAILED: { label: '检测失败' },
-    PENDING_METADATA: { label: '待补录' },
-    MATCH_PENDING: { label: '待匹配' },
-    MATCHED: { label: '匹配成功' },
-    PENDING_ARCHIVE: { label: '准备归档' },
+    NEEDS_ACTION: { label: '待处理' },
+    READY_TO_MATCH: { label: '待匹配' },
+    READY_TO_ARCHIVE: { label: '准备归档' },
+    COMPLETED: { label: '已归档' },
     PENDING_APPROVAL: { label: '归档审批中' },
     ARCHIVING: { label: '归档中' },
-    ARCHIVED: { label: '已归档' },
 };
 
 export const resolveCategoryLabel = (code?: string) => {

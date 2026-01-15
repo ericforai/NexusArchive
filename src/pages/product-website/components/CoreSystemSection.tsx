@@ -3,7 +3,7 @@
 // Pos: src/pages/product-website/components/CoreSystemSection.tsx
 
 import React from 'react';
-import { Shield, FileText, Check, Database, Lock, Layers, Key, Activity, Cpu, Server, ChevronRight } from 'lucide-react';
+import { Shield, FileText, Check, Layers, Cpu, Server, ChevronRight } from 'lucide-react';
 import { FOUR_PROPERTIES, TECH_SUITE, AIP_COMPONENTS, AIP_STRUCTURE } from '../data/sections';
 
 export const CoreSystemSection: React.FC = () => {

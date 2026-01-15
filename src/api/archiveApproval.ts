@@ -37,7 +37,7 @@ export interface BatchApprovalRequest {
 }
 
 export interface BatchApprovalResult {
-    success: number;
+    successCount: number;
     failed: number;
     errors?: Array<{ id: string; reason: string }>;
 }
@@ -93,13 +93,15 @@ export const archiveApprovalApi = {
      * 批量批准归档
      */
     batchApprove: async (request: BatchApprovalRequest): Promise<BatchApprovalResult> => {
-        return apiClient.post('/archive-approval/batch-approve', request);
+        const response = await apiClient.post<{ code: number; data: BatchApprovalResult }>('/archive-approval/batch-approve', request);
+        return response.data.data;
     },
 
     /**
      * 批量拒绝归档
      */
     batchReject: async (request: BatchApprovalRequest): Promise<BatchApprovalResult> => {
-        return apiClient.post('/archive-approval/batch-reject', request);
+        const response = await apiClient.post<{ code: number; data: BatchApprovalResult }>('/archive-approval/batch-reject', request);
+        return response.data.data;
     },
 };

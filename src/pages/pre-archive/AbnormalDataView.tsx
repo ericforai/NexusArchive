@@ -1,15 +1,30 @@
-// Input: React、本地模块 api/abnormal
+// Input: React、本地模块 api/abnormal、AbnormalEditModal
 // Output: React 组件 AbnormalDataView
 // Pos: src/pages/pre-archive/AbnormalDataView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react';
 import { getPendingAbnormals, retryAbnormal, AbnormalVoucher } from '../../api/abnormal';
-import { toast } from '../../utils/notificationService';
+import AbnormalEditModal from './components/AbnormalEditModal';
+
+
+
+const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-';
+    try {
+        const date = new Date(dateStr.replace(' ', 'T')); // Fix for Safari/Mac
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('zh-CN');
+    } catch {
+        return dateStr;
+    }
+};
 
 const AbnormalDataView: React.FC = () => {
     const [data, setData] = useState<AbnormalVoucher[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<AbnormalVoucher | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -25,6 +40,11 @@ const AbnormalDataView: React.FC = () => {
         }
     };
 
+    // ... handles ...
+
+    // (This replace is large, let's try a smaller one)
+
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -37,6 +57,16 @@ const AbnormalDataView: React.FC = () => {
         } catch {
             alert('重试失败');
         }
+    };
+
+    const handleEdit = (item: AbnormalVoucher) => {
+        setSelectedItem(item);
+        setIsModalOpen(true);
+    };
+
+    const handleEditSuccess = () => {
+        fetchData();
+        alert('修改成功，请点击重试以重新处理');
     };
 
     return (
@@ -68,13 +98,20 @@ const AbnormalDataView: React.FC = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{item.sourceSystem}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-300 font-medium">{item.voucherNumber}</td>
                                     <td className="px-6 py-4 text-sm text-red-400 max-w-xs truncate" title={item.failReason}>{item.failReason}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{new Date(item.createTime).toLocaleString('zh-CN')}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                        {formatDate(item.createTime)}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                       ${item.status === 'PENDING' ? 'bg-yellow-900/50 text-yellow-200 border border-yellow-700' :
                                                 item.status === 'RETRYING' ? 'bg-blue-900/50 text-blue-200 border border-blue-700' :
-                                                    'bg-gray-700 text-gray-300'}`}>
-                                            {item.status}
+                                                    item.status === 'RESOLVED' ? 'bg-green-900/50 text-green-200 border border-green-700' :
+                                                        'bg-gray-700 text-gray-300'}`}>
+                                            {item.status === 'PENDING' && '待处理'}
+                                            {item.status === 'RETRYING' && '重试中'}
+                                            {item.status === 'IGNORED' && '已忽略'}
+                                            {item.status === 'RESOLVED' && '已解决'}
+                                            {!['PENDING', 'RETRYING', 'IGNORED', 'RESOLVED'].includes(item.status) && item.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -84,7 +121,10 @@ const AbnormalDataView: React.FC = () => {
                                         >
                                             重试
                                         </button>
-                                        <button className="text-gray-400 hover:text-gray-300 cursor-not-allowed" disabled>
+                                        <button
+                                            onClick={() => handleEdit(item)}
+                                            className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                                        >
                                             编辑
                                         </button>
                                     </td>
@@ -94,6 +134,16 @@ const AbnormalDataView: React.FC = () => {
                     </tbody>
                 </table>
             </div>
+
+            {selectedItem && (
+                <AbnormalEditModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={handleEditSuccess}
+                    abnormalId={selectedItem.id}
+                    initialSipData={selectedItem.sipData}
+                />
+            )}
         </div>
     );
 };

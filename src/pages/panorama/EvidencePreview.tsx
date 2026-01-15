@@ -364,13 +364,22 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 />
                             )}
 
-                            <FileViewer
-                                fileUrl={getPreviewUrl(selectedFile)}
-                                fileType={selectedFile.fileType?.toLowerCase()}
-                                fileName={selectedFile.fileName}
-                                className="h-full"
-                                token={token ?? undefined}
-                            />
+                            {/* [FIXED] Use direct iframe for PDF to avoid fetch/blob issues */}
+                            {selectedFile.fileType?.toLowerCase() === 'pdf' ? (
+                                <iframe 
+                                    src={`${getPreviewUrl(selectedFile)}?access_token=${token || ''}`}
+                                    className="w-full h-full border-0 bg-white"
+                                    title="PDF Preview"
+                                />
+                            ) : (
+                                <FileViewer
+                                    fileUrl={getPreviewUrl(selectedFile)}
+                                    fileType={selectedFile.fileType?.toLowerCase()}
+                                    fileName={selectedFile.fileName}
+                                    className="h-full"
+                                    token={token ?? undefined}
+                                />
+                            )}
                         </div>
                     </div>
                 ) : (

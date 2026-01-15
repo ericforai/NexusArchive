@@ -77,6 +77,15 @@ public class ErpOrgSyncService {
                         continue;
                     }
 
+                    // 过滤部门数据：只同步法人实体（orgType 为空或为法人类型）
+                    // 电子会计档案系统没有部门概念，只管理法人实体
+                    String orgType = record.getOrgType();
+                    if (StringUtils.hasText(orgType) && isDepartmentType(orgType)) {
+                        log.debug("跳过部门记录（电子会计档案不管理部门）: id={}, name={}, orgType={}",
+                                record.getId(), record.getName(), orgType);
+                        continue;
+                    }
+
                     SysEntity entity = existingMap.get(record.getId());
                     boolean isUpdate = (entity != null);
 
@@ -151,6 +160,22 @@ public class ErpOrgSyncService {
         if (currentDesc == null || !currentDesc.contains("从 YonSuite 同步")) {
             entity.setDescription(String.format("从 YonSuite 同步 (code=%s)", record.getCode()));
         }
+    }
+
+    /**
+     * 判断是否为部门类型
+     * 电子会计档案系统只管理法人实体，不管理部门
+     */
+    private boolean isDepartmentType(String orgType) {
+        if (orgType == null) {
+            return false;
+        }
+        String lowerType = orgType.toLowerCase();
+        // 常见的部门类型标识
+        return lowerType.contains("department") ||
+               lowerType.contains("部门") ||
+               lowerType.contains("dept") ||
+               lowerType.equals("2"); // 某些系统中部门类型编码为 2
     }
 
     /**

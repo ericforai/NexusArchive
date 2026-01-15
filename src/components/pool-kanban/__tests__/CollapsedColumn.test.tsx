@@ -3,7 +3,7 @@
 // Output: Vitest test suite validating component behavior
 // Pos: src/components/pool-kanban/__tests__/CollapsedColumn.test.tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { CollapsedColumn } from '../CollapsedColumn';
 import { POOL_COLUMN_GROUPS } from '@/config/pool-columns.config';
 
@@ -26,7 +26,7 @@ describe('CollapsedColumn', () => {
     );
 
     expect(container.querySelector('.collapsed-column')).toBeInTheDocument();
-    expect(container.querySelector('.collapsed-column__title-text')).toHaveTextContent('待处理');
+    expect(container.querySelector('.collapsed-column__title-text')).toHaveTextContent('待检测');
   });
 
   it('should display card count badge', () => {
@@ -107,19 +107,19 @@ describe('CollapsedColumn', () => {
     );
 
     const title = container.querySelector('.collapsed-column__title');
-    expect(title).toHaveAttribute('aria-label', '待处理');
+    expect(title).toHaveAttribute('aria-label', '待检测');
 
     const expandButton = container.querySelector('.collapsed-column__expand');
-    expect(expandButton).toHaveAttribute('aria-label', '展开 待处理');
+    expect(expandButton).toHaveAttribute('aria-label', '展开 待检测');
   });
 
   it('should render different columns correctly', () => {
-    const readyColumn = POOL_COLUMN_GROUPS[2]; // 准备就绪
+    const readyColumn = POOL_COLUMN_GROUPS[2]; // 可匹配
     const { container } = render(
       <CollapsedColumn column={readyColumn} cardCount={23} onExpand={mockOnExpand} />
     );
 
-    expect(container.querySelector('.collapsed-column__title-text')).toHaveTextContent('准备就绪');
+    expect(container.querySelector('.collapsed-column__title-text')).toHaveTextContent('可匹配');
     expect(container.querySelector('.collapsed-column__count-badge')).toHaveTextContent('23');
   });
 });

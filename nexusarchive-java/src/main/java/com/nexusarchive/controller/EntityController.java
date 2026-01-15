@@ -40,7 +40,7 @@ public class EntityController {
 
     @GetMapping("/page")
     @Operation(summary = "分页查询法人列表")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<Page<EntityResponse>> getPage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit) {
@@ -51,7 +51,7 @@ public class EntityController {
 
     @GetMapping("/list")
     @Operation(summary = "查询法人列表")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<List<EntityResponse>> list() {
         List<SysEntity> entities = entityService.list();
         return Result.success(dtoMapper.toEntityResponseList(entities));
@@ -59,7 +59,7 @@ public class EntityController {
 
     @GetMapping("/list/active")
     @Operation(summary = "查询活跃法人列表")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<List<EntityResponse>> listActive() {
         List<SysEntity> entities = entityService.listActive();
         return Result.success(dtoMapper.toEntityResponseList(entities));
@@ -67,7 +67,7 @@ public class EntityController {
 
     @GetMapping("/{id}")
     @Operation(summary = "查询法人详情")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<EntityResponse> getById(@PathVariable String id) {
         SysEntity entity = entityService.getById(id);
         if (entity == null) {
@@ -78,7 +78,7 @@ public class EntityController {
 
     @GetMapping("/{id}/fonds")
     @Operation(summary = "查询法人下的全宗列表")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<List<String>> getFondsIds(@PathVariable String id) {
         List<String> fondsIds = entityService.getFondsIdsByEntityId(id);
         return Result.success(fondsIds);
@@ -86,14 +86,14 @@ public class EntityController {
 
     @GetMapping("/{id}/can-delete")
     @Operation(summary = "检查法人是否可以删除")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Boolean> canDelete(@PathVariable String id) {
         return Result.success(entityService.canDelete(id));
     }
 
     @PostMapping
     @Operation(summary = "创建法人")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<EntityResponse> save(@Valid @RequestBody SysEntity entity) {
         if (entity.getName() == null || entity.getName().trim().isEmpty()) {
             return Result.error("法人名称不能为空");
@@ -107,7 +107,7 @@ public class EntityController {
 
     @PutMapping
     @Operation(summary = "更新法人")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<EntityResponse> update(@Valid @RequestBody SysEntity entity) {
         if (entity.getId() == null) {
             return Result.error("法人ID不能为空");
@@ -121,7 +121,7 @@ public class EntityController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除法人")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Boolean> remove(@PathVariable String id) {
         if (!entityService.canDelete(id)) {
             return Result.error("该法人下存在关联全宗或下级法人，无法删除");
@@ -131,14 +131,14 @@ public class EntityController {
 
     @GetMapping("/tree")
     @Operation(summary = "获取法人树形结构")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<List<EntityService.EntityTreeNode>> getTree() {
         return Result.success(entityService.getTree());
     }
 
     @PutMapping("/{id}/parent")
     @Operation(summary = "更新法人父节点（调整层级关系）")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Void> updateParent(
             @PathVariable String id,
             @RequestParam(required = false) String parentId) {
@@ -148,7 +148,7 @@ public class EntityController {
 
     @PutMapping("/{id}/order")
     @Operation(summary = "更新法人排序")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Void> updateOrder(
             @PathVariable String id,
             @RequestParam Integer orderNum) {

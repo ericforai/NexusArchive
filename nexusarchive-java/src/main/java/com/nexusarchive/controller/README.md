@@ -36,7 +36,7 @@
 | `MonitoringController.java` | 控制器类 | 监控接口 |
 | `NavController.java` | 控制器类 | 导航接口 |
 | `NotificationController.java` | 控制器类 | 通知接口 |
-| `OfdConvertController.java` | 控制器类 | OFD 转换接口 |
+| `OfdConvertController.java` | 控制器类 | OFD 转换接口（已禁用） |
 | `OpenAppraisalController.java` | 控制器类 | 开放鉴定接口 |
 | `OpsController.java` | 控制器类 | 档案作业接口 |
 | `PoolController.java` | 控制器类 | 凭证池接口 |

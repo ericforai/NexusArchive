@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Calendar, Shield, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { FileText, Shield, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { authTicketApi, CreateAuthTicketRequest, AuthScope } from '../../api/authTicket';
 import { fondsApi, BasFonds } from '../../api/fonds';
 import { useFondsStore } from '../../store';
@@ -104,9 +104,8 @@ export const AuthTicketApplyPage: React.FC = () => {
 
                 {/* Message */}
                 {message && (
-                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${
-                        message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
+                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        }`}>
                         {message.type === 'success' ? (
                             <CheckCircle2 className="w-5 h-5" />
                         ) : (
@@ -159,7 +158,7 @@ export const AuthTicketApplyPage: React.FC = () => {
                     {/* 访问范围 */}
                     <div className="border border-slate-200 rounded-lg p-4 space-y-4">
                         <h3 className="text-sm font-medium text-slate-700">访问范围（可选，不填表示访问全部）</h3>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                                 归档年度（多个用逗号分隔）

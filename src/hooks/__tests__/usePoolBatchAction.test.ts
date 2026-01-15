@@ -116,7 +116,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1', 'card-2']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('delete');
       });
@@ -129,7 +129,7 @@ describe('usePoolBatchAction', () => {
     });
 
     it('should handle partial failures in batch delete', async () => {
-      const mockDelete = vi.mocked(poolApi.delete)
+      const _mockDelete = vi.mocked(poolApi.delete)
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('删除失败'));
       const { result } = renderHook(() => usePoolBatchAction());
@@ -138,7 +138,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1', 'card-2']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('delete');
       });
@@ -153,7 +153,7 @@ describe('usePoolBatchAction', () => {
     it('should return empty selection error when no items selected', async () => {
       const { result } = renderHook(() => usePoolBatchAction());
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('delete');
       });
@@ -172,7 +172,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1', 'card-2', 'card-3']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('archive');
       });
@@ -190,7 +190,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('archive');
       });
@@ -208,7 +208,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1', 'card-2']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('recheck');
       });
@@ -224,7 +224,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('edit');
       });
@@ -240,7 +240,7 @@ describe('usePoolBatchAction', () => {
         result.current.selectAll(['card-1']);
       });
 
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('match');
       });
@@ -321,7 +321,7 @@ describe('usePoolBatchAction', () => {
       });
 
       // But execute with custom IDs (3 items)
-      let actionResult;
+      let actionResult: any;
       await act(async () => {
         actionResult = await result.current.executeAction('delete', [
           'card-3',

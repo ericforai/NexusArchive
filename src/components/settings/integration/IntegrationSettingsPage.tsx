@@ -11,7 +11,6 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Settings } from 'lucide-react';
-import { Modal } from 'antd';
 import { useErpConfigManager } from './hooks/useErpConfigManager';
 import { useScenarioSyncManager } from './hooks/useScenarioSyncManager';
 import { useConnectorModal } from './hooks/useConnectorModal';
@@ -82,7 +81,7 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       }
       // Note: Use lastSyncStatus to determine scenario status
       const status = s.lastSyncStatus === 'RUNNING' ? 'running' :
-                    s.lastSyncStatus === 'FAIL' ? 'error' : 'idle';
+        s.lastSyncStatus === 'FAIL' ? 'error' : 'idle';
       if (status === 'running') stats[s.configId].running++;
       if (status === 'error') stats[s.configId].error++;
     });
@@ -103,7 +102,7 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
       .map(s => {
         const status: ScenarioStatus = s.lastSyncStatus === 'RUNNING' ? 'running' :
           s.lastSyncStatus === 'FAIL' ? 'error' :
-          s.lastSyncStatus === 'SUCCESS' ? 'success' : 'idle';
+            s.lastSyncStatus === 'SUCCESS' ? 'success' : 'idle';
         return {
           id: s.id,
           name: s.name,
@@ -137,7 +136,7 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
         onConfig={(config) => connectorModal.actions.openModal(config)}
         onTest={configManager.actions.testConnection}
         onDiagnose={diagnosis.actions.startDiagnosis}
-        onReconcile={(id) => {
+        onReconcile={(_id) => {
           // TODO: implement reconcile
           console.log('Reconcile not implemented yet');
         }}

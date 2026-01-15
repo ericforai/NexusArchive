@@ -91,6 +91,7 @@ public class ErpChannelService {
                 .apiEndpoint(getApiEndpointForType(config.getErpType(), scenario.getScenarioKey()))
                 .accbookCode(extractAccbookCode(config.getConfigJson()))
                 .accbookCodes(extractAccbookCodes(config.getConfigJson(), config.getAccbookMapping()))
+                .accbookMapping(extractAccbookMappingMap(config.getAccbookMapping()))
                 .lastSyncMsg(scenario.getLastSyncMsg())
                 .build();
     }
@@ -227,10 +228,30 @@ public class ErpChannelService {
 
     /**
      * 提取账簿代码列表
-     * 优先从 configJson 读取，如果为空则从 accbookMapping 提取
+     * 优先从 accbookMapping 提取（因为这是用户在 UI 配置的真实数据），
+     * 如果为空则尝试从 configJson 读取
      */
     private List<String> extractAccbookCodes(String configJson, String accbookMapping) {
-        // 首先尝试从 configJson 读取
+        // 1. 优先从 accbookMapping 提取账套代码（用户在 UI 配置的映射）
+        if (accbookMapping != null && !accbookMapping.isEmpty()) {
+            try {
+                cn.hutool.json.JSONObject mapping = cn.hutool.json.JSONUtil.parseObj(accbookMapping);
+                List<String> codes = new ArrayList<>();
+                mapping.forEach((key, value) -> {
+                    if (key != null) {
+                        codes.add(key.toString());
+                    }
+                });
+                if (!codes.isEmpty()) {
+                    log.info("从 accbookMapping 提取到 {} 个账套代码: {}", codes.size(), codes);
+                    return codes;
+                }
+            } catch (Exception e) {
+                log.warn("解析 accbookMapping 失败: {}", e.getMessage());
+            }
+        }
+
+        // 2. accbookMapping 为空时，尝试从 configJson 读取
         if (configJson != null && !configJson.isEmpty()) {
             try {
                 cn.hutool.json.JSONObject json = cn.hutool.json.JSONUtil.parseObj(configJson);
@@ -251,26 +272,29 @@ public class ErpChannelService {
             }
         }
 
-        // configJson 中没有配置，尝试从 accbookMapping 提取账套代码
-        if (accbookMapping != null && !accbookMapping.isEmpty()) {
-            try {
-                cn.hutool.json.JSONObject mapping = cn.hutool.json.JSONUtil.parseObj(accbookMapping);
-                List<String> codes = new ArrayList<>();
-                mapping.forEach((key, value) -> {
-                    if (key != null) {
-                        codes.add(key.toString());
-                    }
-                });
-                if (!codes.isEmpty()) {
-                    log.info("从 accbookMapping 提取到 {} 个账套代码: {}", codes.size(), codes);
-                    return codes;
-                }
-            } catch (Exception e) {
-                log.warn("解析 accbookMapping 失败: {}", e.getMessage());
-            }
-        }
-
-        // 默认返回 BR01
+        // 3. 默认返回 BR01
         return Collections.singletonList("BR01");
+    }
+
+    /**
+     * 提取账套映射 Map
+     */
+    private java.util.Map<String, String> extractAccbookMappingMap(String accbookMapping) {
+        if (accbookMapping == null || accbookMapping.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+        try {
+            cn.hutool.json.JSONObject mapping = cn.hutool.json.JSONUtil.parseObj(accbookMapping);
+            java.util.Map<String, String> result = new java.util.HashMap<>();
+            mapping.forEach((key, value) -> {
+                if (key != null && value != null) {
+                    result.put(key.toString(), value.toString());
+                }
+            });
+            return result;
+        } catch (Exception e) {
+            log.warn("解析 accbookMapping Map 失败: {}", e.getMessage());
+            return java.util.Collections.emptyMap();
+        }
     }
 }

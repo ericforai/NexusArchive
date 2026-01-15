@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Loader2, CheckCircle2, XCircle, Eye, Clock, User, MessageSquare } from 'lucide-react';
+import { ShieldCheck, Loader2, CheckCircle2, XCircle, Eye, User } from 'lucide-react';
 import { userLifecycleApi, AccessReviewTask, ExecuteReviewRequest } from '../../api/userLifecycle';
 import { toast } from '../../utils/notificationService';
 
@@ -40,7 +40,7 @@ export const AccessReviewPage: React.FC = () => {
         try {
             const params: any = { page, size: pageSize };
             if (statusFilter) params.status = statusFilter;
-            
+
             const res = await userLifecycleApi.getReviewTasks(params);
             if (res.code === 200 && res.data) {
                 setTasks(res.data.records || []);

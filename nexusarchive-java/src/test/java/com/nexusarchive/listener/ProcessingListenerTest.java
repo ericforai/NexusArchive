@@ -11,6 +11,7 @@ import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.IngestRequestStatus;
 import com.nexusarchive.event.CheckPassedEvent;
+import com.nexusarchive.service.AbnormalVoucherService;
 import com.nexusarchive.service.ArchivalPackageService;
 import com.nexusarchive.service.IAutoAssociationService;
 import com.nexusarchive.service.SmartParserService;
@@ -36,6 +37,9 @@ class ProcessingListenerTest {
 
     @Mock
     private ArchivalPackageService archivalPackageService;
+
+    @Mock
+    private AbnormalVoucherService abnormalVoucherService;
 
     @Mock
     private SmartParserService smartParserService;
@@ -70,6 +74,7 @@ class ProcessingListenerTest {
         
         processingListener = new ProcessingListener(
             archivalPackageService,
+            abnormalVoucherService,
             smartParserService,
             autoAssociationService,
             archiveMapper,

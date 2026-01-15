@@ -1,0 +1,17 @@
+// Input: MyBatis-Plus、Java 标准库
+// Output: SyncTaskMapper 接口
+// Pos: 持久层 Mapper
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+package com.nexusarchive.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.nexusarchive.entity.SyncTask;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * 同步任务 Mapper
+ */
+@Mapper
+public interface SyncTaskMapper extends BaseMapper<SyncTask> {
+}

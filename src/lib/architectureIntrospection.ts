@@ -141,60 +141,68 @@ export function initializeArchitectureIntrospection(): void {
 
   // Register feature modules
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: archivesManifest } = require('../features/archives/manifest.config');
     registry.register(archivesManifest, 'feature', 'src/features/archives');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: settingsManifest } = require('../features/settings/manifest.config');
     registry.register(settingsManifest, 'feature', 'src/features/settings');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: borrowingManifest } = require('../features/borrowing/manifest.config');
     registry.register(borrowingManifest, 'feature', 'src/features/borrowing');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: complianceManifest } = require('../features/compliance/manifest.config');
     registry.register(complianceManifest, 'feature', 'src/features/compliance');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   // Register component modules
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: commonManifest } = require('../components/common/manifest.config');
     registry.register(commonManifest, 'component', 'src/components/common');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: tableManifest } = require('../components/table/manifest.config');
     registry.register(tableManifest, 'component', 'src/components/table');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: layoutManifest } = require('../components/layout/manifest.config');
     registry.register(layoutManifest, 'component', 'src/components/layout');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 
   // Register utils
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { moduleManifest: utilsManifest } = require('../utils/manifest.config');
     registry.register(utilsManifest, 'util', 'src/utils');
-  } catch (e) {
+  } catch (_e) {
     // Module not found or no manifest
   }
 

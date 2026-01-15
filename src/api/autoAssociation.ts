@@ -48,6 +48,12 @@ export interface RelationGraph {
     centerId: string;
     nodes: RelationGraphNode[];
     edges: RelationGraphEdge[];
+    /** 原始查询档案ID（如果发生了自动转换） */
+    originalQueryId?: string;
+    /** 是否自动转换（true表示以原始档案为中心时自动找到凭证） */
+    autoRedirected?: boolean;
+    /** 转换提示信息 */
+    redirectMessage?: string;
 }
 
 /**
@@ -152,10 +158,13 @@ export const autoAssociationApi = {
                 return response.data.data;
             }
         } catch (error: any) {
-            console.warn('Failed to fetch relation graph', error);
             // 401/403 未认证/无权限时抛出错误，让前端处理
             if (error.response?.status === 401 || error.response?.status === 403) {
                 throw error;
+            }
+            // 404 或其他错误静默处理，返回默认图谱
+            if (error.response?.status !== 404) {
+                console.warn('Failed to fetch relation graph', error);
             }
         }
         // 无数据时返回默认数据

@@ -3,7 +3,7 @@
 // Pos: src/components/GlobalSearch/ 主组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { useGlobalSearchApi } from '../../hooks/useGlobalSearchApi';
 import { GlobalSearchDTO } from '../../types';
 import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';

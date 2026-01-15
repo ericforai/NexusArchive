@@ -13,12 +13,8 @@ import {
   Activity,
   Layers,
   Key,
-  AlertTriangle,
-  XCircle,
-  Check,
   Lock,
   Globe,
-  ChevronRight,
   Server,
   Cpu,
 } from 'lucide-react';

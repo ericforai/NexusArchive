@@ -3,7 +3,7 @@
 // Pos: src/pages/product-website/components/XinchuangPartnersSection.tsx
 
 import React from 'react';
-import { Cpu, Layers, Database, Shield } from 'lucide-react';
+// Icons are provided dynamically via partner data
 import { XINCHUANG_PARTNERS } from '../data/sections';
 
 export const XinchuangPartnersSection: React.FC = () => {

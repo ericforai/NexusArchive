@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { Alert, Input, InputNumber, Select, Space } from 'antd';
+import { Alert, Input, Select, Space } from 'antd';
 import { Info, Lock, Server, ShieldAlert } from 'lucide-react';
 import { SapInterfaceType, SapInterfaceConfig } from '../types';
 
@@ -129,7 +129,7 @@ const RfcConfigForm: React.FC<{
   config?: SapInterfaceConfig['rfc'];
   onChange: (rfc: SapInterfaceConfig['rfc']) => void;
   disabled?: boolean;
-}> = ({ config, onChange, disabled }) => {
+}> = ({ config: _config, onChange: _onChange, disabled: _disabled }) => {
   return (
     <Alert
       message="即将推出"
@@ -147,7 +147,7 @@ const IdocConfigForm: React.FC<{
   config?: SapInterfaceConfig['idoc'];
   onChange: (idoc: SapInterfaceConfig['idoc']) => void;
   disabled?: boolean;
-}> = ({ config, onChange, disabled }) => {
+}> = ({ config: _config, onChange: _onChange, disabled: _disabled }) => {
   return (
     <Alert
       message="即将推出"
@@ -165,7 +165,7 @@ const GatewayConfigForm: React.FC<{
   config?: SapInterfaceConfig['gateway'];
   onChange: (gateway: SapInterfaceConfig['gateway']) => void;
   disabled?: boolean;
-}> = ({ config, onChange, disabled }) => {
+}> = ({ config: _config, onChange: _onChange, disabled: _disabled }) => {
   return (
     <Alert
       message="即将推出"

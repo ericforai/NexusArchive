@@ -2,8 +2,8 @@
 // Output: 产品演示区域组件
 // Pos: src/pages/product-website/components/ProductShowcaseSection.tsx
 
-import React, { useEffect, useRef } from 'react';
-import { Shield, Lock, Search, Key, FileText, Activity, Database, ChevronRight } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Shield, Lock, Search, ChevronRight } from 'lucide-react';
 import {
   DEMO_NAV_ITEMS,
   DASHBOARD_STATS,
@@ -80,11 +80,10 @@ export const ProductShowcaseSection: React.FC = () => {
                   <button
                     key={i}
                     onClick={() => handleNavClick(i)}
-                    className={`demo-nav-item w-full text-left px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
-                      i === 0
+                    className={`demo-nav-item w-full text-left px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${i === 0
                         ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                         : 'text-slate-400 hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     {item}
                   </button>
@@ -253,9 +252,8 @@ const DemoArchiveView: React.FC<DemoArchiveViewProps> = ({ tableData }) => (
               <td className="p-4">{item.type}</td>
               <td className="p-4">{item.amount}</td>
               <td className="p-4">
-                <span className={`px-2 py-1 rounded text-xs ${
-                  item.status === '已归档' ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400'
-                }`}>
+                <span className={`px-2 py-1 rounded text-xs ${item.status === '已归档' ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400'
+                  }`}>
                   {item.status}
                 </span>
               </td>
@@ -302,9 +300,8 @@ const DemoBorrowView: React.FC<DemoBorrowViewProps> = ({ stats, records }) => (
               <div className="text-sm text-slate-400">档案编号: <span className="text-cyan-400">{item.doc}</span></div>
               <div className="text-sm text-slate-400">申请时间: {item.date}</div>
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs ${
-              item.status === '借阅中' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-amber-500/10 text-amber-400'
-            }`}>
+            <span className={`px-3 py-1 rounded-full text-xs ${item.status === '借阅中' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-amber-500/10 text-amber-400'
+              }`}>
               {item.status}
             </span>
           </div>

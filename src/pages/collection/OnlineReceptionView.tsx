@@ -67,7 +67,7 @@ export const OnlineReceptionView: React.FC = () => {
     const [syncError, setSyncError] = useState<string | null>(null);
 
     // 同步进度状态
-    const [syncTaskId, setSyncTaskId] = useState<string | null>(null);
+    const [_syncTaskId, setSyncTaskId] = useState<string | null>(null); // 内部跟踪用
     const [syncProgress, setSyncProgress] = useState({ status: '', progress: 0, message: '' });
     const [isPolling, setIsPolling] = useState(false);
 
@@ -130,10 +130,16 @@ export const OnlineReceptionView: React.FC = () => {
         const codes = channel.accbookCodes || (channel.accbookCode ? [channel.accbookCode] : []);
         const fondsMap = (window as any)._fondsMap || {};
 
-        const orgs = codes.map(code => ({
-            code,
-            name: fondsMap[code] ? `${fondsMap[code]} (${code})` : `组织 (${code})`
-        }));
+        const orgs = codes.map(code => {
+            // 优先使用后端返回的 mapping 找到对应的全宗号
+            const fondsCode = channel.accbookMapping?.[code] || code;
+            // 再根据全宗号查找全宗名称
+            const fondsName = fondsMap[fondsCode];
+            return {
+                code,
+                name: fondsName ? `${fondsName} (${code})` : `组织 (${code})`
+            };
+        });
 
         setAvailableOrgs(orgs);
         setSelectedOrgs(codes.length > 0 ? [codes[0]] : []);
@@ -446,7 +452,7 @@ export const OnlineReceptionView: React.FC = () => {
                                     />
                                 </td>
                                 <td className="p-4">
-                                    <div className="font-medium text-slate-900">{channel.name}</div>
+                                    <div className="font-medium text-slate-900">{channel.displayName || channel.name}</div>
                                     <div className="text-slate-500 text-xs mt-0.5">{channel.description}</div>
                                 </td>
                                 <td className="p-4">

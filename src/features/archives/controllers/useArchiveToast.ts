@@ -2,8 +2,9 @@
  * useArchiveToast - Toast UI Management Hook
  *
  * Handles toast notification state
+ * 修复：使用 useMemo 稳定返回值引用
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ControllerToast, ControllerUI } from './types';
 
 export function useArchiveToast(): ControllerUI {
@@ -20,8 +21,9 @@ export function useArchiveToast(): ControllerUI {
         }, 3000);
     }, []);
 
-    return {
+    // 使用 useMemo 稳定返回值引用
+    return useMemo(() => ({
         toast,
         showToast,
-    };
+    }), [toast, showToast]);
 }

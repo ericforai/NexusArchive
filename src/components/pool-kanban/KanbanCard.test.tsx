@@ -10,10 +10,10 @@ import type { ColumnAction } from '@/config/pool-columns.config';
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  FileText: ({ size, children }: any) => <span data-icon="FileText">{children}</span>,
-  Calendar: ({ size, children }: any) => <span data-icon="Calendar">{children}</span>,
-  DollarSign: ({ size, children }: any) => <span data-icon="DollarSign">{children}</span>,
-  Building: ({ size, children }: any) => <span data-icon="Building">{children}</span>,
+  FileText: ({ size: _size, children }: any) => <span data-icon="FileText">{children}</span>,
+  Calendar: ({ size: _size, children }: any) => <span data-icon="Calendar">{children}</span>,
+  DollarSign: ({ size: _size, children }: any) => <span data-icon="DollarSign">{children}</span>,
+  Building: ({ size: _size, children }: any) => <span data-icon="Building">{children}</span>,
 }));
 
 // Mock Ant Design components to use actual components for testing
@@ -72,11 +72,11 @@ describe('KanbanCard', () => {
     });
 
     it('should show selected state', () => {
-      const { container } = render(
+      const { container: _container } = render(
         <KanbanCard card={mockCard as any} selected={true} />
       );
 
-      const card = container.querySelector('.kanban-card');
+      const card = _container.querySelector('.kanban-card');
       expect(card).toHaveClass('kanban-card--selected');
     });
 
@@ -219,7 +219,7 @@ describe('KanbanCard', () => {
         { key: 'cancel-archive', label: '取消归档', danger: true },
       ];
 
-      const { container } = render(
+      const { container: _container } = render(
         <KanbanCard
           card={mockCard as any}
           selected={false}

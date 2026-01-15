@@ -23,7 +23,7 @@ export const useSearchQuery = (search: (query: string) => Promise<GlobalSearchDT
                     const data = await search(query);
                     setResults(data);
                     setIsOpen(true);
-                } catch (error) {
+                } catch (_error) {
                     // Silently handle search errors
                 } finally {
                     setIsLoading(false);

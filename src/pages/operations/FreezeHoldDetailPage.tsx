@@ -158,11 +158,10 @@ export const FreezeHoldDetailPage: React.FC = () => {
                         <div>
                             <div className="text-sm text-slate-500 mb-1">类型</div>
                             <div>
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    record.type === 'FREEZE' 
-                                        ? 'bg-red-100 text-red-700' 
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${record.type === 'FREEZE'
+                                        ? 'bg-red-100 text-red-700'
                                         : 'bg-yellow-100 text-yellow-700'
-                                }`}>
+                                    }`}>
                                     {getTypeLabel(record.type)}
                                 </span>
                             </div>
@@ -222,7 +221,7 @@ export const FreezeHoldDetailPage: React.FC = () => {
                         <div>
                             <div className="text-sm text-slate-500 mb-1">到期日期</div>
                             <div className="font-medium">
-                                {record.endDate 
+                                {record.endDate
                                     ? new Date(record.endDate).toLocaleDateString('zh-CN')
                                     : <span className="text-slate-400">永久</span>
                                 }

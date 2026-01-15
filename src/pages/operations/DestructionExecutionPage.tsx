@@ -161,7 +161,7 @@ export const DestructionExecutionPage: React.FC = () => {
                                         <td className="px-4 py-3">{destruction.firstApproverName || '-'}</td>
                                         <td className="px-4 py-3">{destruction.secondApproverName || '-'}</td>
                                         <td className="px-4 py-3 text-slate-600">
-                                            {destruction.secondApprovalTime 
+                                            {destruction.secondApprovalTime
                                                 ? new Date(destruction.secondApprovalTime).toLocaleString('zh-CN')
                                                 : '-'}
                                         </td>

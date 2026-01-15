@@ -3,7 +3,7 @@
 // Pos: src/pages/utilization/RelationshipQueryView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Search,
   FileText,
@@ -13,9 +13,9 @@ import {
   RotateCcw,
   Info
 } from 'lucide-react';
-import { SimpleGraphView } from '@/components/relation-graph';
+import { SimpleGraphView, ThreeColumnLayout } from '@/components/relation-graph';
 import { useRelationGraphStore } from '@/store/useRelationGraphStore';
-import type { RelationNodeData } from '@/types/relationGraph';
+import type { RelationNodeData, RelationEdgeData } from '@/types/relationGraph';
 import { ARCHIVE_TYPE_STYLES } from '@/types/relationGraph';
 import { toast } from 'react-hot-toast';
 
@@ -28,14 +28,14 @@ const SearchBar: React.FC<{
   onSearch: () => void;
   isLoading: boolean;
 }> = ({ value, onChange, onSearch, isLoading }) => (
-  <form onSubmit={(e) => { e.preventDefault(); onSearch(); }} className="flex items-center gap-2 w-full max-w-md">
+  <form onSubmit={(e) => { e.preventDefault(); onSearch(); }} className="flex items-center gap-2 w-full max-w-lg">
     <div className="relative flex-1">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm placeholder:text-[11px] placeholder:leading-tight"
         placeholder="请输入凭证号 / 发票号 / 合同号..."
         disabled={isLoading}
       />
@@ -133,21 +133,6 @@ const NodeDetailDrawer: React.FC<{
   );
 };
 
-/**
- * 帮助提示
- */
-const HelpTip: React.FC = () => (
-  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 flex items-start gap-3">
-    <Info size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
-    <div>
-      <div className="font-medium mb-1">使用提示</div>
-      <ul className="text-blue-700 space-y-1 text-xs">
-        <li>• 点击节点可展开/折叠其关联关系</li>
-        <li>• 最多展开 3 度关系，超出时自动折叠早期节点</li>
-      </ul>
-    </div>
-  </div>
-);
 
 /**
  * 空状态
@@ -173,27 +158,25 @@ const EmptyState: React.FC<{
  * 关系联查主页面 - 简化版
  */
 export const RelationshipQueryView: React.FC = () => {
-  // 本地状态
-  const [searchQuery, setSearchQuery] = useState('JZ-202311-0052');
+  // 本地状态 - 移除默认值，避免页面加载时请求不存在的档号
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedNodeData, setSelectedNodeData] = useState<RelationNodeData | null>(null);
+  const [highlightedArchiveId, setHighlightedArchiveId] = useState<string | null>(null);
 
   // Store 状态
   const nodes = useRelationGraphStore(s => s.nodes);
+  const edges = useRelationGraphStore(s => s.edges);
+  const centerNodeId = useRelationGraphStore(s => s.centerNodeId);
   const isInitialLoading = useRelationGraphStore(s => s.isInitialLoading);
   const initialError = useRelationGraphStore(s => s.initialError);
+  const originalQueryId = useRelationGraphStore(s => s.originalQueryId);
+  const redirectMessage = useRelationGraphStore(s => s.redirectMessage);
   const initializeGraph = useRelationGraphStore(s => s.initializeGraph);
   const resetGraph = useRelationGraphStore(s => s.resetGraph);
   const expandNode = useRelationGraphStore(s => s.expandNode);
 
-  // 初始化：自动加载示例数据
-  useEffect(() => {
-    if (searchQuery) {
-      initializeGraph(searchQuery);
-    }
-  }, [initializeGraph]);
-
   // 搜索处理
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     const query = searchQuery.trim();
     if (!query) {
       toast.error('请输入档号');
@@ -201,32 +184,66 @@ export const RelationshipQueryView: React.FC = () => {
     }
 
     setSelectedNodeData(null);
+    setHighlightedArchiveId(null);
     resetGraph();
-    initializeGraph(query);
+    await initializeGraph(query);
+    
+    // 检查是否有自动转换提示（使用 useEffect 监听 store 状态变化更可靠）
   }, [searchQuery, initializeGraph, resetGraph]);
+
+  // 监听 store 中的 redirectMessage，显示提示
+  useEffect(() => {
+    if (redirectMessage && originalQueryId) {
+      toast.success(redirectMessage, { 
+        duration: 4000
+      });
+      setHighlightedArchiveId(originalQueryId);
+    }
+  }, [redirectMessage, originalQueryId]);
 
   // 重置处理
   const handleReset = useCallback(() => {
     setSearchQuery('');
     setSelectedNodeData(null);
+    setHighlightedArchiveId(null);
     resetGraph();
     toast.success('已重置图谱');
   }, [resetGraph]);
 
-  // 节点点击处理
-  const handleNodeClick = useCallback((nodeId: string, data: RelationNodeData) => {
-    setSelectedNodeData(data);
-    // 展开节点的关联关系
-    expandNode(nodeId);
-  }, [expandNode]);
+  // 节点点击处理：打开右侧详情抽屉
+  const handleNodeClick = useCallback((nodeId: string, nodeData: RelationNodeData) => {
+    // 点击任何单据卡片，都打开右侧详情抽屉
+    setSelectedNodeData(nodeData);
+  }, []);
 
   // 关闭抽屉
   const handleCloseDrawer = useCallback(() => {
     setSelectedNodeData(null);
   }, []);
 
-  // 判断是否显示画布
-  const showCanvas = nodes.length > 0;
+  // 判断是否显示内容
+  const showContent = nodes.length > 0;
+  
+  // 获取中心节点
+  const centerNode = nodes.find(n => n.data?.isCenter)?.data || (nodes[0]?.data);
+  
+  // 转换 edges 为 RelationEdgeData 格式
+  const relationEdges: RelationEdgeData[] = useMemo(() => 
+    edges.map(edge => ({
+      id: edge.id,
+      from: edge.source as string,
+      to: edge.target as string,
+      relationType: (edge.data?.relationType || 'default') as any,
+      description: edge.data?.description
+    })),
+    [edges]
+  );
+  
+  // 转换 nodes 为 RelationNodeData 格式
+  const relationNodes: RelationNodeData[] = useMemo(() =>
+    nodes.map(node => node.data as RelationNodeData).filter(Boolean),
+    [nodes]
+  );
 
   return (
     <div className="h-full flex flex-col bg-slate-50/50">
@@ -237,7 +254,7 @@ export const RelationshipQueryView: React.FC = () => {
             穿透联查
           </h2>
           <p className="text-slate-500 mt-1 text-sm">
-            输入任意档号，点击节点可展开其关联关系（最多3度）
+            输入任意档号，自动生成全链路业务关系（左侧：依据/凭证/来源，右侧：流向/归档/结果）
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -260,16 +277,17 @@ export const RelationshipQueryView: React.FC = () => {
 
       {/* 主内容区 */}
       <div className="flex-1 relative overflow-hidden flex">
-        {/* 画布/空状态 */}
-        {showCanvas ? (
-          <div className="flex-1 relative">
-            {/* 帮助提示 */}
-            <div className="absolute top-4 left-4 z-10 w-72">
-              <HelpTip />
-            </div>
-
-            {/* 简单图谱画布 */}
-            <SimpleGraphView onNodeClick={handleNodeClick} />
+        {/* 三栏布局/空状态 */}
+        {showContent && centerNode ? (
+          <div className="flex-1 relative overflow-auto">
+            {/* 三栏布局 */}
+            <ThreeColumnLayout
+              centerNode={centerNode}
+              nodes={relationNodes}
+              relations={relationEdges}
+              onNodeClick={handleNodeClick}
+              highlightedArchiveId={highlightedArchiveId}
+            />
           </div>
         ) : (
           <EmptyState onSearch={handleSearch} />

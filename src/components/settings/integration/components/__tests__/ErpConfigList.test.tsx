@@ -1,6 +1,6 @@
 // src/components/settings/integration/components/__tests__/ErpConfigList.test.tsx
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ErpConfigList } from '../ErpConfigList';
 import { ErpConfig } from '@/types';
 

@@ -2,7 +2,7 @@
 // Output: 简单关系图谱组件
 // Pos: 关系图谱简单实现
 
-import React, { useMemo, useState, useRef, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import {
   FileText,
   Receipt,
@@ -15,8 +15,8 @@ import {
   ZoomOut,
   Maximize
 } from 'lucide-react';
-import type { RelationNodeData } from '@/types/relationGraph';
-import { ARCHIVE_TYPE_STYLES } from '@/types/relationGraph';
+import type { RelationNodeData, RelationType } from '@/types/relationGraph';
+import { ARCHIVE_TYPE_STYLES, RELATION_TYPE_LABELS } from '@/types/relationGraph';
 import { useRelationGraphStore } from '@/store/useRelationGraphStore';
 
 // 图标映射
@@ -26,6 +26,17 @@ const iconMap = {
   FileText,
   CreditCard,
   FileSpreadsheet
+};
+
+// 关系类型颜色配置
+const RELATION_TYPE_STYLES: Record<string, { color: string; strokeWidth: number; dasharray?: string }> = {
+  BASIS: { color: '#818cf8', strokeWidth: 3 }, // 依据 - 靛蓝色
+  ORIGINAL_VOUCHER: { color: '#c084fc', strokeWidth: 3 }, // 原始凭证 - 紫色
+  CASH_FLOW: { color: '#34d399', strokeWidth: 3 }, // 资金流 - 绿色
+  ARCHIVE: { color: '#fbbf24', strokeWidth: 3 }, // 归档 - 黄色
+  SYSTEM_AUTO: { color: '#94a3b8', strokeWidth: 2.5, dasharray: '5,5' }, // 系统自动 - 灰色虚线
+  // 默认
+  default: { color: '#64748b', strokeWidth: 2.5 }
 };
 
 interface SimpleGraphViewProps {
@@ -74,11 +85,24 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
   }, []);
 
   // 滚轮缩放
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     setZoom(z => Math.max(0.3, Math.min(3, z + delta)));
   }, []);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 使用非被动事件监听器以支持 preventDefault
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
 
   // 计算画布尺寸
   const canvasSize = useMemo(() => {
@@ -102,8 +126,11 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
   const centerNode = nodes.find(n => n.data?.isCenter) || nodes[0];
 
   // 计算居中偏移量（所有节点共用）
+  // 注意：节点高度不同（中心 140，普通 110），需要动态计算连接点
+  const centerNodeHeight = centerNode?.data?.isCenter ? 140 : 110;
   const offsetX = canvasSize.width / 2 - (centerNode?.position.x || 0) - 100;
-  const offsetY = canvasSize.height / 2 - (centerNode?.position.y || 0) - 70;
+  // offsetY 使中心节点的几何中心与画布中心对齐
+  const offsetY = canvasSize.height / 2 - (centerNode?.position.y || 0) - centerNodeHeight / 2;
 
   if (isInitialLoading) {
     return (
@@ -126,6 +153,7 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
 
   return (
     <div
+      ref={containerRef}
       className="w-full h-full overflow-hidden bg-slate-50 relative"
       style={{
         backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)',
@@ -136,7 +164,6 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      onWheel={handleWheel}
     >
       {/* 缩放控制 */}
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
@@ -175,26 +202,88 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
           }}
         >
           <defs>
+            {/* 为每种关系类型创建箭头标记 */}
+            {Object.entries(RELATION_TYPE_STYLES).map(([type, style]) => (
+              <React.Fragment key={type}>
+                <marker
+                  id={`arrowhead-${type}`}
+                  markerWidth="12"
+                  markerHeight="10"
+                  refX="10"
+                  refY="5"
+                  orient="auto"
+                  markerUnits="strokeWidth"
+                >
+                  <polygon
+                    points="0,0 12,5 0,10"
+                    fill={style.color}
+                    stroke="white"
+                    strokeWidth="1"
+                  />
+                </marker>
+                <marker
+                  id={`arrowhead-start-${type}`}
+                  markerWidth="12"
+                  markerHeight="10"
+                  refX="2"
+                  refY="5"
+                  orient="auto"
+                  markerUnits="strokeWidth"
+                >
+                  <polygon
+                    points="12,0 0,5 12,10"
+                    fill={style.color}
+                    stroke="white"
+                    strokeWidth="1"
+                  />
+                </marker>
+              </React.Fragment>
+            ))}
+            {/* 默认箭头标记 */}
             <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
+              id="arrowhead-default"
+              markerWidth="12"
+              markerHeight="10"
+              refX="10"
+              refY="5"
               orient="auto"
+              markerUnits="strokeWidth"
             >
-              <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
+              <polygon
+                points="0,0 12,5 0,10"
+                fill="#64748b"
+                stroke="white"
+                strokeWidth="1"
+              />
             </marker>
             <marker
-              id="arrowhead-start"
-              markerWidth="10"
-              markerHeight="7"
-              refX="1"
-              refY="3.5"
+              id="arrowhead-start-default"
+              markerWidth="12"
+              markerHeight="10"
+              refX="2"
+              refY="5"
               orient="auto"
+              markerUnits="strokeWidth"
             >
-              <polygon points="10 0, 0 3.5, 10 7" fill="#94a3b8" />
+              <polygon
+                points="12,0 0,5 12,10"
+                fill="#64748b"
+                stroke="white"
+                strokeWidth="1"
+              />
             </marker>
+            {/* 连线阴影滤镜（增强对比度） */}
+            <filter id="edge-shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+              <feOffset dx="0" dy="1" result="offsetblur" />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
           {edges.map(edge => {
@@ -202,37 +291,78 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
             const targetNode = nodes.find(n => n.id === edge.target);
             if (!sourceNode || !targetNode) return null;
 
-            // 计算连线两端点（节点中心），应用居中偏移
+            // 计算连线两端点（节点几何中心），应用居中偏移
+            // 节点宽度固定 200，高度：中心 140，普通 110
+            const sourceHeight = sourceNode.data?.isCenter ? 140 : 110;
+            const targetHeight = targetNode.data?.isCenter ? 140 : 110;
             const sourceX = sourceNode.position.x + offsetX + 100;
-            const sourceY = sourceNode.position.y + offsetY + (sourceNode.data?.isCenter ? 70 : 55);
+            const sourceY = sourceNode.position.y + offsetY + sourceHeight / 2;
             const targetX = targetNode.position.x + offsetX + 100;
-            const targetY = targetNode.position.y + offsetY + (targetNode.data?.isCenter ? 70 : 55);
+            const targetY = targetNode.position.y + offsetY + targetHeight / 2;
+
+            // 获取关系类型样式
+            const relationType = (edge.data?.relationType || 'default') as RelationType;
+            const edgeStyle = RELATION_TYPE_STYLES[relationType] || RELATION_TYPE_STYLES.default;
+            const relationLabel = RELATION_TYPE_LABELS[relationType] || edge.data?.description || relationType;
+
+            // 计算连线角度（用于标签旋转）
+            const angle = Math.atan2(targetY - sourceY, targetX - sourceX) * (180 / Math.PI);
+            const labelX = (sourceX + targetX) / 2;
+            const labelY = (sourceY + targetY) / 2;
 
             return (
-              <g key={edge.id}>
-                {/* 连线 */}
+              <g key={edge.id} filter="url(#edge-shadow)">
+                {/* 连线背景（白色描边，增强对比度） */}
                 <line
                   x1={sourceX}
                   y1={sourceY}
                   x2={targetX}
                   y2={targetY}
-                  stroke="#94a3b8"
-                  strokeWidth={2}
-                  markerEnd="url(#arrowhead)"
-                  markerStart="url(#arrowhead-start)"
+                  stroke="white"
+                  strokeWidth={edgeStyle.strokeWidth + 2}
+                  strokeLinecap="round"
+                  strokeDasharray={edgeStyle.dasharray}
+                  opacity={0.8}
                 />
-                {/* 关系标签 */}
+                {/* 主连线 */}
+                <line
+                  x1={sourceX}
+                  y1={sourceY}
+                  x2={targetX}
+                  y2={targetY}
+                  stroke={edgeStyle.color}
+                  strokeWidth={edgeStyle.strokeWidth}
+                  strokeLinecap="round"
+                  strokeDasharray={edgeStyle.dasharray}
+                  markerEnd={`url(#arrowhead-${relationType === 'default' ? 'default' : relationType})`}
+                  markerStart={`url(#arrowhead-start-${relationType === 'default' ? 'default' : relationType})`}
+                  opacity={0.9}
+                />
+                {/* 关系标签背景（圆形） */}
+                <circle
+                  cx={labelX}
+                  cy={labelY - 8}
+                  r="14"
+                  fill="white"
+                  stroke={edgeStyle.color}
+                  strokeWidth="1.5"
+                  opacity={0.95}
+                />
+                {/* 关系标签文字 */}
                 <text
-                  x={(sourceX + targetX) / 2}
-                  y={(sourceY + targetY) / 2 - 8}
+                  x={labelX}
+                  y={labelY - 8}
                   textAnchor="middle"
-                  className="text-[10px] fill-slate-500"
+                  dominantBaseline="central"
+                  fontSize="11"
+                  fontWeight="600"
+                  fill={edgeStyle.color}
                   style={{
-                    background: 'white',
-                    paintOrder: 'stroke'
+                    pointerEvents: 'none',
+                    userSelect: 'none'
                   }}
                 >
-                  {edge.data?.relationType || '关联'}
+                  {relationLabel}
                 </text>
               </g>
             );

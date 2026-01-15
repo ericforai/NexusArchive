@@ -3,7 +3,7 @@
 // Pos: src/pages/product-website/components/ComplianceSection.tsx
 
 import React from 'react';
-import { Layers, Shield, FileText, Lock, Key, Server, Database, Activity, Cpu } from 'lucide-react';
+import { Layers, Shield, Key, Server, Cpu } from 'lucide-react';
 import { COMPLIANCE_LAYERS } from '../data/sections';
 
 export const ComplianceSection: React.FC = () => {

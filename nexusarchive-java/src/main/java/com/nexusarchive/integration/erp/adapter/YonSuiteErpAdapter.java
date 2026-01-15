@@ -32,10 +32,10 @@ import java.util.*;
 @ErpAdapterAnnotation(
     identifier = "yonsuite",
     name = "用友YonSuite",
-    description = "用友新一代企业云服务平台，支持凭证、附件、收款单、付款单、退款单同步和 Webhook 推送",
+    description = "用友新一代企业云服务平台，支持凭证、附件、收款单、付款单、退款单、付款申请单同步和 Webhook 推送",
     version = "1.0.0",
     erpType = "YONSUITE",
-    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "COLLECTION_FILE_SYNC", "PAYMENT_FILE_SYNC", "REFUND_FILE_SYNC"},
+    supportedScenarios = {"VOUCHER_SYNC", "ATTACHMENT_SYNC", "COLLECTION_FILE_SYNC", "PAYMENT_FILE_SYNC", "REFUND_FILE_SYNC", "PAYMENT_APPLY_SYNC", "ORG_SYNC"},
     supportsWebhook = true,
     priority = 10
 )
@@ -53,6 +53,7 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     @Qualifier("erpAdapterPaymentClient")
     private final YonSuitePaymentClient paymentClient;
     private final YonSuiteRefundClient refundClient;
+    private final YonSuitePaymentApplyClient paymentApplyClient;
     private final YonSuiteFeedbackClient feedbackClient;
 
     @Override
@@ -93,6 +94,12 @@ public class YonSuiteErpAdapter implements ErpAdapter {
 
         scenarios.add(createScenario("REFUND_FILE_SYNC", "付款退款单文件获取",
                 "从YonSuite获取付款退款单文件", "MANUAL"));
+
+        scenarios.add(createScenario("PAYMENT_APPLY_SYNC", "付款申请单文件同步",
+                "从YonSuite获取付款申请单文件", "MANUAL"));
+
+        scenarios.add(createScenario("ORG_SYNC", "组织架构同步",
+                "从YonSuite同步组织机构树", "MANUAL"));
 
         return scenarios;
     }
@@ -270,6 +277,31 @@ public class YonSuiteErpAdapter implements ErpAdapter {
     public List<VoucherDTO> syncRefundFiles(ErpConfig config, List<String> fileIds) {
         log.info("执行付款退款单文件同步: fileIds={}", fileIds);
         return refundClient.syncRefundFilesByIds(config, fileIds);
+    }
+
+    /**
+     * 同步付款申请单文件（按日期范围）
+     */
+    public List<VoucherDTO> syncPaymentApplyFiles(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        log.info("执行付款申请单文件同步: startDate={}, endDate={}", startDate, endDate);
+        return paymentApplyClient.syncPaymentApplyFiles(config, startDate, endDate);
+    }
+
+    /**
+     * 同步付款申请单文件（按 ID 列表）
+     */
+    public List<VoucherDTO> syncPaymentApplyFiles(ErpConfig config, List<String> fileIds) {
+        log.info("执行付款申请单文件同步: fileIds={}", fileIds);
+        return paymentApplyClient.syncPaymentApplyFilesByIds(config, fileIds);
+    }
+
+    /**
+     * 同步组织架构 (Stub)
+     */
+    public List<VoucherDTO> syncOrg(ErpConfig config, LocalDate startDate, LocalDate endDate) {
+        log.info("执行组织架构同步 (Stub): startDate={}, endDate={}", startDate, endDate);
+        // TODO: Implement actual Org Sync logic using a dedicated client
+        return new ArrayList<>();
     }
 
     @Override

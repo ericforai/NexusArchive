@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IntegrationSettingsPage } from '../../IntegrationSettingsPage';
-import { erpApi } from '@/api/erp';
 
 const mockErpApi = {
   getConfigs: vi.fn(),

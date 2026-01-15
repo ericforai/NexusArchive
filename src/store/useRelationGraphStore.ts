@@ -13,7 +13,7 @@ import type {
 import { DEFAULT_LAYOUT_CONFIG } from '@/types/relationGraph';
 import { autoAssociationApi } from '@/api/autoAssociation';
 import { resolveArchiveType } from '@/types/relationGraph';
-import { Node } from '@xyflow/react';
+// Node 类型由 RelationNode 继承，无需单独导入
 
 /**
  * 最大展开深度
@@ -65,6 +65,8 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
   loadedRelations: new Map<string, any>(),
   isInitialLoading: false,
   initialError: null,
+  originalQueryId: null,
+  redirectMessage: null,
 
   // === 操作 ===
 
@@ -82,8 +84,18 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
         throw new Error('未找到档案数据');
       }
 
-      // 收集所有节点ID（用于计算位置）
-      const nodeIds = new Set(graph.nodes.map(n => n.id));
+      // 处理自动转换（如果发生了自动转换，显示提示并高亮原始查询档案）
+      if (graph.autoRedirected && graph.originalQueryId) {
+        // 将原始查询档案ID保存到 state，供前端使用
+        set({ 
+          originalQueryId: graph.originalQueryId, 
+          redirectMessage: graph.redirectMessage || '已自动切换到关联的记账凭证查看完整业务链路' 
+        });
+      } else {
+        set({ originalQueryId: null, redirectMessage: null });
+      }
+
+      // 收集边的节点ID（用于调试，暂时注释）
       const edgeIds = new Set();
       graph.edges.forEach(e => {
         edgeIds.add(e.from);
@@ -221,7 +233,7 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
     // 深度检查：超过 3 度时，折叠最早的 1 度节点
     if (currentDepth >= MAX_DEPTH) {
       const depth1Nodes = Array.from(state.nodeDepths.entries())
-        .filter(([_, depth]) => depth === 1)
+        .filter(([_nodeId, depth]) => depth === 1)
         .map(([id]) => id)
         .filter(id => id !== nodeId && id !== state.centerNodeId);
 
@@ -428,7 +440,9 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
       nodeParents: new Map(),
       loadedRelations: new Map(),
       isInitialLoading: false,
-      initialError: null
+      initialError: null,
+      originalQueryId: null,
+      redirectMessage: null
     });
   },
 

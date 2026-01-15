@@ -4,6 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import { useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 import { poolApi } from '@/api/pool';
 import { POOL_COLUMN_GROUPS, SimplifiedPreArchiveStatus, type ColumnGroupConfig } from '@/config/pool-columns.config';
 import type { PoolItem } from '@/api/pool';
@@ -64,6 +65,7 @@ interface UsePoolKanbanResult {
  * 看板数据管理 Hook
  *
  * 获取所有预处理凭证，按列和子状态分组
+ * 修复：使用 useMemo 稳定返回值引用
  */
 export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanbanResult {
   // 获取所有预处理凭证
@@ -74,27 +76,27 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
     },
   });
 
-  const cards: KanbanCard[] = (data || []).map(card => ({
-    ...card,
-    _columnId: getColumnIdForStatus(card.status),
-  }));
-
   /**
    * 根据状态获取列ID
    */
-  function getColumnIdForStatus(status: string): string {
+  const getColumnIdForStatus = useCallback((status: string): string => {
     for (const column of POOL_COLUMN_GROUPS) {
       if (column.subStates.some(sub => sub.value === status)) {
         return column.id;
       }
     }
     return '';
-  }
+  }, []);
+
+  const cards: KanbanCard[] = useMemo(() => (data || []).map(card => ({
+    ...card,
+    _columnId: getColumnIdForStatus(card.status),
+  })), [data, getColumnIdForStatus]);
 
   /**
    * 获取指定列和子状态的卡片
    */
-  function getCardsForColumn(columnId: string, subState: string): KanbanCard[] {
+  const getCardsForColumn = useCallback((columnId: string, subState: string): KanbanCard[] => {
     let filteredCards = cards.filter(card => card.status === subState);
 
     // 如果有筛选条件，只返回匹配简化状态的卡片
@@ -106,19 +108,19 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
     }
 
     return filteredCards;
-  }
+  }, [cards, options.filter]);
 
   /**
    * 获取指定列和子状态的卡片数量
    */
-  function getSubStateCount(columnId: string, subState: string): number {
+  const getSubStateCount = useCallback((columnId: string, subState: string): number => {
     return cards.filter(card => card.status === subState).length;
-  }
+  }, [cards]);
 
   /**
    * 获取指定列的总卡片数量
    */
-  function getTotalCount(columnId: string): number {
+  const getTotalCount = useCallback((columnId: string): number => {
     const column = POOL_COLUMN_GROUPS.find(c => c.id === columnId);
     if (!column) return 0;
 
@@ -126,18 +128,21 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
       (sum, sub) => sum + getSubStateCount(columnId, sub.value),
       0
     );
-  }
+  }, [getSubStateCount]);
 
-  return {
+  const doRefetch = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  // 使用 useMemo 稳定返回值引用
+  return useMemo(() => ({
     columns: POOL_COLUMN_GROUPS,
     cards,
     loading: isLoading,
     error: error as Error | null,
-    refetch: async () => {
-      await refetch();
-    },
+    refetch: doRefetch,
     getCardsForColumn,
     getSubStateCount,
     getTotalCount,
-  };
+  }), [cards, isLoading, error, doRefetch, getCardsForColumn, getSubStateCount, getTotalCount]);
 }

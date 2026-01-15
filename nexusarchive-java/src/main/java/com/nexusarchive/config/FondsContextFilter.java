@@ -76,6 +76,13 @@ public class FondsContextFilter extends OncePerRequestFilter {
         if (path.startsWith("/api/bas/fonds")) {
             return false;
         }
+
+        // [FIXED] 排除附件下载和预览路径（浏览器原生请求无法带 Header，避免默认回落到错误全宗）
+        // 参见: docs/knowledge/2026-01-13-attachment-preview-auth-fix.md
+        if (path.contains("/files/download/") || path.endsWith("/content")) {
+            return false;
+        }
+
         // 其他路径默认需要全宗权限
         return true;
     }

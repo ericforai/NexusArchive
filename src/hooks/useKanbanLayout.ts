@@ -2,6 +2,7 @@
 // Output: useKanbanLayout hook for responsive kanban layout
 // Pos: src/hooks/useKanbanLayout.ts
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+// 修复：使用 useMemo 稳定返回值引用
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { POOL_COLUMN_GROUPS } from '@/config/pool-columns.config';
@@ -215,13 +216,13 @@ function useCollapseState(getEmptyColumns: (cardsByColumn: Record<string, unknow
     setCollapsedColumns(new Set());
   }, []);
 
-  return {
+  return useMemo(() => ({
     collapsedColumns,
     toggleCollapse,
     isCollapsed,
     collapseAllEmpty,
     expandAll,
-  };
+  }), [collapsedColumns, toggleCollapse, isCollapsed, collapseAllEmpty, expandAll]);
 }
 
 /**
@@ -239,7 +240,7 @@ function useLayoutCalculations(
     return calculateTotalContentWidth(columnWidth, collapsedColumns.size);
   }, [columnWidth, collapsedColumns.size]);
 
-  return { getVisibleColumnCount, getTotalContentWidth };
+  return useMemo(() => ({ getVisibleColumnCount, getTotalContentWidth }), [getVisibleColumnCount, getTotalContentWidth]);
 }
 
 /**
@@ -250,6 +251,7 @@ function useLayoutCalculations(
  * 2. 空列检测和自动折叠
  * 3. 折叠状态管理
  * 4. 容器溢出检测
+ * 修复：使用 useMemo 稳定返回值引用
  */
 export function useKanbanLayout(options: KanbanLayoutOptions = {}): UseKanbanLayoutResult {
   const {
@@ -277,7 +279,8 @@ export function useKanbanLayout(options: KanbanLayoutOptions = {}): UseKanbanLay
   // 计算辅助
   const calculations = useLayoutCalculations(columnWidth, collapseState.collapsedColumns);
 
-  return {
+  // 使用 useMemo 稳定返回值引用
+  return useMemo(() => ({
     // 列宽计算
     columnWidth,
     setColumnWidth: setColumnWidthHandler,
@@ -292,11 +295,16 @@ export function useKanbanLayout(options: KanbanLayoutOptions = {}): UseKanbanLay
     hasCards,
 
     // 折叠状态
-    ...collapseState,
+    collapsedColumns: collapseState.collapsedColumns,
+    toggleCollapse: collapseState.toggleCollapse,
+    isCollapsed: collapseState.isCollapsed,
+    collapseAllEmpty: collapseState.collapseAllEmpty,
+    expandAll: collapseState.expandAll,
 
     // 计算辅助
-    ...calculations,
-  };
+    getVisibleColumnCount: calculations.getVisibleColumnCount,
+    getTotalContentWidth: calculations.getTotalContentWidth,
+  }), [columnWidth, setColumnWidthHandler, recalculateWidth, containerWidth, isOverflowing, getEmptyColumns, hasCards, collapseState, calculations]);
 }
 
 /**

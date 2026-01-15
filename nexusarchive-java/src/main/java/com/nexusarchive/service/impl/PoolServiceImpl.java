@@ -11,6 +11,7 @@ import com.nexusarchive.dto.PoolItemDto;
 import com.nexusarchive.dto.search.CandidateSearchRequest;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.ArcFileMetadataIndex;
+import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.service.PoolService;
@@ -42,6 +43,18 @@ public class PoolServiceImpl implements PoolService {
     private static final String[] SOURCE_SYSTEMS = {
             "Web上传", "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"
     };
+    private static final Map<String, String> LEGACY_STATUS_MAP = Map.ofEntries(
+            Map.entry("DRAFT", PreArchiveStatus.PENDING_CHECK.getCode()),
+            Map.entry("PENDING_CHECK", PreArchiveStatus.PENDING_CHECK.getCode()),
+            Map.entry("CHECK_FAILED", PreArchiveStatus.NEEDS_ACTION.getCode()),
+            Map.entry("PENDING_METADATA", PreArchiveStatus.NEEDS_ACTION.getCode()),
+            Map.entry("MATCH_PENDING", PreArchiveStatus.READY_TO_MATCH.getCode()),
+            Map.entry("MATCHED", PreArchiveStatus.READY_TO_MATCH.getCode()),
+            Map.entry("PENDING_ARCHIVE", PreArchiveStatus.READY_TO_ARCHIVE.getCode()),
+            Map.entry("PENDING_APPROVAL", PreArchiveStatus.COMPLETED.getCode()),
+            Map.entry("ARCHIVING", PreArchiveStatus.COMPLETED.getCode()),
+            Map.entry("ARCHIVED", PreArchiveStatus.COMPLETED.getCode())
+    );
 
     @Override
     public List<PoolItemDto> searchCandidates(CandidateSearchRequest request) {
@@ -174,8 +187,9 @@ public class PoolServiceImpl implements PoolService {
 
     @Override
     public List<PoolItemDto> listByStatus(String status) {
+        String normalizedStatus = normalizeLegacyStatus(status);
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, status)
+        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, normalizedStatus)
                 .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
                 .orderByDesc(ArcFileContent::getCreatedTime);
 
@@ -183,6 +197,15 @@ public class PoolServiceImpl implements PoolService {
         return fileContents.stream()
                 .map(this::convertToPoolItemDto)
                 .collect(Collectors.toList());
+    }
+
+    private String normalizeLegacyStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return status;
+        }
+        String trimmed = status.trim();
+        String normalized = LEGACY_STATUS_MAP.get(trimmed);
+        return normalized != null ? normalized : trimmed;
     }
 
     @Override

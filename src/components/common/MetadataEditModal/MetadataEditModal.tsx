@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { FormModal } from '../../modals/FormModal';
-import { MetadataForm, type MetadataFormData, type MetadataFormConfig } from '../MetadataForm';
+import { MetadataForm } from '../MetadataForm';
+// MetadataFormData/MetadataFormConfig 类型由 ../MetadataForm 导出，按需使用
 import { DEFAULT_FIELDS } from './constants';
 import { useFileDetailLoader } from './useFileDetailLoader';
 import { useMetadataSubmit } from './useMetadataSubmit';
@@ -36,7 +37,7 @@ export const MetadataEditModal: React.FC<MetadataEditModalProps> = ({
     });
 
     // Handle form submission with validation
-    const { saving, error, handleSubmit, setError } = useMetadataSubmit({
+    const { saving, error, handleSubmit } = useMetadataSubmit({
         fileId,
         formData,
         fieldConfig,

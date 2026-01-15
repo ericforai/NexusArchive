@@ -4,8 +4,9 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React from 'react';
-import { useRouteError, isRouteErrorResponse, useNavigate } from 'react-router-dom';
-import { AlertTriangle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
+// 临时禁用：useRouteError, isRouteErrorResponse, useNavigate 和图标暂未使用
+// import { useRouteError, isRouteErrorResponse, useNavigate } from 'react-router-dom';
+// import { AlertTriangle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
 
 export const RouteErrorBoundary: React.FC = () => {
     // const error = useRouteError();

@@ -105,7 +105,7 @@ export class RootErrorBoundary extends Component<Props, State> {
       // 清理 sessionStorage 中的 HMR 状态
       try {
         sessionStorage.clear();
-      } catch (e) {
+      } catch (_e) {
         // Ignore storage errors
       }
     }

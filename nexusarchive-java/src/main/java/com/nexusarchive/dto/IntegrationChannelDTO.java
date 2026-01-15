@@ -86,6 +86,11 @@ public class IntegrationChannelDTO {
     private java.util.List<String> accbookCodes;
 
     /**
+     * 账套-全宗映射 (accbookCode -> fondsCode)
+     */
+    private java.util.Map<String, String> accbookMapping;
+
+    /**
      * 最后一次同步的详细日志消息
      */
     private String lastSyncMsg;

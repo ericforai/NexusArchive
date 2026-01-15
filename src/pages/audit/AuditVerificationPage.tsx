@@ -23,7 +23,7 @@ type VerifyMode = 'single' | 'batch' | 'chain' | 'sample';
  * PRD 来源: Section 6.2 - 审计日志防篡改要求
  */
 export const AuditVerificationPage: React.FC = () => {
-    const { currentFonds } = useFondsStore();
+    const { currentFonds: _currentFonds } = useFondsStore(); // 预留用于全宗筛选
     const [mode, setMode] = useState<VerifyMode>('single');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<VerificationResult | ChainVerificationResult | SamplingResult | null>(null);
@@ -187,10 +187,10 @@ export const AuditVerificationPage: React.FC = () => {
 
         // 哈希链/抽检验真结果
         if ('totalLogs' in result) {
-            const chainResult = 'verificationResult' in result 
+            const chainResult = 'verificationResult' in result
                 ? (result as SamplingResult).verificationResult
                 : result as ChainVerificationResult;
-            
+
             const sampleInfo = 'verificationResult' in result ? result as SamplingResult : null;
 
             return (
@@ -204,7 +204,7 @@ export const AuditVerificationPage: React.FC = () => {
                             <div className="text-sm space-y-1">
                                 <div><span className="text-slate-600">总日志数:</span> {sampleInfo.totalLogs}</div>
                                 <div><span className="text-slate-600">抽检数量:</span> {sampleInfo.sampledLogs}</div>
-                                <div><span className="text-slate-600">抽检日志ID:</span> 
+                                <div><span className="text-slate-600">抽检日志ID:</span>
                                     <div className="mt-1 font-mono text-xs max-h-32 overflow-y-auto">
                                         {sampleInfo.sampledLogIds.join(', ')}
                                     </div>
@@ -280,44 +280,40 @@ export const AuditVerificationPage: React.FC = () => {
                 <div className="flex space-x-2">
                     <button
                         onClick={() => { setMode('single'); setResult(null); setError(null); }}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            mode === 'single' 
-                                ? 'bg-primary-600 text-white' 
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'single'
+                                ? 'bg-primary-600 text-white'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         <Search className="inline mr-2" size={16} />
                         单条验真
                     </button>
                     <button
                         onClick={() => { setMode('batch'); setResult(null); setError(null); }}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            mode === 'batch' 
-                                ? 'bg-primary-600 text-white' 
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'batch'
+                                ? 'bg-primary-600 text-white'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         <List className="inline mr-2" size={16} />
                         批量验真
                     </button>
                     <button
                         onClick={() => { setMode('chain'); setResult(null); setError(null); }}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            mode === 'chain' 
-                                ? 'bg-primary-600 text-white' 
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'chain'
+                                ? 'bg-primary-600 text-white'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         <FileText className="inline mr-2" size={16} />
                         链路验真
                     </button>
                     <button
                         onClick={() => { setMode('sample'); setResult(null); setError(null); }}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            mode === 'sample' 
-                                ? 'bg-primary-600 text-white' 
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'sample'
+                                ? 'bg-primary-600 text-white'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         <Shuffle className="inline mr-2" size={16} />
                         抽检验真

@@ -5,7 +5,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SapInterfaceConfigForm } from '../SapInterfaceConfigForm';
-import type { SapInterfaceConfig } from '../../types';
 
 describe('SapInterfaceConfigForm', () => {
   const mockOnChange = vi.fn();

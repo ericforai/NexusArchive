@@ -12,3 +12,5 @@ export const LoadingState: React.FC = React.memo(() => {
         </div>
     );
 });
+
+LoadingState.displayName = 'LoadingState';

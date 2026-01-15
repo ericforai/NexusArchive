@@ -195,6 +195,14 @@ public class YonSuiteClient {
     }
 
     /**
+     * 通用附件查询接口（别名方法）
+     * 用于付款申请单、收款单等其他单据类型的附件查询
+     */
+    public YonAttachmentListResponse queryAttachments(String accessToken, String billId) {
+        return queryVoucherAttachments(accessToken, billId);
+    }
+
+    /**
      * 获取收款单文件
      * POST /yonbip/EFI/collection/file/url
      */
@@ -613,6 +621,54 @@ public class YonSuiteClient {
             return response;
         } catch (Exception e) {
             log.error("Failed to call YonSuite queryRefundList", e);
+            throw new RuntimeException("YonSuite API Error", e);
+        }
+    }
+
+    /**
+     * 付款申请单文件下载查询
+     * POST /yonbip/EFI/paymentApply/file/url
+     *
+     * @param accessToken 可选, 为null则自动获取
+     * @param request 付款申请单文件下载请求 (fileId 列表, 最多20个)
+     * @return 付款申请单文件下载信息
+     */
+    public YonPaymentApplyFileResponse queryPaymentApplyFileUrls(String accessToken, YonPaymentApplyFileRequest request) {
+        String token = getToken(accessToken);
+        String url = baseUrl + "/yonbip/EFI/paymentApply/file/url"
+                + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        log.info("Calling YonSuite queryPaymentApplyFileUrls: fileIds={}", request.getFileId());
+
+        try {
+            String body = objectMapper.writeValueAsString(request);
+            log.debug("Request body: {}", body);
+
+            String respStr = HttpRequest.post(url)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .timeout(30_000)
+                    .execute()
+                    .body();
+
+            log.info("YonSuite payment apply file url response: {}", respStr);
+
+            if (respStr == null || respStr.isEmpty()) {
+                YonPaymentApplyFileResponse emptyResponse = new YonPaymentApplyFileResponse();
+                emptyResponse.setCode("200");
+                emptyResponse.setMessage("No data");
+                return emptyResponse;
+            }
+
+            YonPaymentApplyFileResponse response = objectMapper.readValue(respStr, YonPaymentApplyFileResponse.class);
+
+            if (!"200".equals(response.getCode())) {
+                log.warn("YonSuite payment apply file url API warning: {} - {}", response.getCode(), response.getMessage());
+            }
+
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to call YonSuite queryPaymentApplyFileUrls", e);
             throw new RuntimeException("YonSuite API Error", e);
         }
     }

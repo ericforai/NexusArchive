@@ -57,9 +57,10 @@ public class OriginalVoucherController {
             @Parameter(description = "二级类型") @RequestParam(required = false) String type,
             @Parameter(description = "归档状态") @RequestParam(required = false) String status,
             @Parameter(description = "全宗号") @RequestParam(required = false) String fondsCode,
-            @Parameter(description = "会计年度") @RequestParam(required = false) String fiscalYear) {
+            @Parameter(description = "会计年度") @RequestParam(required = false) String fiscalYear,
+            @Parameter(description = "单据池状态 (ENTRY,PARSED,PARSE_FAILED)") @RequestParam(required = false) String poolStatus) {
         return Result.success(
-                voucherService.getVouchers(page, limit, search, category, type, status, fondsCode, fiscalYear));
+                voucherService.getVouchers(page, limit, search, category, type, status, fondsCode, fiscalYear, poolStatus));
     }
 
     @GetMapping("/{id}")

@@ -19,7 +19,7 @@ const ICON_SIZE_LG = 24;
  */
 export interface BatchError {
   /** 记录 ID */
-  id: number;
+  id: string;
   /** 失败原因 */
   reason: string;
 }
@@ -37,7 +37,7 @@ export interface BatchResultModalProps {
   /** 错误列表 */
   errors?: BatchError[];
   /** 重试回调（传入失败的 ID 列表） */
-  onRetry?: (failedIds: number[]) => void | Promise<void>;
+  onRetry?: (failedIds: string[]) => void | Promise<void>;
   /** 关闭回调 */
   onClose: () => void;
   /** 操作类型（用于标题显示） */

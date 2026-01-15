@@ -96,6 +96,7 @@ export function clearFondsState(): void {
 let clearFondsCallback: (() => void) | null = null;
 export function registerClearFondsCallback(callback: () => void): void {
   clearFondsCallback = callback;
+  void clearFondsCallback; // 已注册，通过 provider.clear 调用
   // 同时更新 provider 以支持 clear 方法
   fundsProvider = {
     ...fundsProvider,

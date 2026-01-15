@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Tabs, Breadcrumb } from 'antd';
-import type { VoucherDTO } from '../../components/voucher';
+// VoucherDTO 类型由 useVoucherData hook 内部使用
 import { VoucherMetadata, VoucherPreviewCanvas, OriginalDocumentPreview } from '../../components/voucher';
 import { useVoucherData } from './hooks/useVoucherData';
 import { archivesApi } from '../../api/archives';

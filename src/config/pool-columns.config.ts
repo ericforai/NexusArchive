@@ -187,3 +187,38 @@ export function getColumnStates(columnId: string): SimplifiedPreArchiveStatus[] 
   const column = POOL_COLUMN_GROUPS.find(g => g.id === columnId);
   return column?.subStates.map(s => s.value) || [];
 }
+
+/**
+ * 旧状态代码映射到新简化状态的映射表
+ * 用于统一处理后端可能返回的历史状态值
+ */
+export const LEGACY_STATUS_MAP: Record<string, SimplifiedPreArchiveStatus> = {
+  // 待检测
+  'PENDING_CHECK': SimplifiedPreArchiveStatus.PENDING_CHECK,
+  // 待处理
+  'CHECK_FAILED': SimplifiedPreArchiveStatus.NEEDS_ACTION,
+  'PENDING_METADATA': SimplifiedPreArchiveStatus.NEEDS_ACTION,
+  'NEEDS_ACTION': SimplifiedPreArchiveStatus.NEEDS_ACTION,
+  // 可匹配
+  'READY_TO_MATCH': SimplifiedPreArchiveStatus.READY_TO_MATCH,
+  'MATCHED': SimplifiedPreArchiveStatus.READY_TO_MATCH, // 实际上匹配完了可能也是这个状态，或者流转到下一步
+  // 可归档
+  'PENDING_ARCHIVE': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
+  'READY_TO_ARCHIVE': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
+  // 已完成
+  'ARCHIVED': SimplifiedPreArchiveStatus.COMPLETED,
+  'COMPLETED': SimplifiedPreArchiveStatus.COMPLETED
+};
+
+/**
+ * 解析状态：将任意（可能过时的）状态字符串解析为标准的 SimplifiedPreArchiveStatus
+ * 如果无法解析，默认返回 NEEDS_ACTION 以引起注意
+ */
+export function resolveStatus(rawStatus: string): SimplifiedPreArchiveStatus {
+  // 1. 如果已经是标准状态，直接返回
+  if (Object.values(SimplifiedPreArchiveStatus).includes(rawStatus as SimplifiedPreArchiveStatus)) {
+    return rawStatus as SimplifiedPreArchiveStatus;
+  }
+  // 2. 尝试映射旧状态
+  return LEGACY_STATUS_MAP[rawStatus] || SimplifiedPreArchiveStatus.NEEDS_ACTION;
+}

@@ -1,6 +1,6 @@
 // nexusarchive-java/src/main/java/com/nexusarchive/service/impl/ErpConfigServiceImpl.java
 // Input: ERP type, config ID
-// Output: ERP config entities
+// Output: ERP config entities / DTOs
 // Pos: AI 模块 - ERP 配置服务实现
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -9,6 +9,8 @@ package com.nexusarchive.service.impl;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nexusarchive.dto.ErpConfigDto;
+import com.nexusarchive.dto.ErpConfigApiDtoBuilder;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.service.ErpConfigService;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ERP 配置服务实现
@@ -34,6 +37,58 @@ public class ErpConfigServiceImpl implements ErpConfigService {
     public ErpConfigServiceImpl(ErpConfigMapper erpConfigMapper) {
         this.erpConfigMapper = erpConfigMapper;
     }
+
+    // ========== API 方法（返回 DTO，已清理敏感信息） ==========
+
+    /**
+     * 获取所有配置（API 响应，已清理敏感信息）
+     * 缓存键: erpConfig:all:dto
+     */
+    @Override
+    @Cacheable(value = "erpConfig", key = "'all:dto'")
+    public List<ErpConfigDto> getConfigs() {
+        log.debug("获取所有 ERP 配置（DTO）");
+        List<ErpConfig> configs = erpConfigMapper.selectList(null);
+        return configs.stream()
+                .map(ErpConfigApiDtoBuilder::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据 ERP 类型查询配置列表（API 响应，已清理敏感信息）
+     * 缓存键: erpConfig:type:{erpType}:dto
+     */
+    @Override
+    @Cacheable(value = "erpConfig", key = "'type:' + #erpType + ':dto'")
+    public List<ErpConfigDto> getConfigsByErpType(String erpType) {
+        log.debug("查询 ERP 配置（DTO）: erpType={}", erpType);
+
+        LambdaQueryWrapper<ErpConfig> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ErpConfig::getErpType, erpType)
+                    .eq(ErpConfig::getIsActive, 1)
+                    .orderByDesc(ErpConfig::getCreatedTime);
+
+        List<ErpConfig> configs = erpConfigMapper.selectList(queryWrapper);
+        List<ErpConfigDto> result = configs.stream()
+                .map(ErpConfigApiDtoBuilder::toDto)
+                .collect(Collectors.toList());
+        log.info("查询到 {} 个 ERP 配置（DTO）: erpType={}", result.size(), erpType);
+        return result;
+    }
+
+    /**
+     * 根据 ID 查询配置（API 响应，已清理敏感信息）
+     * 缓存键: erpConfig:id:{configId}:dto
+     */
+    @Override
+    @Cacheable(value = "erpConfig", key = "'id:' + #configId + ':dto'")
+    public ErpConfigDto getConfig(Long configId) {
+        log.debug("查询 ERP 配置（DTO）: configId={}", configId);
+        ErpConfig config = erpConfigMapper.selectById(configId);
+        return ErpConfigApiDtoBuilder.toDto(config);
+    }
+
+    // ========== 内部方法（返回 Entity，包含敏感信息） ==========
 
     /**
      * 根据 ERP 类型查询配置列表
@@ -69,6 +124,19 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         if (config != null) {
             sanitizeSensitiveFields(config);
         }
+        return config;
+    }
+
+    /**
+     * 根据 ID 查询完整配置（包含敏感信息）
+     * 用于内部调用（如适配器连接测试），不清除敏感字段
+     * 缓存键: erpConfig:internal:id:{configId}
+     */
+    @Override
+    public ErpConfig getByIdForInternalUse(Long configId) {
+        log.debug("查询完整 ERP 配置（内部使用）: configId={}", configId);
+        ErpConfig config = erpConfigMapper.selectById(configId);
+        // 不清除敏感信息，直接返回
         return config;
     }
 

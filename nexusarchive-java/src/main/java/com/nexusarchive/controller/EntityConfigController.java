@@ -36,14 +36,14 @@ public class EntityConfigController {
     
     @GetMapping("/entity/{entityId}")
     @Operation(summary = "查询指定法人的所有配置")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<List<EntityConfig>> getConfigsByEntityId(@PathVariable String entityId) {
         return Result.success(configService.getConfigsByEntityId(entityId));
     }
     
     @GetMapping("/entity/{entityId}/type/{configType}")
     @Operation(summary = "查询指定法人和配置类型的配置")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<List<EntityConfig>> getConfigsByEntityIdAndType(
             @PathVariable String entityId,
             @PathVariable String configType) {
@@ -52,14 +52,14 @@ public class EntityConfigController {
     
     @GetMapping("/entity/{entityId}/grouped")
     @Operation(summary = "查询指定法人的配置（按类型分组）")
-    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:view', 'entity:manage') or hasRole('super_admin')")
     public Result<Map<String, List<EntityConfig>>> getConfigsGroupedByType(@PathVariable String entityId) {
         return Result.success(configService.getConfigsGroupedByType(entityId));
     }
     
     @PostMapping
     @Operation(summary = "保存或更新配置")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Map<String, String>> saveOrUpdateConfig(@Valid @RequestBody EntityConfig config) {
         if (config.getEntityId() == null || config.getConfigType() == null || config.getConfigKey() == null) {
             return Result.error("法人ID、配置类型和配置键不能为空");
@@ -76,7 +76,7 @@ public class EntityConfigController {
     
     @DeleteMapping("/entity/{entityId}")
     @Operation(summary = "删除指定法人的所有配置")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Void> deleteConfigsByEntityId(@PathVariable String entityId) {
         configService.deleteConfigsByEntityId(entityId, null);
         return Result.success(null);
@@ -84,7 +84,7 @@ public class EntityConfigController {
     
     @DeleteMapping("/entity/{entityId}/type/{configType}")
     @Operation(summary = "删除指定法人和配置类型的配置")
-    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('entity:manage') or hasRole('super_admin')")
     public Result<Void> deleteConfigsByEntityIdAndType(
             @PathVariable String entityId,
             @PathVariable String configType) {

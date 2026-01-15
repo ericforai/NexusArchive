@@ -33,3 +33,5 @@ export const UserProfile: React.FC<UserProfileProps> = React.memo(({
         </div>
     );
 });
+
+UserProfile.displayName = 'UserProfile';

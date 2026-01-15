@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { voucherTableStyles, formatCurrency, numberToChinese, formatDate } from './styles';
-import type { VoucherDTO, VoucherEntryDTO } from './types';
+import type { VoucherDTO } from './types';
 import { formatVoucherNumber } from '../../utils/voucherNumber';
 
 interface VoucherPreviewCanvasProps {
@@ -30,7 +30,7 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
   });
 
   // 计算合计
-  const { totalDebit, totalCredit, chineseAmount } = useMemo(() => {
+  const { totalDebit, chineseAmount } = useMemo(() => {
     let debitSum = 0;
     let creditSum = 0;
 
@@ -52,7 +52,6 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
 
     return {
       totalDebit: debitSum,
-      totalCredit: creditSum,
       chineseAmount: numberToChinese(debitSum),
     };
   }, [data.entries, data.debitTotal]);
@@ -60,7 +59,6 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
   // 格式化凭证号
   const voucherNumber = useMemo(() => {
     return formatVoucherNumber({
-      displayValue: data.voucherNo,
       voucherWord: data.voucherWord,
       voucherNo: data.voucherNo,
       fallback: data.voucherId || data.id,
@@ -103,21 +101,21 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
         <thead style={voucherTableStyles.tableHead}>
           <tr>
             <th style={{ ...voucherTableStyles.tableHeadCell, width: '22%' }}>摘要</th>
-            <th style={{ ...voucherTableStyles.tableHeadCell, width: '30%' }}>科目</th>
-            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '13%' }}>借方</th>
-            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '13%' }}>贷方</th>
-            <th style={{ ...voucherTableStyles.tableHeadCell, width: '12%' }}>币种</th>
+            <th style={{ ...voucherTableStyles.tableHeadCell, width: '26%' }}>科目</th>
+            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '12%' }}>借方</th>
+            <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '12%' }}>贷方</th>
+            <th style={{ ...voucherTableStyles.tableHeadCell, width: '10%' }}>币种</th>
             <th style={{ ...voucherTableStyles.tableHeadCellRight, width: '10%' }}>原币</th>
           </tr>
         </thead>
         <tbody>
           {data.entries && data.entries.length > 0 ? (
             data.entries.map((entry, index) => {
-              // 判断是否有外币（非本位币）
-              const hasForeignCurrency = entry.currencyCode && entry.currencyCode !== 'CNY';
               // 获取原币金额
               const originalDebit = entry.debitOriginal ? Number(entry.debitOriginal) : 0;
               const originalCredit = entry.creditOriginal ? Number(entry.creditOriginal) : 0;
+              // 是否有原币数据（非零原币金额）
+              const hasOriginalAmount = originalDebit > 0 || originalCredit > 0;
 
               return (
                 <tr key={entry.lineNo || index} style={voucherTableStyles.tableRow}>
@@ -136,7 +134,7 @@ export const VoucherPreviewCanvas: React.FC<VoucherPreviewCanvasProps> = React.m
                     {entry.currencyName || entry.currencyCode || '-'}
                   </td>
                   <td style={{ ...voucherTableStyles.tableCellRight, fontSize: '12px' }}>
-                    {hasForeignCurrency ? (
+                    {hasOriginalAmount ? (
                       <span>
                         {formatCurrency(originalDebit || originalCredit)}
                       </span>
@@ -204,6 +202,6 @@ VoucherPreviewCanvas.displayName = 'VoucherPreviewCanvas';
 // 自定义比较函数，只在 voucherId 变化时重新渲染
 export default React.memo(VoucherPreviewCanvas, (prevProps, nextProps) => {
   return prevProps.data.voucherId === nextProps.data.voucherId &&
-         prevProps.compact === nextProps.compact &&
-         prevProps.showSignature === nextProps.showSignature;
+    prevProps.compact === nextProps.compact &&
+    prevProps.showSignature === nextProps.showSignature;
 });

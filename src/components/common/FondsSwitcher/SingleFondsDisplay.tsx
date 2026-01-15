@@ -17,3 +17,5 @@ export const SingleFondsDisplay: React.FC<SingleFondsDisplayProps> = React.memo(
         </div>
     );
 });
+
+SingleFondsDisplay.displayName = 'SingleFondsDisplay';

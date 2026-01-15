@@ -45,28 +45,7 @@ async function getAuthToken() {
   return data.token;
 }
 
-/**
- * Helper: Query database for scenario sync status
- *
- * This is the "Shadow Inspector" - we verify what's in the database
- * independently from what the UI shows.
- */
-async function getScenarioSyncStatus(scenarioId: number, token: string) {
-  const response = await fetch(`${API_BASE}/api/erp/scenario/${scenarioId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
-}
-
-/**
- * Helper: Get sync history from audit table
- */
-async function getSyncHistory(scenarioId: number, token: string) {
-  const response = await fetch(`${API_BASE}/api/erp/sync-history?scenarioId=${scenarioId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
-}
+// 已移除未使用的 getScenarioSyncStatus 和 getSyncHistory
 
 /**
  * Setup: Login and navigate to Integration Settings
@@ -154,7 +133,7 @@ test.describe('YonSuite Scenarios - Shadow Inspector', () => {
    * This ensures the database matches the code implementation.
    * If code has a scenario but DB doesn't (or vice versa), test fails.
    */
-  test('YonSuite: all real scenarios are registered', async ({ page, request }) => {
+  test('YonSuite: all real scenarios are registered', async ({ page: _page, request }) => {
     const token = await getAuthToken();
     const response = await request.get(`${API_BASE}/api/erp/scenarios?configId=1`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -189,7 +168,7 @@ test.describe('YonSuite Scenarios - Shadow Inspector', () => {
    * This tests the audit trail invariant:
    * If scenario.last_sync_status === 'SUCCESS', there MUST be a sync history record.
    */
-  test('Sync History: SUCCESS scenarios have audit records', async ({ page, request }) => {
+  test('Sync History: SUCCESS scenarios have audit records', async ({ page: _page, request }) => {
     const token = await getAuthToken();
     const scenariosResponse = await request.get(`${API_BASE}/api/erp/scenarios?configId=1`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -234,14 +213,14 @@ test.describe('YonSuite Scenarios - State Machine Transitions', () => {
    * Valid transitions: NONE → RUNNING → SUCCESS | FAIL
    * Invalid: NONE → SUCCESS (must go through RUNNING first)
    */
-  test('Scenario status transitions respect FSM rules', async ({ page, request }) => {
+  test('Scenario status transitions respect FSM rules', async ({ page: _page, request }) => {
     const token = await getAuthToken();
     const response = await request.get(`${API_BASE}/api/erp/scenarios?configId=1`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     const scenarios = await response.json();
-    const validTransitions = {
+    const validTransitions: Record<string, string[]> = {
       'NONE': ['RUNNING'],
       'RUNNING': ['SUCCESS', 'FAIL'],
       'SUCCESS': ['RUNNING'], // Can re-sync
@@ -276,7 +255,7 @@ test.describe('YonSuite API - Implementation Verification', () => {
    *
    * Verifies the actual YonSuite API connection
    */
-  test('Connection test: real API call succeeds', async ({ page, request }) => {
+  test('Connection test: real API call succeeds', async ({ page: _page, request }) => {
     const token = await getAuthToken();
 
     // Trigger connection test
@@ -312,7 +291,7 @@ test.describe('YonSuite API - Implementation Verification', () => {
    *
    * Triggers actual sync but verifies state changes in DB
    */
-  test('Scenario sync: database state updates correctly', async ({ page, request }) => {
+  test('Scenario sync: database state updates correctly', async ({ page: _page, request }) => {
     const token = await getAuthToken();
 
     // Get initial state
@@ -361,7 +340,7 @@ test.describe('YonSuite Placeholders - Should Not Execute', () => {
    * - SCM_SALESOUT_DETAIL
    * - VOUCHER_ATTACHMENT_BATCH_QUERY
    */
-  test('Placeholder scenarios: return 501 or 400 error', async ({ page, request }) => {
+  test('Placeholder scenarios: return 501 or 400 error', async ({ page: _page, request }) => {
     const token = await getAuthToken();
 
     // Try to sync a placeholder scenario

@@ -7,11 +7,12 @@ import React, { useCallback } from 'react';
 import { message } from 'antd';
 import { useFondsStore } from '@/store/useFondsStore';
 import { archiveBatchApi } from '@/api/archiveBatch';
-import {
-    BatchOperationBar,
-    BatchApprovalDialog,
-    BatchResultModal
-} from '@/components/operations';
+// 批量操作组件已集成到 BatchTable 中
+// import {
+//     BatchOperationBar,
+//     BatchApprovalDialog,
+//     BatchResultModal
+// } from '@/components/operations';
 // Hooks
 import {
     useArchiveBatchData,
@@ -35,7 +36,7 @@ const ArchiveBatchView: React.FC = () => {
         pageSize,
         statusFilter,
         setPage,
-        setPageSize,
+        setPageSize: _setPageSize, // 预留接口，由 BatchTable 内部管理
         setStatusFilter,
         refresh
     } = useArchiveBatchData();
@@ -56,7 +57,7 @@ const ArchiveBatchView: React.FC = () => {
         loadingVouchers,
         form,
         setCreateModalVisible,
-        setDetailModalVisible,
+        setDetailModalVisible: _setDetailModalVisible, // 由 handleViewDetail 管理
         setApprovalModalVisible,
         setAddVoucherModalVisible,
         setApprovalComment,

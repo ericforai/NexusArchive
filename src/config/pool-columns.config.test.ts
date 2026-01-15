@@ -1,6 +1,6 @@
 // src/config/pool-columns.config.test.ts
 import { describe, it, expect } from 'vitest';
-import { POOL_COLUMN_GROUPS, getColumnByState, getSubStateLabel, getColumnStates, SimplifiedPreArchiveStatus, STATUS_CONFIG, DEFAULT_DASHBOARD_FILTER } from './pool-columns.config';
+import { POOL_COLUMN_GROUPS, getColumnByState, getSubStateLabel, getColumnStates, SimplifiedPreArchiveStatus, STATUS_CONFIG, DEFAULT_DASHBOARD_FILTER, LEGACY_STATUS_MAP, resolveStatus } from './pool-columns.config';
 
 describe('PoolColumnsConfig', () => {
   describe('SimplifiedPreArchiveStatus', () => {
@@ -50,7 +50,7 @@ describe('PoolColumnsConfig', () => {
     it('should have correct config for READY_TO_ARCHIVE', () => {
       const config = STATUS_CONFIG[SimplifiedPreArchiveStatus.READY_TO_ARCHIVE];
       expect(config.color).toBe('#10b981');
-      expect(config.icon).toBe('check-circle-2');
+      expect(config.icon).toBe('check-circle');
       expect(config.label).toBe('可归档');
       expect(config.description).toBe('已就绪，可以提交归档');
     });
@@ -213,6 +213,40 @@ describe('PoolColumnsConfig', () => {
     it('should return empty array for unknown column', () => {
       const result = getColumnStates('unknown');
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('Legacy Status Support', () => {
+    describe('LEGACY_STATUS_MAP', () => {
+      it('should map PENDING_CHECK correctly', () => {
+        expect(LEGACY_STATUS_MAP['PENDING_CHECK']).toBe(SimplifiedPreArchiveStatus.PENDING_CHECK);
+      });
+
+      it('should map CHECK_FAILED to NEEDS_ACTION', () => {
+        expect(LEGACY_STATUS_MAP['CHECK_FAILED']).toBe(SimplifiedPreArchiveStatus.NEEDS_ACTION);
+      });
+
+      it('should map PENDING_ARCHIVE to READY_TO_ARCHIVE', () => {
+        expect(LEGACY_STATUS_MAP['PENDING_ARCHIVE']).toBe(SimplifiedPreArchiveStatus.READY_TO_ARCHIVE);
+      });
+
+      it('should map ARCHIVED to COMPLETED', () => {
+        expect(LEGACY_STATUS_MAP['ARCHIVED']).toBe(SimplifiedPreArchiveStatus.COMPLETED);
+      });
+    });
+
+    describe('resolveStatus', () => {
+      it('should preserve standard statuses', () => {
+        expect(resolveStatus(SimplifiedPreArchiveStatus.READY_TO_ARCHIVE)).toBe(SimplifiedPreArchiveStatus.READY_TO_ARCHIVE);
+      });
+
+      it('should resolve legacy status string correct', () => {
+        expect(resolveStatus('PENDING_ARCHIVE')).toBe(SimplifiedPreArchiveStatus.READY_TO_ARCHIVE);
+      });
+
+      it('should resolve unknown status to NEEDS_ACTION (safe fallback)', () => {
+        expect(resolveStatus('SOME_WEIRD_STATUS_FROM_BACKEND')).toBe(SimplifiedPreArchiveStatus.NEEDS_ACTION);
+      });
     });
   });
 });

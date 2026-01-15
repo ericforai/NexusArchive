@@ -53,7 +53,6 @@ export const RelationNode = memo((props: NodeProps) => {
     ledger: '#94a3b8',
     other: '#94a3b8'
   };
-  const nodeColor = isCenter ? '#f59e0b' : (borderColorMap[data.type] || '#94a3b8');
 
   return (
     <div

@@ -57,7 +57,7 @@
 | `PermissionService.java` | 服务接口 | 权限服务 |
 | `PositionService.java` | 服务接口 | 岗位服务 |
 | `PreArchiveCheckService.java` | 服务接口 | 预归档检查服务 |
-| `PreArchiveSubmitService.java` | 服务接口 | 预归档提交服务 |
+| `PreArchiveSubmitService.java` | 服务接口 | 预归档提交服务（归档完成保留原始格式） |
 | `ReconciliationService.java` | 服务接口 | 对账服务 |
 | `RoleService.java` | 服务接口 | 角色服务 |
 | `RoleValidationService.java` | 服务接口 | 角色验证服务 |

@@ -42,7 +42,7 @@ schema:
 # 文件存储根路径（开发环境使用项目根目录下的 data/archives）
 archive:
   root:
-    path: ./data/archives
+    path: /Users/user/nexusarchive/nexusarchive-java
 
 # Token 黑名单服务配置（开发环境允许 Redis 降级）
 token:
@@ -55,3 +55,7 @@ yonsuite:
   app-key: 96a95c00982446cba484ccc4936b221b
   app-secret: e9a58fd35f3ca3f0a46d27b8859758b1ed35f0b6
 
+# 限流配置（开发环境禁用，避免影响开发调试）
+security:
+  rate-limit:
+    enabled: false

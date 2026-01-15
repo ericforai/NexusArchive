@@ -2,8 +2,9 @@
  * useArchiveActions - Actions Management Hook
  *
  * Handles actions like export, reload, etc.
+ * 修复：使用 useMemo 稳定返回值引用
  */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { UseArchiveActionsOptions, ControllerActions } from './types';
 
 export function useArchiveCsvActions(options: UseArchiveActionsOptions): ControllerActions {
@@ -37,8 +38,9 @@ export function useArchiveCsvActions(options: UseArchiveActionsOptions): Control
         showToast('导出成功，正在下载文件');
     }, [rows, mode.config, mode.title, mode.subTitle, showToast]);
 
-    return {
+    // 使用 useMemo 稳定返回值引用
+    return useMemo(() => ({
         reload,
         exportCsv,
-    };
+    }), [reload, exportCsv]);
 }

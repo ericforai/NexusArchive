@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Filter, Loader2, FileText, CheckSquare, Square, Download } from 'lucide-react';
+import { Calendar, Filter, Loader2, FileText, CheckSquare, Square } from 'lucide-react';
 import { destructionApi, ExpiredArchive } from '../../api/destruction';
 import { useFondsStore } from '../../store';
 import { toast } from '../../utils/notificationService';
@@ -46,7 +46,7 @@ export const ExpiredArchivesPage: React.FC = () => {
             if (currentFonds?.fondsNo && !filters.fondsNo) {
                 params.fondsNo = currentFonds.fondsNo;
             }
-            
+
             const res = await destructionApi.getExpiredArchives(params);
             if (res.code === 200 && res.data) {
                 setArchives(res.data.records || []);
@@ -72,8 +72,8 @@ export const ExpiredArchivesPage: React.FC = () => {
     };
 
     const handleSelect = (id: string) => {
-        setSelectedIds(prev => 
-            prev.includes(id) 
+        setSelectedIds(prev =>
+            prev.includes(id)
                 ? prev.filter(i => i !== id)
                 : [...prev, id]
         );

@@ -3,7 +3,7 @@
 // Pos: src/pages/scan/MobileUploadPage.tsx
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Button, Upload, message, Spin, Alert, Card, Typography } from 'antd';
 import { CameraOutlined, UploadOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';

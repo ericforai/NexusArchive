@@ -13,6 +13,7 @@ import {
   MAX_COLUMN_WIDTH,
   COLLAPSED_COLUMN_WIDTH,
 } from '../useKanbanLayout';
+import { POOL_COLUMN_GROUPS } from '@/config/pool-columns.config';
 
 // Mock ResizeObserver
 class MockResizeObserver {
@@ -30,7 +31,7 @@ describe('useKanbanLayout', () => {
   beforeEach(() => {
     // 创建模拟容器元素
     mockElement = {
-      clientWidth: 1200,
+      clientWidth: 1500, // 增加宽度以适应 5 列
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     } as unknown as HTMLElement;
@@ -75,16 +76,16 @@ describe('useKanbanLayout', () => {
       );
 
       await waitFor(() => {
-        expect(result.current.containerWidth).toBe(1200);
+        expect(result.current.containerWidth).toBe(1500);
       });
 
-      // 1200px 容器，4列，每列约 (1200 - 32 - 48) / 4 = 280px
+      // 1500px 容器，5列，每列约 (1500 - 32 - 64) / 5 = 280.8px
       expect(result.current.columnWidth).toBeGreaterThanOrEqual(MIN_COLUMN_WIDTH);
       expect(result.current.columnWidth).toBeLessThanOrEqual(MAX_COLUMN_WIDTH);
     });
 
     it('should respect minimum column width', () => {
-      const smallElement = { clientWidth: 500 } as unknown as HTMLElement;
+      const smallElement = { clientWidth: 600 } as unknown as HTMLElement;
       const smallRef = { current: smallElement };
 
       const { result } = renderHook(() =>
@@ -96,7 +97,7 @@ describe('useKanbanLayout', () => {
     });
 
     it('should respect maximum column width', () => {
-      const largeElement = { clientWidth: 3000 } as unknown as HTMLElement;
+      const largeElement = { clientWidth: 4000 } as unknown as HTMLElement;
       const largeRef = { current: largeElement };
 
       const { result } = renderHook(() =>
@@ -160,9 +161,10 @@ describe('useKanbanLayout', () => {
   describe('empty column detection', () => {
     const mockCardsByColumn = {
       pending: [{ id: '1' }, { id: '2' }],
-      'needs-attention': [],
-      ready: [{ id: '3' }],
-      processing: [],
+      'needs-action': [],
+      'ready-to-match': [{ id: '3' }],
+      'ready-to-archive': [],
+      completed: [],
     };
 
     it('should identify empty columns', () => {
@@ -170,8 +172,8 @@ describe('useKanbanLayout', () => {
 
       const emptyColumns = result.current.getEmptyColumns(mockCardsByColumn);
 
-      expect(emptyColumns).toEqual(['needs-attention', 'processing']);
-      expect(emptyColumns).toHaveLength(2);
+      expect(emptyColumns).toEqual(['needs-action', 'ready-to-archive', 'completed']);
+      expect(emptyColumns).toHaveLength(3);
     });
 
     it('should return empty array when all columns have cards', () => {
@@ -179,9 +181,10 @@ describe('useKanbanLayout', () => {
 
       const fullColumns = {
         pending: [{ id: '1' }],
-        'needs-attention': [{ id: '2' }],
-        ready: [{ id: '3' }],
-        processing: [{ id: '4' }],
+        'needs-action': [{ id: '2' }],
+        'ready-to-match': [{ id: '3' }],
+        'ready-to-archive': [{ id: '4' }],
+        completed: [{ id: '5' }],
       };
 
       const emptyColumns = result.current.getEmptyColumns(fullColumns);
@@ -193,9 +196,9 @@ describe('useKanbanLayout', () => {
       const { result } = renderHook(() => useKanbanLayout());
 
       expect(result.current.hasCards('pending', mockCardsByColumn)).toBe(true);
-      expect(result.current.hasCards('ready', mockCardsByColumn)).toBe(true);
-      expect(result.current.hasCards('needs-attention', mockCardsByColumn)).toBe(false);
-      expect(result.current.hasCards('processing', mockCardsByColumn)).toBe(false);
+      expect(result.current.hasCards('ready-to-match', mockCardsByColumn)).toBe(true);
+      expect(result.current.hasCards('needs-action', mockCardsByColumn)).toBe(false);
+      expect(result.current.hasCards('ready-to-archive', mockCardsByColumn)).toBe(false);
     });
 
     it('should handle missing column keys gracefully', () => {
@@ -205,8 +208,8 @@ describe('useKanbanLayout', () => {
         pending: [{ id: '1' }],
       };
 
-      expect(result.current.hasCards('ready', incompleteData)).toBe(false);
-      expect(result.current.getEmptyColumns(incompleteData)).toContain('ready');
+      expect(result.current.hasCards('ready-to-match', incompleteData)).toBe(false);
+      expect(result.current.getEmptyColumns(incompleteData)).toContain('ready-to-match');
     });
   });
 
@@ -235,13 +238,13 @@ describe('useKanbanLayout', () => {
 
       act(() => {
         result.current.toggleCollapse('pending');
-        result.current.toggleCollapse('ready');
+        result.current.toggleCollapse('ready-to-match');
       });
 
       expect(result.current.collapsedColumns.size).toBe(2);
       expect(result.current.isCollapsed('pending')).toBe(true);
-      expect(result.current.isCollapsed('ready')).toBe(true);
-      expect(result.current.isCollapsed('processing')).toBe(false);
+      expect(result.current.isCollapsed('ready-to-match')).toBe(true);
+      expect(result.current.isCollapsed('completed')).toBe(false);
     });
 
     it('should expand all columns', () => {
@@ -249,8 +252,8 @@ describe('useKanbanLayout', () => {
 
       act(() => {
         result.current.toggleCollapse('pending');
-        result.current.toggleCollapse('ready');
-        result.current.toggleCollapse('processing');
+        result.current.toggleCollapse('ready-to-match');
+        result.current.toggleCollapse('completed');
       });
 
       expect(result.current.collapsedColumns.size).toBe(3);
@@ -261,8 +264,8 @@ describe('useKanbanLayout', () => {
 
       expect(result.current.collapsedColumns.size).toBe(0);
       expect(result.current.isCollapsed('pending')).toBe(false);
-      expect(result.current.isCollapsed('ready')).toBe(false);
-      expect(result.current.isCollapsed('processing')).toBe(false);
+      expect(result.current.isCollapsed('ready-to-match')).toBe(false);
+      expect(result.current.isCollapsed('completed')).toBe(false);
     });
 
     it('should collapse all empty columns', () => {
@@ -270,27 +273,29 @@ describe('useKanbanLayout', () => {
 
       const mockCardsByColumn = {
         pending: [{ id: '1' }],
-        'needs-attention': [],
-        ready: [],
-        processing: [{ id: '2' }],
+        'needs-action': [],
+        'ready-to-match': [],
+        'ready-to-archive': [{ id: '2' }],
+        completed: [],
       };
 
       act(() => {
         result.current.collapseAllEmpty(mockCardsByColumn);
       });
 
-      expect(result.current.collapsedColumns.size).toBe(2);
-      expect(result.current.isCollapsed('needs-attention')).toBe(true);
-      expect(result.current.isCollapsed('ready')).toBe(true);
+      expect(result.current.collapsedColumns.size).toBe(3);
+      expect(result.current.isCollapsed('needs-action')).toBe(true);
+      expect(result.current.isCollapsed('ready-to-match')).toBe(true);
+      expect(result.current.isCollapsed('completed')).toBe(true);
       expect(result.current.isCollapsed('pending')).toBe(false);
-      expect(result.current.isCollapsed('processing')).toBe(false);
+      expect(result.current.isCollapsed('ready-to-archive')).toBe(false);
     });
   });
 
   describe('overflow detection', () => {
     it('should detect when content overflows container', async () => {
       // 小容器会导致溢出
-      const smallElement = { clientWidth: 800 } as unknown as HTMLElement;
+      const smallElement = { clientWidth: 900 } as unknown as HTMLElement;
       const smallRef = { current: smallElement };
 
       const { result } = renderHook(() =>
@@ -298,10 +303,10 @@ describe('useKanbanLayout', () => {
       );
 
       await waitFor(() => {
-        expect(result.current.containerWidth).toBe(800);
+        expect(result.current.containerWidth).toBe(900);
       });
 
-      // 4列 * 280px + 3 * 16px + 32px = 1160px > 800px
+      // 5列 * 280px + 4 * 16px + 32px = 1440px > 900px
       // 应该检测到溢出
       expect(result.current.isOverflowing).toBe(true);
     });
@@ -323,7 +328,7 @@ describe('useKanbanLayout', () => {
     });
 
     it('should reduce overflow when columns are collapsed', async () => {
-      const element = { clientWidth: 800 } as unknown as HTMLElement;
+      const element = { clientWidth: 900 } as unknown as HTMLElement;
       const ref = { current: element };
 
       const { result } = renderHook(() =>
@@ -331,7 +336,7 @@ describe('useKanbanLayout', () => {
       );
 
       await waitFor(() => {
-        expect(result.current.containerWidth).toBe(800);
+        expect(result.current.containerWidth).toBe(900);
       });
 
       expect(result.current.isOverflowing).toBe(true);
@@ -339,12 +344,12 @@ describe('useKanbanLayout', () => {
       // 折叠两列后应该减少溢出
       act(() => {
         result.current.toggleCollapse('pending');
-        result.current.toggleCollapse('ready');
+        result.current.toggleCollapse('completed');
       });
 
       // 折叠后列宽可能会变大，但总内容宽度应该减少
       const visibleColumnCount = result.current.getVisibleColumnCount();
-      expect(visibleColumnCount).toBe(2);
+      expect(visibleColumnCount).toBe(3);
     });
   });
 
@@ -352,27 +357,27 @@ describe('useKanbanLayout', () => {
     it('should return correct visible column count', () => {
       const { result } = renderHook(() => useKanbanLayout());
 
-      expect(result.current.getVisibleColumnCount()).toBe(4);
+      expect(result.current.getVisibleColumnCount()).toBe(POOL_COLUMN_GROUPS.length);
 
       act(() => {
         result.current.toggleCollapse('pending');
       });
 
-      expect(result.current.getVisibleColumnCount()).toBe(3);
+      expect(result.current.getVisibleColumnCount()).toBe(POOL_COLUMN_GROUPS.length - 1);
 
       act(() => {
-        result.current.toggleCollapse('ready');
-        result.current.toggleCollapse('processing');
+        result.current.toggleCollapse('ready-to-match');
+        result.current.toggleCollapse('completed');
       });
 
-      expect(result.current.getVisibleColumnCount()).toBe(1);
+      expect(result.current.getVisibleColumnCount()).toBe(POOL_COLUMN_GROUPS.length - 3);
     });
 
     it('should calculate total content width correctly', () => {
       const { result } = renderHook(() => useKanbanLayout());
 
-      // 4列 * 列宽 + 3 * 16px间距 + 32px内边距
-      const expectedWidth = 4 * result.current.columnWidth + 3 * 16 + 32;
+      // 5列 * 列宽 + 4 * 16px间距 + 32px内边距
+      const expectedWidth = 5 * result.current.columnWidth + 4 * 16 + 32;
       expect(result.current.getTotalContentWidth()).toBe(expectedWidth);
     });
 
@@ -397,26 +402,29 @@ describe('useKanbanLayout', () => {
       it('should calculate card counts for each column', () => {
         const cardsByColumn = {
           pending: [{ id: '1' }, { id: '2' }, { id: '3' }],
-          'needs-attention': [{ id: '4' }],
-          ready: [],
-          processing: [{ id: '5' }, { id: '6' }],
+          'needs-action': [{ id: '4' }],
+          'ready-to-match': [],
+          'ready-to-archive': [{ id: '5' }, { id: '6' }],
+          completed: [],
         };
 
         const counts = calculateColumnCardCounts(cardsByColumn);
 
         expect(counts.pending).toBe(3);
-        expect(counts['needs-attention']).toBe(1);
-        expect(counts.ready).toBe(0);
-        expect(counts.processing).toBe(2);
+        expect(counts['needs-action']).toBe(1);
+        expect(counts['ready-to-match']).toBe(0);
+        expect(counts['ready-to-archive']).toBe(2);
+        expect(counts.completed).toBe(0);
       });
 
       it('should handle empty data', () => {
         const counts = calculateColumnCardCounts({});
 
         expect(counts.pending).toBe(0);
-        expect(counts.ready).toBe(0);
-        expect(counts.processing).toBe(0);
-        expect(counts['needs-attention']).toBe(0);
+        expect(counts['needs-action']).toBe(0);
+        expect(counts['ready-to-match']).toBe(0);
+        expect(counts['ready-to-archive']).toBe(0);
+        expect(counts.completed).toBe(0);
       });
     });
 
@@ -424,9 +432,10 @@ describe('useKanbanLayout', () => {
       it('should return true when all columns are empty', () => {
         const emptyData = {
           pending: [],
-          'needs-attention': [],
-          ready: [],
-          processing: [],
+          'needs-action': [],
+          'ready-to-match': [],
+          'ready-to-archive': [],
+          completed: [],
         };
 
         expect(areAllColumnsEmpty(emptyData)).toBe(true);
@@ -435,9 +444,10 @@ describe('useKanbanLayout', () => {
       it('should return false when at least one column has cards', () => {
         const dataWithCards = {
           pending: [],
-          'needs-attention': [{ id: '1' }],
-          ready: [],
-          processing: [],
+          'needs-action': [{ id: '1' }],
+          'ready-to-match': [],
+          'ready-to-archive': [],
+          completed: [],
         };
 
         expect(areAllColumnsEmpty(dataWithCards)).toBe(false);
@@ -448,7 +458,7 @@ describe('useKanbanLayout', () => {
           pending: [],
         };
 
-        // 未定义的列默认为空数组，所以所有列都为空
+        // 未定义的列默认为空数组
         expect(areAllColumnsEmpty(incompleteData)).toBe(true);
       });
     });
@@ -457,20 +467,22 @@ describe('useKanbanLayout', () => {
       it('should return first non-empty column ID', () => {
         const data = {
           pending: [],
-          'needs-attention': [{ id: '1' }],
-          ready: [{ id: '2' }],
-          processing: [],
+          'needs-action': [{ id: '1' }],
+          'ready-to-match': [{ id: '2' }],
+          'ready-to-archive': [],
+          completed: [],
         };
 
-        expect(getFirstNonEmptyColumnId(data)).toBe('needs-attention');
+        expect(getFirstNonEmptyColumnId(data)).toBe('needs-action');
       });
 
       it('should return first column ID when first column has cards', () => {
         const data = {
           pending: [{ id: '1' }],
-          'needs-attention': [{ id: '2' }],
-          ready: [{ id: '3' }],
-          processing: [{ id: '4' }],
+          'needs-action': [{ id: '2' }],
+          'ready-to-match': [{ id: '3' }],
+          'ready-to-archive': [{ id: '4' }],
+          completed: [{ id: '5' }],
         };
 
         expect(getFirstNonEmptyColumnId(data)).toBe('pending');
@@ -479,9 +491,10 @@ describe('useKanbanLayout', () => {
       it('should return null when all columns are empty', () => {
         const emptyData = {
           pending: [],
-          'needs-attention': [],
-          ready: [],
-          processing: [],
+          'needs-action': [],
+          'ready-to-match': [],
+          'ready-to-archive': [],
+          completed: [],
         };
 
         expect(getFirstNonEmptyColumnId(emptyData)).toBeNull();

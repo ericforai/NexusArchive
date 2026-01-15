@@ -37,7 +37,7 @@ export const AuditEvidencePackagePage: React.FC = () => {
         fileSize?: string;
     }>>([]);
 
-    // 获取当前日期作为默认结束日期
+    // 默认开始日期设为30天前
     React.useEffect(() => {
         const today = new Date().toISOString().split('T')[0];
         if (!endDate) {

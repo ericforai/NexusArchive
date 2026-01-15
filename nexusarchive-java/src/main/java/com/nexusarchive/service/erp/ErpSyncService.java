@@ -1,4 +1,4 @@
-// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库
+// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、凭证 JSON
 // Output: ErpSyncService 类
 // Pos: 业务服务层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -6,7 +6,6 @@
 package com.nexusarchive.service.erp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.SyncHistory;
@@ -14,7 +13,6 @@ import com.nexusarchive.engine.ErpMappingEngine;
 import com.nexusarchive.integration.erp.adapter.ErpAdapter;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.integration.erp.dto.VoucherDTO;
-import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ErpScenarioMapper;
@@ -53,7 +51,6 @@ public class ErpSyncService {
     private final SyncHistoryMapper syncHistoryMapper;
     private final ArchiveMapper archiveMapper;
     private final AuditLogService auditLogService;
-    private final ArcFileContentMapper arcFileContentMapper;
 
     // 提取的服务
     private final ErpConfigDtoBuilder configDtoBuilder;
@@ -213,13 +210,14 @@ public class ErpSyncService {
             String voucherJson = serializeVoucherJson(dto);
 
             // 保存凭证
-            ArcFileContent fileContent = voucherPersistence.saveVoucher(dto, mappingConfig, adapter, startDate, entityConfig.getName());
-
-            // 更新源数据（如果保存成功）
-            if (voucherJson != null && fileContent != null) {
-                fileContent.setSourceData(voucherJson);
-                arcFileContentMapper.updateById(fileContent);
-            }
+            voucherPersistence.saveVoucher(
+                dto,
+                mappingConfig,
+                adapter,
+                startDate,
+                entityConfig.getName(),
+                voucherJson
+            );
 
             savedCount++;
         }

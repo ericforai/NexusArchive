@@ -174,6 +174,7 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                                                                 className="!px-2 !py-1"
                                                                 actions={[
                                                                     <Button
+                                                                        key="download"
                                                                         type="text"
                                                                         size="small"
                                                                         icon={<Download size={12} />}

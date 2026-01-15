@@ -183,17 +183,17 @@ const LeafLink: React.FC<{
  * Children container with border hierarchy
  */
 const ChildrenContainer: React.FC<{
-  children: NavItem[];
+  items: NavItem[];
   level: number;
   renderChild: (child: NavItem, siblings: string[]) => React.ReactNode;
-}> = ({ children, level, renderChild }) => {
-  const siblings = children.map(c => c.id);
+}> = ({ items, level, renderChild }) => {
+  const siblings = items.map(c => c.id);
   const ml = level === 0 ? 'ml-7' : 'ml-4';
 
   return (
     <div className={`overflow-hidden transition-all duration-300 ${level === 0 ? 'mt-1' : ''}`}>
       <div className={`${ml} border-l border-slate-800 space-y-1`}>
-        {children.map(child => renderChild(child, siblings.filter(id => id !== child.id)))}
+        {items.map(child => renderChild(child, siblings.filter(id => id !== child.id)))}
       </div>
     </div>
   );
@@ -205,7 +205,7 @@ const ChildrenContainer: React.FC<{
 export const NavNode: React.FC<NavNodeProps> = ({
   item,
   level,
-  siblings,
+  siblings: _siblings, // 预留参数，未来可用于同级导航
   collapsed,
   expandedMenusWithAuto,
   activeTopLevelId,
@@ -216,7 +216,7 @@ export const NavNode: React.FC<NavNodeProps> = ({
   const isActive = useIsActive()(item);
   const mainPath = useMemo(() => resolveMainPath(item, hasChildren), [item, hasChildren]);
   const levelStyles = useMemo(() => getLevelStyles(level), [level]);
-  const Icon = item.icon;
+  // Icon 已在 ParentButton/LeafLink 中直接使用 item.icon
 
   // Recursive render function for children
   const renderChild = useCallback((child: NavItem, childSiblings: string[]) => {
@@ -249,7 +249,7 @@ export const NavNode: React.FC<NavNodeProps> = ({
           />
           {!collapsed && isExpanded && (
             <ChildrenContainer
-              children={item.children!}
+              items={item.children!}
               level={level}
               renderChild={renderChild}
             />

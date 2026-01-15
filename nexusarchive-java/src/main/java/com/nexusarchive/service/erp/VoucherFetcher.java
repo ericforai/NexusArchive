@@ -35,6 +35,9 @@ public class VoucherFetcher {
     private static final String SCENARIO_COLLECTION_FILE_SYNC = "COLLECTION_FILE_SYNC";
     private static final String SCENARIO_PAYMENT_FILE_SYNC = "PAYMENT_FILE_SYNC";
     private static final String SCENARIO_REFUND_FILE_SYNC = "REFUND_FILE_SYNC";
+    private static final String SCENARIO_PAYMENT_APPLY_SYNC = "PAYMENT_APPLY_SYNC";
+    private static final String SCENARIO_PAYMENT_APPLY_FILE = "PAYMENT_APPLY_FILE";
+    private static final String SCENARIO_ORG_SYNC = "ORG_SYNC";
 
     /**
      * 获取凭证数据
@@ -67,6 +70,14 @@ public class VoucherFetcher {
             return getYonSuiteAdapter(adapter).syncRefundFiles(dtoConfig, startDate, endDate);
         }
 
+        if (isYonSuitePaymentApplySync(scenarioKey, adapter)) {
+            return getYonSuiteAdapter(adapter).syncPaymentApplyFiles(dtoConfig, startDate, endDate);
+        }
+
+        if (isYonSuiteOrgSync(scenarioKey, adapter)) {
+            return getYonSuiteAdapter(adapter).syncOrg(dtoConfig, startDate, endDate);
+        }
+
         // 默认：调用通用凭证同步
         return adapter.syncVouchers(dtoConfig, startDate, endDate);
     }
@@ -92,6 +103,23 @@ public class VoucherFetcher {
      */
     private boolean isYonSuiteRefundSync(String scenarioKey, ErpAdapter adapter) {
         return SCENARIO_REFUND_FILE_SYNC.equals(scenarioKey)
+            && adapter instanceof YonSuiteErpAdapter;
+    }
+
+    /**
+     * 判断是否为用友付款申请单同步
+     */
+    private boolean isYonSuitePaymentApplySync(String scenarioKey, ErpAdapter adapter) {
+        return (SCENARIO_PAYMENT_APPLY_SYNC.equals(scenarioKey)
+                || SCENARIO_PAYMENT_APPLY_FILE.equals(scenarioKey))
+            && adapter instanceof YonSuiteErpAdapter;
+    }
+
+    /**
+     * 判断是否为用友组织架构同步
+     */
+    private boolean isYonSuiteOrgSync(String scenarioKey, ErpAdapter adapter) {
+        return SCENARIO_ORG_SYNC.equals(scenarioKey)
             && adapter instanceof YonSuiteErpAdapter;
     }
 

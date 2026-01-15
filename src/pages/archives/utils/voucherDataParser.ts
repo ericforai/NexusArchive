@@ -73,15 +73,12 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
 
 
     // 解析分录数据
-    if (bodies.length > 0) {
-      console.log('[Debug] First Body Entry:', JSON.stringify(bodies[0]));
-    }
     const parsedEntries = bodies
       .map((body: any, index: number) => {
         const debit = body.debitOrg || body.debit_original || body.debit_org || body.debit || 0;
         const credit = body.creditOrg || body.credit_original || body.credit_org || body.credit || 0;
-        const debitOriginal = body.debitOriginal || body.debit_original || body.amountInTransactionCurrency || 0;
-        const creditOriginal = body.creditOriginal || body.credit_original || 0;
+        const debitOriginal = body.debitOriginal || body.debit_original || body.amountInTransactionCurrency || body.debitOrg || 0;
+        const creditOriginal = body.creditOriginal || body.credit_original || body.creditOrg || 0;
 
         // 获取科目信息 - 支持 YonSuite 原始格式 (accsubject) 和 VoucherDTO 格式 (accountCode/accountName)
         let accountCode = body.accountCode || body.account_code || '';
@@ -100,7 +97,7 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
         // 获取币种信息 - 支持 YonSuite 原始格式 (currency) 和 VoucherDTO 格式 (currencyCode/currencyName)
         let currencyCode = body.currencyCode || body.currency_code || '';
         let currencyName = body.currencyName || body.currency_name || '';
-        let exchangeRate = body.exchangeRate || body.exchange_rate || null;
+        const exchangeRate = body.exchangeRate || body.exchange_rate || null;
 
         // 尝试从 YonSuite 的 currency 对象获取
         if (!currencyCode && !currencyName) {

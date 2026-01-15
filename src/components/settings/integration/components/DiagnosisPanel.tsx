@@ -7,7 +7,6 @@
 
 import React from 'react';
 import { X, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { IntegrationDiagnosisResult } from '../../../../types';
 import { DiagnosisState, DiagnosisActions } from '../types';
 
 interface DiagnosisPanelProps {

@@ -44,12 +44,7 @@ const minimapNodeColor = (node: Node) => {
   return data?.isCenter ? '#f59e0b' : (colorMap[data?.type || 'other'] || '#94a3b8');
 };
 
-// 小地图节点背景色
-const minimapNodeBackgroundColor = (node: Node) => {
-  const data = (node.data as unknown) as RelationNodeData | undefined;
-  if (data?.isCenter) return '#fef3c7';
-  return '#ffffff';
-};
+// 已移除未使用的 minimapNodeBackgroundColor
 
 /**
  * React Flow 内部组件：处理自动聚焦
@@ -92,7 +87,6 @@ export const RelationGraphCanvas: React.FC<RelationGraphCanvasProps> = ({
   const storeNodes = useRelationGraphStore(s => s.nodes) as unknown as Node[];
   const storeEdges = useRelationGraphStore(s => s.edges) as unknown as Edge[];
   const expandNode = useRelationGraphStore(s => s.expandNode);
-  const setEdges = useRelationGraphStore(s => s.setEdges);
 
   const flowInstanceRef = useRef<any>(null);
 
@@ -110,13 +104,29 @@ export const RelationGraphCanvas: React.FC<RelationGraphCanvasProps> = ({
     [onNodeClick, expandNode]
   );
 
-  // 添加双向箭头标记
+  // 关系类型颜色映射
+  const getRelationColor = (relationType?: string): string => {
+    const colorMap: Record<string, string> = {
+      BASIS: '#818cf8', // 依据 - 靛蓝色
+      ORIGINAL_VOUCHER: '#c084fc', // 原始凭证 - 紫色
+      CASH_FLOW: '#34d399', // 资金流 - 绿色
+      ARCHIVE: '#fbbf24', // 归档 - 黄色
+      SYSTEM_AUTO: '#94a3b8', // 系统自动 - 灰色
+    };
+    return colorMap[relationType || ''] || '#64748b';
+  };
+
+  // 添加双向箭头标记（根据关系类型设置颜色）
   const edgesWithMarkers = useMemo(() =>
-    (storeEdges as Edge[]).map(edge => ({
-      ...edge,
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8', strokeWidth: 1.5 },
-      markerStart: { type: MarkerType.Arrow, color: '#94a3b8', strokeWidth: 1.5 }
-    })),
+    (storeEdges as Edge[]).map(edge => {
+      const relationType = (edge.data as any)?.relationType;
+      const edgeColor = getRelationColor(relationType);
+      return {
+        ...edge,
+        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, strokeWidth: 2 },
+        markerStart: { type: MarkerType.Arrow, color: edgeColor, strokeWidth: 2 }
+      };
+    }),
     [storeEdges]
   );
 

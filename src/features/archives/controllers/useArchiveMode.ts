@@ -2,8 +2,9 @@
  * useArchiveMode - Mode Resolution Hook
  *
  * Handles route mode resolution and configuration
+ * 修复：使用 useMemo 稳定返回值引用
  */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { resolveRouteConfig, DEFAULT_ROUTE_CONFIG, ArchiveRouteMode } from '../routeConfigs';
 import { ControllerMode, UseArchiveModeOptions } from './types';
 import type { ModuleConfig } from '../../../types';
@@ -46,7 +47,8 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
         return undefined;
     }, [subTitle]);
 
-    return {
+    // 使用 useMemo 稳定返回值引用
+    return useMemo(() => ({
         routeKey: routeConfig as ArchiveRouteMode | undefined,
         title,
         subTitle,
@@ -55,5 +57,5 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
         isLinkingView,
         categoryCode: resolveCategoryCode(),
         defaultStatus: resolveDefaultStatus(),
-    };
+    }), [routeConfig, title, subTitle, config, isPoolView, isLinkingView, resolveCategoryCode, resolveDefaultStatus]);
 }

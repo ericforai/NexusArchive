@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,20 +40,68 @@ public class EntityServiceImpl extends ServiceImpl<SysEntityMapper, SysEntity> i
     public List<SysEntity> listActive() {
         LambdaQueryWrapper<SysEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysEntity::getStatus, "ACTIVE");
-        return list(wrapper);
+        List<SysEntity> all = list(wrapper);
+        // 应用部门过滤逻辑：电子会计档案系统只管理法人实体，不管理部门
+        return all.stream()
+                .filter(this::isEntityNotDepartment)
+                .collect(Collectors.toList());
     }
 
     /**
      * 获取法人树形结构
      * 缓存键: entityTree:tree
+     * 
+     * 过滤逻辑：电子会计档案系统只管理法人实体，不管理部门
+     * - 过滤掉名称以"部"结尾且没有税号的记录（通常是部门）
+     * - 过滤掉名称包含"部门"的记录
      */
     @Override
     @Cacheable(value = "entityTree", key = "'tree'")
     public List<EntityTreeNode> getTree() {
         List<SysEntity> all = list(new LambdaQueryWrapper<>());
-        List<EntityTreeNode> nodes = all.stream().map(this::toNode).collect(Collectors.toList());
+        // 过滤部门数据：电子会计档案系统没有部门概念
+        List<SysEntity> entities = all.stream()
+                .filter(this::isEntityNotDepartment)
+                .collect(Collectors.toList());
+        
+        List<EntityTreeNode> nodes = entities.stream().map(this::toNode).collect(Collectors.toList());
         // build tree
         return buildTree(nodes);
+    }
+
+    /**
+     * 判断是否为法人实体（而非部门）
+     * 电子会计档案系统只管理法人实体，不管理部门
+     * 
+     * 判断规则：
+     * 1. 有税号（统一社会信用代码）的，视为法人实体
+     * 2. 名称以"部"结尾且没有税号的，视为部门（过滤）
+     * 3. 名称包含"部门"的，视为部门（过滤）
+     * 4. 其他情况视为法人实体
+     */
+    private boolean isEntityNotDepartment(SysEntity entity) {
+        String name = entity.getName();
+        String taxId = entity.getTaxId();
+        
+        // 有税号的，肯定是法人实体
+        if (StringUtils.hasText(taxId)) {
+            return true;
+        }
+        
+        // 没有税号，但名称以"部"结尾的，很可能是部门
+        if (StringUtils.hasText(name) && name.endsWith("部")) {
+            log.debug("过滤部门数据: id={}, name={} (名称以'部'结尾且无税号)", entity.getId(), name);
+            return false;
+        }
+        
+        // 名称包含"部门"的，视为部门
+        if (StringUtils.hasText(name) && name.contains("部门")) {
+            log.debug("过滤部门数据: id={}, name={} (名称包含'部门')", entity.getId(), name);
+            return false;
+        }
+        
+        // 其他情况视为法人实体
+        return true;
     }
 
     @Override

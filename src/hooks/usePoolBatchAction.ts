@@ -3,7 +3,7 @@
 // Pos: src/hooks/usePoolBatchAction.ts
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { poolApi } from '@/api/pool';
 
 /**
@@ -57,6 +57,7 @@ export interface UsePoolBatchActionReturn {
  * 批量操作 Hook
  *
  * 提供卡片选择管理和批量操作功能
+ * 修复：使用 useMemo 稳定返回值引用
  */
 export function usePoolBatchAction(): UsePoolBatchActionReturn {
   const [selection, setSelection] = useState<Set<string>>(new Set());
@@ -215,10 +216,11 @@ export function usePoolBatchAction(): UsePoolBatchActionReturn {
         setIsExecuting(false);
       }
     },
-    [selection, getSelectedIds]
+    [getSelectedIds]
   );
 
-  return {
+  // 使用 useMemo 稳定返回值引用
+  return useMemo(() => ({
     state: { selection, isExecuting, result },
     selectAll,
     toggleSelection,
@@ -228,7 +230,7 @@ export function usePoolBatchAction(): UsePoolBatchActionReturn {
     getSelectedIds,
     executeAction,
     clearResult,
-  };
+  }), [selection, isExecuting, result, selectAll, toggleSelection, clearSelection, isSelected, getSelectedCount, getSelectedIds, executeAction, clearResult]);
 }
 
 /**

@@ -43,7 +43,7 @@ export interface UseArchiveBatchDataReturn {
  * 管理批次列表数据、统计信息和分页状态
  */
 export function useArchiveBatchData(): UseArchiveBatchDataReturn {
-    const currentFonds = useFondsStore((state: any) => state.currentFonds);
+    const _currentFonds = useFondsStore((state: any) => state.currentFonds);
 
     // 数据状态
     const [batches, setBatches] = useState<ArchiveBatch[]>([]);

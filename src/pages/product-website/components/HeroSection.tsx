@@ -3,7 +3,7 @@
 // Pos: src/pages/product-website/components/HeroSection.tsx
 
 import React from 'react';
-import { Shield, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { HERO_SECTION } from '../data/sections';
 
 interface HeroSectionProps {
@@ -54,11 +54,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             <button
               key={i}
               onClick={() => btn.primary && onNavigate('/system')}
-              className={`px-8 py-4 rounded-xl transition-all flex items-center justify-center ${
-                btn.primary
+              className={`px-8 py-4 rounded-xl transition-all flex items-center justify-center ${btn.primary
                   ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transform hover:scale-105'
                   : 'bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-white backdrop-blur-sm'
-              }`}
+                }`}
             >
               {btn.text}
               {btn.primary && <ChevronRight className="w-5 h-5 ml-2" />}

@@ -16,6 +16,10 @@
 | `ArchiveApprovalView.tsx` | React组件 | 归档审批视图，处理归档申请的审核流程。支持批量审批。 |
 | `ArchiveBatchView.tsx` | React组件 | 归档批次管理，负责批次的创建、校验、提交和归档执行。支持批量审批。 |
 | `DestructionApprovalPage.tsx` | React组件 | 档案销毁审批，处理销毁申请的审核。支持批量审批。 |
+| `DestructionExecutionPage.tsx` | React组件 | 档案销毁执行，处理经批准档案的物理/逻辑销毁确认。 |
+| `DestructionView.tsx` | React组件 | 档案销毁管理主页，查看销毁状态与记录。 |
+| `ExpiredArchivesPage.tsx` | React组件 | 到期档案列表，展示已超过保管期限的档案。 |
+| `FreezeHoldPage.tsx` | React组件 | 档案冻结管理，处理因诉讼等原因需要暂缓销毁的档案。 |
 | `OpenAppraisalView.tsx` | React组件 | 开放鉴定视图，处理档案的开放范围鉴定。 |
 | `VolumeManagement.tsx` | React组件 | 案卷管理，负责案卷的组卷与维护。 |
 

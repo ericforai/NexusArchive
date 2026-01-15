@@ -1,0 +1,311 @@
+// Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、等
+// Output: UserService 类
+// Pos: 业务服务层
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
+package com.nexusarchive.service;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
+import com.nexusarchive.dto.request.CreateUserRequest;
+import com.nexusarchive.dto.request.UpdateUserFondsScopeRequest;
+import com.nexusarchive.dto.request.UpdateUserRequest;
+import com.nexusarchive.dto.response.FondsScopeResponse;
+import com.nexusarchive.dto.response.UserResponse;
+import com.nexusarchive.entity.BasFonds;
+import com.nexusarchive.entity.SysUserFondsScope;
+import com.nexusarchive.entity.User;
+import com.nexusarchive.mapper.BasFondsMapper;
+import com.nexusarchive.mapper.RoleMapper;
+import com.nexusarchive.mapper.SysUserFondsScopeMapper;
+import com.nexusarchive.mapper.UserMapper;
+import com.nexusarchive.service.RoleValidationService;
+import com.nexusarchive.util.PasswordPolicyValidator;
+import com.nexusarchive.util.PasswordUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 用户管理服务
+ */
+@Service
+@RequiredArgsConstructor
+public class UserService {
+
+    private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
+    private final SysUserFondsScopeMapper sysUserFondsScopeMapper;
+    private final BasFondsMapper basFondsMapper;
+    private final PasswordUtil passwordUtil;
+    private final RoleValidationService roleValidationService;
+
+    /**
+     * 创建用户
+     */
+    @Transactional
+    public UserResponse createUser(CreateUserRequest request) {
+        // 检查用户名是否已存在
+        if (userMapper.findByUsername(request.getUsername()) != null) {
+            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
+        }
+        // 三员互斥校验
+        roleValidationService.validateThreeRoleExclusion(null, request.getRoleIds());
+        // 密码哈希
+        PasswordPolicyValidator.validate(request.getPassword());
+        String passwordHash = passwordUtil.hashPassword(request.getPassword());
+        // 构建实体 - 应用 XSS 过滤
+        User user = new User();
+        user.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+        user.setUsername(request.getUsername()); // 用户名保持原样
+        user.setPasswordHash(passwordHash);
+        user.setFullName(com.nexusarchive.util.XssFilter.clean(request.getFullName())); // XSS 过滤
+        user.setEmail(com.nexusarchive.util.XssFilter.clean(request.getEmail())); // XSS 过滤
+        user.setPhone(com.nexusarchive.util.XssFilter.clean(request.getPhone())); // XSS 过滤
+        user.setAvatar(request.getAvatar());
+        user.setOrganizationId(request.getOrganizationId());
+        user.setStatus("active");
+        user.setCreatedTime(LocalDateTime.now());
+        user.setLastModifiedTime(LocalDateTime.now());
+        // 保存用户
+        userMapper.insert(user);
+        // 关联角色 - 如果没有指定角色，分配默认业务操作员角色
+        List<String> rolesToAssign = request.getRoleIds();
+        if (rolesToAssign == null || rolesToAssign.isEmpty()) {
+            // 分配默认角色: business_user (业务操作员)
+            rolesToAssign = Arrays.asList("role_business_user");
+        }
+        userMapper.insertUserRoles(user.getId(), rolesToAssign);
+        // 关联全宗权限 - 如果没有指定全宗，分配默认全宗
+        List<String> fondsCodes = request.getFondsCodes();
+        if (fondsCodes == null || fondsCodes.isEmpty()) {
+            // 分配默认全宗: BR-GROUP (泊冉集团有限公司)
+            fondsCodes = Arrays.asList("BR-GROUP");
+        }
+        for (String fondsCode : fondsCodes) {
+            SysUserFondsScope scope = new SysUserFondsScope();
+            scope.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+            scope.setUserId(user.getId());
+            scope.setFondsNo(fondsCode);
+            scope.setScopeType("DIRECT");
+            scope.setCreatedTime(LocalDateTime.now());
+            scope.setLastModifiedTime(LocalDateTime.now());
+            scope.setDeleted(0);
+            sysUserFondsScopeMapper.insert(scope);
+        }
+        return toResponse(user);
+    }
+
+    /**
+     * 更新用户信息（不包括密码）
+     */
+    @Transactional
+    public UserResponse updateUser(UpdateUserRequest request) {
+        User existing = userMapper.selectById(request.getId());
+        if (existing == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        // 三员互斥校验（排除自身已有角色）
+        roleValidationService.validateThreeRoleExclusion(request.getId(), request.getRoleIds());
+        // 更新字段
+        existing.setFullName(com.nexusarchive.util.XssFilter.clean(request.getFullName()));
+        existing.setEmail(com.nexusarchive.util.XssFilter.clean(request.getEmail()));
+        existing.setPhone(com.nexusarchive.util.XssFilter.clean(request.getPhone()));
+        existing.setAvatar(request.getAvatar());
+        existing.setOrganizationId(request.getOrganizationId());
+        existing.setLastModifiedTime(LocalDateTime.now());
+        userMapper.updateById(existing);
+        // 更新角色关联
+        userMapper.deleteUserRoles(existing.getId());
+        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
+            userMapper.insertUserRoles(existing.getId(), request.getRoleIds());
+        }
+        return toResponse(existing);
+    }
+
+    /**
+     * 删除用户（软删除）
+     */
+    @Transactional
+    public void deleteUser(String userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        user.setDeleted(1);
+        user.setLastModifiedTime(LocalDateTime.now());
+        userMapper.updateById(user);
+    }
+
+    /**
+     * 根据 ID 查询用户
+     */
+    public UserResponse getUserById(String userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        return toResponse(user);
+    }
+
+    /**
+     * 分页查询用户（简化实现）
+     */
+    public Page<UserResponse> listPaged(int page, int limit, String search, String status) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getDeleted, 0);
+        if (StringUtils.hasText(search)) {
+            wrapper.and(w -> w.like(User::getUsername, search).or().like(User::getFullName, search));
+        }
+        if (StringUtils.hasText(status)) {
+            wrapper.eq(User::getStatus, status);
+        }
+        wrapper.orderByDesc(User::getCreatedTime);
+
+        Page<User> pageObj = new Page<>(page, limit);
+        Page<User> userPage = userMapper.selectPage(pageObj, wrapper);
+
+        Page<UserResponse> respPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        respPage.setRecords(userPage.getRecords().stream().map(this::toResponse).collect(Collectors.toList()));
+        respPage.setPages(userPage.getPages());
+        return respPage;
+    }
+
+    private UserResponse toResponse(User user) {
+        UserResponse resp = new UserResponse();
+        resp.setId(user.getId());
+        resp.setUsername(user.getUsername());
+        resp.setFullName(user.getFullName());
+        resp.setEmail(user.getEmail());
+        resp.setPhone(user.getPhone());
+        resp.setAvatar(user.getAvatar());
+        resp.setOrganizationId(user.getOrganizationId());
+        resp.setStatus(user.getStatus());
+        // 角色列表
+        List<String> roleIds = userMapper.selectRoleIdsByUserId(user.getId());
+        resp.setRoleIds(roleIds);
+        return resp;
+    }
+
+    /**
+     * 重置密码
+     */
+    @Transactional
+    public void resetPassword(String userId, String newPassword) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        PasswordPolicyValidator.validate(newPassword);
+        String hash = passwordUtil.hashPassword(newPassword);
+        user.setPasswordHash(hash);
+        user.setLastModifiedTime(LocalDateTime.now());
+        userMapper.updateById(user);
+    }
+
+    /**
+     * 更新用户状态
+     */
+    @Transactional
+    public void updateStatus(String userId, String status) {
+        if (!Arrays.asList("active", "disabled", "locked").contains(status)) {
+            throw new BusinessException(ErrorCode.INVALID_USER_STATUS);
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        user.setStatus(status);
+        user.setLastModifiedTime(LocalDateTime.now());
+        userMapper.updateById(user);
+    }
+
+    /**
+     * 获取用户的全宗权限范围
+     * 返回已分配的全宗列表和可分配的全宗列表
+     */
+    public FondsScopeResponse getUserFondsScope(String userId) {
+        // 验证用户存在
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        FondsScopeResponse response = new FondsScopeResponse();
+        response.setUserId(userId);
+
+        // 获取已分配的全宗号列表
+        List<String> assignedFonds = sysUserFondsScopeMapper.findFondsNoByUserId(userId);
+        response.setAssignedFonds(assignedFonds);
+
+        // 获取所有可用的全宗列表
+        QueryWrapper<BasFonds> wrapper = new QueryWrapper<>();
+        wrapper.orderByAsc("fonds_code");
+        List<BasFonds> allFonds = basFondsMapper.selectList(wrapper);
+
+        // 转换为 FondsInfo
+        List<FondsScopeResponse.FondsInfo> availableFonds = allFonds.stream()
+            .map(fonds -> {
+                FondsScopeResponse.FondsInfo info = new FondsScopeResponse.FondsInfo();
+                info.setFondsCode(fonds.getFondsCode());
+                info.setFondsName(fonds.getFondsName());
+                info.setCompanyName(fonds.getCompanyName());
+                return info;
+            })
+            .collect(Collectors.toList());
+
+        response.setAvailableFonds(availableFonds);
+        return response;
+    }
+
+    /**
+     * 更新用户的全宗权限范围
+     * 先删除用户的所有全宗权限，再插入新的权限
+     */
+    @Transactional
+    public void updateUserFondsScope(String userId, UpdateUserFondsScopeRequest request) {
+        // 验证用户存在
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        List<String> fondsCodes = request.getFondsCodes();
+        if (fondsCodes == null) {
+            fondsCodes = java.util.Collections.emptyList();
+        }
+
+        // 删除用户的所有现有全宗权限（逻辑删除）
+        sysUserFondsScopeMapper.deleteByUserId(userId);
+
+        // 插入新的全宗权限
+        for (String fondsCode : fondsCodes) {
+            // 验证全宗存在
+            QueryWrapper<BasFonds> wrapper = new QueryWrapper<>();
+            wrapper.eq("fonds_code", fondsCode);
+            BasFonds fonds = basFondsMapper.selectOne(wrapper);
+            if (fonds == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND);
+            }
+
+            SysUserFondsScope scope = new SysUserFondsScope();
+            scope.setId(java.util.UUID.randomUUID().toString().replaceAll("-", ""));
+            scope.setUserId(userId);
+            scope.setFondsNo(fondsCode);
+            scope.setScopeType("DIRECT"); // 直接分配
+            scope.setCreatedTime(LocalDateTime.now());
+            scope.setLastModifiedTime(LocalDateTime.now());
+            scope.setDeleted(0);
+            sysUserFondsScopeMapper.insert(scope);
+        }
+    }
+}

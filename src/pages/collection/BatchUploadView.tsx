@@ -61,7 +61,7 @@ interface BatchFormData {
 export const BatchUploadView: React.FC = () => {
   const navigate = useNavigate();
   const currentFonds = useFondsStore((state) => state.currentFonds);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const _fileInputRef = useRef<HTMLInputElement>(null); // 预留的文件输入引用
 
   // ===== State =====
   const [step, setStep] = useState<'create' | 'upload' | 'complete'>('create');
@@ -211,10 +211,10 @@ export const BatchUploadView: React.FC = () => {
     try {
       const values = await form.validateFields();
       createBatchMutation.mutate(values);
-    } catch (error) {
+    } catch (_error) {
       message.error('请填写完整的批次信息');
     }
-  }, [form, createBatchMutation, uploadQueue]);
+  }, [form, createBatchMutation]);
 
   const handleFileSelect: UploadProps['onChange'] = useCallback((info: { fileList: UploadFile[] }) => {
     const newFiles = info.fileList
@@ -406,7 +406,7 @@ export const BatchUploadView: React.FC = () => {
           <Dragger
             multiple
             accept=".pdf,.ofd,.xml,.jpg,.jpeg,.png,.tif,.tiff"
-            customRequest={() => {}}
+            customRequest={() => { }}
             onChange={handleFileSelect}
             showUploadList={false}
           >
@@ -604,8 +604,8 @@ export const BatchUploadView: React.FC = () => {
                 file.uploadStatus === 'UPLOADED' || file.uploadStatus === 'VALIDATED'
                   ? 'uploaded'
                   : file.uploadStatus === 'FAILED' || file.uploadStatus === 'CHECK_FAILED'
-                  ? 'failed'
-                  : 'pending'
+                    ? 'failed'
+                    : 'pending'
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-700 truncate">

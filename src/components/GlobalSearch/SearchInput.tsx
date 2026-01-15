@@ -2,11 +2,11 @@
 // Output: SearchInput component
 // Pos: src/components/GlobalSearch/ 子组件
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 
 interface SearchInputProps {
-    inputRef: React.RefObject<HTMLInputElement | null>;
+    inputRef: React.RefObject<HTMLInputElement>;
     query: string;
     setQuery: (query: string) => void;
     isLoading: boolean;

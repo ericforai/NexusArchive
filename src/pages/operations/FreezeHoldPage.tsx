@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { Lock, Loader2, CheckCircle2, XCircle, Plus, Eye, Unlock, AlertCircle, Filter, Search } from 'lucide-react';
+import { Lock, Loader2, CheckCircle2, Plus, Eye, Unlock, AlertCircle, Filter, Search } from 'lucide-react';
 import { freezeHoldApi, FreezeHoldRecord, ApplyFreezeHoldRequest, FreezeHoldType, FreezeHoldStatus } from '../../api/freezeHold';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_PATHS } from '../../routes/paths';
@@ -251,11 +251,10 @@ export const FreezeHoldPage: React.FC = () => {
                                             {record.archiveTitle}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`px-2 py-1 rounded text-xs ${
-                                                record.type === 'FREEZE' 
-                                                    ? 'bg-red-100 text-red-700' 
-                                                    : 'bg-yellow-100 text-yellow-700'
-                                            }`}>
+                                            <span className={`px-2 py-1 rounded text-xs ${record.type === 'FREEZE'
+                                                ? 'bg-red-100 text-red-700'
+                                                : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
                                                 {getTypeLabel(record.type)}
                                             </span>
                                         </td>

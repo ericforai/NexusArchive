@@ -45,12 +45,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userId;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else {
+            // [ADDED] Support token in query parameter for iframe/browser direct access
+            String queryToken = request.getParameter("access_token");
+            if (queryToken != null && !queryToken.isEmpty()) {
+                jwt = queryToken;
+            } else {
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
-
-        jwt = authHeader.substring(7);
 
         try {
             // 1. 检查Token是否在黑名单中

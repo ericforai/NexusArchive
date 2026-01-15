@@ -98,7 +98,7 @@ export const PositionManagement: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold text-slate-800">岗位管理</h3>
-          <p className="text-sm text-slate-500">维护部门岗位，辅助角色与人员管理</p>
+          <p className="text-sm text-slate-500">维护岗位信息，辅助角色与人员管理</p>
         </div>
         <button
           onClick={openCreate}

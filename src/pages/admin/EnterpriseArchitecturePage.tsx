@@ -26,14 +26,38 @@ export const EnterpriseArchitecturePage: React.FC = () => {
         loadTree();
     }, []);
 
+    /**
+     * 过滤部门数据（前端双重保险）
+     * 电子会计档案系统只管理法人实体，不管理部门
+     */
+    const filterDepartmentEntities = (entities: EntityNode[]): EntityNode[] => {
+        return entities.filter(entity => {
+            // 有税号的，肯定是法人实体
+            if (entity.taxId) {
+                return true;
+            }
+            // 名称以"部"结尾且没有税号的，视为部门（过滤）
+            if (entity.name.endsWith('部')) {
+                return false;
+            }
+            // 名称包含"部门"的，视为部门（过滤）
+            if (entity.name.includes('部门')) {
+                return false;
+            }
+            return true;
+        });
+    };
+
     const loadTree = async () => {
         setLoading(true);
         try {
             const res = await enterpriseArchitectureApi.getTree();
             if (res.code === 200 && res.data) {
-                setTree(res.data);
+                // 前端过滤：确保不显示部门数据（双重保险）
+                const filteredEntities = filterDepartmentEntities(res.data.entities);
+                setTree({ ...res.data, entities: filteredEntities });
                 // 默认展开所有法人
-                const entityIds = new Set(res.data.entities.map(e => e.id));
+                const entityIds = new Set(filteredEntities.map(e => e.id));
                 setExpandedEntities(entityIds);
             }
         } catch (error) {
@@ -44,7 +68,7 @@ export const EnterpriseArchitecturePage: React.FC = () => {
     };
 
     const handleSyncFromErp = async () => {
-        if (!window.confirm('确认从 YonSuite 同步组织架构吗？此操作将同步法人实体和组织数据。')) return;
+        if (!window.confirm('确认从 YonSuite 同步法人实体吗？此操作将同步法人数据（不包含部门）。')) return;
         setSyncing(true);
         try {
             const res = await adminApi.syncOrgFromErp();
@@ -76,7 +100,8 @@ export const EnterpriseArchitecturePage: React.FC = () => {
         setExpandedEntities(newExpanded);
     };
 
-    const toggleFonds = (fondsId: string) => {
+    // toggleFonds 预留用于全宗展开/收起功能
+    const _toggleFonds = (fondsId: string) => {
         const newExpanded = new Set(expandedFonds);
         if (newExpanded.has(fondsId)) {
             newExpanded.delete(fondsId);
@@ -115,7 +140,7 @@ export const EnterpriseArchitecturePage: React.FC = () => {
                             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
                         >
                             <RefreshCw size={16} className={`mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                            {syncing ? '同步中...' : '从 ERP 同步'}
+                            {syncing ? '同步中...' : '从 ERP 同步法人'}
                         </button>
                     </div>
                 </div>
@@ -181,9 +206,10 @@ export const EnterpriseArchitecturePage: React.FC = () => {
                                     </div>
 
                                     {/* Fonds Nodes */}
-                                    {expandedEntities.has(entity.id) && entity.fonds && entity.fonds.length > 0 && (
+                                    {expandedEntities.has(entity.id) && (
                                         <div className="bg-white border-t border-slate-200">
-                                            {entity.fonds.map((fonds: FondsNode) => (
+                                            {entity.fonds && entity.fonds.length > 0 ? (
+                                                entity.fonds.map((fonds: FondsNode) => (
                                                 <div key={fonds.id} className="border-b border-slate-100 last:border-b-0">
                                                     <div className="px-4 py-3 pl-12 hover:bg-slate-50 transition-colors">
                                                         <div className="flex items-center justify-between">
@@ -229,7 +255,13 @@ export const EnterpriseArchitecturePage: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-3 pl-12 text-sm text-slate-400 flex items-center gap-2">
+                                                    <FolderOpen className="w-4 h-4" />
+                                                    <span>该法人下暂无全宗</span>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

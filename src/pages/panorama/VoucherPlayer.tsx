@@ -20,8 +20,8 @@ export const VoucherPlayer: React.FC<VoucherPlayerProps> = ({ initialVoucherId, 
     const [hoveredField, setHoveredField] = useState<string | null>(null);
 
     const [voucherList, setVoucherList] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [_loading, setLoading] = useState(false);
+    const [_error, setError] = useState<string | null>(null);
 
     // Fetch voucher list dynamically (e.g., from archives API)
     useEffect(() => {

@@ -9,8 +9,18 @@ import {
   type EdgeProps,
   getBezierPath
 } from '@xyflow/react';
-import type { RelationEdgeData } from '@/types/relationGraph';
+import type { RelationEdgeData, RelationType } from '@/types/relationGraph';
 import { RELATION_TYPE_LABELS } from '@/types/relationGraph';
+
+// 关系类型颜色配置
+const RELATION_TYPE_STYLES: Record<string, { color: string; strokeWidth: number; dasharray?: string }> = {
+  BASIS: { color: '#818cf8', strokeWidth: 3 }, // 依据 - 靛蓝色
+  ORIGINAL_VOUCHER: { color: '#c084fc', strokeWidth: 3 }, // 原始凭证 - 紫色
+  CASH_FLOW: { color: '#34d399', strokeWidth: 3 }, // 资金流 - 绿色
+  ARCHIVE: { color: '#fbbf24', strokeWidth: 3 }, // 归档 - 黄色
+  SYSTEM_AUTO: { color: '#94a3b8', strokeWidth: 2.5, dasharray: '5,5' }, // 系统自动 - 灰色虚线
+  default: { color: '#64748b', strokeWidth: 2.5 }
+};
 
 /**
  * 关系图谱连线组件
@@ -41,24 +51,48 @@ export const RelationEdge = memo((props: EdgeProps) => {
   });
 
   // 关系类型标签
-  const relationLabel = data?.relationType
-    ? RELATION_TYPE_LABELS[data.relationType] || data.relationType
+  const relationType = (data?.relationType || 'default') as RelationType;
+  const relationLabel = relationType !== 'default'
+    ? RELATION_TYPE_LABELS[relationType] || data?.description || relationType
     : (data?.description || '关联');
 
-  // 选中状态样式
-  const strokeColor = selected ? '#3b82f6' : '#94a3b8';
-  const strokeWidth = selected ? 2.5 : 2;
+  // 获取关系类型样式
+  const edgeStyle = RELATION_TYPE_STYLES[relationType] || RELATION_TYPE_STYLES.default;
+  
+  // 选中状态时加深颜色并加粗
+  const strokeColor = selected 
+    ? edgeStyle.color 
+    : edgeStyle.color;
+  const strokeWidth = selected 
+    ? edgeStyle.strokeWidth + 1 
+    : edgeStyle.strokeWidth;
 
   return (
     <>
-      {/* 连线路径 */}
+      {/* 连线背景（白色描边，增强对比度） */}
+      <path
+        id={`${id}-bg`}
+        d={edgePath}
+        stroke="white"
+        strokeWidth={strokeWidth + 2}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray={edgeStyle.dasharray}
+        opacity={0.6}
+        className="transition-all duration-200"
+      />
+      
+      {/* 主连线路径 */}
       <path
         id={id}
         d={edgePath}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         fill="none"
+        strokeLinecap="round"
+        strokeDasharray={edgeStyle.dasharray}
         className="transition-all duration-200"
+        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
       />
 
       {/* 标签渲染器 */}
@@ -68,8 +102,11 @@ export const RelationEdge = memo((props: EdgeProps) => {
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: 'all',
+            backgroundColor: 'white',
+            border: `1.5px solid ${strokeColor}`,
+            color: strokeColor,
           }}
-          className="px-2 py-0.5 bg-white border border-slate-200 rounded-full text-[10px] font-medium text-slate-600 shadow-sm whitespace-nowrap hover:border-primary-300 hover:text-primary-600 transition-colors cursor-default"
+          className="px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-md whitespace-nowrap hover:shadow-lg transition-all cursor-default"
         >
           {relationLabel}
         </div>

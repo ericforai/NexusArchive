@@ -51,7 +51,7 @@ export const ArchiveApprovalView: React.FC = () => {
     const [batchDialogOpen, setBatchDialogOpen] = useState(false);
     const [batchResultOpen, setBatchResultOpen] = useState(false);
     const [batchAction, setBatchAction] = useState<'approve' | 'reject'>('approve');
-    const [batchResult, setBatchResult] = useState({ success: 0, failed: 0, errors: [] as BatchError[] });
+    const [batchResult, setBatchResult] = useState({ successCount: 0, failedCount: 0, errors: [] as BatchError[] });
     const [batchProcessing, setBatchProcessing] = useState(false);
 
     const loadApprovals = useCallback(async () => {
@@ -143,7 +143,7 @@ export const ArchiveApprovalView: React.FC = () => {
         setBatchDialogOpen(true);
     };
 
-    const handleBatchConfirm = async (comment: string, skipIds: number[]) => {
+    const handleBatchConfirm = async (comment: string, skipIds: string[]) => {
         const selectedIdArray = Array.from(selectedIds).filter(id => !skipIds.includes(id));
 
         // 添加边界检查
@@ -171,10 +171,10 @@ export const ArchiveApprovalView: React.FC = () => {
                 ? await archiveApprovalApi.batchApprove(request)
                 : await archiveApprovalApi.batchReject(request);
 
-            setBatchResult({
-                success: result.success,
-                failed: result.failed,
-                errors: result.errors?.map(e => ({ id: parseInt(e.id), reason: e.reason })) || []
+            setBatchResult({ successCount: result.successCount, failedCount: result.failed,
+                
+                
+                errors: result.errors?.map(e => ({ id: e.id, reason: e.reason })) || []
             });
 
             setBatchDialogOpen(false);
@@ -184,20 +184,20 @@ export const ArchiveApprovalView: React.FC = () => {
 
             if (result.failed === 0) {
                 toast.success(`批量${batchAction === 'approve' ? '批准' : '拒绝'}成功`);
-            } else if (result.success === 0) {
+            } else if (result.successCount === 0) {
                 toast.error(`批量${batchAction === 'approve' ? '批准' : '拒绝'}失败`);
             } else {
-                toast.warning(`部分成功：${result.success}条成功，${result.failed}条失败`);
+                toast.warning(`部分成功：${result.successCount}条成功，${result.failed}条失败`);
             }
         } catch (error) {
-            console.error('Batch operation failed:', error);
+            console.error("Batch operation failed:", error); console.error("Error response:", (error as any).response?.data); console.error("Error status:", (error as any).response?.status);
             toast.error(`批量${batchAction === 'approve' ? '批准' : '拒绝'}失败，请重试`);
         } finally {
             setBatchProcessing(false);
         }
     };
 
-    const handleBatchRetry = async (failedIds: number[]) => {
+    const handleBatchRetry = async (failedIds: string[]) => {
         try {
             setBatchProcessing(true);
 
@@ -212,10 +212,10 @@ export const ArchiveApprovalView: React.FC = () => {
                 ? await archiveApprovalApi.batchApprove(request)
                 : await archiveApprovalApi.batchReject(request);
 
-            setBatchResult({
-                success: result.success,
-                failed: result.failed,
-                errors: result.errors?.map(e => ({ id: parseInt(e.id), reason: e.reason })) || []
+            setBatchResult({ successCount: result.successCount, failedCount: result.failed,
+                
+                
+                errors: result.errors?.map(e => ({ id: e.id, reason: e.reason })) || []
             });
 
             loadApprovals();
@@ -223,10 +223,10 @@ export const ArchiveApprovalView: React.FC = () => {
             if (result.failed === 0) {
                 toast.success('重试成功');
                 setBatchResultOpen(false);
-            } else if (result.success === 0) {
+            } else if (result.successCount === 0) {
                 toast.error('重试失败');
             } else {
-                toast.warning(`部分成功：${result.success}条成功，${result.failed}条失败`);
+                toast.warning(`部分成功：${result.successCount}条成功，${result.failed}条失败`);
             }
         } catch (error) {
             console.error('Batch retry failed:', error);
@@ -237,7 +237,7 @@ export const ArchiveApprovalView: React.FC = () => {
     };
 
     const handleSelectAll = () => {
-        const allIds = approvals.map(a => parseInt(a.id));
+        const allIds = approvals.map(a => a.id);
         const result = selectAll(allIds);
         if (!result.success) {
             toast.warning(result.reason || '全选失败');
@@ -247,9 +247,9 @@ export const ArchiveApprovalView: React.FC = () => {
     // 获取选中的记录列表
     const selectedRecords = useMemo<ApprovalRecord[]>(() => {
         return approvals
-            .filter(a => selectedIds.has(parseInt(a.id)))
+            .filter(a => selectedIds.has(a.id))
             .map(a => ({
-                id: parseInt(a.id),
+                id: a.id,
                 title: a.archiveTitle,
                 code: a.archiveCode
             }));
@@ -437,7 +437,7 @@ export const ArchiveApprovalView: React.FC = () => {
                             <Table<ArchiveApproval>
                                 columns={columns}
                                 dataSource={approvals}
-                                rowKey={(record) => record.id}
+                                rowKey="id"
                                 rowSelection={rowSelection}
                                 pagination={false}
                                 scroll={{ y: 'calc(100vh - 500px)' }}
@@ -592,8 +592,8 @@ export const ArchiveApprovalView: React.FC = () => {
             {/* Batch Result Modal */}
             <BatchResultModal
                 visible={batchResultOpen}
-                successCount={batchResult.success}
-                failedCount={batchResult.failed}
+                successCount={batchResult.successCount}
+                failedCount={batchResult.failedCount}
                 errors={batchResult.errors}
                 onRetry={handleBatchRetry}
                 onClose={() => setBatchResultOpen(false)}

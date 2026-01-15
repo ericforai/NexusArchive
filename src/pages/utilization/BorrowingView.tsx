@@ -211,7 +211,7 @@ export const BorrowingView: React.FC = () => {
         if (!confirm('确认归还此档案吗？')) return;
         setRowLoading(id);
         try {
-            const res = await borrowingApi.returnArchive(id, 'admin-1');
+            const res = await borrowingApi.userReturnArchive(id, 'admin-1');
             if (res.code === 200) {
                 showToast('已归还');
                 fetchBorrowings();

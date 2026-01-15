@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Search, Filter, CheckCircle2, XCircle, Clock, Ban, Eye, Loader2, MessageSquare } from 'lucide-react';
+import { Shield, Filter, CheckCircle2, XCircle, Clock, Ban, Eye, Loader2 } from 'lucide-react';
 import { authTicketApi, AuthTicketDetail, ApprovalRequest } from '../../api/authTicket';
 import { useFondsStore } from '../../store';
 
@@ -102,7 +102,7 @@ export const AuthTicketListPage: React.FC = () => {
             const res = approvalType === 'first'
                 ? await authTicketApi.firstApproval(selectedTicket.id, approvalForm)
                 : await authTicketApi.secondApproval(selectedTicket.id, approvalForm);
-            
+
             if (res.code === 200) {
                 setMessage({ type: 'success', text: '审批成功' });
                 setShowApprovalModal(false);
@@ -200,9 +200,8 @@ export const AuthTicketListPage: React.FC = () => {
 
                 {/* Message */}
                 {message && (
-                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${
-                        message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
+                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        }`}>
                         {message.type === 'success' ? (
                             <CheckCircle2 className="w-5 h-5" />
                         ) : (

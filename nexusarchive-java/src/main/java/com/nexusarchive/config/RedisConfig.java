@@ -47,6 +47,7 @@ import java.util.Map;
  *   <tr><td>fondsScope</td><td>30 分钟</td><td>全宗权限范围</td></tr>
  *   <tr><td>erpConfig</td><td>30 分钟</td><td>ERP 配置</td></tr>
  *   <tr><td>entityConfig</td><td>30 分钟</td><td>法人配置</td></tr>
+ *   <tr><td>archiveVoucherMapping</td><td>30 分钟</td><td>档案→凭证映射（穿透联查）</td></tr>
  *   <tr><td>default</td><td>30 分钟</td><td>默认缓存</td></tr>
  * </table>
  *
@@ -153,6 +154,10 @@ public class RedisConfig implements CachingConfigurer {
 
         // entityConfig 缓存 - 30 分钟（法人配置）
         cacheConfigurations.put("entityConfig",
+                defaultConfig.entryTtl(Duration.ofMinutes(30)));
+
+        // archiveVoucherMapping 缓存 - 30 分钟（档案→凭证映射，用于穿透联查）
+        cacheConfigurations.put("archiveVoucherMapping",
                 defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
         return RedisCacheManager.builder(factory)

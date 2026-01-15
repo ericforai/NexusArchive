@@ -4182,25 +4182,9 @@ INSERT INTO public.sys_env_marker (marker_key, marker_value, created_at) VALUES 
 -- Data for Name: sys_erp_config; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (2, 'SAP ERP (生产环境)', 'GENERIC', '{"system":"SAP ERP","frequency":"实时","description":"SAP 财务凭证自动同步接口"}', 1, '2025-12-28 09:03:34.854164', '2025-12-28 09:03:34.854164', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (3, '金蝶云星空 (生产环境)', 'KINGDEE', '{"system":"金蝶云星空","frequency":"每日 23:00","description":"存货核算数据同步"}', 1, '2025-12-28 09:03:34.854164', '2025-12-28 09:03:34.854164', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (4, '泛微 OA (生产环境)', 'GENERIC', '{"system":"泛微OA","frequency":"每小时","description":"员工报销单据同步"}', 1, '2025-12-28 09:03:34.854164', '2025-12-28 09:03:34.854164', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (5, '易快报 (生产环境)', 'GENERIC', '{"system":"易快报","frequency":"每小时","description":"差旅费用数据同步"}', 1, '2025-12-28 09:03:34.854164', '2025-12-28 09:03:34.854164', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (6, '汇联易 (生产环境)', 'GENERIC', '{"system":"汇联易","frequency":"每小时","description":"费用报销同步","status":"error"}', 0, '2025-12-28 09:03:34.854164', '2025-12-28 09:03:34.854164', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (8, '金蝶云星空', 'kingdee', '{"baseUrl":"https://api.kingdee.com", "appKey":"mock", "appSecret":"mock"}', 1, '2025-12-28 09:03:34.88932', '2025-12-28 09:03:34.88932', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (9, '泛微OA系统', 'weaver', '{"baseUrl": "http://oa.nexus-demo.com", "appKey": "weaver_demo_key", "appSecret": "weaver_demo_secret", "accbookCode": "WEAVER01"}', 1, '2025-12-28 09:03:34.891391', '2025-12-28 09:03:34.891391', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (10, '泛微E10中台', 'weaver_e10', '{"baseUrl": "https://api.eteams.cn", "clientId": "7577f814096e611038c5eff1479d3b9", "tenantId": "1001", "clientSecret": "cdc0d6c9bc39312bd6288ced1789a49"}', 1, '2025-12-28 09:03:34.893282', '2025-12-28 09:03:34.893282', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (1, '用友 YonSuite (生产环境)', 'YONSUITE', '{
-        "baseUrl": "https://dbox.yonyoucloud.com/iuap-api-gateway",
-        "appKey": "96a95c00982446cba484ccc4936b221b",
-        "appSecret": "e9a58fd35f3ca3f0a46d27b8859758b1ed35f0b6",
-        "accbookCode": "BR01",
-        "extraConfig": ""
-    }', 1, '2025-12-28 09:03:34.854164', '2025-12-28 09:03:34.854164', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (7, '用友YonSuite', 'yonsuite', '{"appKey": "96a95c00982446cba484ccc4936b221b", "baseUrl": "https://dbox.yonyoucloud.com/iuap-api-gateway", "appSecret": "e9a58fd35f3ca3f0a46d27b8859758b1ed35f0b6", "accbookCode": "BRYS002", "extraConfig": ""}', 1, '2025-12-28 09:03:34.88932', '2025-12-28 09:03:34.926493', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (11, '金蝶云星空 (标准模板)', 'kingdee', '{"baseUrl":"https://api.kingdee.com/k3cloud/", "appKey":"YOUR_APP_KEY", "appSecret":"YOUR_APP_SECRET"}', 0, '2025-12-28 09:03:34.94384', '2025-12-28 09:03:34.94384', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (12, '泛微 OA (标准模板)', 'weaver', '{"baseUrl":"http://YOUR_OA_HOST/weaver/", "appKey":"YOUR_APP_KEY", "appSecret":"YOUR_APP_SECRET"}', 0, '2025-12-28 09:03:34.94384', '2025-12-28 09:03:34.94384', NULL);
-INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, created_time, last_modified_time, org_id) VALUES (13, '用友 YonSuite (标准模板)', 'yonsuite', '{"baseUrl":"https://api.yonyoucloud.com/iuap-api-gateway", "appKey":"YOUR_APP_KEY", "appSecret":"YOUR_APP_SECRET"}', 0, '2025-12-28 09:03:34.94384', '2025-12-28 09:03:34.94384', NULL);
+-- ERP配置数据已迁移到独立的 demo 数据文件
+-- V1__init_baseline_2025.sql 保持为空表，避免重复测试数据
+-- 如需演示数据，请执行 V1xx__seed_demo_erp_configs.sql
 
 
 --
@@ -4213,19 +4197,16 @@ INSERT INTO public.sys_erp_config (id, name, erp_type, config_json, is_active, c
 -- Data for Name: sys_erp_scenario; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.sys_erp_scenario (id, config_id, scenario_key, name, description, is_active, sync_strategy, cron_expression, last_sync_time, last_sync_status, last_sync_msg, created_time, last_modified_time, params_json) VALUES (1, 7, 'PAYMENT_FILE_SYNC', '付款单文件获取', '从YonSuite获取资金结算文件 (AI Integration)', true, 'MANUAL', NULL, NULL, NULL, NULL, '2025-12-28 09:03:34.912544', '2025-12-28 09:03:34.924138', NULL);
-INSERT INTO public.sys_erp_scenario (id, config_id, scenario_key, name, description, is_active, sync_strategy, cron_expression, last_sync_time, last_sync_status, last_sync_msg, created_time, last_modified_time, params_json) VALUES (2, 1, 'VOUCHER_SYNC', '凭证同步', '从用友YonSuite同步会计凭证到档案系统', true, 'MANUAL', NULL, NULL, 'NONE', NULL, '2025-12-28 09:07:24.391945', '2025-12-28 09:07:24.391945', NULL);
-INSERT INTO public.sys_erp_scenario (id, config_id, scenario_key, name, description, is_active, sync_strategy, cron_expression, last_sync_time, last_sync_status, last_sync_msg, created_time, last_modified_time, params_json) VALUES (3, 1, 'ATTACHMENT_SYNC', '附件同步', '同步凭证关联的电子发票和原始单据', true, 'REALTIME', NULL, NULL, 'NONE', NULL, '2025-12-28 09:07:24.391945', '2025-12-28 09:07:24.391945', NULL);
-INSERT INTO public.sys_erp_scenario (id, config_id, scenario_key, name, description, is_active, sync_strategy, cron_expression, last_sync_time, last_sync_status, last_sync_msg, created_time, last_modified_time, params_json) VALUES (4, 1, 'COLLECTION_FILE_SYNC', '收款单文件同步', '从YonSuite获取收款单文件', true, 'MANUAL', NULL, NULL, 'NONE', NULL, '2025-12-28 09:07:24.391945', '2025-12-28 09:07:24.391945', NULL);
-INSERT INTO public.sys_erp_scenario (id, config_id, scenario_key, name, description, is_active, sync_strategy, cron_expression, last_sync_time, last_sync_status, last_sync_msg, created_time, last_modified_time, params_json) VALUES (5, 1, 'PAYMENT_FILE_SYNC', '付款单文件获取', '从YonSuite获取资金结算文件 (AI集成)', true, 'MANUAL', NULL, NULL, 'NONE', NULL, '2025-12-28 09:07:24.391945', '2025-12-28 09:07:24.391945', NULL);
+-- ERP场景数据依赖于 sys_erp_config，已同步迁移
+-- 如需演示数据，请执行 V1xx__seed_demo_erp_configs.sql
 
 
 --
 -- Data for Name: sys_erp_sub_interface; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.sys_erp_sub_interface (id, scenario_id, interface_key, interface_name, description, is_active, sort_order, config_json, created_time, last_modified_time) VALUES (1, 1, 'LIST_QUERY', '付款单列表查询', '查询指定期间的付款单列表', true, 1, NULL, '2025-12-28 09:03:34.930122', '2025-12-28 09:03:34.930122');
-INSERT INTO public.sys_erp_sub_interface (id, scenario_id, interface_key, interface_name, description, is_active, sort_order, config_json, created_time, last_modified_time) VALUES (2, 1, 'FILE_DOWNLOAD', '付款单文件下载', '下载付款单关联的文件', true, 2, NULL, '2025-12-28 09:03:34.930122', '2025-12-28 09:03:34.930122');
+-- ERP子接口数据依赖于 sys_erp_scenario，已同步迁移
+-- 如需演示数据，请执行 V1xx__seed_demo_erp_configs.sql
 
 
 --
@@ -4501,7 +4482,8 @@ SELECT pg_catalog.setval('public.period_lock_id_seq', 1, false);
 -- Name: sys_erp_config_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.sys_erp_config_id_seq', 13, true);
+-- ERP配置数据已删除，序列重置为 0（首次插入将从 1 开始）
+SELECT pg_catalog.setval('public.sys_erp_config_id_seq', 0, false);
 
 
 --
@@ -4515,14 +4497,16 @@ SELECT pg_catalog.setval('public.sys_erp_feedback_queue_id_seq', 1, false);
 -- Name: sys_erp_scenario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.sys_erp_scenario_id_seq', 5, true);
+-- ERP场景数据已删除，序列重置为 0（首次插入将从 1 开始）
+SELECT pg_catalog.setval('public.sys_erp_scenario_id_seq', 0, false);
 
 
 --
 -- Name: sys_erp_sub_interface_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.sys_erp_sub_interface_id_seq', 2, true);
+-- ERP子接口数据已删除，序列重置为 0（首次插入将从 1 开始）
+SELECT pg_catalog.setval('public.sys_erp_sub_interface_id_seq', 0, false);
 
 
 --

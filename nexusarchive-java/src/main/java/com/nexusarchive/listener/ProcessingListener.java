@@ -1,4 +1,4 @@
-// Input: Jackson、Lombok、Spring Framework、Java 标准库、等
+// Input: Jackson、Lombok、Spring Framework、Java 标准库、AbnormalVoucherService
 // Output: ProcessingListener 类
 // Pos: 事件监听
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -14,6 +14,7 @@ import com.nexusarchive.entity.IngestRequestStatus;
 import com.nexusarchive.event.CheckPassedEvent;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
+import com.nexusarchive.service.AbnormalVoucherService;
 import com.nexusarchive.service.ArchivalPackageService;
 import com.nexusarchive.service.IAutoAssociationService;
 import com.nexusarchive.service.SmartParserService;
@@ -35,6 +36,7 @@ import java.util.List;
 public class ProcessingListener {
 
     private final ArchivalPackageService archivalPackageService;
+    private final AbnormalVoucherService abnormalVoucherService;
     private final SmartParserService smartParserService;
     private final IAutoAssociationService autoAssociationService;
     private final ArchiveMapper archiveMapper;
@@ -80,8 +82,18 @@ public class ProcessingListener {
                 );
             }
 
-            // 6. 完成
+
+            // 6. 成功处理，尝试关闭关联的异常记录（如果是重试单据）
+            try {
+                abnormalVoucherService.markResolvedByRequestId(requestId);
+            } catch (Exception e) {
+                log.warn("Failed to mark abnormal voucher resolved for requestId: {}", requestId, e);
+                // Non-blocking, continue
+            }
+
+            // 7. 完成
             updateStatus(requestId, "COMPLETED", "归档完成，已存储至: " + storagePath);
+
 
         } catch (Exception e) {
             log.error("Error during Processing for requestId={}", requestId, e);

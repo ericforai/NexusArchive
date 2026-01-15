@@ -1,5 +1,5 @@
 // Input: MyBatis-Plus、Spring Framework、Lombok、Java 标准库、等
-// Output: PreArchiveSubmitService 类
+// Output: PreArchiveSubmitService 类（归档完成时保留原始格式）
 // Pos: 业务服务层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -52,7 +52,7 @@ public class PreArchiveSubmitService {
     private final com.nexusarchive.service.converter.OfdConverterHelper ofdConverterHelper;
     private final com.nexusarchive.service.signature.OfdSignatureHelper ofdSignatureHelper;
     private final com.nexusarchive.util.FileHashUtil fileHashUtil;
-    private final ArchivalCodeGenerator archivalCodeGenerator;
+    private final com.nexusarchive.service.strategy.ArchivalCodeGenerator archivalCodeGeneratorStrategy;
 
     @org.springframework.beans.factory.annotation.Value("${signature.keystore.path:}")
     private String keystorePath;
@@ -111,10 +111,15 @@ public class PreArchiveSubmitService {
             // 生成正式档号（替换临时档号）
             String newArchiveCode = generateArchiveCode(file);
 
-            // 使用 UpdateWrapper 强制更新 archive_code（绕过 FieldStrategy.NEVER）
+            // 提取正确的题名（从文件名）
+            String properTitle = extractTitle(file);
+
+            // 使用 UpdateWrapper 强制更新多个字段（绕过 FieldStrategy.NEVER）
             LambdaUpdateWrapper<Archive> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.eq(Archive::getId, archive.getId())
                     .set(Archive::getArchiveCode, newArchiveCode)
+                    .set(Archive::getTitle, properTitle)
+                    .set(Archive::getSummary, file.getFileName())
                     .set(Archive::getStatus, "PENDING")
                     .set(Archive::getRetentionPeriod, "30Y")
                     .set(Archive::getLastModifiedTime, LocalDateTime.now());
@@ -125,8 +130,10 @@ public class PreArchiveSubmitService {
 
             // 更新内存对象以供后续使用
             archive.setArchiveCode(newArchiveCode);
+            archive.setTitle(properTitle);
+            archive.setSummary(file.getFileName());
             archive.setStatus("PENDING");
-            log.info("档案记录已更新: newCode={}", newArchiveCode);
+            log.info("档案记录已更新: newCode={}, title={}", newArchiveCode, properTitle);
         } else {
             // 不存在，创建新记录
             archive = createArchiveFromPoolFile(file);
@@ -201,27 +208,8 @@ public class PreArchiveSubmitService {
         List<ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
 
         for (ArcFileContent file : files) {
-            // 1. 格式统一化: 强制转换为 OFD
+            // 1. 格式统一化: 已禁用 OFD 转换，保留原始文件格式
             Path storagePath = java.nio.file.Paths.get(file.getStoragePath());
-                    
-            if (!file.getFileName().toLowerCase().endsWith(".ofd")) {
-                try {
-                    String newFileName = file.getFileName().substring(0, file.getFileName().lastIndexOf('.')) + ".ofd";
-                    Path targetPath = storagePath.getParent().resolve(newFileName);
-                    
-                    ofdConverterHelper.convertToOfd(storagePath, targetPath);
-                    
-                    // 更新文件记录
-                    file.setStoragePath(targetPath.toString());
-                    file.setFileName(newFileName);
-                    file.setFileType("OFD");
-                    storagePath = targetPath; // 指向新文件
-                    log.info("归档并转换文件格式: {} -> OFD", file.getId());
-                } catch (Exception e) {
-                    log.error("归档转换OFD失败: {}", e.getMessage());
-                    throw new RuntimeException("归档转换失败", e);
-                }
-            }
 
             // 2. 电子签章: 对 OFD 加盖归档章
             try {
@@ -302,14 +290,18 @@ public class PreArchiveSubmitService {
      * 生成正式档号
      * 使用 ArchivalCodeGenerator 服务生成符合 DA/T 94-2022 的档号
      * 格式: [全宗号]-[年度]-[保管期限]-[分类]-[件号]
+     *
+     * 使用数据库持久化的序列号生成器，避免应用重启后档号重复
      */
     private String generateArchiveCode(ArcFileContent file) {
-        String fondsCode = file.getFondsCode() != null ? file.getFondsCode() : "DEFAULT";
-        String year = file.getFiscalYear() != null ? file.getFiscalYear() : String.valueOf(LocalDate.now().getYear());
-        String retention = "30Y"; // 默认30年保管期限
-        String category = file.getVoucherType() != null ? file.getVoucherType() : "AC01";
+        // 创建临时 Archive 对象用于档号生成
+        Archive tempArchive = new Archive();
+        tempArchive.setFondsNo(file.getFondsCode() != null ? file.getFondsCode() : "DEFAULT");
+        tempArchive.setFiscalYear(file.getFiscalYear() != null ? file.getFiscalYear() : String.valueOf(LocalDate.now().getYear()));
+        tempArchive.setRetentionPeriod("30Y"); // 默认30年保管期限
+        tempArchive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : "AC01");
 
-        return archivalCodeGenerator.generate(fondsCode, year, retention, category);
+        return archivalCodeGeneratorStrategy.generateNextCode(tempArchive);
     }
 
     /**

@@ -17,6 +17,7 @@ node_modules
 
 # Java 编译产物（用 mvn 构建重新生成）
 nexusarchive-java/target/
+**/target/
 
 # 前端构建产物（用 npm run build 重新生成）
 dist
@@ -41,6 +42,7 @@ lerna-debug.log*
 
 # macOS 系统文件（每台电脑自动生成，内容不同）
 .DS_Store
+.gemini-clipboard/
 
 # 临时编辑器交换文件
 *.sw?
@@ -95,6 +97,7 @@ backup*.sql
 test_aip*/
 .m2-temp/
 test_upload.pdf
+nexusarchive-java/download_*.pdf
 
 # ----------------
 # 项目特定：数据文件（如果太大或包含测试数据）
@@ -138,9 +141,12 @@ docs/demo数据/
 .frontend.pid
 
 # ----------------
-# 开发日志文件
+# 开发日志与报告文件
 # ----------------
 backend.log
+lint_*.txt
+lint_full_report.txt
+lint_output.txt
 
 # ----------------
 # 需要同步的重要文件（确保没有被忽略）

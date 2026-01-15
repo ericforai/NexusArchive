@@ -69,8 +69,7 @@ const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWaterm
 // 凭证预览组件 Demo
 const VoucherPreviewDemo = lazy(() => import('../pages/demo/VoucherPreviewDemo'));
 
-// 预归档池看板视图
-const PoolKanbanPage = lazy(() => import('../pages/pre-archive/PoolKanbanPage').then(m => ({ default: m.PoolKanbanPage })));
+// [已移除] PoolKanbanPage - 看板功能已集成到 PoolPage 组件中
 
 // 匹配向导模块（OnboardingWizard 和 ComplianceReport 仍用 withSuspense）
 const OnboardingWizard = lazy(() => import('../pages/matching/OnboardingWizard'));
@@ -94,12 +93,12 @@ const FondsManagement = lazy(() => import('../pages/admin/FondsManagement'));
 // 岗位管理模块
 const PositionManagement = lazy(() => import('../pages/admin/PositionManagement').then(m => ({ default: m.PositionManagement })));
 
-// 历史数据导入模块
-const LegacyImportPage = lazy(() => import('../pages/admin/LegacyImportPage'));
+// [预留] 历史数据导入模块 - 路由待集成
+// const LegacyImportPage = lazy(() => import('../pages/admin/LegacyImportPage'));
 
-// 用户生命周期管理模块
-const UserLifecyclePage = lazy(() => import('../pages/admin/UserLifecyclePage'));
-const AccessReviewPage = lazy(() => import('../pages/admin/AccessReviewPage'));
+// [预留] 用户生命周期管理模块 - 路由待集成
+// const UserLifecyclePage = lazy(() => import('../pages/admin/UserLifecyclePage'));
+// const AccessReviewPage = lazy(() => import('../pages/admin/AccessReviewPage'));
 
 // MFA设置模块
 const MfaSettingsPage = lazy(() => import('../pages/settings/MfaSettingsPage'));
@@ -118,9 +117,9 @@ const MobileUploadPage = lazy(() => import('../pages/scan/MobileUploadPage').the
 const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
 const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPage'));
 
-// 审计验真模块
-const AuditVerificationPage = lazy(() => import('../pages/audit/AuditVerificationPage'));
-const AuditEvidencePackagePage = lazy(() => import('../pages/audit/AuditEvidencePackagePage'));
+// [预留] 审计验真模块 - 路由待集成
+// const AuditVerificationPage = lazy(() => import('../pages/audit/AuditVerificationPage'));
+// const AuditEvidencePackagePage = lazy(() => import('../pages/audit/AuditEvidencePackagePage'));
 
 // 代码质量监控模块
 const QualityView = lazy(() => import('../pages/quality/QualityView').then(m => ({ default: m.QualityView })));

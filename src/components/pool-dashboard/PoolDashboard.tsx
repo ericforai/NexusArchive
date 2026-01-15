@@ -34,15 +34,15 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
   showActions = false,
   onBatchArchive,
 }) => {
-  const { refetch } = usePoolKanban();
-  const { stats, totalCount } = usePoolDashboard();
+  const { refetch: _refetch } = usePoolKanban();
+  const { stats, totalCount: _totalCount } = usePoolDashboard();
 
   // 计算每个状态的卡片配置
   const cards = useMemo(() => {
     return Object.values(SimplifiedPreArchiveStatus).map((status) => {
       const count = stats[status];
       const isActive = activeFilter === status;
-      const config = STATUS_CONFIG[status];
+      const _config = STATUS_CONFIG[status];
 
       // "可归档"状态显示批量操作按钮
       const showAction = showActions && status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE && count > 0;

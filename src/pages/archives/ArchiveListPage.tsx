@@ -13,13 +13,13 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { ArchiveRouteMode, useArchiveActions, useArchiveListController, PoolStatusFilter } from '../../features/archives';
 import { SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
 
-// 简化状态到旧状态的映射（用于筛选同步）
+// 简化状态到 PoolStatusFilter 的映射
 const SIMPLIFIED_TO_OLD_STATUS: Record<SimplifiedPreArchiveStatus, PoolStatusFilter> = {
     'PENDING_CHECK': 'PENDING_CHECK',
-    'NEEDS_ACTION': 'CHECK_FAILED',
-    'READY_TO_MATCH': 'PENDING_METADATA',
-    'READY_TO_ARCHIVE': 'PENDING_ARCHIVE',
-    'COMPLETED': 'ARCHIVED',
+    'NEEDS_ACTION': 'NEEDS_ACTION',
+    'READY_TO_MATCH': 'READY_TO_MATCH',
+    'READY_TO_ARCHIVE': 'READY_TO_ARCHIVE',
+    'COMPLETED': 'COMPLETED',
 };
 
 // 诊断：模块加载日志
@@ -44,8 +44,16 @@ const LoadingFallback = () => (
 );
 
 export const ArchiveListPage: React.FC<ArchiveListPageProps> = ({ routeConfig, statusFilter }) => {
+    // 计算初始 Pool 筛选状态
+    const initialPoolFilter = (routeConfig === 'pool' && statusFilter) 
+        ? SIMPLIFIED_TO_OLD_STATUS[statusFilter] 
+        : undefined;
+
     // 1. 获取核心业务数据与状态
-    const controller = useArchiveListController({ routeConfig });
+    const controller = useArchiveListController({ 
+        routeConfig,
+        initialPoolStatusFilter: initialPoolFilter
+    });
 
     // 2. 获取操作 Action
     const actions = useArchiveActions(controller);

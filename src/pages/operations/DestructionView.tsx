@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { destructionApi, ExpiredArchive, Destruction } from '../../api/destruction';
-import { FileWarning, ShieldAlert, FileSignature, Flame, CheckCircle2, History, Trash2, RefreshCw, BrainCircuit, BookOpen, Loader2 } from 'lucide-react';
+import { FileWarning, ShieldAlert, FileSignature, Flame, CheckCircle2, Trash2, RefreshCw, BrainCircuit, BookOpen, Loader2 } from 'lucide-react';
 import { toast } from '../../utils/notificationService';
 
 import { statsApi, DestructionStats } from '../../api/stats';
@@ -88,7 +88,7 @@ export const DestructionView: React.FC = () => {
          if (res.code === 200) {
             setBatches(res.data?.records || []);
          }
-      } catch (e) {
+      } catch (_e) {
          toast.error('销毁执行失败');
       }
    };

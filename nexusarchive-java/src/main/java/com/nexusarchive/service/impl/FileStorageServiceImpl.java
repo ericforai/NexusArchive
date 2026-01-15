@@ -27,10 +27,10 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public Path resolvePath(String relativePath) {
-        if (relativePath == null || relativePath.isEmpty()) {
+        if (relativePath == null || relativePath.trim().isEmpty()) {
             throw new BusinessException("File path cannot be null or empty");
         }
-        
+
         // [FIXED P0-2] 1. URL 解码（防止 %2e%2e 绕过）
         try {
             relativePath = java.net.URLDecoder.decode(relativePath, java.nio.charset.StandardCharsets.UTF_8);

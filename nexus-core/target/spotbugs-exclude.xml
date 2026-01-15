@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Input: SpotBugs 排除规则 -->
-<!-- Output: Sprint 0 静态扫描过滤器 -->
-<!-- Pos: NexusCore 代码质量 -->
-<!-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。 -->
-<FindBugsFilter>
-</FindBugsFilter>

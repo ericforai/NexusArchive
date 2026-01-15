@@ -6,17 +6,33 @@
 import { client } from './client';
 import { ApiResponse, PageResult } from '../types';
 
+export const BORROW_PURPOSE_OPTIONS = [
+    { label: '查阅', value: 'READING' },
+    { label: '复印', value: 'COPY' },
+    { label: '借出', value: 'LOAN' },
+];
+
+export const URGENCY_LEVEL_OPTIONS = [
+    { label: '普通', value: 'NORMAL' },
+    { label: '紧急', value: 'URGENT' },
+];
+
 export interface BorrowingRecord {
     id: string;
     archiveId: string;
     archiveTitle?: string;
+    userId: string;
     userName?: string;
+    borrowPurpose?: string;
+    urgencyLevel?: string;
+    contactInfo?: string;
     borrowDate?: string;
     expectedReturnDate?: string;
     actualReturnDate?: string;
     status: string;
     reason?: string;
     approvalComment?: string;
+    createdTime?: string;
 }
 
 export interface BorrowingListParams {
@@ -50,7 +66,12 @@ export const borrowingApi = {
     },
 
     // 审批借阅 (修正: 后端 Command 需要 requestId)
-    approveBorrowing: async (id: string, payload: { approverId: string; approverName: string; approved: boolean; comment: string }): Promise<ApiResponse<void>> => {
+    approveBorrowing: async (id: string, payload: {
+        approverId?: string;
+        approverName?: string;
+        approved: boolean;
+        comment?: string
+    }): Promise<ApiResponse<void>> => {
         const response = await client.post(`/borrow/requests/${id}/approve`, { ...payload, requestId: id });
         return response.data;
     },
@@ -61,15 +82,15 @@ export const borrowingApi = {
         return response.data;
     },
 
-    // 归还档案
-    returnArchive: async (id: string, operatorId: string): Promise<ApiResponse<void>> => {
+    // 归还档案 (重命名以匹配组件调用，参数可选)
+    userReturnArchive: async (id: string, operatorId?: string): Promise<ApiResponse<void>> => {
         const response = await client.post(`/borrow/requests/${id}/return`, null, {
             params: { operatorId }
         });
         return response.data;
     },
 
-    // 取消借阅 (Mock)
+    // 取消借阅 (Mock - TODO: 后端实现后移除 console.warn)
     cancelBorrowing: async (_id: string): Promise<ApiResponse<void>> => {
         // const response = await client.post(`/borrow/requests/${id}/cancel`);
         console.warn('Cancel not implemented in backend yet');

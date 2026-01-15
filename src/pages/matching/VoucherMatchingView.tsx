@@ -471,7 +471,7 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                                             renderItem={(attachment: VoucherAttachment) => (
                                                 <List.Item
                                                     actions={[
-                                                        <Tooltip title="下载">
+                                                        <Tooltip key="download" title="下载">
                                                             <Button
                                                                 type="text"
                                                                 size="small"

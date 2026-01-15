@@ -24,7 +24,7 @@ export interface SelectionResult {
  * 批量选择状态
  */
 export interface BatchSelectionState {
-  selectedIds: Set<number>;
+  selectedIds: Set<string>;  // 修改: number -> string 以支持大整数 ID
   selectAllMode: boolean;
 }
 
@@ -43,20 +43,20 @@ export interface RowSelectionConfig {
  */
 export interface UseBatchSelectionReturn {
   // 状态
-  selectedIds: Set<number>;
+  selectedIds: Set<string>;  // 修改: number -> string
   selectAllMode: boolean;
-  lastError?: SelectionResult; // 最后一次操作错误（如果有）
+  lastError?: SelectionResult;
 
   // Ant Design Table rowSelection 配置
   rowSelection: RowSelectionConfig;
 
   // 操作方法
   clearSelection: () => SelectionResult;
-  toggleSelection: (id: number) => SelectionResult;
-  setSelectedIds: (ids: Set<number> | number[]) => SelectionResult;
-  selectAll: (allIds: number[]) => SelectionResult;
+  toggleSelection: (id: string) => SelectionResult;  // 修改: number -> string
+  setSelectedIds: (ids: Set<string> | string[]) => SelectionResult;  // 修改
+  selectAll: (allIds: string[]) => SelectionResult;  // 修改: number[] -> string[]
   getSelectedCount: () => number;
-  isSelected: (id: number) => boolean;
+  isSelected: (id: string) => boolean;  // 修改: number -> string
 }
 
 /**
@@ -66,56 +66,37 @@ export interface UseBatchSelectionReturn {
  * 兼容 Ant Design Table 的 rowSelection 配置
  *
  * @returns 批量选择状态和操作方法
- *
- * @example
- * ```tsx
- * function MyTable() {
- *   const {
- *     rowSelection,
- *     selectedCount,
- *     clearSelection
- *   } = useBatchSelection();
- *
- *   return (
- *     <Table
- *       rowSelection={rowSelection}
- *       dataSource={data}
- *     />
- *   );
- * }
- * ```
  */
 export function useBatchSelection(): UseBatchSelectionReturn {
-  const [selectedIds, setSelectedIdsState] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIdsState] = useState<Set<string>>(new Set());  // 修改: number -> string
   const [selectAllMode, setSelectAllMode] = useState<boolean>(false);
   const [lastError, setLastError] = useState<SelectionResult | undefined>();
 
   /**
    * 处理 Table rowSelection 的 onChange 回调
-   * 接受 React.Key[] 类型，转换为 number[] 处理
+   * 保持 ID 为字符串，避免大整数精度丢失
    */
   const handleSelectionChange = useCallback((selectedRowKeys: Key[]) => {
-    // 转换 Key[] 为 number[]
-    const numericKeys = selectedRowKeys.map(key => typeof key === 'number' ? key : parseInt(String(key)));
+    // 转换 Key[] 为 string[]，保持原始字符串值
+    const stringKeys = selectedRowKeys.map(key => String(key));
 
     // 检查是否超出限制
-    if (numericKeys.length > MAX_SELECTION_LIMIT) {
+    if (stringKeys.length > MAX_SELECTION_LIMIT) {
       const error: SelectionResult = {
         success: false,
         reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items`
       };
       setLastError(error);
       console.warn(
-        `[useBatchSelection] Selection limit exceeded: ${numericKeys.length} > ${MAX_SELECTION_LIMIT}`
+        `[useBatchSelection] Selection limit exceeded: ${stringKeys.length} > ${MAX_SELECTION_LIMIT}`
       );
       return;
     }
 
-    setSelectedIdsState(new Set(numericKeys));
-    setLastError(undefined); // 清除错误
+    setSelectedIdsState(new Set(stringKeys));
+    setLastError(undefined);
 
-    // 如果当前是全选模式，但选中数量少于实际数量，则退出全选模式
-    if (selectAllMode && numericKeys.length < MAX_SELECTION_LIMIT) {
+    if (selectAllMode && stringKeys.length < MAX_SELECTION_LIMIT) {
       setSelectAllMode(false);
     }
   }, [selectAllMode]);
@@ -132,9 +113,8 @@ export function useBatchSelection(): UseBatchSelectionReturn {
 
   /**
    * 切换单条选中状态
-   * 使用 functional setState 避免竞态条件，使用 flushSync 确保同步返回结果
    */
-  const toggleSelection = useCallback((id: number): SelectionResult => {
+  const toggleSelection = useCallback((id: string): SelectionResult => {  // 修改: number -> string
     let result: SelectionResult = { success: false, reason: 'Unknown error' };
 
     flushSync(() => {
@@ -142,7 +122,6 @@ export function useBatchSelection(): UseBatchSelectionReturn {
         const isAlreadySelected = prev.has(id);
 
         if (isAlreadySelected) {
-          // 取消选中
           const newSet = new Set(prev);
           newSet.delete(id);
           setSelectAllMode(false);
@@ -150,11 +129,10 @@ export function useBatchSelection(): UseBatchSelectionReturn {
           result = { success: true };
           return newSet;
         } else {
-          // 选中
           if (prev.size >= MAX_SELECTION_LIMIT) {
             result = { success: false, reason: `Cannot select more than ${MAX_SELECTION_LIMIT} items` };
             setLastError(result);
-            return prev; // 保持原状态
+            return prev;
           }
 
           const newSet = new Set(prev);
@@ -167,15 +145,14 @@ export function useBatchSelection(): UseBatchSelectionReturn {
     });
 
     return result;
-  }, []); // 空依赖数组，避免因 selectedIds 变化导致函数重建
+  }, []);
 
   /**
    * 设置选中的 ID 集合
    */
-  const setSelectedIds = useCallback((ids: Set<number> | number[]): SelectionResult => {
+  const setSelectedIds = useCallback((ids: Set<string> | string[]): SelectionResult => {  // 修改
     const newIds = ids instanceof Set ? ids : new Set(ids);
 
-    // 检查是否超出限制
     if (newIds.size > MAX_SELECTION_LIMIT) {
       const error: SelectionResult = {
         success: false,
@@ -190,14 +167,14 @@ export function useBatchSelection(): UseBatchSelectionReturn {
 
     setSelectedIdsState(newIds);
     setSelectAllMode(false);
-    setLastError(undefined); // 清除错误
+    setLastError(undefined);
     return { success: true };
   }, []);
 
   /**
    * 全选所有记录
    */
-  const selectAll = useCallback((allIds: number[]): SelectionResult => {
+  const selectAll = useCallback((allIds: string[]): SelectionResult => {  // 修改: number[] -> string[]
     if (allIds.length > MAX_SELECTION_LIMIT) {
       const error: SelectionResult = {
         success: false,
@@ -209,7 +186,7 @@ export function useBatchSelection(): UseBatchSelectionReturn {
 
     setSelectedIdsState(new Set(allIds));
     setSelectAllMode(true);
-    setLastError(undefined); // 清除错误
+    setLastError(undefined);
 
     return { success: true };
   }, []);
@@ -224,7 +201,7 @@ export function useBatchSelection(): UseBatchSelectionReturn {
   /**
    * 检查是否选中
    */
-  const isSelected = useCallback((id: number): boolean => {
+  const isSelected = useCallback((id: string): boolean => {  // 修改: number -> string
     return selectedIds.has(id);
   }, [selectedIds]);
 
@@ -241,15 +218,10 @@ export function useBatchSelection(): UseBatchSelectionReturn {
   }), [selectedIds, handleSelectionChange]);
 
   return {
-    // 状态
     selectedIds,
     selectAllMode,
     lastError,
-
-    // rowSelection 配置
     rowSelection,
-
-    // 操作方法
     clearSelection,
     toggleSelection,
     setSelectedIds,
@@ -259,7 +231,4 @@ export function useBatchSelection(): UseBatchSelectionReturn {
   };
 }
 
-/**
- * 默认导出
- */
 export default useBatchSelection;

@@ -12,8 +12,10 @@
  * === REFACTORED ===
  * Previously 650 lines with mixed responsibilities.
  * Now ~150 lines as a compositor of specialized hooks.
+ *
+ * 修复：使用 useMemo 稳定返回值，避免因引用变化导致子组件无限循环
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useArchiveMode } from './controllers/useArchiveMode';
 import { useArchiveQuery } from './controllers/useArchiveQuery';
 import { useArchivePagination } from './controllers/useArchivePagination';
@@ -50,7 +52,10 @@ export function useArchiveListController(options: any): ArchiveListController {
     const query = useArchiveQuery();
     const page = useArchivePagination();
     const data = useArchiveData(page.pageInfo.pageSize);
-    const pool = useArchivePool({ isEnabled: mode.isPoolView });
+    const pool = useArchivePool({
+        isEnabled: mode.isPoolView,
+        initialStatusFilter: options.initialPoolStatusFilter
+    });
     const ui = useArchiveToast();
     const { loadCurrentView } = useArchiveDataLoader({
         mode, query, page,
@@ -67,11 +72,12 @@ export function useArchiveListController(options: any): ArchiveListController {
         showToast: ui.showToast,
     });
 
-    return {
+    // 使用 useMemo 稳定返回值，只有关键值变化时才返回新对象
+    return useMemo(() => ({
         mode, query, page,
         data: { rows: data.rows, isLoading: data.isLoading, errorMessage: data.errorMessage },
         selection, pool, ui, actions,
-    };
+    }), [mode, query, page, data.rows, data.isLoading, data.errorMessage, selection, pool, ui, actions]);
 }
 
 function useArchiveSelectionInline(rows: any[]) {
@@ -81,10 +87,10 @@ function useArchiveSelectionInline(rows: any[]) {
     }, []);
     const toggleAll = React.useCallback(() => {
         setSelectedIds(prev => (prev.length === rows.length ? [] : rows.map(r => r.id)));
-    }, [selectedIds.length, rows]);
+    }, [rows]);
     const clear = React.useCallback(() => setSelectedIds([]), []);
-    return {
+    return useMemo(() => ({
         selectedIds, toggle, toggleAll, clear,
         allSelected: rows.length > 0 && selectedIds.length === rows.length,
-    };
+    }), [selectedIds, rows.length, toggle, toggleAll, clear]);
 }

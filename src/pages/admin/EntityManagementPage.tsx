@@ -44,9 +44,8 @@ const EntityTreeNodeComponent: React.FC<{
             >
                 {/* 展开/收起图标 */}
                 <span
-                    className={`w-5 h-5 flex items-center justify-center cursor-pointer text-slate-400 ${
-                        hasChildren ? '' : 'invisible'
-                    }`}
+                    className={`w-5 h-5 flex items-center justify-center cursor-pointer text-slate-400 ${hasChildren ? '' : 'invisible'
+                        }`}
                     onClick={() => onToggle(node.id)}
                 >
                     {expandedIds.has(node.id) ? (
@@ -67,11 +66,10 @@ const EntityTreeNodeComponent: React.FC<{
                                     ({node.taxId})
                                 </span>
                             )}
-                            <span className={`px-2 py-0.5 rounded text-xs ${
-                                node.status === 'ACTIVE'
+                            <span className={`px-2 py-0.5 rounded text-xs ${node.status === 'ACTIVE'
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-slate-100 text-slate-700'
-                            }`}>
+                                }`}>
                                 {node.status === 'ACTIVE' ? '活跃' : '停用'}
                             </span>
                         </div>
@@ -127,12 +125,12 @@ const EntityTreeNodeComponent: React.FC<{
 
 export const EntityManagementPage: React.FC = () => {
     const [tree, setTree] = useState<EntityTreeNode[]>([]);
-    const [fondsList, setFondsList] = useState<BasFonds[]>([]);
+    const [_fondsList, setFondsList] = useState<BasFonds[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [selectedEntity, setSelectedEntity] = useState<SysEntity | null>(null);
+    const [_selectedEntity, setSelectedEntity] = useState<SysEntity | null>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -147,6 +145,33 @@ export const EntityManagementPage: React.FC = () => {
         description: '',
     });
 
+    /**
+     * 过滤部门数据（前端双重保险）
+     * 电子会计档案系统只管理法人实体，不管理部门
+     */
+    const filterDepartments = (nodes: EntityTreeNode[]): EntityTreeNode[] => {
+        return nodes
+            .filter(node => {
+                // 有税号的，肯定是法人实体
+                if (node.taxId) {
+                    return true;
+                }
+                // 名称以"部"结尾且没有税号的，视为部门（过滤）
+                if (node.name.endsWith('部')) {
+                    return false;
+                }
+                // 名称包含"部门"的，视为部门（过滤）
+                if (node.name.includes('部门')) {
+                    return false;
+                }
+                return true;
+            })
+            .map(node => ({
+                ...node,
+                children: node.children ? filterDepartments(node.children) : []
+            }));
+    };
+
     useEffect(() => {
         loadData();
     }, []);
@@ -159,7 +184,9 @@ export const EntityManagementPage: React.FC = () => {
                 fondsApi.list(),
             ]);
             if (treeRes.code === 200 && treeRes.data) {
-                setTree(treeRes.data);
+                // 前端过滤：确保不显示部门数据（双重保险）
+                const filteredTree = filterDepartments(treeRes.data);
+                setTree(filteredTree);
                 // 默认展开所有节点
                 const allIds = new Set<string>();
                 const collectIds = (nodes: EntityTreeNode[]) => {
@@ -170,15 +197,41 @@ export const EntityManagementPage: React.FC = () => {
                         }
                     });
                 };
-                collectIds(treeRes.data);
+                collectIds(filteredTree);
                 setExpandedIds(allIds);
             }
             if (fondsRes.code === 200 && fondsRes.data) {
                 setFondsList(fondsRes.data);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('加载数据失败', error);
-            setMessage({ type: 'error', text: '加载数据失败' });
+            
+            // 提取错误信息
+            let errorMessage = '加载数据失败';
+            
+            // 检查是否是 AxiosError 且有响应
+            if (error?.response) {
+                const status = error.response.status;
+                const data = error.response.data;
+                
+                if (status === 403) {
+                    // 403 Forbidden - 权限不足
+                    errorMessage = '权限不足：您没有访问法人管理数据的权限。请联系管理员授予 entity:view 或 entity:manage 权限。';
+                } else if (status === 401) {
+                    // 401 Unauthorized - 未授权
+                    errorMessage = '未授权：请重新登录';
+                } else if (data?.message) {
+                    // 使用后端返回的错误消息
+                    errorMessage = `加载数据失败：${data.message}`;
+                } else {
+                    errorMessage = `加载数据失败：HTTP ${status}`;
+                }
+            } else if (error?.message) {
+                // 网络错误或其他错误
+                errorMessage = `加载数据失败：${error.message}`;
+            }
+            
+            setMessage({ type: 'error', text: errorMessage });
         } finally {
             setLoading(false);
         }
@@ -282,7 +335,7 @@ export const EntityManagementPage: React.FC = () => {
     };
 
     const handleSyncFromErp = async () => {
-        if (!window.confirm('确认从 YonSuite 同步组织架构吗？此操作将同步法人实体数据。')) return;
+        if (!window.confirm('确认从 YonSuite 同步法人实体吗？此操作将同步法人数据（不包含部门）。')) return;
         setSyncing(true);
         try {
             const res = await adminApi.syncOrgFromErp();
@@ -320,6 +373,10 @@ export const EntityManagementPage: React.FC = () => {
                                 <p className="text-sm text-slate-500 mt-1">
                                     管理法人实体及层级关系（{totalCount} 个法人，{activeCount} 个活跃）
                                 </p>
+                                <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                    <span>📋</span>
+                                    <span>电子会计档案架构：法人 → 全宗 → 档案。法人层级关系仅用于管理维度（母公司-子公司），数据隔离基于全宗号。</span>
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -329,7 +386,7 @@ export const EntityManagementPage: React.FC = () => {
                                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
                                 <RefreshCw size={16} className={`mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                                {syncing ? '同步中...' : '从 ERP 同步'}
+                                {syncing ? '同步中...' : '从 ERP 同步法人'}
                             </button>
                             <button
                                 onClick={() => {
@@ -347,9 +404,8 @@ export const EntityManagementPage: React.FC = () => {
 
                 {/* Message */}
                 {message && (
-                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${
-                        message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
+                    <div className={`mx-6 mt-4 p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                        }`}>
                         {message.type === 'success' ? (
                             <CheckCircle2 className="w-5 h-5" />
                         ) : (

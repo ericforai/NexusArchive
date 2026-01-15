@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { ChevronDown, ChevronRight, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { ErpScenario, ErpSubInterface, SyncHistory } from '../../../../types';
+import { ErpScenario } from '../../../../types';
 import { ScenarioSyncManagerState, ScenarioSyncManagerActions } from '../types';
 
 interface ScenarioCardProps {

@@ -134,7 +134,7 @@ interface KanbanToolbarProps {
  */
 function KanbanToolbar({
   totalColumns,
-  visibleColumns,
+  visibleColumns: _visibleColumns,
   collapsedColumns,
   selectedCount,
   hasSelection,
@@ -280,12 +280,7 @@ export function PoolKanbanView({ className, filter }: PoolKanbanViewProps) {
       return;
     }
 
-    if (actionKey === 'batch-approve') {
-      // TODO: 批量审批
-      return;
-    }
-
-    // 需要批量确认的操作（删除、重新检测等）
+    // 需要批量确认的操作（删除、重新检测、提交归档等）
     const actionType = ACTION_KEY_TO_BATCH_TYPE[actionKey];
     if (actionType) {
       const cardIds = columnCards.map(card => card.id);

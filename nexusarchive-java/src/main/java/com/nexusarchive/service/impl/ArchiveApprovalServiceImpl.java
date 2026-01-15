@@ -210,7 +210,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         }
 
         log.info("Batch approval completed: {} succeeded, {} failed",
-                response.getSuccess(), response.getFailed());
+                response.getSuccessCount(), response.getFailed());
 
         return response;
     }
@@ -252,7 +252,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         }
 
         log.info("Batch rejection completed: {} succeeded, {} failed",
-                response.getSuccess(), response.getFailed());
+                response.getSuccessCount(), response.getFailed());
 
         return response;
     }

@@ -10,7 +10,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, DatePicker, message, Spin } from 'antd';
+import { Modal, Form, Input, Select, message, Spin } from 'antd';
 import type { Archive } from '@/api/archives';
 import { archivesApi } from '@/api/archives';
 
@@ -155,7 +155,7 @@ export const ManualArchiveModal: React.FC<ManualArchiveModalProps> = ({
           <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded text-sm text-amber-700 dark:text-amber-300">
             <p className="font-medium mb-1">💡 提示：</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
-              <li>补录元数据后，档案状态将更新为"准备归档"</li>
+              <li>补录元数据后，档案状态将更新为&quot;准备归档&quot;</li>
               <li>请在提交前确认信息准确无误</li>
               <li>提交后可在归档管理页面查看</li>
             </ul>
