@@ -131,7 +131,13 @@ public class FondsContextFilter extends OncePerRequestFilter {
             // 不强制要求全宗权限的路径（如 /api/stats、/api/notification）
             // 仍然解析 X-Fonds-No 头用于数据过滤和缓存隔离
             String optionalFonds = null;
-            if (!allowedFonds.isEmpty()) {
+            
+            // [FIXED] 对于附件下载/预览路径，完全不设置 currentFonds
+            // 这样 Service 层会跳过全宗匹配检查，由 DataScopeService 进行二级权限校验
+            // 参见: docs/knowledge/2026-01-13-attachment-preview-auth-fix.md
+            boolean isFilePreviewPath = path.contains("/files/download/") || path.endsWith("/content");
+            
+            if (!allowedFonds.isEmpty() && !isFilePreviewPath) {
                 // 尝试从请求头获取全宗号，如果未指定则使用第一个允许的全宗
                 optionalFonds = resolveCurrentFonds(request, allowedFonds);
             }
@@ -142,6 +148,7 @@ public class FondsContextFilter extends OncePerRequestFilter {
                 log.debug("[FondsFilter] Optional fonds for stats/notification: {}", optionalFonds);
             }
         }
+
 
         // 无论是否有全宗权限，都设置 allowedFonds（可能是空列表）
         request.setAttribute(ALLOWED_FONDS_ATTRIBUTE, List.copyOf(allowedFonds));

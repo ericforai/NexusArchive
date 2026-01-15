@@ -3,7 +3,7 @@
 // Pos: src/pages/portal/Dashboard.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ViewState } from '../../types';
 import type { DashboardStats } from '../../api/stats';
@@ -20,6 +20,7 @@ import {
 import { statsApi } from '../../api/stats';
 import { notificationsApi, NotificationItem } from '../../api/notifications';
 import { ROUTE_PATHS } from '../../routes/paths';
+import { useFondsStore } from '../../store/useFondsStore';
 
 const ComplianceChart: React.FC<{ trend: { date: string; count: number }[] }> = ({ trend }) => (
   <div className="h-full w-full">
@@ -57,7 +58,10 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  // 监听全宗变化，自动刷新数据
+  const currentFondsCode = useFondsStore((state) => state.currentFonds?.fondsCode);
+
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -98,7 +102,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // 空依赖数组，API 和 setState 都是稳定的
 
   const refreshNotifications = async () => {
     setNotifRefreshing(true);
@@ -116,7 +120,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  // 当全宗变化时自动刷新数据
+  }, [currentFondsCode, loadData]);
 
   const statCards = [
     { label: '总归档量', value: stats?.totalArchives ?? '--', color: 'bg-blue-500', icon: CheckCircle2 },

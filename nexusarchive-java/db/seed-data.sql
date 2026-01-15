@@ -5457,7 +5457,7 @@ voucher-2024-11-002	BR-GROUP	BR-GROUP-2022-30Y-FIN-AC01-1002	AC01	支付强生�
 COPY public.acc_archive_attachment (id, archive_id, file_id, attachment_type, relation_desc, created_by, created_time, created_at) FROM stdin;
 attach-link-001	voucher-2024-11-002	file-invoice-001	invoice	原始发票	system	2025-12-28 09:03:35.017527	2026-01-05 13:16:32.333536
 attach-link-002	voucher-2024-11-001	file-invoice-002	invoice	原始发票	system	2025-12-28 09:03:35.017527	2026-01-05 13:16:32.333536
-attach-link-003	voucher-2024-11-003	file-invoice-003	bank_slip	银行回单	system	2025-12-28 09:03:35.017527	2026-01-05 13:16:32.333536
+attach-link-003	voucher-2024-11-003	file-invoice-003	invoice	原始凭证	system	2025-12-28 09:03:35.017527	2026-01-05 13:16:32.333536
 link-bank-1002	voucher-2024-11-002	file-bank-receipt-1002	bank_slip	银行回单附件	system	2025-12-28 09:03:35.066446	2026-01-05 13:16:32.333536
 link-reimb-1002	voucher-2024-11-002	file-reimbursement-1002	other	员工报销单据	system	2025-12-28 09:03:35.066446	2026-01-05 13:16:32.333536
 \.
