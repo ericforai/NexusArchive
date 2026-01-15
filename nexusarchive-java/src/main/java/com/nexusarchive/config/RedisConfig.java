@@ -26,6 +26,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Redis 缓存配置
  *
@@ -60,6 +63,8 @@ import java.util.Map;
 @Configuration
 @EnableCaching
 public class RedisConfig implements CachingConfigurer {
+
+    private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
 
     /**
      * 默认缓存配置
@@ -191,7 +196,7 @@ public class RedisConfig implements CachingConfigurer {
 
     /**
      * 缓存异常处理器
-     * 缓存异常时不影响业务流程
+     * 缓存异常时记录详细日志，便于诊断问题
      */
     @Bean
     @Override
@@ -199,23 +204,38 @@ public class RedisConfig implements CachingConfigurer {
         return new SimpleCacheErrorHandler() {
             @Override
             public void handleCacheGetError(RuntimeException exception, org.springframework.cache.Cache cache, Object key) {
-                // 缓存读取失败时，直接返回 null，不影响业务
-                // 生产环境应记录日志
+                log.error("[CACHE_ERROR] Get failed - cache: {}, key: {}, error: {}",
+                    cache != null ? cache.getName() : "null",
+                    key,
+                    exception.getMessage(),
+                    exception);
             }
 
             @Override
             public void handleCachePutError(RuntimeException exception, org.springframework.cache.Cache cache, Object key, Object value) {
-                // 缓存写入失败时，忽略异常，不影响业务
+                log.error("[CACHE_ERROR] Put failed - cache: {}, key: {}, value type: {}, error: {}",
+                    cache != null ? cache.getName() : "null",
+                    key,
+                    value != null ? value.getClass().getSimpleName() : "null",
+                    exception.getMessage(),
+                    exception);
             }
 
             @Override
             public void handleCacheEvictError(RuntimeException exception, org.springframework.cache.Cache cache, Object key) {
-                // 缓存删除失败时，忽略异常
+                log.error("[CACHE_ERROR] Evict failed - cache: {}, key: {}, error: {}",
+                    cache != null ? cache.getName() : "null",
+                    key,
+                    exception.getMessage(),
+                    exception);
             }
 
             @Override
             public void handleCacheClearError(RuntimeException exception, org.springframework.cache.Cache cache) {
-                // 缓存清空失败时，忽略异常
+                log.error("[CACHE_ERROR] Clear failed - cache: {}, error: {}",
+                    cache != null ? cache.getName() : "null",
+                    exception.getMessage(),
+                    exception);
             }
         };
     }
