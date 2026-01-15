@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '../utils/storage';
 import { fondsApi, BasFonds } from '../api/fonds';
+import { registerFondsProvider } from '../api/client.types';
 
 /**
  * 全宗状态接口
@@ -120,4 +121,15 @@ if (typeof window !== 'undefined') {
         console.log('[FondsStore] Already hydrated on init');
         useFondsStore.setState({ _hasHydrated: true });
     }
+
+    // 注册全宗状态提供者到 HTTP client
+    registerFondsProvider({
+        getState: () => {
+            const currentFonds = useFondsStore.getState().currentFonds;
+            return {
+                fondsCode: currentFonds?.fondsCode || null,
+            };
+        },
+    });
+    console.log('[FondsStore] Registered provider to HTTP client');
 }
