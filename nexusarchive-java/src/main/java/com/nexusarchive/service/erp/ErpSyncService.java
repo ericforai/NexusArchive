@@ -17,12 +17,14 @@ import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.mapper.ErpScenarioMapper;
 import com.nexusarchive.mapper.SyncHistoryMapper;
+import com.nexusarchive.security.FondsContext;
 import com.nexusarchive.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -146,9 +148,26 @@ public class ErpSyncService {
         // 如果前端传了临时日期参数，优先使用
         if (tempStartDate != null && !tempStartDate.isEmpty() && tempEndDate != null && !tempEndDate.isEmpty()) {
             try {
+                // 支持 yyyy-MM 格式
+                if (tempStartDate.length() == 7) {
+                    tempStartDate += "-01";
+                }
+                if (tempEndDate.length() == 7) {
+                    // 简单的处理：如果是 yyyy-MM，直接 append -01 作为开始，或者计算月底作为结束
+                    // 这里为了简单及配合 fetchVouchers 的逻辑（通常包含），我们 append -01
+                    // 更好的做法是计算该月最后一天，但 VoucherFetcher 可能只看 include
+                    tempEndDate += "-01"; 
+                }
+
                 java.time.LocalDate start = java.time.LocalDate.parse(tempStartDate);
                 java.time.LocalDate end = java.time.LocalDate.parse(tempEndDate);
-                log.info("使用前端传递的临时日期范围: {} ~ {}", tempStartDate, tempEndDate);
+                
+                // 如果是 yyyy-MM 格式且作为结束日期，应调整为该月最后一天
+                if (tempEndDate.endsWith("-01") && tempEndDate.length() == 10 && end.getDayOfMonth() == 1) {
+                     end = end.withDayOfMonth(end.lengthOfMonth());
+                }
+
+                log.info("使用前端传递的临时日期范围: {} ~ {}", start, end);
                 return new SyncDateRangeExtractor.DateRange(start, end);
             } catch (Exception e) {
                 log.warn("解析临时日期失败，使用数据库配置: {}", e.getMessage());
@@ -202,7 +221,12 @@ public class ErpSyncService {
         cn.hutool.json.JSONObject mappingConfig = extractMappingConfig(scenario);
 
         for (VoucherDTO dto : vouchers) {
-            if (voucherPersistence.isVoucherExist(dto.getVoucherNo())) {
+            String currentFonds = FondsContext.getCurrentFondsNo();
+            // 修复：应使用凭证自身的日期来确定会计年度进行查重，而不是同步任务的开始日期
+            LocalDate voucherDate = dto.getVoucherDate() != null ? dto.getVoucherDate() : startDate;
+            String fiscalYear = String.valueOf(voucherDate.getYear());
+
+            if (voucherPersistence.isVoucherExist(dto.getVoucherNo(), currentFonds, fiscalYear)) {
                 continue;
             }
 

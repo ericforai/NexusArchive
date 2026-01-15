@@ -65,6 +65,7 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: assign_id
+      worker-id: ${NODE_ID:1} # 通过环境变量注入唯一标识，缺省为 1
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0

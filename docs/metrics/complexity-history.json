@@ -2,7 +2,7 @@
   "metadata": {
     "formatVersion": "1.0",
     "createdAt": "2026-01-08T07:04:13.327Z",
-    "lastUpdated": "2026-01-15T09:07:26.638Z"
+    "lastUpdated": "2026-01-15T10:35:15.846Z"
   },
   "snapshots": [
     {
@@ -8672,6 +8672,1887 @@
         {
           "path": "src/pages/portal/Dashboard.tsx",
           "lines": 256,
+          "maxFunctionLines": 0,
+          "complexity": 19,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/pre-archive/AbnormalDataView.tsx",
+          "lines": 152,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/pre-archive/OCRProcessingView.tsx",
+          "lines": 721,
+          "maxFunctionLines": 0,
+          "complexity": 23,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/pre-archive/PoolPage.tsx",
+          "lines": 145,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/pre-archive/components/AbnormalEditModal.tsx",
+          "lines": 144,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/product-website/components/CoreSystemSection.tsx",
+          "lines": 216,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/product-website/components/HeroSection.tsx",
+          "lines": 74,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/product-website/components/PainPointsSection.tsx",
+          "lines": 78,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/product-website/components/ProductShowcaseSection.tsx",
+          "lines": 342,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/quality/QualityView.tsx",
+          "lines": 185,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/quality/components/ComplexityChart.tsx",
+          "lines": 108,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/quality/components/ComplexityDetail.tsx",
+          "lines": 213,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/quality/useComplexityData.ts",
+          "lines": 99,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/scan/MobileUploadPage.tsx",
+          "lines": 117,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/security/AuthTicketApplyPage.tsx",
+          "lines": 287,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/security/AuthTicketListPage.tsx",
+          "lines": 519,
+          "maxFunctionLines": 0,
+          "complexity": 23,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/settings/AuditLogView.tsx",
+          "lines": 265,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/settings/ErpPreviewPage.tsx",
+          "lines": 330,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/settings/MfaSettingsPage.tsx",
+          "lines": 378,
+          "maxFunctionLines": 0,
+          "complexity": 22,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/stats/StatsView.tsx",
+          "lines": 255,
+          "maxFunctionLines": 0,
+          "complexity": 26,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/system/viewRenderers.tsx",
+          "lines": 195,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/utilization/BorrowingView.tsx",
+          "lines": 599,
+          "maxFunctionLines": 0,
+          "complexity": 18,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/utilization/RelationshipQueryView.tsx",
+          "lines": 322,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/utilization/WarehouseView.tsx",
+          "lines": 370,
+          "maxFunctionLines": 0,
+          "complexity": 24,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/store/useAuthStore.ts",
+          "lines": 225,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/store/useRelationGraphStore.ts",
+          "lines": 472,
+          "maxFunctionLines": 0,
+          "complexity": 16,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/test-complexity/bad-code.ts",
+          "lines": 53,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/utils/notificationService.ts",
+          "lines": 287,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/utils/storage.ts",
+          "lines": 212,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/utils/taskScheduler.ts",
+          "lines": 226,
+          "maxFunctionLines": 0,
+          "complexity": 18,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/utils/voucherNumber.ts",
+          "lines": 34,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "complexity"
+          ]
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-01-15T10:35:15.865Z",
+      "commit": "ec756037",
+      "branch": "main",
+      "summary": {
+        "total": 388,
+        "high": 50,
+        "medium": 53,
+        "low": 82
+      },
+      "files": [
+        {
+          "path": "src/api/autoAssociation.ts",
+          "lines": 177,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/api/preview.ts",
+          "lines": 110,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/auth/ProtectedRoute.tsx",
+          "lines": 101,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/RelationshipVisualizer.tsx",
+          "lines": 144,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/Sidebar.tsx",
+          "lines": 159,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/Sidebar/NavNode.tsx",
+          "lines": 271,
+          "maxFunctionLines": 0,
+          "complexity": 16,
+          "violations": [
+            "complexity",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/TopBar.tsx",
+          "lines": 87,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/TopBar/TopBar.tsx",
+          "lines": 54,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/auth/LoginCard.tsx",
+          "lines": 93,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/borrowing/BorrowApplicationDialog.tsx",
+          "lines": 317,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/borrowing/BorrowApprovalDrawer.tsx",
+          "lines": 384,
+          "maxFunctionLines": 0,
+          "complexity": 25,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/common/ComplianceRadar.tsx",
+          "lines": 91,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/common/ErrorBoundary.tsx",
+          "lines": 93,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/common/FondsSwitcher.tsx",
+          "lines": 165,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/common/FondsSwitcher/FondsDropdown.tsx",
+          "lines": 94,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/common/MetadataEditModal.tsx",
+          "lines": 224,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/common/MetadataEditModal/useMetadataSubmit.ts",
+          "lines": 98,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/common/MetadataForm.tsx",
+          "lines": 107,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/common/MetadataFormField.tsx",
+          "lines": 131,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/common/OfdViewer.tsx",
+          "lines": 283,
+          "maxFunctionLines": 0,
+          "complexity": 31,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/common/ReconciliationReport.tsx",
+          "lines": 98,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/common/RootErrorBoundary.tsx",
+          "lines": 236,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/layout/ProfileDrawer.tsx",
+          "lines": 75,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/modals/BaseModal.tsx",
+          "lines": 115,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/modals/ConfirmModal.tsx",
+          "lines": 112,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/operations/BatchApprovalDialog.tsx",
+          "lines": 380,
+          "maxFunctionLines": 0,
+          "complexity": 21,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/operations/BatchOperationBar.tsx",
+          "lines": 175,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/operations/BatchResultModal.tsx",
+          "lines": 356,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/operations/useBatchSelection.ts",
+          "lines": 235,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/org/OrgBreadcrumb.tsx",
+          "lines": 130,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/org/OrgSelector.tsx",
+          "lines": 358,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/org/OrgTreePicker.tsx",
+          "lines": 273,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/org/useOrg.ts",
+          "lines": 177,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/pool-dashboard/DashboardCard.tsx",
+          "lines": 88,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/pool-dashboard/PoolDashboard.tsx",
+          "lines": 95,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/pool-kanban/BatchActionBar.tsx",
+          "lines": 136,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/pool-kanban/KanbanCard.tsx",
+          "lines": 147,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/pool-kanban/KanbanColumn.tsx",
+          "lines": 120,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/pool-kanban/PoolKanbanView.tsx",
+          "lines": 440,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/preview/FilePreview.tsx",
+          "lines": 193,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/preview/ImageViewer.tsx",
+          "lines": 96,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/preview/PdfViewer.tsx",
+          "lines": 93,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/preview/PreviewToolbar.tsx",
+          "lines": 172,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/preview/SmartFilePreview.tsx",
+          "lines": 310,
+          "maxFunctionLines": 0,
+          "complexity": 24,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/preview/useFilePreview.ts",
+          "lines": 171,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/relation-graph/ArchiveCard.tsx",
+          "lines": 169,
+          "maxFunctionLines": 0,
+          "complexity": 24,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/relation-graph/RelationEdge.tsx",
+          "lines": 126,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/relation-graph/RelationGraphCanvas.tsx",
+          "lines": 200,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/relation-graph/RelationNode.tsx",
+          "lines": 294,
+          "maxFunctionLines": 0,
+          "complexity": 49,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/relation-graph/SimpleGraphView.tsx",
+          "lines": 478,
+          "maxFunctionLines": 0,
+          "complexity": 22,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/relation-graph/ThreeColumnLayout.tsx",
+          "lines": 346,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/scan/FolderMonitorDialog.tsx",
+          "lines": 343,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/BasicSettings.tsx",
+          "lines": 164,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/LicenseSettings.tsx",
+          "lines": 143,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/RoleSettings.tsx",
+          "lines": 373,
+          "maxFunctionLines": 0,
+          "complexity": 18,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/SecuritySettings.tsx",
+          "lines": 208,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/UserFondsScopeDrawer.tsx",
+          "lines": 213,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/UserSettings.tsx",
+          "lines": 571,
+          "maxFunctionLines": 0,
+          "complexity": 32,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "complexity",
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/IntegrationSettingsPage.tsx",
+          "lines": 187,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/ConnectorForm.tsx",
+          "lines": 363,
+          "maxFunctionLines": 0,
+          "complexity": 31,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/DiagnosisPanel.tsx",
+          "lines": 189,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/ErpConfigCard.tsx",
+          "lines": 264,
+          "maxFunctionLines": 0,
+          "complexity": 18,
+          "violations": [
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/ParamsEditor.tsx",
+          "lines": 145,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/SapInterfaceConfigForm.tsx",
+          "lines": 238,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/SapInterfaceTypes.tsx",
+          "lines": 247,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/ScenarioCard.tsx",
+          "lines": 191,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/components/ScenarioDrawer.tsx",
+          "lines": 150,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/hooks/useAiAdapterHandler.ts",
+          "lines": 126,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/hooks/useConnectorModal.ts",
+          "lines": 281,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/hooks/useErpConfigManager.ts",
+          "lines": 180,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/settings/integration/hooks/useScenarioSyncManager.ts",
+          "lines": 163,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/table/DataTable.tsx",
+          "lines": 117,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/table/TableActions.tsx",
+          "lines": 158,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/table/TableFilters.tsx",
+          "lines": 161,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/table/useDataTable.ts",
+          "lines": 128,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/components/voucher/OriginalDocumentPreview.tsx",
+          "lines": 92,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/voucher/VoucherMetadata.tsx",
+          "lines": 225,
+          "maxFunctionLines": 0,
+          "complexity": 16,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/voucher/VoucherPreviewCanvas.tsx",
+          "lines": 208,
+          "maxFunctionLines": 0,
+          "complexity": 16,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/voucher/styles.ts",
+          "lines": 182,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/components/watermark/WatermarkOverlay.tsx",
+          "lines": 137,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/e2e/yonsuite-scenarios.spec.ts",
+          "lines": 393,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/e2e/yonsuite-verification.spec.ts",
+          "lines": 139,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/features/archives/controllers/useArchiveDataLoader.ts",
+          "lines": 260,
+          "maxFunctionLines": 0,
+          "complexity": 19,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/features/archives/controllers/useArchiveMode.ts",
+          "lines": 62,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/features/archives/controllers/utils.ts",
+          "lines": 153,
+          "maxFunctionLines": 0,
+          "complexity": 85,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/features/archives/useArchiveActions.ts",
+          "lines": 216,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/features/archives/useSmartMatching.ts",
+          "lines": 173,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/hooks/useDocumentationGuard.ts",
+          "lines": 312,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/hooks/usePoolBatchAction.ts",
+          "lines": 263,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/hooks/usePoolKanban.ts",
+          "lines": 149,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/hooks/useSettings.ts",
+          "lines": 129,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/Auth/Login/index.tsx",
+          "lines": 93,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/Auth/LoginView.tsx",
+          "lines": 161,
+          "maxFunctionLines": 0,
+          "complexity": 16,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/Auth/MfaVerifyPage.tsx",
+          "lines": 177,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/AccessReviewPage.tsx",
+          "lines": 389,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/AdminLayout.tsx",
+          "lines": 93,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/EnterpriseArchitecturePage.tsx",
+          "lines": 284,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/EntityConfigPage.tsx",
+          "lines": 426,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/EntityManagementPage.tsx",
+          "lines": 604,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "complexity",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/FondsHistoryListPage.tsx",
+          "lines": 233,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/FondsHistoryPage.tsx",
+          "lines": 622,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "complexity",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/FondsManagement.tsx",
+          "lines": 326,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/components/FileUploader.tsx",
+          "lines": 195,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/components/HistoryTab.tsx",
+          "lines": 296,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/components/ImportTab.tsx",
+          "lines": 501,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/hooks/useFieldMapping.ts",
+          "lines": 285,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/hooks/useFileUpload.ts",
+          "lines": 184,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/hooks/useImportHistory.ts",
+          "lines": 272,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/hooks/useImportPreview.ts",
+          "lines": 191,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/LegacyImportPage/index.tsx",
+          "lines": 327,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/PositionManagement.tsx",
+          "lines": 231,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/admin/UserLifecyclePage.tsx",
+          "lines": 463,
+          "maxFunctionLines": 0,
+          "complexity": 15,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/archives/ArchiveDetailDrawer.tsx",
+          "lines": 321,
+          "maxFunctionLines": 0,
+          "complexity": 22,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/archives/ArchiveDetailPage.tsx",
+          "lines": 176,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/archives/ArchiveListView.tsx",
+          "lines": 668,
+          "maxFunctionLines": 0,
+          "complexity": 32,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/archives/ComplianceModal.tsx",
+          "lines": 259,
+          "maxFunctionLines": 0,
+          "complexity": 13,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/archives/ComplianceReportView.tsx",
+          "lines": 254,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/archives/CreateOriginalVoucherDialog.tsx",
+          "lines": 232,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/archives/LinkModal.tsx",
+          "lines": 293,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/archives/MatchPreviewModal.tsx",
+          "lines": 131,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/archives/OriginalVoucherListView.tsx",
+          "lines": 533,
+          "maxFunctionLines": 0,
+          "complexity": 22,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/archives/components/ManualArchiveModal.tsx",
+          "lines": 170,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/archives/utils/voucherDataParser.ts",
+          "lines": 210,
+          "maxFunctionLines": 0,
+          "complexity": 73,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/audit/AuditEvidencePackagePage.tsx",
+          "lines": 321,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/audit/AuditVerificationPage.tsx",
+          "lines": 518,
+          "maxFunctionLines": 0,
+          "complexity": 23,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/collection/BatchUploadView.tsx",
+          "lines": 668,
+          "maxFunctionLines": 0,
+          "complexity": 24,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/collection/FourNatureReportView.tsx",
+          "lines": 239,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/collection/OnlineReceptionView.tsx",
+          "lines": 724,
+          "maxFunctionLines": 0,
+          "complexity": 18,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/debug/PaymentFileTestView.tsx",
+          "lines": 125,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/matching/ComplianceReport.tsx",
+          "lines": 276,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/matching/OnboardingWizard.tsx",
+          "lines": 209,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/matching/VoucherMatchingView.tsx",
+          "lines": 573,
+          "maxFunctionLines": 0,
+          "complexity": 24,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/AppraisalListPage.tsx",
+          "lines": 316,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/ArchiveApprovalView.tsx",
+          "lines": 608,
+          "maxFunctionLines": 0,
+          "complexity": 22,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "complexity",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/ArchiveBatchView.tsx",
+          "lines": 213,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/DestructionApprovalPage.tsx",
+          "lines": 514,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/operations/DestructionExecutionPage.tsx",
+          "lines": 230,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/DestructionView.tsx",
+          "lines": 303,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/operations/ExpiredArchivesPage.tsx",
+          "lines": 279,
+          "maxFunctionLines": 0,
+          "complexity": 12,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/operations/FreezeHoldDetailPage.tsx",
+          "lines": 341,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/operations/FreezeHoldPage.tsx",
+          "lines": 508,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/OpenAppraisalView.tsx",
+          "lines": 404,
+          "maxFunctionLines": 0,
+          "complexity": 16,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/operations/VolumeManagement.tsx",
+          "lines": 548,
+          "maxFunctionLines": 0,
+          "complexity": 17,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/archive-batch/components/BatchStats.tsx",
+          "lines": 80,
+          "maxFunctionLines": 0,
+          "complexity": 11,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/operations/archive-batch/components/BatchTable.tsx",
+          "lines": 645,
+          "maxFunctionLines": 0,
+          "complexity": 19,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/archive-batch/hooks/useArchiveBatchData.ts",
+          "lines": 126,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/archive-batch/hooks/useBatchModals.ts",
+          "lines": 309,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/operations/archive-batch/hooks/useBatchOperations.ts",
+          "lines": 238,
+          "maxFunctionLines": 0,
+          "complexity": 20,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/panorama/ArchivalPanoramaView.tsx",
+          "lines": 426,
+          "maxFunctionLines": 0,
+          "complexity": 40,
+          "violations": [
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "max-lines-per-function",
+            "complexity",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/panorama/ArchiveStructureTree.tsx",
+          "lines": 209,
+          "maxFunctionLines": 0,
+          "complexity": 14,
+          "violations": [
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/panorama/EvidencePreview.tsx",
+          "lines": 396,
+          "maxFunctionLines": 0,
+          "complexity": 18,
+          "violations": [
+            "max-lines-per-function",
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/panorama/VoucherDetailCard.tsx",
+          "lines": 397,
+          "maxFunctionLines": 0,
+          "complexity": 35,
+          "violations": [
+            "complexity",
+            "max-lines-per-function",
+            "complexity"
+          ]
+        },
+        {
+          "path": "src/pages/panorama/VoucherPlayer.tsx",
+          "lines": 171,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/panorama/VoucherPreviewDrawer.tsx",
+          "lines": 237,
+          "maxFunctionLines": 0,
+          "complexity": 0,
+          "violations": [
+            "max-lines-per-function"
+          ]
+        },
+        {
+          "path": "src/pages/portal/Dashboard.tsx",
+          "lines": 261,
           "maxFunctionLines": 0,
           "complexity": 19,
           "violations": [

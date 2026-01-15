@@ -125,6 +125,23 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         setErrorMessage(null);
         onSelectionClear?.();
         try {
+            // Debug: 打印实际参数值，排查 400 错误
+            console.log('[ArchiveDataLoader] API params:', {
+                page: currentPage,
+                limit: page.pageInfo.pageSize,
+                search: query.searchTerm || undefined,
+                status: query.statusFilter || mode.defaultStatus,
+                categoryCode: mode.categoryCode,
+                subTitle: mode.subTitle,
+                routeKey: mode.routeKey,
+                orgId: query.orgFilter || undefined,
+                subType: query.subTypeFilter || undefined
+            });
+
+            // 当 subType 存在但 categoryCode 为空时，需要确保不会导致后端验证失败
+            // 如果 categoryCode 未定义，则不发送 subType 参数以避免验证问题
+            const shouldSendSubType = query.subTypeFilter && query.subTypeFilter.trim().length > 0 && mode.categoryCode;
+
             const result = await archivesApi.getArchives({
                 page: currentPage,
                 limit: page.pageInfo.pageSize,
@@ -132,7 +149,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
                 status: query.statusFilter || mode.defaultStatus,
                 categoryCode: mode.categoryCode,
                 orgId: query.orgFilter || undefined,
-                subType: query.subTypeFilter || undefined
+                subType: shouldSendSubType ? query.subTypeFilter : undefined
             });
 
             if (result.code !== 200 || !result.data) {

@@ -17,8 +17,7 @@ headerMappings:
   voucherDate:
     field: header.maketime
 
-  attachmentCount:
-    script: "ctx['header']['attachmentQuantity'] ? Integer.parseInt(ctx['header']['attachmentQuantity'].toString()) : 0"
+  # attachmentCount 已在适配层通过附件列表长度自动计算，此处移除失效脚本
 
   issuer:
     field: header.maker.name

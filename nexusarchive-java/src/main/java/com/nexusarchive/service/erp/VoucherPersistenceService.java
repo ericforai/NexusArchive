@@ -75,18 +75,28 @@ public class VoucherPersistenceService {
                                       LocalDate startDate,
                                       String sourceSystemName,
                                       String voucherJson) {
-        // 检查凭证是否已存在（基于 erp_voucher_no）
+        // 精确查重：基于 erp_voucher_no + fonds_code + fiscal_year 字段进行匹配
+        String fondsCode = FondsContext.getCurrentFondsNo();
+        if (fondsCode == null) fondsCode = DEFAULT_FONDS_CODE;
+        
+        LocalDate voucherDate = dto.getVoucherDate() != null ? dto.getVoucherDate() : startDate;
+        String fiscalYear = String.valueOf(voucherDate.getYear());
+
         String voucherNo = dto.getVoucherNo();
-        if (isVoucherExist(voucherNo)) {
-            log.info("凭证已存在，跳过保存: voucherNo={}", voucherNo);
+        if (isVoucherExist(voucherNo, fondsCode, fiscalYear)) {
+            log.info("凭证已存在，跳过保存: voucherNo={}, fonds={}, year={}", voucherNo, fondsCode, fiscalYear);
             return null;
         }
 
-        ArcFileContent fileContent = mapToFileContent(dto, mappingConfig, startDate);
+        ArcFileContent fileContent = mapToFileContent(dto, mappingConfig, voucherDate);
         fileContent.setSourceSystem(adapter.getName());
 
         setStoragePath(fileContent);
-        setDefaultFields(fileContent, startDate);
+        setDefaultFields(fileContent, voucherDate);
+
+        // 设置业务唯一标识，用于更严谨的幂等性控制
+        fileContent.setBusinessDocNo(adapter.getName() + "_" + dto.getVoucherId());
+
         if (voucherJson != null && !voucherJson.isEmpty()) {
             fileContent.setSourceData(voucherJson);
         }
@@ -112,13 +122,16 @@ public class VoucherPersistenceService {
      * 检查凭证是否已存在
      *
      * @param voucherNo 凭证号
+     * @param fondsCode 全宗号
+     * @param fiscalYear 会计年度
      * @return 是否存在
      */
-    public boolean isVoucherExist(String voucherNo) {
-        // 精确查重：基于 erp_voucher_no 字段进行精确匹配
+    public boolean isVoucherExist(String voucherNo, String fondsCode, String fiscalYear) {
         return arcFileContentMapper.selectCount(
             new LambdaQueryWrapper<ArcFileContent>()
-                .eq(ArcFileContent::getErpVoucherNo, voucherNo)) > 0;
+                .eq(ArcFileContent::getErpVoucherNo, voucherNo)
+                .eq(ArcFileContent::getFondsCode, fondsCode)
+                .eq(ArcFileContent::getFiscalYear, fiscalYear)) > 0;
     }
 
     /**

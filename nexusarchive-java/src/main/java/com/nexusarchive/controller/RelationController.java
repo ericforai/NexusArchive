@@ -38,10 +38,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -206,63 +210,93 @@ public class RelationController {
         List<VoucherRelation> voucherRelations = voucherRelationMapper.findByAccountingVoucherId(finalCenterArchiveId);
         log.debug("[RelationController] Found {} original voucher relations for centerArchiveId: {}", voucherRelations.size(), finalCenterArchiveId);
         
-        // 将原始凭证关联转换为 ArchiveRelation（用于统一处理）
-        // 原始凭证可能通过 source_doc_id 关联到 acc_archive 记录
-        for (VoucherRelation vr : voucherRelations) {
-            // 查询原始凭证信息，获取 source_doc_id
-            OriginalVoucher originalVoucher = originalVoucherMapper.selectById(vr.getOriginalVoucherId());
-            if (originalVoucher == null) {
-                log.debug("[RelationController] Original voucher {} not found, skipping", vr.getOriginalVoucherId());
-                continue;
-            }
+        // 【性能优化】批量查询原始凭证和档案，减少数据库往返次数
+        if (!voucherRelations.isEmpty()) {
+            // 收集所有原始凭证ID
+            List<String> originalVoucherIds = voucherRelations.stream()
+                .map(VoucherRelation::getOriginalVoucherId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
             
-            // 方法1: 如果原始凭证的 source_doc_id 指向某个档案记录，使用该档案ID
-            String invoiceArchiveId = null;
-            if (originalVoucher.getSourceDocId() != null && !originalVoucher.getSourceDocId().isEmpty()) {
-                // 关系查询场景：直接通过 mapper 查询，绕过权限检查
-                Archive sourceArchive = archiveMapper.selectById(originalVoucher.getSourceDocId());
-                if (sourceArchive != null) {
-                    invoiceArchiveId = originalVoucher.getSourceDocId();
-                    log.debug("[RelationController] Found archive via source_doc_id: {} -> {}", vr.getOriginalVoucherId(), invoiceArchiveId);
+            // 批量查询所有原始凭证
+            List<OriginalVoucher> originalVouchers = originalVoucherMapper.selectBatchIds(originalVoucherIds);
+            Map<String, OriginalVoucher> voucherMap = originalVouchers.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(OriginalVoucher::getId, v -> v));
+            
+            // 收集所有 source_doc_id 和原始凭证ID（用于批量查询档案）
+            Set<String> archiveIdsToQuery = new HashSet<>();
+            for (OriginalVoucher voucher : originalVouchers) {
+                if (voucher.getSourceDocId() != null && !voucher.getSourceDocId().isEmpty()) {
+                    archiveIdsToQuery.add(voucher.getSourceDocId());
                 }
+                // 也尝试用原始凭证ID查询档案
+                archiveIdsToQuery.add(voucher.getId());
             }
             
-            // 方法2: 如果 source_doc_id 不存在或无效，检查原始凭证ID是否直接对应某个档案记录
-            if (invoiceArchiveId == null) {
-                // 关系查询场景：直接通过 mapper 查询，绕过权限检查
-                Archive directArchive = archiveMapper.selectById(vr.getOriginalVoucherId());
-                if (directArchive != null) {
-                    invoiceArchiveId = vr.getOriginalVoucherId();
-                    log.debug("[RelationController] Found archive via direct ID: {}", invoiceArchiveId);
+            // 批量查询所有可能的档案
+            Map<String, Archive> archiveMapById = new HashMap<>();
+            if (!archiveIdsToQuery.isEmpty()) {
+                List<Archive> archives = archiveMapper.selectBatchIds(new ArrayList<>(archiveIdsToQuery));
+                archiveMapById = archives.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Archive::getId, a -> a));
+            }
+            
+            // 处理每个原始凭证关联
+            for (VoucherRelation vr : voucherRelations) {
+                OriginalVoucher originalVoucher = voucherMap.get(vr.getOriginalVoucherId());
+                if (originalVoucher == null) {
+                    log.debug("[RelationController] Original voucher {} not found, skipping", vr.getOriginalVoucherId());
+                    continue;
                 }
-            }
-            
-            // 如果找到了对应的档案记录，创建关系
-            if (invoiceArchiveId != null) {
-                ArchiveRelation ar = new ArchiveRelation();
-                ar.setSourceId(invoiceArchiveId);
-                ar.setTargetId(finalCenterArchiveId);
-                ar.setRelationType("ORIGINAL_VOUCHER");
-                ar.setRelationDesc("原始凭证");
-                relations.add(ar);
-                log.debug("[RelationController] Added original voucher relation: {} -> {}", invoiceArchiveId, finalCenterArchiveId);
-            } else {
-                // 如果原始凭证未转换为档案，但原始凭证存在且有文件，创建虚拟关系
-                // 使用原始凭证ID作为虚拟档案ID，后续在构建节点时创建虚拟档案对象
-                List<OriginalVoucherFile> files = originalVoucherFileMapper.findByVoucherId(vr.getOriginalVoucherId());
-                if (!files.isEmpty()) {
-                    // 创建虚拟关系，使用原始凭证ID作为源ID
+                
+                // 方法1: 如果原始凭证的 source_doc_id 指向某个档案记录，使用该档案ID
+                String invoiceArchiveId = null;
+                if (originalVoucher.getSourceDocId() != null && !originalVoucher.getSourceDocId().isEmpty()) {
+                    Archive sourceArchive = archiveMapById.get(originalVoucher.getSourceDocId());
+                    if (sourceArchive != null) {
+                        invoiceArchiveId = originalVoucher.getSourceDocId();
+                        log.debug("[RelationController] Found archive via source_doc_id: {} -> {}", vr.getOriginalVoucherId(), invoiceArchiveId);
+                    }
+                }
+                
+                // 方法2: 如果 source_doc_id 不存在或无效，检查原始凭证ID是否直接对应某个档案记录
+                if (invoiceArchiveId == null) {
+                    Archive directArchive = archiveMapById.get(vr.getOriginalVoucherId());
+                    if (directArchive != null) {
+                        invoiceArchiveId = vr.getOriginalVoucherId();
+                        log.debug("[RelationController] Found archive via direct ID: {}", invoiceArchiveId);
+                    }
+                }
+                
+                // 如果找到了对应的档案记录，创建关系
+                if (invoiceArchiveId != null) {
                     ArchiveRelation ar = new ArchiveRelation();
-                    ar.setSourceId("OV_" + vr.getOriginalVoucherId()); // 添加前缀以区分虚拟节点
+                    ar.setSourceId(invoiceArchiveId);
                     ar.setTargetId(finalCenterArchiveId);
                     ar.setRelationType("ORIGINAL_VOUCHER");
                     ar.setRelationDesc("原始凭证");
                     relations.add(ar);
-                    log.debug("[RelationController] Added virtual original voucher relation: {} -> {} (has {} files)", 
-                        vr.getOriginalVoucherId(), finalCenterArchiveId, files.size());
+                    log.debug("[RelationController] Added original voucher relation: {} -> {}", invoiceArchiveId, finalCenterArchiveId);
                 } else {
-                    log.debug("[RelationController] Original voucher {} (source_doc_id: {}) not found in acc_archive and has no files, skipping relation", 
-                        vr.getOriginalVoucherId(), originalVoucher.getSourceDocId());
+                    // 如果原始凭证未转换为档案，但原始凭证存在且有文件，创建虚拟关系
+                    // 使用原始凭证ID作为虚拟档案ID，后续在构建节点时创建虚拟档案对象
+                    List<OriginalVoucherFile> files = originalVoucherFileMapper.findByVoucherId(vr.getOriginalVoucherId());
+                    if (!files.isEmpty()) {
+                        // 创建虚拟关系，使用原始凭证ID作为源ID
+                        ArchiveRelation ar = new ArchiveRelation();
+                        ar.setSourceId("OV_" + vr.getOriginalVoucherId()); // 添加前缀以区分虚拟节点
+                        ar.setTargetId(finalCenterArchiveId);
+                        ar.setRelationType("ORIGINAL_VOUCHER");
+                        ar.setRelationDesc("原始凭证");
+                        relations.add(ar);
+                        log.debug("[RelationController] Added virtual original voucher relation: {} -> {} (has {} files)", 
+                            vr.getOriginalVoucherId(), finalCenterArchiveId, files.size());
+                    } else {
+                        log.debug("[RelationController] Original voucher {} (source_doc_id: {}) not found in acc_archive and has no files, skipping relation", 
+                            vr.getOriginalVoucherId(), originalVoucher.getSourceDocId());
+                    }
                 }
             }
         }
@@ -333,11 +367,8 @@ public class RelationController {
                         finalCenterArchiveId, center.getFondsNo(), currentFonds);
                     // 继续处理，不返回错误
                 }
-            } else {
-                // 中心档案不存在（不应该发生，因为前面已经检查过）
-                log.error("[RelationController] Center archive {} is null, this should not happen", finalCenterArchiveId);
-                return Result.error(404, "Center archive not found: " + finalCenterArchiveId);
             }
+            // 注意：center 在前面已经检查过不为 null，所以这里不需要 else 分支
         }
 
         Map<String, Archive> archiveMap = relatedArchives.stream()
@@ -356,6 +387,8 @@ public class RelationController {
         // 重要：如果关系中的节点被权限过滤掉了，需要手动查询并添加
         // 这是因为关系数据可能跨全宗，但权限过滤会过滤掉不同全宗的节点
         // 为了显示完整的关系链，我们需要包含所有关系中的节点（即使跨全宗）
+        // 【性能优化】批量查询所有缺失节点，减少数据库往返次数
+        Set<String> missingNodeIds = new HashSet<>();
         for (ArchiveRelation relation : relations) {
             String sourceId = relation.getSourceId();
             String targetId = relation.getTargetId();
@@ -368,31 +401,28 @@ public class RelationController {
                 continue;
             }
             
-            // 如果源节点不在结果中，尝试直接查询（绕过权限过滤）
+            // 收集缺失的节点ID
             if (!archiveMap.containsKey(sourceId) && !sourceId.equals(finalCenterArchiveId)) {
-                Archive sourceArchive = archiveMapper.selectById(sourceId);
-                if (sourceArchive != null) {
-                    // 检查是否与中心档案在同一全宗，或者用户有权限访问
-                    if (sourceArchive.getFondsNo().equals(center.getFondsNo()) || 
-                        currentFonds == null || currentFonds.isEmpty() || 
-                        sourceArchive.getFondsNo().equals(currentFonds)) {
-                        archiveMap.put(sourceId, sourceArchive);
-                        log.debug("[RelationController] Added missing source node: {} (fonds: {})", sourceId, sourceArchive.getFondsNo());
-                    }
-                }
+                missingNodeIds.add(sourceId);
             }
-            
-            // 如果目标节点不在结果中，尝试直接查询（绕过权限过滤）
             if (!archiveMap.containsKey(targetId) && !targetId.equals(finalCenterArchiveId)) {
-                Archive targetArchive = archiveMapper.selectById(targetId);
-                if (targetArchive != null) {
-                    // 检查是否与中心档案在同一全宗，或者用户有权限访问
-                    if (targetArchive.getFondsNo().equals(center.getFondsNo()) || 
-                        currentFonds == null || currentFonds.isEmpty() || 
-                        targetArchive.getFondsNo().equals(currentFonds)) {
-                        archiveMap.put(targetId, targetArchive);
-                        log.debug("[RelationController] Added missing target node: {} (fonds: {})", targetId, targetArchive.getFondsNo());
-                    }
+                missingNodeIds.add(targetId);
+            }
+        }
+        
+        // 批量查询所有缺失节点
+        if (!missingNodeIds.isEmpty()) {
+            List<Archive> missingArchives = archiveMapper.selectBatchIds(new ArrayList<>(missingNodeIds));
+            for (Archive archive : missingArchives) {
+                if (archive == null) {
+                    continue;
+                }
+                // 检查是否与中心档案在同一全宗，或者用户有权限访问
+                if (archive.getFondsNo().equals(center.getFondsNo()) || 
+                    currentFonds == null || currentFonds.isEmpty() || 
+                    archive.getFondsNo().equals(currentFonds)) {
+                    archiveMap.put(archive.getId(), archive);
+                    log.debug("[RelationController] Added missing node: {} (fonds: {})", archive.getId(), archive.getFondsNo());
                 }
             }
         }
@@ -580,11 +610,10 @@ public class RelationController {
             }
         }
         
-        // 策略2: 查找所有关联关系，递归查找凭证（最多3度，避免性能问题）
-        Set<String> visited = new HashSet<>();
-        String voucherId = findVoucherInRelationChain(archiveId, visited, 0, 3);
+        // 策略2: 使用批量优化的递归查找（最多3度，避免性能问题）
+        String voucherId = findVoucherInRelationChainBatch(archiveId);
         if (voucherId != null) {
-            log.debug("[RelationController] Found voucher via relation chain: {} -> {}", archiveId, voucherId);
+            log.debug("[RelationController] Found voucher via relation chain (batch): {} -> {}", archiveId, voucherId);
         } else {
             log.debug("[RelationController] No voucher found for archive: {}", archiveId);
         }
@@ -592,85 +621,82 @@ public class RelationController {
     }
 
     /**
-     * 递归查找关系链中的记账凭证
+     * 递归查找关系链中的记账凭证（批量优化版本）
      * 性能优化：
+     * - 使用广度优先搜索，批量查询每一层的所有节点
      * - 使用 visited Set 防止循环
      * - 限制最大深度为3度
-     * - 限制每次查询的关系数量（LIMIT 20）
+     * - 批量查询档案，减少数据库往返次数
      * 
-     * @param archiveId 当前档案ID
-     * @param visited 已访问的档案ID集合（防止循环）
-     * @param depth 当前递归深度
-     * @param maxDepth 最大递归深度（建议不超过3）
+     * @param archiveId 起始档案ID
      * @return 找到的凭证ID，未找到返回null
      */
-    private String findVoucherInRelationChain(String archiveId, Set<String> visited, int depth, int maxDepth) {
-        // 防止循环和深度过深
-        if (depth > maxDepth || visited.contains(archiveId)) {
-            return null;
-        }
+    private String findVoucherInRelationChainBatch(String archiveId) {
+        Set<String> visited = new HashSet<>();
+        Queue<String> queue = new LinkedList<>();
+        queue.offer(archiveId);
         visited.add(archiveId);
         
-        // 首先检查当前节点是否为凭证（避免不必要的查询）
-        // 关系查询场景：直接通过 mapper 查询，绕过权限检查
-        Archive archive = archiveMapper.selectById(archiveId);
-        if (archive != null && isVoucher(archive.getArchiveCode())) {
-            log.debug("[RelationController] Found voucher at depth {}: {} (code: {})", 
-                depth, archiveId, archive.getArchiveCode());
-            return archiveId;
-        }
+        int maxDepth = 3;
+        int depth = 0;
         
-        if (depth >= maxDepth) {
-            return null; // 达到最大深度，停止递归
-        }
-        
-        // 优化：优先查找指向凭证的关系（ORIGINAL_VOUCHER、BASIS）
-        List<ArchiveRelation> directRelations = archiveRelationService.list(
-            new LambdaQueryWrapper<ArchiveRelation>()
-                .eq(ArchiveRelation::getSourceId, archiveId)
-                .in(ArchiveRelation::getRelationType, List.of("ORIGINAL_VOUCHER", "BASIS"))
-                .last("LIMIT 10") // 优先查询直接关系
-        );
-        
-        for (ArchiveRelation relation : directRelations) {
-            String targetId = relation.getTargetId();
-            // 关系查询场景：直接通过 mapper 查询，绕过权限检查
-            Archive target = archiveMapper.selectById(targetId);
-            if (target != null && isVoucher(target.getArchiveCode())) {
-                return targetId;
+        while (!queue.isEmpty() && depth <= maxDepth) {
+            int levelSize = queue.size();
+            depth++;
+            
+            // 收集当前层级的所有档案ID
+            List<String> currentLevelIds = new ArrayList<>();
+            for (int i = 0; i < levelSize; i++) {
+                currentLevelIds.add(queue.poll());
             }
             
-            String voucherId = findVoucherInRelationChain(targetId, visited, depth + 1, maxDepth);
-            if (voucherId != null) {
-                return voucherId;
-            }
-        }
-        
-        // 如果直接关系未找到，再查找所有关联关系（但限制数量）
-        List<ArchiveRelation> allRelations = archiveRelationService.list(
-            new LambdaQueryWrapper<ArchiveRelation>()
-                .eq(ArchiveRelation::getSourceId, archiveId)
-                .or()
-                .eq(ArchiveRelation::getTargetId, archiveId)
-                .last("LIMIT 20") // 限制查询数量，避免性能问题
-        );
-        
-        for (ArchiveRelation relation : allRelations) {
-            // 跳过已经查询过的直接关系
-            if (directRelations.contains(relation)) {
-                continue;
+            // 批量查询当前层级的所有档案，检查是否为凭证
+            if (!currentLevelIds.isEmpty()) {
+                List<Archive> archives = archiveMapper.selectBatchIds(currentLevelIds);
+                for (Archive archive : archives) {
+                    if (archive != null && isVoucher(archive.getArchiveCode())) {
+                        log.debug("[RelationController] Found voucher at depth {}: {} (code: {})", 
+                            depth - 1, archive.getId(), archive.getArchiveCode());
+                        return archive.getId();
+                    }
+                }
             }
             
-            String nextId = relation.getSourceId().equals(archiveId) 
-                ? relation.getTargetId() 
-                : relation.getSourceId();
+            if (depth > maxDepth) {
+                break; // 达到最大深度，停止搜索
+            }
             
-            String voucherId = findVoucherInRelationChain(nextId, visited, depth + 1, maxDepth);
-            if (voucherId != null) {
-                return voucherId;
+            // 批量查询当前层级的所有关系
+            List<ArchiveRelation> relations = archiveRelationService.list(
+                new LambdaQueryWrapper<ArchiveRelation>()
+                    .in(ArchiveRelation::getSourceId, currentLevelIds)
+                    .or()
+                    .in(ArchiveRelation::getTargetId, currentLevelIds)
+            );
+            
+            // 收集下一层级的档案ID（去重）
+            Set<String> nextLevelIds = new HashSet<>();
+            for (ArchiveRelation relation : relations) {
+                String sourceId = relation.getSourceId();
+                String targetId = relation.getTargetId();
+                
+                if (currentLevelIds.contains(sourceId) && !visited.contains(targetId)) {
+                    nextLevelIds.add(targetId);
+                    visited.add(targetId);
+                }
+                if (currentLevelIds.contains(targetId) && !visited.contains(sourceId)) {
+                    nextLevelIds.add(sourceId);
+                    visited.add(sourceId);
+                }
+            }
+            
+            // 将下一层级的档案ID加入队列
+            for (String nextId : nextLevelIds) {
+                queue.offer(nextId);
             }
         }
         
         return null;
     }
+
 }
