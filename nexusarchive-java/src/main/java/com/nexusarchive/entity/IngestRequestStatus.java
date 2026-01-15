@@ -41,4 +41,11 @@ public class IngestRequestStatus {
 
     @TableField(value = "updated_time", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedTime;
+
+    /**
+     * 全宗号，用于数据隔离
+     * 对应数据库字段 fonds_no (V2026010706 迁移添加)
+     */
+    @TableField("fonds_no")
+    private String fondsNo;
 }

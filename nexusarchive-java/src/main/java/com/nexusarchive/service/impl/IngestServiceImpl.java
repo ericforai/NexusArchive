@@ -142,9 +142,10 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
             Map<String, byte[]> fileStreams = new HashMap<>();
             prepareTempFiles(sipDto, tempPath, fileStreams);
 
-            // 3. 初始化请求状态 (Sync)
+            // 3. 初始化请求状态 (Sync) - 填充全宗号用于数据隔离
             IngestRequestStatus status = IngestRequestStatus.builder()
                     .requestId(requestId)
+                    .fondsNo(sipDto.getHeader().getFondsCode()) // 从 SIP 头提取全宗号
                     .status("RECEIVED")
                     .message("已接收请求，开始处理")
                     .build();

@@ -11,7 +11,10 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.IngestRequestStatus;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
+import com.nexusarchive.service.DataScopeService;
+import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import com.nexusarchive.service.NotificationService;
+import com.nexusarchive.security.FondsContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,19 +29,23 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final IngestRequestStatusMapper ingestRequestStatusMapper;
     private final ArchiveMapper archiveMapper;
+    private final DataScopeService dataScopeService;
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public List<NotificationDto> listLatest() {
         List<NotificationDto> items = new ArrayList<>();
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
 
-        // 1) 最新处理任务（待处理/处理中/失败）
-        // 使用 LambdaQueryWrapper 避免 empty where 语法错误
-        List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(
-                new LambdaQueryWrapper<IngestRequestStatus>()
-                        .orderByDesc(IngestRequestStatus::getUpdatedTime)
-                        .last("LIMIT 5"));
+        // 1) 最新处理任务（待处理/处理中/失败）- 添加全宗过滤
+        LambdaQueryWrapper<IngestRequestStatus> taskWrapper = new LambdaQueryWrapper<>();
+        if (currentFondsNo != null && !currentFondsNo.isEmpty()) {
+            taskWrapper.eq(IngestRequestStatus::getFondsNo, currentFondsNo);
+        }
+        taskWrapper.orderByDesc(IngestRequestStatus::getUpdatedTime)
+                .last("LIMIT 5");
+        List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(taskWrapper);
         for (IngestRequestStatus task : tasks) {
             String type = "info";
             if ("FAILED".equalsIgnoreCase(task.getStatus())) {
@@ -54,13 +61,16 @@ public class NotificationServiceImpl implements NotificationService {
                     .build());
         }
 
-        // 2) 最新归档记录
-        List<Archive> archives = archiveMapper.selectList(new LambdaQueryWrapper<Archive>()
-                .orderByDesc(Archive::getCreatedTime)
-                .last("LIMIT 3"));
+        // 2) 最新归档记录 - 使用 DataScopeService 进行全宗过滤
+        DataScopeContext scope = dataScopeService.resolve();
+        LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
+        dataScopeService.applyArchiveScope(archiveWrapper, scope);
+        archiveWrapper.orderByDesc(Archive::getCreatedTime)
+                .last("LIMIT 3");
+        List<Archive> archives = archiveMapper.selectList(archiveWrapper);
         for (Archive archive : archives) {
             items.add(NotificationDto.builder()
-                    .id(archive.getId() != null ? archive.getId() : UUID.randomUUID().toString())
+                    .id(archive.getId() != null ? archive.getId().toString() : UUID.randomUUID().toString())
                     .title("新归档: " + archive.getArchiveCode() + " - " + archive.getTitle())
                     .time(formatDateTime(archive.getLastModifiedTime(), archive.getCreatedTime()))
                     .type("success")

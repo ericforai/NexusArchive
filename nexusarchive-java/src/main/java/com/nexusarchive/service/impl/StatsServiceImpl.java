@@ -18,6 +18,7 @@ import com.nexusarchive.mapper.IngestRequestStatusMapper;
 import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import com.nexusarchive.service.StatsService;
+import com.nexusarchive.security.FondsContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,9 +49,11 @@ public class StatsServiceImpl implements StatsService {
     private String archiveRootPath;
 
     @Override
-    @Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName()")
+    @Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
     public DashboardStatsDto getDashboardStats() {
         DataScopeContext scope = dataScopeService.resolve();
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+
         QueryWrapper<Archive> totalWrapper = new QueryWrapper<>();
         dataScopeService.applyArchiveScope(totalWrapper, scope);
         long totalArchives = archiveMapper.selectCount(totalWrapper);
@@ -59,9 +62,14 @@ public class StatsServiceImpl implements StatsService {
         long safeUsedBytes = usedBytes != null ? usedBytes : 0L;
         String storageUsed = formatSize(safeUsedBytes);
 
-        long pendingTasks = ingestRequestStatusMapper.selectCount(new QueryWrapper<IngestRequestStatus>()
-                .ne("status", "COMPLETED")
-                .ne("status", "FAILED"));
+        // 修复: 添加全宗过滤到待处理任务统计
+        QueryWrapper<IngestRequestStatus> pendingWrapper = new QueryWrapper<>();
+        if (currentFondsNo != null && !currentFondsNo.isEmpty()) {
+            pendingWrapper.eq("fonds_no", currentFondsNo);
+        }
+        pendingWrapper.ne("status", "COMPLETED")
+                .ne("status", "FAILED");
+        long pendingTasks = ingestRequestStatusMapper.selectCount(pendingWrapper);
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         QueryWrapper<Archive> todayWrapper = new QueryWrapper<>();
@@ -92,7 +100,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
-    @Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now()")
+    @Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
     public List<ArchivalTrendDto> getArchivalTrend() {
         // 近 30 天归档趋势，使用 SQL 聚合
         Map<LocalDate, Long> dailyCounts = new LinkedHashMap<>();
