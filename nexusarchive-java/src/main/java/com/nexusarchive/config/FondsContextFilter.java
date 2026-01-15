@@ -107,7 +107,8 @@ public class FondsContextFilter extends OncePerRequestFilter {
         }
 
         // 检查当前路径是否需要全宗权限
-        if (requiresFondsPermission(path)) {
+        boolean requiresPermission = requiresFondsPermission(path);
+        if (requiresPermission) {
             // 需要全宗权限的路径，如果没有全宗则拒绝
             if (allowedFonds.isEmpty()) {
                 deny(response, "当前用户未配置任何可访问全宗");
@@ -125,6 +126,20 @@ public class FondsContextFilter extends OncePerRequestFilter {
 
             if (path.contains("relations")) {
                 log.debug("[FondsFilter] Set currentFonds: {} for path: {}", currentFonds, path);
+            }
+        } else {
+            // 不强制要求全宗权限的路径（如 /api/stats、/api/notification）
+            // 仍然解析 X-Fonds-No 头用于数据过滤和缓存隔离
+            String optionalFonds = null;
+            if (!allowedFonds.isEmpty()) {
+                // 尝试从请求头获取全宗号，如果未指定则使用第一个允许的全宗
+                optionalFonds = resolveCurrentFonds(request, allowedFonds);
+            }
+            // 设置全宗上下文（即使为 null 也要设置，用于清除旧值）
+            FondsContext.setCurrentFondsNo(optionalFonds);
+
+            if (path.startsWith("/api/stats") || path.startsWith("/api/notification")) {
+                log.debug("[FondsFilter] Optional fonds for stats/notification: {}", optionalFonds);
             }
         }
 
