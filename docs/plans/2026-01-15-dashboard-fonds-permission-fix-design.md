@@ -65,23 +65,22 @@ Dashboard (前端)
 
 #### 修复 1: pendingTasks 添加全宗过滤
 
-**问题**: `IngestRequestStatus` 表没有直接的 `fonds_code` 字段
+**问题**: `IngestRequestStatus` 表虽然在 V2026010706 迁移中添加了 `fonds_no` 字段，但实体类和填充逻辑尚未更新。
 
-**解决方案**: 通过关联 `Archive` 表进行过滤
-
-```sql
--- IngestRequestStatus 与 Archive 的关联
-SELECT COUNT(*)
-FROM ingest_request_status irs
-LEFT JOIN acc_archive a ON irs.archive_id = a.id
-WHERE (a.fonds_code IN ('用户允许的全宗') OR a.fonds_code IS NULL)
-  AND irs.status NOT IN ('COMPLETED', 'FAILED')
-```
+**解决方案**: 
+1. 更新 `IngestRequestStatus` 实体，添加 `fondsNo` 字段。
+2. 更新 `IngestServiceImpl.ingestSip`，在创建状态时保存 `fonds_no`。
+3. 直接使用 `fonds_no` 进行过滤，无需 JOIN（可覆盖未生成 Archive 的早期阶段任务）。
 
 **实现**:
 ```java
-// 新增方法：IngestRequestStatusMapper 中添加带全宗过滤的计数方法
-Long countPendingByFonds(List<String> fondsCodes);
+// IngestRequestStatusMapper 中使用 MyBatis-Plus 的 selectCount
+Long pendingTasks = ingestRequestStatusMapper.selectCount(
+    new LambdaQueryWrapper<IngestRequestStatus>()
+        .eq(IngestRequestStatus::getFondsNo, currentFondsNo)
+        .ne(IngestRequestStatus::getStatus, "COMPLETED")
+        .ne(IngestRequestStatus::getStatus, "FAILED")
+);
 ```
 
 #### 修复 2: 通知列表添加全宗过滤
@@ -90,21 +89,21 @@ Long countPendingByFonds(List<String> fondsCodes);
 @Override
 public List<NotificationDto> listLatest() {
     DataScopeContext scope = dataScopeService.resolve();
+    String currentFondsNo = FondsContext.getCurrentFondsNo();
 
-    // 1) 任务通知 - 通过关联 Archive 过滤
+    // 1) 任务通知 - 直接通过 fonds_no 过滤
     List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(
         new LambdaQueryWrapper<IngestRequestStatus>()
-            .inSql(IngestRequestStatus::getArchiveId,
-                "SELECT id FROM acc_archive WHERE fonds_code IN ('允许的全宗')")
+            .eq(IngestRequestStatus::getFondsNo, currentFondsNo)
             .orderByDesc(IngestRequestStatus::getUpdatedTime)
             .last("LIMIT 5")
     );
 
     // 2) 归档通知 - 使用 DataScopeService
+    LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
+    dataScopeService.applyArchiveScope(archiveWrapper, scope);
     List<Archive> archives = archiveMapper.selectList(
-        createScopedWrapper(scope)  // 使用全宗过滤
-            .orderByDesc(Archive::getCreatedTime)
-            .last("LIMIT 3")
+        archiveWrapper.orderByDesc(Archive::getCreatedTime).last("LIMIT 3")
     );
 
     return mergeResults(tasks, archives);
@@ -117,11 +116,11 @@ public List<NotificationDto> listLatest() {
 // 修改前
 @Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName()")
 
-// 修改后 - 从 FondsContext 获取当前全宗
-@Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName() + ':' + T(com.nexusarchive.config.FondsContext).get()")
+// 修改后 - 从 FondsContext 获取当前全宗 (注意包名和方法名)
+@Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
 
 // 趋势统计同理
-@Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now() + ':' + T(com.nexusarchive.config.FondsContext).get()")
+@Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
 ```
 
 ### 3.2 类图修改
@@ -162,93 +161,60 @@ public List<NotificationDto> listLatest() {
 
 ## 四、实现步骤
 
-### Step 1: 数据库层修改
+### Step 1: 实体类修改
 
-**文件**: `nexusarchive-java/src/main/java/com/nexusarchive/mapper/IngestRequestStatusMapper.java`
+**文件**: `nexusarchive-java/src/main/java/com/nexusarchive/entity/IngestRequestStatus.java`
 
 ```java
-/**
- * 统计指定全宗的待处理任务数量
- * @param fondsCodes 全宗代码列表
- * @return 待处理任务数量
- */
-Long countPendingByFonds(@Param("fondsCodes") List<String> fondsCodes);
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@TableName("sys_ingest_request_status")
+public class IngestRequestStatus {
+    // ... 原有字段 ...
+
+    /**
+     * 全宗号，用于数据隔离
+     */
+    private String fondsNo;
+}
 ```
 
-**XML 映射**: `nexusarchive-java/src/main/resources/mapper/IngestRequestStatusMapper.xml`
+### Step 2: IngestServiceImpl 填充逻辑
 
-```xml
-<select id="countPendingByFonds" resultType="java.lang.Long">
-    SELECT COUNT(*)
-    FROM ingest_request_status irs
-    LEFT JOIN acc_archive a ON irs.archive_id = a.id
-    WHERE (a.fonds_code IN
-        <foreach collection="fondsCodes" item="code" open="(" separator="," close=")">
-            #{code}
-        </foreach>
-        OR a.fonds_code IS NULL)
-      AND irs.status NOT IN ('COMPLETED', 'FAILED')
-</select>
-```
-
-### Step 2: StatsService 修改
-
-**文件**: `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/StatsServiceImpl.java`
+**文件**: `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/IngestServiceImpl.java`
 
 ```java
 @Override
-@Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName() + ':' + T(com.nexusarchive.config.FondsContext).get()")
-public DashboardStatsDto getDashboardStats() {
-    DataScopeContext scope = dataScopeService.resolve();
-
-    // ... 其他代码保持不变 ...
-
-    // 修复 pendingTasks - 使用全宗过滤
-    List<String> fondsCodes = scope.getFondsCodes();
-    long pendingTasks = ingestRequestStatusMapper.countPendingByFonds(fondsCodes);
-
-    // ... 其他代码保持不变 ...
+@Transactional(rollbackFor = Exception.class)
+public IngestResponse ingestSip(AccountingSipDto sipDto) {
+    // ...
+    // 初始化请求状态 (Sync) - 填充全宗号
+    IngestRequestStatus status = IngestRequestStatus.builder()
+            .requestId(requestId)
+            .fondsNo(sipDto.getHeader().getFondsCode()) // 从 SIP 头提取
+            .status("RECEIVED")
+            .message("已接收请求，开始处理")
+            .build();
+    ingestRequestStatusMapper.insert(status);
+    // ...
 }
 ```
 
-### Step 3: NotificationService 修改
+### Step 3: StatsServiceImpl 统计逻辑
+
+**文件**: `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/StatsServiceImpl.java`
+
+1. 修改缓存 Key (SpEL)。
+2. 在 `getDashboardStats` 中获取 `currentFondsNo` 并应用到 `pendingTasks` 查询。
+
+### Step 4: NotificationServiceImpl 过滤逻辑
 
 **文件**: `nexusarchive-java/src/main/java/com/nexusarchive/service/impl/NotificationServiceImpl.java`
 
-```java
-@Service
-@RequiredArgsConstructor
-public class NotificationServiceImpl implements NotificationService {
-
-    private final IngestRequestStatusMapper ingestRequestStatusMapper;
-    private final ArchiveMapper archiveMapper;
-    private final DataScopeService dataScopeService;  // 新增
-
-    @Override
-    public List<NotificationDto> listLatest() {
-        DataScopeContext scope = dataScopeService.resolve();
-        List<NotificationDto> items = new ArrayList<>();
-
-        // 1) 任务通知 - 添加全宗过滤
-        List<String> fondsCodes = scope.getFondsCodes();
-        List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(
-                new LambdaQueryWrapper<IngestRequestStatus>()
-                        .inSql(IngestRequestStatus::getArchiveId,
-                            "SELECT id FROM acc_archive WHERE fonds_code IN ('" +
-                            String.join("','", fondsCodes) + "')")
-                        .orderByDesc(IngestRequestStatus::getUpdatedTime)
-                        .last("LIMIT 5"));
-
-        // 2) 归档通知 - 使用 DataScopeService
-        LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
-        dataScopeService.applyArchiveScope(archiveWrapper, scope);
-        archiveWrapper.orderByDesc(Archive::getCreatedTime).last("LIMIT 3");
-        List<Archive> archives = archiveMapper.selectList(archiveWrapper);
-
-        return mergeNotifications(tasks, archives);
-    }
-}
-```
+1. 注入 `DataScopeService`。
+2. 在 `listLatest` 中应用全宗过滤。
 
 ### Step 4: 缓存失效机制
 
