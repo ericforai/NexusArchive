@@ -28,9 +28,9 @@ import LoginPage from '../pages/Auth/Login';
 import { ArchiveListPage } from '../pages/archives/ArchiveListPage';
 import { VoucherMatchingPage } from '../pages/matching/VoucherMatchingPage';
 import { PoolPage } from '@/pages/pre-archive/PoolPage';
+import { Dashboard } from '../pages/portal/Dashboard';
 
 // 懒加载各功能模块（Page 层）
-const Dashboard = lazy(() => import('../pages/portal/Dashboard'));
 const ArchivalPanoramaView = lazy(() => import('../pages/panorama/ArchivalPanoramaView'));
 const OCRProcessingView = lazy(() => import('../pages/pre-archive/OCRProcessingView'));
 const AbnormalDataView = lazy(() => import('../pages/pre-archive/AbnormalDataView'));
@@ -176,7 +176,7 @@ export const routes: RouteObject[] = [
         errorElement: <RouteErrorBoundary />,
         children: [
             // 门户首页
-            { index: true, element: withSuspense(Dashboard) },
+            { index: true, element: <Dashboard /> },
 
             // 全景视图（支持可选参数）
             { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView) },
@@ -210,7 +210,7 @@ export const routes: RouteObject[] = [
 
             // ========== 档案作业 (Operations) ==========
             { path: 'operations', element: <ArchiveListPage routeConfig="view" /> }, // Fallback/Default
-            { path: 'operations/boxing', element: <ArchiveListPage routeConfig="box" /> },
+
             { path: 'operations/volume', element: withSuspense(VolumeManagement) },
             { path: 'operations/approval', element: withSuspense(ArchiveApprovalView) },
             { path: 'operations/batch', element: withSuspense(ArchiveBatchView) },  // 归档批次
