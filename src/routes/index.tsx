@@ -210,7 +210,7 @@ export const routes: RouteObject[] = [
 
             // ========== 档案作业 (Operations) ==========
             { path: 'operations', element: <ArchiveListPage routeConfig="view" /> }, // Fallback/Default
-
+            { path: 'operations/boxing', element: <ArchiveListPage routeConfig="box" /> },
             { path: 'operations/volume', element: withSuspense(VolumeManagement) },
             { path: 'operations/approval', element: withSuspense(ArchiveApprovalView) },
             { path: 'operations/batch', element: withSuspense(ArchiveBatchView) },  // 归档批次
