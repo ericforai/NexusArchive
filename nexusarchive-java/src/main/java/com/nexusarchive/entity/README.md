@@ -23,7 +23,7 @@
 | `ConvertLog.java` | Java 类 | 格式转换日志实体 |
 | `Destruction.java` | Java 类 | 销毁实体 |
 | `enums/` | 目录入口 | 枚举子目录 |
-| `ErpConfig.java` | 配置类 | ERP 配置实体（账套映射、AI 适配器） |
+| `ErpConfig.java` | 配置类 | ERP 配置实体（账套映射、AI 适配器、路由校验方法） |
 | `ErpScenario.java` | Java 类 | ERP 场景实体 |
 | `ErpSubInterface.java` | Java 类 | ERP 子接口实体 |
 | `es/` | 目录入口 | ES 子目录 |

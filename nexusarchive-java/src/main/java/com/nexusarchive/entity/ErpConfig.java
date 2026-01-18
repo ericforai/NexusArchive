@@ -1,5 +1,5 @@
 // Input: MyBatis-Plus、Lombok、Java 标准库
-// Output: ErpConfig 类
+// Output: ErpConfig 类（含账套-全宗映射校验方法）
 // Pos: 领域实体/模型
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -102,5 +102,41 @@ public class ErpConfig {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // ===== 账套-全宗映射校验方法 =====
+
+    /**
+     * 根据账套代码获取映射的全宗代码
+     * @param accbookCode 账套代码
+     * @return 映射的全宗代码，如果未配置映射则返回 null
+     */
+    public String getFondsForAccbook(String accbookCode) {
+        if (accbookMapping == null || accbookMapping.isEmpty()) {
+            return null;
+        }
+        try {
+            JSONObject mapping = JSONUtil.parseObj(accbookMapping);
+            return mapping.getStr(accbookCode);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 检查账套是否映射到指定全宗
+     * 如果没有配置映射，认为允许任何全宗（兼容现有行为）
+     *
+     * @param accbookCode 账套代码
+     * @param fondsCode 全宗代码
+     * @return true 表示映射一致或未配置映射
+     */
+    public boolean isAccbookMappedToFonds(String accbookCode, String fondsCode) {
+        String mappedFonds = getFondsForAccbook(accbookCode);
+        // 如果没有配置映射，认为允许任何全宗（兼容现有行为）
+        if (mappedFonds == null) {
+            return true;
+        }
+        return mappedFonds.equals(fondsCode);
     }
 }

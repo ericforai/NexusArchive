@@ -78,6 +78,17 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    preview: {
+      port: 4173,
+      host: '0.0.0.0',
+      proxy: {
+        '/api': {
+          target: apiTarget,
+          changeOrigin: true,
+          secure: false,
+        }
+      }
+    },
     plugins: [
       react(),
       // 移除任何外部注入的 importmap（如 AI Studio 插件），防止 React 版本冲突

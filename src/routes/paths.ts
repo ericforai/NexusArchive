@@ -36,7 +36,7 @@ export const ROUTE_PATHS = {
 
     // New: Archive Operations Path (Separated from Repository)
     ARCHIVE_OPS: '/system/operations',
-    ARCHIVE_BOXING: '/system/operations/boxing',
+
     ARCHIVE_VOLUME: '/system/operations/volume',
     ARCHIVE_APPROVAL: '/system/operations/approval',
     ARCHIVE_OPEN_APPRAISAL: '/system/operations/open-appraisal',
@@ -160,7 +160,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '会计档案鉴定意见书': ROUTE_PATHS.ARCHIVE_OTHER + '?type=APPRAISAL_OPINION',
 
     // --- 档案作业 (Level 1: ARCHIVE_OPS) ---
-    '档案装盒': ROUTE_PATHS.ARCHIVE_BOXING,
+
     '档案组卷': ROUTE_PATHS.ARCHIVE_VOLUME,
     '归档审批': ROUTE_PATHS.ARCHIVE_APPROVAL,  // 单条归档审批
     '归档批次': '/system/operations/batch',     // 批次归档管理

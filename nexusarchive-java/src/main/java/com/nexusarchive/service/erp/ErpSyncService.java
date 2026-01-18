@@ -1,5 +1,5 @@
 // Input: MyBatis-Plus、Lombok、Spring Framework、Java 标准库、凭证 JSON
-// Output: ErpSyncService 类
+// Output: ErpSyncService 类（含全宗-账套路由校验）
 // Pos: 业务服务层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -106,6 +106,9 @@ public class ErpSyncService {
             ErpAdapter adapter = erpAdapterFactory.getAdapter(entityConfig.getErpType());
             com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig = configDtoBuilder.buildDtoConfig(entityConfig);
 
+            // ✅ 校验全宗与账套映射一致性（Guard Clause）
+            validateFondsAccbookMapping(entityConfig, dtoConfig);
+
             // 确定同步时间范围：优先使用临时参数，否则从数据库配置读取
             SyncDateRangeExtractor.DateRange dateRange = determineDateRange(scenario, tempStartDate, tempEndDate);
 
@@ -206,6 +209,45 @@ public class ErpSyncService {
         }
         return entityConfig;
     }
+
+    /**
+     * 校验当前全宗与账套映射是否一致
+     * 如果配置了映射但当前全宗不匹配，则抛出异常阻止同步
+     *
+     * @param entityConfig 数据库实体配置
+     * @param dtoConfig DTO 配置（包含解析后的账套列表）
+     */
+    private void validateFondsAccbookMapping(ErpConfig entityConfig,
+                                             com.nexusarchive.integration.erp.dto.ErpConfig dtoConfig) {
+        String currentFonds = FondsContext.getCurrentFondsNo();
+        if (currentFonds == null || currentFonds.isEmpty()) {
+            log.warn("当前全宗上下文为空，跳过路由校验");
+            return;
+        }
+
+        // 获取所有将被同步的账套代码
+        java.util.List<String> accbookCodes = dtoConfig.resolveAllAccbookCodes();
+        if (accbookCodes == null || accbookCodes.isEmpty()) {
+            log.debug("未配置账套代码，跳过路由校验");
+            return;
+        }
+
+        // 逐一校验每个账套的映射关系
+        for (String accbookCode : accbookCodes) {
+            if (!entityConfig.isAccbookMappedToFonds(accbookCode, currentFonds)) {
+                String expectedFonds = entityConfig.getFondsForAccbook(accbookCode);
+                String errorMsg = String.format(
+                    "路由校验失败：账套 %s 配置的全宗为 %s，但当前全宗为 %s。请切换到正确的全宗后重试。",
+                    accbookCode, expectedFonds, currentFonds
+                );
+                log.error(errorMsg);
+                throw new IllegalStateException(errorMsg);
+            }
+        }
+
+        log.info("路由校验通过：{} 个账套 -> 全宗 {}", accbookCodes.size(), currentFonds);
+    }
+
 
     /**
      * 处理凭证列表

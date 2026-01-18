@@ -10,7 +10,7 @@
 | `AsyncErpSyncService.java` | 业务服务 | ERP 同步异步执行 |
 | `ErpChannelService.java` | 业务服务 | ERP 集成通道聚合服务 |
 | `ErpConfigDtoBuilder.java` | 工具类 | ERP 配置 DTO 构建 |
-| `ErpSyncService.java` | 业务服务 | ERP 同步执行服务（含凭证 JSON 预存） |
+| `ErpSyncService.java` | 业务服务 | ERP 同步执行服务（含凭证 JSON 预存、路由校验 Guard Clause） |
 | `SyncDateRangeExtractor.java` | 工具类 | 同步日期范围提取 |
 | `SyncTaskCleanupService.java` | 业务服务 | 同步任务清理 |
 | `VoucherFetcher.java` | 业务服务 | 凭证数据获取 |

@@ -1,5 +1,5 @@
 // Input: React、lucide-react 图标、本地模块 FourNatureReportView、api/stats、api/erp 等
-// Output: React 组件 OnlineReceptionView
+// Output: React 组件 OnlineReceptionView（含路由校验错误友好提示）
 // Pos: src/pages/collection/OnlineReceptionView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -193,7 +193,13 @@ export const OnlineReceptionView: React.FC = () => {
                 throw new Error('未获取到任务ID');
             }
         } catch (error: any) {
-            setSyncError(error.message || '同步请求失败');
+            // 检测路由校验失败，提供友好的错误提示
+            const errMsg = error.message || error.response?.data?.message || '同步请求失败';
+            if (errMsg.includes('路由校验失败')) {
+                setSyncError('⚠️ 全宗不匹配：当前全宗与选择的账套配置不一致。请切换到正确的全宗后重试。');
+            } else {
+                setSyncError(errMsg);
+            }
             setChannels(prev => prev.map(c =>
                 c.id === syncChannelId ? { ...c, status: 'error' as const } : c
             ));
@@ -267,7 +273,13 @@ export const OnlineReceptionView: React.FC = () => {
 
                     if (status.status === 'FAIL') {
                         setIsPolling(false);
-                        setSyncError(status.errorMessage || '同步失败');
+                        // 检测路由校验失败，提供友好的错误提示
+                        const errMsg = status.errorMessage || '同步失败';
+                        if (errMsg.includes('路由校验失败')) {
+                            setSyncError('⚠️ 全宗不匹配：当前全宗与选择的账套配置不一致。请切换到正确的全宗后重试。');
+                        } else {
+                            setSyncError(errMsg);
+                        }
                         setChannels(prev => prev.map(c =>
                             c.id === scenarioId ? { ...c, status: 'error' as const } : c
                         ));

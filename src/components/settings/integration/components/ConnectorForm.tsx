@@ -261,7 +261,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
       </div>
 
       {/* Close Check Mode (仅 YonSuite 显示) */}
-      {configForm.erpType === 'yonsuite' && (
+      {configForm.erpType?.toLowerCase() === 'yonsuite' && (
         <div style={{ marginBottom: 16, padding: 16, backgroundColor: '#f9fafb', borderRadius: 8 }}>
           <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500 }}>
             <div className="flex items-center gap-2">

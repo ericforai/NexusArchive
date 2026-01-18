@@ -130,7 +130,12 @@ const AppraisalListPage = lazy(() => import('../pages/operations/AppraisalListPa
 const DestructionApprovalPage = lazy(() => import('../pages/operations/DestructionApprovalPage'));
 const DestructionExecutionPage = lazy(() => import('../pages/operations/DestructionExecutionPage'));
 
-// 加载占位符
+/**
+ * 加载占位符
+ *
+ * 注意：常用页面（Dashboard, PoolPage, ArchiveListPage）已改为直接导入，无需 LoadingFallback
+ * 大型页面（全景视图、统计图表、报表）仍使用懒加载，需要此占位符
+ */
 const LoadingFallback = () => (
     <div className="flex items-center justify-center h-full text-slate-600">
         <span className="animate-pulse text-sm">加载中...</span>

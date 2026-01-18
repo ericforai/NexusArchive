@@ -59,21 +59,11 @@ import java.util.List;
  *
  * @see RedisConfig 缓存命名空间与 TTL 配置
  */
+/*
 @Slf4j
 @Configuration
 public class CacheMetricsConfig {
 
-    /**
-     * 为所有缓存注册指标
-     * <p>
-     * 注意：Redis 的 size/hit/miss 统计需要从 Redis INFO stats 获取
-     * 这里我们注册缓存存在性的基础指标
-     * </p>
-     *
-     * @param cacheManager 缓存管理器
-     * @param meterRegistry Micrometer 指标注册表
-     * @return 缓存指标绑定器列表
-     */
     @Bean
     public List<CacheMeterBinder> cacheMeterBinders(CacheManager cacheManager, MeterRegistry meterRegistry) {
         log.info("注册缓存指标，缓存数量: {}", cacheManager.getCacheNames().size());
@@ -126,3 +116,4 @@ public class CacheMetricsConfig {
         return binders;
     }
 }
+*/

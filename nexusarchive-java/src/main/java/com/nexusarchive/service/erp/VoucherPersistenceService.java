@@ -95,7 +95,7 @@ public class VoucherPersistenceService {
         setDefaultFields(fileContent, voucherDate);
 
         // 设置业务唯一标识，用于更严谨的幂等性控制
-        fileContent.setBusinessDocNo(adapter.getName() + "_" + dto.getVoucherId());
+        fileContent.setBusinessDocNo(adapter.getName() + "_" + dto.getVoucherId() + "_" + fondsCode);
 
         if (voucherJson != null && !voucherJson.isEmpty()) {
             fileContent.setSourceData(voucherJson);
@@ -259,7 +259,7 @@ public class VoucherPersistenceService {
         archive.setDocDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : LocalDate.now());
         archive.setCreator(dto.getCreator());
         archive.setStatus(STATUS_DRAFT);
-        archive.setUniqueBizId(sourceSystem + "_" + dto.getVoucherId());
+        archive.setUniqueBizId(sourceSystem + "_" + dto.getVoucherId() + "_" + fileContent.getFondsCode());
 
         return archive;
     }
