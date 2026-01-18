@@ -1,5 +1,11 @@
-# 生产环境前端 Dockerfile
-# 构建静态文件并用 Nginx 托管
+# ==============================================================================
+# NexusArchive 前端 Dockerfile - 多阶段构建
+#
+# 优化目标：
+# - 最终镜像 < 50MB
+# - 利用 BuildKit 缓存加速构建
+# - 本地构建，服务器免编译
+# ==============================================================================
 
 # 阶段1: 构建
 FROM node:18-alpine AS builder
@@ -9,25 +15,27 @@ WORKDIR /app
 # 复制依赖文件
 COPY package*.json ./
 
-# 安装依赖
-RUN npm ci --only=production=false
+# 安装依赖（使用 BuildKit 缓存挂载加速）
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # 复制源码
 COPY . .
 
 # 构建生产版本
-RUN npm run build
+RUN npm run build && \
+    # 清理缓存减小层大小
+    rm -rf /root/.npm
 
-# 阶段2: 生产镜像
+# 阶段2: 生产镜像（Nginx Alpine）
 FROM nginx:alpine
 
 # 复制构建产物到 Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 复制 Nginx 配置
-COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
+# 复制 Nginx 配置模板（实际配置在服务器生成）
+COPY nginx/ /etc/nginx/templates/
 
-# 暴露端口
 EXPOSE 80 443
 
 CMD ["nginx", "-g", "daemon off;"]

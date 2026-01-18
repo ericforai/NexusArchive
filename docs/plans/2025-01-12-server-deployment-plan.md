@@ -9,17 +9,34 @@
 
 ## 📋 部署前检查清单
 
-### 服务器环境检查
+### 服务器环境要求
 
-| 检查项 | 命令 | 预期结果 |
-|--------|------|----------|
-| 操作系统版本 | `cat /etc/os-release` | Ubuntu 20.04+ / CentOS 7+ |
-| 内存 | `free -h` | ≥4GB |
+**最低配置**（已验证）：
+- CPU: 4 核
+- 内存: 4GB
+- 磁盘: 50GB
+
+**容器资源限制**（已配置）：
+| 服务 | 内存限制 | 说明 |
+|------|----------|------|
+| nexus-backend | 768MB | JVM 已优化 (`-Xmx768m`) |
+| nexus-frontend | 256MB | Nginx Alpine 轻量级 |
+| nexus-db | 512MB | PostgreSQL 适合小规模 |
+| nexus-redis | 128MB | Redis Alpine |
+| 系统预留 | ~1.5GB | 操作系统 + Docker 开销 |
+| **总计** | **~3.2GB** | 在 4GB 服务器内安全运行 |
+
+**⚠️ 服务器限制对策**：
+- **拉镜像慢**: 本地构建完整镜像，服务器仅加载运行
+- **内存紧张**: 已使用 Alpine 基础镜像，JVM 内存已优化
+- **构建慢**: 本地构建，使用 BuildKit 缓存加速
+
+### 服务器环境检查
 | 磁盘空间 | `df -h /` | ≥50GB |
 | Docker | `docker --version` | 20.10+ |
-| docker-compose | `docker-compose --version` | 2.0+ (或 `docker compose version`) |
-| 端口 80 开放 | `netstat -tlnp \| grep :80` | 监听中 |
-| 端口 443 开放 | `netstat -tlnp \| grep :443` | 监听中 |
+| docker compose | `docker compose version` | 2.20+ (支持 include) |
+| 端口 80 可用 | `ss -tlnp \| grep :80` | 未被占用 |
+| 端口 443 可用 | `ss -tlnp \| grep :443` | 未被占用 |
 
 ### 域名和 DNS 检查
 
@@ -36,12 +53,20 @@
 # - TCP 80   (HTTP)
 # - TCP 443  (HTTPS)
 # - TCP 22   (SSH，建议限制 IP)
+#
+# ⚠️ 生产环境禁止开放以下端口到公网：
+# - TCP 5432 (PostgreSQL)
+# - TCP 6379 (Redis)
+#   如需调试，仅允许内网 IP 访问
 
 # 服务器防火墙（如果启用 ufw）
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 22/tcp
 sudo ufw enable
+
+# 验证规则
+sudo ufw status numbered
 ```
 
 ---
@@ -70,38 +95,53 @@ sudo ufw enable
 git pull
 git log -1 --oneline  # 记录当前版本
 
-# 2. 构建前端
-npm run build
-ls -la dist/          # 确认构建产物
+# 2. 验证代码可编译（可选但推荐）
+#    ⚠️ 注意：本地产物不会被 Docker 使用，Docker 会在容器内重新构建
+#    此步骤仅用于提前发现编译错误，避免 Docker 构建失败浪费更多时间
 
-# 3. 构建后端
+# 前端验证（可选）
+npm run build
+ls -la dist/          # 确认构建产物（仅验证用）
+rm -rf dist/          # 清理，Docker 会重新构建
+
+# 后端验证（可选）
 cd nexusarchive-java
 mvn clean package -DskipTests
-ls -la target/*.jar   # 确认 JAR 文件
+ls -la target/*.jar   # 确认 JAR 文件（仅验证用）
 cd ..
 
-# 4. 构建镜像（本地构建，避免服务器需要源码）
-docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
-docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
+# 3. 构建 Docker 镜像（启用 BuildKit 加速构建和缓存）
+#    🔧 多阶段构建机制：Dockerfile 会将源码复制进容器，在容器内完成编译
+#    🔧 BuildKit 缓存：利用 --mount=cache 加速依赖下载
+DOCKER_BUILDKIT=1 docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
+DOCKER_BUILDKIT=1 docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
 
-# 5. 导出镜像为 tar 文件
-docker save nexusarchive-backend:latest | gzip > nexusarchive-backend.tar.gz
-docker save nexusarchive-web:latest | gzip > nexusarchive-web.tar.gz
+# 查看镜像大小（预期：后端 < 200MB，前端 < 50MB）
+docker images | grep nexusarchive
 
-# 6. 创建部署包
+# 4. 导出镜像为 tar 文件
+#    注意：使用 gzip -9 最高压缩率，减少传输时间
+docker save nexusarchive-backend:latest | gzip -9 > nexusarchive-backend.tar.gz
+docker save nexusarchive-web:latest | gzip -9 > nexusarchive-web.tar.gz
+
+# 查看压缩后大小
+ls -lh nexusarchive-*.tar.gz
+
+# 5. 创建部署包（精简版，不含源码）
 tar -czf nexusarchive-prod-$(date +%Y%m%d).tar.gz \
     deploy/ \
     docker-compose.infra.yml \
     docker-compose.app.yml \
     docker-compose.prod.yml \
-    nginx/nginx.prod.template \
-    nginx/nginx.http.template \
+    nginx/ \
     deploy/.env.prod.example \
     nexusarchive-backend.tar.gz \
     nexusarchive-web.tar.gz \
     db/seed-data.sql
 
-# 7. 上传到服务器
+# 6. 上传到服务器
+#    如果网络慢，可以使用 rsync --progress 查看进度
+#    或者使用 split 分割大文件后传输
 scp nexusarchive-prod-*.tar.gz user@服务器IP:/tmp/
 ```
 
@@ -116,9 +156,13 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 newgrp docker
 
-# 验证安装
+# 验证安装（需要 Docker 20.10+ 和 docker compose 2.20+）
 docker --version
-docker-compose --version
+docker compose version
+
+# ⚠️ 如果 docker compose 版本 < 2.20，需要升级：
+# sudo apt-get update
+# sudo apt-get install -y docker compose-plugin
 
 # ========== 步骤 2: 创建部署目录 ==========
 sudo mkdir -p /opt/nexusarchive
@@ -148,6 +192,15 @@ vi .env.prod
 # APP_SECURITY_CORS_ALLOWED_ORIGINS=https://你的域名
 # REDIS_PASSWORD=你的redis密码（可选但推荐）
 
+# 🔒 生产安全配置（端口不映射到宿主机，仅容器内访问）：
+# --------------------------------------------
+# DB_PORT=              # 留空禁用 PostgreSQL 端口映射
+# REDIS_PORT=           # 留空禁用 Redis 端口映射
+#
+# ⚠️ 如果需要调试，可临时设置：
+# DB_PORT=5432          # 仅限内网 IP 访问，配置安全组/防火墙
+# REDIS_PORT=6379       # 仅限内网 IP 访问，配置安全组/防火墙
+
 # 生成密钥的命令：
 # openssl rand -base64 16   # 数据库密码
 # openssl rand -hex 16      # SM4密钥
@@ -163,13 +216,13 @@ sed "s/{{DOMAIN}}/$DOMAIN/g" nginx/nginx.http.template > nginx/nginx.conf
 grep "server_name" nginx/nginx.conf
 
 # ========== 步骤 7: 启动服务（HTTP 模式） ==========
-# 修改 docker-compose.app.yml，使用 nginx.conf 而非 nginx.prod.conf
-sed 's|nginx/nginx.prod.conf|nginx/nginx.conf|g' docker-compose.app.yml > docker-compose.app.yml.tmp
-mv docker-compose.app.yml.tmp docker-compose.app.yml
+# 修改 docker compose.app.yml，使用 nginx.conf 而非 nginx.prod.conf
+sed 's|nginx/nginx.prod.conf|nginx/nginx.conf|g' docker compose.app.yml > docker compose.app.yml.tmp
+mv docker compose.app.yml.tmp docker compose.app.yml
 
-docker-compose -f docker-compose.infra.yml \
-               -f docker-compose.app.yml \
-               -f docker-compose.prod.yml \
+docker compose -f docker compose.infra.yml \
+               -f docker compose.app.yml \
+               -f docker compose.prod.yml \
                --env-file .env.prod up -d
 
 # ========== 步骤 8: 等待服务启动 ==========
@@ -177,7 +230,7 @@ echo "等待服务启动..."
 sleep 30
 
 # ========== 步骤 9: 验证服务状态 ==========
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker compose.prod.yml ps
 
 # 测试 HTTP 访问
 curl -I http://localhost/
@@ -186,8 +239,8 @@ curl -I http://localhost/
 curl http://localhost/api/health
 
 # ========== 步骤 10: 查看日志（如有问题） ==========
-docker-compose -f docker-compose.prod.yml logs nexus-backend
-docker-compose -f docker-compose.prod.yml logs nexus-frontend
+docker compose -f docker compose.prod.yml logs nexus-backend
+docker compose -f docker compose.prod.yml logs nexus-frontend
 ```
 
 ### 阶段 3: 配置 HTTPS（服务器执行）
@@ -198,7 +251,7 @@ sudo apt-get update
 sudo apt-get install -y certbot
 
 # ========== 步骤 2: 停止前端容器（释放 443 端口） ==========
-docker-compose -f docker-compose.prod.yml stop nexus-frontend
+docker compose -f docker compose.prod.yml stop nexus-frontend
 
 # ========== 步骤 3: 获取 SSL 证书 ==========
 sudo certbot certonly --standalone \
@@ -221,11 +274,11 @@ DOMAIN="你的域名"
 sed "s/{{DOMAIN}}/$DOMAIN/g" nginx/nginx.prod.template > nginx/nginx.prod.conf
 
 # 恢复使用 nginx.prod.conf
-sed 's|nginx/nginx.conf|nginx/nginx.prod.conf|g' docker-compose.app.yml > docker-compose.app.yml.tmp
-mv docker-compose.app.yml.tmp docker-compose.app.yml
+sed 's|nginx/nginx.conf|nginx/nginx.prod.conf|g' docker compose.app.yml > docker compose.app.yml.tmp
+mv docker compose.app.yml.tmp docker compose.app.yml
 
 # ========== 步骤 7: 启动前端容器 ==========
-docker-compose -f docker-compose.prod.yml start nexus-frontend
+docker compose -f docker compose.prod.yml start nexus-frontend
 
 # ========== 步骤 8: 验证容器内证书访问 ==========
 docker exec nexus-frontend ls -la /etc/letsencrypt/live/你的域名/
@@ -252,9 +305,10 @@ sudo chmod +x /etc/letsencrypt/renewal-hooks/post/restart-nginx.sh
 ### 阶段 4: 配置自动备份（服务器执行）
 
 ```bash
-# ========== 步骤 1: 创建脚本目录 ==========
+# ========== 步骤 1: 创建脚本和日志目录 ==========
 sudo mkdir -p /opt/nexusarchive/scripts
-sudo chown $USER:$USER /opt/nexusarchive/scripts
+sudo mkdir -p /opt/nexusarchive/logs
+sudo chown -R $USER:$USER /opt/nexusarchive/scripts /opt/nexusarchive/logs
 
 # ========== 步骤 2: 复制备份脚本 ==========
 cp deploy/backup.sh /opt/nexusarchive/scripts/
@@ -266,15 +320,18 @@ chmod +x /opt/nexusarchive/scripts/*.sh
 crontab -e
 
 # 添加以下内容：
-# NexusArchive 备份任务
-0 2 * * * /opt/nexusarchive/scripts/backup.sh daily >> /var/log/nexus-backup.log 2>&1
-0 3 * * 0 /opt/nexusarchive/scripts/backup.sh weekly >> /var/log/nexus-backup.log 2>&1
-0 4 1 * * /opt/nexusarchive/scripts/backup.sh monthly >> /var/log/nexus-backup.log 2>&1
-0 5 1 1 * /opt/nexusarchive/scripts/backup.sh yearly >> /var/log/nexus-backup.log 2>&1
-*/5 * * * * /opt/nexusarchive/scripts/health-check.sh >> /var/log/nexus-health.log 2>&1
+# NexusArchive 备份任务（日志写入应用目录，避免权限问题）
+0 2 * * * /opt/nexusarchive/scripts/backup.sh daily >> /opt/nexusarchive/logs/backup.log 2>&1
+0 3 * * 0 /opt/nexusarchive/scripts/backup.sh weekly >> /opt/nexusarchive/logs/backup.log 2>&1
+0 4 1 * * /opt/nexusarchive/scripts/backup.sh monthly >> /opt/nexusarchive/logs/backup.log 2>&1
+0 5 1 1 * /opt/nexusarchive/scripts/backup.sh yearly >> /opt/nexusarchive/logs/backup.log 2>&1
+*/5 * * * * /opt/nexusarchive/scripts/health-check.sh >> /opt/nexusarchive/logs/health.log 2>&1
 
 # ========== 步骤 4: 验证 Cron ==========
 crontab -l
+
+# 查看日志
+tail -f /opt/nexusarchive/logs/health.log
 
 # ========== 步骤 5: 备份恢复测试（重要！） ==========
 # ⚠️  "没有测试过的备份等于没有备份"
@@ -391,21 +448,21 @@ docker stats --no-stream
 git pull
 git log -1 --oneline  # 记录版本
 
-# 2. 构建前端
-npm run build
+# 2. 验证代码可编译（可选）
+#    ⚠️ Docker 会在容器内重新构建，此步骤仅用于提前发现编译错误
+npm run build && rm -rf dist/
+cd nexusarchive-java && mvn package -DskipTests && cd ..
 
-# 3. 构建后端
-cd nexusarchive-java && mvn package && cd ..
+# 3. 构建 Docker 镜像（启用 BuildKit）
+DOCKER_BUILDKIT=1 docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
+DOCKER_BUILDKIT=1 docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
 
-# 4. 构建镜像
-docker build -t nexusarchive-backend:latest -f nexusarchive-java/Dockerfile nexusarchive-java
-docker build -t nexusarchive-web:latest -f Dockerfile.frontend.prod .
+# 4. 导出镜像（使用最高压缩率）
+docker save nexusarchive-backend:latest | gzip -9 > nexusarchive-backend.tar.gz
+docker save nexusarchive-web:latest | gzip -9 > nexusarchive-web.tar.gz
 
-# 5. 导出镜像
-docker save nexusarchive-backend:latest | gzip > nexusarchive-backend.tar.gz
-docker save nexusarchive-web:latest | gzip > nexusarchive-web.tar.gz
-
-# 6. 上传到服务器
+# 5. 上传到服务器
+#    网络慢可用 rsync --progress 查看进度
 scp nexusarchive-backend.tar.gz nexusarchive-web.tar.gz user@服务器IP:/opt/nexusarchive/
 
 # ========== 服务器执行 ==========
@@ -417,7 +474,7 @@ docker load < nexusarchive-backend.tar.gz
 docker load < nexusarchive-web.tar.gz
 
 # 重启服务
-docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+docker compose -f docker compose.prod.yml --env-file .env.prod up -d
 
 # 验证
 curl https://你的域名/api/health
@@ -497,7 +554,7 @@ docker exec nexus-redis redis-cli ping
 # 测试密码连接
 docker exec nexus-redis redis-cli -a 你的密码 ping
 
-# 如果需要启用 Redis 密码，修改 docker-compose.infra.yml：
+# 如果需要启用 Redis 密码，修改 docker compose.infra.yml：
 # command: redis-server --requirepass ${REDIS_PASSWORD}
 ```
 
@@ -547,16 +604,27 @@ docker exec nexus-redis redis-cli -a 你的密码 ping
 
 如遇到问题：
 
-1. 保存日志：`docker-compose logs > error.log`
+1. 保存日志：`docker compose logs > error.log`
 2. 记录版本：`git log -1`
 3. 记录命令：重现问题的命令
 4. 联系技术支持
 
 ---
 
-**文档版本**: 2.0
-**最后更新**: 2025-01-12
+**文档版本**: 2.2
+**最后更新**: 2026-01-18
 **变更记录**:
+- v2.2: 添加 4GB 内存服务器配置说明和资源限制
+- v2.2: 后端镜像改用 JRE-Alpine (~200MB → ~50MB)
+- v2.2: 添加 JVM 内存优化参数 (-Xmx768m)
+- v2.2: 启用 BuildKit 加速构建，添加缓存挂载
+- v2.2: 优化 .dockerignore 减少构建上下文
+- v2.2: 使用 gzip -9 最高压缩率减少传输时间
+- v2.1: 修复构建步骤冗余说明，澄清多阶段构建机制
+- v2.1: 统一使用 `docker compose` 命令（v2.20+），移除 `docker-compose`
+- v2.1: 修复备份 cron 日志权限问题（/var/log → /opt/nexusarchive/logs）
+- v2.1: 添加 DB/Redis 端口安全说明，生产环境禁用映射
+- v2.1: 修复端口预检查逻辑（"监听中" → "未被占用"）
 - v2.0: 重构部署策略，添加本地构建镜像方案
 - v2.0: 添加 HTTP-only 模式解决首次部署证书问题
 - v2.0: 修复备份验证流程
