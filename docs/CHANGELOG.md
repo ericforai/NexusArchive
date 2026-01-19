@@ -7,7 +7,6 @@
 ## [Unreleased]
 
 ### Added
-- **全模块演示数据补全设计文档** (`/docs/plans/2026-01-19-demo-data-full-coverage-design.md`)
 - **穿透联查功能** (`RelationshipQueryView` + `SimpleGraphView` + `ThreeColumnLayout`)
   - 输入档号查询档案关联关系图谱
   - **三栏布局**：左侧上游数据、中心核心单据、右侧下游数据
@@ -34,7 +33,6 @@
   - 后端强制路由机制，根据全宗上下文自动选择账套
 
 ### Changed
-- **更新 plans 目录文件清单** (`/docs/plans/README.md`)
 - **组织管理重构** - 简化组织架构管理
   - 删除独立的 `Org` 实体，合并到 `SysEntity` 中
   - 删除 `OrgService`，功能迁移到 `EntityService`
