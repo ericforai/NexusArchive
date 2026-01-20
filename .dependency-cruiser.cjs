@@ -166,7 +166,8 @@ module.exports = {
         // 排除测试文件和 __tests__ 目录
         pathNot: [
           '[.](?:spec|test)[.](?:js|mjs|cjs|jsx|ts|mts|cts|tsx)$',
-          '^src/__tests__/'
+          '^src/__tests__/',
+          '^src/vite-env\\.d\\.ts$'
         ]
       },
       to: {

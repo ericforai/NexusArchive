@@ -23,6 +23,7 @@
 | `ComplianceReportView.tsx` | 合规报告页面 |
 | `components/` | 子组件 | 页面局部组件 |
 | `CreateOriginalVoucherDialog.tsx` | 原始凭证创建弹窗 |
+| `FinancialReportDetailDrawer.tsx` | 财务报告预览抽屉（使用预览组件公共 API） |
 | `hooks/` | Hooks | 页面级 Hook |
 | `index.ts` | 模块入口 | 统一导出 |
 | `LinkModal.tsx` | 关联凭证弹窗 |
