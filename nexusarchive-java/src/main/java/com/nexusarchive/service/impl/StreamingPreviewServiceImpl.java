@@ -182,15 +182,19 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
                                  HttpServletResponse response, String traceId) {
         try {
             // 1. 获取文件路径
-            String relativePath = filePathResolver.resolveArchiveFilePath(archive.getId());
+            String relativePath = filePathResolver.resolveArchiveFilePath(archive.getArchiveCode());
+            log.debug("[handleStreamMode] relativePath={}", relativePath);
             if (relativePath == null) {
-                log.warn("档案文件不存在: archiveId={}", archive.getId());
+                log.warn("[handleStreamMode] 档案文件不存在: archiveId={}", archive.getId());
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
             java.io.File file = fileStorageService.getFile(relativePath);
+            log.debug("[handleStreamMode] file={}, exists={}", file, file != null ? file.exists() : "null");
             if (file == null || !file.exists()) {
+                log.error("[handleStreamMode] 文件不存在: relativePath={}, file={}, exists={}",
+                    relativePath, file, file != null ? file.exists() : "N/A");
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }

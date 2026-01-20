@@ -149,20 +149,30 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
      */
     @Override
     public Archive getArchiveById(String idOrCode) {
+        log.debug("[getArchiveById] 查询档案: idOrCode={}", idOrCode);
+
         Archive archive = archiveMapper.selectById(idOrCode);
+        log.debug("[getArchiveById] selectById 结果: {}", archive != null ? "FOUND" : "NULL");
+
         if (archive == null) {
             // Fallback: try archive_code lookup (supporting human-readable codes in URLs)
-            QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-            wrapper.eq("archive_code", idOrCode);
+            log.debug("[getArchiveById] 尝试通过 archive_code 查询...");
+            LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Archive::getArchiveCode, idOrCode);
             archive = archiveMapper.selectOne(wrapper);
+            log.debug("[getArchiveById] archive_code 查询结果: {}", archive != null ? "FOUND" : "NULL");
         }
 
         if (archive == null) {
+            log.error("[getArchiveById] 档案不存在: idOrCode={}", idOrCode);
             throw new BusinessException(404, "档案不存在: " + idOrCode);
         }
 
+        log.debug("[getArchiveById] 档案查询成功: id={}, archiveCode={}", archive.getId(), archive.getArchiveCode());
+
         DataScopeContext scope = dataScopeService.resolve();
         if (!dataScopeService.canAccessArchive(archive, scope)) {
+            log.warn("[getArchiveById] 权限不足: userId={}, archiveId={}", scope.userId(), archive.getId());
             throw new BusinessException(ErrorCode.NO_PERMISSION_TO_VIEW_ARCHIVE);
         }
         return archive;

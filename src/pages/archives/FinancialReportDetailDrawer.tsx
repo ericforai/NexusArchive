@@ -16,6 +16,8 @@ import type { DrawerProps } from 'antd';
 import type { GenericRow } from '../../types';
 import { SmartFilePreview } from '../../components/preview';
 
+console.log("%c🔴 FinancialReportDetailDrawer.tsx LOADED - 2025-01-20 11:30", "background: red; color: white; font-size: 20px;");
+
 interface FinancialReportDetailDrawerProps {
   open: boolean;
   onClose: () => void;
