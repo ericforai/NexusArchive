@@ -18,6 +18,7 @@
 set -e
 
 # 颜色输出
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
@@ -140,6 +141,19 @@ done
 # ==============================================================================
 echo -e ""
 echo -e "${YELLOW}⚛️  启动前端...${NC}"
+
+# 检查端口 15175 是否被意外占用（防止僵尸进程）
+if lsof -i :15175 -t >/dev/null; then
+    # 如果有 PID 文件且对应进程在运行，那是正常的
+    if [ -f .frontend.pid ] && ps -p $(cat .frontend.pid) > /dev/null 2>&1; then
+        echo -e "${YELLOW}ℹ️  前端端口正常活跃中${NC}"
+    else
+        ZOMBIE_PID=$(lsof -i :15175 -t)
+        echo -e "${RED}❌ 致命错误：端口 15175 被不明进程 (PID: $ZOMBIE_PID) 占用！${NC}"
+        echo -e "${YELLOW}建议运行: kill -9 $ZOMBIE_PID${NC}"
+        exit 1
+    fi
+fi
 
 # 检查是否已有进程在运行
 if [ -f .frontend.pid ]; then

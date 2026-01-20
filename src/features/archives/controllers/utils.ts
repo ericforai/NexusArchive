@@ -117,19 +117,41 @@ export const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
     }
 
     if (subTitle === '财务报告') {
+        // 解析 customMetadata 获取报告类型等字段
+        let customMeta: any = {};
+        try {
+            if (archive?.customMetadata) {
+                customMeta = typeof archive.customMetadata === 'string'
+                    ? JSON.parse(archive.customMetadata)
+                    : archive.customMetadata;
+            }
+        } catch (e) {
+            console.warn('Failed to parse custom metadata for financial report', e);
+        }
+
         return {
             id: archive?.id,
             code: archive?.archiveCode,
-            reportNo: archive?.archiveCode,
+            reportNo: customMeta?.reportNo || archive?.archiveCode,
             archivalCode: archive?.archiveCode,
-            type: categoryLabel,
+            type: customMeta?.reportType || 'MONTHLY', // 从 customMetadata 获取报告类型
             year: archive?.fiscalYear,
-            unit: archive?.orgName,
+            unit: customMeta?.unit || archive?.orgName,
             title: getSafeDisplayValue(archive?.title),
-            period: archive?.fiscalPeriod || '',
+            period: customMeta?.period || archive?.fiscalPeriod || '',
             date,
             status: statusText,
-            rawStatus: archive?.preArchiveStatus || archive?.status
+            rawStatus: archive?.preArchiveStatus || archive?.status,
+            amount: archive?.amount,
+            summary: archive?.summary,
+            archiveCode: archive?.archiveCode,
+            retentionPeriod: archive?.retentionPeriod,
+            location: archive?.location,
+            createdAt: archive?.createdTime,
+            creator: archive?.creator,
+            docDate: archive?.docDate,
+            // 保留 customMetadata 供其他用途
+            customMetadata: customMeta
         };
     }
 

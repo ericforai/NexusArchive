@@ -126,12 +126,11 @@ export const DestructionApprovalPage: React.FC = () => {
     };
 
     // 批量确认
-    const handleBatchConfirm = async (comment: string, skipIds: number[]) => {
+    const handleBatchConfirm = async (comment: string, skipIds: string[]) => {
         setBatchProcessing(true);
 
-        // 转换 skipIds (number) 回 string IDs
         const selectedArray = Array.from(selectedIds);
-        const skipIdSet = new Set(skipIds.map(id => selectedArray[id] || ''));
+        const skipIdSet = new Set(skipIds);
         const finalIds = selectedArray.filter(id => !skipIdSet.has(id));
 
         try {
@@ -186,7 +185,7 @@ export const DestructionApprovalPage: React.FC = () => {
         return Array.from(selectedIds).map((id, index) => {
             const destruction = destructions.find(d => d.id === id);
             return {
-                id: index,
+                id: destruction ? destruction.id : id,
                 title: destruction ? `申请 #${destruction.id} (${destruction.applicantName})` : `申请 #${id}`,
             };
         });
@@ -494,7 +493,7 @@ export const DestructionApprovalPage: React.FC = () => {
                 successCount={batchResult?.success ?? 0}
                 failedCount={batchResult?.failed ?? 0}
                 errors={batchResult?.errors.map(e => ({
-                    id: parseInt(e.id) || 0,
+                    id: e.id,
                     reason: e.reason,
                 })) ?? []}
                 onClose={() => setShowResultModal(false)}

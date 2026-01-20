@@ -151,7 +151,7 @@ mfa:
 app:
   security:
     cors:
-      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:15175,http://localhost:3000,http://localhost:5173,http://localhost:4173}
+      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:15175,http://localhost:3000,http://localhost:5173,http://localhost:4173,http://115.190.237.184,https://www.digivoucher.cn,https://digivoucher.cn}
   scan:
     upload-path: ${APP_SCAN_UPLOAD_PATH:/tmp/nexusarchive/scan}  # 扫描工作区文件上传路径
   debug:

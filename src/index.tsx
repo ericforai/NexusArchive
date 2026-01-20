@@ -29,65 +29,8 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-// 运行时多实例防御监测
-if (typeof window !== 'undefined') {
-  const win = window as any;
-  win.__REACT_LOG__ = win.__REACT_LOG__ || [];
-  if (!win.__REACT_ROOT_REF__) {
-    win.__REACT_ROOT_REF__ = React;
-    win.__REACT_ROOT_USESTATE__ = React.useState;
-  }
-  const dispatcher =
-    (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-      ?.ReactCurrentDispatcher?.current ?? null;
-  win.__REACT_LOG__.push({
-    version: React.version,
-    time: new Date().toISOString(),
-    module: import.meta.url,
-    sameRoot: win.__REACT_ROOT_REF__ === React,
-    dispatcher: dispatcher ? 'set' : 'null',
-  });
-  console.log(`%c[Runtime] React v${React.version} | ReactDOM Ready`, 'color: #7c3aed; font-weight: bold; background: #f3e8ff; padding: 2px 5px; border-radius: 4px;');
-
-  if (win.__REACT_LOG__.length > 1) {
-    console.error('%c[Runtime] Multiple React instances detected! This will cause Hooks errors.', 'color: #ef4444; font-weight: bold; font-size: 14px;');
-  }
-}
-
-// HMR 状态清理：防止热更新时 Context 丢失
-if (import.meta.env.DEV && typeof window !== 'undefined') {
-  const win = window as any;
-
-  // 检测 HMR 循环 - 如果刷新次数过多，强制清理
-  const currentRefreshCount = (win.__HMR_REFRESH_COUNT__ || 0) + 1;
-  win.__HMR_REFRESH_COUNT__ = currentRefreshCount;
-
-  if (currentRefreshCount > 10) {
-    console.warn('%c[HMR] Excessive refresh detected, resetting...', 'color: #ef4444; font-weight: bold;');
-    win.__HMR_REFRESH_COUNT__ = 0;
-    // 清理所有可能的缓存
-    try {
-      if (win.__ANTD_MESSAGE_INSTANCE__) {
-        win.__ANTD_MESSAGE_INSTANCE__ = null;
-      }
-      // 清理 React Query 缓存（如果存在）
-      const queryCache = win.__REACT_QUERY_CLIENT__;
-      if (queryCache && typeof queryCache.clear === 'function') {
-        queryCache.clear();
-      }
-    } catch (e) {
-      console.warn('[HMR] Cache cleanup failed:', e);
-    }
-  }
-
-  // 清理可能残留的 antd message 实例
-  win.__ANTD_MESSAGE_INSTANCE__ = null;
-
-  console.log(`%c[HMR] Refresh count: ${currentRefreshCount}`, 'color: #8b5cf6; font-size: 12px;');
-}
-
-console.log('%c[APP] NexusArchive v2.0.6 - BUILD 20260108-HMR-FIX', 'color: #0ea5e9; font-weight: bold; font-size: 14px;');
-console.log('%c[APP] Context stability fixes applied', 'color: #10b981; font-weight: bold;');
+// 移除所有自定义运行时检测
+console.log('%c[APP] NexusArchive v2.0.7 - CLEAN START', 'color: #0ea5e9; font-weight: bold; font-size: 14px;');
 
 const root = ReactDOM.createRoot(rootElement);
 

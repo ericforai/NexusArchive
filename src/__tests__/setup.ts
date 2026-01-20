@@ -102,6 +102,14 @@ vi.mock('antd', () => {
         );
     };
 
+    // Drawer mock that renders title as text content
+    const DrawerMock = ({ children, title, ...props }: any) => {
+        return React.createElement('div', { 'data-mock': 'Drawer', ...props },
+            title ? React.createElement('div', { className: 'drawer-title' }, title) : null,
+            children
+        );
+    };
+
     // Alert mock that renders message and description as text content
     const AlertMock = ({ message, description, children, ...props }: any) => {
         return React.createElement('div', { 'data-mock': 'Alert', ...props },
@@ -154,8 +162,26 @@ vi.mock('antd', () => {
     const FormMock: any = createComponentMock('Form');
     FormMock.Item = createComponentMock('Form.Item');
 
-    const InputMock: any = createComponentMock('Input');
-    InputMock.TextArea = createComponentMock('Input.TextArea');
+    const InputMock: any = ({ children, ...props }: any) => {
+        return React.createElement('input', { 'data-mock': 'Input', ...props }, children);
+    };
+    InputMock.displayName = 'Input';
+
+    InputMock.TextArea = ({ children, ...props }: any) => {
+        return React.createElement('textarea', { 'data-mock': 'Input.TextArea', ...props }, children);
+    };
+    InputMock.TextArea.displayName = 'Input.TextArea';
+
+    InputMock.Password = ({ children, ...props }: any) => {
+        return React.createElement('input', { 'data-mock': 'Input.Password', type: 'password', ...props }, children);
+    };
+    InputMock.Password.displayName = 'Input.Password';
+
+    const SelectMock: any = createComponentMock('Select');
+    SelectMock.Option = createComponentMock('Select.Option');
+
+    const SpaceMock: any = createComponentMock('Space');
+    SpaceMock.Compact = createComponentMock('Space.Compact');
 
     const DatePickerMock: any = createComponentMock('DatePicker');
     DatePickerMock.RangePicker = createComponentMock('RangePicker');
@@ -165,13 +191,13 @@ vi.mock('antd', () => {
         // Mock commonly used antd components
         Button: createComponentMock('Button'),
         Table: createComponentMock('Table'),
-        Drawer: createComponentMock('Drawer'),
+        Drawer: DrawerMock,
         Modal: ModalMock,
         Form: FormMock,
         Input: InputMock,
-        Select: createComponentMock('Select'),
+        Select: SelectMock,
         DatePicker: DatePickerMock,
-        Space: createComponentMock('Space'),
+        Space: SpaceMock,
         Divider: createComponentMock('Divider'),
         Tag: createComponentMock('Tag'),
         Badge: createComponentMock('Badge'),

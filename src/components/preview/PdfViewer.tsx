@@ -5,8 +5,9 @@
 import React, { useRef, useState } from 'react';
 import { Page, Document, pdfjs } from 'react-pdf';
 
-// 配置 PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// 配置 PDF.js worker - 使用 ?url 获取实际的 URL 字符串
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 export interface PdfViewerProps {
   url: string;

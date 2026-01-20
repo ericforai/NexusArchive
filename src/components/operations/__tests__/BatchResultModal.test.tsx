@@ -12,8 +12,8 @@ describe('BatchResultModal', () => {
     successCount: 95,
     failedCount: 5,
     errors: [
-      { id: 1, reason: '状态不允许审批' },
-      { id: 2, reason: '权限不足' },
+      { id: '1', reason: '状态不允许审批' },
+      { id: '2', reason: '权限不足' },
     ],
     onClose: vi.fn(),
     onRetry: vi.fn(),
@@ -102,7 +102,7 @@ describe('BatchResultModal', () => {
       const retryButton = screen.getByText('重试失败项');
       fireEvent.click(retryButton);
       await waitFor(() => {
-        expect(defaultProps.onRetry).toHaveBeenCalledWith([1, 2]);
+        expect(defaultProps.onRetry).toHaveBeenCalledWith(['1', '2']);
       });
     });
 
@@ -200,7 +200,7 @@ describe('BatchResultModal', () => {
     it('应该处理单个错误', () => {
       const props = {
         ...defaultProps,
-        errors: [{ id: 1, reason: 'Single error' }],
+        errors: [{ id: '1', reason: 'Single error' }],
         failedCount: 1,
       };
       render(<BatchResultModal {...props} />);
@@ -211,7 +211,7 @@ describe('BatchResultModal', () => {
 
     it('应该处理许多错误（可滚动列表）', () => {
       const manyErrors = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
+        id: String(i + 1),
         reason: `Error ${i + 1}`,
       }));
       const props = { ...defaultProps, errors: manyErrors, failedCount: 50 };
@@ -316,7 +316,7 @@ describe('BatchResultModal', () => {
 
       // 点击重试
       fireEvent.click(screen.getByText('重试失败项'));
-      expect(onRetry).toHaveBeenCalledWith([1, 2]);
+      expect(onRetry).toHaveBeenCalledWith(['1', '2']);
 
       // 关闭弹窗
       fireEvent.click(screen.getByText('关闭'));
@@ -334,7 +334,7 @@ describe('BatchResultModal', () => {
 
   describe('异步回调', () => {
     it('应该处理异步 onRetry 回调', async () => {
-      const onRetry = vi.fn(async (_ids: number[]) => {
+      const onRetry = vi.fn(async (_ids: string[]) => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       });
 
@@ -345,7 +345,7 @@ describe('BatchResultModal', () => {
 
       await waitFor(() => {
         expect(onRetry).toHaveBeenCalledTimes(1);
-        expect(onRetry).toHaveBeenCalledWith([1, 2]);
+        expect(onRetry).toHaveBeenCalledWith(['1', '2']);
       });
     });
 

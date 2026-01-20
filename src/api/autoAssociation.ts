@@ -31,7 +31,7 @@ export interface RelationGraphNode {
     id: string;
     code?: string;
     name?: string;
-    type: 'contract' | 'invoice' | 'voucher' | 'receipt' | 'report' | 'ledger' | 'other';
+    type: 'contract' | 'invoice' | 'voucher' | 'receipt' | 'report' | 'ledger' | 'payment' | 'reimbursement' | 'application' | 'other';
     amount?: string;
     date?: string;
     status?: string;

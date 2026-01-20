@@ -21,7 +21,6 @@ import java.util.List;
  * 档案响应 DTO
  * <p>
  * 从 Archive Entity 转换，隐藏以下敏感/大字段：
- * - customMetadata: 自定义元数据（可能包含敏感信息）
  * - standardMetadata: 标准元数据（大JSON字段）
  * - fixityValue: 哈希值（内部校验用）
  * - deleted: 逻辑删除标记
@@ -221,6 +220,12 @@ public class ArchiveResponse {
     private Integer fileCount;
 
     /**
+     * 自定义元数据 (JSON) - 包含会计分录等详情
+     */
+    @Schema(description = "自定义元数据(会计分录)", example = "[{\"id\":\"1\"...}]")
+    private String customMetadata;
+
+    /**
      * 关联文件列表 (简化信息)
      */
     @Schema(description = "关联文件列表")
@@ -262,6 +267,7 @@ public class ArchiveResponse {
                 .matchScore(entity.getMatchScore())
                 .destructionStatus(entity.getDestructionStatus())
                 .matchMethod(entity.getMatchMethod())
+                .customMetadata(entity.getCustomMetadata())
                 .build();
     }
 

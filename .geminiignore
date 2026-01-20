@@ -1,0 +1,25 @@
+# 基础过滤（直接拷贝你 gitignore 的核心部分）
+node_modules/
+**/target/
+dist/
+build/
+.cache/
+logs/
+*.log
+
+# 重点打击：PDF 和 压缩包（这是你那 1600 万 Token 的主要来源）
+**/*.pdf
+**/*.tar.gz
+**/*.zip
+**/*.bin
+
+# 排除备份和数据目录
+backup*/
+backups/
+nexusarchive-java/data/
+uploads/
+docs/demo数据/
+
+# 排除编译产物
+BOOT-INF/
+**/*.class

@@ -82,8 +82,8 @@ export interface BatchTableProps {
     batchAction: 'approve' | 'reject';
     batchResult: { success: number; failed: number; errors: any[] };
     selectedRecords: any[];
-    onBatchConfirm: (comment: string, skipIds: number[]) => Promise<void>;
-    onBatchRetry: (failedIds: number[]) => Promise<void>;
+    onBatchConfirm: (comment: string, skipIds: string[]) => Promise<void>;
+    onBatchRetry: (failedIds: string[]) => Promise<void>;
     onCloseResultDialog: () => void;
 
     // 详情弹窗数据

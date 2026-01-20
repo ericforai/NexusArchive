@@ -11,9 +11,9 @@ describe('BatchApprovalDialog', () => {
   const mockOnCancel = vi.fn();
 
   const mockRecords: ApprovalRecord[] = [
-    { id: 1, title: '记录1', code: 'CODE001' },
-    { id: 2, title: '记录2', code: 'CODE002' },
-    { id: 3, title: '记录3', code: 'CODE003' },
+    { id: '1', title: '记录1', code: 'CODE001' },
+    { id: '2', title: '记录2', code: 'CODE002' },
+    { id: '3', title: '记录3', code: 'CODE003' },
   ];
 
   beforeEach(() => {
@@ -219,7 +219,7 @@ describe('BatchApprovalDialog', () => {
       fireEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(mockOnConfirm).toHaveBeenCalledWith('批量审批', [1]);
+        expect(mockOnConfirm).toHaveBeenCalledWith('批量审批', ['1']);
       });
     });
 
@@ -275,7 +275,7 @@ describe('BatchApprovalDialog', () => {
   describe('Threshold Warning', () => {
     it('should show warning when count exceeds threshold', () => {
       const largeRecords = Array.from({ length: CONFIRM_THRESHOLD + 1 }, (_, i) => ({
-        id: i + 1,
+        id: String(i + 1),
         title: `记录${i + 1}`,
       }));
 
@@ -297,7 +297,7 @@ describe('BatchApprovalDialog', () => {
 
     it('should display record list preview (max 5 records)', () => {
       const largeRecords = Array.from({ length: CONFIRM_THRESHOLD + 1 }, (_, i) => ({
-        id: i + 1,
+        id: String(i + 1),
         title: `记录${i + 1}`,
       }));
 
@@ -483,7 +483,7 @@ describe('BatchApprovalDialog', () => {
     });
 
     it('should handle records without title or code', () => {
-      const minimalRecords: ApprovalRecord[] = [{ id: 1 }];
+      const minimalRecords: ApprovalRecord[] = [{ id: '1' }];
 
       render(
         <BatchApprovalDialog

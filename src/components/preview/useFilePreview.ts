@@ -106,6 +106,7 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
         result = await previewApi.getPoolPreview(fileId!);
       } else {
         // 已归档档案模式：使用 archiveId 调用 archive preview API
+        console.log("[useFilePreview] archiveId:", archiveId, "row data:", { archiveId, fileId, mode });
         const requestParams: PreviewRequest = {
           archiveId: archiveId!,
           fileId,

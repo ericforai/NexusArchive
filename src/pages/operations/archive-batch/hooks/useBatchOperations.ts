@@ -25,10 +25,10 @@ export interface UseBatchOperationsReturn {
     batchProcessing: boolean;
 
     // 批量选择
-    selectedIds: Set<number>;
+    selectedIds: Set<string>;
     rowSelection: any;
     clearSelection: () => void;
-    selectAll: (allIds: number[]) => { success: boolean; reason?: string };
+    selectAll: (allIds: string[]) => { success: boolean; reason?: string };
     getSelectedCount: () => number;
 
     // 选中记录列表
@@ -39,9 +39,9 @@ export interface UseBatchOperationsReturn {
     setBatchResultOpen: (open: boolean) => void;
     handleBatchApprove: () => void;
     handleBatchReject: () => void;
-    handleBatchConfirm: (comment: string, skipIds: number[]) => Promise<void>;
-    handleBatchRetry: (failedIds: number[]) => Promise<void>;
-    handleSelectAll: (allIds: number[]) => void;
+    handleBatchConfirm: (comment: string, skipIds: string[]) => Promise<void>;
+    handleBatchRetry: (failedIds: string[]) => Promise<void>;
+    handleSelectAll: (allIds: string[]) => void;
 }
 
 /**
@@ -91,7 +91,7 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
     /**
      * 批量操作确认
      */
-    const handleBatchConfirm = useCallback(async (comment: string, skipIds: number[]) => {
+    const handleBatchConfirm = useCallback(async (comment: string, skipIds: string[]) => {
         const selectedIdArray = Array.from(selectedIds).filter(id => !skipIds.includes(id));
 
         // 添加边界检查
@@ -108,8 +108,13 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
         try {
             setBatchProcessing(true);
 
+            // API expects number[], so we convert string[] back to number[] if necessary,
+            // or we need to check if API supports string[].
+            // Assuming API expects numbers based on previous code.
+            const batchIds = selectedIdArray.map(id => Number(id));
+
             const request = {
-                batchIds: selectedIdArray,
+                batchIds: batchIds,
                 operatorId: user?.id || '',
                 operatorName: user?.realName || user?.username || '',
                 comment: comment || (batchAction === 'approve' ? '批量批准' : '批量拒绝')
@@ -122,7 +127,7 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
             setBatchResult({
                 success: result.success,
                 failed: result.failed,
-                errors: result.errors || []
+                errors: (result.errors || []).map(e => ({...e, id: String(e.id)}))
             });
 
             setBatchDialogOpen(false);
@@ -146,12 +151,12 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
     /**
      * 批量操作重试
      */
-    const handleBatchRetry = useCallback(async (failedIds: number[]) => {
+    const handleBatchRetry = useCallback(async (failedIds: string[]) => {
         try {
             setBatchProcessing(true);
 
             const request = {
-                batchIds: failedIds,
+                batchIds: failedIds.map(id => Number(id)),
                 operatorId: user?.id || '',
                 operatorName: user?.realName || user?.username || '',
                 comment: batchAction === 'approve' ? '重试批量批准' : '重试批量拒绝'
@@ -164,7 +169,7 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
             setBatchResult({
                 success: result.success,
                 failed: result.failed,
-                errors: result.errors || []
+                errors: (result.errors || []).map(e => ({...e, id: String(e.id)}))
             });
 
             if (result.failed === 0) {
@@ -185,7 +190,7 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
     /**
      * 全选处理
      */
-    const handleSelectAll = useCallback((allIds: number[]) => {
+    const handleSelectAll = useCallback((allIds: string[]) => {
         const result = selectAll(allIds);
         if (!result.success) {
             message.warning(result.reason || '全选失败');
@@ -197,9 +202,9 @@ export function useBatchOperations(batches: ArchiveBatch[]): UseBatchOperationsR
      */
     const selectedRecords = useMemo<ApprovalRecord[]>(() => {
         return batches
-            .filter(b => selectedIds.has(b.id))
+            .filter(b => selectedIds.has(String(b.id)))
             .map(b => ({
-                id: b.id,
+                id: String(b.id),
                 title: b.batchNo,
                 code: b.batchNo
             }));

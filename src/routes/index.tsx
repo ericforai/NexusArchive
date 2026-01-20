@@ -20,8 +20,8 @@ import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { ActivationPage } from '../pages/ActivationPage';
 
-// ProductWebsite 静态导入测试
-import ProductWebsite from '../pages/ProductWebsite';
+// ProductWebsite 使用懒加载避免 React 实例问题
+const ProductWebsite = lazy(() => import('../pages/product-website'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -149,7 +149,7 @@ function withSuspense<P extends object>(
 ): React.ReactElement {
     return (
         <Suspense fallback={<LoadingFallback />}>
-            <Component {...(props as P)} />
+            <Component {...(props as any)} />
         </Suspense>
     );
 }
@@ -159,7 +159,7 @@ function withSuspense<P extends object>(
  */
 export const routes: RouteObject[] = [
     // 根路径显示产品首页（公开访问）
-    { path: '/', element: <ProductWebsite /> },
+    { path: '/', element: withSuspense(ProductWebsite) },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },

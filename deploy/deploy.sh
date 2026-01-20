@@ -8,7 +8,7 @@ set -e
 
 # Configuration
 SERVER_USER="root" # Change this to your server user
-SERVER_HOST="180.184.54.214" # Volcano Cloud IP
+SERVER_HOST="115.190.237.184" # 火山云服务器 IP
 REMOTE_DIR="/opt/nexusarchive"
 
 # Colors

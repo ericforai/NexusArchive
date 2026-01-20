@@ -79,12 +79,24 @@ public class PreviewFilePathResolver {
      * 从档案内容表解析文件路径
      */
     private String resolveFromArcFileContent(String archiveId) {
+        // 先尝试通过 item_id 查找
         List<ArcFileContent> files = arcFileContentMapper.selectList(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
                 .eq(ArcFileContent::getItemId, archiveId)
                 .orderByAsc(ArcFileContent::getCreatedTime)
                 .last("LIMIT 1")
         );
+
+        if (files.isEmpty() || files.get(0).getStoragePath() == null) {
+            // 如果 item_id 查找失败，尝试通过 archival_code 查找
+            log.debug("item_id 查找失败，尝试通过 archival_code 查找: archiveId={}", archiveId);
+            files = arcFileContentMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent>()
+                    .eq(ArcFileContent::getArchivalCode, archiveId)
+                    .orderByAsc(ArcFileContent::getCreatedTime)
+                    .last("LIMIT 1")
+            );
+        }
 
         if (!files.isEmpty() && files.get(0).getStoragePath() != null) {
             return files.get(0).getStoragePath();

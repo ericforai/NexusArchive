@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useArchiveListController, PoolStatusFilter, useSmartMatching } from '../../features/archives';
 import { STATUS_CONFIG, SimplifiedPreArchiveStatus, resolveStatus } from '@/config/pool-columns.config';
 import ArchiveDetailDrawer from './ArchiveDetailDrawer';
+import FinancialReportDetailDrawer from './FinancialReportDetailDrawer';
 import MatchPreviewModal from './MatchPreviewModal';
 import { TablePreviewAction } from '../../components/table';
 import { formatVoucherNumber } from '../../utils/voucherNumber';
@@ -494,26 +495,27 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
         )}
       </div>
 
-      {/* Archive Detail Drawer */}
-      {/* DIAGNOSTIC: Log drawer render attempt */}
-      {(() => {
-        console.log('[ArchiveListView] About to render ArchiveDetailDrawer with:', {
-          isViewModalOpen,
-          viewRowId: viewRow?.id,
-          viewRowCode: viewRow?.code
-        });
-        return null;
-      })()}
-      <ArchiveDetailDrawer
-        key={viewRow?.id || 'archive-detail'}
-        open={isViewModalOpen}
-        onClose={closeViewModal}
-        row={viewRow}
-        config={mode.config}
-        isPoolView={mode.isPoolView}
-        onAipExport={archiveActions.handleAipExport}
-        isExporting={archiveActions.isExporting}
-      />
+      {/* Detail Drawer - 根据类型选择不同的抽屉组件 */}
+      {/* 财务报告使用专门的抽屉组件，其他使用凭证抽屉组件 */}
+      {mode.subTitle === '财务报告' ? (
+        <FinancialReportDetailDrawer
+          key={`report-${viewRow?.id || 'detail'}`}
+          open={isViewModalOpen}
+          onClose={closeViewModal}
+          row={viewRow}
+        />
+      ) : (
+        <ArchiveDetailDrawer
+          key={viewRow?.id || 'archive-detail'}
+          open={isViewModalOpen}
+          onClose={closeViewModal}
+          row={viewRow}
+          config={mode.config}
+          isPoolView={mode.isPoolView}
+          onAipExport={archiveActions.handleAipExport}
+          isExporting={archiveActions.isExporting}
+        />
+      )}
 
       {/* 匹配规则配置弹窗 */}
       {isRuleModalOpen && createPortal(

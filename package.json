@@ -36,8 +36,10 @@
     "@types/d3-force": "^3.0.10",
     "@xyflow/react": "^12.9.3",
     "antd": "^6.1.1",
+    "axios": "^1.13.2",
     "d3-force": "^3.0.0",
     "lucide-react": "^0.554.0",
+    "pdfjs-dist": "^4.8.69",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -45,8 +47,7 @@
     "react-pdf": "^9.2.1",
     "react-router-dom": "^6.28.0",
     "recharts": "^3.4.1",
-    "zustand": "^5.0.9",
-    "axios": "^1.13.2"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

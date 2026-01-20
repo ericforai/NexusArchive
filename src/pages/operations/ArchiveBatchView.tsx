@@ -120,13 +120,13 @@ const ArchiveBatchView: React.FC = () => {
     }, [handleCreate, currentFonds?.id, refresh]);
 
     // 审批确认
-    const handleApprovalConfirm = useCallback(async (comment: string, skipIds: number[]) => {
+    const handleApprovalConfirm = useCallback(async (comment: string, skipIds: string[]) => {
         await handleBatchConfirm(comment, skipIds);
         refresh();
     }, [handleBatchConfirm, refresh]);
 
     // 批量操作重试
-    const handleBatchRetryConfirm = useCallback(async (failedIds: number[]) => {
+    const handleBatchRetryConfirm = useCallback(async (failedIds: string[]) => {
         await handleBatchRetry(failedIds);
         refresh();
     }, [handleBatchRetry, refresh]);
@@ -168,7 +168,7 @@ const ArchiveBatchView: React.FC = () => {
                 onArchive={handleArchive}
                 onBatchApprove={handleBatchApprove}
                 onBatchReject={handleBatchReject}
-                onSelectAll={() => handleSelectAll(batches.map(b => b.id))}
+                onSelectAll={() => handleSelectAll(batches.map(b => String(b.id)))}
                 onClearSelection={clearSelection}
                 batchProcessing={batchProcessing}
                 batchDialogOpen={batchDialogOpen}

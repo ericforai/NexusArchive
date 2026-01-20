@@ -191,23 +191,34 @@ export function getColumnStates(columnId: string): SimplifiedPreArchiveStatus[] 
 /**
  * 旧状态代码映射到新简化状态的映射表
  * 用于统一处理后端可能返回的历史状态值
+ * 同时支持大写和小写状态值（数据库实际存储为小写）
  */
 export const LEGACY_STATUS_MAP: Record<string, SimplifiedPreArchiveStatus> = {
   // 待检测
   'PENDING_CHECK': SimplifiedPreArchiveStatus.PENDING_CHECK,
+  'pending_check': SimplifiedPreArchiveStatus.PENDING_CHECK,
   // 待处理
   'CHECK_FAILED': SimplifiedPreArchiveStatus.NEEDS_ACTION,
+  'check_failed': SimplifiedPreArchiveStatus.NEEDS_ACTION,
   'PENDING_METADATA': SimplifiedPreArchiveStatus.NEEDS_ACTION,
+  'pending_metadata': SimplifiedPreArchiveStatus.NEEDS_ACTION,
   'NEEDS_ACTION': SimplifiedPreArchiveStatus.NEEDS_ACTION,
+  'needs_action': SimplifiedPreArchiveStatus.NEEDS_ACTION,
   // 可匹配
   'READY_TO_MATCH': SimplifiedPreArchiveStatus.READY_TO_MATCH,
-  'MATCHED': SimplifiedPreArchiveStatus.READY_TO_MATCH, // 实际上匹配完了可能也是这个状态，或者流转到下一步
+  'ready_to_match': SimplifiedPreArchiveStatus.READY_TO_MATCH,
+  'MATCHED': SimplifiedPreArchiveStatus.READY_TO_MATCH,
+  'matched': SimplifiedPreArchiveStatus.READY_TO_MATCH,
   // 可归档
   'PENDING_ARCHIVE': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
+  'pending_archive': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
   'READY_TO_ARCHIVE': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
+  'ready_to_archive': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
   // 已完成
   'ARCHIVED': SimplifiedPreArchiveStatus.COMPLETED,
-  'COMPLETED': SimplifiedPreArchiveStatus.COMPLETED
+  'archived': SimplifiedPreArchiveStatus.COMPLETED,
+  'COMPLETED': SimplifiedPreArchiveStatus.COMPLETED,
+  'completed': SimplifiedPreArchiveStatus.COMPLETED
 };
 
 /**
