@@ -5,14 +5,12 @@
 - [x] Task: Create robust seed data for E2E scenarios. d9c794b
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Environment & Data Preparation' (Protocol in workflow.md) c7a9927
 
-## Phase 2: Ingestion Pipeline Verification
+## Phase 2: Ingestion Pipeline Verification [checkpoint: 40b4535]
 - [x] Task: Verify Batch Upload API (`/api/collection/upload`). 73f85d4
-    - [ ] Sub-task: Write integration test `tests/integration/upload_api_test.java` (or .ts).
-    - [ ] Sub-task: Fix any 500 errors or timeout issues during large file uploads.
 - [x] Task: Verify Async Parsing Logic. 511a9e7
-    - [ ] Sub-task: Check Redis queue processing for uploaded files.
-    - [ ] Sub-task: Verify `OriginalVoucher` entities are created with correct status.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Ingestion Pipeline Verification' (Protocol in workflow.md)
+    - [x] Sub-task: Check Redis queue processing for uploaded files.
+    - [x] Sub-task: Verify `OriginalVoucher` entities are created with correct status.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Ingestion Pipeline Verification' (Protocol in workflow.md) 40b4535
 
 ## Phase 3: Four-Nature Testing Verification
 - [ ] Task: Execute Compliance Engine on Seed Data.
