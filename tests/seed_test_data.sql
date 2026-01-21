@@ -13,7 +13,7 @@ INSERT INTO collection_batch (
     archival_category, source_channel, status, total_files, uploaded_files, 
     created_by, created_time
 ) VALUES (
-    'E2E-BATCH-001', 'E2E Test Batch Happy Path', 'fonds-brjt', 'BRJT', '2025', '2025-01',
+    'E2E-BATCH-001', 'E2E Test Batch Happy Path', 'fonds-brjt', 'BR-GROUP', '2025', '2025-01',
     'VOUCHER', 'MANUAL_UPLOAD', 'VALIDATED', 2, 2,
     'admin', NOW()
 );
@@ -29,7 +29,7 @@ INSERT INTO arc_original_voucher (
     'E2E-OV-001', 'SAP-202501-0001', 'VOUCHER', 'API_SYNC', 'TRANSFER_VOUCHER',
     '2025-01-15', 1000.00, 'CNY', 'Supplier A', 'Office Supplies',
     'ZhangSan', 'LiSi', 'WangWu', 'ZhaoLiu',
-    'SAP', 'SAP-DOC-001', 'BRJT', '2025', '10Y',
+    'SAP', 'SAP-DOC-001', 'BR-GROUP', '2025', '10Y',
     'PENDING', 1, true, 'admin', NOW()
 );
 
@@ -45,12 +45,12 @@ INSERT INTO arc_original_voucher_file (
 INSERT INTO collection_batch_file (
     batch_id, file_id, original_filename, file_size_bytes, upload_status, upload_order, created_time
 )
-SELECT id, 'E2E-OVF-001', 'voucher_001.pdf', 1024, 'VALIDATED', 1, NOW() FROM collection_batch WHERE batch_no = 'E2E-BATCH-001';
+SELECT id, 'E2E-OVF-001', 'voucher_001.pdf', 1024, 'UPLOADED', 1, NOW() FROM collection_batch WHERE batch_no = 'E2E-BATCH-001';
 
 INSERT INTO collection_batch_file (
     batch_id, file_id, original_filename, file_size_bytes, upload_status, upload_order, created_time
 )
-SELECT id, 'E2E-OVF-002', 'invoice_001.xml', 512, 'VALIDATED', 2, NOW() FROM collection_batch WHERE batch_no = 'E2E-BATCH-001';
+SELECT id, 'E2E-OVF-002', 'invoice_001.xml', 512, 'UPLOADED', 2, NOW() FROM collection_batch WHERE batch_no = 'E2E-BATCH-001';
 
 -- 5. 插入 Arc File Content (不设 batch_id)
 INSERT INTO arc_file_content (
