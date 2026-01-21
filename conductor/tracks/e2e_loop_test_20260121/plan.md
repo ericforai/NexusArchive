@@ -6,7 +6,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Environment & Data Preparation' (Protocol in workflow.md) c7a9927
 
 ## Phase 2: Ingestion Pipeline Verification
-- [ ] Task: Verify Batch Upload API (`/api/collection/upload`).
+- [x] Task: Verify Batch Upload API (`/api/collection/upload`). 73f85d4
     - [ ] Sub-task: Write integration test `tests/integration/upload_api_test.java` (or .ts).
     - [ ] Sub-task: Fix any 500 errors or timeout issues during large file uploads.
 - [ ] Task: Verify Async Parsing Logic.
