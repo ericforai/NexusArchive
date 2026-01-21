@@ -9,7 +9,7 @@
 - [x] Task: Verify Batch Upload API (`/api/collection/upload`). 73f85d4
     - [ ] Sub-task: Write integration test `tests/integration/upload_api_test.java` (or .ts).
     - [ ] Sub-task: Fix any 500 errors or timeout issues during large file uploads.
-- [ ] Task: Verify Async Parsing Logic.
+- [x] Task: Verify Async Parsing Logic. 511a9e7
     - [ ] Sub-task: Check Redis queue processing for uploaded files.
     - [ ] Sub-task: Verify `OriginalVoucher` entities are created with correct status.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Ingestion Pipeline Verification' (Protocol in workflow.md)
