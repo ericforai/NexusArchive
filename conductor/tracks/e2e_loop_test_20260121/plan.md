@@ -13,7 +13,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Ingestion Pipeline Verification' (Protocol in workflow.md) 40b4535
 
 ## Phase 3: Four-Nature Testing Verification
-- [ ] Task: Execute Compliance Engine on Seed Data.
+- [x] Task: Execute Compliance Engine on Seed Data. 6aa5445
     - [ ] Sub-task: Trigger compliance check via API.
     - [ ] Sub-task: Verify `ComplianceResult` records are generated.
 - [ ] Task: Verify Detection Logic Correctness.
