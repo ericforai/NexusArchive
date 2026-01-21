@@ -1,13 +1,9 @@
 # Implementation Plan: E2E Loop Test
 
-## Phase 1: Environment & Data Preparation
+## Phase 1: Environment & Data Preparation [checkpoint: c7a9927]
 - [x] Task: Clean up test database and verify clean slate state. a5522ce
-    - [ ] Sub-task: Create cleanup script `tests/cleanup_e2e.sql`.
-    - [ ] Sub-task: Execute cleanup and verify tables are empty.
 - [x] Task: Create robust seed data for E2E scenarios. d9c794b
-    - [ ] Sub-task: Enhance `tests/seed_test_data.sql` to include a full "Happy Path" set (Voucher + XML + PDF + OFD).
-    - [ ] Sub-task: Verify seed data loads correctly via `npm run seed`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Environment & Data Preparation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Environment & Data Preparation' (Protocol in workflow.md) c7a9927
 
 ## Phase 2: Ingestion Pipeline Verification
 - [ ] Task: Verify Batch Upload API (`/api/collection/upload`).
