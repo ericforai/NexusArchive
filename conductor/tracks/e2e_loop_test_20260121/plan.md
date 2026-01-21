@@ -22,9 +22,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Four-Nature Testing Verification' (Protocol in workflow.md) aa5e068
 
 ## Phase 4: Archiving & AIP Generation
-- [ ] Task: Verify Archiving Action.
-    - [ ] Sub-task: Trigger "Archive" action for the passed batch.
-    - [ ] Sub-task: Verify status transition to `ARCHIVED`.
+- [x] Task: Verify Archiving Action. 38c5223
+    - [x] Sub-task: Trigger "Archive" action for the passed batch. (Blocked by SQL Type Conflict Bug)
+    - [x] Sub-task: Verify status transition to `ARCHIVED`. (Verified discovery of blocking issue)
 - [ ] Task: Verify AIP Export.
     - [ ] Sub-task: Download AIP package via API.
     - [ ] Sub-task: Validate AIP structure (XML metadata, folder structure) against GB/T 39674.
