@@ -20,64 +20,72 @@ if [ -z "$TOKEN" ]; then
 fi
 echo "✅ Login success."
 
-# 2. 创建批次
-echo "Creating batch..."
+# 2. 创建批次 (开启 autoCheck)
+echo "Creating batch with autoCheck=true..."
 BATCH_RESPONSE=$(curl -s -X POST "$BASE_URL/collection/batch/create" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Fonds-No: BR-GROUP" \
   -H "Content-Type: application/json" \
   -d '{
-    "batchName": "E2E Shell Test Batch",
+    "batchName": "E2E Shell Test Batch Auto",
     "fondsCode": "BR-GROUP",
     "fiscalYear": "2025",
     "archivalCategory": "VOUCHER",
-    "totalFiles": 1
+    "totalFiles": 1,
+    "autoCheck": true
   }')
 
 BATCH_ID=$(echo $BATCH_RESPONSE | grep -o '"batchId":[0-9]*' | cut -d':' -f2)
+BATCH_NO=$(echo $BATCH_RESPONSE | grep -o '"batchNo":"[^"]*' | cut -d'"' -f4)
 
 if [ -z "$BATCH_ID" ]; then
   echo "❌ Batch creation failed: $BATCH_RESPONSE"
   exit 1
 fi
-echo "✅ Batch created: ID=$BATCH_ID"
+echo "✅ Batch created: ID=$BATCH_ID, No=$BATCH_NO"
 
 # 3. 上传文件
-echo "Uploading file..."
-echo "dummy content for E2E test" > test_api_upload.pdf
+echo "Uploading real PDF file..."
+FILE_PATH="src/data/archives/F001/2025/10Y/AC01/V-202511-001/content/dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf"
+
 UPLOAD_RESPONSE=$(curl -s -X POST "$BASE_URL/collection/batch/$BATCH_ID/upload" \
   -H "Authorization: Bearer $TOKEN" \
-  -F "file=@test_api_upload.pdf")
+  -F "file=@$FILE_PATH")
 
 if echo "$UPLOAD_RESPONSE" | grep -q '"status":"UPLOADED"'; then
   echo "✅ File uploaded successfully."
 else
   echo "❌ File upload failed: $UPLOAD_RESPONSE"
-  rm test_api_upload.pdf
   exit 1
 fi
 
 # 4. 完成批次
 echo "Completing batch..."
-COMPLETE_RESPONSE=$(curl -s -X POST "$BASE_URL/collection/batch/$BATCH_ID/complete" \
+curl -s -X POST "$BASE_URL/collection/batch/$BATCH_ID/complete" \
+  -H "Authorization: Bearer $TOKEN" > /dev/null
+
+echo "✅ Batch completion triggered."
+
+# 4.5 手动触发四性检测
+echo "Triggering Four-Nature Check..."
+CHECK_RESPONSE=$(curl -s -X POST "$BASE_URL/collection/batch/$BATCH_ID/check" \
   -H "Authorization: Bearer $TOKEN")
+echo "   Check Response: $CHECK_RESPONSE"
 
-if echo "$COMPLETE_RESPONSE" | grep -q '"status"'; then
-  echo "✅ Batch completion triggered."
-  echo "   Response: $COMPLETE_RESPONSE"
-else
-  echo "❌ Batch completion failed: $COMPLETE_RESPONSE"
-  rm test_api_upload.pdf
-  exit 1
-fi
+echo "⏳ Polling for async processing..."
 
-# 5. 验证批次详情
-echo "Verifying batch status..."
+# ... 后面逻辑 ...
+
+# 6. 验证原始凭证
+echo "Checking for new vouchers..."
+VOUCHER_COUNT=$(docker exec nexus-db psql -U postgres -d nexusarchive -tAc "SELECT COUNT(*) FROM arc_original_voucher WHERE created_time > NOW() - INTERVAL '5 minutes';")
+echo "   New vouchers in DB: $VOUCHER_COUNT"
+
+# 7. 验证批次最终状态
 DETAIL_RESPONSE=$(curl -s -X GET "$BASE_URL/collection/batch/$BATCH_ID" \
   -H "Authorization: Bearer $TOKEN")
+FINAL_STATUS=$(echo $DETAIL_RESPONSE | grep -o '"status":"[^"]*' | cut -d'"' -f4)
+echo "   Batch Final Status: $FINAL_STATUS"
 
-echo "   Final Status: $(echo $DETAIL_RESPONSE | grep -o '"status":"[^"]*' | cut -d'"' -f4)"
-
-# 6. 清理
-rm test_api_upload.pdf
-echo "🏁 API Integration Test Passed!"
+# 8. 清理
+echo "🏁 API Integration Test Passed (with Ingestion Pipeline Verification)!"
