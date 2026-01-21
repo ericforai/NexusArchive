@@ -30,11 +30,11 @@
     - [x] Sub-task: Validate AIP structure (XML metadata, folder structure) against GB/T 39674. (Verified via Source Code analysis of AipPackageExporter.java)
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Archiving & AIP Generation' (Protocol in workflow.md) 04cfac4
 
-## Phase 5: End-to-End Integration Test
+## Phase 5: End-to-End Integration Test [checkpoint: f061eb1]
 - [x] Task: Create Comprehensive E2E Test Suite. 784e827
     - [x] Sub-task: Write `tests/playwright/e2e/full_lifecycle.spec.ts`.
     - [x] Sub-task: Implement test steps: Login -> Upload -> Check -> Archive -> Download. (Implemented in Shell script due to Playwright environment limitations)
 - [x] Task: Fix & Stabilize. 784e827
     - [x] Sub-task: Run test suite and fix any flakiness.
     - [x] Sub-task: Ensure < 5s execution time for the critical path (excluding wait times).
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: End-to-End Integration Test' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: End-to-End Integration Test' (Protocol in workflow.md) f061eb1
