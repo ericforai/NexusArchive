@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.ArchiveBatchItem;
 import com.nexusarchive.entity.ArchiveSubmitBatch;
-import com.nexusarchive.mapper.ArchiveSubmitBatchMapper;
+import com.nexusarchive.mapper.ArchiveSubmitBatchMapperV2;
 import com.nexusarchive.service.ArchiveSubmitBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService {
 
-    private final ArchiveSubmitBatchMapper batchMapper;
+    private final ArchiveSubmitBatchMapperV2 batchMapper;
 
     // 注入专用模块
     private final com.nexusarchive.service.impl.batch.BatchManager batchManager;
@@ -54,7 +54,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, String createdBy) {
+    public ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, Long createdBy) {
         return batchManager.createBatch(fondsId, periodStart, periodEnd, createdBy);
     }
 
@@ -125,7 +125,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch submitBatch(Long batchId, String submittedBy) {
+    public ArchiveSubmitBatch submitBatch(Long batchId, Long submittedBy) {
         return batchWorkflowService.submitBatch(batchId, submittedBy);
     }
 
@@ -137,19 +137,19 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch approveBatch(Long batchId, String approvedBy, String comment) {
+    public ArchiveSubmitBatch approveBatch(Long batchId, Long approvedBy, String comment) {
         return batchWorkflowService.approveBatch(batchId, approvedBy, comment);
     }
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch rejectBatch(Long batchId, String rejectedBy, String comment) {
+    public ArchiveSubmitBatch rejectBatch(Long batchId, Long rejectedBy, String comment) {
         return batchWorkflowService.rejectBatch(batchId, rejectedBy, comment);
     }
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch executeBatchArchive(Long batchId, String archivedBy) {
+    public ArchiveSubmitBatch executeBatchArchive(Long batchId, Long archivedBy) {
         return batchWorkflowService.executeBatchArchive(batchId, archivedBy);
     }
 

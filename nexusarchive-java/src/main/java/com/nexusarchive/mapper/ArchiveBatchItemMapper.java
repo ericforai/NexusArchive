@@ -81,5 +81,5 @@ public interface ArchiveBatchItemMapper extends BaseMapper<ArchiveBatchItem> {
         AND bi.ref_id = #{refId}
         AND b.status NOT IN ('REJECTED', 'FAILED')
     """)
-    int countVoucherInOtherBatches(@Param("refId") Long refId);
+    int countVoucherInOtherBatches(@Param("refId") String refId);
 }

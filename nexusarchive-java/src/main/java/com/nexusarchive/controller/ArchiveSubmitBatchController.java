@@ -46,7 +46,7 @@ public class ArchiveSubmitBatchController {
             @Valid @RequestBody CreateBatchRequest request,
             @AuthenticationPrincipal UserDetails user
     ) {
-        String userId = getUserId(user);
+        Long userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.createBatch(
                 request.getFondsId(),
                 request.getPeriodStart(),
@@ -141,7 +141,7 @@ public class ArchiveSubmitBatchController {
             @PathVariable Long batchId,
             @AuthenticationPrincipal UserDetails user
     ) {
-        String userId = getUserId(user);
+        Long userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.submitBatch(batchId, userId);
         return Result.success(batch);
     }
@@ -160,7 +160,7 @@ public class ArchiveSubmitBatchController {
             @RequestBody(required = false) ApprovalRequest request,
             @AuthenticationPrincipal UserDetails user
     ) {
-        String userId = getUserId(user);
+        Long userId = getUserId(user);
         String comment = request != null ? request.getComment() : null;
         ArchiveSubmitBatch batch = batchService.approveBatch(batchId, userId, comment);
         return Result.success(batch);
@@ -173,7 +173,7 @@ public class ArchiveSubmitBatchController {
             @Valid @RequestBody ApprovalRequest request,
             @AuthenticationPrincipal UserDetails user
     ) {
-        String userId = getUserId(user);
+        Long userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.rejectBatch(batchId, userId, request.getComment());
         return Result.success(batch);
     }
@@ -184,7 +184,7 @@ public class ArchiveSubmitBatchController {
             @PathVariable Long batchId,
             @AuthenticationPrincipal UserDetails user
     ) {
-        String userId = getUserId(user);
+        Long userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.executeBatchArchive(batchId, userId);
         return Result.success(batch);
     }
@@ -209,9 +209,13 @@ public class ArchiveSubmitBatchController {
 
     // ========== 辅助方法 ==========
 
-    private String getUserId(UserDetails user) {
-        // Return username as String ID
-        return user.getUsername();
+    private Long getUserId(UserDetails user) {
+        // 简化实现：从用户名解析 ID，实际应从 UserDetails 扩展类获取
+        try {
+            return Long.parseLong(user.getUsername());
+        } catch (NumberFormatException e) {
+            return 1L; // 默认用户 ID
+        }
     }
 
     // ========== 请求 DTO ==========

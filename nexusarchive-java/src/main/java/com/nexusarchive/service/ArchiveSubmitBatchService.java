@@ -32,7 +32,7 @@ public interface ArchiveSubmitBatchService {
      * @param createdBy 创建人 ID
      * @return 创建的批次
      */
-    ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, String createdBy);
+    ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, Long createdBy);
 
     /**
      * 获取批次详情
@@ -60,7 +60,7 @@ public interface ArchiveSubmitBatchService {
      * 添加凭证到批次
      *
      * @param batchId 批次 ID
-     * @param voucherIds 凭证 ID 列表
+     * @param voucherIds 凭证 ID 列表 (String)
      * @return 添加的条目数
      */
     int addVouchersToBatch(Long batchId, List<String> voucherIds);
@@ -69,7 +69,7 @@ public interface ArchiveSubmitBatchService {
      * 添加单据到批次
      *
      * @param batchId 批次 ID
-     * @param docIds 单据 ID 列表
+     * @param docIds 单据 ID 列表 (String)
      * @return 添加的条目数
      */
     int addDocsToBatch(Long batchId, List<String> docIds);
@@ -98,7 +98,7 @@ public interface ArchiveSubmitBatchService {
      * @param submittedBy 提交人 ID
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch submitBatch(Long batchId, String submittedBy);
+    ArchiveSubmitBatch submitBatch(Long batchId, Long submittedBy);
 
     /**
      * 执行批次校验
@@ -116,7 +116,7 @@ public interface ArchiveSubmitBatchService {
      * @param comment 审批意见
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch approveBatch(Long batchId, String approvedBy, String comment);
+    ArchiveSubmitBatch approveBatch(Long batchId, Long approvedBy, String comment);
 
     /**
      * 审批驳回
@@ -126,7 +126,7 @@ public interface ArchiveSubmitBatchService {
      * @param comment 驳回原因
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch rejectBatch(Long batchId, String rejectedBy, String comment);
+    ArchiveSubmitBatch rejectBatch(Long batchId, Long rejectedBy, String comment);
 
     /**
      * 执行归档
@@ -135,7 +135,7 @@ public interface ArchiveSubmitBatchService {
      * @param archivedBy 归档执行人 ID
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch executeBatchArchive(Long batchId, String archivedBy);
+    ArchiveSubmitBatch executeBatchArchive(Long batchId, Long archivedBy);
 
     // ========== 四性检测 ==========
 
