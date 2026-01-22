@@ -271,17 +271,18 @@ public class PoolServiceImpl implements PoolService {
      * 应用门类过滤条件
      * 策略：
      * 1. 如果有 category，查找对应的 voucher_type 列表
-     * 2. 如果 category 是 AC04/OTHER，需要包含 NULL 值
+     * 2. 如果 category 是 VOUCHER/AC04/OTHER，需要包含 NULL 值（VOUCHER 包含未设置的旧数据）
      * 3. 如果无 category，默认逻辑：排除 ATTACHMENT (保持向后兼容，或者根据新需求调整)
      *    -> 根据新逻辑，Pool 页面只显示 VOUCHER，所以如果不传 category，可能需要默认显示 VOUCHER？
-     *    -> 现在的逻辑是：不传则显示“非附件”的所有内容 (旧逻辑)。为了兼容性，保持“排除附件”。
+     *    -> 现在的逻辑是：不传则显示"非附件"的所有内容 (旧逻辑)。为了兼容性，保持"排除附件"。
      */
     private void applyCategoryFilter(LambdaQueryWrapper<ArcFileContent> queryWrapper, String category) {
         log.error("DEBUG_FILTER: applyCategoryFilter called with category='{}'", category);
         if (category != null && !category.isBlank() && !"null".equals(category)) {
             List<String> types = new ArrayList<>(CATEGORY_TYPE_MAP.getOrDefault(category, List.of(category)));
             log.error("DEBUG: category matches types={}", types);
-            boolean includeNull = "AC04".equals(category) || "OTHER".equals(category);
+            // VOUCHER 门类也包含 null 值（旧数据或未设置的记账凭证）
+            boolean includeNull = "VOUCHER".equals(category) || "AC04".equals(category) || "OTHER".equals(category);
 
             queryWrapper.and(w -> {
                 if (includeNull) {

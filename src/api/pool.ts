@@ -14,6 +14,8 @@ export interface PoolItem {
   code: string;
   source: string;
   type: string;
+  /** 凭证门类 (VOUCHER/AC01/AC02/AC03/AC04) - 用于门类筛选 */
+  voucherType?: string;
   amount: string;
   date: string;
   status: string;

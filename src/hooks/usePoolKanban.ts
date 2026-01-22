@@ -32,11 +32,13 @@ export const STATUS_SIMPLIFICATION_MAP: Record<string, SimplifiedPreArchiveStatu
 
   // READY_TO_ARCHIVE
   'PENDING_ARCHIVE': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,
+  'READY_TO_ARCHIVE': SimplifiedPreArchiveStatus.READY_TO_ARCHIVE,  // 数据库实际使用的状态
 
   // COMPLETED
   'PENDING_APPROVAL': SimplifiedPreArchiveStatus.COMPLETED,
   'ARCHIVING': SimplifiedPreArchiveStatus.COMPLETED,
   'ARCHIVED': SimplifiedPreArchiveStatus.COMPLETED,
+  'COMPLETED': SimplifiedPreArchiveStatus.COMPLETED,  // 数据库实际使用的状态
 };
 
 /**
@@ -77,8 +79,11 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['pool', 'kanban', currentFonds?.fondsCode || 'default', options.categoryFilter || 'all'],
     queryFn: async () => {
-      return await poolApi.getList(options.categoryFilter);
+      const result = await poolApi.getList(options.categoryFilter);
+      return result;
     },
+    staleTime: 0,  // 强制重新获取，不使用缓存
+    gcTime: 0,      // 立即清理缓存
   });
 
   /**
@@ -99,9 +104,13 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
       _columnId: getColumnIdForStatus(card.status),
     }));
 
-    // 前端直接实现门类维度筛选
-    if (options.categoryFilter) {
-      baseCards = baseCards.filter(card => card.type === options.categoryFilter);
+    // 前端门类筛选：VOUCHER 包含 null 值（旧数据或未设置的记账凭证）
+    if (options.categoryFilter === 'VOUCHER') {
+      baseCards = baseCards.filter(card =>
+        !card.voucherType || card.voucherType === 'VOUCHER'
+      );
+    } else if (options.categoryFilter) {
+      baseCards = baseCards.filter(card => card.voucherType === options.categoryFilter);
     }
 
     return baseCards;

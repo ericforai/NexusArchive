@@ -41,7 +41,6 @@ export function usePoolDashboard(options: { categoryFilter?: string | null } = {
       [SimplifiedPreArchiveStatus.COMPLETED]: 0,
     } as DashboardStats;
 
-    // 遍历所有卡片，将旧状态映射到新状态并计数
     cards.forEach(card => {
       const simplifiedStatus = toSimplifiedStatus(card.status);
       counts[simplifiedStatus]++;

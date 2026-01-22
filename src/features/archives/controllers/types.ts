@@ -46,6 +46,7 @@ export interface ControllerData {
 
 // Internal interface (for hooks only)
 export interface ControllerDataInternal extends ControllerData {
+    pageInfo: { total: number; page: number; pageSize: number };
     setRows: (rows: GenericRow[]) => void;
     setIsLoading: (loading: boolean) => void;
     setErrorMessage: (error: string | null) => void;
@@ -88,7 +89,7 @@ export interface ArchiveListController {
     mode: ControllerMode;
     query: ControllerQuery;
     page: ControllerPage;
-    data: ControllerData;
+    data: ControllerDataInternal;  // 使用 Internal 类型以访问 pageInfo
     selection: ControllerSelection;
     pool: ControllerPool;
     ui: ControllerUI;

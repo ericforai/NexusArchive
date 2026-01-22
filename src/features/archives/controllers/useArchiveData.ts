@@ -13,13 +13,20 @@ export function useArchiveData(_initialPageSize = 10): ControllerDataInternal {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // 修复：添加真正的分页信息状态
+    const [pageInfo, setPageInfoState] = useState({
+        total: 0,
+        page: 1,
+        pageSize: _initialPageSize
+    });
+
     // 使用 useCallback 稳定函数引用
-    const setPageInfo = useCallback(() => {
-        // 占位 - 由 useArchivePagination 处理
+    const setPageInfo = useCallback((info: { total: number; page: number; pageSize: number }) => {
+        setPageInfoState(info);
     }, []);
 
-    const setCurrentPage = useCallback(() => {
-        // 占位 - 由 useArchivePagination 处理
+    const setCurrentPage = useCallback((page: number) => {
+        setPageInfoState(prev => ({ ...prev, page }));
     }, []);
 
     // 使用 useMemo 稳定返回对象引用，只有内部状态变化时才返回新对象
@@ -27,10 +34,11 @@ export function useArchiveData(_initialPageSize = 10): ControllerDataInternal {
         rows,
         isLoading,
         errorMessage,
+        pageInfo,
         setRows,
         setIsLoading,
         setErrorMessage,
         setPageInfo,
         setCurrentPage,
-    }), [rows, isLoading, errorMessage, setRows, setIsLoading, setErrorMessage, setPageInfo, setCurrentPage]);
+    }), [rows, isLoading, errorMessage, pageInfo, setRows, setIsLoading, setErrorMessage, setPageInfo, setCurrentPage]);
 }

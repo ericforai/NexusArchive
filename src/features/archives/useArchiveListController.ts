@@ -77,9 +77,9 @@ export function useArchiveListController(options: any): ArchiveListController {
     // 使用 useMemo 稳定返回值，只有关键值变化时才返回新对象
     return useMemo(() => ({
         mode, query, page,
-        data: { rows: data.rows, isLoading: data.isLoading, errorMessage: data.errorMessage },
+        data,  // 返回完整的 data 对象，包含 pageInfo
         selection, pool, ui, actions,
-    }), [mode, query, page, data.rows, data.isLoading, data.errorMessage, selection, pool, ui, actions]);
+    }), [mode, query, page, data, selection, pool, ui, actions]);
 }
 
 function useArchiveSelectionInline(rows: any[]) {

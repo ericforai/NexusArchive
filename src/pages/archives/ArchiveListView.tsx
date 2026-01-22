@@ -70,13 +70,17 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('[ArchiveListView] state', {
-      isLoading: data.isLoading,
-      rows: data.rows.length,
-      page: page.pageInfo.page,
-      total: page.pageInfo.total,
-    });
-  }, [data.isLoading, data.rows.length, page.pageInfo.page, page.pageInfo.total]);
+    // 仅在开发环境打印调试信息
+    if (import.meta.env.DEV) {
+      console.log('[ArchiveListView] state', {
+        isLoading: data.isLoading,
+        rows: data.rows.length,
+        'page.currentPage': page.currentPage,
+        'data.pageInfo.page': data.pageInfo.page,
+        total: data.pageInfo.total,
+      });
+    }
+  }, [data.isLoading, data.rows.length, page.currentPage, data.pageInfo.page]);
 
   // Local UI state (purely presentational)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -239,8 +243,9 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
     return <span className="text-slate-700 font-medium">{value}</span>;
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= Math.ceil(page.pageInfo.total / page.pageInfo.pageSize)) {
+  const handlePageChange = async (newPage: number) => {
+    const totalPages = Math.ceil(data.pageInfo.total / data.pageInfo.pageSize);
+    if (newPage >= 1 && newPage <= totalPages) {
       page.setCurrentPage(newPage);
     }
   };
@@ -463,19 +468,19 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
             {!data.isLoading && data.rows.length > 0 && (
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="text-sm text-slate-500">
-                  共 {page.pageInfo.total} 条，当前第 {page.pageInfo.page} / {Math.ceil(page.pageInfo.total / page.pageInfo.pageSize)} 页
+                  共 {data.pageInfo.total} 条，当前第 {data.pageInfo.page} / {Math.ceil(data.pageInfo.total / data.pageInfo.pageSize)} 页
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handlePageChange(page.pageInfo.page - 1)}
-                    disabled={page.pageInfo.page <= 1}
+                    onClick={() => handlePageChange(data.pageInfo.page - 1)}
+                    disabled={data.pageInfo.page <= 1}
                     className="px-3 py-1 border rounded bg-white hover:bg-slate-50 disabled:opacity-50"
                   >
                     上一页
                   </button>
                   <button
-                    onClick={() => handlePageChange(page.pageInfo.page + 1)}
-                    disabled={page.pageInfo.page >= Math.ceil(page.pageInfo.total / page.pageInfo.pageSize)}
+                    onClick={() => handlePageChange(data.pageInfo.page + 1)}
+                    disabled={data.pageInfo.page >= Math.ceil(data.pageInfo.total / data.pageInfo.pageSize)}
                     className="px-3 py-1 border rounded bg-white hover:bg-slate-50 disabled:opacity-50"
                   >
                     下一页
