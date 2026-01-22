@@ -38,7 +38,7 @@ public interface ArchiveSubmitBatchMapper extends BaseMapper<ArchiveSubmitBatch>
         ORDER BY created_time DESC
     """)
     List<ArchiveSubmitBatch> findByFondsAndStatus(
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("status") String status
     );
 
@@ -49,7 +49,7 @@ public interface ArchiveSubmitBatchMapper extends BaseMapper<ArchiveSubmitBatch>
         <script>
         SELECT * FROM archive_batch
         <where>
-            <if test="fondsId != null">
+            <if test="fondsId != null and fondsId != ''">
                 fonds_id = #{fondsId}
             </if>
             <if test="status != null and status != ''">
@@ -61,7 +61,7 @@ public interface ArchiveSubmitBatchMapper extends BaseMapper<ArchiveSubmitBatch>
     """)
     IPage<ArchiveSubmitBatch> findPage(
         Page<ArchiveSubmitBatch> page,
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("status") String status
     );
 
@@ -77,7 +77,7 @@ public interface ArchiveSubmitBatchMapper extends BaseMapper<ArchiveSubmitBatch>
         AND status NOT IN ('ARCHIVED', 'REJECTED', 'FAILED')
     """)
     int countPendingBatchesInPeriod(
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("periodStart") String periodStart,
         @Param("periodEnd") String periodEnd
     );
@@ -100,12 +100,12 @@ public interface ArchiveSubmitBatchMapper extends BaseMapper<ArchiveSubmitBatch>
         SELECT status, COUNT(*) as count
         FROM archive_batch
         <where>
-            <if test="fondsId != null">
+            <if test="fondsId != null and fondsId != ''">
                 fonds_id = #{fondsId}
             </if>
         </where>
         GROUP BY status
         </script>
     """)
-    List<java.util.Map<String, Object>> countByStatus(@Param("fondsId") Long fondsId);
+    List<java.util.Map<String, Object>> countByStatus(@Param("fondsId") String fondsId);
 }

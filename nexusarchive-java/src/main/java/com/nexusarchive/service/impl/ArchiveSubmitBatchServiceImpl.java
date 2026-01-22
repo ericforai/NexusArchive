@@ -54,7 +54,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch createBatch(Long fondsId, LocalDate periodStart, LocalDate periodEnd, Long createdBy) {
+    public ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, String createdBy) {
         return batchManager.createBatch(fondsId, periodStart, periodEnd, createdBy);
     }
 
@@ -64,12 +64,12 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
     }
 
     @Override
-    public IPage<ArchiveSubmitBatch> listBatches(Page<ArchiveSubmitBatch> page, Long fondsId, String status) {
+    public IPage<ArchiveSubmitBatch> listBatches(Page<ArchiveSubmitBatch> page, String fondsId, String status) {
         return batchManager.listBatches(page, fondsId, status);
     }
 
     @Override
-    public List<ArchiveSubmitBatch> listBatchesByFonds(Long fondsId, String status) {
+    public List<ArchiveSubmitBatch> listBatchesByFonds(String fondsId, String status) {
         return batchManager.listBatchesByFonds(fondsId, status);
     }
 
@@ -83,7 +83,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public int addVouchersToBatch(Long batchId, List<Long> voucherIds) {
+    public int addVouchersToBatch(Long batchId, List<String> voucherIds) {
         ArchiveSubmitBatch batch = batchManager.getBatch(batchId);
         int added = batchItemManager.addVouchersToBatch(batch, voucherIds);
         if (added > 0) {
@@ -94,7 +94,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public int addDocsToBatch(Long batchId, List<Long> docIds) {
+    public int addDocsToBatch(Long batchId, List<String> docIds) {
         ArchiveSubmitBatch batch = batchManager.getBatch(batchId);
         int added = batchItemManager.addDocsToBatch(batch, docIds);
         if (added > 0) {
@@ -125,7 +125,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch submitBatch(Long batchId, Long submittedBy) {
+    public ArchiveSubmitBatch submitBatch(Long batchId, String submittedBy) {
         return batchWorkflowService.submitBatch(batchId, submittedBy);
     }
 
@@ -137,19 +137,19 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch approveBatch(Long batchId, Long approvedBy, String comment) {
+    public ArchiveSubmitBatch approveBatch(Long batchId, String approvedBy, String comment) {
         return batchWorkflowService.approveBatch(batchId, approvedBy, comment);
     }
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch rejectBatch(Long batchId, Long rejectedBy, String comment) {
+    public ArchiveSubmitBatch rejectBatch(Long batchId, String rejectedBy, String comment) {
         return batchWorkflowService.rejectBatch(batchId, rejectedBy, comment);
     }
 
     @Override
     @Transactional
-    public ArchiveSubmitBatch executeBatchArchive(Long batchId, Long archivedBy) {
+    public ArchiveSubmitBatch executeBatchArchive(Long batchId, String archivedBy) {
         return batchWorkflowService.executeBatchArchive(batchId, archivedBy);
     }
 
@@ -164,7 +164,7 @@ public class ArchiveSubmitBatchServiceImpl implements ArchiveSubmitBatchService 
     // ========== 统计 ==========
 
     @Override
-    public Map<String, Object> getBatchStats(Long fondsId) {
+    public Map<String, Object> getBatchStats(String fondsId) {
         Map<String, Object> stats = new java.util.LinkedHashMap<>();
 
         List<Map<String, Object>> statusCounts = batchMapper.countByStatus(fondsId);

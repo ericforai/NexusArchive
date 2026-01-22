@@ -42,7 +42,7 @@ public class BatchManager {
      * 创建归档批次
      */
     @Transactional
-    public ArchiveSubmitBatch createBatch(Long fondsId, LocalDate periodStart, LocalDate periodEnd, Long createdBy) {
+    public ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, String createdBy) {
         // 检查期间是否已锁定
         String startPeriod = periodStart.toString().substring(0, 7);
         String endPeriod = periodEnd.toString().substring(0, 7);
@@ -93,14 +93,14 @@ public class BatchManager {
     /**
      * 分页查询批次列表
      */
-    public IPage<ArchiveSubmitBatch> listBatches(Page<ArchiveSubmitBatch> page, Long fondsId, String status) {
+    public IPage<ArchiveSubmitBatch> listBatches(Page<ArchiveSubmitBatch> page, String fondsId, String status) {
         return batchMapper.findPage(page, fondsId, status);
     }
 
     /**
      * 按全宗查询批次列表
      */
-    public List<ArchiveSubmitBatch> listBatchesByFonds(Long fondsId, String status) {
+    public List<ArchiveSubmitBatch> listBatchesByFonds(String fondsId, String status) {
         return batchMapper.findByFondsAndStatus(fondsId, status);
     }
 

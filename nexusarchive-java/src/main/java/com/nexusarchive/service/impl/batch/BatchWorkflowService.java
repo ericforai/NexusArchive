@@ -41,7 +41,7 @@ public class BatchWorkflowService {
      * 提交批次
      */
     @Transactional
-    public ArchiveSubmitBatch submitBatch(Long batchId, Long submittedBy) {
+    public ArchiveSubmitBatch submitBatch(Long batchId, String submittedBy) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);
@@ -74,7 +74,7 @@ public class BatchWorkflowService {
      * 审批通过批次
      */
     @Transactional
-    public ArchiveSubmitBatch approveBatch(Long batchId, Long approvedBy, String comment) {
+    public ArchiveSubmitBatch approveBatch(Long batchId, String approvedBy, String comment) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);
@@ -105,7 +105,7 @@ public class BatchWorkflowService {
      * 驳回批次
      */
     @Transactional
-    public ArchiveSubmitBatch rejectBatch(Long batchId, Long rejectedBy, String comment) {
+    public ArchiveSubmitBatch rejectBatch(Long batchId, String rejectedBy, String comment) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);
@@ -130,7 +130,7 @@ public class BatchWorkflowService {
      * 执行批次归档
      */
     @Transactional
-    public ArchiveSubmitBatch executeBatchArchive(Long batchId, Long archivedBy) {
+    public ArchiveSubmitBatch executeBatchArchive(Long batchId, String archivedBy) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);

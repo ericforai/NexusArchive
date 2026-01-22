@@ -32,7 +32,7 @@ public interface ArchiveSubmitBatchService {
      * @param createdBy 创建人 ID
      * @return 创建的批次
      */
-    ArchiveSubmitBatch createBatch(Long fondsId, LocalDate periodStart, LocalDate periodEnd, Long createdBy);
+    ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, String createdBy);
 
     /**
      * 获取批次详情
@@ -42,12 +42,12 @@ public interface ArchiveSubmitBatchService {
     /**
      * 分页查询批次
      */
-    IPage<ArchiveSubmitBatch> listBatches(Page<ArchiveSubmitBatch> page, Long fondsId, String status);
+    IPage<ArchiveSubmitBatch> listBatches(Page<ArchiveSubmitBatch> page, String fondsId, String status);
 
     /**
      * 按全宗查询所有批次
      */
-    List<ArchiveSubmitBatch> listBatchesByFonds(Long fondsId, String status);
+    List<ArchiveSubmitBatch> listBatchesByFonds(String fondsId, String status);
 
     /**
      * 删除批次（仅 PENDING 状态可删）
@@ -63,7 +63,7 @@ public interface ArchiveSubmitBatchService {
      * @param voucherIds 凭证 ID 列表
      * @return 添加的条目数
      */
-    int addVouchersToBatch(Long batchId, List<Long> voucherIds);
+    int addVouchersToBatch(Long batchId, List<String> voucherIds);
 
     /**
      * 添加单据到批次
@@ -72,7 +72,7 @@ public interface ArchiveSubmitBatchService {
      * @param docIds 单据 ID 列表
      * @return 添加的条目数
      */
-    int addDocsToBatch(Long batchId, List<Long> docIds);
+    int addDocsToBatch(Long batchId, List<String> docIds);
 
     /**
      * 从批次移除条目
@@ -98,7 +98,7 @@ public interface ArchiveSubmitBatchService {
      * @param submittedBy 提交人 ID
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch submitBatch(Long batchId, Long submittedBy);
+    ArchiveSubmitBatch submitBatch(Long batchId, String submittedBy);
 
     /**
      * 执行批次校验
@@ -116,7 +116,7 @@ public interface ArchiveSubmitBatchService {
      * @param comment 审批意见
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch approveBatch(Long batchId, Long approvedBy, String comment);
+    ArchiveSubmitBatch approveBatch(Long batchId, String approvedBy, String comment);
 
     /**
      * 审批驳回
@@ -126,7 +126,7 @@ public interface ArchiveSubmitBatchService {
      * @param comment 驳回原因
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch rejectBatch(Long batchId, Long rejectedBy, String comment);
+    ArchiveSubmitBatch rejectBatch(Long batchId, String rejectedBy, String comment);
 
     /**
      * 执行归档
@@ -135,7 +135,7 @@ public interface ArchiveSubmitBatchService {
      * @param archivedBy 归档执行人 ID
      * @return 更新后的批次
      */
-    ArchiveSubmitBatch executeBatchArchive(Long batchId, Long archivedBy);
+    ArchiveSubmitBatch executeBatchArchive(Long batchId, String archivedBy);
 
     // ========== 四性检测 ==========
 
@@ -152,5 +152,5 @@ public interface ArchiveSubmitBatchService {
     /**
      * 获取批次统计
      */
-    Map<String, Object> getBatchStats(Long fondsId);
+    Map<String, Object> getBatchStats(String fondsId);
 }

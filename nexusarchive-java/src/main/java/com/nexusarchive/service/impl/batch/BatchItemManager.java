@@ -39,7 +39,7 @@ public class BatchItemManager {
      * 向批次添加凭证
      */
     @Transactional
-    public int addVouchersToBatch(ArchiveSubmitBatch batch, List<Long> voucherIds) {
+    public int addVouchersToBatch(ArchiveSubmitBatch batch, List<String> voucherIds) {
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在");
         }
@@ -48,7 +48,7 @@ public class BatchItemManager {
         }
 
         int added = 0;
-        for (Long voucherId : voucherIds) {
+        for (String voucherId : voucherIds) {
             // 检查凭证是否已在其他批次中
             int existCount = itemMapper.countVoucherInOtherBatches(voucherId);
             if (existCount > 0) {
@@ -91,7 +91,7 @@ public class BatchItemManager {
      * 向批次添加单据
      */
     @Transactional
-    public int addDocsToBatch(ArchiveSubmitBatch batch, List<Long> docIds) {
+    public int addDocsToBatch(ArchiveSubmitBatch batch, List<String> docIds) {
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在");
         }
@@ -100,7 +100,7 @@ public class BatchItemManager {
         }
 
         int added = 0;
-        for (Long docId : docIds) {
+        for (String docId : docIds) {
             // 获取单据信息
             OriginalVoucher doc = originalVoucherMapper.selectById(docId);
             if (doc == null) {
