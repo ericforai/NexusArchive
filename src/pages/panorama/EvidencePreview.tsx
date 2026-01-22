@@ -34,7 +34,7 @@ type TabType = typeof TAB_CONFIG[number]['id'];
  * 电子会计档案一经归档，不得进行修改、删除、替换原有内容。
  * 因此已归档档案的附件区只能查看，不能添加/修改。
  * 
- * 附件上传功能应在"电子凭证池"中进行（归档前阶段）。
+ * 附件上传功能应在"记账凭证库"中进行（归档前阶段）。
  */
 interface InvoiceOverlayProps {
     highlightField?: string | null;
@@ -366,7 +366,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
 
                             {/* [FIXED] Use direct iframe for PDF to avoid fetch/blob issues */}
                             {selectedFile.fileType?.toLowerCase() === 'pdf' ? (
-                                <iframe 
+                                <iframe
                                     src={`${getPreviewUrl(selectedFile)}?access_token=${token || ''}`}
                                     className="w-full h-full border-0 bg-white"
                                     title="PDF Preview"

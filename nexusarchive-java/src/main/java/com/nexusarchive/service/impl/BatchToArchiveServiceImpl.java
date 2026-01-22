@@ -66,27 +66,31 @@ public class BatchToArchiveServiceImpl implements BatchToArchiveService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Archive createArchiveFromBatch(ArcFileContent fileContent, CollectionBatch batch) {
-        log.info("创建档案记录: fileId={}, batchNo={}", fileContent.getId(), batch.getBatchNo());
+        log.info("创建档案记录: fileId={}, batchNo={}, category={}", 
+                 fileContent.getId(), batch.getBatchNo(), batch.getArchivalCategory());
 
-        // 生成档号
+        // 1. 映射门类代码 (VOUCHER -> AC01, LEDGER -> AC02, REPORT -> AC03, OTHER -> AC04)
+        String categoryCode = mapToCategoryCode(batch.getArchivalCategory());
+
+        // 2. 生成符合 DA/T 94-2022 规范的档号
         String archiveCode = archivalCodeGenerator.generate(
             batch.getFondsCode(),
             batch.getFiscalYear(),
             DEFAULT_RETENTION,
-            CATEGORY_ATTACHMENT
+            categoryCode
         );
 
-        // 创建档案记录（最小必填字段）
+        // 3. 创建档案记录（最小必填字段）
         Archive archive = new Archive();
         archive.setId(generateArchiveId());
         archive.setArchiveCode(archiveCode);
         archive.setFondsNo(batch.getFondsCode());
-        archive.setCategoryCode(CATEGORY_ATTACHMENT); // 固定为"其他会计资料"（原始凭证附件）
+        archive.setCategoryCode(categoryCode);
         archive.setFiscalYear(batch.getFiscalYear());
         archive.setFiscalPeriod(batch.getFiscalPeriod());
         archive.setTitle(fileContent.getFileName()); // 初始使用文件名，用户可修改
-        archive.setRetentionPeriod("30年"); // 默认保管期限
-        archive.setOrgName("上传单位"); // TODO: 从全宗信息获取
+        archive.setRetentionPeriod("30Y"); // 默认保管期限 (对齐 entity 校验)
+        archive.setOrgName("立档单位"); // TODO: 从全宗信息获取
         archive.setStatus(PreArchiveStatus.NEEDS_ACTION.getCode());
 
         // 存储文件内容关联
@@ -97,9 +101,25 @@ public class BatchToArchiveServiceImpl implements BatchToArchiveService {
 
         archiveMapper.insert(archive);
 
-        log.info("档案记录创建成功: archiveId={}, archiveCode={}", archive.getId(), archiveCode);
+        log.info("档案记录创建成功: archiveId={}, archiveCode={}, category={}", 
+                 archive.getId(), archiveCode, categoryCode);
 
         return archive;
+    }
+
+    /**
+     * 将业务门类映射为标准分类代码
+     * @param archivalCategory 业务门类 (VOUCHER/LEDGER/REPORT/OTHER)
+     * @return 标准代码 (AC01/AC02/AC03/AC04)
+     */
+    private String mapToCategoryCode(String archivalCategory) {
+        if (archivalCategory == null) return CATEGORY_ATTACHMENT;
+        return switch (archivalCategory.toUpperCase()) {
+            case "VOUCHER" -> "AC01";
+            case "LEDGER" -> "AC02";
+            case "REPORT" -> "AC03";
+            default -> "AC04";
+        };
     }
 
     /**

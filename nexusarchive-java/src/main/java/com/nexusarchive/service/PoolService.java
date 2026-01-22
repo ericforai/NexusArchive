@@ -33,18 +33,24 @@ public interface PoolService {
 
     /**
      * 查询电子凭证池列表
+     * @param category 门类过滤器 (可选)
+     * @return 凭证池列表
      */
-    List<PoolItemDto> listPoolItems();
+    List<PoolItemDto> listPoolItems(String category);
 
     /**
      * 按状态查询预归档文件
+     * @param status 状态
+     * @param category 门类过滤器 (可选)
+     * @return 文件列表
      */
-    List<PoolItemDto> listByStatus(String status);
+    List<PoolItemDto> listByStatus(String status, String category);
 
     /**
      * 统计各状态数量
+     * @param category 门类过滤 (DA/T 94 标准码: VOUCHER/AC01/AC02/AC03/AC04), 可为 null
      */
-    Map<String, Long> getStatusStats();
+    Map<String, Long> getStatusStats(String category);
 
     /**
      * 更新预归档状态

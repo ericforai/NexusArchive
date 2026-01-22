@@ -30,7 +30,7 @@ interface FourNatureReportViewProps {
 }
 
 // API 基础路径
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '/api';
+const API_BASE = '/api';
 
 export const FourNatureReportView: React.FC<FourNatureReportViewProps> = ({ fileId, onClose }) => {
     const [report, setReport] = useState<FourNatureReport | null>(null);

@@ -111,7 +111,7 @@ public class CollectionBatch {
     /**
      * 创建人ID
      */
-    private Long createdBy;
+    private String createdBy;
 
     /**
      * 创建时间

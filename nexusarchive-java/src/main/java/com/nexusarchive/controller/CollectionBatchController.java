@@ -53,7 +53,7 @@ public class CollectionBatchController {
             @Valid @RequestBody BatchUploadRequest request,
             HttpServletRequest httpRequest) {
 
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         BatchUploadResponse response = collectionBatchService.createBatch(request, userId);
 
         log.info("批次创建成功: batchId={}, batchNo={}", response.getBatchId(), response.getBatchNo());
@@ -88,7 +88,7 @@ public class CollectionBatchController {
             return Result.error("文件大小超过限制 (最大100MB)");
         }
 
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         CollectionBatchService.FileUploadResult result =
             collectionBatchService.uploadFile(batchId, file, userId);
 
@@ -109,7 +109,7 @@ public class CollectionBatchController {
             @PathVariable Long batchId,
             HttpServletRequest httpRequest) {
 
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         CollectionBatchService.BatchCompleteResult result =
             collectionBatchService.completeBatch(batchId, userId);
 
@@ -129,7 +129,7 @@ public class CollectionBatchController {
             @PathVariable Long batchId,
             HttpServletRequest httpRequest) {
 
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         collectionBatchService.cancelBatch(batchId, userId);
 
         return Result.success("批次已取消");
@@ -180,7 +180,7 @@ public class CollectionBatchController {
             @PathVariable Long batchId,
             HttpServletRequest httpRequest) {
 
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         CollectionBatchService.BatchCheckResult result =
             collectionBatchService.runFourNatureCheck(batchId, userId);
 
@@ -199,7 +199,7 @@ public class CollectionBatchController {
             @RequestParam(defaultValue = "0") int offset,
             HttpServletRequest httpRequest) {
 
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         // TODO: 实现列表查询
         return Result.success(List.of());
     }
@@ -218,9 +218,9 @@ public class CollectionBatchController {
             HttpServletRequest httpRequest) {
 
         // 从认证上下文获取操作人信息（如果请求中未提供）
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         if (request.getOperatorId() == null) {
-            request.setOperatorId(String.valueOf(userId));
+            request.setOperatorId(userId);
         }
 
         BatchArchiveResponse response = collectionBatchService.batchApprove(request);
@@ -244,9 +244,9 @@ public class CollectionBatchController {
             HttpServletRequest httpRequest) {
 
         // 从认证上下文获取操作人信息（如果请求中未提供）
-        Long userId = getUserIdFromRequest(httpRequest);
+        String userId = getUserIdFromRequest(httpRequest);
         if (request.getOperatorId() == null) {
-            request.setOperatorId(String.valueOf(userId));
+            request.setOperatorId(userId);
         }
 
         BatchArchiveResponse response = collectionBatchService.batchReject(request);
@@ -258,15 +258,12 @@ public class CollectionBatchController {
 
     // ===== Private Helper Methods =====
 
-    private Long getUserIdFromRequest(HttpServletRequest request) {
+    private String getUserIdFromRequest(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {
-            return 1L; // 默认用户 (开发环境)
+            return "1"; // 默认用户 (开发环境)
         }
-        if (userId instanceof Number) {
-            return ((Number) userId).longValue();
-        }
-        return Long.parseLong(userId.toString());
+        return userId.toString();
     }
 
     private boolean isAllowedFileType(String filename) {

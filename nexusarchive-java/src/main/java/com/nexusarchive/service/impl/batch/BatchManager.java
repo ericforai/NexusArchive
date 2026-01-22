@@ -12,7 +12,7 @@ import com.nexusarchive.entity.ArchiveBatchItem;
 import com.nexusarchive.entity.ArchiveSubmitBatch;
 import com.nexusarchive.entity.PeriodLock;
 import com.nexusarchive.mapper.ArchiveBatchItemMapper;
-import com.nexusarchive.mapper.ArchiveSubmitBatchMapper;
+import com.nexusarchive.mapper.ArchiveSubmitBatchMapperV2;
 import com.nexusarchive.mapper.PeriodLockMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BatchManager {
 
-    private final ArchiveSubmitBatchMapper batchMapper;
+    private final ArchiveSubmitBatchMapperV2 batchMapper;
     private final ArchiveBatchItemMapper itemMapper;
     private final PeriodLockMapper periodLockMapper;
 
@@ -42,7 +42,7 @@ public class BatchManager {
      * 创建归档批次
      */
     @Transactional
-    public ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, String createdBy) {
+    public ArchiveSubmitBatch createBatch(String fondsId, LocalDate periodStart, LocalDate periodEnd, Long createdBy) {
         // 检查期间是否已锁定
         String startPeriod = periodStart.toString().substring(0, 7);
         String endPeriod = periodEnd.toString().substring(0, 7);

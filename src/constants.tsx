@@ -28,7 +28,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Layers,
     permission: 'nav:pre_archive',
     children: [
-      { id: '电子凭证池', label: '电子凭证池', path: '电子凭证池' },
+      { id: '记账凭证库', label: '记账凭证库', path: '记账凭证库' },
       {
         id: '单据池',
         label: '单据池',
@@ -57,7 +57,10 @@ export const NAV_ITEMS: NavItem[] = [
         ]
       },
       // { id: 'OCR识别', label: 'OCR识别', path: 'OCR识别' }, // 待开发：后端 OCR 服务未实现，详见 docs/plans/2026-01-06-ocr-service-design.md
+      { id: '会计账簿', label: '会计账簿', path: '预归档:会计账簿' },
+      { id: '财务报告', label: '财务报告', path: '预归档:财务报告' },
       { id: '凭证关联', label: '凭证关联', path: '凭证关联' },
+      { id: '其他会计资料', label: '其他会计资料', path: '其他会计资料' },
       { id: '异常数据', label: '异常数据', path: '异常数据' }
     ]
   },

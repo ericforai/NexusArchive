@@ -23,6 +23,9 @@ export const ROUTE_PATHS = {
     PRE_ARCHIVE_OCR: '/system/pre-archive/ocr',
     PRE_ARCHIVE_LINK: '/system/pre-archive/link',
     PRE_ARCHIVE_ABNORMAL: '/system/pre-archive/abnormal',
+    PRE_ARCHIVE_OTHER: '/system/pre-archive/other',
+    PRE_ARCHIVE_LEDGERS: '/system/pre-archive/ledgers',
+    PRE_ARCHIVE_REPORTS: '/system/pre-archive/reports',
 
     COLLECTION: '/system/collection',
     COLLECTION_ONLINE: '/system/collection/online',
@@ -96,11 +99,14 @@ export const ROUTE_PATHS = {
  */
 export const SUBITEM_TO_PATH: Record<string, string> = {
     // 预归档库
-    '电子凭证池': ROUTE_PATHS.PRE_ARCHIVE_POOL,  // 默认列表视图，支持 ?view=kanban 切换
+    '记账凭证库': ROUTE_PATHS.PRE_ARCHIVE_POOL,  // 默认列表视图，支持 ?view=kanban 切换
     '单据池': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL,
     // 'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR, // 待开发
     '凭证关联': ROUTE_PATHS.PRE_ARCHIVE_LINK,
     '异常数据': ROUTE_PATHS.PRE_ARCHIVE_ABNORMAL,
+    '其他会计资料': ROUTE_PATHS.PRE_ARCHIVE_OTHER,
+    '预归档:会计账簿': ROUTE_PATHS.PRE_ARCHIVE_LEDGERS,
+    '预归档:财务报告': ROUTE_PATHS.PRE_ARCHIVE_REPORTS,
 
     // 单据池 - 15 个分类子菜单（与数据库 sys_original_voucher_type 一致）
     // 发票类 (INVOICE)

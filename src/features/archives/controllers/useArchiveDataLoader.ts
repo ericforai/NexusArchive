@@ -14,6 +14,7 @@ interface UseArchiveDataLoaderOptions extends UseArchiveDataLoadOptions {
     data: ControllerDataInternal;
     showToast: (message: string, type?: 'success' | 'error') => void;
     onSelectionClear?: () => void;
+    categoryFilter?: string | null; // 新增
 }
 
 export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
@@ -23,6 +24,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         page,
         isPoolView,
         poolStatusFilter,
+        categoryFilter,
         data,
         showToast,
         onSelectionClear,
@@ -39,6 +41,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         page,
         isPoolView,
         poolStatusFilter,
+        categoryFilter,
         setRows,
         setIsLoading,
         setErrorMessage,
@@ -56,6 +59,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             page,
             isPoolView,
             poolStatusFilter,
+            categoryFilter,
             setRows,
             setIsLoading,
             setErrorMessage,
@@ -68,16 +72,16 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
 
     // Load pool data - 不依赖任何外部值，全部从 ref 读取
     const loadPoolData = useCallback(async (pageNum?: number, filterOverride?: PoolStatusFilter) => {
-        const { page, poolStatusFilter, setRows, setIsLoading, setErrorMessage, setPageInfo, showToast, onSelectionClear } = depsRef.current;
+        const { page, poolStatusFilter, categoryFilter, setRows, setIsLoading, setErrorMessage, setPageInfo, showToast, onSelectionClear } = depsRef.current;
         const currentPage = pageNum ?? page.currentPage;
-        const startAt = Date.now();
+        const _startAt = Date.now();
         setIsLoading(true);
         setErrorMessage(null);
         onSelectionClear?.();
-        let resolvedFilter: PoolStatusFilter | undefined;
+        let _resolvedFilter: PoolStatusFilter | undefined;
         try {
             const activeFilter = filterOverride !== undefined ? filterOverride : poolStatusFilter;
-            resolvedFilter = activeFilter;
+            _resolvedFilter = activeFilter;
 
             let poolItems = [];
             // 如果指定了状态，调用特定的状态过滤接口（后端过滤）
@@ -92,10 +96,18 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
                 };
                 const queryStatus = LEGACY_STATUS_MAP[activeFilter] || activeFilter;
 
-                poolItems = await poolApi.getListByStatus(queryStatus);
+                poolItems = await poolApi.getListByStatus(queryStatus, categoryFilter || undefined);
             } else {
-                poolItems = await poolApi.getList();
+                // 如果没有状态过滤，暂时不支持 categoryFilter (或者后端 getList 也需要支持？)
+                // 目前 Pool 页面总是有默认状态，所以这里暂时保持原样，或者也添加支持
+                // 考虑到 getList 很少被直接调用且没有参数，先忽略 categoryFilter (或者需要扩展 getList)
+                poolItems = await poolApi.getList(categoryFilter || undefined);
             }
+
+            // --- 门类筛选 (已改为后端过滤) ---
+            // if (categoryFilter) {
+            //     poolItems = poolItems.filter((item: any) => item.type === categoryFilter);
+            // }
 
             const total = poolItems.length;
             const start = (currentPage - 1) * page.pageInfo.pageSize;
@@ -119,7 +131,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
 
     // Load archive list - 不依赖任何外部值，全部从 ref 读取
     const loadArchiveList = useCallback(async (pageNum?: number) => {
-        const { page, query, mode, setRows, setIsLoading, setErrorMessage, setPageInfo, setCurrentPage, showToast, onSelectionClear } = depsRef.current;
+        const { page, query, mode, categoryFilter, setRows, setIsLoading, setErrorMessage, setPageInfo, setCurrentPage, showToast, onSelectionClear } = depsRef.current;
         const currentPage = pageNum ?? page.currentPage;
         setIsLoading(true);
         setErrorMessage(null);
@@ -135,7 +147,8 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
                 subTitle: mode.subTitle,
                 routeKey: mode.routeKey,
                 orgId: query.orgFilter || undefined,
-                subType: query.subTypeFilter || undefined
+                subType: query.subTypeFilter || undefined,
+                categoryFilter: categoryFilter || undefined
             });
 
             // 当 subType 存在但 categoryCode 为空时，需要确保不会导致后端验证失败
@@ -147,7 +160,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
                 limit: page.pageInfo.pageSize,
                 search: query.searchTerm || undefined,
                 status: query.statusFilter || mode.defaultStatus,
-                categoryCode: mode.categoryCode,
+                categoryCode: mode.categoryCode || (categoryFilter === 'VOUCHER' ? 'AC01' : undefined), // 简单映射
                 orgId: query.orgFilter || undefined,
                 subType: shouldSendSubType ? query.subTypeFilter : undefined
             });
@@ -189,6 +202,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
         orgFilter: query.orgFilter,
         subTypeFilter: query.subTypeFilter,
         poolStatusFilter,
+        categoryFilter, // 新增
         currentPage: page.currentPage,
         isPoolView,
     });
@@ -227,14 +241,15 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
     // Monitor other filter changes
     useEffect(() => {
         if (isInitialLoadRef.current) return;
-        const { mode, query, isPoolView, poolStatusFilter, setCurrentPage } = depsRef.current;
+        const { mode, query, isPoolView, poolStatusFilter, categoryFilter, setCurrentPage } = depsRef.current;
         const prevDeps = prevDepsRef.current;
         const depsChanged =
             prevDeps.subTitle !== mode.subTitle ||
             prevDeps.searchTerm !== query.searchTerm ||
             prevDeps.statusFilter !== query.statusFilter ||
             prevDeps.orgFilter !== query.orgFilter ||
-            prevDeps.subTypeFilter !== query.subTypeFilter;
+            prevDeps.subTypeFilter !== query.subTypeFilter ||
+            prevDeps.categoryFilter !== categoryFilter; // 添加门类变化监听
 
         if (depsChanged) {
             prevDepsRef.current.subTitle = mode.subTitle;
@@ -242,6 +257,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             prevDepsRef.current.statusFilter = query.statusFilter;
             prevDepsRef.current.orgFilter = query.orgFilter;
             prevDepsRef.current.subTypeFilter = query.subTypeFilter;
+            prevDepsRef.current.categoryFilter = categoryFilter; // 同步门类状态
             setCurrentPage(1);
             if (isPoolView) {
                 loadPoolData(1, poolStatusFilter);
@@ -250,7 +266,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             }
             isPageChangeFromFilterRef.current = true;
         }
-    }, [mode.subTitle, query.searchTerm, query.statusFilter, query.orgFilter, query.subTypeFilter, loadPoolData, loadArchiveList]);
+    }, [mode.subTitle, query.searchTerm, query.statusFilter, query.orgFilter, query.subTypeFilter, categoryFilter, loadPoolData, loadArchiveList]);
 
     // Monitor page changes - 只监听 currentPage 的值变化
     useEffect(() => {

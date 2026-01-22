@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             {isChunkError
                                 ? '系统检测到新版本发布，请刷新页面以加载最新内容。'
                                 : '应用程序遇到意外错误，我们正在努力修复。'}
-                            {process.env.NODE_ENV === 'development' && this.state.error && (
+                            {import.meta.env.DEV && this.state.error && (
                                 <code className="block mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded-lg text-xs text-left overflow-auto max-h-32 text-rose-600">
                                     {(() => {
                                         try {

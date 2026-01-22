@@ -38,7 +38,7 @@ public class ArchiveSubmitBatch {
     private String batchNo;
 
     /**
-     * 全宗 ID（公司/组织）
+     * 全宗 ID（公司/组织，字符串格式如 fonds-brjt）
      */
     private String fondsId;
 
@@ -110,7 +110,7 @@ public class ArchiveSubmitBatch {
     /**
      * 提交人 ID
      */
-    private String submittedBy;
+    private Long submittedBy;
 
     /**
      * 提交时间
@@ -120,7 +120,7 @@ public class ArchiveSubmitBatch {
     /**
      * 审批人 ID
      */
-    private String approvedBy;
+    private Long approvedBy;
 
     /**
      * 审批时间
@@ -140,12 +140,12 @@ public class ArchiveSubmitBatch {
     /**
      * 归档执行人 ID
      */
-    private String archivedBy;
+    private Long archivedBy;
 
     /**
      * 创建人 ID
      */
-    private String createdBy;
+    private Long createdBy;
 
     /**
      * 创建时间

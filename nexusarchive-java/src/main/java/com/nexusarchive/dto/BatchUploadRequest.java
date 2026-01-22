@@ -29,8 +29,8 @@ public class BatchUploadRequest {
     private String fiscalPeriod;
 
     @NotBlank(message = "档案门类不能为空")
-    @Pattern(regexp = "^(VOUCHER|LEDGER|REPORT|OTHER)$",
-             message = "档案门类必须为 VOUCHER/LEDGER/REPORT/OTHER")
+    @Pattern(regexp = "^(VOUCHER|AC01|AC02|AC03|AC04|LEDGER|REPORT|OTHER)$",
+             message = "档案门类必须为 VOUCHER/AC01/AC02/AC03/AC04/LEDGER/REPORT/OTHER")
     private String archivalCategory;
 
     @NotNull(message = "预计文件数量不能为空")

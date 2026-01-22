@@ -54,13 +54,15 @@ export function useArchiveListController(options: any): ArchiveListController {
     const data = useArchiveData(page.pageInfo.pageSize);
     const pool = useArchivePool({
         isEnabled: mode.isPoolView,
-        initialStatusFilter: options.initialPoolStatusFilter
+        initialStatusFilter: options.initialPoolStatusFilter,
+        categoryFilter: options.categoryFilter // 新增
     });
     const ui = useArchiveToast();
     const { loadCurrentView } = useArchiveDataLoader({
         mode, query, page,
         isPoolView: mode.isPoolView,
         poolStatusFilter: pool.statusFilter,
+        categoryFilter: options.categoryFilter, // 新增
         data, showToast: ui.showToast,
     });
     const selection = useArchiveSelectionInline(data.rows);

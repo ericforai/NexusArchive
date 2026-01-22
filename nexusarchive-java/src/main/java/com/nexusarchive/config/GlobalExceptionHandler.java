@@ -16,6 +16,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -109,6 +110,26 @@ public class GlobalExceptionHandler {
     public Result<Void> handleAuthErrors(RuntimeException e) {
         log.warn("Auth Error: {}", e.getMessage());
         return Result.unauthorized("未登录或登录已过期");
+    }
+    
+    /**
+     * 处理数据库完整性违约 (如唯一键冲突)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Result<Map<String, String>> handleDataIntegrityException(DataIntegrityViolationException e) {
+        log.warn("Database Integrity Violation: {}", e.getMessage());
+        Map<String, String> details = new HashMap<>();
+        String msg = "数据完整性要求未通过，可能存在重复记录或关联数据不存在";
+        
+        // 尝试从异常信息中提取更友好的提示（针对 PostgreSQL）
+        if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+            msg = "关键数据已存在，请勿重复操作";
+        }
+        
+        details.put("errCode", "EAA_DB_INTEGRITY");
+        details.put("ref", "DA/T 94-2022");
+        return new Result<>(409, msg, details);
     }
     
     /**

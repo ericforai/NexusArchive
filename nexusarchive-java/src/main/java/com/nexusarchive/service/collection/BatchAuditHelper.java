@@ -22,10 +22,10 @@ public class BatchAuditHelper {
     /**
      * 记录批次创建日志
      */
-    public void logCreate(Long userId, Long batchId, String batchNo) {
+    public void logCreate(String userId, Long batchId, String batchNo) {
         auditLogService.log(
-                String.valueOf(userId),
-                String.valueOf(userId),
+                userId,
+                userId,
                 "CREATE_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
@@ -38,10 +38,10 @@ public class BatchAuditHelper {
     /**
      * 记录批次完成日志
      */
-    public void logComplete(Long userId, Long batchId, String batchNo) {
+    public void logComplete(String userId, Long batchId, String batchNo) {
         auditLogService.log(
-                String.valueOf(userId),
-                String.valueOf(userId),
+                userId,
+                userId,
                 "COMPLETE_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
@@ -54,10 +54,10 @@ public class BatchAuditHelper {
     /**
      * 记录批次取消日志
      */
-    public void logCancel(Long userId, Long batchId, String batchNo) {
+    public void logCancel(String userId, Long batchId, String batchNo) {
         auditLogService.log(
-                String.valueOf(userId),
-                String.valueOf(userId),
+                userId,
+                userId,
                 "CANCEL_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),

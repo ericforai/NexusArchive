@@ -43,7 +43,7 @@ public class BatchNumberGenerator {
      * @param userId 用户ID
      * @return 上传令牌
      */
-    public String generateUploadToken(Long batchId, Long userId) {
+    public String generateUploadToken(Long batchId, String userId) {
         return UUID.randomUUID().toString().replace("-", "");
     }
 }

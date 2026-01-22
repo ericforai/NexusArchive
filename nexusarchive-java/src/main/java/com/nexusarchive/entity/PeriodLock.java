@@ -29,7 +29,7 @@ public class PeriodLock {
     private Long id;
 
     /**
-     * 全宗 ID（公司/组织）
+     * 全宗 ID（公司/组织，字符串格式如 fonds-brjt）
      */
     private String fondsId;
 
@@ -54,7 +54,7 @@ public class PeriodLock {
     /**
      * 锁定人 ID
      */
-    private String lockedBy;
+    private Long lockedBy;
 
     /**
      * 解锁时间（如果允许解锁）
@@ -64,7 +64,7 @@ public class PeriodLock {
     /**
      * 解锁人 ID
      */
-    private String unlockBy;
+    private Long unlockBy;
 
     /**
      * 锁定原因

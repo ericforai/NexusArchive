@@ -51,7 +51,7 @@ class PoolServiceImplTest {
     void listByStatus_shouldNormalizeLegacyStatus() {
         when(arcFileContentMapper.selectList(any())).thenReturn(Collections.emptyList());
 
-        poolService.listByStatus("PENDING_ARCHIVE");
+        poolService.listByStatus("PENDING_ARCHIVE", null);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<LambdaQueryWrapper<ArcFileContent>> captor = ArgumentCaptor.forClass(LambdaQueryWrapper.class);

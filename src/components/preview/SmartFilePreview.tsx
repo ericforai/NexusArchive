@@ -36,6 +36,8 @@ export interface SmartFilePreviewProps extends Omit<UseFilePreviewParams, 'autoL
   showToolbar?: boolean;
   /** 显示文件切换按钮 */
   showFileNav?: boolean;
+  /** 文件名（用于识别类型和显示） */
+  fileName?: string;
   /** 自定义类名 */
   className?: string;
 }
@@ -53,6 +55,7 @@ export function SmartFilePreview({
   onFileChange,
   showToolbar = true,
   showFileNav = true,
+  fileName: propFileName,
   className = '',
   ...previewParams
 }: SmartFilePreviewProps) {
@@ -68,7 +71,7 @@ export function SmartFilePreview({
 
   // 当前文件信息
   const currentFile = files?.find(f => f.id === currentFileId);
-  const fileName = currentFile?.fileName || previewParams.fileId || '预览';
+  const fileName = currentFile?.fileName || propFileName || previewParams.fileId || '预览';
 
   // 文件索引
   const currentIndex = files?.findIndex(f => f.id === currentFileId) ?? -1;

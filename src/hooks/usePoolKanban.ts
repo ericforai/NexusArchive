@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { poolApi } from '@/api/pool';
+import { useFondsStore } from '@/store/useFondsStore';
 import { POOL_COLUMN_GROUPS, SimplifiedPreArchiveStatus, type ColumnGroupConfig } from '@/config/pool-columns.config';
 import type { PoolItem } from '@/api/pool';
 
@@ -48,6 +49,8 @@ export function toSimplifiedStatus(oldStatus: string): SimplifiedPreArchiveStatu
 interface UsePoolKanbanOptions {
   /** 筛选特定状态（null 表示显示全部） */
   filter?: SimplifiedPreArchiveStatus | null;
+  /** 筛选特定门类 (VOUCHER/LEDGER/REPORT/OTHER) */
+  categoryFilter?: string | null;
 }
 
 interface UsePoolKanbanResult {
@@ -64,15 +67,17 @@ interface UsePoolKanbanResult {
 /**
  * 看板数据管理 Hook
  *
- * 获取所有预处理凭证，按列和子状态分组
+ * 获取所有预处理凭证，按列 and/or 门类分组筛选
  * 修复：使用 useMemo 稳定返回值引用
  */
 export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanbanResult {
+  const currentFonds = useFondsStore(state => state.currentFonds);
+
   // 获取所有预处理凭证
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['pool', 'kanban'],
+    queryKey: ['pool', 'kanban', currentFonds?.fondsCode || 'default', options.categoryFilter || 'all'],
     queryFn: async () => {
-      return await poolApi.getList();
+      return await poolApi.getList(options.categoryFilter);
     },
   });
 
@@ -88,10 +93,19 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
     return '';
   }, []);
 
-  const cards: KanbanCard[] = useMemo(() => (data || []).map(card => ({
-    ...card,
-    _columnId: getColumnIdForStatus(card.status),
-  })), [data, getColumnIdForStatus]);
+  const cards: KanbanCard[] = useMemo(() => {
+    let baseCards = (data || []).map(card => ({
+      ...card,
+      _columnId: getColumnIdForStatus(card.status),
+    }));
+
+    // 前端直接实现门类维度筛选
+    if (options.categoryFilter) {
+      baseCards = baseCards.filter(card => card.type === options.categoryFilter);
+    }
+
+    return baseCards;
+  }, [data, getColumnIdForStatus, options.categoryFilter]);
 
   /**
    * 获取指定列和子状态的卡片
@@ -99,7 +113,7 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
   const getCardsForColumn = useCallback((columnId: string, subState: string): KanbanCard[] => {
     let filteredCards = cards.filter(card => card.status === subState);
 
-    // 如果有筛选条件，只返回匹配简化状态的卡片
+    // 如果有状态筛选条件，只返回匹配简化状态的卡片
     if (options.filter) {
       filteredCards = filteredCards.filter(card => {
         const simplifiedStatus = toSimplifiedStatus(card.status);

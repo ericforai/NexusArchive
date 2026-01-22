@@ -1,20 +1,20 @@
 # Implementation Plan: Fix Archive ID Type Mismatch
 
 ## Phase 1: Entity & DTO Refactoring
-- [x] Task: Update `ArchiveBatch` and `ArchiveBatchItem` entities. 0b81f4e
-    - [x] Sub-task: Change `fondsId` type from `Long` to `String`.
-    - [x] Sub-task: Change `refId` in `ArchiveBatchItem` is already String (VARCHAR), but check Entity definition (`refId` should be String).
-- [x] Task: Update Controller DTOs. 0b81f4e
-    - [x] Sub-task: Update `ArchiveSubmitBatchController.CreateBatchRequest`.
-    - [x] Sub-task: Update `addVouchers` / `addDocs` payloads to accept `List<String>`.
+- [ ] Task: Update `ArchiveBatch` and `ArchiveBatchItem` entities. [BLOCKED: Compiler/Lombok issues]
+    - [ ] Sub-task: Change `fondsId` type from `Long` to `String`.
+    - [ ] Sub-task: Change `refId` in `ArchiveBatchItem` is already String (VARCHAR), but check Entity definition (`refId` should be String).
+- [ ] Task: Update Controller DTOs. [BLOCKED]
+    - [ ] Sub-task: Update `ArchiveSubmitBatchController.CreateBatchRequest`.
+    - [ ] Sub-task: Update `addVouchers` / `addDocs` payloads to accept `List<String>`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Entity & DTO Refactoring' (Protocol in workflow.md)
 
 ## Phase 2: Service & Mapper Logic Update
-- [x] Task: Refactor `ArchiveSubmitBatchService` interface and implementation. 7dc21e1
-    - [x] Sub-task: Update method signatures to use `String` for IDs.
-    - [x] Sub-task: Fix logic in `createBatch`, `addVouchersToBatch`, `executeBatchArchive`.
-- [x] Task: Update MyBatis Mappers. 7dc21e1
-    - [x] Sub-task: Check `ArchiveSubmitBatchMapper.xml` (if exists) for parameter types.
+- [ ] Task: Refactor `ArchiveSubmitBatchService` interface and implementation. [BLOCKED]
+    - [ ] Sub-task: Update method signatures to use `String` for IDs.
+    - [ ] Sub-task: Fix logic in `createBatch`, `addVouchersToBatch`, `executeBatchArchive`.
+- [ ] Task: Update MyBatis Mappers. [BLOCKED]
+    - [ ] Sub-task: Check `ArchiveSubmitBatchMapper.xml` (if exists) for parameter types.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Service & Mapper Logic Update' (Protocol in workflow.md)
 
 ## Phase 3: Verification

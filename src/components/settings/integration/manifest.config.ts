@@ -114,12 +114,12 @@ export function validateManifest(): void {
     );
   }
 
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log(`[Architecture] Module ${moduleManifest.id} validated`);
   }
 }
 
 // Auto-validate in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
   validateManifest();
 }

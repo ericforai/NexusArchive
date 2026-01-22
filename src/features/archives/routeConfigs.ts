@@ -32,7 +32,7 @@ const DEFAULT_CONFIG: ModuleConfig = GENERIC_CONFIG;
  * 使用 union type 确保任何拼写错误都会导致编译失败。
  */
 export type ArchiveRouteMode =
-    | 'pool'       // 电子凭证池
+    | 'pool'       // 记账凭证库
     | 'link'       // 凭证关联
     | 'collection' // 资料收集概览
     | 'online'     // 在线接收
@@ -60,7 +60,7 @@ export interface RouteConfigMeta {
  * Key 类型为 ArchiveRouteMode，任何不存在的 key 都会编译报错。
  */
 export const ROUTE_CONFIG_MAP: Record<ArchiveRouteMode, RouteConfigMeta> = {
-    'pool': { config: PRE_ARCHIVE_POOL_CONFIG, title: '预归档库', subTitle: '电子凭证池' },
+    'pool': { config: PRE_ARCHIVE_POOL_CONFIG, title: '预归档库', subTitle: '记账凭证库' },
     'link': { config: PRE_ARCHIVE_LINK_CONFIG, title: '预归档库', subTitle: '凭证关联' },
     'collection': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '概览' },
     'online': { config: GENERIC_CONFIG, title: '资料收集', subTitle: '在线接收' },

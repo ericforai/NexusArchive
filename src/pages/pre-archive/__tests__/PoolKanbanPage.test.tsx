@@ -12,7 +12,7 @@ import { ROUTE_PATHS } from '@/routes/paths';
 vi.mock('@/components/pool-kanban', () => ({
   PoolKanbanView: ({ className }: { className?: string }) => (
     <div className={`pool-kanban-view ${className || ''}`}>
-      <h2>电子凭证池</h2>
+      <h2>记账凭证库</h2>
       <div className="pool-kanban-view__board">看板内容</div>
     </div>
   ),
@@ -92,7 +92,7 @@ describe('PoolKanbanPage', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByText('电子凭证池')).toBeInTheDocument();
+      expect(screen.getByText('记账凭证库')).toBeInTheDocument();
       expect(screen.getByText('看板内容')).toBeInTheDocument();
     });
 
@@ -118,7 +118,7 @@ describe('PoolKanbanPage', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByText('电子凭证池')).toBeInTheDocument();
+      expect(screen.getByText('记账凭证库')).toBeInTheDocument();
     });
 
     it('should not render at different route paths', () => {
@@ -131,7 +131,7 @@ describe('PoolKanbanPage', () => {
         </MemoryRouter>
       );
 
-      expect(screen.queryByText('电子凭证池')).not.toBeInTheDocument();
+      expect(screen.queryByText('记账凭证库')).not.toBeInTheDocument();
       expect(screen.getByText('Other Page')).toBeInTheDocument();
     });
 

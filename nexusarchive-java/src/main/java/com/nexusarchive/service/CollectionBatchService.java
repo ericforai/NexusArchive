@@ -25,7 +25,7 @@ public interface CollectionBatchService {
      * @param userId 用户ID
      * @return 批次上传响应
      */
-    BatchUploadResponse createBatch(BatchUploadRequest request, Long userId);
+    BatchUploadResponse createBatch(BatchUploadRequest request, String userId);
 
     /**
      * 上传单个文件到批次
@@ -35,7 +35,7 @@ public interface CollectionBatchService {
      * @param userId 用户ID
      * @return 文件上传结果
      */
-    FileUploadResult uploadFile(Long batchId, MultipartFile file, Long userId);
+    FileUploadResult uploadFile(Long batchId, MultipartFile file, String userId);
 
     /**
      * 完成批次上传
@@ -44,7 +44,7 @@ public interface CollectionBatchService {
      * @param userId 用户ID
      * @return 批次完成结果
      */
-    BatchCompleteResult completeBatch(Long batchId, Long userId);
+    BatchCompleteResult completeBatch(Long batchId, String userId);
 
     /**
      * 取消批次
@@ -52,7 +52,7 @@ public interface CollectionBatchService {
      * @param batchId 批次ID
      * @param userId 用户ID
      */
-    void cancelBatch(Long batchId, Long userId);
+    void cancelBatch(Long batchId, String userId);
 
     /**
      * 获取批次详情
@@ -77,7 +77,7 @@ public interface CollectionBatchService {
      * @param userId 用户ID
      * @return 四性检测结果
      */
-    BatchCheckResult runFourNatureCheck(Long batchId, Long userId);
+    BatchCheckResult runFourNatureCheck(Long batchId, String userId);
 
     /**
      * 文件上传结果记录

@@ -24,13 +24,13 @@ export interface DashboardStats {
  * 计算每个简化状态的凭证数量
  * 修复：使用 useMemo 稳定返回值引用
  */
-export function usePoolDashboard(): {
+export function usePoolDashboard(options: { categoryFilter?: string | null } = {}): {
   stats: DashboardStats;
   totalCount: number;
   readyToArchiveCount: number;
   needsActionCount: number;
 } {
-  const { cards } = usePoolKanban();
+  const { cards } = usePoolKanban({ categoryFilter: options.categoryFilter });
 
   const stats = useMemo<DashboardStats>(() => {
     const counts = {

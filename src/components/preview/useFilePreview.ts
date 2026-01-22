@@ -8,9 +8,9 @@ import { previewApi, PreviewRequest, WatermarkMetadata } from '../../api/preview
 export interface UseFilePreviewParams {
   /** 档案ID（已归档档案使用） */
   archiveId?: string;
-  /** 文件ID（电子凭证池或附件使用） */
+  /** 文件ID（记账凭证库或附件使用） */
   fileId?: string;
-  /** 是否为电子凭证池模式（未归档） */
+  /** 是否为记账凭证库模式（未归档） */
   isPool?: boolean;
   /** 预览模式 */
   mode?: 'stream' | 'presigned' | 'rendered';
@@ -102,7 +102,7 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
       let result;
 
       if (isPool) {
-        // 电子凭证池模式：使用 fileId 调用 pool preview API
+        // 记账凭证库模式：使用 fileId 调用 pool preview API
         result = await previewApi.getPoolPreview(fileId!);
       } else {
         // 已归档档案模式：使用 archiveId 调用 archive preview API

@@ -46,6 +46,11 @@ public class PoolItemDto {
     private String type;
 
     /**
+     * 凭证门类类型 (VOUCHER/AC01/AC02/AC03/AC04 等)
+     */
+    private String voucherType;
+
+    /**
      * 金额 (暂时为 "-", 待OCR识别后更新)
      */
     private String amount;
@@ -83,7 +88,25 @@ public class PoolItemDto {
     /**
      * 业务日期 (单据日期)
      */
+    /**
+     * 业务日期 (单据日期)
+     */
     private String docDate;
+
+    /**
+     * 会计年度
+     */
+    private String fiscalYear;
+
+    /**
+     * 会计期间
+     */
+    private String period;
+
+    /**
+     * 全宗号
+     */
+    private String fondsCode;
 
     /**
      * 原始JSON数据（用于前端分录展示）

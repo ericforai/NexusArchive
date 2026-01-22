@@ -7,7 +7,7 @@ import { client } from './client';
 import { useAuthStore } from '../store';
 
 /**
- * 电子凭证池列表项
+ * 记账凭证库列表项
  */
 export interface PoolItem {
   id: string;
@@ -41,15 +41,18 @@ interface ApiResponse<T> {
 }
 
 /**
- * 电子凭证池 API
+ * 记账凭证库 API
  */
 export const poolApi = {
   /**
    * 按状态查询预归档列表
    */
-  getListByStatus: async (status: string): Promise<PoolItem[]> => {
+  getListByStatus: async (status: string, category?: string): Promise<PoolItem[]> => {
     try {
-      const response = await client.get<ApiResponse<PoolItem[]>>(`/pool/list/status/${status}`);
+      const url = category
+        ? `/pool/list/status/${status}?category=${category}`
+        : `/pool/list/status/${status}`;
+      const response = await client.get<ApiResponse<PoolItem[]>>(url);
       if (response.data.code === 200) {
         return response.data.data;
       }
@@ -61,11 +64,12 @@ export const poolApi = {
   },
 
   /**
-   * 查询电子凭证池列表
+   * 查询记账凭证库列表
    */
-  getList: async (): Promise<PoolItem[]> => {
+  getList: async (category?: string | null): Promise<PoolItem[]> => {
     try {
-      const response = await client.get<ApiResponse<PoolItem[]>>('/pool/list');
+      const url = category ? `/pool/list?category=${category}` : '/pool/list';
+      const response = await client.get<ApiResponse<PoolItem[]>>(url);
       if (response.data.code === 200) {
         return response.data.data;
       } else {
@@ -134,7 +138,7 @@ export const poolApi = {
   },
 
   /**
-   * 删除电子凭证池记录
+   * 删除记账凭证库记录
    */
   delete: async (id: string): Promise<void> => {
     const response = await client.post<ApiResponse<any>>(`/pool/delete/${id}`);

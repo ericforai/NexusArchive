@@ -9,7 +9,7 @@ import com.nexusarchive.entity.ArchiveBatchItem;
 import com.nexusarchive.entity.ArchiveSubmitBatch;
 import com.nexusarchive.entity.PeriodLock;
 import com.nexusarchive.mapper.ArchiveBatchItemMapper;
-import com.nexusarchive.mapper.ArchiveSubmitBatchMapper;
+import com.nexusarchive.mapper.ArchiveSubmitBatchMapperV2;
 import com.nexusarchive.mapper.PeriodLockMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BatchWorkflowService {
 
-    private final ArchiveSubmitBatchMapper batchMapper;
+    private final ArchiveSubmitBatchMapperV2 batchMapper;
     private final ArchiveBatchItemMapper itemMapper;
     private final PeriodLockMapper periodLockMapper;
     private final FourNatureChecker fourNatureChecker;
@@ -41,7 +41,7 @@ public class BatchWorkflowService {
      * 提交批次
      */
     @Transactional
-    public ArchiveSubmitBatch submitBatch(Long batchId, String submittedBy) {
+    public ArchiveSubmitBatch submitBatch(Long batchId, Long submittedBy) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);
@@ -74,7 +74,7 @@ public class BatchWorkflowService {
      * 审批通过批次
      */
     @Transactional
-    public ArchiveSubmitBatch approveBatch(Long batchId, String approvedBy, String comment) {
+    public ArchiveSubmitBatch approveBatch(Long batchId, Long approvedBy, String comment) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);
@@ -105,7 +105,7 @@ public class BatchWorkflowService {
      * 驳回批次
      */
     @Transactional
-    public ArchiveSubmitBatch rejectBatch(Long batchId, String rejectedBy, String comment) {
+    public ArchiveSubmitBatch rejectBatch(Long batchId, Long rejectedBy, String comment) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);
@@ -130,7 +130,7 @@ public class BatchWorkflowService {
      * 执行批次归档
      */
     @Transactional
-    public ArchiveSubmitBatch executeBatchArchive(Long batchId, String archivedBy) {
+    public ArchiveSubmitBatch executeBatchArchive(Long batchId, Long archivedBy) {
         ArchiveSubmitBatch batch = batchMapper.selectById(batchId);
         if (batch == null) {
             throw new IllegalArgumentException("批次不存在: " + batchId);

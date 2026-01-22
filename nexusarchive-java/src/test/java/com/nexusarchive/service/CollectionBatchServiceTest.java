@@ -14,6 +14,7 @@ import com.nexusarchive.entity.CollectionBatchFile;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
+import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.security.FondsContext;
 import com.nexusarchive.service.collection.BatchFileStorageService;
 import com.nexusarchive.service.collection.BatchFileValidator;
@@ -67,6 +68,9 @@ class CollectionBatchServiceTest {
 
     @Mock
     private CollectionBatchFileMapper batchFileMapper;
+    
+    @Mock
+    private BasFondsMapper fondsMapper;
 
     @Mock
     private ArcFileContentMapper arcFileContentMapper;
@@ -131,7 +135,7 @@ class CollectionBatchServiceTest {
             .uploadedFiles(0)
             .failedFiles(0)
             .totalSizeBytes(0L)
-            .createdBy(1L)
+            .createdBy("1")
             .createdTime(LocalDateTime.now())
             .lastModifiedTime(LocalDateTime.now())
             .build();
@@ -159,10 +163,11 @@ class CollectionBatchServiceTest {
                 return 1;
             });
             when(batchNumberGenerator.generateBatchNo()).thenReturn("COL-20240105-001");
-            when(batchNumberGenerator.generateUploadToken(anyLong(), anyLong())).thenReturn("test-token-123");
+            when(batchNumberGenerator.generateUploadToken(anyLong(), anyString())).thenReturn("test-token-123");
+            when(fondsMapper.selectOne(any())).thenReturn(null); // Simple default
 
             // When: 调用创建批次
-            BatchUploadResponse response = collectionBatchService.createBatch(testRequest, 1L);
+            BatchUploadResponse response = collectionBatchService.createBatch(testRequest, "1");
 
             // Then: 验证响应
             assertThat(response).isNotNull();
@@ -192,11 +197,12 @@ class CollectionBatchServiceTest {
             when(batchNumberGenerator.generateBatchNo())
                 .thenReturn("COL-20240105-001")
                 .thenReturn("COL-20240105-002");
-            when(batchNumberGenerator.generateUploadToken(anyLong(), anyLong())).thenReturn("token");
+            when(batchNumberGenerator.generateUploadToken(anyLong(), anyString())).thenReturn("token");
+            when(fondsMapper.selectOne(any())).thenReturn(null);
 
             // When: 创建两个批次
-            BatchUploadResponse response1 = collectionBatchService.createBatch(testRequest, 1L);
-            BatchUploadResponse response2 = collectionBatchService.createBatch(testRequest, 1L);
+            BatchUploadResponse response1 = collectionBatchService.createBatch(testRequest, "1");
+            BatchUploadResponse response2 = collectionBatchService.createBatch(testRequest, "1");
 
             // Then: 批次号应该不同
             assertThat(response1.getBatchNo()).isEqualTo("COL-20240105-001");
@@ -273,7 +279,7 @@ class CollectionBatchServiceTest {
             when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
 
             // When
-            var result = collectionBatchService.completeBatch(1L, 1L);
+            var result = collectionBatchService.completeBatch(1L, "1");
 
             // Then
             assertThat(result).isNotNull();
@@ -286,6 +292,7 @@ class CollectionBatchServiceTest {
                 anyString(), anyString(), anyString(),
                 anyString(), anyString(), anyString(), anyString(), any()
             );
+
         }
     }
 
@@ -303,7 +310,7 @@ class CollectionBatchServiceTest {
             when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
 
             // When
-            collectionBatchService.cancelBatch(1L, 1L);
+            collectionBatchService.cancelBatch(1L, "1");
 
             // Then
             verify(batchMapper).updateById(any(CollectionBatch.class));
@@ -400,7 +407,7 @@ class CollectionBatchServiceTest {
             when(preArchiveCheckService.checkSingleFile("file-002")).thenReturn(mockReport2);
 
             // When
-            var result = collectionBatchService.runFourNatureCheck(1L, 1L);
+            var result = collectionBatchService.runFourNatureCheck(1L, "1");
 
             // Then
             assertThat(result).isNotNull();
@@ -438,7 +445,7 @@ class CollectionBatchServiceTest {
             when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(mockReport);
 
             // When
-            collectionBatchService.runFourNatureCheck(1L, 1L);
+            collectionBatchService.runFourNatureCheck(1L, "1");
 
             // Then
             verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));

@@ -27,7 +27,7 @@ export function useVoucherData({ row, enabled = true }: UseVoucherDataOptions) {
       return;
     }
 
-    // 首先检查 row 是否已有 sourceData（来自电子凭证池视图）
+    // 首先检查 row 是否已有 sourceData（来自记账凭证库视图）
     const existingSourceData = row.sourceData || row.source_data;
     if (existingSourceData) {
       const result = parseVoucherData(existingSourceData, row);

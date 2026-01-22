@@ -35,6 +35,12 @@ interface ArchiveListPageProps {
     routeConfig: ArchiveRouteMode;
     /** 仪表盘筛选状态 (仅用于 pool 视图) */
     statusFilter?: SimplifiedPreArchiveStatus | null;
+    /** 档案门类筛选 (仅用于 pool 视图) */
+    categoryFilter?: string | null;
+    /** 自定义子标题 (用于覆盖默认的 Route Config) */
+    subTitle?: string;
+    /** 自定义模块配置 (用于覆盖默认的 Table Columns) */
+    config?: any;
 }
 
 const LoadingFallback = () => (
@@ -43,16 +49,19 @@ const LoadingFallback = () => (
     </div>
 );
 
-export const ArchiveListPage: React.FC<ArchiveListPageProps> = ({ routeConfig, statusFilter }) => {
+export const ArchiveListPage: React.FC<ArchiveListPageProps> = ({ routeConfig, statusFilter, categoryFilter, subTitle, config }) => {
     // 计算初始 Pool 筛选状态
-    const initialPoolFilter = (routeConfig === 'pool' && statusFilter) 
-        ? SIMPLIFIED_TO_OLD_STATUS[statusFilter] 
+    const initialPoolFilter = (routeConfig === 'pool' && statusFilter)
+        ? SIMPLIFIED_TO_OLD_STATUS[statusFilter]
         : undefined;
 
     // 1. 获取核心业务数据与状态
-    const controller = useArchiveListController({ 
+    const controller = useArchiveListController({
         routeConfig,
-        initialPoolStatusFilter: initialPoolFilter
+        initialPoolStatusFilter: initialPoolFilter,
+        categoryFilter: categoryFilter,
+        subTitle: subTitle, // 传递自定义子标题
+        config: config      // 传递自定义配置
     });
 
     // 2. 获取操作 Action

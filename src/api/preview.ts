@@ -80,7 +80,7 @@ export const previewApi = {
     },
 
     /**
-     * 预览电子凭证池文件（未归档）
+     * 预览记账凭证库文件（未归档）
      * @param fileId 文件ID
      */
     getPoolPreview: async (fileId: string): Promise<PreviewResult> => {

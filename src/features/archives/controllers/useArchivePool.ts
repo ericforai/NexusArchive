@@ -11,10 +11,11 @@ import { ControllerPool, PoolStatusFilter } from './types';
 interface UseArchivePoolOptions {
     isEnabled: boolean;
     initialStatusFilter?: PoolStatusFilter;
+    categoryFilter?: string | null; // 新增
 }
 
 export function useArchivePool(options: UseArchivePoolOptions): ControllerPool {
-    const { isEnabled, initialStatusFilter } = options;
+    const { isEnabled, initialStatusFilter, categoryFilter } = options;
 
     const [statusFilter, setStatusFilter] = useState<PoolStatusFilter>(initialStatusFilter || null);
     const [statusStats, setStatusStats] = useState<Record<string, number>>({});
@@ -28,7 +29,10 @@ export function useArchivePool(options: UseArchivePoolOptions): ControllerPool {
     const refreshStats = useCallback(async () => {
         if (!isEnabledRef.current) return;
         try {
-            const response = await client.get('/pool/stats/status');
+            const url = categoryFilter
+                ? `/pool/stats/status?category=${categoryFilter}`
+                : '/pool/stats/status';
+            const response = await client.get(url);
             if (response.data.code === 200) {
                 setStatusStats(response.data.data || {});
             }
@@ -42,7 +46,7 @@ export function useArchivePool(options: UseArchivePoolOptions): ControllerPool {
         if (isEnabled) {
             refreshStats();
         }
-    }, [isEnabled]); // 移除 refreshStats 依赖
+    }, [isEnabled, categoryFilter, refreshStats]); // 添加 categoryFilter 和 refreshStats 依赖
 
     // 使用 useMemo 稳定返回值
     return useMemo(() => ({

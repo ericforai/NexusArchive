@@ -36,6 +36,7 @@ import type { UploadProps, UploadFile } from 'antd';
 import { batchUploadApi, ArchivalCategoryLabels } from '../../api/batchUpload';
 import { useFondsStore } from '../../store/useFondsStore';
 import { ComplianceAlert } from './components/ComplianceAlert';
+import { ARCHIVE_CATEGORIES, CATEGORY_OPTIONS } from '../../constants/archivalCategories';
 
 const { Dragger } = Upload;
 
@@ -73,6 +74,7 @@ export const BatchUploadView: React.FC = () => {
   const [uploadQueue, setUploadQueue] = useState<FileUploadItem[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number>(-1);
+  const [selectedCategory, setSelectedCategory] = useState<string>('VOUCHER');
   const [form] = Form.useForm<BatchFormData>();
 
   // ===== Queries =====
@@ -391,13 +393,40 @@ export const BatchUploadView: React.FC = () => {
                   rules={[{ required: true, message: '请选择档案门类' }]}
                 >
                   <Select
-                    options={Object.entries(ArchivalCategoryLabels).map(
-                      ([value, label]) => ({ label, value })
-                    )}
+                    onChange={(val) => setSelectedCategory(val)}
+                    options={CATEGORY_OPTIONS.map(opt => ({
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <opt.icon size={14} className={`text-${opt.color}-500`} />
+                          <span>{opt.label}</span>
+                        </div>
+                      ),
+                      value: opt.value
+                    }))}
                   />
                 </Form.Item>
               </Col>
             </Row>
+
+            {/* 显性强校验提示 */}
+            {selectedCategory && (
+              <div className="mt-4 animate-in slide-in-from-top-2 duration-300">
+                <Alert
+                  type="info"
+                  showIcon
+                  icon={React.createElement((ARCHIVE_CATEGORIES as any)[selectedCategory]?.icon || AlertCircle, { size: 18 })}
+                  title={`${(ARCHIVE_CATEGORIES as any)[selectedCategory]?.label} 合规说明`}
+                  description={
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">{(ARCHIVE_CATEGORIES as any)[selectedCategory]?.description}</p>
+                      <p className="text-xs text-slate-500 bg-slate-100 p-2 rounded border-l-4 border-blue-500">
+                        校验规则：{(ARCHIVE_CATEGORIES as any)[selectedCategory]?.validationRule}
+                      </p>
+                    </div>
+                  }
+                />
+              </div>
+            )}
           </Form>
         </Card>
 
@@ -570,7 +599,7 @@ export const BatchUploadView: React.FC = () => {
       </Row>
 
       {/* Compliance Alert */}
-      <ComplianceAlert className="mb-6" />
+      <ComplianceAlert category={batchInfo ? form.getFieldValue('archivalCategory') : selectedCategory} className="mb-6" />
 
       {/* Overall Progress */}
       {step === 'upload' && (
@@ -632,7 +661,7 @@ export const BatchUploadView: React.FC = () => {
             type="success"
             showIcon
             className="mb-4"
-            message="上传完成！"
+            title="上传完成！"
             description="已为您创建档案记录，请在凭证关联页面匹配原始凭证。"
           />
 

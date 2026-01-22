@@ -6,7 +6,7 @@
  */
 import { ModuleConfig } from '../../types';
 
-// 1.1 电子凭证池
+// 1.1 记账凭证库
 export const PRE_ARCHIVE_POOL_CONFIG: ModuleConfig = {
     columns: [
         { key: 'voucherWord', header: '凭证号', type: 'text' },

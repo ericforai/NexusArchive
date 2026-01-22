@@ -109,6 +109,7 @@ export interface UseArchiveDataLoadOptions {
     page: ControllerPage;
     isPoolView: boolean;
     poolStatusFilter?: PoolStatusFilter;
+    categoryFilter?: string | null; // 新增
 }
 
 export interface UseArchiveActionsOptions {

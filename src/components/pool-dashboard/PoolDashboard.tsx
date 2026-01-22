@@ -10,32 +10,45 @@ import {
   SimplifiedPreArchiveStatus,
   STATUS_CONFIG,
 } from '@/config/pool-columns.config';
+import { CATEGORY_OPTIONS } from '@/constants/archivalCategories';
 import './PoolDashboard.css';
 
 interface PoolDashboardProps {
   /** 当前激活的筛选状态 */
   activeFilter: SimplifiedPreArchiveStatus | null;
+  /** 当前激活的门类筛选 */
+  categoryFilter?: string | null;
   /** 筛选状态变更回调 */
   onFilterChange: (status: SimplifiedPreArchiveStatus | null) => void;
+  /** 门类筛选变更回调 */
+  onCategoryChange?: (category: string | null) => void;
   /** 是否显示批量操作按钮 */
   showActions?: boolean;
-  /** 批量归档回调 */
+  /** 是否显示批量归档回调 */
   onBatchArchive?: () => void;
+  /** 是否显示门类选择器 (维度筛选器) */
+  showCategoryPicker?: boolean;
 }
 
 /**
- * 电子凭证池仪表板
+ * 记账凭证库仪表板
  *
- * 展示 5 个核心状态的统计卡片，支持点击筛选看板数据
+ * 展示 5 个核心状态的统计卡片 + 4 个档案门类快速筛选
  */
 export const PoolDashboard: React.FC<PoolDashboardProps> = ({
   activeFilter,
+  categoryFilter,
   onFilterChange,
+  onCategoryChange,
   showActions = false,
   onBatchArchive,
+  showCategoryPicker = true,
 }) => {
-  const { refetch: _refetch } = usePoolKanban();
-  const { stats, totalCount: _totalCount } = usePoolDashboard();
+  const { refetch: _refetch } = usePoolKanban({
+    filter: activeFilter,
+    categoryFilter
+  });
+  const { stats, totalCount: _totalCount } = usePoolDashboard({ categoryFilter });
 
   // 计算每个状态的卡片配置
   const cards = useMemo(() => {
@@ -59,9 +72,13 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
   }, [stats, activeFilter, showActions]);
 
   const handleCardClick = (status: SimplifiedPreArchiveStatus) => {
-    // 切换筛选状态：如果点击当前激活状态，则取消筛选
     const newFilter = activeFilter === status ? null : status;
     onFilterChange(newFilter);
+  };
+
+  const handleCategoryClick = (category: string) => {
+    const newFilter = categoryFilter === category ? null : category;
+    onCategoryChange?.(newFilter);
   };
 
   const handleBatchArchive = () => {
@@ -69,7 +86,8 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
   };
 
   return (
-    <div className="pool-dashboard">
+    <div className="pool-dashboard space-y-4">
+      {/* 状态统计卡片 */}
       <div className="pool-dashboard__cards">
         {cards.map((card) => (
           <DashboardCard
@@ -87,6 +105,38 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
           />
         ))}
       </div>
+
+      {/* 门类多维筛选器 (New) */}
+      {showCategoryPicker && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-white/50 backdrop-blur rounded-xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">维度筛选</span>
+          <div className="flex gap-2">
+            {CATEGORY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleCategoryClick(opt.value)}
+                className={`
+                flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
+                ${categoryFilter === opt.value
+                    ? `bg-${opt.color}-50 text-${opt.color}-600 ring-2 ring-${opt.color}-500/20`
+                    : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'}
+              `}
+              >
+                <opt.icon size={14} />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {categoryFilter && (
+            <button
+              onClick={() => onCategoryChange?.(null)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors ml-auto"
+            >
+              重置维度
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

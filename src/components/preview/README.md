@@ -171,7 +171,7 @@ import { FilePreviewModal } from '@/components/preview';
 |------|---------|---------|
 | 预归档库-凭证关联 | ❌ Not Found | ✅ 使用 SmartFilePreview |
 | 档案列表 → 详情 | ❌ Not Found | ✅ 使用 SmartFilePreview |
-| 电子凭证池 | ⚠️ 缺少预览按钮 | ✅ 添加 FilePreviewModal |
+| 记账凭证库 | ⚠️ 缺少预览按钮 | ✅ 添加 FilePreviewModal |
 | 全景视图 | ⚠️ 不稳定 | ✅ 使用 SmartFilePreview |
 
 ---

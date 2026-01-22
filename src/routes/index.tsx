@@ -46,6 +46,9 @@ const BorrowingView = lazy(() => import('../pages/utilization/BorrowingView'));
 const StatsView = lazy(() => import('../pages/stats/StatsView'));
 const ComplianceReportView = lazy(() => import('../pages/archives/ComplianceReportView'));
 const ArchiveDetailPage = lazy(() => import('../pages/archives/ArchiveDetailPage'));
+const OtherAccountingMaterialsView = lazy(() => import('../pages/pre-archive/OtherAccountingMaterialsView'));
+const LedgersPreArchiveView = lazy(() => import('../pages/pre-archive/LedgersPreArchiveView'));
+const ReportsPreArchiveView = lazy(() => import('../pages/pre-archive/ReportsPreArchiveView'));
 const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
 
 // 系统设置模块（4 个整合版布局）
@@ -192,6 +195,9 @@ export const routes: RouteObject[] = [
             { path: 'pre-archive/pool', element: <PoolPage /> },
             { path: 'pre-archive/pool/kanban', element: <PoolPage /> },  // 兼容旧路由
             { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }) },
+            { path: 'pre-archive/ledgers', element: withSuspense(LedgersPreArchiveView) },
+            { path: 'pre-archive/reports', element: withSuspense(ReportsPreArchiveView) },
+            { path: 'pre-archive/other', element: withSuspense(OtherAccountingMaterialsView) },
             { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView) },
             { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" /> },
             { path: 'pre-archive/abnormal', element: withSuspense(AbnormalDataView) },

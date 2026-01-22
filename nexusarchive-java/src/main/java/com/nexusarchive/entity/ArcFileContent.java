@@ -98,7 +98,15 @@ public class ArcFileContent {
     /**
      * 会计年度
      */
+    /**
+     * 会计年度
+     */
     private String fiscalYear;
+
+    /**
+     * 会计期间
+     */
+    private String period;
 
     /**
      * 凭证类型
@@ -370,6 +378,14 @@ public class ArcFileContent {
         this.fiscalYear = fiscalYear;
     }
 
+    public String getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(String period) {
+        this.period = period;
+    }
+
     public String getVoucherType() {
         return voucherType;
     }
@@ -625,6 +641,11 @@ public class ArcFileContent {
 
         public ArcFileContentBuilder docDate(java.time.LocalDate docDate) {
             entity.setDocDate(docDate);
+            return this;
+        }
+
+        public ArcFileContentBuilder period(String period) {
+            entity.setPeriod(period);
             return this;
         }
 

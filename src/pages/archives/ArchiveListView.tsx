@@ -20,7 +20,7 @@ import {
   AlertTriangle, Loader2, X
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useArchiveListController, PoolStatusFilter, useSmartMatching } from '../../features/archives';
 import { STATUS_CONFIG, SimplifiedPreArchiveStatus, resolveStatus } from '@/config/pool-columns.config';
@@ -67,6 +67,7 @@ export interface ArchiveListViewProps {
 const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: archiveActions }) => {
   const { mode, query, page, data, selection, pool, ui } = controller;
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('[ArchiveListView] state', {
@@ -252,21 +253,15 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
       </div>
       <h3 className="text-slate-900 font-medium mb-1">暂无数据</h3>
       <p className="text-slate-500 text-sm max-w-xs mx-auto mb-6">
-        {mode.isPoolView ? '电子凭证池中暂时没有待处理的凭证' : '当前列表为空，请调整筛选条件或新增记录'}
+        {mode.isPoolView ? '记账凭证库中暂时没有待处理的凭证' : '当前列表为空，请调整筛选条件或新增记录'}
       </p>
       {mode.isPoolView && (
-        <label className="cursor-pointer px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/20 active:scale-95">
-          上传凭证
-          <input
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) archiveActions.handleUpload(file);
-              e.target.value = '';
-            }}
-          />
-        </label>
+        <button
+          onClick={() => navigate('/system/collection/upload')}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/20 active:scale-95 flex items-center gap-2"
+        >
+          <Upload size={16} /> 前往资料收件
+        </button>
       )}
     </div>
   );
@@ -347,10 +342,12 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
             </button>
 
             {mode.isPoolView && (
-              <label className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 cursor-pointer flex items-center gap-2">
-                <Upload size={16} /> 上传
-                <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) archiveActions.handleUpload(f); e.target.value = ''; }} />
-              </label>
+              <button
+                onClick={() => navigate('/system/collection/upload')}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/20 active:scale-95 flex items-center gap-2"
+              >
+                <Upload size={16} /> 资料收件
+              </button>
             )}
           </div>
         </div>
@@ -496,13 +493,17 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
       </div>
 
       {/* Detail Drawer - 根据类型选择不同的抽屉组件 */}
-      {/* 财务报告使用专门的抽屉组件，其他使用凭证抽屉组件 */}
-      {mode.subTitle === '财务报告' ? (
+      {/* 财务报告、会计账簿、其他会计资料使用专门的文件预览抽屉组件 */}
+      {(mode.subTitle === '财务报告' || mode.subTitle === '财务报告库' ||
+        mode.subTitle === '会计账簿' || mode.subTitle === '会计账簿库' ||
+        mode.subTitle === '其他会计资料' || mode.subTitle === '其他会计资料库') ? (
         <FinancialReportDetailDrawer
-          key={`report-${viewRow?.id || 'detail'}`}
+          key={`file-${viewRow?.id || 'detail'}`}
           open={isViewModalOpen}
           onClose={closeViewModal}
           row={viewRow}
+          moduleTitle={mode.subTitle.replace('库', '')} // 移除"库"后缀作为标题
+          isPool={mode.isPoolView}
         />
       ) : (
         <ArchiveDetailDrawer

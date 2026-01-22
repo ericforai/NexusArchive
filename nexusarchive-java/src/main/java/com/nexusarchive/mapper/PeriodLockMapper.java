@@ -30,7 +30,7 @@ public interface PeriodLockMapper extends BaseMapper<PeriodLock> {
         LIMIT 1
     """)
     PeriodLock findActiveLock(
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("period") String period
     );
 
@@ -45,7 +45,7 @@ public interface PeriodLockMapper extends BaseMapper<PeriodLock> {
         AND unlock_at IS NULL
     """)
     PeriodLock findActiveLockByType(
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("period") String period,
         @Param("lockType") String lockType
     );
@@ -59,7 +59,7 @@ public interface PeriodLockMapper extends BaseMapper<PeriodLock> {
         AND unlock_at IS NULL
         ORDER BY period DESC
     """)
-    List<PeriodLock> findAllActiveLocks(@Param("fondsId") Long fondsId);
+    List<PeriodLock> findAllActiveLocks(@Param("fondsId") String fondsId);
 
     /**
      * 获取期间范围内的锁定记录
@@ -73,7 +73,7 @@ public interface PeriodLockMapper extends BaseMapper<PeriodLock> {
         ORDER BY period
     """)
     List<PeriodLock> findLocksInRange(
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("periodStart") String periodStart,
         @Param("periodEnd") String periodEnd
     );
@@ -89,7 +89,7 @@ public interface PeriodLockMapper extends BaseMapper<PeriodLock> {
         AND unlock_at IS NULL
     """)
     int countArchivedLock(
-        @Param("fondsId") Long fondsId,
+        @Param("fondsId") String fondsId,
         @Param("period") String period
     );
 }

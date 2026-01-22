@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,10 +39,15 @@ public class OriginalVoucher {
      */
     private String voucherNo;
 
-    /**
-     * 一级类型: INVOICE/BANK/DOCUMENT/CONTRACT/OTHER
-     */
+    @NotBlank(message = "档案门类不能为空")
+    @TableField("voucher_category")
     private String voucherCategory;
+
+    /**
+     * 数据来源类型: API_SYNC / MANUAL_UPLOAD
+     */
+    @Builder.Default
+    private String sourceType = "MANUAL_UPLOAD";
 
     /**
      * 二级类型: INV_PAPER/INV_VAT_E/BANK_RECEIPT/...

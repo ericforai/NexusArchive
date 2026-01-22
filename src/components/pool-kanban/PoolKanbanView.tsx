@@ -146,7 +146,7 @@ function KanbanToolbar({
   return (
     <div className="pool-kanban-view__toolbar">
       <div className="pool-kanban-view__title-section">
-        <h2 className="pool-kanban-view__title">电子凭证池</h2>
+        <h2 className="pool-kanban-view__title">记账凭证库</h2>
         {collapsedColumns > 0 && !hasSelection && (
           <span className="pool-kanban-view__layout-info">
             {collapsedColumns} / {totalColumns} 列已折叠
@@ -204,11 +204,25 @@ function KanbanToolbar({
 }
 
 /**
- * 电子凭证池看板视图
+ * 记账凭证库看板视图
  *
  * 展示档案预处理流程的四列看板，支持批量操作和响应式布局
  */
-export function PoolKanbanView({ className, filter }: PoolKanbanViewProps) {
+export interface PoolKanbanViewProps {
+  /** 额外的类名 */
+  className?: string;
+  /** 状态筛选（可选） */
+  filter?: SimplifiedPreArchiveStatus | null;
+  /** 门类筛选（可选） */
+  categoryFilter?: string | null;
+}
+
+/**
+ * 记账凭证库看板视图
+ *
+ * 展示档案预处理流程的四列看板，支持批量操作和响应式布局
+ */
+export function PoolKanbanView({ className, filter, categoryFilter }: PoolKanbanViewProps) {
   const containerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
   const {
@@ -217,7 +231,7 @@ export function PoolKanbanView({ className, filter }: PoolKanbanViewProps) {
     error,
     refetch,
     getCardsForColumn,
-  } = usePoolKanban({ filter });
+  } = usePoolKanban({ filter, categoryFilter });
 
   const batchAction = usePoolBatchAction();
 
@@ -431,7 +445,7 @@ export function PoolKanbanView({ className, filter }: PoolKanbanViewProps) {
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         row={detailRow}
-        config={{ id: 'pool', title: '电子凭证池' } as any}
+        config={{ id: 'pool', title: '记账凭证库' } as any}
         isPoolView={true}
       />
     </div>

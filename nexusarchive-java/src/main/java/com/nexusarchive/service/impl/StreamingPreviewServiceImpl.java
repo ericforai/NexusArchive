@@ -286,8 +286,15 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
     private void recordPreviewAuditLog(String archiveId, String mode, String traceId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication != null ? authentication.getName() : "Unknown";
-        String username = authentication != null ?
-            (authentication.getPrincipal() != null ? authentication.getPrincipal().toString() : "Unknown") : "Unknown";
+        String username = "Unknown";
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                username = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            } else {
+                username = authentication.getName();
+            }
+        }
 
         SysAuditLog auditLog = new SysAuditLog();
         auditLog.setUserId(userId);

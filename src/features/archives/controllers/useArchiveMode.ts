@@ -14,11 +14,11 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
 
     // Resolve configuration
     const resolvedConfig = routeConfig ? resolveRouteConfig(routeConfig as ArchiveRouteMode) : undefined;
-    const title = resolvedConfig?.title || propTitle || DEFAULT_ROUTE_CONFIG.title;
-    const subTitle = resolvedConfig?.subTitle || propSubTitle || DEFAULT_ROUTE_CONFIG.subTitle;
-    const config: ModuleConfig = resolvedConfig?.config || propConfig || DEFAULT_ROUTE_CONFIG.config;
+    const title = propTitle || resolvedConfig?.title || DEFAULT_ROUTE_CONFIG.title;
+    const subTitle = propSubTitle || resolvedConfig?.subTitle || DEFAULT_ROUTE_CONFIG.subTitle;
+    const config: ModuleConfig = propConfig || resolvedConfig?.config || DEFAULT_ROUTE_CONFIG.config;
 
-    const isPoolView = subTitle === '电子凭证池';
+    const isPoolView = routeConfig === 'pool' || subTitle === '记账凭证库';
     const isLinkingView = subTitle === '凭证关联';
 
     const resolveCategoryCode = useCallback((): 'AC01' | 'AC02' | 'AC03' | 'AC04' | undefined => {
@@ -29,23 +29,35 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
             case '凭证关联':
                 return 'AC01';
             case '会计账簿':
+            case '会计账簿库':
                 return 'AC02';
             case '财务报告':
+            case '财务报告库':
                 return 'AC03';
             case '其他会计资料':
+            case '其他会计资料库':
                 return 'AC04';
             default:
+                // Handle fuzzy match for robustness
+                if ((subTitle || '').includes('会计账簿')) return 'AC02';
+                if ((subTitle || '').includes('财务报告')) return 'AC03';
+                if ((subTitle || '').includes('其他会计资料')) return 'AC04';
                 return undefined;
         }
     }, [subTitle]);
 
     const resolveDefaultStatus = useCallback(() => {
         if (subTitle === '凭证关联') return 'draft,MATCH_PENDING,MATCHED';
-        if (['会计凭证', '会计账簿', '财务报告', '其他会计资料'].includes(subTitle || '')) {
+        // For Pool views, we typically want "All" (undefined) or PENDING.
+        // If we force 'archived', we hide new uploads.
+        if (isPoolView) return undefined;
+
+        // For actual Archive views (Search/View)
+        if (['会计凭证', '会计账簿', '财务报告', '其他会计资料'].some(kw => (subTitle || '').includes(kw))) {
             return 'archived';
         }
         return undefined;
-    }, [subTitle]);
+    }, [subTitle, isPoolView]);
 
     // 使用 useMemo 稳定返回值引用
     return useMemo(() => ({

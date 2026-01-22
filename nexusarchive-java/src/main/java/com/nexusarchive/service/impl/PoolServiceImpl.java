@@ -56,6 +56,26 @@ public class PoolServiceImpl implements PoolService {
             Map.entry("ARCHIVED", PreArchiveStatus.COMPLETED.getCode())
     );
 
+    // 门类映射表: 前端/API代码 -> 数据库 voucher_type 值列表
+    private static final Map<String, List<String>> CATEGORY_TYPE_MAP;
+    static {
+        Map<String, List<String>> map = new HashMap<>();
+        // 记账凭证 (ERP同步)
+        map.put("VOUCHER", List.of("VOUCHER"));
+        // 原始凭证 (通常在单据池)
+        map.put("AC01", List.of("AC01", "ATTACHMENT"));
+        // 会计账簿
+        map.put("AC02", List.of("AC02"));
+        // 财务报告
+        map.put("AC03", List.of("AC03", "REPORT"));
+        // 其他资料 (包含未分类的 NULL 值) -> 注意: NULL 需要特殊处理
+        map.put("AC04", List.of("AC04", "OTHER"));
+        // 兼容前端传 OTHER 的情况
+        map.put("OTHER", List.of("AC04", "OTHER"));
+        CATEGORY_TYPE_MAP = Map.copyOf(map);
+    }
+
+
     @Override
     public List<PoolItemDto> searchCandidates(CandidateSearchRequest request) {
         log.info("开始搜索候选凭证: {}", request);
@@ -153,6 +173,7 @@ public class PoolServiceImpl implements PoolService {
                 .code(displayCode)
                 .source(source)
                 .type(fileContent.getFileType())
+                .voucherType(fileContent.getVoucherType())
                 .amount(amountStr)
                 .date(fileContent.getCreatedTime() != null ? fileContent.getCreatedTime().format(FORMATTER) : "-")
                 .status(fileContent.getPreArchiveStatus() != null ? fileContent.getPreArchiveStatus() : "PENDING_CHECK")
@@ -161,7 +182,11 @@ public class PoolServiceImpl implements PoolService {
                 .summary(fileContent.getSummary())
                 .voucherWord(fileContent.getVoucherWord())
                 .docDate(fileContent.getDocDate() != null ? fileContent.getDocDate().toString() : "-")
+                .docDate(fileContent.getDocDate() != null ? fileContent.getDocDate().toString() : "-")
                 .sourceData(fileContent.getSourceData())
+                .fiscalYear(fileContent.getFiscalYear())
+                .period(fileContent.getPeriod())
+                .fondsCode(fileContent.getFondsCode())
                 .build();
     }
 
@@ -171,33 +196,41 @@ public class PoolServiceImpl implements PoolService {
     }
 
     @Override
-    public List<PoolItemDto> listPoolItems() {
+    public List<PoolItemDto> listPoolItems(String category) {
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         queryWrapper.and(w -> w.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
                 .or()
-                .isNotNull(ArcFileContent::getPreArchiveStatus))
-                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
-                .orderByDesc(ArcFileContent::getCreatedTime);
+                .isNotNull(ArcFileContent::getPreArchiveStatus));
+
+        // Use standard filter logic
+        applyCategoryFilter(queryWrapper, category);
+        
+        queryWrapper.orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
         return fileContents.stream()
                 .map(this::convertToPoolItemDto)
                 .collect(Collectors.toList());
     }
+
+
 
     @Override
-    public List<PoolItemDto> listByStatus(String status) {
+    public List<PoolItemDto> listByStatus(String status, String category) {
         String normalizedStatus = normalizeLegacyStatus(status);
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, normalizedStatus)
-                .and(w -> w.isNull(ArcFileContent::getVoucherType).or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"))
-                .orderByDesc(ArcFileContent::getCreatedTime);
+        queryWrapper.eq(ArcFileContent::getPreArchiveStatus, normalizedStatus);
+
+        applyCategoryFilter(queryWrapper, category);
+
+        queryWrapper.orderByDesc(ArcFileContent::getCreatedTime);
 
         List<ArcFileContent> fileContents = arcFileContentMapper.selectList(queryWrapper);
         return fileContents.stream()
                 .map(this::convertToPoolItemDto)
                 .collect(Collectors.toList());
     }
+
 
     private String normalizeLegacyStatus(String status) {
         if (status == null || status.isBlank()) {
@@ -208,28 +241,70 @@ public class PoolServiceImpl implements PoolService {
         return normalized != null ? normalized : trimmed;
     }
 
+
+
     @Override
-    public Map<String, Long> getStatusStats() {
+    public Map<String, Long> getStatusStats(String category) {
         Map<String, Long> stats = new HashMap<>();
         String[] statuses = { "PENDING_CHECK", "NEEDS_ACTION", "READY_TO_MATCH", "READY_TO_ARCHIVE", "COMPLETED" };
 
         for (String status : statuses) {
-            QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("pre_archive_status", status)
-                    .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
+            LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ArcFileContent::getPreArchiveStatus, status);
+            applyCategoryFilter(queryWrapper, category);
             Long count = arcFileContentMapper.selectCount(queryWrapper);
             stats.put(status, count);
         }
 
         // 统计无状态的记录（旧数据）
-        QueryWrapper<ArcFileContent> nullStatusQuery = new QueryWrapper<>();
-        nullStatusQuery.likeRight("archival_code", "TEMP-POOL-")
-                .isNull("pre_archive_status")
-                .and(w -> w.isNull("voucher_type").or().ne("voucher_type", "ATTACHMENT"));
+        LambdaQueryWrapper<ArcFileContent> nullStatusQuery = new LambdaQueryWrapper<>();
+        nullStatusQuery.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
+                .isNull(ArcFileContent::getPreArchiveStatus);
+        applyCategoryFilter(nullStatusQuery, category);
         Long nullCount = arcFileContentMapper.selectCount(nullStatusQuery);
         stats.put("NO_STATUS", nullCount);
 
         return stats;
+    }
+
+    /**
+     * 应用门类过滤条件
+     * 策略：
+     * 1. 如果有 category，查找对应的 voucher_type 列表
+     * 2. 如果 category 是 AC04/OTHER，需要包含 NULL 值
+     * 3. 如果无 category，默认逻辑：排除 ATTACHMENT (保持向后兼容，或者根据新需求调整)
+     *    -> 根据新逻辑，Pool 页面只显示 VOUCHER，所以如果不传 category，可能需要默认显示 VOUCHER？
+     *    -> 现在的逻辑是：不传则显示“非附件”的所有内容 (旧逻辑)。为了兼容性，保持“排除附件”。
+     */
+    private void applyCategoryFilter(LambdaQueryWrapper<ArcFileContent> queryWrapper, String category) {
+        log.error("DEBUG_FILTER: applyCategoryFilter called with category='{}'", category);
+        if (category != null && !category.isBlank() && !"null".equals(category)) {
+            List<String> types = new ArrayList<>(CATEGORY_TYPE_MAP.getOrDefault(category, List.of(category)));
+            log.error("DEBUG: category matches types={}", types);
+            boolean includeNull = "AC04".equals(category) || "OTHER".equals(category);
+
+            queryWrapper.and(w -> {
+                if (includeNull) {
+                    w.isNull(ArcFileContent::getVoucherType);
+                    if (!types.isEmpty()) {
+                        w.or().in(ArcFileContent::getVoucherType, types);
+                    }
+                } else {
+                    if (!types.isEmpty()) {
+                        w.in(ArcFileContent::getVoucherType, types);
+                    } else {
+                        // 如果映射列表为空（未知的 category），可能应该查不到数据
+                        // 这里为了安全，查一个不存在的值
+                        w.eq(ArcFileContent::getVoucherType, "UNKNOWN_CATEGORY_" + category);
+                    }
+                }
+            });
+        } else {
+            // 无门类参数时 (旧逻辑兼容): 排除 ATTACHMENT
+            // 注意: 随着页面细分，应该总是传递 category。这个 fallback 主要是为了防止未更新的前端调用出错。
+            queryWrapper.and(w -> w.isNull(ArcFileContent::getVoucherType)
+                    .or().ne(ArcFileContent::getVoucherType, "ATTACHMENT"));
+        }
     }
 
     @Override

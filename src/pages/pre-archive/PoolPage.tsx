@@ -51,7 +51,7 @@ function ViewSwitcher({ currentMode, onModeChange }: ViewSwitcherProps) {
 }
 
 /**
- * 电子凭证池页面容器
+ * 记账凭证库页面容器
  *
  * 职责：
  * 1. 维护视图模式状态 (list/kanban)
@@ -85,6 +85,9 @@ export const PoolPage: React.FC = () => {
     DEFAULT_DASHBOARD_FILTER // 默认显示"可归档"
   );
 
+  // 档案门类筛选状态 (VOUCHER/LEDGER/REPORT/OTHER)
+  const [categoryFilter, setCategoryFilter] = useState<string | null>('VOUCHER');
+
   // 同步 URL 参数变化到状态
   useEffect(() => {
     const viewParam = searchParams.get('view') as ViewMode | null;
@@ -117,7 +120,7 @@ export const PoolPage: React.FC = () => {
     <div className="pool-page">
       <div className="pool-page__header">
         <div className="pool-page__title-section">
-          <h1 className="pool-page__title">电子凭证池</h1>
+          <h1 className="pool-page__title">记账凭证库</h1>
         </div>
         <ViewSwitcher currentMode={viewMode} onModeChange={handleViewChange} />
       </div>
@@ -126,15 +129,25 @@ export const PoolPage: React.FC = () => {
       <PoolDashboard
         activeFilter={dashboardFilter}
         onFilterChange={setDashboardFilter}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        showCategoryPicker={false}
         showActions={true}
         onBatchArchive={handleBatchArchive}
       />
 
       <div className="pool-page__content">
         {viewMode === 'kanban' ? (
-          <PoolKanbanView filter={dashboardFilter} />
+          <PoolKanbanView
+            filter={dashboardFilter}
+            categoryFilter={categoryFilter}
+          />
         ) : (
-          <ArchiveListPage routeConfig="pool" statusFilter={dashboardFilter} />
+          <ArchiveListPage
+            routeConfig="pool"
+            statusFilter={dashboardFilter}
+            categoryFilter={categoryFilter}
+          />
         )}
       </div>
     </div>

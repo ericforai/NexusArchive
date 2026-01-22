@@ -28,7 +28,7 @@ public interface CollectionBatchMapper extends BaseMapper<CollectionBatch> {
             "ORDER BY created_time DESC " +
             "LIMIT #{limit} OFFSET #{offset}")
     List<CollectionBatch> findByUserId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("limit") int limit,
         @Param("offset") int offset
     );

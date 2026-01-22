@@ -22,6 +22,8 @@ interface FinancialReportDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   row: GenericRow | null;
+  moduleTitle?: string;
+  isPool?: boolean;
 }
 
 type TabKey = 'preview' | 'metadata';
@@ -45,6 +47,8 @@ export const FinancialReportDetailDrawer: React.FC<FinancialReportDetailDrawerPr
   open,
   onClose,
   row,
+  moduleTitle = '财务报告',
+  isPool = false,
 }) => {
   const [activeTab, setActiveTab] = React.useState<TabKey>('preview');
 
@@ -55,24 +59,31 @@ export const FinancialReportDetailDrawer: React.FC<FinancialReportDetailDrawerPr
 
   // 报告类型标签 - 移动到此处以符合 Hook 调用规则
   const reportTypeLabel = useMemo(() => {
-    if (!row) return '财务报告';
+    if (!row) return moduleTitle;
     const typeMap: Record<string, string> = {
       'MONTHLY': '月度财务报告',
       'QUARTERLY': '季度财务报告',
       'SEMI_ANNUAL': '半年度财务报告',
       'ANNUAL': '年度财务报告',
       'SPECIAL': '专项财务报告',
+      // Ledgers
+      'GENERAL': '总账',
+      'JOURNAL': '日记账',
+      'SUBSIDIARY': '明细账',
     };
-    return typeMap[row.type || ''] || row.type || '财务报告';
-  }, [row]);
+    return typeMap[row.type || ''] || row.type || moduleTitle;
+  }, [row, moduleTitle]);
 
   // Don't render if closed or no row
   if (!open || !row) return null;
 
-  // 获取档案ID用于预览 - 使用 archiveCode 而不是 id
-  // 因为后端 getArchiveById 需要通过 archive_code 查找文件关联
-  const archiveId = row.archiveCode || row.code || row.archivalCode || row.id;
-  console.log("[FinancialReportDetailDrawer] archiveId:", archiveId, "row:", row);
+  // 获取档案标识符用于预览
+  // 凭证池 (isPool) 模式：必须使用 row.id (数据库 UUID) 见 PoolController.java
+  // 档案库模式：优先使用 archiveCode 作为 archiveId，见 ArchivePreviewController.java
+  const previewArchiveId = !isPool ? (row.archiveCode || row.code || row.archivalCode || row.id) : undefined;
+  const previewFileId = isPool ? (row.id as string) : undefined;
+
+  console.log("[FinancialReportDetailDrawer] previewParams:", { previewArchiveId, previewFileId, isPool, rowId: row.id });
 
   // 判断是否为无文件的演示数据
   const isDemoDataWithoutFile = DEMO_DATA_IDS.has(row.id || '');
@@ -96,9 +107,11 @@ export const FinancialReportDetailDrawer: React.FC<FinancialReportDetailDrawerPr
             </div>
           ) : (
             <SmartFilePreview
-              key={archiveId} // 当 archiveId 变化时重新挂载组件
-              archiveId={archiveId}
-              fileId={`${row.title || 'report'}.pdf`} // 传递文件名用于类型检测
+              key={`${isPool ? 'pool' : 'archive'}-${previewArchiveId || previewFileId}`}
+              archiveId={previewArchiveId}
+              fileId={previewFileId}
+              fileName={row.fileName}
+              isPool={isPool}
               showToolbar={true}
               showFileNav={false}
               className="h-full"

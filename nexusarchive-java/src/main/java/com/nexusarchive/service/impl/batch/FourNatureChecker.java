@@ -12,7 +12,7 @@ import com.nexusarchive.entity.ArchiveSubmitBatch;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.IntegrityCheck;
 import com.nexusarchive.mapper.ArchiveBatchItemMapper;
-import com.nexusarchive.mapper.ArchiveSubmitBatchMapper;
+import com.nexusarchive.mapper.ArchiveSubmitBatchMapperV2;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.IntegrityCheckMapper;
 import com.nexusarchive.service.FourNatureCoreService;
@@ -39,7 +39,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class FourNatureChecker {
 
-    private final ArchiveSubmitBatchMapper batchMapper;
+    private final ArchiveSubmitBatchMapperV2 batchMapper;
     private final ArchiveBatchItemMapper itemMapper;
     private final ArcFileContentMapper voucherMapper;
     private final IntegrityCheckMapper integrityCheckMapper;

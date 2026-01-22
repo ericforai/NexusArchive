@@ -175,7 +175,7 @@ describe('PoolPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('电子凭证池')).toBeInTheDocument();
+    expect(screen.getByText('记账凭证库')).toBeInTheDocument();
   });
 
   it('应将 routeConfig 传递给 ArchiveListPage', () => {

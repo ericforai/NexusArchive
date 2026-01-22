@@ -13,6 +13,7 @@ import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.CollectionBatch;
 import com.nexusarchive.entity.CollectionBatchFile;
 import com.nexusarchive.mapper.ArcFileContentMapper;
+import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
 import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.service.AuditLogService;
@@ -23,6 +24,7 @@ import com.nexusarchive.service.collection.BatchFileStorageService;
 import com.nexusarchive.service.collection.BatchFileValidator;
 import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.util.FileHashUtil;
+import org.springframework.dao.DuplicateKeyException;
 import com.nexusarchive.security.FondsContext;
 import com.nexusarchive.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +61,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     private final CollectionBatchMapper batchMapper;
     private final CollectionBatchFileMapper batchFileMapper;
+    private final BasFondsMapper fondsMapper;
     private final ArcFileContentMapper arcFileContentMapper;
     private final FileHashUtil fileHashUtil;
     private final PreArchiveCheckService preArchiveCheckService;
@@ -72,7 +75,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     @Override
     @Transactional
-    public BatchUploadResponse createBatch(BatchUploadRequest request, Long userId) {
+    public BatchUploadResponse createBatch(BatchUploadRequest request, String userId) {
         log.info("创建上传批次: userId={}, request={}", userId, request);
 
         // 1. 生成批次编号
@@ -84,10 +87,18 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             throw new BusinessException(403, "越权操作：无法在非当前全宗下创建批次");
         }
 
+        // 获取全宗 ID
+        var fonds = fondsMapper.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.BasFonds>()
+                .eq(com.nexusarchive.entity.BasFonds::getFondsCode, currentFonds)
+        );
+        String fondsId = fonds != null ? fonds.getId() : "UNKNOWN";
+
         // 2. 创建批次记录
         CollectionBatch batch = CollectionBatch.builder()
             .batchNo(batchNo)
             .batchName(request.getBatchName())
+            .fondsId(fondsId)
             .fondsCode(currentFonds)
             .fiscalYear(request.getFiscalYear())
             .fiscalPeriod(request.getFiscalPeriod())
@@ -99,14 +110,16 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             .failedFiles(0)
             .totalSizeBytes(0L)
             .createdBy(userId)
+            .createdTime(LocalDateTime.now())
+            .lastModifiedTime(LocalDateTime.now())
             .build();
 
         batchMapper.insert(batch);
 
         // 3. 记录审计日志
         auditLogService.log(
-            String.valueOf(userId),
-            String.valueOf(userId),
+            userId,
+            userId,
             "CREATE_BATCH",
             "COLLECTION_BATCH",
             String.valueOf(batch.getId()),
@@ -130,7 +143,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     @Override
     @Transactional
-    public FileUploadResult uploadFile(Long batchId, MultipartFile file, Long userId) {
+    public FileUploadResult uploadFile(Long batchId, MultipartFile file, String userId) {
         log.info("上传文件: batchId={}, filename={}, size={}",
                  batchId, file.getOriginalFilename(), file.getSize());
 
@@ -174,6 +187,19 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         // 4. 确定文件类型
         String fileType = fileValidator.detectFileType(file.getOriginalFilename());
 
+        // 4.5 检查单次内同名文件 (防止数据库唯一索引冲突)
+        // Root Cause Fix: 之前未检查文件名重复，导致插入时触发 idx_collection_batch_file_batch_name 唯一索引报错 (500)
+        boolean nameExists = batchFileMapper.exists(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CollectionBatchFile>()
+                .eq(CollectionBatchFile::getBatchId, batchId)
+                .eq(CollectionBatchFile::getOriginalFilename, file.getOriginalFilename())
+        );
+        if (nameExists) {
+            log.warn("检测到同名文件重复上传: batchId={}, filename={}", batchId, file.getOriginalFilename());
+            return new FileUploadResult(null, file.getOriginalFilename(),
+                "FAILED", "当前批次已存在同名文件，请先删除旧文件或重命名");
+        }
+
         // 5. 创建批次文件记录
         Long batchIdParam = batchId; // Rename to avoid lambda capture issue
         AtomicInteger uploadOrder = new AtomicInteger(
@@ -193,9 +219,16 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             .uploadStatus(CollectionBatchFile.STATUS_UPLOADING)
             .uploadOrder(uploadOrder.incrementAndGet())
             .startedTime(LocalDateTime.now())
+            .createdTime(LocalDateTime.now())
             .build();
 
-        batchFileMapper.insert(batchFile);
+        try {
+            batchFileMapper.insert(batchFile);
+        } catch (DuplicateKeyException e) {
+            log.warn("并发上传冲突: batchId={}, filename={}", batchId, file.getOriginalFilename());
+            return new FileUploadResult(null, file.getOriginalFilename(),
+                "FAILED", "文件处理中或已存在，请勿重复操作");
+        }
 
         // 6. 保存文件到存储
         String fileId;
@@ -241,7 +274,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     @Override
     @Transactional
-    public BatchCompleteResult completeBatch(Long batchId, Long userId) {
+    public BatchCompleteResult completeBatch(Long batchId, String userId) {
         log.info("完成批次: batchId={}, userId={}", batchId, userId);
 
         CollectionBatch batch = batchMapper.selectById(batchId);
@@ -261,8 +294,8 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
         // 记录审计日志
         auditLogService.log(
-            String.valueOf(userId),
-            String.valueOf(userId),
+            userId,
+            userId,
             "COMPLETE_BATCH",
             "COLLECTION_BATCH",
             String.valueOf(batchId),
@@ -283,7 +316,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     @Override
     @Transactional
-    public void cancelBatch(Long batchId, Long userId) {
+    public void cancelBatch(Long batchId, String userId) {
         log.info("取消批次: batchId={}, userId={}", batchId, userId);
 
         CollectionBatch batch = batchMapper.selectById(batchId);
@@ -303,8 +336,8 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         batchMapper.updateById(batch);
 
         auditLogService.log(
-            String.valueOf(userId),
-            String.valueOf(userId),
+            userId,
+            userId,
             "CANCEL_BATCH",
             "COLLECTION_BATCH",
             String.valueOf(batchId),
@@ -359,7 +392,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
     @Override
     @Transactional
-    public BatchCheckResult runFourNatureCheck(Long batchId, Long userId) {
+    public BatchCheckResult runFourNatureCheck(Long batchId, String userId) {
         log.info("执行批次四性检测: batchId={}, userId={}", batchId, userId);
 
         CollectionBatch batch = batchMapper.selectById(batchId);
@@ -607,7 +640,9 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             .fondsCode(batch.getFondsCode())
             .sourceSystem("WEB上传")
             .preArchiveStatus("PENDING_CHECK")
-            .batchId(batch.getId())
+            // 注意：batchId 外键指向 arc_archive_batch，不是 collection_batch
+            // 采集阶段设为 null，归档时再关联到正确的 arc_archive_batch
+            .batchId(null)
             .createdTime(LocalDateTime.now())
             .build();
     }

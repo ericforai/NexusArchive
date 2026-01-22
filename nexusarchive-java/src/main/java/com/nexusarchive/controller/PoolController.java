@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -267,40 +268,43 @@ public class PoolController {
      * @return 凭证池列表
      */
     @GetMapping("/list")
-    @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<List<PoolItemDto>> listPoolItems() {
-        log.info("查询电子凭证池列表");
-        List<PoolItemDto> poolItems = poolService.listPoolItems();
-        log.info("查询到 {} 条电子凭证池记录", poolItems.size());
+    public Result<List<PoolItemDto>> listPoolItems(@RequestParam(required = false) String category) {
+        log.error("DEBUG: Controller listPoolItems called with category='{}'", category);
+        List<PoolItemDto> poolItems = poolService.listPoolItems(category);
+        log.error("DEBUG: Controller listPoolItems returning {} items", poolItems.size());
         return Result.success(poolItems);
     }
 
     /**
      * 按状态查询预归档文件
      * 
-     * @param status 状态:
-     *               PENDING_CHECK/CHECK_FAILED/PENDING_METADATA/PENDING_ARCHIVE/ARCHIVED
+     * @param status   状态: PENDING_CHECK/NEEDS_ACTION/READY_TO_MATCH/READY_TO_ARCHIVE/COMPLETED
+     * @param category 门类 (DA/T 94 标准码): VOUCHER/AC01/AC02/AC03/AC04 (可选)
      * @return 文件列表
      */
     @GetMapping("/list/status/{status}")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<List<PoolItemDto>> listByStatus(@PathVariable String status) {
-        log.info("按状态查询预归档文件: {}", status);
-        List<PoolItemDto> poolItems = poolService.listByStatus(status);
-        log.info("状态 {} 共有 {} 条记录", status, poolItems.size());
+    public Result<List<PoolItemDto>> listByStatus(
+            @PathVariable String status,
+            @RequestParam(required = false) String category) {
+        log.info("按状态查询预归档文件: status={}, category={}", status, category);
+        List<PoolItemDto> poolItems = poolService.listByStatus(status, category);
+        log.info("状态 {} 门类 {} 共有 {} 条记录", status, category, poolItems.size());
         return Result.success(poolItems);
     }
 
     /**
      * 统计各状态数量
      *
+     * @param category 门类过滤 (DA/T 94 标准码): VOUCHER/AC01/AC02/AC03/AC04 (可选)
      * @return 各状态计数
      */
     @GetMapping("/stats/status")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<java.util.Map<String, Long>> getStatusStats() {
-        log.info("统计预归档各状态数量");
-        return Result.success(poolService.getStatusStats());
+    public Result<java.util.Map<String, Long>> getStatusStats(
+            @RequestParam(required = false) String category) {
+        log.info("统计预归档各状态数量, category={}", category);
+        return Result.success(poolService.getStatusStats(category));
     }
 
     /**

@@ -9,7 +9,7 @@ import { PoolKanbanView } from '@/components/pool-kanban';
 /**
  * 预归档池看板页面
  *
- * 展示电子凭证池的看板视图，支持多列管理和批量操作
+ * 展示记账凭证库的看板视图，支持多列管理和批量操作
  */
 export const PoolKanbanPage: React.FC = () => {
   return (

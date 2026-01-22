@@ -261,7 +261,7 @@ describe('PoolKanbanView', () => {
 
     it('should render toolbar with title', () => {
       render(<PoolKanbanView />);
-      expect(screen.getByText('电子凭证池')).toBeInTheDocument();
+      expect(screen.getByText('记账凭证库')).toBeInTheDocument();
     });
 
     it('should render all columns from config', () => {

@@ -20,6 +20,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -53,7 +54,7 @@ public class ArchivalAuditAspect {
         
         // 获取当前用户信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication != null ? authentication.getName() : "SYSTEM";
+        String username = getUsernameFromAuthentication(authentication);
         String userId = getUserIdFromRequest();
         
         // 获取请求信息
@@ -265,6 +266,31 @@ public class ArchivalAuditAspect {
         return fp.equals("|||") ? null : fp;
     }
     
+    /**
+     * 从认证信息中提取用户名
+     * 确保返回纯文本用户名，并限制长度在 255 以内
+     */
+    private String getUsernameFromAuthentication(Authentication authentication) {
+        if (authentication == null) {
+            return "SYSTEM";
+        }
+        
+        Object principal = authentication.getPrincipal();
+        String username;
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else {
+            username = authentication.getName();
+        }
+        
+        // 防御性处理：防止任何非预期情况导致的超长字符
+        if (username != null && username.length() > 255) {
+            return username.substring(0, 252) + "...";
+        }
+        
+        return username != null ? username : "UNKNOWN";
+    }
+
     /**
      * 从方法参数中提取对象摘要(哈希值)
      */

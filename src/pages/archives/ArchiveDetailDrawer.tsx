@@ -105,13 +105,23 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
     return unlisten;
   }, []);
 
+  // --- 智能预览逻辑确定 ---
+  const archivalCategory = useMemo(() => {
+    if (!row) return null;
+    return (row as any).type || (row as any).archivalCategory;
+  }, [row]);
+
+  const isVoucherCategory = archivalCategory === 'VOUCHER';
+  const isAttachmentOnly = archivalCategory === 'OTHER';
+
   // Close drawer when route changes (handled by parent)
   // This is a placeholder for any additional cleanup
   useEffect(() => {
     if (!open) {
-      setActiveTab('metadata'); // Reset tab when drawer closes
+      // 智能默认 Tab：凭证类默认业务元数据，资料/非凭证类默认附件
+      setActiveTab(isVoucherCategory ? 'metadata' : 'attachments');
     }
-  }, [open]);
+  }, [open, isVoucherCategory]);
 
   const handleExpandToPage = () => {
     if (!row?.id) return;
@@ -130,17 +140,22 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
     {
       key: 'metadata',
       label: '业务元数据',
-      children: voucherData ? (
+      children: (voucherData || isAttachmentOnly) ? (
         <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-          <VoucherMetadata data={voucherData} />
+          <VoucherMetadata data={voucherData || {
+            voucherNo: row.code,
+            docDate: row.date,
+            summary: row.summary || '原始文件资料'
+          } as any} />
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-slate-400">
-          <p>暂无凭证数据</p>
+          <p>暂无业务元数据</p>
         </div>
       ),
     },
-    {
+    // 会计凭证 Tab 仅对凭证门类展示 (核心简化逻辑)
+    ...(isVoucherCategory ? [{
       key: 'voucher',
       label: '会计凭证',
       children: voucherData ? (
@@ -149,10 +164,10 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-slate-400">
-          <p>暂无凭证数据</p>
+          <p>暂无凭证可视化数据</p>
         </div>
       ),
-    },
+    }] : []),
     {
       key: 'attachments',
       label: `关联附件${voucherData?.attachments && voucherData.attachments.length > 0 ? ` (${voucherData.attachments.length})` : ''}`,
