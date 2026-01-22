@@ -147,5 +147,25 @@ export const poolApi = {
     if (response.data.code !== 200) {
       throw new Error(response.data.message || '删除失败');
     }
+  },
+
+  /**
+   * 批量执行四性检测
+   */
+  checkBatch: async (fileIds: string[]): Promise<void> => {
+    const response = await client.post<ApiResponse<any>>('/pool/check/batch', fileIds);
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '检测失败');
+    }
+  },
+
+  /**
+   * 检测所有待检测文件
+   */
+  checkAllPending: async (): Promise<void> => {
+    const response = await client.get<ApiResponse<any>>('/pool/check/all-pending');
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '全面检测失败');
+    }
   }
 };

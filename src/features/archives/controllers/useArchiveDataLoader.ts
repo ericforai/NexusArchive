@@ -201,13 +201,14 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
     // Monitor poolStatusFilter changes
     useEffect(() => {
         if (isInitialLoadRef.current) return;
-        const { poolStatusFilter, isPoolView, setCurrentPage } = depsRef.current;
+        const { isPoolView, setCurrentPage } = depsRef.current;
         const prevFilter = prevDepsRef.current.poolStatusFilter;
+        // 使用闭包捕获的 poolStatusFilter（依赖数组中的最新值），而不是 depsRef.current
         if (prevFilter !== poolStatusFilter) {
             prevDepsRef.current.poolStatusFilter = poolStatusFilter;
             if (isPoolView) {
                 setCurrentPage(1);
-                // 直接调用 loadCurrentView，确保使用最新的 poolStatusFilter
+                // 使用闭包捕获的 poolStatusFilter
                 loadCurrentView(1, poolStatusFilter);
             }
         }

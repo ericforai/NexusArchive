@@ -208,6 +208,12 @@ public class ArchiveResponse {
     private String destructionStatus;
 
     /**
+     * 到期日期 (计算产生)
+     */
+    @Schema(description = "到期日期", example = "2034-01-01")
+    private LocalDate expiredDate;
+
+    /**
      * 关联方式
      */
     @Schema(description = "关联方式", example = "AUTO_AMOUNT")
@@ -236,7 +242,7 @@ public class ArchiveResponse {
      * 隐藏字段: customMetadata, standardMetadata, fixityValue, deleted
      */
     public static ArchiveResponse fromEntity(Archive entity) {
-        return ArchiveResponse.builder()
+        ArchiveResponse response = ArchiveResponse.builder()
                 .id(entity.getId())
                 .fondsNo(entity.getFondsNo())
                 .archiveCode(entity.getArchiveCode())
@@ -269,6 +275,17 @@ public class ArchiveResponse {
                 .matchMethod(entity.getMatchMethod())
                 .customMetadata(entity.getCustomMetadata())
                 .build();
+
+        // 计算到期日期
+        if (entity.getRetentionStartDate() != null && entity.getRetentionPeriod() != null) {
+            if ("10Y".equals(entity.getRetentionPeriod())) {
+                response.setExpiredDate(entity.getRetentionStartDate().plusYears(10));
+            } else if ("30Y".equals(entity.getRetentionPeriod())) {
+                response.setExpiredDate(entity.getRetentionStartDate().plusYears(30));
+            }
+        }
+        
+        return response;
     }
 
     /**

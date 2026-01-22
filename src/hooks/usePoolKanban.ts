@@ -104,10 +104,15 @@ export function usePoolKanban(options: UsePoolKanbanOptions = {}): UsePoolKanban
       _columnId: getColumnIdForStatus(card.status),
     }));
 
-    // 前端门类筛选：VOUCHER 包含 null 值（旧数据或未设置的记账凭证）
-    if (options.categoryFilter === 'VOUCHER') {
+    // 门类筛选：VOUCHER、AC04、OTHER、AC03 包含 null 值
+    if (options.categoryFilter === 'AC03') { // Handle AC03 first because it has special REPORT matching
+      // AC03 还需要匹配 REPORT 类型
       baseCards = baseCards.filter(card =>
-        !card.voucherType || card.voucherType === 'VOUCHER'
+        !card.voucherType || card.voucherType === 'AC03' || card.voucherType === 'REPORT'
+      );
+    } else if (options.categoryFilter === 'VOUCHER' || options.categoryFilter === 'AC04' || options.categoryFilter === 'OTHER') {
+      baseCards = baseCards.filter(card =>
+        !card.voucherType || card.voucherType === options.categoryFilter
       );
     } else if (options.categoryFilter) {
       baseCards = baseCards.filter(card => card.voucherType === options.categoryFilter);

@@ -6,6 +6,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { List, Columns3 } from 'lucide-react';
+import { message, Modal } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
+import { poolApi } from '@/api/pool';
 import { PoolKanbanView } from '@/components/pool-kanban';
 import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
@@ -63,8 +66,10 @@ export const ReportsPreArchiveView: React.FC = () => {
     }, [searchParams]);
 
     const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
-    // 默认展示全部状态 (null)，以免过滤掉新上传的 "待检测" (PENDING_CHECK) 文件
-    const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(null);
+    // 默认显示"待检测"状态
+    const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(
+        SimplifiedPreArchiveStatus.PENDING_CHECK
+    );
 
     // 固定门类为 AC03 (财务报告)
     const [categoryFilter] = useState<string | null>('AC03');
@@ -82,9 +87,48 @@ export const ReportsPreArchiveView: React.FC = () => {
         localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
     }, [setSearchParams]);
 
-    const handleBatchArchive = useCallback(() => {
-        console.log('Batch archive for Reports');
-    }, []);
+    const queryClient = useQueryClient();
+
+    // 批量操作回调：接收状态参数
+    const handleBatchArchive = useCallback(async (status: SimplifiedPreArchiveStatus) => {
+        const isArchive = status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE;
+        const statusLabel = isArchive ? '批量归档' : '重新检测';
+
+        Modal.confirm({
+            title: `确认${statusLabel}？`,
+            content: `系统将对所有处于“${isArchive ? '可归档' : '待检测'}”状态的财务报告执行操作。`,
+            okText: '确定',
+            cancelText: '取消',
+            onOk: async () => {
+                const hide = message.loading(`正在执行${statusLabel}...`, 0);
+                try {
+                    // 1. 获取目标 ID (AC03 财务报告)
+                    const items = await poolApi.getListByStatus(status, 'AC03');
+                    if (items.length === 0) {
+                        message.info('当前状态下没有可操作的财务报告');
+                        return;
+                    }
+                    const ids = items.map((item: any) => item.id);
+
+                    if (isArchive) {
+                        await poolApi.archiveItems(ids);
+                        message.success(`已成功提交 ${ids.length} 份财务报告的归档申请`);
+                    } else {
+                        await poolApi.checkBatch(ids);
+                        message.success(`已开始对 ${ids.length} 份财务报告进行重新检测`);
+                    }
+
+                    // 2. 刷新数据
+                    queryClient.invalidateQueries({ queryKey: ['pool'] });
+                } catch (error: any) {
+                    console.error(`${statusLabel}失败:`, error);
+                    message.error(`${statusLabel}执行失败: ${error.message || '系统错误'}`);
+                } finally {
+                    hide();
+                }
+            }
+        });
+    }, [queryClient]);
 
     return (
         <div className="pool-page">

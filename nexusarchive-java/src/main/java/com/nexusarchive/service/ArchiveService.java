@@ -404,6 +404,12 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
                 .replace("\t", "\\t");
     }
 
+    @Override
+    public com.baomidou.mybatisplus.core.metadata.IPage<Archive> getExpiredArchives(int page, int limit, String fondsNo) {
+        Page<Archive> pageObj = new Page<>(page, limit);
+        return archiveMapper.selectExpired(pageObj, fondsNo);
+    }
+
     /**
      * Helper to check if category is one of the standard Accounting Archive categories
      */

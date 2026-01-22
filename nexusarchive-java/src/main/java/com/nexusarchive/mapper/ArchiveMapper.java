@@ -38,4 +38,30 @@ public interface ArchiveMapper extends BaseMapper<Archive> {
 
     @Select("SELECT DISTINCT custom_metadata->>'bookType' FROM acc_archive WHERE category_code = 'AC02' AND fonds_no = #{fondsNo} AND custom_metadata->>'bookType' IS NOT NULL")
     List<String> selectDistinctBookTypes(@Param("fondsNo") String fondsNo);
+
+    /**
+     * 查询到期档案
+     */
+    @Select("""
+        <script>
+        SELECT * FROM acc_archive
+        <where>
+            deleted = 0
+            AND status = 'archived'
+            AND retention_period != 'PERMANENT'
+            AND (
+                (retention_period = '10Y' AND (retention_start_date + INTERVAL '10 years') &lt; CURRENT_DATE)
+                OR (retention_period = '30Y' AND (retention_start_date + INTERVAL '30 years') &lt; CURRENT_DATE)
+            )
+            <if test="fondsNo != null and fondsNo != ''">
+                AND fonds_no = #{fondsNo}
+            </if>
+        </where>
+        ORDER BY retention_start_date ASC
+        </script>
+    """)
+    com.baomidou.mybatisplus.core.metadata.IPage<Archive> selectExpired(
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Archive> page,
+        @Param("fondsNo") String fondsNo
+    );
 }

@@ -25,7 +25,7 @@ interface PoolDashboardProps {
   /** 是否显示批量操作按钮 */
   showActions?: boolean;
   /** 是否显示批量归档回调 */
-  onBatchArchive?: () => void;
+  onBatchArchive?: (status: SimplifiedPreArchiveStatus) => void;
   /** 是否显示门类选择器 (维度筛选器) */
   showCategoryPicker?: boolean;
 }
@@ -57,16 +57,25 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
       const isActive = activeFilter === status;
       const _config = STATUS_CONFIG[status];
 
-      // "可归档"状态显示批量操作按钮
-      const showAction = showActions && status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE && count > 0;
-      const actionLabel = `批量归档 (${count})`;
+      let currentActionLabel: string | undefined;
+      let currentShowAction = false;
+
+      if (showActions && count > 0) {
+        if (status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE) {
+          currentShowAction = true;
+          currentActionLabel = `批量归档 (${count})`;
+        } else if (status === SimplifiedPreArchiveStatus.PENDING_CHECK) {
+          currentShowAction = true;
+          currentActionLabel = `重新检测 (${count})`; // "重新检测" for PENDING_CHECK
+        }
+      }
 
       return {
         status,
         count,
         isActive,
-        showAction,
-        actionLabel: showAction ? actionLabel : undefined,
+        showAction: currentShowAction,
+        actionLabel: currentShowAction ? currentActionLabel : undefined,
       };
     });
   }, [stats, activeFilter, showActions]);
@@ -76,13 +85,13 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
     onFilterChange(newFilter);
   };
 
+  const handleCardAction = (status: SimplifiedPreArchiveStatus) => {
+    onBatchArchive?.(status); // Pass status to the callback
+  };
+
   const handleCategoryClick = (category: string) => {
     const newFilter = categoryFilter === category ? null : category;
     onCategoryChange?.(newFilter);
-  };
-
-  const handleBatchArchive = () => {
-    onBatchArchive?.();
   };
 
   return (
@@ -97,11 +106,8 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
             isActive={card.isActive}
             showAction={card.showAction}
             actionLabel={card.actionLabel}
-            onClick={() =>
-              card.showAction && card.status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE
-                ? handleBatchArchive()
-                : handleCardClick(card.status)
-            }
+            onCardClick={() => handleCardClick(card.status)}
+            onActionClick={card.showAction ? () => handleCardAction(card.status) : undefined}
           />
         ))}
       </div>

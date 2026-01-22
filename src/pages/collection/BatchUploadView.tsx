@@ -33,10 +33,24 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { message, Upload, Modal, Progress, Button, Select, Form, Input, Card, Row, Col, Statistic, Alert } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
-import { batchUploadApi, ArchivalCategoryLabels } from '../../api/batchUpload';
+import { batchUploadApi } from '../../api/batchUpload';
 import { useFondsStore } from '../../store/useFondsStore';
 import { ComplianceAlert } from './components/ComplianceAlert';
 import { ARCHIVE_CATEGORIES, CATEGORY_OPTIONS } from '../../constants/archivalCategories';
+
+/**
+ * API 错误类型（axios 错误对象）
+ */
+interface ApiError {
+  response?: {
+    status: number;
+    data?: {
+      message?: string;
+      code?: number;
+    };
+  };
+  message?: string;
+}
 
 const { Dragger } = Upload;
 
@@ -114,8 +128,12 @@ export const BatchUploadView: React.FC = () => {
       setStep('upload');
       message.success('批次创建成功');
     },
-    onError: (err: Error) => {
-      message.error('批次创建失败: ' + (err.message || '未知错误'));
+    onError: (err: ApiError) => {
+      if (err?.response?.status === 409) {
+        message.error('批次创建失败：批次名称可能已存在，请尝试使用其他名称。');
+      } else {
+        message.error('批次创建失败: ' + (err.message || '未知错误'));
+      }
     },
   });
 
@@ -228,7 +246,23 @@ export const BatchUploadView: React.FC = () => {
         progress: 0,
       }));
 
-    setUploadQueue((prev) => [...prev, ...newFiles]);
+    // 去重：基于文件名和大小判断是否重复
+    setUploadQueue((prev) => {
+      const existingKeySet = new Set(
+        prev.map((item) => `${item.file.name}-${item.file.size}`)
+      );
+
+      const filtered = newFiles.filter((item) => {
+        const key = `${item.file.name}-${item.file.size}`;
+        if (existingKeySet.has(key)) {
+          return false; // 跳过重复文件
+        }
+        existingKeySet.add(key);
+        return true;
+      });
+
+      return [...prev, ...filtered];
+    });
   }, []);
 
   const handleRemoveFile = useCallback((uid: string) => {

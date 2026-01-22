@@ -11,7 +11,10 @@ interface DashboardCardProps {
   status: SimplifiedPreArchiveStatus;
   count: number;
   isActive: boolean;
-  onClick: () => void;
+  /** 卡片主体点击事件：切换筛选状态 */
+  onCardClick: () => void;
+  /** 操作按钮点击事件：执行批量操作 */
+  onActionClick?: () => void;
   actionLabel?: string;
   showAction?: boolean;
 }
@@ -25,7 +28,8 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   status,
   count,
   isActive,
-  onClick,
+  onCardClick,
+  onActionClick,
   actionLabel,
   showAction = false,
 }) => {
@@ -39,13 +43,13 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   return (
     <div
       className={`dashboard-card ${isActive ? 'dashboard-card--active' : ''}`}
-      onClick={onClick}
+      onClick={onCardClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onClick();
+          onCardClick();
         }
       }}
       aria-label={`${config.label}：${count} 条`}
@@ -63,13 +67,13 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
         <div className="dashboard-card__description">{config.description}</div>
       </div>
 
-      {showAction && actionLabel && (
+      {showAction && actionLabel && onActionClick && (
         <div className="dashboard-card__footer">
           <button
             className="dashboard-card__action"
             onClick={(e) => {
               e.stopPropagation();
-              onClick();
+              onActionClick();
             }}
           >
             {actionLabel}

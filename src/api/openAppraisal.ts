@@ -39,27 +39,27 @@ export const openAppraisalApi = {
     getAppraisalList: async (page: number = 1, limit: number = 10, status?: string) => {
         const params: any = { page, limit };
         if (status) params.status = status;
-        return apiClient.get('/api/open-appraisal/list', { params });
+        return apiClient.get('/open-appraisal/list', { params });
     },
 
     /**
      * 获取鉴定详情
      */
     getAppraisalById: async (id: string) => {
-        return apiClient.get(`/api/open-appraisal/${id}`);
+        return apiClient.get(`/open-appraisal/${id}`);
     },
 
     /**
      * 创建鉴定任务
      */
     createAppraisal: async (appraisal: Partial<OpenAppraisal>) => {
-        return apiClient.post('/api/open-appraisal/create', appraisal);
+        return apiClient.post('/open-appraisal/create', appraisal);
     },
 
     /**
      * 提交鉴定结果
      */
     submitAppraisal: async (request: AppraisalSubmitRequest) => {
-        return apiClient.post('/api/open-appraisal/submit', request);
+        return apiClient.post('/open-appraisal/submit', request);
     },
 };

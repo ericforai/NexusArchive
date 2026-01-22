@@ -78,4 +78,9 @@ public interface ArchiveReadService {
      * @return 文件列表
      */
     List<ArcFileContent> getFilesByArchiveId(String archiveId);
+
+    /**
+     * 获取到期档案列表
+     */
+    com.baomidou.mybatisplus.core.metadata.IPage<Archive> getExpiredArchives(int page, int limit, String fondsNo);
 }

@@ -6,10 +6,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { List, Columns3 } from 'lucide-react';
+import { message, Modal } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
+import { poolApi } from '@/api/pool';
 import { PoolKanbanView } from '@/components/pool-kanban';
 import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
-import { SimplifiedPreArchiveStatus, DEFAULT_DASHBOARD_FILTER } from '@/config/pool-columns.config';
+import { SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
 import './PoolPage.css';
 
 const VIEW_MODE_STORAGE_KEY = 'pool.viewMode';
@@ -80,9 +83,9 @@ export const PoolPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
 
-  // 仪表板筛选状态
+  // 仪表板筛选状态：默认显示"待检测"状态
   const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(
-    DEFAULT_DASHBOARD_FILTER // 默认显示"可归档"
+    SimplifiedPreArchiveStatus.PENDING_CHECK
   );
 
   // 档案门类筛选状态 (VOUCHER/LEDGER/REPORT/OTHER)
@@ -103,11 +106,48 @@ export const PoolPage: React.FC = () => {
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
   }, [setSearchParams]);
 
+  const queryClient = useQueryClient();
+
   // 处理批量归档
-  const handleBatchArchive = useCallback(() => {
-    // TODO: 实现批量归档逻辑
-    console.log('Batch archive for READY_TO_ARCHIVE items');
-  }, []);
+  const handleBatchArchive = useCallback(async (status: SimplifiedPreArchiveStatus) => {
+    const isArchive = status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE;
+    const statusLabel = isArchive ? '批量归档' : '批量检测';
+
+    Modal.confirm({
+      title: `确认${statusLabel}？`,
+      content: `系统将对所有处于“${isArchive ? '可归档' : '待检测'}”状态的记账凭证执行操作。`,
+      okText: '确定',
+      cancelText: '取消',
+      onOk: async () => {
+        const hide = message.loading(`正在执行${statusLabel}...`, 0);
+        try {
+          // 1. 获取目标 ID (使用当前门类筛选，默认 VOUCHER)
+          const items = await poolApi.getListByStatus(status, categoryFilter || undefined);
+          if (items.length === 0) {
+            message.info('当前状态下没有可操作的记录');
+            return;
+          }
+          const ids = items.map((item: any) => item.id);
+
+          if (isArchive) {
+            await poolApi.archiveItems(ids);
+            message.success(`已成功提交 ${ids.length} 份记录的归档申请`);
+          } else {
+            await poolApi.checkBatch(ids);
+            message.success(`已开始对 ${ids.length} 份记录进行重新检测`);
+          }
+
+          // 2. 刷新数据
+          queryClient.invalidateQueries({ queryKey: ['pool'] });
+        } catch (error: any) {
+          console.error(`${statusLabel}失败:`, error);
+          message.error(`${statusLabel}执行失败: ${error.message || '系统错误'}`);
+        } finally {
+          hide();
+        }
+      }
+    });
+  }, [queryClient, categoryFilter]);
 
   // 兼容旧的 /kanban 路由 - 重定向到新格式
   useEffect(() => {

@@ -6,10 +6,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { List, Columns3 } from 'lucide-react';
+import { message, Modal } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
+import { poolApi } from '@/api/pool';
 import { PoolKanbanView } from '@/components/pool-kanban';
 import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
-import { SimplifiedPreArchiveStatus, DEFAULT_DASHBOARD_FILTER } from '@/config/pool-columns.config';
+import { SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
 import { PRE_ARCHIVE_OTHER_CONFIG } from '@/config/pre-archive-columns.config';
 import './PoolPage.css';
 
@@ -71,9 +74,10 @@ export const OtherAccountingMaterialsView: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
 
-  // 状态维护
-  // 状态维护
-  const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(null);
+  // 默认显示"待检测"状态
+  const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(
+    SimplifiedPreArchiveStatus.PENDING_CHECK
+  );
 
   // 【核心】预设门类为 AC04 (其他资料)，且在仪表板中不可更改
   const [categoryFilter] = useState<string | null>('AC04');
@@ -93,11 +97,48 @@ export const OtherAccountingMaterialsView: React.FC = () => {
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
   }, [setSearchParams]);
 
-  // 处理批量归档 (保留原PoolPage的逻辑，如果需要)
-  const handleBatchArchive = useCallback(() => {
-    // TODO: 实现批量归档逻辑
-    console.log('Batch archive for READY_TO_ARCHIVE items');
-  }, []);
+  const queryClient = useQueryClient();
+
+  // 处理批量操作回调
+  const handleBatchArchive = useCallback(async (status: SimplifiedPreArchiveStatus) => {
+    const isArchive = status === SimplifiedPreArchiveStatus.READY_TO_ARCHIVE;
+    const statusLabel = isArchive ? '批量归档' : '重新检测';
+
+    Modal.confirm({
+      title: `确认${statusLabel}？`,
+      content: `系统将对所有处于“${isArchive ? '可归档' : '待检测'}”状态的其他会计资料执行操作。`,
+      okText: '确定',
+      cancelText: '取消',
+      onOk: async () => {
+        const hide = message.loading(`正在执行${statusLabel}...`, 0);
+        try {
+          // 1. 获取目标 ID (AC04 其他资料)
+          const items = await poolApi.getListByStatus(status, 'AC04');
+          if (items.length === 0) {
+            message.info('当前状态下没有可操作的其他合计资料');
+            return;
+          }
+          const ids = items.map((item: any) => item.id);
+
+          if (isArchive) {
+            await poolApi.archiveItems(ids);
+            message.success(`已成功提交 ${ids.length} 份其他资料的归档申请`);
+          } else {
+            await poolApi.checkBatch(ids);
+            message.success(`已开始对 ${ids.length} 份其他资料进行重新检测`);
+          }
+
+          // 2. 刷新数据
+          queryClient.invalidateQueries({ queryKey: ['pool'] });
+        } catch (error: any) {
+          console.error(`${statusLabel}失败:`, error);
+          message.error(`${statusLabel}执行失败: ${error.message || '系统错误'}`);
+        } finally {
+          hide();
+        }
+      }
+    });
+  }, [queryClient]);
 
   // 兼容旧的 /kanban 路由 - 重定向到新格式 (保留原PoolPage的逻辑，如果需要)
   useEffect(() => {

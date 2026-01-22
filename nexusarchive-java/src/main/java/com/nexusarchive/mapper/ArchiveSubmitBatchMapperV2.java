@@ -35,7 +35,7 @@ public interface ArchiveSubmitBatchMapperV2 extends BaseMapper<ArchiveSubmitBatc
         SELECT * FROM archive_batch
         WHERE fonds_id = #{fondsId}
         AND (#{status} IS NULL OR status = #{status})
-        ORDER BY created_time DESC
+        ORDER BY created_at DESC
     """)
     List<ArchiveSubmitBatch> findByFondsAndStatus(
         @Param("fondsId") String fondsId,
@@ -56,7 +56,7 @@ public interface ArchiveSubmitBatchMapperV2 extends BaseMapper<ArchiveSubmitBatc
                 AND status = #{status}
             </if>
         </where>
-        ORDER BY created_time DESC
+        ORDER BY created_at DESC
         </script>
     """)
     IPage<ArchiveSubmitBatch> findPage(
