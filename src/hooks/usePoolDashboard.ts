@@ -5,18 +5,7 @@
 
 import { useMemo } from 'react';
 import { usePoolKanban, toSimplifiedStatus } from './usePoolKanban';
-import { SimplifiedPreArchiveStatus } from '@/config/pool-columns.config';
-
-/**
- * 仪表板统计数据接口
- */
-export interface DashboardStats {
-  [SimplifiedPreArchiveStatus.PENDING_CHECK]: number;
-  [SimplifiedPreArchiveStatus.NEEDS_ACTION]: number;
-  [SimplifiedPreArchiveStatus.READY_TO_MATCH]: number;
-  [SimplifiedPreArchiveStatus.READY_TO_ARCHIVE]: number;
-  [SimplifiedPreArchiveStatus.COMPLETED]: number;
-}
+import { SimplifiedPreArchiveStatus, DashboardStats } from '@/config/pool-columns.config';
 
 /**
  * 仪表板统计 Hook

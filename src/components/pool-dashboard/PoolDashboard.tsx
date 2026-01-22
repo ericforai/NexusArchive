@@ -3,8 +3,7 @@
 // Pos: src/components/pool-dashboard/PoolDashboard.tsx
 
 import React, { useMemo } from 'react';
-import { usePoolKanban } from '@/hooks/usePoolKanban';
-import { usePoolDashboard } from '@/hooks/usePoolDashboard';
+import type { DashboardStats } from '@/config/pool-columns.config';
 import { DashboardCard } from './DashboardCard';
 import {
   SimplifiedPreArchiveStatus,
@@ -14,6 +13,8 @@ import { CATEGORY_OPTIONS } from '@/constants/archivalCategories';
 import './PoolDashboard.css';
 
 interface PoolDashboardProps {
+  /** 统计数据 (由外部 Hook 提供) */
+  stats: DashboardStats;
   /** 当前激活的筛选状态 */
   activeFilter: SimplifiedPreArchiveStatus | null;
   /** 当前激活的门类筛选 */
@@ -34,8 +35,10 @@ interface PoolDashboardProps {
  * 记账凭证库仪表板
  *
  * 展示 5 个核心状态的统计卡片 + 4 个档案门类快速筛选
+ * 架构优化：转换为纯展示组件，以符合 dependency-cruiser 边界规则
  */
 export const PoolDashboard: React.FC<PoolDashboardProps> = ({
+  stats,
   activeFilter,
   categoryFilter,
   onFilterChange,
@@ -44,11 +47,6 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
   onBatchArchive,
   showCategoryPicker = true,
 }) => {
-  const { refetch: _refetch } = usePoolKanban({
-    filter: activeFilter,
-    categoryFilter
-  });
-  const { stats, totalCount: _totalCount } = usePoolDashboard({ categoryFilter });
 
   // 计算每个状态的卡片配置
   const cards = useMemo(() => {
@@ -98,7 +96,7 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
     <div className="pool-dashboard space-y-4">
       {/* 状态统计卡片 */}
       <div className="pool-dashboard__cards">
-        {cards.map((card) => (
+        {cards.map((card: any) => (
           <DashboardCard
             key={card.status}
             status={card.status}

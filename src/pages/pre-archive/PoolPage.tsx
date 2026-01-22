@@ -9,6 +9,7 @@ import { List, Columns3 } from 'lucide-react';
 import { message, Modal } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { poolApi } from '@/api/pool';
+import { usePoolDashboard } from '@/hooks/usePoolDashboard';
 import { PoolKanbanView } from '@/components/pool-kanban';
 import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
@@ -91,6 +92,9 @@ export const PoolPage: React.FC = () => {
   // 档案门类筛选状态 (VOUCHER/LEDGER/REPORT/OTHER)
   const [categoryFilter, setCategoryFilter] = useState<string | null>('VOUCHER');
 
+  // 获取仪表盘统计数据
+  const { stats } = usePoolDashboard({ categoryFilter });
+
   // 同步 URL 参数变化到状态
   useEffect(() => {
     const viewParam = searchParams.get('view') as ViewMode | null;
@@ -167,6 +171,7 @@ export const PoolPage: React.FC = () => {
 
       {/* 仪表板区域 */}
       <PoolDashboard
+        stats={stats}
         activeFilter={dashboardFilter}
         onFilterChange={setDashboardFilter}
         categoryFilter={categoryFilter}

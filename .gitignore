@@ -99,6 +99,9 @@ test_aip*/
 test_upload.pdf
 nexusarchive-java/download_*.pdf
 
+# 临时测试文件目录（pre-archive 测试数据）
+nexusarchive-java/pre-archive/DEFAULT/
+
 # ----------------
 # 项目特定：数据文件（如果太大或包含测试数据）
 # ----------------

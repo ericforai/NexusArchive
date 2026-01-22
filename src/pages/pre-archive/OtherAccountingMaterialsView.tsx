@@ -9,6 +9,7 @@ import { List, Columns3 } from 'lucide-react';
 import { message, Modal } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { poolApi } from '@/api/pool';
+import { usePoolDashboard } from '@/hooks/usePoolDashboard';
 import { PoolKanbanView } from '@/components/pool-kanban';
 import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
@@ -81,6 +82,9 @@ export const OtherAccountingMaterialsView: React.FC = () => {
 
   // 【核心】预设门类为 AC04 (其他资料)，且在仪表板中不可更改
   const [categoryFilter] = useState<string | null>('AC04');
+
+  // 获取仪表盘统计数据
+  const { stats } = usePoolDashboard({ categoryFilter });
 
   // 同步 URL 参数变化到状态
   useEffect(() => {
@@ -158,6 +162,7 @@ export const OtherAccountingMaterialsView: React.FC = () => {
 
       {/* 仪表板：仅显示待处理统计，门类固定 */}
       <PoolDashboard
+        stats={stats}
         activeFilter={dashboardFilter}
         onFilterChange={setDashboardFilter}
         categoryFilter={categoryFilter}

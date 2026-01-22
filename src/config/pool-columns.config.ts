@@ -17,6 +17,17 @@ export enum SimplifiedPreArchiveStatus {
 }
 
 /**
+ * 仪表板统计数据接口
+ */
+export interface DashboardStats {
+  [SimplifiedPreArchiveStatus.PENDING_CHECK]: number;
+  [SimplifiedPreArchiveStatus.NEEDS_ACTION]: number;
+  [SimplifiedPreArchiveStatus.READY_TO_MATCH]: number;
+  [SimplifiedPreArchiveStatus.READY_TO_ARCHIVE]: number;
+  [SimplifiedPreArchiveStatus.COMPLETED]: number;
+}
+
+/**
  * 状态显示配置
  * 定义每个状态的视觉呈现（颜色、图标、标签、描述）
  */

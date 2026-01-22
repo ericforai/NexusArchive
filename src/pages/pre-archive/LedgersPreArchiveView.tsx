@@ -9,6 +9,7 @@ import { List, Columns3 } from 'lucide-react';
 import { message, Modal } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { poolApi } from '@/api/pool';
+import { usePoolDashboard } from '@/hooks/usePoolDashboard';
 import { PoolKanbanView } from '@/components/pool-kanban';
 import { PoolDashboard } from '@/components/pool-dashboard';
 import { ArchiveListPage } from '@/pages/archives/ArchiveListPage';
@@ -73,6 +74,9 @@ export const LedgersPreArchiveView: React.FC = () => {
 
     // 固定门类为 AC02 (会计账簿)
     const [categoryFilter] = useState<string | null>('AC02');
+
+    // 获取仪表盘统计数据
+    const { stats } = usePoolDashboard({ categoryFilter });
 
     useEffect(() => {
         const viewParam = searchParams.get('view') as ViewMode | null;
@@ -140,6 +144,7 @@ export const LedgersPreArchiveView: React.FC = () => {
             </div>
 
             <PoolDashboard
+                stats={stats}
                 activeFilter={dashboardFilter}
                 onFilterChange={setDashboardFilter}
                 categoryFilter={categoryFilter}
