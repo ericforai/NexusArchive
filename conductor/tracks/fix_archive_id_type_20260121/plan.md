@@ -10,11 +10,11 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Entity & DTO Refactoring' (Protocol in workflow.md)
 
 ## Phase 2: Service & Mapper Logic Update
-- [ ] Task: Refactor `ArchiveSubmitBatchService` interface and implementation.
-    - [ ] Sub-task: Update method signatures to use `String` for IDs.
-    - [ ] Sub-task: Fix logic in `createBatch`, `addVouchersToBatch`, `executeBatchArchive`.
-- [ ] Task: Update MyBatis Mappers.
-    - [ ] Sub-task: Check `ArchiveSubmitBatchMapper.xml` (if exists) for parameter types.
+- [x] Task: Refactor `ArchiveSubmitBatchService` interface and implementation. 7dc21e1
+    - [x] Sub-task: Update method signatures to use `String` for IDs.
+    - [x] Sub-task: Fix logic in `createBatch`, `addVouchersToBatch`, `executeBatchArchive`.
+- [x] Task: Update MyBatis Mappers. 7dc21e1
+    - [x] Sub-task: Check `ArchiveSubmitBatchMapper.xml` (if exists) for parameter types.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Service & Mapper Logic Update' (Protocol in workflow.md)
 
 ## Phase 3: Verification
