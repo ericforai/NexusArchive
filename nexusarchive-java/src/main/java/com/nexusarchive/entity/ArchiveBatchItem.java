@@ -47,7 +47,7 @@ public class ArchiveBatchItem {
      * itemType=VOUCHER 时指向 arc_file_content.id
      * itemType=SOURCE_DOC 时指向 original_voucher.id
      */
-    private Long refId;
+    private String refId;
 
     /**
      * 引用编号（凭证号/单据号）

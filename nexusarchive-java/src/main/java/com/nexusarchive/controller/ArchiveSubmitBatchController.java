@@ -46,7 +46,7 @@ public class ArchiveSubmitBatchController {
             @Valid @RequestBody CreateBatchRequest request,
             @AuthenticationPrincipal UserDetails user
     ) {
-        Long userId = getUserId(user);
+        String userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.createBatch(
                 request.getFondsId(),
                 request.getPeriodStart(),
@@ -71,7 +71,7 @@ public class ArchiveSubmitBatchController {
     public Result<IPage<ArchiveSubmitBatch>> listBatches(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Long fondsId,
+            @RequestParam(required = false) String fondsId,
             @RequestParam(required = false) String status
     ) {
         Page<ArchiveSubmitBatch> pageParam = new Page<>(page, size);
@@ -92,7 +92,7 @@ public class ArchiveSubmitBatchController {
     @Operation(summary = "添加凭证到批次")
     public Result<Integer> addVouchers(
             @PathVariable Long batchId,
-            @RequestBody List<Long> voucherIds
+            @RequestBody List<String> voucherIds
     ) {
         int added = batchService.addVouchersToBatch(batchId, voucherIds);
         return Result.success(added);
@@ -102,7 +102,7 @@ public class ArchiveSubmitBatchController {
     @Operation(summary = "添加单据到批次")
     public Result<Integer> addDocs(
             @PathVariable Long batchId,
-            @RequestBody List<Long> docIds
+            @RequestBody List<String> docIds
     ) {
         int added = batchService.addDocsToBatch(batchId, docIds);
         return Result.success(added);
@@ -141,7 +141,7 @@ public class ArchiveSubmitBatchController {
             @PathVariable Long batchId,
             @AuthenticationPrincipal UserDetails user
     ) {
-        Long userId = getUserId(user);
+        String userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.submitBatch(batchId, userId);
         return Result.success(batch);
     }
@@ -160,7 +160,7 @@ public class ArchiveSubmitBatchController {
             @RequestBody(required = false) ApprovalRequest request,
             @AuthenticationPrincipal UserDetails user
     ) {
-        Long userId = getUserId(user);
+        String userId = getUserId(user);
         String comment = request != null ? request.getComment() : null;
         ArchiveSubmitBatch batch = batchService.approveBatch(batchId, userId, comment);
         return Result.success(batch);
@@ -173,7 +173,7 @@ public class ArchiveSubmitBatchController {
             @Valid @RequestBody ApprovalRequest request,
             @AuthenticationPrincipal UserDetails user
     ) {
-        Long userId = getUserId(user);
+        String userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.rejectBatch(batchId, userId, request.getComment());
         return Result.success(batch);
     }
@@ -184,7 +184,7 @@ public class ArchiveSubmitBatchController {
             @PathVariable Long batchId,
             @AuthenticationPrincipal UserDetails user
     ) {
-        Long userId = getUserId(user);
+        String userId = getUserId(user);
         ArchiveSubmitBatch batch = batchService.executeBatchArchive(batchId, userId);
         return Result.success(batch);
     }
@@ -202,20 +202,16 @@ public class ArchiveSubmitBatchController {
 
     @GetMapping("/stats")
     @Operation(summary = "获取批次统计")
-    public Result<Map<String, Object>> getStats(@RequestParam(required = false) Long fondsId) {
+    public Result<Map<String, Object>> getStats(@RequestParam(required = false) String fondsId) {
         Map<String, Object> stats = batchService.getBatchStats(fondsId);
         return Result.success(stats);
     }
 
     // ========== 辅助方法 ==========
 
-    private Long getUserId(UserDetails user) {
-        // 简化实现：从用户名解析 ID，实际应从 UserDetails 扩展类获取
-        try {
-            return Long.parseLong(user.getUsername());
-        } catch (NumberFormatException e) {
-            return 1L; // 默认用户 ID
-        }
+    private String getUserId(UserDetails user) {
+        // Return username as String ID
+        return user.getUsername();
     }
 
     // ========== 请求 DTO ==========
@@ -223,7 +219,7 @@ public class ArchiveSubmitBatchController {
     @Data
     public static class CreateBatchRequest {
         @NotNull(message = "全宗ID不能为空")
-        private Long fondsId;
+        private String fondsId;
 
         @NotNull(message = "期间起始日期不能为空")
         private LocalDate periodStart;
