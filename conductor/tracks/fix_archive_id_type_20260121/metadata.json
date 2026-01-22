@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_archive_id_type_20260121",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-21T11:00:00Z",
+  "updated_at": "2026-01-21T11:00:00Z",
+  "description": "修复归档流程中的 ID 类型不一致问题 (VARCHAR vs BIGINT)"
+}
