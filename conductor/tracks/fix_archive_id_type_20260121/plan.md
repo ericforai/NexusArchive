@@ -1,12 +1,12 @@
 # Implementation Plan: Fix Archive ID Type Mismatch
 
 ## Phase 1: Entity & DTO Refactoring
-- [ ] Task: Update `ArchiveBatch` and `ArchiveBatchItem` entities.
-    - [ ] Sub-task: Change `fondsId` type from `Long` to `String`.
-    - [ ] Sub-task: Change `refId` in `ArchiveBatchItem` is already String (VARCHAR), but check Entity definition (`refId` should be String).
-- [ ] Task: Update Controller DTOs.
-    - [ ] Sub-task: Update `ArchiveSubmitBatchController.CreateBatchRequest`.
-    - [ ] Sub-task: Update `addVouchers` / `addDocs` payloads to accept `List<String>`.
+- [x] Task: Update `ArchiveBatch` and `ArchiveBatchItem` entities. 0b81f4e
+    - [x] Sub-task: Change `fondsId` type from `Long` to `String`.
+    - [x] Sub-task: Change `refId` in `ArchiveBatchItem` is already String (VARCHAR), but check Entity definition (`refId` should be String).
+- [x] Task: Update Controller DTOs. 0b81f4e
+    - [x] Sub-task: Update `ArchiveSubmitBatchController.CreateBatchRequest`.
+    - [x] Sub-task: Update `addVouchers` / `addDocs` payloads to accept `List<String>`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Entity & DTO Refactoring' (Protocol in workflow.md)
 
 ## Phase 2: Service & Mapper Logic Update
