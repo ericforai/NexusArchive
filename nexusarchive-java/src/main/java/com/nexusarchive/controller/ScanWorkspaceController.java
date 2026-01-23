@@ -7,6 +7,7 @@ package com.nexusarchive.controller;
 import com.nexusarchive.annotation.ArchivalAudit;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ScanWorkspace;
+import com.nexusarchive.service.ScanSessionService;
 import com.nexusarchive.service.ScanWorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import java.util.List;
  * - 更新OCR识别结果
  * - 提交到预归档池
  * - 删除工作区项
+ * - 移动端扫码会话管理（创建、验证、上传）
  */
 @RestController
 @RequestMapping("/scan/workspace")
@@ -38,6 +40,7 @@ import java.util.List;
 public class ScanWorkspaceController {
 
     private final ScanWorkspaceService scanWorkspaceService;
+    private final ScanSessionService scanSessionService;
 
     /**
      * 获取当前用户的工作区文件列表
@@ -263,10 +266,10 @@ public class ScanWorkspaceController {
     /**
      * 创建移动端扫描会话
      *
-     * POST /api/scan/mobile/session
+     * POST /api/scan/workspace/mobile/session
      *
      * 生成唯一的会话ID，供移动端通过扫码上传文件使用。
-     * 会话有效期为 30 分钟。
+     * 会话有效期为 30 分钟，存储在 Redis 中。
      *
      * @param user 当前认证用户
      * @return 会话信息（sessionId 和过期时间）
@@ -286,5 +289,69 @@ public class ScanWorkspaceController {
         // 会话有效期 30 分钟 (1800 秒)
         MobileSessionResponse response = new MobileSessionResponse(sessionId, 1800);
         return Result.success("会话创建成功", response);
+    }
+
+    /**
+     * 验证移动端扫描会话
+     *
+     * GET /api/scan/workspace/mobile/session/{sessionId}/validate
+     *
+     * 验证移动端扫码后访问的会话是否有效。
+     *
+     * <p>注意：此端点无需认证，因为移动端用户未登录。</p>
+     * <p>会话有效性由 Redis 中的记录和 TTL 保证。</p>
+     *
+     * @param sessionId 会话ID
+     * @return 验证结果（valid 字段表示是否有效）
+     */
+    @GetMapping("/mobile/session/{sessionId}/validate")
+    public Result<java.util.Map<String, Boolean>> validateMobileSession(
+            @PathVariable String sessionId) {
+
+        boolean valid = scanWorkspaceService.validateSession(sessionId);
+        log.info("验证扫描会话: sessionId={}, valid={}", sessionId, valid);
+
+        return Result.success(java.util.Map.of("valid", valid));
+    }
+
+    /**
+     * 移动端文件上传
+     *
+     * POST /api/scan/workspace/mobile/upload
+     *
+     * 移动端扫码后上传文件的专用端点，使用 sessionId 进行身份验证。
+     *
+     * <p>注意：此端点无需 JWT 认证，使用 sessionId 关联会话创建者。</p>
+     *
+     * @param file 上传的文件
+     * @param sessionId 会话ID（从二维码获取）
+     * @return 创建的工作区项
+     */
+    @PostMapping("/mobile/upload")
+    public Result<ScanWorkspace> mobileUpload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("sessionId") String sessionId) {
+
+        // 1. 验证会话有效性
+        if (!scanWorkspaceService.validateSession(sessionId)) {
+            log.warn("移动端上传失败：会话无效或已过期, sessionId={}", sessionId);
+            return Result.error("会话无效或已过期");
+        }
+
+        // 2. 从会话获取用户ID
+        String userId = scanSessionService.getSessionUserId(sessionId);
+
+        if (userId == null) {
+            log.error("会话存在但无法获取用户ID: sessionId={}", sessionId);
+            return Result.error("会话数据异常");
+        }
+
+        // 3. 执行上传
+        ScanWorkspace workspace = scanWorkspaceService.uploadFile(file, "mobile", sessionId, userId);
+
+        log.info("移动端上传成功: sessionId={}, userId={}, fileName={}",
+                sessionId, userId, file.getOriginalFilename());
+
+        return Result.success("文件上传成功", workspace);
     }
 }

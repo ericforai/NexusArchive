@@ -8,6 +8,7 @@ import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.ScanWorkspace;
 import com.nexusarchive.mapper.ScanWorkspaceMapper;
 import com.nexusarchive.service.AuditLogService;
+import com.nexusarchive.service.ScanSessionService;
 import com.nexusarchive.service.ScanWorkspaceService;
 import com.nexusarchive.util.FileHashUtil;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ import java.util.UUID;
  *   <li>数据更新：支持 OCR 结果更新和人工编辑</li>
  *   <li>提交归档：标记为 submitted，关联 archiveId</li>
  *   <li>清理删除：删除物理文件和数据库记录</li>
+ *   <li>会话管理：移动端扫码上传会话（委托给 ScanSessionService）</li>
  * </ol>
  *
  * <p>合规性：</p>
@@ -44,6 +46,7 @@ import java.util.UUID;
  *   <li>文件哈希校验 (SM3 优先，SHA-256 备用)</li>
  *   <li>审计日志记录 (上传、提交、删除)</li>
  *   <li>事务控制 (数据库操作)</li>
+ *   <li>会话持久化 (Redis 存储，30分钟 TTL)</li>
  * </ul>
  */
 @Service
@@ -54,6 +57,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
     private final ScanWorkspaceMapper scanWorkspaceMapper;
     private final FileHashUtil fileHashUtil;
     private final AuditLogService auditLogService;
+    private final ScanSessionService scanSessionService;
 
     @Value("${app.scan.upload-path:/tmp/nexusarchive/scan}")
     private String uploadPath;
@@ -364,9 +368,18 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
 
     @Override
     public String createSession(String userId) {
-        String sessionId = UUID.randomUUID().toString();
-        log.info("Created scan session: sessionId={}, userId={}", sessionId, userId);
+        // 委托给 ScanSessionService
+        String sessionId = scanSessionService.createSession(userId);
+        log.info("创建扫描会话: sessionId={}, userId={}", sessionId, userId);
         return sessionId;
+    }
+
+    @Override
+    public boolean validateSession(String sessionId) {
+        // 委托给 ScanSessionService
+        boolean valid = scanSessionService.validateSession(sessionId);
+        log.debug("验证扫描会话: sessionId={}, valid={}", sessionId, valid);
+        return valid;
     }
 
     // ===== Private Helper Methods =====

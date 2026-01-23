@@ -66,8 +66,17 @@ export const MobileUploadPage: React.FC = () => {
       const { file, onSuccess, onError } = options;
       const fileObj = file as unknown as File;
       const fileName = fileObj.name || 'unknown';
+
+      // 显式检查 sessionId（防止 TypeScript 非空断言问题）
+      if (!sessionId) {
+        message.error('会话ID无效，请重新扫码');
+        onError?.(new Error('会话ID无效'));
+        return;
+      }
+
       try {
-        await scanApi.upload(fileObj, 'mobile', sessionId);
+        // 使用移动端专用上传端点（无需 JWT 认证）
+        await scanApi.mobileUpload(fileObj, sessionId);
         setUploadedFiles([...uploadedFiles, fileName]);
         onSuccess?.({});
         message.success(`${fileName} 上传成功`);

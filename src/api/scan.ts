@@ -188,7 +188,30 @@ export const scanApi = {
    * GET /api/scan/workspace/mobile/session/{sessionId}/validate
    */
   validateSession: async (sessionId: string): Promise<{ valid: boolean }> => {
-    const response = await client.get<{ valid: boolean }>(`/scan/workspace/mobile/session/${sessionId}/validate`);
+    const response = await client.get<{ valid: boolean }>(
+      `/scan/workspace/mobile/session/${sessionId}/validate`
+    );
+    return response.data;
+  },
+
+  /**
+   * 移动端文件上传（使用 sessionId 认证）
+   * POST /api/scan/workspace/mobile/upload
+   */
+  mobileUpload: async (file: File, sessionId: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('sessionId', sessionId);
+
+    const response = await client.post<ApiResponse<ScanWorkspaceItem>>(
+      '/scan/workspace/mobile/upload',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
     return response.data;
   },
 

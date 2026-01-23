@@ -72,6 +72,7 @@ public class SecurityConfig {
                                                                 "/license/**", // License 查询和导入需要在未授权时可访问
                                                                 "/health",
                                                                 "/public/**",
+                                                                "/scan/workspace/mobile/session/**", // 移动端扫码会话管理（验证/上传）
 
                                                                 "/actuator/**",
                                                                 "/v3/api-docs/**",

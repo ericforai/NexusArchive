@@ -86,8 +86,16 @@ public interface ScanWorkspaceService {
     String createSession(String userId);
 
     /**
+     * 验证会话是否有效
+     *
+     * @param sessionId 会话ID
+     * @return 是否有效
+     */
+    boolean validateSession(String sessionId);
+
+    /**
      * 获取文件（物理文件）
-     * 
+     *
      * @param id 工作区记录ID
      * @param userId 用户ID
      * @return 物理文件对象
