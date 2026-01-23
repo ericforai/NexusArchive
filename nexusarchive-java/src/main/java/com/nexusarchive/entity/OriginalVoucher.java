@@ -40,7 +40,7 @@ public class OriginalVoucher {
     private String voucherNo;
 
     @NotBlank(message = "档案门类不能为空")
-    @TableField("voucher_category")
+    @TableField("archival_category")
     private String voucherCategory;
 
     /**

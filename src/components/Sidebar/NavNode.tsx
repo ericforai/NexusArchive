@@ -20,6 +20,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   [ViewState.ARCHIVE_OPS]: ROUTE_PATHS.ARCHIVE_OPS,
   [ViewState.ARCHIVE_UTILIZATION]: ROUTE_PATHS.ARCHIVE_UTILIZATION,
   [ViewState.STATS]: ROUTE_PATHS.STATS,
+  [ViewState.QUALITY]: ROUTE_PATHS.QUALITY,
   [ViewState.SETTINGS]: ROUTE_PATHS.SETTINGS,
   [ViewState.ADMIN]: ROUTE_PATHS.ADMIN,
   [ViewState.DESTRUCTION]: ROUTE_PATHS.DESTRUCTION,
@@ -69,10 +70,18 @@ const useIsActive = () => {
 
 /**
  * Determine the main link path for a nav item
+ *
+ * 优先级：
+ * 1. VIEW_TO_PATH 映射（适用于一级菜单，即使有子菜单也可点击）
+ * 2. SUBITEM_TO_PATH 映射（适用于子菜单项）
+ * 3. item.path 原始值
+ * 4. '#' 兜底（仅展开/收起，不导航）
  */
 const resolveMainPath = (item: NavItem, hasChildren: boolean): string => {
+  // 优先使用 VIEW_TO_PATH（支持一级菜单点击导航）
+  if (VIEW_TO_PATH[item.id]) return VIEW_TO_PATH[item.id];
+
   if (!hasChildren) {
-    if (VIEW_TO_PATH[item.id]) return VIEW_TO_PATH[item.id];
     if (item.path && SUBITEM_TO_PATH[item.path]) return SUBITEM_TO_PATH[item.path];
     if (item.path) return item.path;
   } else if (item.path && SUBITEM_TO_PATH[item.path]) {

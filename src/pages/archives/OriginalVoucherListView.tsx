@@ -22,6 +22,7 @@ import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
 import { VoucherPreviewDrawer } from '../../components/pages';
 import { toast } from '../../utils/notificationService';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../../routes/paths';
+import { useFondsStore } from '../../store/useFondsStore';
 
 // 状态徽章组件
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -127,6 +128,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     poolMode = false
 }) => {
     const queryClient = useQueryClient();
+    const { currentFonds } = useFondsStore();
 
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
@@ -178,7 +180,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     const poolStatusFilter = poolMode ? 'ENTRY,PARSED,PARSE_FAILED' : 'ARCHIVED';
 
     const { data: vouchersData, isLoading, refetch } = useQuery({
-        queryKey: ['originalVouchers', page, limit, search, categoryFilter, typeFilter, statusFilter, poolMode],
+        queryKey: ['originalVouchers', page, limit, search, categoryFilter, typeFilter, statusFilter, poolMode, currentFonds?.fondsCode],
         queryFn: async () => {
             const params = {
                 page,
@@ -187,6 +189,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                 category: categoryFilter || undefined,
                 type: typeFilter || undefined,
                 status: statusFilter || undefined,
+                fondsCode: currentFonds?.fondsCode, // 新增：传递当前全宗代码
                 poolStatus: poolStatusFilter  // 新增：池状态筛选
             };
             if (debugEnabled) {
@@ -423,57 +426,17 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
                                             <span className="font-medium text-gray-900 dark:text-white font-mono">
                                                 {formatAmount(voucher.amount, voucher.currency)}
                                             </span>
-                                            <span className={`
-                                                ml-3 text-xs font-medium transition-all duration-200
-                                                ${hoveredRowId === voucher.id
-                                                    ? 'text-blue-600 dark:text-blue-400'
-                                                    : 'text-gray-400 dark:text-gray-500'}
-                                            `}>
-                                                查看
-                                            </span>
                                         </td>
                                         <td className="p-4">
                                             <StatusBadge status={voucher.archiveStatus} />
                                         </td>
                                         <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex items-center justify-center gap-2">
-                                                {voucher.archiveStatus !== 'ARCHIVED' && (
-                                                    <button
-                                                        className="p-1 text-gray-500 hover:text-red-600 transition"
-                                                        title="删除"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (window.confirm('确认删除此凭证？')) {
-                                                                deleteMutation.mutate(voucher.id);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                                {voucher.archiveStatus !== 'ARCHIVED' && (
-                                                    <button
-                                                        className="p-1 text-gray-500 hover:text-green-600 transition"
-                                                        title="提交归档"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (window.confirm('提交归档后将进入审批流程，确认提交？')) {
-                                                                submitMutation.mutate(voucher.id);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Archive className="w-4 h-4" />
-                                                    </button>
-                                                )}
+                                            <div className="flex items-center justify-center">
                                                 <button
-                                                    className="p-1 text-gray-500 hover:text-gray-700 transition"
-                                                    title="更多操作"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toast.info('更多操作：打印、导出、查看日志（开发中）');
-                                                    }}
+                                                    onClick={() => handlePreviewClick(voucher.id)}
+                                                    className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-md transition-colors"
                                                 >
-                                                    <MoreHorizontal className="w-4 h-4" />
+                                                    查看
                                                 </button>
                                             </div>
                                         </td>

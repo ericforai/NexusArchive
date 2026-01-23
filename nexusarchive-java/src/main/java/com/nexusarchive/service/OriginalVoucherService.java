@@ -55,6 +55,7 @@ public class OriginalVoucherService {
     private final OriginalVoucherTypeMapper typeMapper;
     private final FileStorageService fileStorageService;
     private final com.nexusarchive.service.parser.PdfInvoiceParser pdfInvoiceParser;
+    private final DataScopeService dataScopeService;
 
     // ===== 查询接口 =====
 
@@ -107,6 +108,9 @@ public class OriginalVoucherService {
 
         if (StringUtils.hasText(fondsCode)) {
             wrapper.eq(OriginalVoucher::getFondsCode, fondsCode);
+        } else {
+            // 后备：依赖 DataScopeService 的自动隔离机制
+            dataScopeService.applyOriginalVoucherScope(wrapper, dataScopeService.resolve());
         }
         if (StringUtils.hasText(fiscalYear)) {
             wrapper.eq(OriginalVoucher::getFiscalYear, fiscalYear);
@@ -653,6 +657,8 @@ public class OriginalVoucherService {
         wrapper.eq(OriginalVoucher::getIsLatest, true);
         if (StringUtils.hasText(fondsCode)) {
             wrapper.eq(OriginalVoucher::getFondsCode, fondsCode);
+        } else {
+            dataScopeService.applyOriginalVoucherScope(wrapper, dataScopeService.resolve());
         }
         if (StringUtils.hasText(fiscalYear)) {
             wrapper.eq(OriginalVoucher::getFiscalYear, fiscalYear);

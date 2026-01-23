@@ -35,12 +35,49 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
         const yearMap = new Map<string, TreeNode>();
 
         archives.forEach((archive) => {
-            const docDateStr = archive.docDate ? String(archive.docDate) : null;
-            const year = archive.fiscalYear || (docDateStr ? docDateStr.split('-')[0] : '未分类');
+            // 处理 docDate：可能是数组 [2025, 11, 7] 或字符串
+            let docDateStr: string | null = null;
+            if (Array.isArray(archive.docDate)) {
+                // 格式: [2025, 11, 7] -> 转换为字符串
+                const dateArr = archive.docDate as unknown[];
+                const y = dateArr[0];
+                const m = dateArr[1];
+                const d = dateArr[2];
+                if (typeof y === 'number' && typeof m === 'number' && typeof d === 'number') {
+                    docDateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                }
+            } else if (archive.docDate) {
+                docDateStr = String(archive.docDate);
+            }
+
+            const year = archive.fiscalYear || (docDateStr ? docDateStr.slice(0, 4) : '未分类');
 
             // Filter out 2014 (demo data/expired archives)
             if (year === '2014') return;
-            const month = docDateStr ? docDateStr.slice(0, 7) : `${year}-未知`;
+
+            // 解析月份：支持多种格式
+            let monthLabel = '未知月';
+            let monthId = `${year}-未知`;
+
+            if (docDateStr) {
+                if (docDateStr.includes('-')) {
+                    // 格式: "2025-11-15"
+                    const parts = docDateStr.split('-');
+                    if (parts.length >= 2) {
+                        monthLabel = `${parts[1]}月`;
+                        monthId = `${parts[0]}-${parts[1]}`;
+                    }
+                } else if (docDateStr.length === 6 && /^\d{6}$/.test(docDateStr)) {
+                    // 格式: "202511"
+                    monthLabel = `${docDateStr.slice(4, 6)}月`;
+                    monthId = `${docDateStr.slice(0, 4)}-${docDateStr.slice(4, 6)}`;
+                } else if (docDateStr.length === 8 && /^\d{8}$/.test(docDateStr)) {
+                    // 格式: "20251115"
+                    monthLabel = `${docDateStr.slice(4, 6)}月`;
+                    monthId = `${docDateStr.slice(0, 4)}-${docDateStr.slice(4, 6)}`;
+                }
+            }
+
             const voucherNode: TreeNode = {
                 id: archive.id,
                 label: `${archive.archiveCode || archive.title || archive.id}`,
@@ -50,19 +87,18 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
             if (!yearMap.has(year)) {
                 yearMap.set(year, {
                     id: year,
-                    label: `${year}年度`,
+                    label: year,  // 直接显示年份，不添加"年度"后缀
                     type: 'year',
                     children: []
                 });
             }
 
             const yearNode = yearMap.get(year)!;
-            let monthNode = yearNode.children?.find(child => child.id === month);
+            let monthNode = yearNode.children?.find(child => child.id === monthId);
             if (!monthNode) {
-                const monthStr = String(month);
                 monthNode = {
-                    id: monthStr,
-                    label: `${monthStr.split('-')[1] || monthStr}月`,
+                    id: monthId,
+                    label: monthLabel,
                     type: 'month',
                     children: []
                 };
@@ -97,17 +133,13 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
                 categoryCode: 'AC01',
                 fondsNo: currentFonds?.fondsCode  // 显式全宗过滤
             });
-            console.log('[ArchiveStructureTree] API response (fondsNo=%s):', currentFonds?.fondsCode, res);
             if (res.code === 200 && res.data) {
                 const records = (res.data as any).records || [];
-                console.log('[ArchiveStructureTree] Records count:', records.length, 'Records:', records.slice(0, 3));
                 if (records.length === 0) {
                     // 无数据时显示空状态
-                    console.warn('[ArchiveStructureTree] No records found in response');
                     setTreeData([]);
                 } else {
                     const tree = buildTreeFromArchives(records as Archive[]);
-                    console.log('[ArchiveStructureTree] Tree built, node count:', tree.length, 'Tree:', tree);
                     setTreeData(tree);
                     // 自动展开所有年度和月份
                     const expandIds = tree.flatMap(y => [y.id, ...(y.children?.map(m => m.id) || [])]);
@@ -115,7 +147,6 @@ export const ArchiveStructureTree: React.FC<ArchiveStructureTreeProps> = ({ onSe
                 }
             } else {
                 // 加载失败显示空状态
-                console.warn('[ArchiveStructureTree] API response error:', res.code, res.message);
                 setTreeData([]);
             }
         } catch (e) {

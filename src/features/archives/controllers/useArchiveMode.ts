@@ -48,16 +48,25 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
 
     const resolveDefaultStatus = useCallback(() => {
         if (subTitle === '凭证关联') return 'draft,MATCH_PENDING,MATCHED';
+
         // For Pool views, we typically want "All" (undefined) or PENDING.
         // If we force 'archived', we hide new uploads.
         if (isPoolView) return undefined;
 
-        // For actual Archive views (Search/View)
-        if (['会计凭证', '会计账簿', '财务报告', '其他会计资料'].some(kw => (subTitle || '').includes(kw))) {
+        // 会计档案相关 routeConfig 应只显示已归档档案
+        // 待处理状态的档案应在预归档库中显示
+        const archivedRouteConfigs: ArchiveRouteMode[] = ['view', 'voucher', 'ledger', 'report', 'other'];
+        if (routeConfig && archivedRouteConfigs.includes(routeConfig as ArchiveRouteMode)) {
             return 'archived';
         }
+
+        // subTitle 匹配（兜底逻辑）
+        if (['会计凭证', '会计账簿', '财务报告', '其他会计资料', '归档查看'].some(kw => (subTitle || '').includes(kw))) {
+            return 'archived';
+        }
+
         return undefined;
-    }, [subTitle, isPoolView]);
+    }, [subTitle, isPoolView, routeConfig]);
 
     // 使用 useMemo 稳定返回值引用
     return useMemo(() => ({

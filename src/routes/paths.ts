@@ -62,6 +62,7 @@ export const ROUTE_PATHS = {
     DESTRUCTION: '/system/destruction',
     // WAREHOUSE removed
     STATS: '/system/stats',
+    QUALITY: '/system/quality',
     SETTINGS: '/system/settings',
     SETTINGS_BASIC: '/system/settings/basic',
     SETTINGS_BASIC_SECURITY: '/system/settings/basic/security',

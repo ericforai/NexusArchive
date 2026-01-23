@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.enums.DataScopeType;
 import com.nexusarchive.entity.Archive;
+import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.Role;
 import com.nexusarchive.mapper.RoleMapper;
 import com.nexusarchive.security.CustomUserDetails;
@@ -109,12 +110,12 @@ public class DataScopeService {
     }
 
     /**
-     * 应用档案数据权限过滤 (LambdaQueryWrapper 版本)
+     * 应用原始凭证数据权限过滤 (LambdaQueryWrapper 版本)
      *
      * @param wrapper MyBatis-Plus Lambda查询条件
      * @param context 数据权限上下文
      */
-    public void applyArchiveScope(LambdaQueryWrapper<Archive> wrapper, DataScopeContext context) {
+    public void applyOriginalVoucherScope(LambdaQueryWrapper<OriginalVoucher> wrapper, DataScopeContext context) {
         if (context == null || context.isAll()) {
             return;
         }
@@ -122,29 +123,98 @@ public class DataScopeService {
         // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
         String currentFondsNo = FondsContext.getCurrentFondsNo();
         if (StringUtils.hasText(currentFondsNo)) {
-            wrapper.eq(Archive::getFondsNo, currentFondsNo);
+            wrapper.eq(OriginalVoucher::getFondsCode, currentFondsNo);
             return;
         }
 
         // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
         Set<String> allowedFonds = context.allowedFonds();
         if (!allowedFonds.isEmpty()) {
-            wrapper.in(Archive::getFondsNo, allowedFonds);
+            wrapper.in(OriginalVoucher::getFondsCode, allowedFonds);
             return;
         }
 
         // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
         if (context.isSelf()) {
             if (context.userId() != null) {
-                wrapper.eq(Archive::getCreatedBy, context.userId());
+                wrapper.eq(OriginalVoucher::getCreatedBy, context.userId());
             } else {
-                wrapper.eq(Archive::getId, "never-match");
+                wrapper.eq(OriginalVoucher::getId, "never-match");
             }
             return;
         }
 
         // 如果没有任何权限，不允许访问任何数据
-        wrapper.eq(Archive::getId, "never-match");
+        wrapper.eq(OriginalVoucher::getId, "never-match");
+    }
+
+    /**
+     * 应用原始凭证数据权限过滤 (QueryWrapper 版本)
+     *
+     * @param wrapper MyBatis-Plus 查询条件
+     * @param context 数据权限上下文
+     */
+    public void applyOriginalVoucherScope(QueryWrapper<OriginalVoucher> wrapper, DataScopeContext context) {
+        if (context == null || context.isAll()) {
+            return;
+        }
+
+        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (StringUtils.hasText(currentFondsNo)) {
+            wrapper.eq("fonds_code", currentFondsNo);
+            return;
+        }
+
+        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            wrapper.in("fonds_code", allowedFonds);
+            return;
+        }
+
+        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
+        if (context.isSelf()) {
+            if (context.userId() != null) {
+                wrapper.eq("created_by", context.userId());
+            } else {
+                wrapper.eq("1", "0");
+            }
+            return;
+        }
+
+        // 如果没有任何权限，不允许访问任何数据
+        wrapper.eq("1", "0");
+    }
+
+    /**
+     * 检查是否可以访问指定原始凭证
+     */
+    public boolean canAccessOriginalVoucher(OriginalVoucher voucher, DataScopeContext context) {
+        if (context == null || context.isAll()) {
+            return true;
+        }
+
+        String voucherFondsCode = voucher.getFondsCode();
+
+        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (StringUtils.hasText(currentFondsNo)) {
+            return currentFondsNo.equals(voucherFondsCode);
+        }
+
+        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
+        Set<String> allowedFonds = context.allowedFonds();
+        if (!allowedFonds.isEmpty()) {
+            return StringUtils.hasText(voucherFondsCode) && allowedFonds.contains(voucherFondsCode);
+        }
+
+        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
+        if (context.isSelf()) {
+            return context.userId() != null && context.userId().equals(voucher.getCreatedBy());
+        }
+
+        return false;
     }
 
     /**

@@ -251,7 +251,7 @@ export const routes: RouteObject[] = [
             { path: 'quality', element: withSuspense(QualityView) },
 
             // ========== 系统设置（4 个整合版布局）==========
-            { path: 'settings', element: <Navigate to="settings/basic" replace /> },
+            { path: 'settings', element: <Navigate to="/system/settings/basic" replace /> },
 
             // 基础配置（基础设置 + 安全合规）
             {

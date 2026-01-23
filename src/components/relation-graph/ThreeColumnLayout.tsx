@@ -177,12 +177,25 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
     window.addEventListener('resize', updateLines);
     window.addEventListener('scroll', updateLines, true);
     
+    // 使用 ResizeObserver 监听容器大小变化 (解决侧边栏收缩/展开导致的问题)
+    let resizeObserver: ResizeObserver | null = null;
+    if (containerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        // 请求动画帧以避免频繁更新，并确保布局已完成
+        requestAnimationFrame(updateLines);
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+    
     // 延迟执行，确保 DOM 已渲染
     const timer = setTimeout(updateLines, 100);
     
     return () => {
       window.removeEventListener('resize', updateLines);
       window.removeEventListener('scroll', updateLines, true);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       clearTimeout(timer);
     };
   }, [upstreamNodes, downstreamNodes, centerNode.id]);
