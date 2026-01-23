@@ -77,28 +77,57 @@ const useIsActive = () => {
  * 3. item.path 原始值
  * 4. '#' 兜底（仅展开/收起，不导航）
  */
-const resolveMainPath = (item: NavItem, hasChildren: boolean): string => {
-  // 优先使用 VIEW_TO_PATH（支持一级菜单点击导航）
+const resolveMainPath = (item: NavItem): string => {
+  // 优先级1: VIEW_TO_PATH 映射
   if (VIEW_TO_PATH[item.id]) return VIEW_TO_PATH[item.id];
-
-  if (!hasChildren) {
-    if (item.path && SUBITEM_TO_PATH[item.path]) return SUBITEM_TO_PATH[item.path];
-    if (item.path) return item.path;
-  } else if (item.path && SUBITEM_TO_PATH[item.path]) {
-    return SUBITEM_TO_PATH[item.path];
-  }
+  // 优先级2: SUBITEM_TO_PATH 映射
+  if (item.path && SUBITEM_TO_PATH[item.path]) return SUBITEM_TO_PATH[item.path];
+  // 优先级3: 原始 path
+  if (item.path) return item.path;
+  // 兜底
   return '#';
 };
 
-/**
- * Get styling classes based on level
- */
-const getLevelStyles = (level: number) => {
-  const padding = level === 0 ? 'px-4' : level === 1 ? 'pl-10 pr-4' : level === 2 ? 'pl-12 pr-4' : 'pl-16 pr-4';
-  const fontSize = level === 0 ? 'text-sm font-medium' : 'text-xs';
-  const py = level === 0 ? 'py-3' : 'py-2';
-  return { padding, fontSize, py };
+// Level-specific styling constants
+const LEVEL_STYLES = [
+  { padding: 'px-4', fontSize: 'text-sm font-medium', py: 'py-3' },      // level 0
+  { padding: 'pl-10 pr-4', fontSize: 'text-xs', py: 'py-2' },           // level 1
+  { padding: 'pl-12 pr-4', fontSize: 'text-xs', py: 'py-2' },           // level 2
+  { padding: 'pl-16 pr-4', fontSize: 'text-xs', py: 'py-2' },           // level 3+
+] as const;
+
+const getLevelStyles = (level: number) => LEVEL_STYLES[Math.min(level, 3)];
+
+// Shared style class generators
+const navStyles = {
+  active: 'bg-primary-600/10 text-white shadow-md shadow-primary-900/20 border border-primary-500/20',
+  inactive: 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400',
+  getCommon: (collapsed: boolean, padding: string, py: string) =>
+    `w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${padding} ${py} rounded-xl transition-all duration-300 mb-0.5`,
 };
+
+/**
+ * Shared icon + label rendering component
+ */
+const NavIconLabel: React.FC<{
+  icon?: NavItem['icon'];
+  label: string;
+  collapsed: boolean;
+  fontSize: string;
+  isActive: boolean;
+  level?: number;
+}> = ({ icon, label, collapsed, fontSize, isActive, level }) => (
+  <div className={`flex items-center ${collapsed ? '' : 'space-x-3'} ${collapsed ? 'justify-center' : ''}`}>
+    {icon && React.createElement(icon, {
+      size: 20,
+      className: `transition-colors flex-shrink-0 ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`
+    })}
+    {!icon && level !== undefined && level >= 3 && (
+      <span className={`w-1.5 h-1.5 rounded-full mr-2 flex-shrink-0 ${isActive ? 'bg-primary-400' : 'bg-slate-600 group-hover:bg-slate-500'}`} />
+    )}
+    {!collapsed && <span className={`${fontSize} tracking-wide whitespace-normal text-left leading-tight`}>{label}</span>}
+  </div>
+);
 
 /**
  * Parent button component for items with children
@@ -113,10 +142,7 @@ const ParentButton: React.FC<{
   onClick: () => void;
 }> = ({ item, mainPath, collapsed, isActive, isExpanded, levelStyles, onClick }) => {
   const navigate = useNavigate();
-  const Icon = item.icon;
-  const commonClasses = `w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${levelStyles.padding} ${levelStyles.py} rounded-xl transition-all duration-300 mb-0.5`;
-  const activeClasses = 'bg-primary-600/10 text-white shadow-md shadow-primary-900/20 border border-primary-500/20';
-  const inactiveClasses = 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400';
+  const commonClasses = navStyles.getCommon(collapsed, levelStyles.padding, levelStyles.py);
 
   const handleClick = () => {
     onClick();
@@ -128,13 +154,16 @@ const ParentButton: React.FC<{
   return (
     <button
       onClick={handleClick}
-      className={`${commonClasses} ${isActive && collapsed ? activeClasses : (isActive || isExpanded) ? 'text-white' : inactiveClasses}`}
+      className={`${commonClasses} ${isActive && collapsed ? navStyles.active : (isActive || isExpanded) ? 'text-white' : navStyles.inactive}`}
       title={collapsed ? item.label : ''}
     >
-      <div className={`flex items-center ${collapsed ? '' : 'space-x-3'} ${collapsed ? 'justify-center' : ''}`}>
-        {Icon && <Icon size={20} className={`transition-colors flex-shrink-0 ${(isActive || isExpanded) ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`} />}
-        {!collapsed && <span className={`${levelStyles.fontSize} tracking-wide whitespace-normal text-left leading-tight`}>{item.label}</span>}
-      </div>
+      <NavIconLabel
+        icon={item.icon}
+        label={item.label}
+        collapsed={collapsed}
+        fontSize={levelStyles.fontSize}
+        isActive={isActive || isExpanded}
+      />
       {!collapsed && (
         <div className="flex items-center">
           {levelStyles.padding !== 'px-4' && <FolderOpen size={12} className="mr-2 text-slate-500" />}
@@ -159,28 +188,26 @@ const LeafLink: React.FC<{
   level: number;
   levelStyles: ReturnType<typeof getLevelStyles>;
 }> = ({ item, mainPath, collapsed, isActive, level, levelStyles }) => {
-  const Icon = item.icon;
-  const commonClasses = `w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} ${levelStyles.padding} ${levelStyles.py} rounded-xl transition-all duration-300 mb-0.5`;
-  const activeClasses = 'bg-primary-600/10 text-white shadow-md shadow-primary-900/20 border border-primary-500/20';
-  const inactiveClasses = 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400';
+  const commonClasses = navStyles.getCommon(collapsed, levelStyles.padding, levelStyles.py);
 
   return (
     <NavLink
       to={mainPath}
       className={({ isActive: linkActive }) => {
-        const active = isActive || linkActive;
-        return `${commonClasses} ${active ? activeClasses : inactiveClasses}`;
+        const activeState = isActive || linkActive;
+        return `${commonClasses} ${activeState ? navStyles.active : navStyles.inactive}`;
       }}
       title={collapsed ? item.label : ''}
       end={item.id === ViewState.PORTAL}
     >
-      <div className={`flex items-center ${collapsed ? '' : 'space-x-3'} ${collapsed ? 'justify-center' : ''}`}>
-        {Icon && <Icon size={20} className={`transition-colors flex-shrink-0 ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-300'}`} />}
-        {!Icon && level >= 3 && (
-          <span className={`w-1.5 h-1.5 rounded-full mr-2 flex-shrink-0 ${isActive ? 'bg-primary-400' : 'bg-slate-600 group-hover:bg-slate-500'}`} />
-        )}
-        {!collapsed && <span className={`${levelStyles.fontSize} tracking-wide whitespace-normal text-left leading-tight`}>{item.label}</span>}
-      </div>
+      <NavIconLabel
+        icon={item.icon}
+        label={item.label}
+        collapsed={collapsed}
+        fontSize={levelStyles.fontSize}
+        isActive={isActive}
+        level={level}
+      />
       {!collapsed && isActive && level === 0 && (
         <div className="w-1.5 h-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
       )}
@@ -223,7 +250,7 @@ export const NavNode: React.FC<NavNodeProps> = ({
   const hasChildren = Boolean(item.children && item.children.length > 0);
   const isExpanded = expandedMenusWithAuto.has(item.id);
   const isActive = useIsActive()(item);
-  const mainPath = useMemo(() => resolveMainPath(item, hasChildren), [item, hasChildren]);
+  const mainPath = useMemo(() => resolveMainPath(item), [item]);
   const levelStyles = useMemo(() => getLevelStyles(level), [level]);
   // Icon 已在 ParentButton/LeafLink 中直接使用 item.icon
 
