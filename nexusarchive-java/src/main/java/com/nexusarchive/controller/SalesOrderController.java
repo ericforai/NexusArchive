@@ -6,6 +6,7 @@ package com.nexusarchive.controller;
 
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderListRequest;
+import com.nexusarchive.integration.yonsuite.service.YonAuthService;
 import com.nexusarchive.integration.yonsuite.service.YonSuiteSalesOrderSyncService;
 import com.nexusarchive.service.DataScopeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class SalesOrderController {
 
     private final YonSuiteSalesOrderSyncService syncService;
+    private final YonAuthService yonAuthService;
     private final DataScopeService dataScopeService;
 
     /**
@@ -36,8 +38,8 @@ public class SalesOrderController {
     public Result<YonSuiteSalesOrderSyncService.SyncResult> syncSalesOrders(
             @RequestBody SalesOrderListRequest request
     ) {
-        // TODO: 从 ERP 配置中获取 access_token
-        String accessToken = "";
+        // 从 YonAuthService 获取 access_token (自动刷新)
+        String accessToken = yonAuthService.getAccessToken();
 
         log.info("收到销售订单同步请求: dateBegin={}, dateEnd={}",
                 request.getVouchdateBegin(), request.getVouchdateEnd());
