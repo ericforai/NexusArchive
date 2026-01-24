@@ -37,8 +37,9 @@ export const SalesOrderSyncPanel: React.FC<SalesOrderSyncPanelProps> = ({ classN
       } else {
         message.success(`同步完成！成功 ${successCount} 条，跳过 ${skipped} 条`);
       }
-    } catch (error: any) {
-      message.error(`同步失败: ${error.message || '未知错误'}`);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : '未知错误';
+      message.error(`同步失败: ${errMsg}`);
     } finally {
       setSyncing(false);
     }

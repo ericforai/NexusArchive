@@ -5,6 +5,7 @@
 package com.nexusarchive.integration.yonsuite.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.SalesOrder;
 import com.nexusarchive.entity.SalesOrderDetail;
 import com.nexusarchive.integration.yonsuite.client.YonSuiteSalesOrderClient;
@@ -118,9 +119,10 @@ public class YonSuiteSalesOrderSyncService {
         // 设置全宗（从当前用户的全宗上下文获取第一个）
         DataScopeService.DataScopeContext scope = dataScopeService.resolve();
         Set<String> allowedFonds = scope.allowedFonds();
-        if (allowedFonds != null && !allowedFonds.isEmpty()) {
-            order.setFondsCode(allowedFonds.iterator().next());
+        if (allowedFonds == null || allowedFonds.isEmpty()) {
+            throw new BusinessException("用户未分配全宗权限，无法同步销售订单");
         }
+        order.setFondsCode(allowedFonds.iterator().next());
 
         // 4. 保存或更新
         if (existing != null) {
