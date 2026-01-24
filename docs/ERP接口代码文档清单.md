@@ -42,6 +42,8 @@
 | `docs/plans/2026-01-06-erp-api-security-fixes.md` | ERP API 安全修复 |
 | `docs/plans/2026-01-08-erp-mapping-framework-implementation.md` | ERP 映射框架实现 |
 | `docs/plans/2026-01-09-sap-integration.md` | SAP 集成计划 |
+| `docs/plans/2026-01-24-sales-order-sync-design.md` | **(NEW)** 销售订单同步设计文档 |
+| `docs/plans/2026-01-24-sales-order-sync-implementation.md` | **(NEW)** 销售订单同步实施计划 |
 
 ### 1.3 报告文档
 
@@ -119,6 +121,7 @@
 | `integration/erp/adapter/client/YonSuiteFeedbackClient.java` | 归档状态回写客户端 |
 | `integration/erp/adapter/client/YonSuiteRefundClient.java` | 退款单客户端 |
 | `integration/erp/adapter/client/YonSuitePaymentApplyClient.java` | **(NEW)** 付款申请单同步客户端 |
+| `integration/yonsuite/client/YonSuiteSalesOrderClient.java` | **(NEW)** 销售订单同步客户端 |
 | `integration/yonsuite/client/YonSuiteHttpExecutor.java` | HTTP 执行器 |
 
 ### 2.5 YonSuite 控制器
@@ -148,6 +151,7 @@
 | `integration/yonsuite/service/YonRefundListService.java` | 退款单列表服务 |
 | `integration/yonsuite/service/YonPaymentApplyFileService.java` | **(NEW)** 付款申请单文件服务 |
 | `integration/yonsuite/service/YonPaymentApplySyncService.java` | **(NEW)** 付款申请单同步服务 |
+| `integration/yonsuite/service/YonSuiteSalesOrderSyncService.java` | **(NEW)** 销售订单同步服务 |
 | `integration/yonsuite/event/YonSuiteVoucherEvent.java` | 凭证事件模型 |
 
 ### 2.8 YonSuite DTO
@@ -179,7 +183,11 @@
 | `integration/yonsuite/dto/YonPaymentApplyFileResponse.java` | **(NEW)** 付款申请单文件响应 |
 | `integration/yonsuite/dto/YonPaymentApplyListRequest.java` | **(NEW)** 付款申请单列表请求 |
 | `integration/yonsuite/dto/YonPaymentApplyListResponse.java` | **(NEW)** 付款申请单列表响应 |
+| `integration/yonsuite/dto/SalesOrderListRequest.java` | **(NEW)** 销售订单列表请求 |
+| `integration/yonsuite/dto/SalesOrderListResponse.java` | **(NEW)** 销售订单列表响应 |
+| `integration/yonsuite/dto/SalesOrderDetailResponse.java` | **(NEW)** 销售订单详情响应 |
 | `integration/yonsuite/mapper/SalesOutMapper.java` | 销售出库 Mapper |
+| `integration/yonsuite/mapper/SalesOrderDataMapper.java` | **(NEW)** 销售订单数据映射器 |
 
 ### 2.9 核心 Controller
 
@@ -188,6 +196,7 @@
 | `controller/ErpConfigController.java` | ERP 配置 REST API |
 | `controller/ErpScenarioController.java` | 业务场景 REST API |
 | `controller/GenericYonSuiteController.java` | 通用 YonSuite 端点 |
+| `controller/SalesOrderController.java` | **(NEW)** 销售订单 REST API |
 
 ### 2.10 核心服务
 
