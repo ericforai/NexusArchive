@@ -77,9 +77,9 @@ export const SalesOrderSyncPanel: React.FC<SalesOrderSyncPanelProps> = ({ classN
       </Form>
 
       {result && (
-        <div style={{ marginTop: 16 }}>
+        <div className="mt-4">
           <h4>同步结果</h4>
-          <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Row gutter={16} className="mb-4">
             <Col span={6}>
               <Statistic title="总计" value={result.total} />
             </Col>
@@ -109,7 +109,7 @@ export const SalesOrderSyncPanel: React.FC<SalesOrderSyncPanelProps> = ({ classN
               type="warning"
               message="部分订单同步失败"
               description={
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                <ul className="m-0 pl-5">
                   {result.errors.slice(0, 10).map((err, idx) => (
                     <li key={idx}>
                       {err.orderCode}: {err.reason}
