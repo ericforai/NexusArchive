@@ -98,12 +98,21 @@ public class SalesOrderDataMapper {
             return new ArrayList<>();
         }
 
+        // 解析 orderId（带异常处理）
+        Long orderIdLong;
+        try {
+            orderIdLong = Long.parseLong(orderId);
+        } catch (NumberFormatException e) {
+            log.error("Invalid orderId format: {}", orderId);
+            return new ArrayList<>();
+        }
+
         List<SalesOrderDetail> result = new ArrayList<>();
         int lineNo = 1;
 
         for (SalesOrderDetailResponse.OrderDetail detail : details) {
             SalesOrderDetail entity = SalesOrderDetail.builder()
-                    .orderId(Long.parseLong(orderId))
+                    .orderId(orderIdLong)
                     .lineNo(lineNo++)
                     .productId(detail.getProductId())
                     .productCode(detail.getProductCode())

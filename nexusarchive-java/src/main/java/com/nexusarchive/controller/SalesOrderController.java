@@ -57,7 +57,7 @@ public class SalesOrderController {
     @Operation(summary = "查询订单详情")
     public Result<Object> getSalesOrder(@PathVariable Long id) {
         // TODO: 实现查询逻辑
-        return Result.success(null);
+        return Result.error("订单详情查询功能尚未实现");
     }
 
     /**
@@ -68,6 +68,6 @@ public class SalesOrderController {
     @Operation(summary = "查询关联单据链路")
     public Result<Object> getRelations(@PathVariable Long id) {
         // TODO: 实现关联查询
-        return Result.success(null);
+        return Result.error("关联单据查询功能尚未实现");
     }
 }

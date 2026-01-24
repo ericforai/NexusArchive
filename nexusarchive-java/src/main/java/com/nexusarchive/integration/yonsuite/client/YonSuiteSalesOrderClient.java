@@ -6,6 +6,7 @@ package com.nexusarchive.integration.yonsuite.client;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.nexusarchive.integration.erp.exception.ErpException;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderDetailResponse;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderListRequest;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderListResponse;
@@ -13,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * YonSuite 销售订单 API 客户端
@@ -64,7 +68,7 @@ public class YonSuiteSalesOrderClient {
             return response;
         } catch (Exception e) {
             log.error("Failed to parse querySalesOrders response", e);
-            throw new RuntimeException("Failed to parse YonSuite API response: " + e.getMessage(), e);
+            throw new ErpException("YonSuite API 响应解析失败: " + e.getMessage(), "PARSE_ERROR", "YonSuite", e);
         }
     }
 
@@ -77,8 +81,8 @@ public class YonSuiteSalesOrderClient {
 
         log.info("Calling YonSuite querySalesOrderById: orderId={}", orderId);
 
-        // 添加 id 参数
-        url += "&id=" + orderId;
+        // 添加 id 参数（URL 编码防止注入）
+        url += "&id=" + URLEncoder.encode(orderId, StandardCharsets.UTF_8);
 
         try {
             HttpResponse httpResponse = HttpRequest.get(url)
@@ -102,7 +106,7 @@ public class YonSuiteSalesOrderClient {
             return response;
         } catch (Exception e) {
             log.error("Failed to parse querySalesOrderById response", e);
-            throw new RuntimeException("Failed to parse YonSuite API response: " + e.getMessage(), e);
+            throw new ErpException("YonSuite API 响应解析失败: " + e.getMessage(), "PARSE_ERROR", "YonSuite", e);
         }
     }
 }
