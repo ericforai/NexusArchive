@@ -14,52 +14,62 @@ import { VoucherMetadata, VoucherPreviewCanvas, OriginalDocumentPreview } from '
 import { useVoucherData } from './hooks/useVoucherData';
 import { archivesApi } from '../../api/archives';
 
-// Simulate row from URL param (in real implementation, fetch data by ID)
-const createMockRowFromId = (id: string): any => ({
-  id,
-  code: `凭证-${id.slice(-6)}`,
-  archivalCode: `ARCH-${id.slice(-6)}`,
-});
-
 type TabKey = 'metadata' | 'voucher' | 'attachments';
 
 export const ArchiveDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState<TabKey>('metadata');
-  const [archiveAttachments, setArchiveAttachments] = React.useState<any[]>([]);
-  const [attachmentsLoading, setAttachmentsLoading] = React.useState(false);
 
-  // Simulate row from URL param
-  const row = React.useMemo(() => (id ? createMockRowFromId(id) : null), [id]);
+  // 档案数据状态（从 API 获取）
+  const [archiveData, setArchiveData] = React.useState<any>(null);
+  const [archiveLoading, setArchiveLoading] = React.useState(false);
+
+  // 从 API 获取真实档案数据
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchArchive = async () => {
+      setArchiveLoading(true);
+      try {
+        const response = await archivesApi.getArchiveById(id);
+        if (response?.code === 200 && response.data) {
+          setArchiveData(response.data);
+        } else {
+          if (import.meta.env.DEV) console.warn('[ArchiveDetailPage] Archive not found for id:', id);
+          setArchiveData(null);
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) console.error('[ArchiveDetailPage] Failed to fetch archive:', error);
+        setArchiveData(null);
+      } finally {
+        setArchiveLoading(false);
+      }
+    };
+
+    fetchArchive();
+  }, [id]);
+
+  // 从 API 数据构建 row 对象
+  const row = React.useMemo(() => {
+    if (!id) return null;
+    if (archiveData) {
+      return {
+        id: archiveData.id,
+        code: archiveData.archiveCode || archiveData.erpVoucherNo || archiveData.id,
+        archivalCode: archiveData.archiveCode,
+        ...archiveData,
+      };
+    }
+    // Fallback：数据加载中时显示 ID
+    return { id, code: id, archivalCode: id };
+  }, [id, archiveData]);
 
   // 使用自定义 hook 获取凭证数据
   const { voucherData, isLoading } = useVoucherData({
     row,
     enabled: !!id,
   });
-
-  // 获取已同步的附件关联数据（从数据库）
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchAttachments = async () => {
-      setAttachmentsLoading(true);
-      try {
-        const response = await archivesApi.getArchiveFiles(id);
-        if (response?.data) {
-          setArchiveAttachments(response.data);
-        }
-      } catch (error) {
-        console.error('获取档案附件失败:', error);
-        setArchiveAttachments([]);
-      } finally {
-        setAttachmentsLoading(false);
-      }
-    };
-
-    fetchAttachments();
-  }, [id]);
 
   const handleBack = () => {
     navigate(-1); // Go back to previous page
@@ -77,42 +87,46 @@ export const ArchiveDetailPage: React.FC = () => {
     {
       key: 'metadata',
       label: '业务元数据',
-      children: voucherData ? (
-        <div className="p-6">
-          <VoucherMetadata data={voucherData} />
-        </div>
-      ) : (
-        <div className="flex items-center justify-center h-64 text-slate-400">
-          <p>{isLoading ? '加载中...' : '暂无凭证数据'}</p>
+      children: (
+        <div className="p-4 overflow-y-auto" style={{ height: 'calc(100vh - 250px)' }}>
+          {voucherData ? (
+            <VoucherMetadata data={voucherData} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-slate-400">
+              <p>{isLoading ? '加载中...' : '暂无凭证数据'}</p>
+            </div>
+          )}
         </div>
       ),
     },
     {
       key: 'voucher',
       label: '会计凭证',
-      children: voucherData ? (
-        <div className="p-6">
-          <VoucherPreviewCanvas data={voucherData} />
-        </div>
-      ) : (
-        <div className="flex items-center justify-center h-64 text-slate-400">
-          <p>{isLoading ? '加载中...' : '暂无凭证数据'}</p>
+      children: (
+        <div className="p-4 overflow-y-auto" style={{ height: 'calc(100vh - 250px)' }}>
+          {voucherData ? (
+            <VoucherPreviewCanvas data={voucherData} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-slate-400">
+              <p>{isLoading ? '加载中...' : '暂无凭证数据'}</p>
+            </div>
+          )}
         </div>
       ),
     },
     {
       key: 'attachments',
-      label: `关联附件${archiveAttachments.length > 0 ? ` (${archiveAttachments.length})` : ''}`,
+      label: `关联附件${voucherData?.attachments && voucherData.attachments.length > 0 ? ` (${voucherData.attachments.length})` : ''}`,
       children: (
-        <div className="p-6">
-          {attachmentsLoading ? (
-            <div className="flex items-center justify-center h-64 text-slate-400">
+        <div className="p-0 overflow-y-auto" style={{ height: 'calc(100vh - 250px)' }}>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full text-slate-400">
               <p>加载中...</p>
             </div>
-          ) : archiveAttachments.length > 0 ? (
-            <OriginalDocumentPreview files={archiveAttachments} />
+          ) : voucherData?.attachments && voucherData.attachments.length > 0 ? (
+            <OriginalDocumentPreview files={voucherData.attachments} />
           ) : (
-            <div className="flex items-center justify-center h-64 text-slate-400">
+            <div className="flex items-center justify-center h-full text-slate-400">
               <p>暂无附件</p>
             </div>
           )}
@@ -125,7 +139,7 @@ export const ArchiveDetailPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50" data-archive-id={id}>
       {/* Header */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-[1600px] mx-auto px-6 py-4">
           <Breadcrumb
             items={[
               { title: '档案管理' },
@@ -158,7 +172,7 @@ export const ArchiveDetailPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-[1600px] mx-auto px-6 py-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <Tabs
             activeKey={activeTab}

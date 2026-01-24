@@ -143,6 +143,9 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '原始凭证': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS,
     '记账凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
 
+    // Level 2: 会计账簿（父级，默认导航到第一个子项）
+    '会计账簿': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=GENERAL_LEDGER',
+
     // Level 2: 会计账簿 -> Level 3
     '总账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=GENERAL_LEDGER',
     '明细账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=SUBSIDIARY_LEDGER',

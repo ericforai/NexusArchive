@@ -460,26 +460,52 @@ public class OriginalVoucherService {
 
             fileMapper.insert(voucherFile);
 
-            // 解析发票逻辑 (自动识别金额)
+
+            // 解析发票逻辑 (自动识别金额和日期)
             if ("PDF".equals(fileType) && ("PRIMARY".equals(voucherFile.getFileRole()) || "ORIGINAL".equals(voucherFile.getFileRole()))) {
                 try {
                     java.util.Map<String, Object> parseResult = pdfInvoiceParser.parse(fileStorageService.resolvePath(relativePath).toFile());
+                    OriginalVoucher voucher = getById(voucherId);
+                    boolean updated = false;
+
+                    // 1. 金额识别
                     if (parseResult.containsKey("total_amount_value")) {
                         String amountStr = (String) parseResult.get("total_amount_value");
                         log.info("OCR Identified amount string: {}", amountStr);
                         try {
                             java.math.BigDecimal amount = new java.math.BigDecimal(amountStr);
-                            OriginalVoucher voucher = getById(voucherId);
                             // 修正：即使凭证为 0 也更新，除非已经有人工输入了大于 0 的值
                             if (voucher.getAmount() == null || voucher.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0) {
                                 voucher.setAmount(amount);
-                                voucherMapper.updateById(voucher);
+                                updated = true;
                                 log.info("Automatically filled amount {} for voucher {}", amount, voucherId);
                             }
                         } catch (Exception e) {
                             log.warn("Failed to convert amount: {}", amountStr);
                         }
                     }
+
+                    // 2. 日期识别
+                    if (parseResult.containsKey("invoice_date_value")) {
+                        String dateStr = (String) parseResult.get("invoice_date_value");
+                        log.info("OCR Identified date string: {}", dateStr);
+                        try {
+                            java.time.LocalDate invoiceDate = java.time.LocalDate.parse(dateStr);
+                            // 业务日期应该等于开票日期
+                            // 如果当前业务日期是默认的（例如今天），则更新为开票日期
+                            // 或者始终更新为开票日期（因为开票日期更准确）
+                            voucher.setBusinessDate(invoiceDate);
+                            updated = true;
+                            log.info("Automatically filled business date {} for voucher {}", invoiceDate, voucherId);
+                        } catch (Exception e) {
+                             log.warn("Failed to parse date: {}", dateStr);
+                        }
+                    }
+
+                    if (updated) {
+                        voucherMapper.updateById(voucher);
+                    }
+
                 } catch (Exception e) {
                     log.error("Parsing failed", e);
                 }

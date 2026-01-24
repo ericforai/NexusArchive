@@ -39,10 +39,10 @@ schema:
     enabled: false  # 暂时禁用以便测试
     fail-on-error: false
 
-# 文件存储根路径（开发环境使用项目根目录下的 data/archives）
+# 文件存储根路径（开发环境）
 archive:
   root:
-    path: /Users/user/nexusarchive/nexusarchive-java
+    path: /tmp/nexusarchive
 
 # Token 黑名单服务配置（开发环境允许 Redis 降级）
 token:

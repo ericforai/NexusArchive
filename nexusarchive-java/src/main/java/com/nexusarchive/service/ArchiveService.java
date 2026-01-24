@@ -332,6 +332,8 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
         return archiveMapper.selectIdsByDepartmentIds(departmentIds);
     }
 
+    private final com.nexusarchive.mapper.VoucherRelationMapper voucherRelationMapper; // Inject Mapper
+
     /**
      * 获取档案关联的文件列表
      * @param archiveId 档案ID
@@ -356,6 +358,34 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
             result.addAll(attachments);
         } catch (Exception e) {
             log.warn("Failed to query attachments from acc_archive_attachment: {}", e.getMessage());
+        }
+
+        // 3. [FIXED P1-5] 从 arc_voucher_relation 获取关联的原始凭证文件 (解决关联凭证不可见问题)
+        try {
+            List<com.nexusarchive.entity.VoucherRelation> relations = voucherRelationMapper.selectList(
+                new LambdaQueryWrapper<com.nexusarchive.entity.VoucherRelation>()
+                    .eq(com.nexusarchive.entity.VoucherRelation::getAccountingVoucherId, archiveId)
+                    .eq(com.nexusarchive.entity.VoucherRelation::getDeleted, 0)
+            );
+
+            if (!relations.isEmpty()) {
+                List<String> originalVoucherIds = relations.stream()
+                    .map(com.nexusarchive.entity.VoucherRelation::getOriginalVoucherId)
+                    .collect(Collectors.toList());
+                
+                if (!originalVoucherIds.isEmpty()) {
+                     List<ArcFileContent> originalFiles = arcFileContentMapper.selectList(
+                        new LambdaQueryWrapper<ArcFileContent>()
+                            .in(ArcFileContent::getItemId, originalVoucherIds)
+                            // 排除逻辑删除的文件 (如果 ArcFileContent 有 deleted 字段)
+                            // .eq(ArcFileContent::getDeleted, 0) // ArcFileContent 可能没有 @TableLogic, 暂不加
+                    );
+                    result.addAll(originalFiles);
+                    log.debug("Added {} files from associated original vouchers for archive {}", originalFiles.size(), archiveId);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to query related original voucher files: {}", e.getMessage());
         }
 
         return result;

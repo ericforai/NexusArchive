@@ -5,12 +5,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Drawer, Button, Tag, Collapse, List, Space, message, Spin, Empty } from 'antd';
-import { FileText, X, Fullscreen, CloudDownload, Link, Download } from 'lucide-react';
+import { FileText, X, Fullscreen, CloudDownload, Link, Download, File } from 'lucide-react';
 import { VoucherDetailCard } from './VoucherDetailCard';
 import { EvidencePreview } from './EvidencePreview';
 import { useNavigate } from 'react-router-dom';
 import { yonsuiteApi } from '../../api/yonsuite';
 import type { VoucherAttachment } from '../../api/yonsuite';
+import { getOriginalVoucherFiles } from '../../api/originalVoucher';
 
 interface VoucherPreviewDrawerProps {
     voucherId: string | null;
@@ -34,6 +35,11 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
     const [attachmentsLoading, setAttachmentsLoading] = useState(false);
     const [attachmentsFetched, setAttachmentsFetched] = useState(false);
 
+    // 本地文件相关状态
+    const [localFiles, setLocalFiles] = useState<any[]>([]);
+    const [localFilesLoading, setLocalFilesLoading] = useState(false);
+    const [localFilesFetched, setLocalFilesFetched] = useState(false);
+
     // 查询 YonSuite 附件
     const handleFetchAttachments = async () => {
         if (!voucherId) return;
@@ -53,7 +59,7 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                 message.info('该凭证在 YonSuite 中没有附件');
             }
         } catch (error: any) {
-            console.error('查询 YonSuite 附件失败:', error);
+            if (import.meta.env.DEV) console.error('查询 YonSuite 附件失败:', error);
             message.error(`查询失败: ${error.message || '未知错误'}`);
             setAttachments([]);
         } finally {
@@ -61,10 +67,49 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
         }
     };
 
-    // 当 voucherId 变化时重置附件状态
+    // 查询本地文件
+    const handleFetchLocalFiles = async () => {
+        if (!voucherId) return;
+
+        setLocalFilesLoading(true);
+        try {
+            const files = await getOriginalVoucherFiles(voucherId);
+            setLocalFiles(files || []);
+            setLocalFilesFetched(true);
+            if (files && files.length > 0) {
+                message.success(`找到 ${files.length} 个本地文件`);
+            }
+        } catch (error: any) {
+            if (import.meta.env.DEV) console.error('查询本地文件失败:', error);
+            message.error(`查询失败: ${error.message || '未知错误'}`);
+            setLocalFiles([]);
+        } finally {
+            setLocalFilesLoading(false);
+        }
+    };
+
+    // 下载本地文件
+    const handleDownloadFile = (file: any) => {
+        const downloadUrl = `/api/original-vouchers/files/download/${file.id}`;
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = file.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        message.success(`开始下载 ${file.fileName}`);
+    };
+
+    // 当 voucherId 变化时重置附件状态并自动加载本地文件
     useEffect(() => {
         setAttachments([]);
         setAttachmentsFetched(false);
+        setLocalFiles([]);
+        setLocalFilesFetched(false);
+        // 自动加载本地文件
+        if (voucherId) {
+            handleFetchLocalFiles();
+        }
     }, [voucherId]);
 
     const handleFullScreen = () => {
@@ -117,8 +162,82 @@ export const VoucherPreviewDrawer: React.FC<VoucherPreviewDrawerProps> = ({ vouc
                             voucherId={voucherId}
                             sourceType="ORIGINAL"
                             compact={true}
-                            hideEntries={true}
+                            hideEntries={false}
                         />
+
+                        {/* 本地文件附件 */}
+                        <div className="border-t border-slate-100">
+                            <Collapse
+                                defaultActiveKey={['local-files']}
+                                items={[
+                                    {
+                                        key: 'local-files',
+                                        label: (
+                                            <Space>
+                                                <File size={14} />
+                                                <span>关联附件</span>
+                                                <Tag color={localFiles.length > 0 ? 'success' : 'default'}>
+                                                    {localFiles.length}
+                                                </Tag>
+                                            </Space>
+                                        ),
+                                        children: (
+                                            <div className="p-2">
+                                                {localFilesLoading ? (
+                                                    <div className="text-center py-4">
+                                                        <Spin size="small" tip="加载中...">
+                                                            <div style={{ minHeight: 24 }} />
+                                                        </Spin>
+                                                    </div>
+                                                ) : localFiles.length > 0 ? (
+                                                    <List
+                                                        size="small"
+                                                        dataSource={localFiles}
+                                                        renderItem={(file: any) => (
+                                                            <List.Item
+                                                                className="!px-2 !py-1"
+                                                                actions={[
+                                                                    <Button
+                                                                        key="download"
+                                                                        type="text"
+                                                                        size="small"
+                                                                        icon={<Download size={12} />}
+                                                                        onClick={() => handleDownloadFile(file)}
+                                                                    >
+                                                                        下载
+                                                                    </Button>
+                                                                ]}
+                                                            >
+                                                                <List.Item.Meta
+                                                                    avatar={<File size={12} className="text-blue-500" />}
+                                                                    title={
+                                                                        <span className="text-xs truncate max-w-[180px]" title={file.fileName}>
+                                                                            {file.fileName}
+                                                                        </span>
+                                                                    }
+                                                                    description={
+                                                                        <span className="text-xs text-slate-400">
+                                                                            {(file.fileSize / 1024).toFixed(1)} KB · {file.fileType}
+                                                                        </span>
+                                                                    }
+                                                                />
+                                                            </List.Item>
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <Empty
+                                                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                        description="暂无关联附件"
+                                                    />
+                                                )}
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                                bordered={false}
+                                size="small"
+                            />
+                        </div>
 
                         {/* YonSuite Attachments */}
                         <div className="border-t border-slate-100">

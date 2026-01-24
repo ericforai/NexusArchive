@@ -9,6 +9,7 @@ import { poolApi } from '../../../api/pool';
 import { archivesApi } from '../../../api/archives';
 import { UseArchiveDataLoadOptions, ControllerDataInternal, PoolStatusFilter } from './types';
 import { mapArchiveToRow } from './utils';
+import { useFondsStore } from '../../../store/useFondsStore';
 
 interface UseArchiveDataLoaderOptions extends UseArchiveDataLoadOptions {
     data: ControllerDataInternal;
@@ -32,6 +33,10 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
 
     const { setRows, setIsLoading, setErrorMessage, setPageInfo, setCurrentPage } = data;
     const isInitialLoadRef = useRef(true);
+
+    // 获取全宗 hydration 状态和当前选中的全宗
+    const _hasHydrated = useFondsStore(state => state._hasHydrated);
+    const currentFonds = useFondsStore(state => state.currentFonds);
 
     // 使用 ref 存储动态依赖，避免 useCallback 依赖变化导致无限循环
     const depsRef = useRef({
@@ -183,8 +188,9 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
     });
 
     // Initial load - 只在组件挂载时执行一次
+    // 修复：等待全宗 hydration 完成 AND 全宗已选中后再加载数据，避免请求不带 X-Fonds-No 头
     useEffect(() => {
-        if (isInitialLoadRef.current) {
+        if (isInitialLoadRef.current && _hasHydrated && currentFonds) {
             isInitialLoadRef.current = false;
             const { isPoolView, poolStatusFilter } = depsRef.current;
             const doInitialLoad = async () => {
@@ -196,7 +202,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             };
             doInitialLoad();
         }
-    }, [loadPoolData, loadArchiveList]);
+    }, [loadPoolData, loadArchiveList, _hasHydrated, currentFonds]);
 
     // Monitor poolStatusFilter changes
     useEffect(() => {

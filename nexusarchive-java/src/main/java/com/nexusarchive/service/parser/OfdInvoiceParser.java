@@ -39,7 +39,7 @@ public class OfdInvoiceParser implements InvoiceParserService {
 
              // 利用 KeywordExtractor 提取关键词位置
              // OFDRW 2.x API: getKeyWordPositionList(reader, String...)
-             String[] keywords = {"价税合计", "税额", "小写"};
+             String[] keywords = {"价税合计", "税额", "小写", "开票日期"};
 
              List<KeywordPosition> positions;
              try {
@@ -71,6 +71,11 @@ public class OfdInvoiceParser implements InvoiceParserService {
                  
                  if ("税额".equals(kw)) {
                      regions.put("tax_entry_mock", rect);
+                 }
+                 
+                 if ("开票日期".equals(kw)) {
+                     regions.put("invoice_date", rect);
+                     // OFD value extraction is not implemented here as it requires complex text layout analysis
                  }
              }
 

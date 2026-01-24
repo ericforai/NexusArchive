@@ -4,10 +4,10 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, AlertTriangle, FileText, CreditCard, Calendar, Hash, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, FileText, CreditCard, Calendar, Hash, Info, Link2 } from 'lucide-react';
 import { autoAssociationApi, ComplianceStatus } from '../../api/autoAssociation';
 import { archivesApi, Archive } from '../../api/archives';
-import { originalVoucherApi, OriginalVoucher } from '../../api/originalVoucher';
+import { originalVoucherApi, OriginalVoucher, getVoucherRelations } from '../../api/originalVoucher';
 
 interface VoucherDetailCardProps {
     voucherId: string;
@@ -37,6 +37,7 @@ interface VoucherData {
     creator: string;
     status: string;
     entries: VoucherEntry[];
+    relatedAccountId?: string; // 关联的记账凭证ID
 }
 
 // 解析 YonSuite 凭证分录数据
@@ -129,7 +130,24 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
         };
     };
 
-    const mapOriginalToVoucher = (ov: OriginalVoucher): VoucherData => {
+    const mapOriginalToVoucher = async (ov: OriginalVoucher): Promise<VoucherData> => {
+        // 获取关联的记账凭证，从中提取分录
+        let entries: VoucherEntry[] = [];
+        try {
+            const relations = await getVoucherRelations(ov.id);
+            if (relations && relations.length > 0) {
+                // 获取第一个关联的记账凭证详情
+                const accountingVoucherId = relations[0].accountingVoucherId;
+                const archiveRes = await archivesApi.getArchiveById(accountingVoucherId);
+                if (archiveRes.code === 200 && archiveRes.data) {
+                    const archive = archiveRes.data as Archive;
+                    entries = parseCustomMetadata(archive.customMetadata);
+                }
+            }
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn('Failed to fetch accounting voucher entries for original voucher:', ov.id, e);
+        }
+
         return {
             id: ov.id,
             code: ov.voucherNo,
@@ -138,8 +156,19 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
             amount: (ov.amount !== null && ov.amount !== undefined) ? `¥ ${Number(ov.amount).toLocaleString()}` : '-',
             creator: ov.creator || (ov as any).createdBy || '上传',
             status: ov.archiveStatus || 'DRAFT',
-            entries: [] // 原始凭证暂无分录，待 OCR/关联后产生
+            entries,
+            relatedAccountId: entries.length > 0 ? await getRelatedAccountId(ov.id) : undefined
         };
+    };
+
+    // 获取关联的记账凭证ID
+    const getRelatedAccountId = async (originalVoucherId: string): Promise<string | undefined> => {
+        try {
+            const relations = await getVoucherRelations(originalVoucherId);
+            return relations?.[0]?.accountingVoucherId;
+        } catch {
+            return undefined;
+        }
     };
 
     useEffect(() => {
@@ -153,7 +182,7 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
                     // 直接获取原始凭证
                     const ov = await originalVoucherApi.getOriginalVoucher(voucherId);
                     if (ov) {
-                        setVoucher(mapOriginalToVoucher(ov));
+                        setVoucher(await mapOriginalToVoucher(ov));
                         // 原始凭证暂无合规性检查
                         setCompliance(null);
                     } else {
@@ -176,7 +205,7 @@ export const VoucherDetailCard: React.FC<VoucherDetailCardProps> = ({ voucherId,
                         // 如果类型未知且档案接口失败，降级尝试原始凭证
                         const ov = await originalVoucherApi.getOriginalVoucher(voucherId);
                         if (ov) {
-                            setVoucher(mapOriginalToVoucher(ov));
+                            setVoucher(await mapOriginalToVoucher(ov));
                         } else {
                             setError('未找到档案或原始凭证');
                         }

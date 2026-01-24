@@ -53,6 +53,11 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
         // If we force 'archived', we hide new uploads.
         if (isPoolView) return undefined;
 
+        // 资料收集页面：只显示收集中的档案（预归档状态）
+        if (routeConfig === 'collection' || subTitle === '概览') {
+            return 'pending,NEEDS_ACTION,MATCHED';
+        }
+
         // 会计档案相关 routeConfig 应只显示已归档档案
         // 待处理状态的档案应在预归档库中显示
         const archivedRouteConfigs: ArchiveRouteMode[] = ['view', 'voucher', 'ledger', 'report', 'other'];

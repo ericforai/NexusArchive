@@ -76,7 +76,9 @@ public class ArchiveFileContentService {
         String currentFonds = FondsContext.getCurrentFondsNo();
         if (currentFonds != null && !currentFonds.isEmpty()) {
             String fondsCode = content.getFondsCode();
-            if (!currentFonds.equals(fondsCode)) {
+            // 如果文件的 fonds_code 为 null，则允许访问（用于种子数据或未分配全宗的文件）
+            // 只有当明确设置了不同的 fonds_code 时才拒绝访问
+            if (fondsCode != null && !currentFonds.equals(fondsCode)) {
                 log.warn("全宗权限不匹配: fileId={}, fondsCode={}, currentFonds={}",
                     fileId, fondsCode, currentFonds);
                 return null;

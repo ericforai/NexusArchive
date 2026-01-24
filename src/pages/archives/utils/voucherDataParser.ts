@@ -75,12 +75,13 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
     // 解析分录数据
     const parsedEntries = bodies
       .map((body: any, index: number) => {
-        const debit = body.debitOrg || body.debit_original || body.debit_org || body.debit || 0;
-        const credit = body.creditOrg || body.credit_original || body.credit_org || body.credit || 0;
-        const debitOriginal = body.debitOriginal || body.debit_original || body.amountInTransactionCurrency || body.debitOrg || 0;
-        const creditOriginal = body.creditOriginal || body.credit_original || body.creditOrg || 0;
+        // 支持多种字段命名格式
+        const debit = body.debitOrg || body.debit_original || body.debit_org || body.debitOriginal || body.debit || body.debitOriginal || 0;
+        const credit = body.creditOrg || body.credit_original || body.credit_org || body.creditOriginal || body.credit || body.creditOriginal || 0;
+        const debitOriginal = body.debitOriginal || body.debit_original || body.amountInTransactionCurrency || body.debitOrg || body.debit || 0;
+        const creditOriginal = body.creditOriginal || body.credit_original || body.creditOrg || body.credit || 0;
 
-        // 获取科目信息 - 支持 YonSuite 原始格式 (accsubject) 和 VoucherDTO 格式 (accountCode/accountName)
+        // 获取科目信息 - 支持 YonSuite 原始格式 (accsubject) 和 VoucherDTO 格式 (accountCode/accountName) 和简化的 subjectName
         let accountCode = body.accountCode || body.account_code || '';
         let accountName = body.accountName || body.account_name || '';
 
@@ -92,6 +93,11 @@ export function parseVoucherData(sourceData: string, row: any): ParseResult {
           } else {
             accountName = body.accsubject || '';
           }
+        }
+
+        // 尝试从 subjectName 字段获取 (某些简化格式)
+        if (!accountCode && !accountName && body.subjectName) {
+          accountName = body.subjectName;
         }
 
         // 获取币种信息 - 支持 YonSuite 原始格式 (currency) 和 VoucherDTO 格式 (currencyCode/currencyName)

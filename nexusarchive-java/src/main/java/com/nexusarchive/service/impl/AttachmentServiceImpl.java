@@ -10,6 +10,9 @@ import com.nexusarchive.entity.ArchiveAttachment;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.mapper.ArchiveAttachmentMapper;
 import com.nexusarchive.mapper.ArcFileContentMapper;
+import com.nexusarchive.mapper.VoucherRelationMapper;
+import com.nexusarchive.entity.VoucherRelation;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.service.AttachmentService;
 import com.nexusarchive.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -44,20 +47,55 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final ArcFileContentMapper fileContentMapper;
     private final FileStorageService fileStorageService;
     private final com.nexusarchive.mapper.ArchiveMapper archiveMapper;
+
     private final List<com.nexusarchive.service.parser.InvoiceParserService> invoiceParsers;
+    private final VoucherRelationMapper voucherRelationMapper;
 
     @Override
     public List<ArcFileContent> getAttachmentsByArchive(String archiveId) {
         List<ArchiveAttachment> links = attachmentMapper.selectByArchiveId(archiveId);
         List<ArcFileContent> files = new ArrayList<>();
         
+        // 1. 获取直接关联的附件
         for (ArchiveAttachment link : links) {
             ArcFileContent file = fileContentMapper.selectById(link.getFileId());
             if (file != null) {
-                // 附件类型存储在关联表中，前端通过 link.attachmentType 获取
                 files.add(file);
             }
         }
+
+        // 2. [FIXED] 获取关联的原始凭证文件 (解决关联附件不可见问题)
+        try {
+            List<VoucherRelation> relations = voucherRelationMapper.selectList(
+                new LambdaQueryWrapper<VoucherRelation>()
+                    .eq(VoucherRelation::getAccountingVoucherId, archiveId)
+                    .eq(VoucherRelation::getDeleted, 0)
+            );
+
+            if (!relations.isEmpty()) {
+                List<String> originalVoucherIds = relations.stream()
+                    .map(VoucherRelation::getOriginalVoucherId)
+                    .collect(java.util.stream.Collectors.toList());
+                
+                if (!originalVoucherIds.isEmpty()) {
+                     List<ArcFileContent> relatedFiles = fileContentMapper.selectList(
+                        new LambdaQueryWrapper<ArcFileContent>()
+                            .in(ArcFileContent::getItemId, originalVoucherIds)
+                    );
+                    
+                    // 避免重复添加 (虽然不太可能重复，但为了健壮性)
+                    for (ArcFileContent rf : relatedFiles) {
+                         boolean exists = files.stream().anyMatch(f -> f.getId().equals(rf.getId()));
+                         if (!exists) {
+                             files.add(rf);
+                         }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to query related original voucher files in attachment service: {}", e.getMessage());
+        }
+
         return files;
     }
 
@@ -193,7 +231,48 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     public List<ArchiveAttachment> getAttachmentLinks(String archiveId) {
-        return attachmentMapper.selectByArchiveId(archiveId);
+        List<ArchiveAttachment> links = new ArrayList<>(attachmentMapper.selectByArchiveId(archiveId));
+
+        // [FIXED] 注入关联原始凭证的虚拟链接，确保前端能识别为 'invoice' 类型
+        try {
+            List<VoucherRelation> relations = voucherRelationMapper.selectList(
+                new LambdaQueryWrapper<VoucherRelation>()
+                    .eq(VoucherRelation::getAccountingVoucherId, archiveId)
+                    .eq(VoucherRelation::getDeleted, 0)
+            );
+
+            if (!relations.isEmpty()) {
+                List<String> originalVoucherIds = relations.stream()
+                    .map(VoucherRelation::getOriginalVoucherId)
+                    .collect(java.util.stream.Collectors.toList());
+                
+                if (!originalVoucherIds.isEmpty()) {
+                     List<ArcFileContent> relatedFiles = fileContentMapper.selectList(
+                        new LambdaQueryWrapper<ArcFileContent>()
+                            .in(ArcFileContent::getItemId, originalVoucherIds)
+                    );
+                    
+                    for (ArcFileContent file : relatedFiles) {
+                        // 检查是否已存在真实链接
+                        boolean exists = links.stream().anyMatch(l -> l.getFileId().equals(file.getId()));
+                        if (!exists) {
+                            ArchiveAttachment virtualLink = new ArchiveAttachment();
+                            virtualLink.setId("virtual-" + file.getId()); 
+                            virtualLink.setArchiveId(archiveId);
+                            virtualLink.setFileId(file.getId());
+                            virtualLink.setAttachmentType("invoice"); // 强制标记为发票
+                            virtualLink.setCreatedBy("system");
+                            virtualLink.setCreatedTime(file.getCreatedTime());
+                            links.add(virtualLink);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate virtual links for original vouchers: {}", e.getMessage());
+        }
+
+        return links;
     }
 
     /**

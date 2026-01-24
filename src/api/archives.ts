@@ -116,6 +116,17 @@ export const archivesApi = {
 };
 
 /**
+ * 附件信息（来自原始凭证）
+ */
+export interface VoucherAttachmentInfo {
+    id: string;
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    originalVoucherId: string;
+}
+
+/**
  * 凭证分录数据响应
  */
 export interface VoucherDataResponse {
@@ -125,6 +136,8 @@ export interface VoucherDataResponse {
     summary: string | null;
     docDate: string | null;
     creator: string | null;
+    /** 关联的原始凭证附件（发票等） */
+    attachments?: VoucherAttachmentInfo[];
 }
 
 export const archivesApiEx = {

@@ -53,14 +53,17 @@ export const useFondsStore = create<FondsState>()(
             // 设置全宗列表
             setFondsList: (list) => {
                 set({ fondsList: list });
-                // 如果没有当前全宗，自动选择第一个
+                // 如果没有当前全宗，优先选择 DEMO 全宗，否则选择第一个
                 const { currentFonds } = get();
                 if (!currentFonds && list.length > 0) {
-                    set({ currentFonds: list[0] });
+                    // 优先选择 DEMO 演示全宗（如果存在）
+                    const demoFonds = list.find(f => f.fondsCode === 'DEMO');
+                    set({ currentFonds: demoFonds || list[0] });
                 }
-                // 如果当前全宗不在列表中，重新选择
+                // 如果当前全宗不在列表中，重新选择（优先 DEMO）
                 if (currentFonds && !list.find(f => f.id === currentFonds.id)) {
-                    set({ currentFonds: list[0] || null });
+                    const demoFonds = list.find(f => f.fondsCode === 'DEMO');
+                    set({ currentFonds: demoFonds || list[0] || null });
                 }
             },
 
