@@ -10,7 +10,32 @@
 
 ---
 
-## Task List Overview
+## Progress Overview
+
+| Task | Description | Status |
+|------|-------------|--------|
+| 1 | 数据库迁移脚本 | Pending |
+| 2 | 实体类创建 - SalesOrder | Pending |
+| 3 | 实体类创建 - SalesOrderDetail | Pending |
+| 4 | DTO 类创建 - SalesOrderListRequest | Pending |
+| 5 | DTO 类创建 - SalesOrderListResponse | Pending |
+| 6 | DTO 类创建 - SalesOrderDetailResponse | Pending |
+| 7 | API Client 创建 | Pending |
+| 8 | 数据映射器创建 | Pending |
+| 9 | MyBatis Mapper 创建 | Pending |
+| 10 | 同步服务创建 | Pending |
+| 11 | REST Controller 创建 | ✅ Completed |
+| 12 | 前端 API 客户端 | ✅ Completed |
+| 13 | 前端同步组件 + UI 集成 | ✅ Completed |
+| 14 | 集成测试 | Pending |
+| 15 | 文档更新 | Pending |
+| 16 | 最终验证 | Pending |
+
+**Latest Commit:** `a3841cf1` - feat(sales-order): add access_token support and UI integration
+
+---
+
+## Task List Overview (Original)
 
 1. 数据库迁移脚本
 2. 实体类创建
@@ -1207,13 +1232,17 @@ git commit -m "feat(sales-order): add YonSuiteSalesOrderSyncService"
 
 ---
 
-## Task 11: REST Controller 创建
+## Task 11: REST Controller 创建 ✅ COMPLETED
 
-**Files:**
-- Create: `nexusarchive-java/src/main/java/com/nexusarchive/controller/SalesOrderController.java`
+**Status**: 已完成
+**Commit**: `a3841cf1` - feat(sales-order): add access_token support and UI integration
 
-**Step 1: Write the controller**
+**Implementation Notes:**
+- Controller 已创建于 `nexusarchive-java/src/main/java/com/nexusarchive/controller/SalesOrderController.java`
+- 使用 `YonAuthService.getAccessToken()` 自动获取加密的 access_token
+- 支持自动刷新和缓存机制
 
+**Original spec:**
 ```java
 // Input: Spring Web、Lombok
 // Output: SalesOrderController
@@ -1221,50 +1250,49 @@ git commit -m "feat(sales-order): add YonSuiteSalesOrderSyncService"
 
 package com.nexusarchive.controller;
 
-import com.nexusarchive.common.response.Response;
-import com.nexusarchive.common.response.ResponseBuilder;
+import com.nexusarchive.common.result.Result;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderListRequest;
+import com.nexusarchive.integration.yonsuite.service.YonAuthService;
 import com.nexusarchive.integration.yonsuite.service.YonSuiteSalesOrderSyncService;
 import com.nexusarchive.service.DataScopeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 销售订单同步控制器
+ */
 @RestController
-@RequestMapping("/api/sales-order")
+@RequestMapping("/sales-order")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "销售订单同步")
 public class SalesOrderController {
-    
+
     private final YonSuiteSalesOrderSyncService syncService;
+    private final YonAuthService yonAuthService;
     private final DataScopeService dataScopeService;
-    
+
+    /**
+     * 同步销售订单
+     * POST /sales-order/sync
+     */
     @PostMapping("/sync")
     @Operation(summary = "同步销售订单")
-    public Response<YonSuiteSalesOrderSyncService.SyncResult> syncSalesOrders(
+    public Result<YonSuiteSalesOrderSyncService.SyncResult> syncSalesOrders(
             @RequestBody SalesOrderListRequest request
     ) {
-        // 获取 access_token（从配置中获取）
-        String accessToken = ""; // TODO: 从 ERP 配置中获取
-        
+        // 从 YonAuthService 获取 access_token (自动刷新)
+        String accessToken = yonAuthService.getAccessToken();
+
+        log.info("收到销售订单同步请求: dateBegin={}, dateEnd={}",
+                request.getVouchdateBegin(), request.getVouchdateEnd());
+
         YonSuiteSalesOrderSyncService.SyncResult result = syncService.syncSalesOrders(accessToken, request);
-        
-        return ResponseBuilder.success(result);
-    }
-    
-    @GetMapping("/{id}")
-    @Operation(summary = "查询订单详情")
-    public Response<Object> getSalesOrder(@PathVariable Long id) {
-        // TODO: 实现查询逻辑
-        return ResponseBuilder.success(null);
-    }
-    
-    @GetMapping("/{id}/relations")
-    @Operation(summary = "查询关联单据链路")
-    public Response<Object> getRelations(@PathVariable Long id) {
-        // TODO: 实现关联查询
-        return ResponseBuilder.success(null);
+
+        return Result.success(result);
     }
 }
 ```
@@ -1283,13 +1311,16 @@ git commit -m "feat(sales-order): add SalesOrderController"
 
 ---
 
-## Task 12: 前端 API 客户端
+## Task 12: 前端 API 客户端 ✅ COMPLETED
 
-**Files:**
-- Create: `src/api/sales-order.ts`
+**Status**: 已完成
+**Commit**: `a3841cf1` - feat(sales-order): add access_token support and UI integration
 
-**Step 1: Write the API client**
+**Implementation Notes:**
+- API 客户端已创建于 `src/api/sales-order.ts`
+- 提供同步、查询、关联链路查询接口
 
+**Original spec:**
 ```typescript
 import { client } from './client';
 
@@ -1349,13 +1380,18 @@ git commit -m "feat(sales-order): add sales order API client"
 
 ---
 
-## Task 13: 前端同步组件
+## Task 13: 前端同步组件 + UI 集成 ✅ COMPLETED
 
-**Files:**
-- Create: `src/pages/settings/integration/components/SalesOrderSyncPanel.tsx`
+**Status**: 已完成
+**Commit**: `a3841cf1` - feat(sales-order): add access_token support and UI integration
 
-**Step 1: Write the sync component**
+**Implementation Notes:**
+- 组件已创建于 `src/components/settings/integration/components/SalesOrderSyncPanel.tsx`
+- 已集成到 `IntegrationSettingsPage.tsx` 的"数据同步"选项卡
+- 使用 Ant Design Tabs 组件组织 UI
+- 包含完整的同步结果展示（总计、成功、失败、跳过统计）
 
+**Original spec:**
 ```typescript
 import { useState } from 'react';
 import { Button, DatePicker, Select, Form, message } from 'antd';
