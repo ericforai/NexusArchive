@@ -44,9 +44,7 @@ public class SalesOrder {
     private BigDecimal realMoney;
 
     // 额外金额字段（详情API返回）
-    @TableField(exist = false)
     private BigDecimal orderPayMoney;
-    @TableField(exist = false)
     private BigDecimal orderRealMoney;
 
     // 外键关联

@@ -1,7 +1,7 @@
 # ERP 接口相关代码和文档整理
 
 > 本文档整理了 NexusArchive 系统中所有与 ERP 接口相关的代码文件和文档。
-> 最后更新: 2026-01-14 (新增付款申请单同步场景)
+> 最后更新: 2026-01-24 (新增销售订单同步功能)
 
 ---
 
@@ -154,6 +154,13 @@
 | `integration/yonsuite/service/YonSuiteSalesOrderSyncService.java` | **(NEW)** 销售订单同步服务 |
 | `integration/yonsuite/event/YonSuiteVoucherEvent.java` | 凭证事件模型 |
 
+### 2.7b MyBatis Mapper
+
+| 文件路径 | 说明 |
+|---------|------|
+| `mapper/SdSalesOrderMapper.java` | **(NEW)** 销售订单 MyBatis Mapper |
+| `mapper/SdSalesOrderDetailMapper.java` | **(NEW)** 销售订单明细 MyBatis Mapper |
+
 ### 2.8 YonSuite DTO
 
 | 文件路径 | 说明 |
@@ -216,6 +223,8 @@
 | `entity/ErpConfig.java` | ERP 配置实体 |
 | `entity/ErpScenario.java` | 业务场景实体 |
 | `entity/ErpSubInterface.java` | 子接口实体 |
+| `entity/SalesOrder.java` | **(NEW)** 销售订单实体 |
+| `entity/SalesOrderDetail.java` | **(NEW)** 销售订单明细实体 |
 
 ### 2.12 核心 DTO
 
@@ -264,6 +273,7 @@
 | `src/main/resources/db/migration/V95__add_accbook_mapping_to_erp_config.sql` | 账套-全宗映射字段 (accbook_mapping) |
 | `src/main/resources/db/migration/V98__add_sap_interface_type_to_erp_config.sql` | SAP 接口类型字段 (sap_interface_type) |
 | `src/main/resources/db/migration/V101__sys_entity_add_parent_id.sql` | 组织架构树结构 (parent_id) |
+| `src/main/resources/db/migration/V102__create_sales_order_tables.sql` | **(NEW)** 销售订单表 (sd_sales_order, sd_sales_order_detail) |
 
 ---
 
@@ -277,6 +287,7 @@
 | `src/api/yonsuite.ts` | YonSuite 专用 API 客户端 |
 | `src/api/yonsuite-payment-apply.ts` | **(NEW)** 付款申请单文件 API 客户端 |
 | `src/api/yonsuite-payment-apply-sync.ts` | **(NEW)** 付款申请单同步 API 客户端 |
+| `src/api/sales-order.ts` | **(NEW)** 销售订单同步 API 客户端 |
 
 ### 3.2 集成设置页面
 
@@ -301,6 +312,7 @@
 | `src/components/settings/integration/components/ScenarioDrawer.tsx` | 场景抽屉 |
 | `src/components/settings/integration/components/ScenarioSummaryCard.tsx` | 场景摘要卡片 |
 | `src/components/settings/integration/components/ParamsEditor.tsx` | 参数编辑器 |
+| `src/components/settings/integration/components/SalesOrderSyncPanel.tsx` | **(NEW)** 销售订单同步面板 |
 
 ### 3.4 集成设置 Hooks
 
