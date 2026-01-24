@@ -169,9 +169,8 @@ export function IntegrationSettingsPage({ erpApi }: IntegrationSettingsPageProps
           onConfig={(config) => connectorModal.actions.openModal(config)}
           onTest={configManager.actions.testConnection}
           onDiagnose={diagnosis.actions.startDiagnosis}
-          onReconcile={(_id) => {
-            // TODO: implement reconcile
-            console.log('Reconcile not implemented yet');
+          onReconcile={() => {
+            // TODO: implement reconcile functionality
           }}
           onViewDetails={(configId) => {
             // Load scenarios if not already loaded
