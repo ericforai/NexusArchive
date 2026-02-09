@@ -7,6 +7,7 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.service.FileStorageService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,36 @@ import java.nio.file.StandardCopyOption;
 @Slf4j
 public class FileStorageServiceImpl implements FileStorageService {
 
-    @Value("${archive.root.path:/data/archives}")
+    @Value("${archive.root.path:/tmp/nexusarchive}")
     private String archiveRootPath;
+
+    /**
+     * 启动时自动创建存储目录
+     * 确保文件上传前目录已存在，避免事务回滚导致的数据库记录与物理文件不一致
+     */
+    @PostConstruct
+    public void initStorageDirectory() {
+        try {
+            Path rootPath = Paths.get(archiveRootPath).toAbsolutePath().normalize();
+            if (!Files.exists(rootPath)) {
+                Files.createDirectories(rootPath);
+                log.info("Created archive root directory: {}", rootPath);
+            }
+            // 创建常用子目录，避免首次上传时延迟
+            String[] subDirs = {"attachments", "generated", "pre-archive", "uploads", "scan"};
+            for (String subDir : subDirs) {
+                Path subPath = rootPath.resolve(subDir);
+                if (!Files.exists(subPath)) {
+                    Files.createDirectories(subPath);
+                    log.info("Created sub-directory: {}/{}", archiveRootPath, subDir);
+                }
+            }
+            log.info("File storage initialized: {}", rootPath);
+        } catch (IOException e) {
+            log.error("Failed to create storage directory: {}", archiveRootPath, e);
+            throw new BusinessException("Failed to initialize file storage: " + e.getMessage());
+        }
+    }
 
     @Override
     public Path resolvePath(String relativePath) {

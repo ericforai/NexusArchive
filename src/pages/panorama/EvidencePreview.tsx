@@ -229,11 +229,9 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
         if (!file.id) return '';
 
         // 根据来源选择不同的下载接口
-        if (sourceType === 'ARCHIVE') {
-            return `/api/archive/files/download/${file.id}`;
-        } else {
-            return `/api/original-vouchers/files/download/${file.id}`;
-        }
+        return sourceType === 'ARCHIVE'
+            ? `/api/archive/files/download/${file.id}`
+            : `/api/original-vouchers/files/download/${file.id}`;
     };
 
     // 当前页签对应的文件
