@@ -39,7 +39,7 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
         fetchFileWithAuth(file);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // 依赖项：仅 files 变化时重新获取文件
   }, [files]);
 
   const fetchFileWithAuth = async (file: AttachmentDTO) => {

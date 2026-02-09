@@ -7,10 +7,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { VoucherDTO } from '../../../components/voucher';
+import type { VoucherDTO, AttachmentDTO } from '../../../components/voucher';
 import { archivesApi, type VoucherDataResponse } from '../../../api/archives';
 import { parseVoucherData } from '../utils/voucherDataParser';
-import type { AttachmentDTO } from '../../../components/voucher/types';
 
 interface UseVoucherDataOptions {
   row: any;

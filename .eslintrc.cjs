@@ -75,7 +75,7 @@ module.exports = {
         // React Hooks 依赖项检查 - 允许警告但不阻塞构建
         // 原因：项目中存在大量"首次挂载加载"模式，函数定义在 effect 后
         // 完全修复需要大规模重构（将函数移至 useCallback 或 effect 内部）
-        'react-hooks/exhaustive-deps': 'warn',
+        // 注意：eslint-plugin-react-hooks v5 的 recommended 预设已包含此规则
 
         // ========================================
         // 🧱 Module Boundaries (eslint-plugin-boundaries)
