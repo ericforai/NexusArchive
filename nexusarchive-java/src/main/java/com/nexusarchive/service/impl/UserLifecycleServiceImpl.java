@@ -292,10 +292,40 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
     
     /**
      * 生成临时密码
+     * 安全加固: 使用 SecureRandom 生成符合密码强度策略的12位密码
+     * 密码包含: 大写字母、小写字母、数字、特殊字符
      */
     private String generateTemporaryPassword() {
-        // 生成8位随机密码
-        return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
+        java.security.SecureRandom random = new java.security.SecureRandom();
+        String upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // 去除易混淆字符 I, O
+        String lower = "abcdefghjkmnpqrstuvwxyz"; // 去除易混淆字符 i, l, o
+        String digits = "23456789"; // 去除易混淆字符 0, 1
+        String special = "@#$%&*+-=";
+
+        String allChars = upper + lower + digits + special;
+
+        // 确保密码至少包含每种类型的字符
+        StringBuilder password = new StringBuilder(12);
+        password.append(upper.charAt(random.nextInt(upper.length())));
+        password.append(lower.charAt(random.nextInt(lower.length())));
+        password.append(digits.charAt(random.nextInt(digits.length())));
+        password.append(special.charAt(random.nextInt(special.length())));
+
+        // 填充剩余8位
+        for (int i = 4; i < 12; i++) {
+            password.append(allChars.charAt(random.nextInt(allChars.length())));
+        }
+
+        // 打乱字符顺序
+        char[] chars = password.toString().toCharArray();
+        for (int i = chars.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = chars[i];
+            chars[i] = chars[j];
+            chars[j] = temp;
+        }
+
+        return new String(chars);
     }
     
     /**

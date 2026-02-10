@@ -247,18 +247,60 @@ public class YonSuiteClient {
     /**
      * 下载附件并返回字节数组 (自动关闭连接)
      * ✅ P1 修复: 返回 byte[] 而不是 InputStream,避免连接泄漏
+     * ✅ 安全加固: 添加 URL 白名单验证，防止 SSRF 攻击
      */
     public byte[] downloadFile(String url) {
         if (url == null || url.isEmpty()) {
             return null;
         }
+
+        // 安全检查: URL 白名单验证，防止 SSRF 攻击
+        if (!isValidDownloadUrl(url)) {
+            log.error("拒绝下载文件: URL 不在白名单中, url={}", url);
+            throw new IllegalArgumentException("不允许的下载地址，仅支持 YonSuite 官方域名");
+        }
+
         log.info("Downloading from: {}", url);
-        
+
         try (var response = HttpRequest.get(url).timeout(60_000).execute()) {
             return response.bodyBytes();
         } catch (Exception e) {
             log.error("下载文件失败: url={}, error={}", url, e.getMessage(), e);
             throw new RuntimeException("下载文件失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 验证下载 URL 是否在白名单中
+     * 仅允许 YonSuite 官方域名，防止 SSRF 攻击
+     */
+    private boolean isValidDownloadUrl(String url) {
+        try {
+            java.net.URL parsedUrl = new java.net.URL(url);
+            String host = parsedUrl.getHost();
+
+            // 允许的域名白列表
+            if (host == null || host.isEmpty()) {
+                return false;
+            }
+
+            // 允许 yonyoucloud.com 及其子域名
+            if (host.equals("yonyoucloud.com") || host.endsWith(".yonyoucloud.com")) {
+                return true;
+            }
+            // 允许 yonyou.com 及其子域名
+            if (host.equals("yonyou.com") || host.endsWith(".yonyou.com")) {
+                return true;
+            }
+            // 允许用友其他相关域名
+            if (host.equals("diwork.com") || host.endsWith(".diwork.com")) {
+                return true;
+            }
+
+            return false;
+        } catch (java.net.MalformedURLException e) {
+            log.warn("URL 格式错误: {}", url);
+            return false;
         }
     }
     

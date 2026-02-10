@@ -7,11 +7,13 @@ package com.nexusarchive.controller;
 
 import com.nexusarchive.service.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/debug")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('SYSTEM_ADMIN')")
 public class DebugController {
 
     private final LoginAttemptService loginAttemptService;

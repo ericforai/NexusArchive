@@ -6,7 +6,6 @@
 package com.nexusarchive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.dto.relation.ComplianceStatusDto;
 import com.nexusarchive.dto.relation.LinkedFileDto;
@@ -120,9 +119,10 @@ public class RelationController {
         // 这样可以避免因为当前全宗不匹配而无法查看关系数据的问题
         Archive inputArchive = archiveMapper.selectById(archiveId);
         if (inputArchive == null) {
-            // Fallback: try archive_code lookup
-            QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-            wrapper.eq("archive_code", archiveId);
+            // Fallback: try archive_code lookup (ALLOW-QUERYWRAPPER: archive_code is a controlled field name)
+            // Using LambdaQueryWrapper to prevent SQL injection
+            LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Archive::getArchiveCode, archiveId);
             inputArchive = archiveMapper.selectOne(wrapper);
         }
         if (inputArchive == null) {
@@ -170,9 +170,10 @@ public class RelationController {
         // 关系查询场景：直接通过 mapper 查询，绕过权限检查
         Archive center = archiveMapper.selectById(centerArchiveId);
         if (center == null) {
-            // Fallback: try archive_code lookup
-            QueryWrapper<Archive> wrapper = new QueryWrapper<>();
-            wrapper.eq("archive_code", centerArchiveId);
+            // Fallback: try archive_code lookup (ALLOW-QUERYWRAPPER: archive_code is a controlled field name)
+            // Using LambdaQueryWrapper to prevent SQL injection
+            LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Archive::getArchiveCode, centerArchiveId);
             center = archiveMapper.selectOne(wrapper);
         }
         if (center == null) {

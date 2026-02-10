@@ -61,6 +61,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Map<String, TokenBucket> buckets = new ConcurrentHashMap<>();
     private final Map<String, LoginRateLimiter> loginLimiters = new ConcurrentHashMap<>();
 
+    /**
+     * 定时调度器，用于定期清理过期的限流器
+     */
+    private java.util.concurrent.ScheduledExecutorService scheduler;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -144,13 +149,30 @@ public class RateLimitFilter extends OncePerRequestFilter {
      */
     @jakarta.annotation.PostConstruct
     public void startCleanupTask() {
-        java.util.concurrent.ScheduledExecutorService scheduler = 
-            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "RateLimitCleanup");
-                t.setDaemon(true);
-                return t;
-            });
+        scheduler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "RateLimitCleanup");
+            t.setDaemon(true);
+            return t;
+        });
         scheduler.scheduleAtFixedRate(this::cleanupExpiredBuckets, 60, 60, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    /**
+     * 应用关闭时清理资源（防止资源泄漏）
+     */
+    @jakarta.annotation.PreDestroy
+    public void shutdownCleanupTask() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+            try {
+                if (!scheduler.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private void cleanupExpiredBuckets() {

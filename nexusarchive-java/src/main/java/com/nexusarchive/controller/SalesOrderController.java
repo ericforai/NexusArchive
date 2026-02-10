@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -35,6 +36,7 @@ public class SalesOrderController {
      */
     @PostMapping("/sync")
     @Operation(summary = "同步销售订单")
+    @PreAuthorize("hasAnyAuthority('sales:sync', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<YonSuiteSalesOrderSyncService.SyncResult> syncSalesOrders(
             @RequestBody SalesOrderListRequest request
     ) {

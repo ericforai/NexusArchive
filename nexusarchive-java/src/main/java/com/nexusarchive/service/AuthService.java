@@ -97,6 +97,7 @@ public class AuthService {
 
     /**
      * 刷新Token
+     * 安全加固: 验证用户存在且状态为 active
      */
     public String refreshToken(String token) {
         if (tokenBlacklistService.isBlacklisted(token)) {
@@ -105,9 +106,20 @@ public class AuthService {
         if (!jwtUtil.validateToken(token)) {
             throw new BusinessException("Token 无效或已过期");
         }
+
+        String userId = jwtUtil.extractUserId(token);
+
+        // 安全检查: 验证用户存在且状态为 active
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在或已被删除");
+        }
+        if (!"active".equals(user.getStatus())) {
+            throw new BusinessException("用户已被禁用或锁定，无法刷新令牌");
+        }
+
         licenseService.assertValid(userMapper.countActiveUsers());
         String username = jwtUtil.extractUsername(token);
-        String userId = jwtUtil.extractUserId(token);
         return jwtUtil.generateToken(username, userId);
     }
 
