@@ -26,11 +26,7 @@ jobs:
       - name: Pack source
         run: |
           set -euo pipefail
-          tar \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='nexusarchive-java/target' \
-            -czf nexusarchive-deploy.tar.gz .
+          git archive --format=tar.gz --output=nexusarchive-deploy.tar.gz HEAD
 
       - name: Upload package
         uses: appleboy/scp-action@v0.1.7
