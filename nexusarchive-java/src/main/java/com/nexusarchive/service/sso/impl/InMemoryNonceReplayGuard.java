@@ -5,7 +5,7 @@
 package com.nexusarchive.service.sso.impl;
 
 import com.nexusarchive.service.sso.NonceReplayGuard;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@ConditionalOnMissingBean(name = "redisNonceReplayGuard")
+@Primary
 public class InMemoryNonceReplayGuard implements NonceReplayGuard {
 
     private final Map<String, Long> nonceExpireMap = new ConcurrentHashMap<>();

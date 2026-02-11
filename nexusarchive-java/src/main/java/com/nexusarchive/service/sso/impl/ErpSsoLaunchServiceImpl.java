@@ -26,8 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Service
@@ -56,7 +56,7 @@ public class ErpSsoLaunchServiceImpl implements ErpSsoLaunchService {
             throw new ErpSsoException(SsoErrorCodes.CLIENT_NOT_FOUND, "SSO 客户端不存在或未启用", 401);
         }
 
-        long now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        long now = Instant.now().getEpochSecond();
         signatureService.validateTimestamp(request.getTimestamp(), now, TIMESTAMP_ALLOWED_SKEW_SECONDS);
 
         String payload = buildPayload(clientId, request);
