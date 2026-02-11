@@ -49,6 +49,9 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/nexusarchive
-            tar -xzf nexusarchive-deploy.tar.gz
+            rm -rf /tmp/nexusarchive-release
+            mkdir -p /tmp/nexusarchive-release
+            tar -xzf nexusarchive-deploy.tar.gz -C /tmp/nexusarchive-release
+            rsync -a --delete /tmp/nexusarchive-release/ /opt/nexusarchive/
             chmod +x scripts/deploy-prod.sh
             SKIP_GIT_PULL=1 PROJECT_ROOT=/opt/nexusarchive bash scripts/deploy-prod.sh
