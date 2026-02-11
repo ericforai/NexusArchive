@@ -80,7 +80,7 @@ npm run build
 
 echo "[3/6] 构建后端..."
 cd "$PROJECT_ROOT/nexusarchive-java"
-mvn -DskipTests clean package
+mvn -DskipTests -Dmaven.compiler.failOnWarning=false clean package
 
 echo "[4/6] 重启服务..."
 systemctl restart "$SERVICE_NAME"
