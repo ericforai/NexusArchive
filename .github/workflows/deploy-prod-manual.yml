@@ -1,0 +1,37 @@
+name: Deploy Prod Manual (Self-Hosted)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch/tag/sha)"
+        required: true
+        default: "main"
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, x64, prod]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+
+      - name: Sync source to server project dir
+        run: |
+          set -euo pipefail
+          sudo mkdir -p /opt/nexusarchive
+          sudo rsync -a --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude "nexusarchive-java/target" \
+            "$GITHUB_WORKSPACE"/ /opt/nexusarchive/
+
+      - name: Run deploy script
+        run: |
+          set -euo pipefail
+          sudo chmod +x /opt/nexusarchive/scripts/deploy-prod.sh
+          sudo SKIP_GIT_PULL=1 PROJECT_ROOT=/opt/nexusarchive \
+            bash /opt/nexusarchive/scripts/deploy-prod.sh
