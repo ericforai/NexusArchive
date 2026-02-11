@@ -1,0 +1,58 @@
+name: Deploy Prod via SSH
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch/tag/sha)"
+        required: true
+        default: "main"
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+
+      - name: Pack source
+        run: |
+          set -euo pipefail
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='nexusarchive-java/target' \
+            -czf nexusarchive-deploy.tar.gz .
+
+      - name: Upload package
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT }}
+          source: "nexusarchive-deploy.tar.gz"
+          target: "/opt/nexusarchive"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/nexusarchive
+            tar -xzf nexusarchive-deploy.tar.gz
+            chmod +x scripts/deploy-prod.sh
+            SKIP_GIT_PULL=1 PROJECT_ROOT=/opt/nexusarchive bash scripts/deploy-prod.sh
