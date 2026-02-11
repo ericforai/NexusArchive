@@ -127,4 +127,14 @@ public interface ErpConfigService {
      * @return 映射关系 Map，Key=账套编码，Value=全宗编码
      */
     java.util.Map<String, String> getAccbookFondsMapping();
+
+    /**
+     * 严格解析账套编码对应的全宗编码。
+     *
+     * 规则：
+     * - 未命中 -> 抛出异常
+     * - 命中多条 -> 抛出异常
+     * - 仅命中一条 -> 返回全宗编码
+     */
+    String resolveFondsCodeStrict(String accbookCode);
 }

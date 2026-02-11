@@ -69,6 +69,8 @@ public class SecurityConfig {
                                                                 "/auth/login",
                                                                 "/auth/refresh",
                                                                 "/auth/logout",
+                                                                "/erp/sso/launch",
+                                                                "/erp/sso/consume",
                                                                 "/license/**", // License 查询和导入需要在未授权时可访问
                                                                 "/health",
                                                                 "/public/**",

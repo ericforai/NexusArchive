@@ -96,6 +96,25 @@ public class AuthService {
     }
 
     /**
+     * 基于用户 ID 直接签发登录响应（供系统内受控 SSO 场景使用）
+     */
+    public LoginResponse issueTokenByUserId(String userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(401, "用户不存在");
+        }
+        if (!"active".equals(user.getStatus())) {
+            throw new BusinessException(401, "用户已被禁用或锁定");
+        }
+
+        String token = jwtUtil.generateToken(user.getUsername(), user.getId());
+        user.setLastLoginAt(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        return new LoginResponse(token, buildUserInfo(user));
+    }
+
+    /**
      * 刷新Token
      * 安全加固: 验证用户存在且状态为 active
      */

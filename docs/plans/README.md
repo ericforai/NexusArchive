@@ -7,6 +7,7 @@
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
+| `2026-02-11-erp-sso-launch-query-implementation-plan.md` | 实施计划 | ERP 发起联查单点登录（账套解析 + 用户映射）实施步骤 |
 | `2026-01-09-performance-optimization-design.md` | 设计 | 性能优化设计文档 (24类问题方案) |
 | `2025-12-29-querywrapper-lambda-migration.md` | 方案 | QueryWrapper Lambda 迁移方案 |
 | `2025-12-30-prd-v1-evaluation.md` | 评估 | PRD v1.0 多法人架构评估报告 |

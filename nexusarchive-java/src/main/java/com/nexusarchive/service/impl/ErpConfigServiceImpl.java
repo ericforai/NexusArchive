@@ -12,8 +12,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.ErpConfigDto;
 import com.nexusarchive.dto.ErpConfigApiDtoBuilder;
 import com.nexusarchive.entity.ErpConfig;
+import com.nexusarchive.exception.ErpSsoException;
 import com.nexusarchive.mapper.ErpConfigMapper;
 import com.nexusarchive.service.ErpConfigService;
+import com.nexusarchive.service.sso.SsoErrorCodes;
 import com.nexusarchive.util.SM4Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -251,6 +254,35 @@ public class ErpConfigServiceImpl implements ErpConfigService {
         }
 
         return result;
+    }
+
+    @Override
+    public String resolveFondsCodeStrict(String accbookCode) {
+        if (accbookCode == null || accbookCode.isBlank()) {
+            throw new ErpSsoException(SsoErrorCodes.ACCBOOK_MAPPING_NOT_FOUND, "账套编码不能为空", 400);
+        }
+
+        List<ErpConfig> configs = erpConfigMapper.selectList(
+                new LambdaQueryWrapper<ErpConfig>().eq(ErpConfig::getIsActive, 1));
+
+        List<String> matchedFonds = new java.util.ArrayList<>();
+        for (ErpConfig config : configs) {
+            String mapped = config.getFondsForAccbook(accbookCode);
+            if (mapped != null && !mapped.isBlank()) {
+                matchedFonds.add(mapped);
+            }
+        }
+
+        List<String> distinct = matchedFonds.stream().filter(Objects::nonNull).distinct().toList();
+        if (distinct.isEmpty()) {
+            throw new ErpSsoException(SsoErrorCodes.ACCBOOK_MAPPING_NOT_FOUND,
+                    "账套编码未映射全宗: " + accbookCode, 400);
+        }
+        if (distinct.size() > 1) {
+            throw new ErpSsoException(SsoErrorCodes.ACCBOOK_MAPPING_DUPLICATE,
+                    "账套编码映射到多个全宗: " + accbookCode, 400);
+        }
+        return distinct.get(0);
     }
 
     /**

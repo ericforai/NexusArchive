@@ -12,6 +12,7 @@
 |:-----|:-----|
 | `openapi.yaml` | 机器可读的 OpenAPI 3.1 规格文件 |
 | `modules/` | 分模块导读（可选）|
+| `erp-sso-launch.md` | ERP 发起联查单点登录对接规范（签名、ticket、错误码） |
 
 ---
 

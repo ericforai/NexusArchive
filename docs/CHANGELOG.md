@@ -7,6 +7,10 @@
 ## [Unreleased]
 
 ### Added
+- **ERP 发起联查 SSO 接口与对接文档**
+  - 新增 `POST /api/erp/sso/launch`（HMAC 签名、nonce 防重放、一次性 ticket）
+  - 新增 `POST /api/erp/sso/consume`（ticket 换取登录态）
+  - 新增联查对接文档：`docs/api/erp-sso-launch.md`
 - **穿透联查功能** (`RelationshipQueryView` + `SimpleGraphView` + `ThreeColumnLayout`)
   - 输入档号查询档案关联关系图谱
   - **三栏布局**：左侧上游数据、中心核心单据、右侧下游数据

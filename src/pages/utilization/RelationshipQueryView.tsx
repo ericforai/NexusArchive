@@ -4,6 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search,
   FileText,
@@ -158,6 +159,7 @@ const EmptyState: React.FC<{
  * 关系联查主页面 - 简化版
  */
 export const RelationshipQueryView: React.FC = () => {
+  const [urlSearchParams] = useSearchParams();
   // 本地状态 - 移除默认值，避免页面加载时请求不存在的档号
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNodeData, setSelectedNodeData] = useState<RelationNodeData | null>(null);
@@ -200,6 +202,22 @@ export const RelationshipQueryView: React.FC = () => {
       setHighlightedArchiveId(originalQueryId);
     }
   }, [redirectMessage, originalQueryId]);
+
+  // 支持从 URL 参数自动填充并触发查询
+  useEffect(() => {
+    const voucherNo = urlSearchParams.get('voucherNo')?.trim();
+    const autoSearch = urlSearchParams.get('autoSearch') === '1';
+    if (!voucherNo) {
+      return;
+    }
+    setSearchQuery(voucherNo);
+    if (autoSearch) {
+      setSelectedNodeData(null);
+      setHighlightedArchiveId(null);
+      resetGraph();
+      void initializeGraph(voucherNo);
+    }
+  }, [urlSearchParams, initializeGraph, resetGraph]);
 
   // 重置处理
   const handleReset = useCallback(() => {

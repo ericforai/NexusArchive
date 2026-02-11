@@ -25,6 +25,7 @@ const ProductWebsite = lazy(() => import('../pages/product-website'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
+const SsoLaunchPage = lazy(() => import('../pages/Auth/SsoLaunchPage'));
 import { ArchiveListPage } from '../pages/archives/ArchiveListPage';
 import { VoucherMatchingPage } from '../pages/matching/VoucherMatchingPage';
 import { PoolPage } from '@/pages/pre-archive/PoolPage';
@@ -166,6 +167,7 @@ export const routes: RouteObject[] = [
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },
+    { path: '/system/sso/launch', element: withSuspense(SsoLaunchPage) },
 
     // 激活页（独立于 SystemLayout，但需要基础环境）
     { path: '/system/activation', element: <ActivationPage /> },
