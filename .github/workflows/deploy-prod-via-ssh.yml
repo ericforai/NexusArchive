@@ -23,22 +23,51 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
           fetch-depth: 1
 
-      - name: Pack source
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "maven"
+
+      - name: Build frontend
         run: |
           set -euo pipefail
-          git archive --format=tar.gz --output=nexusarchive-deploy.tar.gz HEAD
+          npm ci
+          npm run build
 
-      - name: Upload package
+      - name: Build backend
+        run: |
+          set -euo pipefail
+          cd nexusarchive-java
+          mvn -DskipTests -Dmaven.compiler.failOnWarning=false clean package
+
+      - name: Pack deploy artifacts
+        run: |
+          set -euo pipefail
+          rm -rf ci-artifacts
+          mkdir -p ci-artifacts
+          cp -r dist ci-artifacts/dist
+          cp nexusarchive-java/target/nexusarchive-backend-*.jar ci-artifacts/
+          tar -czf nexusarchive-artifacts.tar.gz -C ci-artifacts .
+
+      - name: Upload artifacts
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
-          source: "nexusarchive-deploy.tar.gz"
+          source: "nexusarchive-artifacts.tar.gz"
           target: "/opt/nexusarchive"
 
-      - name: Deploy on server
+      - name: Deploy artifacts on server
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.PROD_HOST }}
@@ -49,9 +78,35 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/nexusarchive
-            rm -rf /tmp/nexusarchive-release
-            mkdir -p /tmp/nexusarchive-release
-            tar -xzf nexusarchive-deploy.tar.gz -C /tmp/nexusarchive-release
-            rsync -a --delete /tmp/nexusarchive-release/ /opt/nexusarchive/
-            chmod +x scripts/deploy-prod.sh
-            SKIP_GIT_PULL=1 PROJECT_ROOT=/opt/nexusarchive bash scripts/deploy-prod.sh
+
+            echo "[1/5] Backup database"
+            docker exec nexus-db pg_dump -U postgres nexusarchive > /opt/nexusarchive/backup_$(date +%F_%H%M%S).sql
+
+            echo "[2/5] Unpack artifacts"
+            rm -rf /opt/nexusarchive/.ci-artifacts
+            mkdir -p /opt/nexusarchive/.ci-artifacts
+            tar -xzf /opt/nexusarchive/nexusarchive-artifacts.tar.gz -C /opt/nexusarchive/.ci-artifacts
+
+            echo "[3/5] Replace dist and jar"
+            mkdir -p /opt/nexusarchive/nexusarchive-java/target
+            rm -rf /opt/nexusarchive/dist
+            cp -r /opt/nexusarchive/.ci-artifacts/dist /opt/nexusarchive/dist
+            cp /opt/nexusarchive/.ci-artifacts/nexusarchive-backend-*.jar /opt/nexusarchive/nexusarchive-java/target/
+
+            echo "[4/5] Restart service"
+            systemctl restart nexusarchive
+            systemctl status nexusarchive --no-pager -l
+
+            echo "[5/5] Wait for health"
+            timeout=120
+            elapsed=0
+            until curl -fsS https://www.digivoucher.cn/api/health >/dev/null 2>&1; do
+              if [ "$elapsed" -ge "$timeout" ]; then
+                echo "Health check timeout"
+                journalctl -u nexusarchive -n 120 --no-pager || true
+                exit 1
+              fi
+              sleep 5
+              elapsed=$((elapsed + 5))
+            done
+            curl -i https://www.digivoucher.cn/api/health
