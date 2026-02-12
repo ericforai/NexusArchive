@@ -165,11 +165,34 @@ jobs:
             mkdir -p "${ARCHIVE_ROOT_PATH}"
             tar -xzf "${FILE_ARCHIVE}" -C "${ARCHIVE_ROOT_PATH}"
 
-            echo "[8/10] Start app service"
+            echo "[8/10] Verify physical files referenced by DB"
+            DB_PATHS_FILE="${TMP_DIR}/db_storage_paths.txt"
+            MISSING_FILE_LIST="${TMP_DIR}/missing_storage_paths.txt"
+            : > "${MISSING_FILE_LIST}"
+            docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL;" > "${DB_PATHS_FILE}"
+            while IFS= read -r rel_path; do
+              [ -z "${rel_path}" ] && continue
+              if [[ "${rel_path}" == /* ]]; then
+                abs_path="${rel_path}"
+              else
+                abs_path="${ARCHIVE_ROOT_PATH}/${rel_path}"
+              fi
+              if [ ! -f "${abs_path}" ]; then
+                echo "${rel_path}" >> "${MISSING_FILE_LIST}"
+              fi
+            done < "${DB_PATHS_FILE}"
+            if [ -s "${MISSING_FILE_LIST}" ]; then
+              echo "Missing physical files after restore:"
+              sed -n "1,200p" "${MISSING_FILE_LIST}"
+              echo "Total missing count: $(wc -l < "${MISSING_FILE_LIST}")"
+              exit 1
+            fi
+
+            echo "[9/10] Start app service"
             systemctl start nexusarchive
             systemctl status nexusarchive --no-pager -l || true
 
-            echo "[9/10] Health check"
+            echo "[10/10] Health check"
             ok=0
             for i in $(seq 1 36); do
               if curl -fsS "${HEALTHCHECK_URL}" >/dev/null 2>&1; then
@@ -185,7 +208,7 @@ jobs:
               exit 1
             fi
 
-            echo "[10/10] Done"
+            echo "[11/11] Done"
             curl -i "${HEALTHCHECK_URL}" || true
             echo "Migration completed successfully."
             echo "Rollback materials:"
