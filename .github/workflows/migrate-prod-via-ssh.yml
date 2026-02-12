@@ -194,9 +194,19 @@ jobs:
             DB_PATHS_FILE="${TMP_DIR}/db_storage_paths.txt"
             MISSING_FILE_LIST="${TMP_DIR}/missing_storage_paths.txt"
             SKIPPED_PATH_LIST="${TMP_DIR}/skipped_storage_paths.txt"
+            DB_PATHS_ERR_FILE="${TMP_DIR}/db_storage_paths.err.log"
             : > "${MISSING_FILE_LIST}"
             : > "${SKIPPED_PATH_LIST}"
-            docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL;" > "${DB_PATHS_FILE}"
+            set +e
+            docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL;" > "${DB_PATHS_FILE}" 2>"${DB_PATHS_ERR_FILE}"
+            query_rc=$?
+            set -e
+            if [ "${query_rc}" -ne 0 ]; then
+              echo "Failed to query storage paths from database (rc=${query_rc})"
+              sed -n "1,120p" "${DB_PATHS_ERR_FILE}" || true
+              exit 1
+            fi
+            echo "Collected storage paths: $(wc -l < "${DB_PATHS_FILE}" | tr -d ' ')"
             checked_count=0
             while IFS= read -r rel_path; do
               [ -z "${rel_path}" ] && continue
@@ -219,6 +229,7 @@ jobs:
                 echo "${rel_path}" >> "${MISSING_FILE_LIST}"
               fi
             done < "${DB_PATHS_FILE}"
+            echo "File existence scan completed."
             echo "Checked storage paths: ${checked_count}"
             if [ -s "${SKIPPED_PATH_LIST}" ]; then
               echo "Skipped non-migratable paths (show first 20):"
