@@ -48,38 +48,27 @@ jobs:
           cd nexusarchive-java
           mvn -DskipTests -Dmaven.compiler.failOnWarning=false clean package
 
-      - name: Pack deploy artifacts
+      - name: Setup SSH
         run: |
           set -euo pipefail
-          rm -rf ci-artifacts
-          mkdir -p ci-artifacts
-          cp -r dist ci-artifacts/dist
-          cp nexusarchive-java/target/nexusarchive-backend-*.jar ci-artifacts/
-          tar -czf nexusarchive-artifacts.tar.gz -C ci-artifacts .
-          ls -lh nexusarchive-artifacts.tar.gz
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf "%s\n" "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
+          ssh-keyscan -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Validate artifact size
+      - name: Rsync dist and jar (incremental)
         run: |
           set -euo pipefail
-          SIZE_MB=$(du -m nexusarchive-artifacts.tar.gz | awk '{print $1}')
-          echo "artifact size: ${SIZE_MB}MB"
-          if [ "$SIZE_MB" -gt 600 ]; then
-            echo "Artifact too large (>600MB), aborting upload."
-            exit 1
-          fi
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "mkdir -p /opt/nexusarchive/dist /opt/nexusarchive/nexusarchive-java/target"
 
-      - name: Upload artifacts
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
-          port: ${{ secrets.PROD_PORT }}
-          source: "nexusarchive-artifacts.tar.gz"
-          target: "/opt/nexusarchive"
-          timeout: "120s"
-          command_timeout: "20m"
-          overwrite: true
+          rsync -az --delete -e "ssh -i ~/.ssh/prod_key -p ${{ secrets.PROD_PORT }}" \
+            dist/ "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/nexusarchive/dist/"
+
+          rsync -az -e "ssh -i ~/.ssh/prod_key -p ${{ secrets.PROD_PORT }}" \
+            nexusarchive-java/target/nexusarchive-backend-*.jar \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/nexusarchive/nexusarchive-java/target/"
 
       - name: Deploy artifacts on server
         uses: appleboy/ssh-action@v1.2.0
@@ -96,16 +85,7 @@ jobs:
             echo "[1/5] Backup database"
             docker exec nexus-db pg_dump -U postgres nexusarchive > /opt/nexusarchive/backup_$(date +%F_%H%M%S).sql
 
-            echo "[2/5] Unpack artifacts"
-            rm -rf /opt/nexusarchive/.ci-artifacts
-            mkdir -p /opt/nexusarchive/.ci-artifacts
-            tar -xzf /opt/nexusarchive/nexusarchive-artifacts.tar.gz -C /opt/nexusarchive/.ci-artifacts
-
-            echo "[3/5] Replace dist and jar"
-            mkdir -p /opt/nexusarchive/nexusarchive-java/target
-            mkdir -p /opt/nexusarchive/dist
-            cp -r /opt/nexusarchive/.ci-artifacts/dist/* /opt/nexusarchive/dist/
-            cp /opt/nexusarchive/.ci-artifacts/nexusarchive-backend-*.jar /opt/nexusarchive/nexusarchive-java/target/
+            echo "[2/5] Artifacts already synced by rsync"
 
             echo "[4/5] Ensure JWT key files and env"
             mkdir -p /opt/nexusarchive/nexusarchive-java/keystore
