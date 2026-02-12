@@ -43,20 +43,18 @@ jobs:
 
       - name: Run full overwrite migration on server
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          SERVER_PACKAGE_PATH: ${{ github.event.inputs.server_package_path }}
-          PKG_SHA: ${{ github.event.inputs.migration_package_sha256 }}
-          HEALTHCHECK_URL: ${{ github.event.inputs.healthcheck_url }}
-          INPUT_ARCHIVE_ROOT_PATH: ${{ github.event.inputs.archive_root_path }}
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
           script_stop: true
-          envs: SERVER_PACKAGE_PATH,PKG_SHA,HEALTHCHECK_URL,INPUT_ARCHIVE_ROOT_PATH
           script: |
             set -euo pipefail
+            SERVER_PACKAGE_PATH="${{ github.event.inputs.server_package_path }}"
+            PKG_SHA="${{ github.event.inputs.migration_package_sha256 }}"
+            HEALTHCHECK_URL="${{ github.event.inputs.healthcheck_url }}"
+            INPUT_ARCHIVE_ROOT_PATH="${{ github.event.inputs.archive_root_path }}"
 
             APP_DIR="/opt/nexusarchive"
             ENV_FILE="/etc/nexusarchive/nexusarchive.env"
@@ -85,10 +83,11 @@ jobs:
               if [ -z "${p}" ]; then
                 return 1
               fi
-              case "${p}" in
-                /*) echo "${p}" ;;
-                *) echo "${APP_DIR}/${p}" ;;
-              esac
+              if [[ "${p}" == /* ]]; then
+                echo "${p}"
+              else
+                echo "${APP_DIR}/${p}"
+              fi
             }
 
             ARCHIVE_ROOT_PATH_RAW="$(detect_archive_root_path)"
