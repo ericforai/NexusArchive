@@ -103,8 +103,8 @@ jobs:
 
             echo "[3/5] Replace dist and jar"
             mkdir -p /opt/nexusarchive/nexusarchive-java/target
-            rm -rf /opt/nexusarchive/dist
-            cp -r /opt/nexusarchive/.ci-artifacts/dist /opt/nexusarchive/dist
+            mkdir -p /opt/nexusarchive/dist
+            cp -r /opt/nexusarchive/.ci-artifacts/dist/* /opt/nexusarchive/dist/
             cp /opt/nexusarchive/.ci-artifacts/nexusarchive-backend-*.jar /opt/nexusarchive/nexusarchive-java/target/
 
             echo "[4/5] Ensure JWT key files and env"
