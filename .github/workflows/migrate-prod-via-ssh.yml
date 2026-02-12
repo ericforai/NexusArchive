@@ -168,19 +168,38 @@ jobs:
             echo "[8/10] Verify physical files referenced by DB"
             DB_PATHS_FILE="${TMP_DIR}/db_storage_paths.txt"
             MISSING_FILE_LIST="${TMP_DIR}/missing_storage_paths.txt"
+            SKIPPED_PATH_LIST="${TMP_DIR}/skipped_storage_paths.txt"
             : > "${MISSING_FILE_LIST}"
+            : > "${SKIPPED_PATH_LIST}"
             docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL;" > "${DB_PATHS_FILE}"
+            checked_count=0
             while IFS= read -r rel_path; do
               [ -z "${rel_path}" ] && continue
+              if [[ "${rel_path}" == *"/._"* ]] || [[ "${rel_path}" == *".DS_Store"* ]]; then
+                echo "${rel_path}" >> "${SKIPPED_PATH_LIST}"
+                continue
+              fi
               if [[ "${rel_path}" == /* ]]; then
-                abs_path="${rel_path}"
+                if [[ "${rel_path}" == "${ARCHIVE_ROOT_PATH}/"* ]]; then
+                  abs_path="${rel_path}"
+                else
+                  echo "${rel_path}" >> "${SKIPPED_PATH_LIST}"
+                  continue
+                fi
               else
                 abs_path="${ARCHIVE_ROOT_PATH}/${rel_path}"
               fi
+              checked_count=$((checked_count + 1))
               if [ ! -f "${abs_path}" ]; then
                 echo "${rel_path}" >> "${MISSING_FILE_LIST}"
               fi
             done < "${DB_PATHS_FILE}"
+            echo "Checked storage paths: ${checked_count}"
+            if [ -s "${SKIPPED_PATH_LIST}" ]; then
+              echo "Skipped non-migratable paths (show first 20):"
+              sed -n "1,20p" "${SKIPPED_PATH_LIST}"
+              echo "Total skipped count: $(wc -l < "${SKIPPED_PATH_LIST}")"
+            fi
             if [ -s "${MISSING_FILE_LIST}" ]; then
               echo "Missing physical files after restore:"
               sed -n "1,200p" "${MISSING_FILE_LIST}"
