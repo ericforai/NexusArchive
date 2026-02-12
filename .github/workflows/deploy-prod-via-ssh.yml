@@ -56,6 +56,17 @@ jobs:
           cp -r dist ci-artifacts/dist
           cp nexusarchive-java/target/nexusarchive-backend-*.jar ci-artifacts/
           tar -czf nexusarchive-artifacts.tar.gz -C ci-artifacts .
+          ls -lh nexusarchive-artifacts.tar.gz
+
+      - name: Validate artifact size
+        run: |
+          set -euo pipefail
+          SIZE_MB=$(du -m nexusarchive-artifacts.tar.gz | awk '{print $1}')
+          echo "artifact size: ${SIZE_MB}MB"
+          if [ "$SIZE_MB" -gt 600 ]; then
+            echo "Artifact too large (>600MB), aborting upload."
+            exit 1
+          fi
 
       - name: Upload artifacts
         uses: appleboy/scp-action@v0.1.7
@@ -66,6 +77,9 @@ jobs:
           port: ${{ secrets.PROD_PORT }}
           source: "nexusarchive-artifacts.tar.gz"
           target: "/opt/nexusarchive"
+          timeout: "120s"
+          command_timeout: "20m"
+          overwrite: true
 
       - name: Deploy artifacts on server
         uses: appleboy/ssh-action@v1.2.0
