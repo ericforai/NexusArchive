@@ -209,6 +209,7 @@ jobs:
             fi
             echo "Collected storage paths: $(wc -l < "${DB_PATHS_FILE}" | tr -d ' ')"
             checked_count=0
+            set +e
             while IFS= read -r rel_path; do
               [ -z "${rel_path}" ] && continue
               if [[ "${rel_path}" == *"/._"* ]] || [[ "${rel_path}" == *".DS_Store"* ]]; then
@@ -229,7 +230,14 @@ jobs:
               if [ ! -f "${abs_path}" ]; then
                 echo "${rel_path}" >> "${MISSING_FILE_LIST}"
               fi
-            done < "${DB_PATHS_FILE}" || true
+            done < "${DB_PATHS_FILE}"
+            scan_rc=$?
+            set -e
+            echo "Storage scan rc: ${scan_rc}"
+            if [ "${scan_rc}" -ne 0 ]; then
+              echo "Storage scan loop returned non-zero."
+              exit 1
+            fi
             echo "File existence scan completed."
             echo "Checked storage paths: ${checked_count}"
             if [ -s "${SKIPPED_PATH_LIST}" ]; then
