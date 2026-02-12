@@ -228,7 +228,7 @@ jobs:
               if [ ! -f "${abs_path}" ]; then
                 echo "${rel_path}" >> "${MISSING_FILE_LIST}"
               fi
-            done < "${DB_PATHS_FILE}"
+            done < "${DB_PATHS_FILE}" || true
             echo "File existence scan completed."
             echo "Checked storage paths: ${checked_count}"
             if [ -s "${SKIPPED_PATH_LIST}" ]; then
