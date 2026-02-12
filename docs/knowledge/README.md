@@ -10,6 +10,7 @@
 | `2025-12-10-approval-ui-fix.md` | 文档 | 2025-12-10-approval-ui-fix 文档 |
 | `2025-12-10-archive-classification-compliance.md` | 文档 | 2025-12-10-archive-classification-compliance 文档 |
 | `2025-12-18-phase4-performance-tuning-integration.md` | 文档 | 2025-12-18-phase4-performance-tuning-integration 文档 |
+| `2026-02-12-panorama-attachment-mismatch-postmortem.md` | 文档 | 全景视图附件错配复盘与防复发清单 |
 | `compliance_standards.md` | 文档 | compliance_standards 文档 |
 | `erp_integration.md` | 文档 | erp_integration 文档 |
 | `expert_review.md` | 文档 | expert_review 文档 |
@@ -44,6 +45,11 @@
     *   **故障**: 浏览器下载预览无法携带标头导致全宗过滤 404。
     *   **解决**: 豁免下载路径的强制上下文回退逻辑。
     *   **经验**: 业务服务应区分“界面上下文”与“总体数据权限”。
+
+6.  [**全景附件错配复盘 (Attachment Mismatch Postmortem)**](./2026-02-12-panorama-attachment-mismatch-postmortem.md)
+    *   **故障链路**: 404 → 无限加载 → 内容错配。
+    *   **修复要点**: 下载授权兜底、按物理文件计算 `Content-Length`、demo 附件启动同步。
+    *   **经验**: 协议级正确性（响应头）与存储真源一致性同等重要。
 
 
 ## 获取帮助

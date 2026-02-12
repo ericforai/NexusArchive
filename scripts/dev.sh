@@ -77,14 +77,19 @@ echo -e "${GREEN}✅ Redis 就绪${NC}"
 # 4. 检查是否需要导入 seed data
 # ==============================================================================
 echo -e ""
-# 检查 archive_user 表是否存在并有数据
-USER_COUNT=$(docker exec nexus-db psql -U postgres -d nexusarchive -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'archive_user'" 2>/dev/null || echo "0")
+# 旧逻辑使用 archive_user（历史表）判断，当前库已改为 sys_user，会导致每次重启都误导入 seed。
+# 新逻辑：
+# 1) 先判断 sys_user 表是否存在
+# 2) 再判断 sys_user 是否有数据
+# 仅在“表不存在”或“表为空”时导入 seed
+SYS_USER_TABLE_EXISTS=$(docker exec nexus-db psql -U postgres -d nexusarchive -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'sys_user'" 2>/dev/null | tr -d '[:space:]')
+if [ -z "$SYS_USER_TABLE_EXISTS" ]; then
+    SYS_USER_TABLE_EXISTS="0"
+fi
 
-if [ "$USER_COUNT" = "0" ]; then
-    # 表不存在，可能是首次启动
+if [ "$SYS_USER_TABLE_EXISTS" = "0" ]; then
     if [ -f db/seed-data.sql ]; then
-        echo -e "${YELLOW}📥 首次启动，导入 seed data...${NC}"
-        # 等待一下确保数据库完全就绪
+        echo -e "${YELLOW}📥 首次启动（sys_user 表不存在），导入 seed data...${NC}"
         sleep 2
         cat db/seed-data.sql | docker exec -i nexus-db psql -U postgres -d nexusarchive -q > /dev/null 2>&1
         echo -e "${GREEN}✅ Seed data 导入完成${NC}"
@@ -93,13 +98,29 @@ if [ "$USER_COUNT" = "0" ]; then
         echo -e "${YELLOW}  如需从另一台 Mac 同步数据，请运行: npm run db:load${NC}"
     fi
 else
-    # 表存在，检查是否有数据
-    USER_COUNT=$(docker exec nexus-db psql -U postgres -d nexusarchive -tAc "SELECT COUNT(*) FROM archive_user" 2>/dev/null || echo "0")
-    if [ "$USER_COUNT" = "0" ] && [ -f db/seed-data.sql ]; then
-        echo -e "${YELLOW}📥 数据库为空，导入 seed data...${NC}"
+    SYS_USER_COUNT=$(docker exec nexus-db psql -U postgres -d nexusarchive -tAc "SELECT COUNT(*) FROM sys_user" 2>/dev/null | tr -d '[:space:]')
+    if [ -z "$SYS_USER_COUNT" ]; then
+        SYS_USER_COUNT="0"
+    fi
+    if [ "$SYS_USER_COUNT" = "0" ] && [ -f db/seed-data.sql ]; then
+        echo -e "${YELLOW}📥 检测到数据库为空（sys_user=0），导入 seed data...${NC}"
         cat db/seed-data.sql | docker exec -i nexus-db psql -U postgres -d nexusarchive -q > /dev/null 2>&1
         echo -e "${GREEN}✅ Seed data 导入完成${NC}"
+    else
+        echo -e "${GREEN}✅ 检测到已有业务数据（sys_user=${SYS_USER_COUNT}），跳过 seed 导入${NC}"
     fi
+fi
+
+# ==============================================================================
+# 4.5 同步 demo 附件到归档存储根（避免历史错误副本导致预览内容错配）
+# ==============================================================================
+if [ -d uploads/demo ]; then
+    DEMO_SRC_DIR="$(cd . && pwd)/uploads/demo"
+    DEMO_DST_DIR="$(cd . && pwd)/nexusarchive-java/data/archives/uploads/demo"
+    mkdir -p "$DEMO_DST_DIR"
+    # 仅覆盖 demo 附件目录，不影响其它业务文件
+    cp -f "$DEMO_SRC_DIR"/* "$DEMO_DST_DIR"/ 2>/dev/null || true
+    echo -e "${GREEN}✅ Demo 附件已同步到归档存储目录${NC}"
 fi
 
 # ==============================================================================
@@ -125,7 +146,8 @@ if [ ! -f ../.backend.pid ]; then
     # 覆盖 .env.local 中的配置，确保路径正确
     export ARCHIVE_ROOT_PATH="$(cd .. && pwd)/nexusarchive-java/data/archives"
     export ARCHIVE_TEMP_PATH="$(cd .. && pwd)/nexusarchive-java/data/temp"
-    mvn spring-boot:run -Dmaven.test.skip=true -Dspring-boot.run.profiles=dev > ../backend.log 2>&1 &
+    # 使用 nohup + stdin 重定向，确保脚本退出后后端进程不被回收
+    nohup mvn spring-boot:run -Dmaven.test.skip=true -Dspring-boot.run.profiles=dev > ../backend.log 2>&1 < /dev/null &
     BACKEND_PID=$!
     echo $BACKEND_PID > ../.backend.pid
     echo -e "${GREEN}✅ 后端启动中 (PID: $BACKEND_PID)${NC}"
@@ -181,7 +203,8 @@ if [ -f .frontend.pid ]; then
 fi
 
 if [ ! -f .frontend.pid ]; then
-    npm run dev:vite > frontend.log 2>&1 &
+    # 使用 nohup + stdin 重定向，确保脚本退出后前端进程不被回收
+    nohup npm run dev:vite > frontend.log 2>&1 < /dev/null &
     FRONTEND_PID=$!
     echo $FRONTEND_PID > .frontend.pid
     echo -e "${GREEN}✅ 前端启动中 (PID: $FRONTEND_PID)${NC}"

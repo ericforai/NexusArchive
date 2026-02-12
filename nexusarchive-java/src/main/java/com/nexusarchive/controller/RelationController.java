@@ -16,6 +16,7 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArchiveRelation;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.security.FondsContext;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.IAutoAssociationService;
@@ -65,6 +66,7 @@ public class RelationController {
     private final VoucherRelationMapper voucherRelationMapper;
     private final OriginalVoucherMapper originalVoucherMapper;
     private final OriginalVoucherFileMapper originalVoucherFileMapper;
+    private final ArcFileContentMapper arcFileContentMapper;
 
     /**
      * 获取凭证关联的文件列表
@@ -124,6 +126,25 @@ public class RelationController {
             LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(Archive::getArchiveCode, archiveId);
             inputArchive = archiveMapper.selectOne(wrapper);
+        }
+        if (inputArchive == null) {
+            // 兼容原始凭证场景：前端可能传入 INV-*（原始凭证号）而非 acc_archive 主键
+            OriginalVoucher originalVoucher = resolveOriginalVoucher(archiveId);
+            if (originalVoucher != null) {
+                String accountingVoucherId = findRelatedAccountingVoucherId(originalVoucher.getId());
+                if (accountingVoucherId != null) {
+                    inputArchive = archiveMapper.selectById(accountingVoucherId);
+                    if (inputArchive == null) {
+                        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+                        wrapper.eq(Archive::getArchiveCode, accountingVoucherId);
+                        inputArchive = archiveMapper.selectOne(wrapper);
+                    }
+                    if (inputArchive != null) {
+                        log.info("[RelationController] Resolved original voucher {} to accounting voucher {}",
+                                archiveId, inputArchive.getId());
+                    }
+                }
+            }
         }
         if (inputArchive == null) {
             return Result.error(404, "Archive not found: " + archiveId);
@@ -698,6 +719,50 @@ public class RelationController {
         }
         
         return null;
+    }
+
+    /**
+     * 解析原始凭证（支持: ID、voucher_no、arc_file_content.archival_code）
+     */
+    private OriginalVoucher resolveOriginalVoucher(String idOrVoucherNo) {
+        OriginalVoucher originalVoucher = originalVoucherMapper.selectById(idOrVoucherNo);
+        if (originalVoucher != null) {
+            return originalVoucher;
+        }
+
+        LambdaQueryWrapper<OriginalVoucher> voucherNoWrapper = new LambdaQueryWrapper<>();
+        voucherNoWrapper.eq(OriginalVoucher::getVoucherNo, idOrVoucherNo);
+        originalVoucher = originalVoucherMapper.selectOne(voucherNoWrapper);
+        if (originalVoucher != null) {
+            return originalVoucher;
+        }
+
+        LambdaQueryWrapper<ArcFileContent> fileWrapper = new LambdaQueryWrapper<>();
+        fileWrapper.eq(ArcFileContent::getArchivalCode, idOrVoucherNo)
+                .orderByDesc(ArcFileContent::getCreatedTime)
+                .last("LIMIT 1");
+        ArcFileContent content = arcFileContentMapper.selectOne(fileWrapper);
+        if (content != null && content.getItemId() != null && !content.getItemId().isBlank()) {
+            return originalVoucherMapper.selectById(content.getItemId());
+        }
+
+        return null;
+    }
+
+    /**
+     * 按原始凭证ID查询关联记账凭证ID（取第一个有效结果）
+     */
+    private String findRelatedAccountingVoucherId(String originalVoucherId) {
+        List<VoucherRelation> relations = voucherRelationMapper.findByOriginalVoucherId(originalVoucherId);
+        if (relations == null || relations.isEmpty()) {
+            return null;
+        }
+        return relations.stream()
+                .map(VoucherRelation::getAccountingVoucherId)
+                .filter(Objects::nonNull)
+                .filter(id -> !id.isBlank())
+                .findFirst()
+                .orElse(null);
     }
 
 }

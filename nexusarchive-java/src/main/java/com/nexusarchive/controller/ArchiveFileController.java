@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 
 @RestController
@@ -84,11 +85,14 @@ public class ArchiveFileController {
             encodedFileName = content.getFileName().replaceAll("[^a-zA-Z0-9._-]", "_");
         }
 
-        return ResponseEntity.ok()
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
-                .contentType(MediaType.parseMediaType(contentType))
-                .contentLength(content.getFileSize())  // [ADDED] 设置 Content-Length
-                .body(resource);
+                .contentType(MediaType.parseMediaType(contentType));
+        Long contentLength = resolveContentLength(resource, content);
+        if (contentLength != null) {
+            builder.contentLength(contentLength);
+        }
+        return builder.body(resource);
     }
 
     /**
@@ -131,11 +135,14 @@ public class ArchiveFileController {
             encodedFileName = content.getFileName().replaceAll("[^a-zA-Z0-9._-]", "_");
         }
 
-        return ResponseEntity.ok()
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
-                .contentType(MediaType.parseMediaType(contentType))
-                .contentLength(content.getFileSize())  // [ADDED] 设置 Content-Length
-                .body(resource);
+                .contentType(MediaType.parseMediaType(contentType));
+        Long contentLength = resolveContentLength(resource, content);
+        if (contentLength != null) {
+            builder.contentLength(contentLength);
+        }
+        return builder.body(resource);
     }
 
     /**
@@ -349,6 +356,18 @@ public class ArchiveFileController {
         return "application/octet-stream";
     }
 
+    private Long resolveContentLength(Resource resource, ArcFileContent content) {
+        try {
+            long actualLength = resource.contentLength();
+            return actualLength >= 0 ? actualLength : null;
+        } catch (IOException e) {
+            Long fallback = content.getFileSize();
+            log.warn("无法读取物理文件长度，回退到数据库 fileSize: fileId={}, path={}, fileSize={}",
+                    content.getId(), content.getStoragePath(), fallback, e);
+            return fallback;
+        }
+    }
+
     private void authorizeArchiveAccess(String archivalCode) {
         authorizeFileAccess(archivalCode);
     }
@@ -385,19 +404,47 @@ public class ArchiveFileController {
         // 2. 如果在正式档案表中未找到，尝试在原始凭证表 (arc_original_voucher) 中查找
         // 必须验证原始凭证的全宗权限，防止权限绕过
         OriginalVoucher voucher = originalVoucherMapper.selectById(archivalCode);
-        if (voucher != null) {
-            DataScopeService.DataScopeContext scope = dataScopeService.resolve();
-            if (!dataScopeService.canAccessOriginalVoucher(voucher, scope)) {
-                log.warn("原始凭证访问被拒绝: archivalCode={}, allowedFonds={}", archivalCode, scope.allowedFonds());
-                throw new BusinessException(ErrorCode.ARCHIVE_ACCESS_DENIED);
-            }
-            log.debug("原始凭证权限验证通过: archivalCode={}, fondsCode={}", archivalCode, voucher.getFondsCode());
+        if (authorizeOriginalVoucher(voucher, archivalCode)) {
+            return;
+        }
+
+        // 常见场景：archivalCode 传的是 voucher_no（例如 INV-202311-089），而非主键 ID
+        voucher = originalVoucherMapper.selectOne(
+                new LambdaQueryWrapper<OriginalVoucher>()
+                        .eq(OriginalVoucher::getVoucherNo, archivalCode)
+                        .last("LIMIT 1")
+        );
+        if (authorizeOriginalVoucher(voucher, archivalCode)) {
+            return;
+        }
+
+        // 历史数据兜底：部分数据将 source_doc_id 记录为 INV-* 业务号
+        voucher = originalVoucherMapper.selectOne(
+                new LambdaQueryWrapper<OriginalVoucher>()
+                        .eq(OriginalVoucher::getSourceDocId, archivalCode)
+                        .last("LIMIT 1")
+        );
+        if (authorizeOriginalVoucher(voucher, archivalCode)) {
             return;
         }
 
         // 3. 既不是正式档案也不是原始凭证，拒绝访问
         log.warn("无法找到 archivalCode={} 对应的档案或原始凭证", archivalCode);
         throw new BusinessException(ErrorCode.ARCHIVE_NOT_FOUND, archivalCode);
+    }
+
+    private boolean authorizeOriginalVoucher(OriginalVoucher voucher, String archivalCode) {
+        if (voucher == null) {
+            return false;
+        }
+        DataScopeService.DataScopeContext scope = dataScopeService.resolve();
+        if (!dataScopeService.canAccessOriginalVoucher(voucher, scope)) {
+            log.warn("原始凭证访问被拒绝: archivalCode={}, allowedFonds={}", archivalCode, scope.allowedFonds());
+            throw new BusinessException(ErrorCode.ARCHIVE_ACCESS_DENIED);
+        }
+        log.debug("原始凭证权限验证通过: archivalCode={}, voucherId={}, fondsCode={}",
+                archivalCode, voucher.getId(), voucher.getFondsCode());
+        return true;
     }
 
     private String resolveUserId(jakarta.servlet.http.HttpServletRequest request) {

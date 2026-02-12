@@ -69,3 +69,11 @@
 - [ArchiveFileContentService.java](file:///Users/user/nexusarchive/nexusarchive-java/src/main/java/com/nexusarchive/service/ArchiveFileContentService.java) - 涉及校验逻辑
 - [2026-01-13-fix-attachment-preview-404.md](file:///Users/user/nexusarchive/docs/plans/2026-01-13-fix-attachment-preview-404.md) - 对应计划
 
+## 后续延伸问题（2026-02-12）
+
+本次修复解决了“鉴权导致的 404”，但后续在同一链路中又暴露出两个更深层问题：
+1. 下载接口 `Content-Length` 依赖 DB 元数据，导致浏览器预览“无限加载”；
+2. 运行时存储目录中的 demo 文件副本漂移，导致“内容错配”。
+
+完整复盘见：
+- [2026-02-12-panorama-attachment-mismatch-postmortem.md](./2026-02-12-panorama-attachment-mismatch-postmortem.md)
