@@ -51,6 +51,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
+            trap 'rc=$?; echo "ERROR rc=${rc} line=${LINENO} cmd=${BASH_COMMAND}"; exit ${rc}' ERR
             SERVER_PACKAGE_PATH="${{ github.event.inputs.server_package_path }}"
             PKG_SHA="${{ github.event.inputs.migration_package_sha256 }}"
             HEALTHCHECK_URL="${{ github.event.inputs.healthcheck_url }}"
