@@ -33,7 +33,10 @@ jobs:
       - name: Validate confirmation text
         run: |
           set -euo pipefail
-          if [ "${{ github.event.inputs.confirm_text }}" != "I_UNDERSTAND_FULL_OVERWRITE" ]; then
+          CONFIRM_RAW='${{ github.event.inputs.confirm_text }}'
+          CONFIRM_VALUE="${CONFIRM_RAW#confirm_text=}"
+          CONFIRM_VALUE="$(printf "%s" "${CONFIRM_VALUE}" | tr -d '[:space:]')"
+          if [ "${CONFIRM_VALUE}" != "I_UNDERSTAND_FULL_OVERWRITE" ]; then
             echo "Invalid confirm_text, abort."
             exit 1
           fi
