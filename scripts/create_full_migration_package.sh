@@ -26,6 +26,9 @@ DB_NAME="${DB_NAME:-nexusarchive}"
 DB_USER="${DB_USER:-postgres}"
 DB_CONTAINER="${DB_CONTAINER:-nexus-db}"
 
+# 避免 macOS 将 AppleDouble 与扩展属性打进 tar 包
+export COPYFILE_DISABLE=1
+
 # 读取 .env.local（如果存在）
 if [ -f "${ROOT_DIR}/.env.local" ]; then
   set -a
@@ -70,11 +73,20 @@ fi
 
 mkdir -p "${OUT_DIR}/db" "${OUT_DIR}/files"
 
+TAR_EXCLUDES=(
+  --exclude=".DS_Store"
+  --exclude="*/.DS_Store"
+  --exclude="._*"
+  --exclude="*/._*"
+  --exclude="__MACOSX"
+  --exclude="*/__MACOSX/*"
+)
+
 echo -e "${YELLOW}[1/4] 导出数据库...${NC}"
 docker exec "${DB_CONTAINER}" pg_dump -U "${DB_USER}" --no-owner --no-acl "${DB_NAME}" > "${OUT_DIR}/db/full_dump.sql"
 
 echo -e "${YELLOW}[2/4] 打包文件存储目录...${NC}"
-tar -czf "${OUT_DIR}/files/archive_root.tgz" -C "${ARCHIVE_ROOT_ABS}" .
+tar -czf "${OUT_DIR}/files/archive_root.tgz" "${TAR_EXCLUDES[@]}" -C "${ARCHIVE_ROOT_ABS}" .
 
 echo -e "${YELLOW}[3/4] 生成清单...${NC}"
 DB_SIZE="$(wc -c < "${OUT_DIR}/db/full_dump.sql" | tr -d ' ')"
@@ -99,7 +111,7 @@ EOF
 )
 
 echo -e "${YELLOW}[4/4] 生成发布包...${NC}"
-tar -czf "${PKG_FILE}" -C "${OUT_DIR}" .
+tar -czf "${PKG_FILE}" "${TAR_EXCLUDES[@]}" -C "${OUT_DIR}" .
 PKG_SHA="$(sha256sum "${PKG_FILE}" | awk '{print $1}')"
 PKG_SIZE="$(wc -c < "${PKG_FILE}" | tr -d ' ')"
 
