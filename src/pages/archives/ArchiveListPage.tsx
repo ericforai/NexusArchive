@@ -19,6 +19,7 @@ const SIMPLIFIED_TO_OLD_STATUS: Record<SimplifiedPreArchiveStatus, PoolStatusFil
     'NEEDS_ACTION': 'NEEDS_ACTION',
     'READY_TO_MATCH': 'READY_TO_MATCH',
     'READY_TO_ARCHIVE': 'READY_TO_ARCHIVE',
+    'SUBMITTED': 'SUBMITTED',
     'COMPLETED': 'COMPLETED',
 };
 

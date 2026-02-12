@@ -90,7 +90,7 @@ public interface CollectionBatchService {
     ) {}
 
     /**
-     * 批次完成结果记录
+     * 批次完成结果记录（包含四性检测统计）
      */
     record BatchCompleteResult(
         Long batchId,
@@ -98,7 +98,28 @@ public interface CollectionBatchService {
         String status,
         int totalFiles,
         int uploadedFiles,
-        int failedFiles
+        int failedFiles,
+        int checkedFiles,      // 新增：已检测文件数
+        int passedFiles,       // 新增：检测通过数
+        List<FailedFileInfo> failedFileList  // 新增：失败文件详情
+    ) {
+        /**
+         * 兼容旧构造函数（向后兼容）
+         */
+        public BatchCompleteResult(Long batchId, String batchNo, String status,
+                                   int totalFiles, int uploadedFiles, int failedFiles) {
+            this(batchId, batchNo, status, totalFiles, uploadedFiles, failedFiles,
+                 0, 0, List.of());
+        }
+    }
+
+    /**
+     * 失败文件信息记录
+     */
+    record FailedFileInfo(
+        String fileId,
+        String fileName,
+        String reason
     ) {}
 
     /**
@@ -158,4 +179,14 @@ public interface CollectionBatchService {
      * @return 批量操作响应
      */
     BatchArchiveResponse batchReject(BatchArchiveRequest request);
+
+    /**
+     * 获取批次列表
+     *
+     * @param limit 限制数量
+     * @param offset 偏移量
+     * @param userId 用户ID
+     * @return 批次列表
+     */
+    List<BatchDetailResponse> listBatches(int limit, int offset, String userId);
 }

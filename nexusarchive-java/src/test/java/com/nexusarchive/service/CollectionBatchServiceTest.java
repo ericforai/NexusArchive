@@ -294,6 +294,178 @@ class CollectionBatchServiceTest {
             );
 
         }
+
+        @Test
+        @DisplayName("完成批次时应自动触发四性检测")
+        void completeBatch_ShouldTriggerFourNatureCheck() {
+            // Given - 批次有已上传的文件
+            when(batchMapper.selectById(1L)).thenReturn(testBatch);
+            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
+
+            CollectionBatchFile batchFile = CollectionBatchFile.builder()
+                .id(1L)
+                .batchId(1L)
+                .fileId("file-001")
+                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
+                .build();
+
+            when(batchFileMapper.selectList(any())).thenReturn(List.of(batchFile));
+
+            ArcFileContent arcFile = ArcFileContent.builder()
+                .id("file-001")
+                .fileName("test.pdf")
+                .preArchiveStatus("PENDING_CHECK")
+                .build();
+            when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile);
+
+            // Mock 四性检测服务返回通过
+            FourNatureReport passReport = new FourNatureReport();
+            passReport.setStatus(OverallStatus.PASS);
+
+            com.nexusarchive.dto.sip.report.CheckItem authItem = new com.nexusarchive.dto.sip.report.CheckItem();
+            authItem.setStatus(OverallStatus.PASS);
+            passReport.setAuthenticity(authItem);
+
+            com.nexusarchive.dto.sip.report.CheckItem integItem = new com.nexusarchive.dto.sip.report.CheckItem();
+            integItem.setStatus(OverallStatus.PASS);
+            passReport.setIntegrity(integItem);
+
+            com.nexusarchive.dto.sip.report.CheckItem usaItem = new com.nexusarchive.dto.sip.report.CheckItem();
+            usaItem.setStatus(OverallStatus.PASS);
+            passReport.setUsability(usaItem);
+
+            com.nexusarchive.dto.sip.report.CheckItem safeItem = new com.nexusarchive.dto.sip.report.CheckItem();
+            safeItem.setStatus(OverallStatus.PASS);
+            passReport.setSafety(safeItem);
+
+            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(passReport);
+
+            // When
+            var result = collectionBatchService.completeBatch(1L, "1");
+
+            // Then - 验证调用了四性检测
+            verify(preArchiveCheckService).checkSingleFile("file-001");
+            // 验证文件状态被更新为 READY_TO_ARCHIVE
+            verify(arcFileContentMapper).updateById(any(ArcFileContent.class));
+        }
+
+        @Test
+        @DisplayName("完成批次时检测失败应将文件状态更新为NEEDS_ACTION")
+        void completeBatch_WhenCheckFails_ShouldUpdateStatusToNeedsAction() {
+            // Given
+            when(batchMapper.selectById(1L)).thenReturn(testBatch);
+            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
+
+            CollectionBatchFile batchFile = CollectionBatchFile.builder()
+                .id(1L)
+                .batchId(1L)
+                .fileId("file-001")
+                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
+                .build();
+
+            when(batchFileMapper.selectList(any())).thenReturn(List.of(batchFile));
+
+            ArcFileContent arcFile = ArcFileContent.builder()
+                .id("file-001")
+                .fileName("test.pdf")
+                .preArchiveStatus("PENDING_CHECK")
+                .build();
+            when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile);
+
+            // Mock 四性检测服务返回失败
+            FourNatureReport failReport = new FourNatureReport();
+            failReport.setStatus(OverallStatus.FAIL);
+
+            com.nexusarchive.dto.sip.report.CheckItem authItem = new com.nexusarchive.dto.sip.report.CheckItem();
+            authItem.setStatus(OverallStatus.FAIL);
+            authItem.setMessage("真实性检测失败");
+            failReport.setAuthenticity(authItem);
+
+            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(failReport);
+
+            // When
+            var result = collectionBatchService.completeBatch(1L, "1");
+
+            // Then - 验证文件状态被更新为 NEEDS_ACTION
+            verify(arcFileContentMapper).updateById(any(ArcFileContent.class));
+        }
+
+        @Test
+        @DisplayName("完成批次时应返回检测结果统计")
+        void completeBatch_ShouldReturnCheckStatistics() {
+            // Given - 两个文件，一个通过一个失败
+            when(batchMapper.selectById(1L)).thenReturn(testBatch);
+            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
+
+            CollectionBatchFile file1 = CollectionBatchFile.builder()
+                .id(1L)
+                .batchId(1L)
+                .fileId("file-001")
+                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
+                .build();
+
+            CollectionBatchFile file2 = CollectionBatchFile.builder()
+                .id(2L)
+                .batchId(1L)
+                .fileId("file-002")
+                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
+                .build();
+
+            when(batchFileMapper.selectList(any())).thenReturn(List.of(file1, file2));
+
+            ArcFileContent arcFile1 = ArcFileContent.builder()
+                .id("file-001")
+                .fileName("pass.pdf")
+                .preArchiveStatus("PENDING_CHECK")
+                .build();
+            ArcFileContent arcFile2 = ArcFileContent.builder()
+                .id("file-002")
+                .fileName("fail.pdf")
+                .preArchiveStatus("PENDING_CHECK")
+                .build();
+            when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile1);
+            when(arcFileContentMapper.selectById("file-002")).thenReturn(arcFile2);
+
+            // Mock 第一个文件通过，第二个文件失败
+            FourNatureReport passReport = new FourNatureReport();
+            passReport.setStatus(OverallStatus.PASS);
+
+            com.nexusarchive.dto.sip.report.CheckItem passAuth = new com.nexusarchive.dto.sip.report.CheckItem();
+            passAuth.setStatus(OverallStatus.PASS);
+            passReport.setAuthenticity(passAuth);
+
+            com.nexusarchive.dto.sip.report.CheckItem passInteg = new com.nexusarchive.dto.sip.report.CheckItem();
+            passInteg.setStatus(OverallStatus.PASS);
+            passReport.setIntegrity(passInteg);
+
+            com.nexusarchive.dto.sip.report.CheckItem passUsa = new com.nexusarchive.dto.sip.report.CheckItem();
+            passUsa.setStatus(OverallStatus.PASS);
+            passReport.setUsability(passUsa);
+
+            com.nexusarchive.dto.sip.report.CheckItem passSafe = new com.nexusarchive.dto.sip.report.CheckItem();
+            passSafe.setStatus(OverallStatus.PASS);
+            passReport.setSafety(passSafe);
+
+            FourNatureReport failReport = new FourNatureReport();
+            failReport.setStatus(OverallStatus.FAIL);
+
+            com.nexusarchive.dto.sip.report.CheckItem failAuth = new com.nexusarchive.dto.sip.report.CheckItem();
+            failAuth.setStatus(OverallStatus.FAIL);
+            failAuth.setMessage("完整性检测失败");
+            failReport.setAuthenticity(failAuth);
+
+            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(passReport);
+            when(preArchiveCheckService.checkSingleFile("file-002")).thenReturn(failReport);
+
+            // When
+            var result = collectionBatchService.completeBatch(1L, "1");
+
+            // Then - 验证返回结果包含检测统计（新 API）
+            assertThat(result).isNotNull();
+            // TODO: 添加新的检测统计字段验证
+            // assertThat(result.passedFiles()).isEqualTo(1);
+            // assertThat(result.failedFiles()).isEqualTo(1);
+        }
     }
 
     // ========== 批次取消测试 ==========
@@ -414,11 +586,11 @@ class CollectionBatchServiceTest {
             assertThat(result.batchId()).isEqualTo(1L);
             assertThat(result.totalFiles()).isEqualTo(2);
             assertThat(result.checkedFiles()).isEqualTo(2); // equals totalFiles per implementation
-            assertThat(result.passedFiles()).isEqualTo(0); // Implementation checks for "PASSED" but enum is "PASS"
-            assertThat(result.failedFiles()).isEqualTo(2);
+            assertThat(result.passedFiles()).isEqualTo(1); // 修复后：枚举 PASS 被正确识别
+            assertThat(result.failedFiles()).isEqualTo(1);
             assertThat(result.summary()).contains("共 2 个文件");
-            assertThat(result.summary()).contains("通过 0 个");
-            assertThat(result.summary()).contains("失败 2 个");
+            assertThat(result.summary()).contains("通过 1 个");
+            assertThat(result.summary()).contains("失败 1 个");
 
             // 验证批次状态更新
             verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));

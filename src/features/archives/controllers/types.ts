@@ -6,7 +6,7 @@
 import { ModuleConfig, GenericRow } from '../../../types';
 import { ArchiveRouteMode, RouteConfigMeta as _RouteConfigMeta } from '../routeConfigs';
 
-export type PoolStatusFilter = 'all' | 'PENDING_CHECK' | 'NEEDS_ACTION' | 'READY_TO_MATCH' | 'READY_TO_ARCHIVE' | 'COMPLETED' | 'PENDING_APPROVAL' | null;
+export type PoolStatusFilter = 'all' | 'PENDING_CHECK' | 'NEEDS_ACTION' | 'READY_TO_MATCH' | 'READY_TO_ARCHIVE' | 'SUBMITTED' | 'COMPLETED' | 'PENDING_APPROVAL' | null;
 
 export interface ControllerMode {
     routeKey: ArchiveRouteMode | undefined;

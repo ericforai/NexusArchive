@@ -76,6 +76,7 @@ else
 fi
 
 echo "[2/6] 构建前端..."
+npm ci
 npm run build
 
 echo "[3/6] 构建后端..."

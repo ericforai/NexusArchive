@@ -26,6 +26,7 @@
 | 文件 | 功能 | 使用场景 |
 | --- | --- | --- |
 | `deploy.sh` | 服务器部署 | 一键部署到服务器 |
+| `deploy-prod.sh` | 生产发布（systemd） | 备份数据库 + 拉代码 + 构建 + 重启 + 验证 |
 | `build-offline-bundle.sh` | 构建离线包 | 构建离线安装包 |
 | `rollback-prod.sh` | 生产回滚 | 回滚到上一版本 |
 
@@ -95,6 +96,7 @@ npm run db:reset   # 重置数据库
 
 # 部署
 npm run deploy     # 部署到服务器
+bash scripts/deploy-prod.sh  # 生产发布（systemd 模式）
 ```
 
 ## 相关文档

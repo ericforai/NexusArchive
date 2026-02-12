@@ -30,6 +30,8 @@ export interface FondsSwitcherProps {
     isLoading: boolean;
     /** 是否已从持久化存储中恢复 */
     hasHydrated: boolean;
+    /** 用户是否已认证 */
+    isAuthenticated: boolean;
     /** 加载全宗列表的回调 */
     onLoadFondsList: () => void;
     /** 设置当前全宗的回调 */
@@ -48,15 +50,17 @@ export const FondsSwitcher: React.FC<FondsSwitcherProps> = ({
     fondsList,
     isLoading,
     hasHydrated,
+    isAuthenticated,
     onLoadFondsList,
     onSetCurrentFonds,
 }) => {
     // 初始加载全宗列表
+    // 只在 hydration 完成且用户已认证后才加载
     useEffect(() => {
-        if (hasHydrated) {
+        if (hasHydrated && isAuthenticated) {
             onLoadFondsList();
         }
-    }, [hasHydrated, onLoadFondsList]);
+    }, [hasHydrated, isAuthenticated, onLoadFondsList]);
 
     const [isOpen, setIsOpen] = React.useState(false);
 

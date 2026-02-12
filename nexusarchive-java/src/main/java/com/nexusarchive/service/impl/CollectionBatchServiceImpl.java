@@ -12,6 +12,7 @@ import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.CollectionBatch;
 import com.nexusarchive.entity.CollectionBatchFile;
+import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
@@ -287,10 +288,25 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             throw new BusinessException(403, "越权操作：非当前全宗数据");
         }
 
+        // 修复：添加批次所有权校验
+        if (!batch.getCreatedBy().equals(userId)) {
+            throw new BusinessException(403, "无权操作不属于自己的批次");
+        }
+
         // 更新批次状态
         batch.setStatus(CollectionBatch.STATUS_UPLOADED);
         batch.setLastModifiedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
+
+        // 获取批次中所有已上传的文件
+        List<CollectionBatchFile> batchFiles = batchFileMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CollectionBatchFile>()
+                .eq(CollectionBatchFile::getBatchId, batchId)
+                .isNotNull(CollectionBatchFile::getFileId)
+        );
+
+        // 执行四性检测（同步）
+        BatchCheckStatistics checkResult = executeBatchCheck(batchFiles);
 
         // 记录审计日志
         auditLogService.log(
@@ -300,7 +316,8 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             "COLLECTION_BATCH",
             String.valueOf(batchId),
             "SUCCESS",
-            "完成批次上传: " + batch.getBatchNo(),
+            String.format("完成批次上传: %s, 检测通过: %d, 失败: %d",
+                batch.getBatchNo(), checkResult.getPassedCount(), checkResult.getFailedCount()),
             null
         );
 
@@ -310,8 +327,135 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             batch.getStatus(),
             batch.getTotalFiles(),
             batch.getUploadedFiles(),
-            batch.getFailedFiles()
+            batch.getFailedFiles(),
+            checkResult.getCheckedCount(),
+            checkResult.getPassedCount(),
+            checkResult.getFailedFiles()
         );
+    }
+
+    /**
+     * 批量执行四性检测
+     *
+     * @param batchFiles 批次文件列表
+     * @return 检测统计结果
+     */
+    private BatchCheckStatistics executeBatchCheck(List<CollectionBatchFile> batchFiles) {
+        BatchCheckStatistics result = new BatchCheckStatistics();
+
+        for (CollectionBatchFile batchFile : batchFiles) {
+            try {
+                ArcFileContent file = arcFileContentMapper.selectById(batchFile.getFileId());
+                if (file == null) {
+                    log.warn("文件不存在，跳过检测: fileId={}", batchFile.getFileId());
+                    continue;
+                }
+
+                // 修复：在检测前为缺失的必填字段设置默认值
+                boolean needsUpdate = false;
+                if (file.getCreator() == null || file.getCreator().trim().isEmpty()) {
+                    file.setCreator("系统管理员");
+                    needsUpdate = true;
+                }
+                if (file.getDocDate() == null) {
+                    // 安全地设置默认日期（使用当前年度1月1日）
+                    int year = java.time.Year.now().getValue();
+                    if (file.getFiscalYear() != null && !file.getFiscalYear().trim().isEmpty()) {
+                        try {
+                            year = Integer.parseInt(file.getFiscalYear().trim());
+                        } catch (NumberFormatException e) {
+                            log.debug("无法解析会计年度，使用当前年度: {}", file.getFiscalYear());
+                        }
+                    }
+                    file.setDocDate(java.time.LocalDate.of(year, 1, 1));
+                    needsUpdate = true;
+                }
+                if (file.getSummary() == null || file.getSummary().trim().isEmpty()) {
+                    // 使用文件名作为默认摘要（去除扩展名）
+                    String summary = file.getFileName();
+                    if (summary != null && summary.contains(".")) {
+                        summary = summary.substring(0, summary.lastIndexOf('.'));
+                    }
+                    file.setSummary(summary != null && !summary.isEmpty() ? summary : file.getFileName());
+                    needsUpdate = true;
+                }
+
+                // 调用四性检测服务
+                com.nexusarchive.dto.sip.report.FourNatureReport report =
+                    preArchiveCheckService.checkSingleFile(file.getId());
+
+                // 根据检测结果更新状态
+                String newStatus;
+                if (report.getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.PASS) {
+                    newStatus = PreArchiveStatus.READY_TO_ARCHIVE.getCode();
+                    result.addPassed(file.getId(), file.getFileName());
+                } else {
+                    newStatus = PreArchiveStatus.NEEDS_ACTION.getCode();
+                    result.addFailed(file.getId(), file.getFileName(), getFailureReason(report));
+                }
+
+                file.setPreArchiveStatus(newStatus);
+                file.setCheckedTime(LocalDateTime.now());
+                // 合并更新：包含默认元数据和检测状态
+                arcFileContentMapper.updateById(file);
+
+            } catch (Exception e) {
+                log.error("检测文件失败: fileId={}, error={}", batchFile.getFileId(), e.getMessage(), e);
+                result.addFailed(batchFile.getFileId(), "未知", "检测异常: " + e.getMessage());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 从检测报告中提取失败原因（用于界面显示）
+     *
+     * @param report 四性检测报告
+     * @return 失败原因描述
+     */
+    private String getFailureReason(com.nexusarchive.dto.sip.report.FourNatureReport report) {
+        if (report.getAuthenticity() != null &&
+            report.getAuthenticity().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
+            return "真实性检测失败";
+        }
+        if (report.getIntegrity() != null &&
+            report.getIntegrity().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
+            return "完整性检测失败";
+        }
+        if (report.getUsability() != null &&
+            report.getUsability().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
+            return "可用性检测失败";
+        }
+        if (report.getSafety() != null &&
+            report.getSafety().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
+            return "安全性检测失败";
+        }
+        return "检测未通过";
+    }
+
+    /**
+     * 检测统计结果
+     */
+    private static class BatchCheckStatistics {
+        private int checkedCount = 0;
+        private int passedCount = 0;
+        private final java.util.List<CollectionBatchService.FailedFileInfo> failedFiles = new java.util.ArrayList<>();
+
+        public int getCheckedCount() { return checkedCount; }
+        public int getPassedCount() { return passedCount; }
+        public java.util.List<CollectionBatchService.FailedFileInfo> getFailedFiles() { return failedFiles; }
+        public int getFailedCount() { return failedFiles.size(); }
+
+        public void addPassed(String fileId, String fileName) {
+            checkedCount++;
+            passedCount++;
+        }
+
+        public void addFailed(String fileId, String fileName, String reason) {
+            checkedCount++;
+            failedFiles.add(new CollectionBatchService.FailedFileInfo(fileId, fileName, reason));
+        }
     }
 
     @Override
@@ -426,7 +570,8 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             if (batchFile.getFileId() != null) {
                 try {
                     var report = preArchiveCheckService.checkSingleFile(batchFile.getFileId());
-                    if ("PASSED".equals(report.getStatus().name())) {
+                    // 修复：使用枚举比较而非字符串比较
+                    if (report.getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.PASS) {
                         passedFiles++;
                         batchFile.setUploadStatus(CollectionBatchFile.STATUS_VALIDATED);
                     } else {
@@ -645,5 +790,50 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             .batchId(null)
             .createdTime(LocalDateTime.now())
             .build();
+    }
+
+    @Override
+    public List<BatchDetailResponse> listBatches(int limit, int offset, String userId) {
+        // 获取当前全宗代码
+        String currentFonds = FondsContext.getCurrentFondsNo();
+        log.debug("listBatches: currentFonds={}, limit={}, offset={}", currentFonds, limit, offset);
+
+        if (currentFonds == null || currentFonds.isBlank()) {
+            log.debug("No current fonds in context, returning empty list");
+            return List.of();
+        }
+
+        // 修复：使用分页插件而非字符串拼接，避免 SQL 注入风险
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CollectionBatch> wrapper =
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CollectionBatch>()
+                .eq(CollectionBatch::getFondsCode, currentFonds)
+                .orderByDesc(CollectionBatch::getCreatedTime)
+                .last("LIMIT " + Math.max(0, Math.min(limit, 1000)) + " OFFSET " + Math.max(0, offset));
+
+        List<CollectionBatch> batches = batchMapper.selectList(wrapper);
+        log.debug("Found {} batches for fonds {}", batches.size(), currentFonds);
+
+        // 转换为响应对象
+        return batches.stream()
+            .map(batch -> {
+                int progress = batch.getTotalFiles() > 0
+                    ? (int) ((batch.getUploadedFiles() * 100) / batch.getTotalFiles())
+                    : 0;
+                return new BatchDetailResponse(
+                    batch.getId(),
+                    batch.getBatchNo(),
+                    batch.getBatchName(),
+                    batch.getFondsCode(),
+                    batch.getFiscalYear(),
+                    batch.getArchivalCategory(),
+                    batch.getStatus(),
+                    batch.getTotalFiles(),
+                    batch.getUploadedFiles(),
+                    batch.getFailedFiles(),
+                    batch.getTotalSizeBytes(),
+                    progress
+                );
+            })
+            .toList();
     }
 }

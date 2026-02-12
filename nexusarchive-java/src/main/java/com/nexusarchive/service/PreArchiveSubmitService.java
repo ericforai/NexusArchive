@@ -142,7 +142,7 @@ public class PreArchiveSubmitService {
 
         // 3. 更新文件的正式档号和状态
         file.setArchivalCode(archive.getArchiveCode());
-        file.setPreArchiveStatus(PreArchiveStatus.COMPLETED.getCode()); // Move to completed
+        file.setPreArchiveStatus(PreArchiveStatus.SUBMITTED.getCode()); // 状态变更为"已提交待审批"
         arcFileContentMapper.updateById(file);
 
         // 4. 创建审批申请
@@ -193,10 +193,14 @@ public class PreArchiveSubmitService {
             throw new RuntimeException("档案不存在: " + archiveId);
         }
 
-        // 防重锁：仅允许非 ARCHIVED 状态转 ARCHIVED
+        if ("archived".equalsIgnoreCase(archive.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "归档已完成或状态不允许重复完成");
+        }
+
+        // 防重锁：仅允许非 archived 状态转 archived（统一小写）
         LambdaUpdateWrapper<Archive> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Archive::getId, archiveId).ne(Archive::getStatus, "ARCHIVED")
-                .set(Archive::getStatus, "ARCHIVED");
+        wrapper.eq(Archive::getId, archiveId)
+                .set(Archive::getStatus, "archived");
         int updated = archiveMapper.update(null, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "归档已完成或状态不允许重复完成");

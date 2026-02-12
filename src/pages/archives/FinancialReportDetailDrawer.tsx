@@ -40,7 +40,13 @@ const DEMO_DATA_IDS = new Set([
   'FR-M-2025-001', 'FR-M-2025-002', 'FR-M-2025-003', 'FR-M-2025-004', 'FR-M-2025-005',
   'FR-Q-2025-001', 'FR-Q-2025-002', 'FR-S-2025-001',
   'FR-A-2024-001', 'FR-SP-2025-001',
-  'demo-reimb-bb-001'
+  'demo-reimb-bb-001',
+  // 凭证类演示数据（无实际文件）
+  'JZ-202511-0052', 'V-202511-TEST',
+  // 报告类演示数据（无实际文件）
+  'REP-2023-11', 'REP-2024-Q1',
+  // 其他无文件演示数据
+  'demo-fin-report-001', 'demo-fin-report-002',
 ]);
 
 export const FinancialReportDetailDrawer: React.FC<FinancialReportDetailDrawerProps> = ({

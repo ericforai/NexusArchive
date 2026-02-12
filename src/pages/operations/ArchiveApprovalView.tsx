@@ -59,7 +59,10 @@ export const ArchiveApprovalView: React.FC = () => {
             setLoading(true);
             // 加载当前筛选的数据
             const response = await archiveApprovalApi.getApprovalList(1, PAGE_SIZE, statusFilter);
-            setApprovals(response?.data?.data?.records || []);
+
+            // 后端返回: {code: 200, data: {data: {records: [...]}}}
+            const records = response?.data?.data?.records || [];
+            setApprovals(records);
 
             // 加载各状态计数
             const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
@@ -287,11 +290,24 @@ export const ArchiveApprovalView: React.FC = () => {
             dataIndex: 'createdTime',
             key: 'createdTime',
             width: 180,
-            render: (text) => (
-                <span className="text-slate-500 font-mono text-xs">
-                    {text ? new Date(text).toLocaleString('zh-CN') : '-'}
-                </span>
-            )
+            render: (text) => {
+                if (!text) return '-';
+                // 处理数组格式的时间 [year, month, day, hour, minute, second, nano]
+                if (Array.isArray(text)) {
+                    const [year, month, day, hour, minute, second] = text;
+                    const date = new Date(year, month - 1, day, hour, minute, second);
+                    return (
+                        <span className="text-slate-500 font-mono text-xs">
+                            {date.toLocaleString('zh-CN')}
+                        </span>
+                    );
+                }
+                return (
+                    <span className="text-slate-500 font-mono text-xs">
+                        {new Date(text).toLocaleString('zh-CN')}
+                    </span>
+                );
+            }
         },
         {
             title: '状态',

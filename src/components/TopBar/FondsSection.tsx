@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { FondsSwitcher } from '../common/FondsSwitcher';
-import { useFondsStore } from '../../store';
+import { useFondsStore, useAuthStore } from '../../store';
 
 export const FondsSection: React.FC = () => {
     const {
@@ -16,6 +16,8 @@ export const FondsSection: React.FC = () => {
         setCurrentFonds,
     } = useFondsStore();
 
+    const { isAuthenticated } = useAuthStore();
+
     return (
         <div className="flex items-center gap-4">
             <FondsSwitcher
@@ -23,6 +25,7 @@ export const FondsSection: React.FC = () => {
                 fondsList={fondsList}
                 isLoading={isLoading}
                 hasHydrated={_hasHydrated}
+                isAuthenticated={isAuthenticated}
                 onLoadFondsList={loadFondsList}
                 onSetCurrentFonds={setCurrentFonds}
             />

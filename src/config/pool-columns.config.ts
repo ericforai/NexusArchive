@@ -7,12 +7,13 @@
  * 记账凭证库看板列分组配置
  */
 
-// 简化的预处理状态枚举（5个核心状态）
+// 简化的预处理状态枚举（6个核心状态）
 export enum SimplifiedPreArchiveStatus {
   PENDING_CHECK = 'PENDING_CHECK',    // 待检测
   NEEDS_ACTION = 'NEEDS_ACTION',      // 待处理
   READY_TO_MATCH = 'READY_TO_MATCH',  // 可匹配
   READY_TO_ARCHIVE = 'READY_TO_ARCHIVE', // 可归档（核心）
+  SUBMITTED = 'SUBMITTED',            // 已提交待审批
   COMPLETED = 'COMPLETED',            // 已完成
 }
 
@@ -24,6 +25,7 @@ export interface DashboardStats {
   [SimplifiedPreArchiveStatus.NEEDS_ACTION]: number;
   [SimplifiedPreArchiveStatus.READY_TO_MATCH]: number;
   [SimplifiedPreArchiveStatus.READY_TO_ARCHIVE]: number;
+  [SimplifiedPreArchiveStatus.SUBMITTED]: number;
   [SimplifiedPreArchiveStatus.COMPLETED]: number;
 }
 
@@ -60,6 +62,12 @@ export const STATUS_CONFIG: Record<SimplifiedPreArchiveStatus, {
     icon: 'check-circle',
     label: '可归档',
     description: '已就绪，可以提交归档',
+  },
+  [SimplifiedPreArchiveStatus.SUBMITTED]: {
+    color: '#8b5cf6',
+    icon: 'clock',
+    label: '已提交',
+    description: '已提交归档申请，等待审批',
   },
   [SimplifiedPreArchiveStatus.COMPLETED]: {
     color: '#64748b',

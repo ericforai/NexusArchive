@@ -6,6 +6,7 @@
 package com.nexusarchive.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArchiveMapper;
@@ -17,7 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.time.LocalDateTime;
@@ -43,6 +46,12 @@ class ArchiveServiceTest {
 
     @Mock
     private DataScopeService dataScopeService;
+
+    @Mock
+    private com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
     @InjectMocks
     private ArchiveService archiveService;
@@ -153,5 +162,22 @@ class ArchiveServiceTest {
         assertEquals("NORMAL", result.getDestructionStatus());
         assertNotNull(result.getRetentionStartDate());
         verify(archiveMapper).insert(any(Archive.class));
+    }
+
+    @Test
+    @DisplayName("Get Archives - Accounting Category default filter should be case-insensitive archived")
+    void getArchives_AccountingCategory_UsesCaseInsensitiveArchivedFilter() {
+        Page<Archive> emptyPage = new Page<>(1, 10);
+        when(archiveMapper.selectPage(any(Page.class), any())).thenReturn(emptyPage);
+
+        archiveService.getArchives(1, 10, null, null, "AC01", null, null, null, "BR-GROUP");
+
+        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Archive>> captor =
+                ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class);
+        verify(archiveMapper).selectPage(any(Page.class), captor.capture());
+        String sqlSegment = captor.getValue().getSqlSegment();
+        assertNotNull(sqlSegment);
+        assertTrue(sqlSegment.toLowerCase().contains("lower(status)"),
+                "会计档案默认筛选应使用大小写无关状态过滤");
     }
 }

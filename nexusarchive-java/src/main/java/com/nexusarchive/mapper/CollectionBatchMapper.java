@@ -70,4 +70,37 @@ public interface CollectionBatchMapper extends BaseMapper<CollectionBatch> {
         @Param("status") String status,
         @Param("errorMessage") String errorMessage
     );
+
+    /**
+     * 查询指定日期的最大批次号
+     * @param datePart 日期部分 (yyyyMMdd 格式)
+     * @return 最大批次号，不存在返回 null
+     */
+    @Select("SELECT batch_no FROM collection_batch " +
+            "WHERE batch_no LIKE 'COL-' || #{datePart} || '-%' " +
+            "ORDER BY batch_no DESC " +
+            "LIMIT 1")
+    String selectMaxBatchNoByDate(@Param("datePart") String datePart);
+
+    /**
+     * 通过 PostgreSQL 函数生成下一个批次号（并发安全）
+     * 内部使用 pg_advisory_xact_lock 确保同日期序号串行化
+     * @param datePart 日期部分 (yyyyMMdd 格式)
+     * @return 下一个批次编号，格式: COL-YYYYMMDD-NNNNN
+     */
+    @Select("SELECT next_batch_no(#{datePart})")
+    String nextBatchNo(@Param("datePart") String datePart);
+
+    /**
+     * 查询指定日期的所有批次号（用于悲观锁）
+     * FOR UPDATE 锁定这些行，防止并发修改
+     * @param datePart 日期部分 (yyyyMMdd 格式)
+     * @return 所有匹配的批次号
+     * @deprecated 已被 {@link #nextBatchNo(String)} 替代，保留供回退使用
+     */
+    @Deprecated
+    @Select("SELECT batch_no FROM collection_batch " +
+            "WHERE batch_no LIKE 'COL-' || #{datePart} || '-%' " +
+            "FOR UPDATE")
+    List<String> selectBatchNosForUpdate(@Param("datePart") String datePart);
 }

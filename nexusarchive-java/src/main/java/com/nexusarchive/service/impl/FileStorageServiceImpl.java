@@ -23,7 +23,7 @@ import java.nio.file.StandardCopyOption;
 @Slf4j
 public class FileStorageServiceImpl implements FileStorageService {
 
-    @Value("${archive.root.path:/tmp/nexusarchive}")
+    @Value("${archive.root.path:./data/archives}")
     private String archiveRootPath;
 
     /**

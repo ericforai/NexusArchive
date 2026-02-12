@@ -5,29 +5,38 @@
 
 package com.nexusarchive.service;
 
+import com.nexusarchive.common.exception.BusinessException;
+import com.nexusarchive.common.exception.ErrorCode;
+import com.nexusarchive.entity.Archive;
+import com.nexusarchive.mapper.ArchivalCodeSequenceMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 档号生成器服务
- * 
+ *
  * 遵循 DA/T 94-2022 档号格式规范:
  * [全宗号]-[年度]-[保管期限]-[分类代码]-[件号]
- * 
+ *
  * 示例: QZ01-2025-30Y-AC01-000001
+ *
+ * 修复：使用数据库序列而非内存计数器，避免服务器重启后档号重复
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ArchivalCodeGenerator {
 
-    // 序号计数器缓存 (按年度+分类维护)
+    private final ArchivalCodeSequenceMapper sequenceMapper;
+
+    // 序号计数器缓存 (按年度+分类维护) - 仅用于兼容旧代码，逐步迁移到数据库序列
     private final Map<String, AtomicInteger> sequenceCounters = new ConcurrentHashMap<>();
 
     /**
@@ -66,14 +75,14 @@ public class ArchivalCodeGenerator {
 
     /**
      * 生成符合 DA/T 94-2022 的正式档号
-     * 
+     *
      * @param fondsCode    全宗号 (必填)
      * @param year         年度 (必填, YYYY格式)
      * @param retention    保管期限 (10Y/30Y/PERM)
      * @param categoryCode 分类代码 (AC01/AC02/AC03/AC04)
      * @return 正式档号
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String generate(String fondsCode, String year, String retention, String categoryCode) {
         // 参数校验
         if (fondsCode == null || fondsCode.isEmpty()) {
@@ -91,14 +100,20 @@ public class ArchivalCodeGenerator {
             categoryCode = "AC01";
         }
 
-        // 获取或初始化序号计数器
-        String counterKey = String.format("%s-%s-%s", fondsCode, year, categoryCode);
-        AtomicInteger counter = sequenceCounters.computeIfAbsent(counterKey, 
-            k -> new AtomicInteger(0));
-        
-        int sequence = counter.incrementAndGet();
+        // 修复：使用数据库序列而非内存计数器，避免服务器重启后档号重复
+        // 1. 初始化序列（如果不存在）
+        sequenceMapper.initSequence(fondsCode, year, categoryCode);
 
-        // 生成档号: [全宗号]-[年度]-[保管期限]-[分类代码]-[件号]
+        // 2. 递增并获取序号
+        int rows = sequenceMapper.incrementVal(fondsCode, year, categoryCode);
+        if (rows == 0) {
+            throw new BusinessException(ErrorCode.ARCHIVAL_CODE_GENERATION_FAILED);
+        }
+
+        // 3. 获取当前序号
+        Integer sequence = sequenceMapper.selectCurrentValForUpdate(fondsCode, year, categoryCode);
+
+        // 4. 生成档号: [全宗号]-[年度]-[保管期限]-[分类代码]-[件号]
         String archivalCode = String.format("%s-%s-%s-%s-%06d",
                 fondsCode, year, retention, categoryCode, sequence);
 

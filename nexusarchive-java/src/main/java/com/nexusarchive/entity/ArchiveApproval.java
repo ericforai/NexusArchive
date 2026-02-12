@@ -6,6 +6,7 @@
 package com.nexusarchive.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -89,5 +90,6 @@ public class ArchiveApproval {
     private LocalDateTime lastModifiedTime;
 
     @TableLogic
-    private Integer deleted;
+    @TableField(insertStrategy = FieldStrategy.NOT_NULL)
+    private Integer deleted = 0;
 }

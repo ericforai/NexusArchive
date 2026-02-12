@@ -74,6 +74,19 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
     }, [subTitle, isPoolView, routeConfig]);
 
     // 使用 useMemo 稳定返回值引用
+    const resolvedCategoryCode = resolveCategoryCode();
+    const resolvedDefaultStatus = resolveDefaultStatus();
+
+    // 调试日志（开发环境）
+    if (import.meta.env.DEV) {
+        console.log('[useArchiveMode]', {
+            routeConfig,
+            subTitle,
+            categoryCode: resolvedCategoryCode,
+            defaultStatus: resolvedDefaultStatus,
+        });
+    }
+
     return useMemo(() => ({
         routeKey: routeConfig as ArchiveRouteMode | undefined,
         title,
@@ -81,7 +94,7 @@ export function useArchiveMode(options: UseArchiveModeOptions): ControllerMode {
         config,
         isPoolView,
         isLinkingView,
-        categoryCode: resolveCategoryCode(),
-        defaultStatus: resolveDefaultStatus(),
-    }), [routeConfig, title, subTitle, config, isPoolView, isLinkingView, resolveCategoryCode, resolveDefaultStatus]);
+        categoryCode: resolvedCategoryCode,
+        defaultStatus: resolvedDefaultStatus,
+    }), [routeConfig, title, subTitle, config, isPoolView, isLinkingView, resolvedCategoryCode, resolvedDefaultStatus]);
 }

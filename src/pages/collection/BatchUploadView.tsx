@@ -73,6 +73,15 @@ interface BatchFormData {
   archivalCategory: 'VOUCHER' | 'LEDGER' | 'REPORT' | 'OTHER';
 }
 
+/**
+ * 检测结果统计
+ */
+interface CheckResult {
+  passed: number;
+  failed: number;
+  failedList: Array<{ fileId: string; fileName: string; reason: string }>;
+}
+
 export const BatchUploadView: React.FC = () => {
   const navigate = useNavigate();
   const currentFonds = useFondsStore((state) => state.currentFonds);
@@ -89,6 +98,7 @@ export const BatchUploadView: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number>(-1);
   const [selectedCategory, setSelectedCategory] = useState<string>('VOUCHER');
+  const [checkResult, setCheckResult] = useState<CheckResult>({ passed: 0, failed: 0, failedList: [] });
   const [form] = Form.useForm<BatchFormData>();
 
   // ===== Queries =====
@@ -172,9 +182,23 @@ export const BatchUploadView: React.FC = () => {
 
   const completeBatchMutation = useMutation({
     mutationFn: () => batchUploadApi.completeBatch(batchInfo!.batchId),
-    onSuccess: () => {
+    onSuccess: (data) => {
       setStep('complete');
-      message.success('批次上传完成');
+      // 设置检测结果
+      setCheckResult({
+        passed: data.passedFiles || 0,
+        failed: data.failedFileList?.length || 0,
+        failedList: data.failedFileList || []
+      });
+
+      // 根据检测结果显示不同消息
+      const failedCount = data.failedFileList?.length || 0;
+      const passedCount = data.passedFiles || 0;
+      if (failedCount > 0) {
+        message.warning(`批次完成：${passedCount} 个文件检测通过，${failedCount} 个文件检测失败`);
+      } else {
+        message.success(`批次完成：所有 ${passedCount} 个文件检测通过`);
+      }
     },
   });
 
@@ -330,12 +354,22 @@ export const BatchUploadView: React.FC = () => {
   };
 
   const stats = React.useMemo(() => {
+    // 优先使用服务器返回的批次详情数据（在步骤2和步骤3）
+    if (batchDetail) {
+      return {
+        total: batchDetail.totalFiles || 0,
+        uploaded: batchDetail.uploadedFiles || 0,
+        failed: batchDetail.failedFiles || 0,
+        duplicate: 0, // 批次详情中没有重复计数，可从 batchFiles 计算
+      };
+    }
+    // 回退到本地队列（仅用于步骤1创建阶段）
     const total = uploadQueue.length;
     const uploaded = uploadQueue.filter((f) => f.status === 'uploaded').length;
     const failed = uploadQueue.filter((f) => f.status === 'failed').length;
     const duplicate = uploadQueue.filter((f) => f.status === 'duplicate').length;
     return { total, uploaded, failed, duplicate };
-  }, [uploadQueue]);
+  }, [batchDetail, uploadQueue]);
 
   // ===== Render =====
 
@@ -589,8 +623,9 @@ export const BatchUploadView: React.FC = () => {
               type="primary"
               onClick={handleCompleteBatch}
               disabled={stats.uploaded === 0}
+              loading={completeBatchMutation.isPending}
             >
-              完成上传
+              {completeBatchMutation.isPending ? '正在执行四性检测...' : '完成上传'}
             </Button>
           </div>
         )}
@@ -690,29 +725,40 @@ export const BatchUploadView: React.FC = () => {
       {/* Actions for Complete Step */}
       {step === 'complete' && (
         <div className="mt-6">
-          {/* Completion Summary */}
+          {/* Completion Summary with Check Results */}
           <Alert
-            type="success"
+            type={checkResult.failed > 0 ? 'warning' : 'success'}
             showIcon
             className="mb-4"
-            title="上传完成！"
-            description="已为您创建档案记录，请在凭证关联页面匹配原始凭证。"
+            title={checkResult.failed > 0 ? '上传完成（部分文件检测失败）' : '上传完成！'}
+            description={
+              checkResult.failed > 0
+                ? `${checkResult.passed} 个文件检测通过，${checkResult.failed} 个文件检测失败。失败的文件需要处理后才能归档。`
+                : `所有 ${checkResult.passed} 个文件均已通过四性检测，可以提交归档。`
+            }
           />
+
+          {/* Failed Files List */}
+          {checkResult.failed > 0 && checkResult.failedList.length > 0 && (
+            <Card className="mb-4" title="检测失败文件">
+              <div className="space-y-2">
+                {checkResult.failedList.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                    <span className="text-sm font-medium">{item.fileName}</span>
+                    <span className="text-xs text-red-600 dark:text-red-400">{item.reason}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4">
             <Button
               type="primary"
-              onClick={() => navigate('/system/pre-archive/link')}
+              onClick={() => navigate('/system/pre-archive')}
             >
-              前往凭证关联
-            </Button>
-            <Button
-              icon={<ShieldCheck size={16} />}
-              onClick={handleRunCheck}
-              loading={runCheckMutation.isPending}
-            >
-              执行四性检测
+              前往预归档库
             </Button>
             <Button onClick={() => navigate('/system/collection/upload')}>
               继续上传

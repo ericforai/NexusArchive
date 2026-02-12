@@ -94,7 +94,16 @@ export interface FileUploadResult {
 }
 
 /**
- * 批次完成结果
+ * 失败文件信息
+ */
+export interface FailedFileInfo {
+  fileId: string;
+  fileName: string;
+  reason: string;
+}
+
+/**
+ * 批次完成结果（包含四性检测统计）
  */
 export interface BatchCompleteResult {
   batchId: number;
@@ -103,6 +112,9 @@ export interface BatchCompleteResult {
   totalFiles: number;
   uploadedFiles: number;
   failedFiles: number;
+  checkedFiles?: number;     // 新增：已检测文件数
+  passedFiles?: number;      // 新增：检测通过数
+  failedFileList?: FailedFileInfo[];  // 新增：失败文件详情
 }
 
 /**

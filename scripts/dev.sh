@@ -121,10 +121,15 @@ if [ -f ../.backend.pid ]; then
 fi
 
 if [ ! -f ../.backend.pid ]; then
+    # 设置文件存储根路径（使用绝对路径，避免使用 /tmp 被系统清理）
+    # 覆盖 .env.local 中的配置，确保路径正确
+    export ARCHIVE_ROOT_PATH="$(cd .. && pwd)/nexusarchive-java/data/archives"
+    export ARCHIVE_TEMP_PATH="$(cd .. && pwd)/nexusarchive-java/data/temp"
     mvn spring-boot:run -Dmaven.test.skip=true -Dspring-boot.run.profiles=dev > ../backend.log 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > ../.backend.pid
     echo -e "${GREEN}✅ 后端启动中 (PID: $BACKEND_PID)${NC}"
+    echo -e "${CYAN}📁 文件存储路径: ${ARCHIVE_ROOT_PATH}${NC}"
 fi
 
 cd ..

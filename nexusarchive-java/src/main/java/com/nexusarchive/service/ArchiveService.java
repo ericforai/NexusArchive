@@ -74,11 +74,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
         }
 
         if (status != null && !status.isEmpty()) {
-            if (status.contains(",")) {
-                wrapper.in(Archive::getStatus, Arrays.asList(status.split(",")));
-            } else {
-                wrapper.eq(Archive::getStatus, status);
-            }
+            applyCaseInsensitiveStatusFilter(wrapper, status);
         }
 
         if (categoryCode != null && !categoryCode.isEmpty()) {
@@ -88,7 +84,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
             // If querying an Accounting Category (AC01-AC04) and no status is specified,
             // FORCE strictly 'archived' status. Drafts/Pending items must NOT appear in the Repository.
             if ((status == null || status.isEmpty()) && isAccountingCategory(categoryCode)) {
-                wrapper.eq(Archive::getStatus, "archived");
+                wrapper.apply("LOWER(status) = {0}", "archived");
             }
         }
 
@@ -445,5 +441,31 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
      */
     private boolean isAccountingCategory(String code) {
         return "AC01".equals(code) || "AC02".equals(code) || "AC03".equals(code) || "AC04".equals(code);
+    }
+
+    private void applyCaseInsensitiveStatusFilter(LambdaQueryWrapper<Archive> wrapper, String status) {
+        List<String> statuses = Arrays.stream(status.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
+
+        if (statuses.isEmpty()) {
+            return;
+        }
+
+        if (statuses.size() == 1) {
+            wrapper.apply("LOWER(status) = {0}", statuses.get(0));
+            return;
+        }
+
+        wrapper.and(w -> {
+            for (int i = 0; i < statuses.size(); i++) {
+                if (i > 0) {
+                    w.or();
+                }
+                w.apply("LOWER(status) = {" + i + "}", statuses.get(i));
+            }
+        });
     }
 }

@@ -37,6 +37,9 @@ public enum PreArchiveStatus {
     /** 可归档 - 已就绪，可以提交归档（核心状态） */
     READY_TO_ARCHIVE("READY_TO_ARCHIVE", "可归档"),
 
+    /** 已提交待审批 - 已提交归档申请，等待审批 */
+    SUBMITTED("SUBMITTED", "已提交"),
+
     /** 已完成 - 归档流程已结束 */
     COMPLETED("COMPLETED", "已完成");
 

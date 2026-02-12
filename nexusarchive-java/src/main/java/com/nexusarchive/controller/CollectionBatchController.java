@@ -199,9 +199,15 @@ public class CollectionBatchController {
             @RequestParam(defaultValue = "0") int offset,
             HttpServletRequest httpRequest) {
 
+        log.debug("listBatches: limit={}, offset={}", limit, offset);
+
         String userId = getUserIdFromRequest(httpRequest);
-        // TODO: 实现列表查询
-        return Result.success(List.of());
+
+        List<CollectionBatchService.BatchDetailResponse> batches =
+            collectionBatchService.listBatches(limit, offset, userId);
+
+        log.debug("listBatches: returning {} batches", batches.size());
+        return Result.success(batches);
     }
 
     /**

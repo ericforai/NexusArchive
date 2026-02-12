@@ -223,7 +223,7 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
     // Monitor other filter changes
     useEffect(() => {
         if (isInitialLoadRef.current) return;
-        const { mode, query, isPoolView, poolStatusFilter, categoryFilter, setCurrentPage } = depsRef.current;
+        const { mode, query, page, poolStatusFilter, categoryFilter, setCurrentPage } = depsRef.current;
         const prevDeps = prevDepsRef.current;
         const depsChanged =
             prevDeps.subTitle !== mode.subTitle ||
@@ -240,10 +240,13 @@ export function useArchiveDataLoader(options: UseArchiveDataLoaderOptions) {
             prevDepsRef.current.orgFilter = query.orgFilter;
             prevDepsRef.current.subTypeFilter = query.subTypeFilter;
             prevDepsRef.current.categoryFilter = categoryFilter; // 同步门类状态
-            // 只更新 page.currentPage 到 1，让 page change effect 来处理数据加载
-            setCurrentPage(1);
+            if (page.currentPage === 1) {
+                loadCurrentView(1, poolStatusFilter);
+            } else {
+                setCurrentPage(1);
+            }
         }
-    }, [mode.subTitle, query.searchTerm, query.statusFilter, query.orgFilter, query.subTypeFilter, categoryFilter, loadPoolData, loadArchiveList]);
+    }, [mode.subTitle, query.searchTerm, query.statusFilter, query.orgFilter, query.subTypeFilter, categoryFilter, loadCurrentView]);
 
     // Monitor page changes - 只监听 currentPage 的值变化
     useEffect(() => {

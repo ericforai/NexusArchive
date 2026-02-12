@@ -30,7 +30,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout: _onLogout, onNavigate 
   } = useFondsStore();
 
   // Get user info from auth store
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const mainRole = user?.roleNames?.[0] || user?.roles?.[0] || '-';
   const displayName = user?.fullName || user?.username || '-';
 
@@ -47,6 +47,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onLogout: _onLogout, onNavigate 
             fondsList={fondsList}
             isLoading={isLoading}
             hasHydrated={_hasHydrated}
+            isAuthenticated={isAuthenticated}
             onLoadFondsList={loadFondsList}
             onSetCurrentFonds={setCurrentFonds}
           />
