@@ -1,0 +1,187 @@
+name: Migrate Prod Full Overwrite via SSH
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_package_path:
+        description: "Migration package path on server (e.g. /opt/nexusarchive/migration_packages/full_migration_xxx.tar.gz)"
+        required: true
+      migration_package_sha256:
+        description: "SHA256 of migration package file"
+        required: true
+      confirm_text:
+        description: "Type exactly: I_UNDERSTAND_FULL_OVERWRITE"
+        required: true
+      healthcheck_url:
+        description: "Health check URL after restore"
+        required: true
+        default: "https://www.digivoucher.cn/api/health"
+      archive_root_path:
+        description: "Optional override for ARCHIVE_ROOT_PATH on server"
+        required: false
+        default: ""
+
+concurrency:
+  group: migrate-prod-full-overwrite
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Validate confirmation text
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event.inputs.confirm_text }}" != "I_UNDERSTAND_FULL_OVERWRITE" ]; then
+            echo "Invalid confirm_text, abort."
+            exit 1
+          fi
+
+      - name: Run full overwrite migration on server
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          SERVER_PACKAGE_PATH: ${{ github.event.inputs.server_package_path }}
+          PKG_SHA: ${{ github.event.inputs.migration_package_sha256 }}
+          HEALTHCHECK_URL: ${{ github.event.inputs.healthcheck_url }}
+          INPUT_ARCHIVE_ROOT_PATH: ${{ github.event.inputs.archive_root_path }}
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT }}
+          script_stop: true
+          envs: SERVER_PACKAGE_PATH,PKG_SHA,HEALTHCHECK_URL,INPUT_ARCHIVE_ROOT_PATH
+          script: |
+            set -euo pipefail
+
+            APP_DIR="/opt/nexusarchive"
+            ENV_FILE="/etc/nexusarchive/nexusarchive.env"
+            BACKUP_DIR="${APP_DIR}/migration_backups"
+            TS="$(date +%F_%H%M%S)"
+
+            mkdir -p "${BACKUP_DIR}"
+
+            detect_archive_root_path() {
+              if [ -n "${INPUT_ARCHIVE_ROOT_PATH:-}" ]; then
+                echo "${INPUT_ARCHIVE_ROOT_PATH}"
+                return 0
+              fi
+              if [ -f "${ENV_FILE}" ]; then
+                val="$(grep -E '^ARCHIVE_ROOT_PATH=' "${ENV_FILE}" | tail -n 1 | cut -d'=' -f2- || true)"
+                if [ -n "${val}" ]; then
+                  echo "${val}"
+                  return 0
+                fi
+              fi
+              echo "${APP_DIR}/nexusarchive-java/data/archives"
+            }
+
+            to_abs_path() {
+              p="$1"
+              if [ -z "${p}" ]; then
+                return 1
+              fi
+              case "${p}" in
+                /*) echo "${p}" ;;
+                *) echo "${APP_DIR}/${p}" ;;
+              esac
+            }
+
+            ARCHIVE_ROOT_PATH_RAW="$(detect_archive_root_path)"
+            ARCHIVE_ROOT_PATH="$(to_abs_path "${ARCHIVE_ROOT_PATH_RAW}")"
+
+            echo "[1/10] Resolve paths"
+            echo "APP_DIR=${APP_DIR}"
+            echo "ARCHIVE_ROOT_PATH_RAW=${ARCHIVE_ROOT_PATH_RAW}"
+            echo "ARCHIVE_ROOT_PATH=${ARCHIVE_ROOT_PATH}"
+
+            TMP_DIR="$(mktemp -d /tmp/nexusarchive_migrate_XXXXXX)"
+            PACKAGE_FILE="${TMP_DIR}/migration.tar.gz"
+            EXTRACT_DIR="${TMP_DIR}/extract"
+            mkdir -p "${EXTRACT_DIR}"
+
+            echo "[2/10] Copy migration package from server local path"
+            if [ ! -f "${SERVER_PACKAGE_PATH}" ]; then
+              echo "Package not found on server: ${SERVER_PACKAGE_PATH}"
+              exit 1
+            fi
+            cp -f "${SERVER_PACKAGE_PATH}" "${PACKAGE_FILE}"
+            ACTUAL_SHA="$(sha256sum "${PACKAGE_FILE}" | awk '{print $1}')"
+            if [ "${ACTUAL_SHA}" != "${PKG_SHA}" ]; then
+              echo "SHA256 mismatch!"
+              echo "expected=${PKG_SHA}"
+              echo "actual=${ACTUAL_SHA}"
+              exit 1
+            fi
+
+            echo "[3/10] Extract migration package"
+            tar -xzf "${PACKAGE_FILE}" -C "${EXTRACT_DIR}"
+            DB_DUMP="${EXTRACT_DIR}/db/full_dump.sql"
+            FILE_ARCHIVE="${EXTRACT_DIR}/files/archive_root.tgz"
+            if [ ! -f "${DB_DUMP}" ]; then
+              echo "Missing db/full_dump.sql in package"
+              exit 1
+            fi
+            if [ ! -f "${FILE_ARCHIVE}" ]; then
+              echo "Missing files/archive_root.tgz in package"
+              exit 1
+            fi
+
+            echo "[4/10] Backup current database and files"
+            DB_BACKUP="${BACKUP_DIR}/db_before_migrate_${TS}.sql"
+            FILES_BACKUP="${BACKUP_DIR}/files_before_migrate_${TS}.tgz"
+            docker exec nexus-db pg_dump -U postgres nexusarchive > "${DB_BACKUP}"
+            if [ -d "${ARCHIVE_ROOT_PATH}" ]; then
+              tar -czf "${FILES_BACKUP}" -C "${ARCHIVE_ROOT_PATH}" .
+            else
+              echo "Archive root path does not exist yet: ${ARCHIVE_ROOT_PATH}"
+              mkdir -p "${ARCHIVE_ROOT_PATH}"
+              tar -czf "${FILES_BACKUP}" --files-from /dev/null
+            fi
+            echo "DB backup: ${DB_BACKUP}"
+            echo "Files backup: ${FILES_BACKUP}"
+
+            echo "[5/10] Stop app service"
+            systemctl stop nexusarchive || true
+
+            echo "[6/10] Restore database (full overwrite)"
+            docker exec -i nexus-db psql -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='nexusarchive' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
+            docker exec -i nexus-db psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS nexusarchive;" >/dev/null
+            docker exec -i nexus-db psql -U postgres -d postgres -c "CREATE DATABASE nexusarchive;" >/dev/null
+            docker exec -i nexus-db psql -U postgres -d nexusarchive < "${DB_DUMP}" >/dev/null
+
+            echo "[7/10] Restore file archive root"
+            rm -rf "${ARCHIVE_ROOT_PATH}.pre_migrate_${TS}" || true
+            if [ -d "${ARCHIVE_ROOT_PATH}" ]; then
+              mv "${ARCHIVE_ROOT_PATH}" "${ARCHIVE_ROOT_PATH}.pre_migrate_${TS}"
+            fi
+            mkdir -p "${ARCHIVE_ROOT_PATH}"
+            tar -xzf "${FILE_ARCHIVE}" -C "${ARCHIVE_ROOT_PATH}"
+
+            echo "[8/10] Start app service"
+            systemctl start nexusarchive
+            systemctl status nexusarchive --no-pager -l || true
+
+            echo "[9/10] Health check"
+            ok=0
+            for i in $(seq 1 36); do
+              if curl -fsS "${HEALTHCHECK_URL}" >/dev/null 2>&1; then
+                ok=1
+                break
+              fi
+              echo "health not ready: attempt ${i}/36"
+              sleep 5
+            done
+            if [ "${ok}" -ne 1 ]; then
+              echo "Health check timeout"
+              journalctl -u nexusarchive -n 200 --no-pager || true
+              exit 1
+            fi
+
+            echo "[10/10] Done"
+            curl -i "${HEALTHCHECK_URL}" || true
+            echo "Migration completed successfully."
+            echo "Rollback materials:"
+            echo "  ${DB_BACKUP}"
+            echo "  ${FILES_BACKUP}"
