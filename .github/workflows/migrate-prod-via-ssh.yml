@@ -51,6 +51,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
+            MIGRATION_SCRIPT_VERSION="2026-02-12.183v2"
             SERVER_PACKAGE_PATH="${{ github.event.inputs.server_package_path }}"
             PKG_SHA="${{ github.event.inputs.migration_package_sha256 }}"
             HEALTHCHECK_URL="${{ github.event.inputs.healthcheck_url }}"
@@ -123,6 +124,7 @@ jobs:
             fi
 
             echo "[1/10] Resolve paths"
+            echo "SCRIPT_VERSION=${MIGRATION_SCRIPT_VERSION}"
             echo "APP_DIR=${APP_DIR}"
             echo "ARCHIVE_ROOT_PATH_RAW=${ARCHIVE_ROOT_PATH_RAW}"
             echo "ARCHIVE_ROOT_PATH=${ARCHIVE_ROOT_PATH}"
@@ -230,13 +232,7 @@ jobs:
                 echo "${rel_path}" >> "${MISSING_FILE_LIST}"
               fi
             done < "${DB_PATHS_FILE}"
-            scan_rc=$?
             set -e
-            echo "Storage scan rc: ${scan_rc}"
-            if [ "${scan_rc}" -ne 0 ]; then
-              echo "Storage scan loop returned non-zero."
-              exit 1
-            fi
             echo "File existence scan completed."
             echo "Checked storage paths: ${checked_count}"
             if [ -s "${SKIPPED_PATH_LIST}" ]; then
