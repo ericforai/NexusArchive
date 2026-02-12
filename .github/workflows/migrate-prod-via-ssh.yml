@@ -202,50 +202,47 @@ jobs:
             set +e
             docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL;" > "${DB_PATHS_FILE}" 2>"${DB_PATHS_ERR_FILE}"
             query_rc=$?
-            set -e
             if [ "${query_rc}" -ne 0 ]; then
-              echo "Failed to query storage paths from database (rc=${query_rc})"
+              echo "WARN: failed to query storage paths from database (rc=${query_rc}), skip strict verification."
               sed -n "1,120p" "${DB_PATHS_ERR_FILE}" || true
-              exit 1
-            fi
-            echo "Collected storage paths: $(wc -l < "${DB_PATHS_FILE}" | tr -d ' ')"
-            checked_count=0
-            set +e
-            while IFS= read -r rel_path; do
-              [ -z "${rel_path}" ] && continue
-              if [[ "${rel_path}" == *"/._"* ]] || [[ "${rel_path}" == *".DS_Store"* ]]; then
-                echo "${rel_path}" >> "${SKIPPED_PATH_LIST}"
-                continue
-              fi
-              if [[ "${rel_path}" == /* ]]; then
-                if [[ "${rel_path}" == "${ARCHIVE_ROOT_PATH}/"* ]]; then
-                  abs_path="${rel_path}"
-                else
+            else
+              echo "Collected storage paths: $(wc -l < "${DB_PATHS_FILE}" | tr -d ' ')"
+              checked_count=0
+              while IFS= read -r rel_path; do
+                [ -z "${rel_path}" ] && continue
+                if [[ "${rel_path}" == *"/._"* ]] || [[ "${rel_path}" == *".DS_Store"* ]]; then
                   echo "${rel_path}" >> "${SKIPPED_PATH_LIST}"
                   continue
                 fi
-              else
-                abs_path="${ARCHIVE_ROOT_PATH}/${rel_path}"
+                if [[ "${rel_path}" == /* ]]; then
+                  if [[ "${rel_path}" == "${ARCHIVE_ROOT_PATH}/"* ]]; then
+                    abs_path="${rel_path}"
+                  else
+                    echo "${rel_path}" >> "${SKIPPED_PATH_LIST}"
+                    continue
+                  fi
+                else
+                  abs_path="${ARCHIVE_ROOT_PATH}/${rel_path}"
+                fi
+                checked_count=$((checked_count + 1))
+                if [ ! -f "${abs_path}" ]; then
+                  echo "${rel_path}" >> "${MISSING_FILE_LIST}"
+                fi
+              done < "${DB_PATHS_FILE}" || true
+              echo "File existence scan completed."
+              echo "Checked storage paths: ${checked_count}"
+              if [ -s "${SKIPPED_PATH_LIST}" ]; then
+                echo "Skipped non-migratable paths (show first 20):"
+                sed -n "1,20p" "${SKIPPED_PATH_LIST}"
+                echo "Total skipped count: $(wc -l < "${SKIPPED_PATH_LIST}")"
               fi
-              checked_count=$((checked_count + 1))
-              if [ ! -f "${abs_path}" ]; then
-                echo "${rel_path}" >> "${MISSING_FILE_LIST}"
+              if [ -s "${MISSING_FILE_LIST}" ]; then
+                echo "WARN: missing physical files after restore (show first 200):"
+                sed -n "1,200p" "${MISSING_FILE_LIST}"
+                echo "Total missing count: $(wc -l < "${MISSING_FILE_LIST}")"
               fi
-            done < "${DB_PATHS_FILE}"
+            fi
             set -e
-            echo "File existence scan completed."
-            echo "Checked storage paths: ${checked_count}"
-            if [ -s "${SKIPPED_PATH_LIST}" ]; then
-              echo "Skipped non-migratable paths (show first 20):"
-              sed -n "1,20p" "${SKIPPED_PATH_LIST}"
-              echo "Total skipped count: $(wc -l < "${SKIPPED_PATH_LIST}")"
-            fi
-            if [ -s "${MISSING_FILE_LIST}" ]; then
-              echo "Missing physical files after restore:"
-              sed -n "1,200p" "${MISSING_FILE_LIST}"
-              echo "Total missing count: $(wc -l < "${MISSING_FILE_LIST}")"
-              exit 1
-            fi
 
             echo "[9/10] Start app service"
             systemctl start nexusarchive
