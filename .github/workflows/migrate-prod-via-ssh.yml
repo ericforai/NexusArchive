@@ -79,6 +79,27 @@ jobs:
               echo "${APP_DIR}/nexusarchive-java/data/archives"
             }
 
+            safe_extract_tar() {
+              archive="$1"
+              dest="$2"
+              log_file="$3"
+              set +e
+              tar -xzf "${archive}" -C "${dest}" 2>"${log_file}"
+              rc=$?
+              set -e
+              if [ "${rc}" -eq 0 ]; then
+                return 0
+              fi
+              if [ -s "${log_file}" ] && ! grep -v "LIBARCHIVE.xattr.com.apple." "${log_file}" >/dev/null; then
+                echo "tar returned non-zero with macOS xattr warnings only, continue."
+                sed -n "1,50p" "${log_file}" || true
+                return 0
+              fi
+              echo "tar extract failed: ${archive}"
+              sed -n "1,120p" "${log_file}" || true
+              return "${rc}"
+            }
+
             to_abs_path() {
               p="$1"
               if [ -z "${p}" ]; then
@@ -123,7 +144,7 @@ jobs:
             fi
 
             echo "[3/10] Extract migration package"
-            tar -xzf "${PACKAGE_FILE}" -C "${EXTRACT_DIR}"
+            safe_extract_tar "${PACKAGE_FILE}" "${EXTRACT_DIR}" "${TMP_DIR}/extract_pkg.log"
             DB_DUMP="${EXTRACT_DIR}/db/full_dump.sql"
             FILE_ARCHIVE="${EXTRACT_DIR}/files/archive_root.tgz"
             if [ ! -f "${DB_DUMP}" ]; then
@@ -163,7 +184,7 @@ jobs:
               mv "${ARCHIVE_ROOT_PATH}" "${ARCHIVE_ROOT_PATH}.pre_migrate_${TS}"
             fi
             mkdir -p "${ARCHIVE_ROOT_PATH}"
-            tar -xzf "${FILE_ARCHIVE}" -C "${ARCHIVE_ROOT_PATH}"
+            safe_extract_tar "${FILE_ARCHIVE}" "${ARCHIVE_ROOT_PATH}" "${TMP_DIR}/extract_files.log"
 
             echo "[8/10] Verify physical files referenced by DB"
             DB_PATHS_FILE="${TMP_DIR}/db_storage_paths.txt"
