@@ -83,8 +83,12 @@ jobs:
               archive="$1"
               dest="$2"
               log_file="$3"
+              tar_cmd=(tar -xzf "${archive}" -C "${dest}")
+              if tar --help 2>/dev/null | grep -q -- "--warning"; then
+                tar_cmd=(tar --warning=no-unknown-keyword -xzf "${archive}" -C "${dest}")
+              fi
               set +e
-              tar -xzf "${archive}" -C "${dest}" 2>"${log_file}"
+              "${tar_cmd[@]}" 2>"${log_file}"
               rc=$?
               set -e
               if [ "${rc}" -eq 0 ]; then
