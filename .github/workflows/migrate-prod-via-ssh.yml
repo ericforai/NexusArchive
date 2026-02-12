@@ -68,7 +68,7 @@ jobs:
                 return 0
               fi
               if [ -f "${ENV_FILE}" ]; then
-                val="$(grep -E '^ARCHIVE_ROOT_PATH=' "${ENV_FILE}" | tail -n 1 | cut -d'=' -f2- || true)"
+                val="$(grep -E "^ARCHIVE_ROOT_PATH=" "${ENV_FILE}" | tail -n 1 | cut -d "=" -f2- || true)"
                 if [ -n "${val}" ]; then
                   echo "${val}"
                   return 0
@@ -107,7 +107,7 @@ jobs:
               exit 1
             fi
             cp -f "${SERVER_PACKAGE_PATH}" "${PACKAGE_FILE}"
-            ACTUAL_SHA="$(sha256sum "${PACKAGE_FILE}" | awk '{print $1}')"
+              ACTUAL_SHA="$(sha256sum "${PACKAGE_FILE}" | cut -d " " -f1)"
             if [ "${ACTUAL_SHA}" != "${PKG_SHA}" ]; then
               echo "SHA256 mismatch!"
               echo "expected=${PKG_SHA}"
@@ -146,8 +146,7 @@ jobs:
             systemctl stop nexusarchive || true
 
             echo "[6/10] Restore database (full overwrite)"
-            docker exec -i nexus-db psql -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='nexusarchive' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
-            docker exec -i nexus-db psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS nexusarchive;" >/dev/null
+              docker exec -i nexus-db psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS nexusarchive WITH (FORCE);" >/dev/null
             docker exec -i nexus-db psql -U postgres -d postgres -c "CREATE DATABASE nexusarchive;" >/dev/null
             docker exec -i nexus-db psql -U postgres -d nexusarchive < "${DB_DUMP}" >/dev/null
 
