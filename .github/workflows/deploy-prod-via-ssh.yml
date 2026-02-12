@@ -107,9 +107,25 @@ jobs:
             cp -r /opt/nexusarchive/.ci-artifacts/dist /opt/nexusarchive/dist
             cp /opt/nexusarchive/.ci-artifacts/nexusarchive-backend-*.jar /opt/nexusarchive/nexusarchive-java/target/
 
-            echo "[4/5] Check JWT key files"
-            ls -l /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem
-            ls -l /opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem
+            echo "[4/5] Ensure JWT key files and env"
+            mkdir -p /opt/nexusarchive/nexusarchive-java/keystore
+            mkdir -p /etc/nexusarchive
+            touch /etc/nexusarchive/nexusarchive.env
+
+            if [ ! -s /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem ] || [ ! -s /opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem ]; then
+              openssl genrsa -out /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem 2048
+              openssl rsa -in /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem -pubout -out /opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem >/dev/null 2>&1
+            fi
+
+            if ! grep -q '^JWT_PUBLIC_KEY_LOCATION=' /etc/nexusarchive/nexusarchive.env; then
+              echo 'JWT_PUBLIC_KEY_LOCATION=file:/opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem' >> /etc/nexusarchive/nexusarchive.env
+            fi
+            if ! grep -q '^JWT_PRIVATE_KEY_LOCATION=' /etc/nexusarchive/nexusarchive.env; then
+              echo 'JWT_PRIVATE_KEY_LOCATION=file:/opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem' >> /etc/nexusarchive/nexusarchive.env
+            fi
+
+            grep -E '^JWT_(PUBLIC|PRIVATE)_KEY_LOCATION=' /etc/nexusarchive/nexusarchive.env || true
+            ls -l /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem /opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem
 
             echo "[5/6] Restart service"
             systemctl restart nexusarchive
