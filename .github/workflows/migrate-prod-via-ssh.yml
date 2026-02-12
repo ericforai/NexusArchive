@@ -48,10 +48,11 @@ jobs:
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
+          command_timeout: 120m
           script_stop: true
           script: |
             set -euo pipefail
-            MIGRATION_SCRIPT_VERSION="2026-02-12.183v2"
+            MIGRATION_SCRIPT_VERSION="2026-02-12.184v3"
             SERVER_PACKAGE_PATH="${{ github.event.inputs.server_package_path }}"
             PKG_SHA="${{ github.event.inputs.migration_package_sha256 }}"
             HEALTHCHECK_URL="${{ github.event.inputs.healthcheck_url }}"
@@ -208,8 +209,13 @@ jobs:
             else
               echo "Collected storage paths: $(wc -l < "${DB_PATHS_FILE}" | tr -d ' ')"
               checked_count=0
+              scan_count=0
               while IFS= read -r rel_path; do
                 [ -z "${rel_path}" ] && continue
+                scan_count=$((scan_count + 1))
+                if [ $((scan_count % 2000)) -eq 0 ]; then
+                  echo "scan progress: ${scan_count} rows"
+                fi
                 if [[ "${rel_path}" == *"/._"* ]] || [[ "${rel_path}" == *".DS_Store"* ]]; then
                   echo "${rel_path}" >> "${SKIPPED_PATH_LIST}"
                   continue
@@ -230,6 +236,7 @@ jobs:
                 fi
               done < "${DB_PATHS_FILE}" || true
               echo "File existence scan completed."
+              echo "Scanned rows: ${scan_count}"
               echo "Checked storage paths: ${checked_count}"
               if [ -s "${SKIPPED_PATH_LIST}" ]; then
                 echo "Skipped non-migratable paths (show first 20):"
