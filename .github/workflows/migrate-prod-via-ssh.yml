@@ -59,6 +59,7 @@ jobs:
             APP_DIR="/opt/nexusarchive"
             ENV_FILE="/etc/nexusarchive/nexusarchive.env"
             BACKUP_DIR="${APP_DIR}/migration_backups"
+            DEFAULT_PKG_DIR="${APP_DIR}/migration_packages"
             TS="$(date +%F_%H%M%S)"
 
             mkdir -p "${BACKUP_DIR}"
@@ -92,11 +93,15 @@ jobs:
 
             ARCHIVE_ROOT_PATH_RAW="$(detect_archive_root_path)"
             ARCHIVE_ROOT_PATH="$(to_abs_path "${ARCHIVE_ROOT_PATH_RAW}")"
+            if [[ "${SERVER_PACKAGE_PATH}" != */* ]]; then
+              SERVER_PACKAGE_PATH="${DEFAULT_PKG_DIR}/${SERVER_PACKAGE_PATH}"
+            fi
 
             echo "[1/10] Resolve paths"
             echo "APP_DIR=${APP_DIR}"
             echo "ARCHIVE_ROOT_PATH_RAW=${ARCHIVE_ROOT_PATH_RAW}"
             echo "ARCHIVE_ROOT_PATH=${ARCHIVE_ROOT_PATH}"
+            echo "SERVER_PACKAGE_PATH=${SERVER_PACKAGE_PATH}"
 
             TMP_DIR="$(mktemp -d /tmp/nexusarchive_migrate_XXXXXX)"
             PACKAGE_FILE="${TMP_DIR}/migration.tar.gz"
@@ -109,7 +114,7 @@ jobs:
               exit 1
             fi
             cp -f "${SERVER_PACKAGE_PATH}" "${PACKAGE_FILE}"
-              ACTUAL_SHA="$(sha256sum "${PACKAGE_FILE}" | cut -d " " -f1)"
+            ACTUAL_SHA="$(sha256sum "${PACKAGE_FILE}" | cut -d " " -f1)"
             if [ "${ACTUAL_SHA}" != "${PKG_SHA}" ]; then
               echo "SHA256 mismatch!"
               echo "expected=${PKG_SHA}"
@@ -148,7 +153,7 @@ jobs:
             systemctl stop nexusarchive || true
 
             echo "[6/10] Restore database (full overwrite)"
-              docker exec -i nexus-db psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS nexusarchive WITH (FORCE);" >/dev/null
+            docker exec -i nexus-db psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS nexusarchive WITH (FORCE);" >/dev/null
             docker exec -i nexus-db psql -U postgres -d postgres -c "CREATE DATABASE nexusarchive;" >/dev/null
             docker exec -i nexus-db psql -U postgres -d nexusarchive < "${DB_DUMP}" >/dev/null
 
