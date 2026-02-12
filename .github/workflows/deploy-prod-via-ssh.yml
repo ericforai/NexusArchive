@@ -112,15 +112,21 @@ jobs:
             systemctl status nexusarchive --no-pager -l
 
             echo "[5/5] Wait for health"
-            timeout=120
-            elapsed=0
-            until curl -fsS https://www.digivoucher.cn/api/health >/dev/null 2>&1; do
-              if [ "$elapsed" -ge "$timeout" ]; then
-                echo "Health check timeout"
-                journalctl -u nexusarchive -n 120 --no-pager || true
-                exit 1
+            ok=0
+            for i in $(seq 1 24); do
+              if curl -fsS https://www.digivoucher.cn/api/health >/dev/null 2>&1; then
+                ok=1
+                break
               fi
+              echo "health not ready: attempt ${i}/24"
               sleep 5
-              elapsed=$((elapsed + 5))
             done
+
+            if [ "$ok" -ne 1 ]; then
+              echo "Health check timeout"
+              systemctl status nexusarchive --no-pager -l || true
+              journalctl -u nexusarchive -n 120 --no-pager || true
+              exit 1
+            fi
+
             curl -i https://www.digivoucher.cn/api/health
