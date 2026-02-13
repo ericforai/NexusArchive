@@ -32,6 +32,11 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
     return selectedIndex >= 0 ? files[selectedIndex] : null;
   }, [selectedIndex, files]);
 
+  // 当外部文件列表切换（例如点击联查中的不同节点）时，重置当前选中文件
+  useEffect(() => {
+    setSelectedIndex(files.length > 0 ? Math.min(defaultFileIndex, files.length - 1) : -1);
+  }, [files, defaultFileIndex]);
+
   // 获取文件并创建 blob URL
   useEffect(() => {
     files.forEach(file => {
@@ -59,7 +64,7 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
 
       setFileUrls(prev => ({ ...prev, [file.id]: blobUrl }));
     } catch (error) {
-      if (import.meta.env.DEV) console.error('Failed to fetch file:', error);
+      console.error('Failed to fetch file:', error);
       setErrorStates(prev => ({ ...prev, [file.id]: true }));
       message.error(`无法加载文件: ${file.fileName || file.name}`);
     } finally {
