@@ -1,5 +1,5 @@
 // Input: React、简单图谱组件、Zustand store
-// Output: React 组件 RelationshipQueryView（简化版）
+// Output: React 组件 RelationshipQueryView（后端方向优先 + 演示数据加载）
 // Pos: src/pages/utilization/RelationshipQueryView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -22,6 +22,11 @@ import { originalVoucherApi } from '@/api/originalVoucher';
 import { attachmentsApi } from '@/api/attachments';
 import { archivesApi } from '@/api/archives';
 import type { GenericRow, ModuleConfig } from '@/types';
+import {
+  detectPaymentMainline,
+  buildPrintNodeScope,
+  dedupeAttachments
+} from './relationDrilldown';
 
 /**
  * 搜索栏组件
@@ -58,14 +63,14 @@ const SearchBar: React.FC<{
  * 空状态
  */
 const EmptyState: React.FC<{
-  onSearch: () => void;
-}> = ({ onSearch }) => (
+  onLoadDemo: () => void;
+}> = ({ onLoadDemo }) => (
   <div className="flex-1 flex items-center justify-center text-slate-400">
     <div className="text-center">
       <FileText size={48} className="mx-auto mb-4 opacity-50" />
       <p className="text-sm text-slate-500 mb-4">暂无关系数据，请输入档号查询</p>
       <button
-        onClick={onSearch}
+        onClick={onLoadDemo}
         className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors"
       >
         加载示例数据
@@ -73,6 +78,8 @@ const EmptyState: React.FC<{
     </div>
   </div>
 );
+
+const DEMO_ARCHIVE_QUERY = 'JZ-2025-01-001';
 
 const EMPTY_MODULE_CONFIG: ModuleConfig = {
   columns: [],
@@ -101,6 +108,23 @@ const inferFileTypeFromName = (name?: string): string | undefined => {
   if (lower.endsWith('.gif')) return 'image/gif';
   if (lower.endsWith('.webp')) return 'image/webp';
   return undefined;
+};
+
+const normalizeClientRelativeUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  // 历史占位下载接口兼容：/api/archives/{archiveId}/download -> /archive/{archiveId}/content
+  const legacyMatched = url.match(/^\/api\/archives\/([^/]+)\/download$/) || url.match(/^\/archives\/([^/]+)\/download$/);
+  if (legacyMatched?.[1]) {
+    return `/archive/${legacyMatched[1]}/content`;
+  }
+  // axios client 已包含 /api baseURL，避免传入 /api/... 产生 /api/api/...
+  return url.startsWith('/api/') ? url.replace(/^\/api/, '') : url;
+};
+
+const extractArchiveIdFromLegacyDownloadUrl = (url: string): string | null => {
+  // 兼容后端历史占位 URL: /api/archives/{archiveId}/download
+  const matched = url.match(/^\/api\/archives\/([^/]+)\/download$/) || url.match(/^\/archives\/([^/]+)\/download$/);
+  return matched?.[1] || null;
 };
 
 const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRow> => {
@@ -203,17 +227,54 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
   if (attachments.length === 0) {
     try {
       const linkedFiles = await autoAssociationApi.getLinkedFiles(nodeData.id);
-      linkedFiles.files.forEach(file => {
+      const seenIds = new Set<string>();
+      for (const file of linkedFiles.files) {
         const candidateUrl = file.url?.trim();
-        // 仅使用可访问的真实 URL；跳过 "#" 等演示占位，避免触发 /archive/files/download/{demo-id} 的 404
-        if (!candidateUrl || candidateUrl === '#') return;
+        // 跳过空/占位 URL
+        if (!candidateUrl || candidateUrl === '#') continue;
+
+        // 兼容后端历史占位 URL：先解析 archiveId，再查询真实文件列表
+        const legacyArchiveId = extractArchiveIdFromLegacyDownloadUrl(candidateUrl);
+        if (legacyArchiveId) {
+          let resolved = false;
+          try {
+            const filesResp = await archivesApi.getArchiveFiles(legacyArchiveId);
+            const archiveFiles = filesResp?.data || [];
+            for (const af of archiveFiles) {
+              if (!af?.id || seenIds.has(af.id)) continue;
+              seenIds.add(af.id);
+              attachments.push({
+                id: af.id,
+                fileName: af.fileName || af.originalName || af.name || file.name,
+                fileUrl: `/archive/files/download/${af.id}`,
+                type: af.fileType || inferFileTypeFromName(af.fileName || af.name),
+              });
+              resolved = true;
+            }
+          } catch {
+            // legacy 链路失败则继续走 URL 重写兜底
+          }
+
+          // 硬兜底：即使拿不到 files 列表，也使用可用的 archive content 接口
+          if (!resolved) {
+            attachments.push({
+              id: file.id || legacyArchiveId,
+              fileName: file.name || legacyArchiveId,
+              fileUrl: `/archive/${legacyArchiveId}/content`,
+              type: inferFileTypeFromName(file.name),
+            });
+          }
+          continue;
+        }
+
+        const normalizedUrl = normalizeClientRelativeUrl(candidateUrl);
         attachments.push({
           id: file.id,
           fileName: file.name,
-          fileUrl: candidateUrl,
+          fileUrl: normalizedUrl,
           type: file.type,
         });
-      });
+      }
     } catch {
       // 保持空数组，交由抽屉空态展示
     }
@@ -252,6 +313,7 @@ export const RelationshipQueryView: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDrawerRow, setSelectedDrawerRow] = useState<GenericRow | null>(null);
   const [highlightedArchiveId, setHighlightedArchiveId] = useState<string | null>(null);
+  const [manuallyExpandedNodeIds, setManuallyExpandedNodeIds] = useState<Set<string>>(new Set());
 
   // Store 状态
   const nodes = useRelationGraphStore(s => s.nodes);
@@ -260,8 +322,18 @@ export const RelationshipQueryView: React.FC = () => {
   const initialError = useRelationGraphStore(s => s.initialError);
   const originalQueryId = useRelationGraphStore(s => s.originalQueryId);
   const redirectMessage = useRelationGraphStore(s => s.redirectMessage);
+  const directionalView = useRelationGraphStore(s => s.directionalView);
   const initializeGraph = useRelationGraphStore(s => s.initializeGraph);
   const resetGraph = useRelationGraphStore(s => s.resetGraph);
+
+  const executeSearch = useCallback(async (query: string) => {
+    setDrawerOpen(false);
+    setSelectedDrawerRow(null);
+    setHighlightedArchiveId(null);
+    setManuallyExpandedNodeIds(new Set());
+    resetGraph();
+    await initializeGraph(query);
+  }, [initializeGraph, resetGraph]);
 
   // 搜索处理
   const handleSearch = useCallback(async () => {
@@ -270,15 +342,15 @@ export const RelationshipQueryView: React.FC = () => {
       toast.error('请输入档号');
       return;
     }
+    await executeSearch(query);
+  }, [searchQuery, executeSearch]);
 
-    setDrawerOpen(false);
-    setSelectedDrawerRow(null);
-    setHighlightedArchiveId(null);
-    resetGraph();
-    await initializeGraph(query);
-    
-    // 检查是否有自动转换提示（使用 useEffect 监听 store 状态变化更可靠）
-  }, [searchQuery, initializeGraph, resetGraph]);
+  // 演示数据加载：无需用户先输入档号
+  const handleLoadDemo = useCallback(async () => {
+    setSearchQuery(DEMO_ARCHIVE_QUERY);
+    await executeSearch(DEMO_ARCHIVE_QUERY);
+    toast.success(`已加载演示数据：${DEMO_ARCHIVE_QUERY}`);
+  }, [executeSearch]);
 
   // 监听 store 中的 redirectMessage，显示提示
   useEffect(() => {
@@ -313,6 +385,7 @@ export const RelationshipQueryView: React.FC = () => {
     setDrawerOpen(false);
     setSelectedDrawerRow(null);
     setHighlightedArchiveId(null);
+    setManuallyExpandedNodeIds(new Set());
     resetGraph();
     toast.success('已重置图谱');
   }, [resetGraph]);
@@ -320,6 +393,7 @@ export const RelationshipQueryView: React.FC = () => {
   // 节点点击处理：复用标准凭证抽屉，默认定位到“关联附件”
   const handleNodeClick = useCallback(async (nodeId: string, nodeData: RelationNodeData) => {
     setHighlightedArchiveId(nodeId);
+    setManuallyExpandedNodeIds(prev => new Set(prev).add(nodeId));
     const loadingId = toast.loading('正在加载预览...');
     try {
       const row = await mapNodeToDrawerRow(nodeData);
@@ -363,6 +437,62 @@ export const RelationshipQueryView: React.FC = () => {
     [nodes]
   );
 
+  const mainline = useMemo(() => {
+    if (!centerNode) return { nodeIds: [], missingSteps: [] };
+    const backendMainline = directionalView?.mainline || [];
+    if (backendMainline.length > 0) {
+      return { nodeIds: backendMainline, missingSteps: [] };
+    }
+    return detectPaymentMainline(relationNodes, relationEdges, centerNode.id);
+  }, [centerNode, directionalView?.mainline, relationNodes, relationEdges]);
+
+  const handleBatchPrint = useCallback(async () => {
+    const scopeNodeIds = buildPrintNodeScope(mainline.nodeIds, Array.from(manuallyExpandedNodeIds));
+    if (scopeNodeIds.length === 0) {
+      toast.error('没有可打印的关联单据');
+      return;
+    }
+
+    const scopeNodes = scopeNodeIds
+      .map(id => relationNodes.find(node => node.id === id))
+      .filter((node): node is RelationNodeData => Boolean(node));
+
+    if (scopeNodes.length === 0) {
+      toast.error('未找到可打印节点');
+      return;
+    }
+
+    const loadingId = toast.loading('正在归集打印单据...');
+    try {
+      const rows = await Promise.all(scopeNodes.map(node => mapNodeToDrawerRow(node)));
+      const rawAttachments = rows.flatMap(row => row.attachments || []);
+      const validAttachments = rawAttachments.filter(att => Boolean(att.fileUrl));
+      const dedupedAttachments = dedupeAttachments(validAttachments);
+
+      if (dedupedAttachments.length === 0) {
+        toast.error('没有可打印附件，请先补充影像或关联文件');
+        return;
+      }
+
+      const message = [
+        `准备打印 ${dedupedAttachments.length} 份附件`,
+        `主线缺口 ${mainline.missingSteps.length} 个`
+      ].join('，');
+
+      dedupedAttachments.forEach((attachment) => {
+        if (!attachment.fileUrl) return;
+        window.open(attachment.fileUrl, '_blank', 'noopener,noreferrer');
+      });
+
+      toast.success(message, { duration: 4500 });
+    } catch (error) {
+      console.error('批量打印归集失败:', error);
+      toast.error('批量打印归集失败，请稍后重试');
+    } finally {
+      toast.dismiss(loadingId);
+    }
+  }, [mainline.missingSteps.length, mainline.nodeIds, manuallyExpandedNodeIds, relationNodes]);
+
   return (
     <div className="h-full flex flex-col bg-slate-50/50">
       {/* 头部 */}
@@ -376,6 +506,14 @@ export const RelationshipQueryView: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={handleBatchPrint}
+            disabled={nodes.length === 0}
+            className="px-4 py-2.5 bg-emerald-600 text-white text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="批量打印主线+手动展开节点"
+          >
+            批量打印关联单据
+          </button>
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -403,12 +541,15 @@ export const RelationshipQueryView: React.FC = () => {
               centerNode={centerNode}
               nodes={relationNodes}
               relations={relationEdges}
+              directionalView={directionalView || undefined}
               onNodeClick={handleNodeClick}
               highlightedArchiveId={highlightedArchiveId}
+              mainlineNodeIds={mainline.nodeIds}
+              missingSteps={mainline.missingSteps}
             />
           </div>
         ) : (
-          <EmptyState onSearch={handleSearch} />
+          <EmptyState onLoadDemo={handleLoadDemo} />
         )}
 
         {/* 初始加载 */}

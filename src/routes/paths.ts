@@ -60,7 +60,7 @@ export const ROUTE_PATHS = {
     BORROWING: '/system/utilization/borrowing',
 
     DESTRUCTION: '/system/destruction',
-    // WAREHOUSE removed
+    WAREHOUSE: '/system/warehouse',
     STATS: '/system/stats',
     QUALITY: '/system/quality',
     SETTINGS: '/system/settings',
@@ -179,8 +179,8 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '全文检索': ROUTE_PATHS.QUERY,
     '借阅申请': ROUTE_PATHS.BORROWING,
 
-    // 库房管理 - Removed
-    // '密集架控制', '温湿度监控' removed
+    // --- 库房管理 (Warehouse) ---
+    '库房管理': ROUTE_PATHS.WAREHOUSE,
 
     // --- 系统设置 ---
     '基础设置': ROUTE_PATHS.SETTINGS_BASIC,

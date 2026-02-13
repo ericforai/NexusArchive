@@ -10,5 +10,5 @@
 | `ComplianceStatusDto.java` | Java 类 | ComplianceStatusDto 类 |
 | `LinkedFileDto.java` | Java 类 | LinkedFileDto 类 |
 | `RelationEdgeDto.java` | Java 类 | RelationEdgeDto 类 |
-| `RelationGraphDto.java` | Java 类 | RelationGraphDto 类 |
+| `RelationGraphDto.java` | Java 类 | RelationGraphDto 类（含 directionalView 上下游分层） |
 | `RelationNodeDto.java` | Java 类 | RelationNodeDto 类 |

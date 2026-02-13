@@ -28,10 +28,11 @@ import {
   ShieldCheck,
   ArrowLeft,
   FolderOpen,
+  Info,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { message, Upload, Modal, Progress, Button, Select, Form, Input, Card, Row, Col, Statistic, Alert } from 'antd';
+import { message, Upload, Modal, Progress, Button, Select, Form, Input, Card, Row, Col, Statistic, Alert, Tag } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
 import { batchUploadApi } from '../../api/batchUpload';
 import { useFondsStore } from '../../store/useFondsStore';
@@ -740,14 +741,36 @@ export const BatchUploadView: React.FC = () => {
 
           {/* Failed Files List */}
           {checkResult.failed > 0 && checkResult.failedList.length > 0 && (
-            <Card className="mb-4" title="检测失败文件">
-              <div className="space-y-2">
-                {checkResult.failedList.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                    <span className="text-sm font-medium">{item.fileName}</span>
-                    <span className="text-xs text-red-600 dark:text-red-400">{item.reason}</span>
-                  </div>
-                ))}
+            <Card className="mb-4" title="检测失败详情与处理建议">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  {checkResult.failedList.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
+                      <div>
+                        <p className="text-sm font-medium text-red-900 dark:text-red-200">{item.fileName}</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">原因：{item.reason}</p>
+                      </div>
+                      <Tag color="error">待处理</Tag>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                  <h4 className="text-sm font-bold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+                    <Info size={16} /> 如何处理失败文件？
+                  </h4>
+                  <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-2 list-disc ml-4">
+                    <li>
+                      <strong>元数据缺失</strong>：点击下方的“前往预归档库”，进入“电子凭证池”找到标记为“待处理”的文件，补充相关字段。
+                    </li>
+                    <li>
+                      <strong>文件或哈希错误</strong>：若提示真实性或可用性失败，建议删除该记录并重新上传完整、未损坏的文件原件。
+                    </li>
+                    <li>
+                      <strong>处理完成后</strong>：系统将在您保存更改后自动重新触发校验，通过后即可正常归档。
+                    </li>
+                  </ul>
+                </div>
               </div>
             </Card>
           )}
@@ -756,7 +779,10 @@ export const BatchUploadView: React.FC = () => {
           <div className="flex justify-center gap-4">
             <Button
               type="primary"
-              onClick={() => navigate('/system/pre-archive')}
+              onClick={() => {
+                const targetStatus = checkResult.failed > 0 ? 'NEEDS_ACTION' : 'READY_TO_ARCHIVE';
+                navigate(`/system/pre-archive?view=list&status=${targetStatus}&category=${selectedCategory}`);
+              }}
             >
               前往预归档库
             </Button>

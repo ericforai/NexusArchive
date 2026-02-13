@@ -11,13 +11,18 @@ import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.CollectionBatch;
 import com.nexusarchive.entity.CollectionBatchFile;
+import com.nexusarchive.entity.enums.PreArchiveStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
 import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.security.FondsContext;
+import com.nexusarchive.service.collection.BatchFileStorageService;
+import com.nexusarchive.service.collection.BatchFileValidator;
+import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.service.collection.CollectionMetadataInheritor;
 import com.nexusarchive.service.collection.FourNatureCheckHelper;
+import com.nexusarchive.service.impl.CollectionBatchServiceImpl;
 import com.nexusarchive.util.FileHashUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -316,7 +321,7 @@ class CollectionBatchServiceTest {
             ArcFileContent arcFile = ArcFileContent.builder()
                 .id("file-001")
                 .fileName("test.pdf")
-                .preArchiveStatus("PENDING_CHECK")
+                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
                 .build();
             when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile);
 
@@ -347,8 +352,8 @@ class CollectionBatchServiceTest {
 
             // Then - 验证调用了四性检测
             verify(preArchiveCheckService).checkSingleFile("file-001");
-            // 验证文件状态被更新为 READY_TO_ARCHIVE
-            verify(arcFileContentMapper).updateById(any(ArcFileContent.class));
+            // 验证批次状态被更新
+            verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));
         }
 
         @Test
@@ -371,7 +376,7 @@ class CollectionBatchServiceTest {
             ArcFileContent arcFile = ArcFileContent.builder()
                 .id("file-001")
                 .fileName("test.pdf")
-                .preArchiveStatus("PENDING_CHECK")
+                .preArchiveStatus(PreArchiveStatus.NEEDS_ACTION.getCode())
                 .build();
             when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile);
 
@@ -387,10 +392,12 @@ class CollectionBatchServiceTest {
             when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(failReport);
 
             // When
-            var result = collectionBatchService.completeBatch(1L, "1");
+            collectionBatchService.completeBatch(1L, "1");
 
-            // Then - 验证文件状态被更新为 NEEDS_ACTION
-            verify(arcFileContentMapper).updateById(any(ArcFileContent.class));
+            // Then - 验证调用了检测
+            verify(preArchiveCheckService).checkSingleFile("file-001");
+            // 验证批次状态被更新
+            verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));
         }
 
         @Test
@@ -420,12 +427,12 @@ class CollectionBatchServiceTest {
             ArcFileContent arcFile1 = ArcFileContent.builder()
                 .id("file-001")
                 .fileName("pass.pdf")
-                .preArchiveStatus("PENDING_CHECK")
+                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
                 .build();
             ArcFileContent arcFile2 = ArcFileContent.builder()
                 .id("file-002")
                 .fileName("fail.pdf")
-                .preArchiveStatus("PENDING_CHECK")
+                .preArchiveStatus(PreArchiveStatus.NEEDS_ACTION.getCode())
                 .build();
             when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile1);
             when(arcFileContentMapper.selectById("file-002")).thenReturn(arcFile2);
@@ -464,11 +471,11 @@ class CollectionBatchServiceTest {
             // When
             var result = collectionBatchService.completeBatch(1L, "1");
 
-            // Then - 验证返回结果包含检测统计（新 API）
-            assertThat(result).isNotNull();
-            // TODO: 添加新的检测统计字段验证
-            // assertThat(result.passedFiles()).isEqualTo(1);
-            // assertThat(result.failedFiles()).isEqualTo(1);
+            // Then - 诊断
+            assertThat(result).as("result should not be null").isNotNull();
+            assertThat(result.checkedFiles()).as("checkedFiles should be 2").isEqualTo(2);
+            assertThat(result.passedFiles()).as("passedFiles should be 1").isEqualTo(1);
+            assertThat(result.failedFileList()).as("failedFileList should have 1 item").hasSize(1);
         }
     }
 
@@ -573,6 +580,15 @@ class CollectionBatchServiceTest {
             when(batchFileMapper.selectList(any())).thenReturn(List.of(file1, file2));
             when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
 
+            when(arcFileContentMapper.selectById("file-001")).thenReturn(ArcFileContent.builder()
+                .id("file-001")
+                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
+                .build());
+            when(arcFileContentMapper.selectById("file-002")).thenReturn(ArcFileContent.builder()
+                .id("file-002")
+                .preArchiveStatus(PreArchiveStatus.NEEDS_ACTION.getCode())
+                .build());
+
             // Mock PreArchiveCheckService
             FourNatureReport mockReport1 = new FourNatureReport();
             mockReport1.setStatus(OverallStatus.PASS);
@@ -617,6 +633,10 @@ class CollectionBatchServiceTest {
 
             when(batchFileMapper.selectList(any())).thenReturn(List.of(file));
             when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
+            when(arcFileContentMapper.selectById("file-001")).thenReturn(ArcFileContent.builder()
+                .id("file-001")
+                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
+                .build());
 
             FourNatureReport mockReport = new FourNatureReport();
             mockReport.setStatus(OverallStatus.PASS);

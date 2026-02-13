@@ -13,6 +13,7 @@ import { Navigate, RouteObject } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
+import { Warehouse } from 'lucide-react';
 
 
 // 布局组件（非懒加载，因为是框架级别）
@@ -116,6 +117,9 @@ const FreezeHoldDetailPage = lazy(() => import('../pages/operations/FreezeHoldDe
 
 // 扫描模块
 const MobileUploadPage = lazy(() => import('../pages/scan/MobileUploadPage').then(m => ({ default: m.MobileUploadPage })));
+
+// 库房管理模块
+const WarehouseView = lazy(() => import('../pages/utilization/WarehouseView'));
 
 // 跨全宗访问授权票据模块
 const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
@@ -243,7 +247,8 @@ export const routes: RouteObject[] = [
             // ========== 档案销毁 ==========
             { path: 'destruction', element: withSuspense(DestructionView) },
 
-            // ========== 库房管理 - Removed ==========
+            // ========== 库房管理 ==========
+            { path: 'warehouse', element: withSuspense(WarehouseView) },
 
             // ========== 数据统计 ==========
             { path: 'stats', element: withSuspense(StatsView) },

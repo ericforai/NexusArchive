@@ -10,8 +10,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.dto.parser.ParsedInvoice;
 import com.nexusarchive.dto.sip.VoucherHeadDto;
+import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArchiveRelation;
+import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.strategy.MatchingStrategy;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import java.util.List;
 public class AutoAssociationService implements IAutoAssociationService {
 
     private final ArchiveMapper archiveMapper;
+    private final ArcFileContentMapper arcFileContentMapper;
     private final IArchiveRelationService archiveRelationService;
     private final List<MatchingStrategy> matchingStrategies;
     private final ObjectMapper objectMapper;
@@ -152,14 +155,25 @@ public class AutoAssociationService implements IAutoAssociationService {
         for (ArchiveRelation relation : relations) {
             Archive target = archiveMapper.selectById(relation.getTargetId());
             if (target != null) {
-                result.add(com.nexusarchive.dto.relation.LinkedFileDto.builder()
-                        .id(target.getId())
-                        .name(target.getTitle()) // 使用标题作为文件名
-                        .type("invoice") // 暂时硬编码，实际应根据 categoryCode 或 metadata 判断
-                        .url("/api/archives/" + target.getId() + "/download") // 假设有下载接口
-                        .uploadDate(target.getCreatedTime() != null ? target.getCreatedTime().toLocalDate().toString() : "")
-                        .size("Unknown") // 暂时未知
-                        .build());
+                // 只返回真实可下载文件，避免返回历史占位链接导致前端 404
+                List<ArcFileContent> files = arcFileContentMapper.selectList(
+                        new LambdaQueryWrapper<ArcFileContent>()
+                                .eq(ArcFileContent::getItemId, target.getId())
+                );
+
+                for (ArcFileContent file : files) {
+                    if (file == null || file.getId() == null) {
+                        continue;
+                    }
+                    result.add(com.nexusarchive.dto.relation.LinkedFileDto.builder()
+                            .id(file.getId())
+                            .name(file.getFileName() != null ? file.getFileName() : target.getTitle())
+                            .type("invoice")
+                            .url("/archive/files/download/" + file.getId())
+                            .uploadDate(file.getCreatedTime() != null ? file.getCreatedTime().toLocalDate().toString() : "")
+                            .size(file.getFileSize() != null ? String.valueOf(file.getFileSize()) : "Unknown")
+                            .build());
+                }
             }
         }
         return result;

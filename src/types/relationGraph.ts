@@ -1,10 +1,15 @@
 // Input: React Flow Node/Edge 类型、本地 RelationGraph 类型
-// Output: 关系图谱专用类型定义
+// Output: 关系图谱专用类型定义（含方向视图状态）
 // Pos: src/types/relationGraph.ts
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import type { Node, Edge } from '@xyflow/react';
-import type { RelationGraph, RelationGraphNode, RelationGraphEdge } from '@/api/autoAssociation';
+import type {
+  RelationGraph,
+  RelationGraphNode,
+  RelationGraphEdge,
+  RelationDirectionalView
+} from '@/api/autoAssociation';
 
 /**
  * 档案类型枚举
@@ -96,6 +101,8 @@ export interface RelationGraphState {
   originalQueryId: string | null;
   /** 自动转换提示信息 */
   redirectMessage: string | null;
+  /** 后端解析的上下游视图 */
+  directionalView: RelationDirectionalView | null;
 
   // === 操作 ===
   /** 初始化图谱（设置中心节点） */

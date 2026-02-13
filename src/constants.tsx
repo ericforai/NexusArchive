@@ -15,6 +15,7 @@ import {
   PanelLeft,
   Cloud,
   Server,
+  Warehouse,
 } from "lucide-react";
 import { ROUTE_PATHS } from "./routes/paths";
 import { NavItem, ViewState, AppNotification } from "./types";
@@ -237,8 +238,13 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   // DESTRUCTION removed as per user request (redundant with Operations)
-  // WAREHOUSE removed as per expert review (Out of Scope)
   // MATCHING removed as per user request (integrated into Pre-Archive > Voucher Link)
+  {
+    id: ViewState.WAREHOUSE,
+    label: "库房管理",
+    icon: Warehouse,
+    permission: "nav:warehouse",
+  },
   {
     id: ViewState.STATS,
     label: "数据统计",

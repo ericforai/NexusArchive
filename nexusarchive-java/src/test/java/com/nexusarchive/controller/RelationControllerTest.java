@@ -16,6 +16,7 @@ import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.AttachmentService;
 import com.nexusarchive.service.IAutoAssociationService;
 import com.nexusarchive.service.IArchiveRelationService;
+import com.nexusarchive.service.relation.RelationDirectionResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,8 @@ class RelationControllerTest {
     private OriginalVoucherFileMapper originalVoucherFileMapper;
     @Mock
     private ArcFileContentMapper arcFileContentMapper;
+    @Mock
+    private RelationDirectionResolver relationDirectionResolver;
 
     @InjectMocks
     private RelationController relationController;
@@ -95,12 +98,20 @@ class RelationControllerTest {
         when(attachmentService.getAttachmentLinks(accountingVoucherId)).thenReturn(Collections.emptyList());
         when(voucherRelationMapper.findByAccountingVoucherId(accountingVoucherId)).thenReturn(Collections.emptyList());
         when(archiveService.getArchivesByIds(any())).thenReturn(List.of(centerArchive));
+        when(relationDirectionResolver.resolve(any(), any()))
+            .thenReturn(RelationGraphDto.DirectionalView.builder()
+                .upstream(List.of())
+                .downstream(List.of())
+                .layers(java.util.Map.of())
+                .mainline(List.of())
+                .build());
 
         Result<RelationGraphDto> result = relationController.getRelationGraph(originalVoucherCode);
 
         assertEquals(200, result.getCode());
         assertNotNull(result.getData());
         assertEquals(accountingVoucherId, result.getData().getCenterId());
+        assertNotNull(result.getData().getDirectionalView());
     }
 
     @Test
@@ -143,11 +154,19 @@ class RelationControllerTest {
         when(attachmentService.getAttachmentLinks(accountingVoucherId)).thenReturn(Collections.emptyList());
         when(voucherRelationMapper.findByAccountingVoucherId(accountingVoucherId)).thenReturn(Collections.emptyList());
         when(archiveService.getArchivesByIds(any())).thenReturn(List.of(centerArchive));
+        when(relationDirectionResolver.resolve(any(), any()))
+            .thenReturn(RelationGraphDto.DirectionalView.builder()
+                .upstream(List.of())
+                .downstream(List.of())
+                .layers(java.util.Map.of())
+                .mainline(List.of())
+                .build());
 
         Result<RelationGraphDto> result = relationController.getRelationGraph(archivalCode);
 
         assertEquals(200, result.getCode());
         assertNotNull(result.getData());
         assertEquals(accountingVoucherId, result.getData().getCenterId());
+        assertNotNull(result.getData().getDirectionalView());
     }
 }

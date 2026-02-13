@@ -336,7 +336,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as TabKey)}
-          className="h-full"
+          className="h-full archive-detail-tabs"
           items={tabItems}
         />
       </div>

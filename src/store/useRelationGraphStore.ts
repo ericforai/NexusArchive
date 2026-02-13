@@ -1,5 +1,5 @@
 // Input: zustand、React Flow 类型、本地 API 与类型
-// Output: useRelationGraphStore
+// Output: useRelationGraphStore（初始化保留全量关系图与方向视图）
 // Pos: 关系图谱状态管理
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -67,6 +67,7 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
   initialError: null,
   originalQueryId: null,
   redirectMessage: null,
+  directionalView: null,
 
   // === 操作 ===
 
@@ -95,73 +96,56 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
         set({ originalQueryId: null, redirectMessage: null });
       }
 
-      // 收集边的节点ID（用于调试，暂时注释）
-      const edgeIds = new Set();
-      graph.edges.forEach(e => {
-        edgeIds.add(e.from);
-        edgeIds.add(e.to);
-      });
-
-      // 计算每个节点的位置
-      const upstreamNodes = graph.nodes.filter(n =>
-        graph.edges.some(e => e.to === centerNode.id && e.from === n.id)
-      );
-      const downstreamNodes = graph.nodes.filter(n =>
-        graph.edges.some(e => e.from === centerNode.id && e.to === n.id)
-      );
-
       const nodes: RelationNode[] = [];
       const nodeDepths = new Map<string, number>();
 
-      // 创建上游节点（左侧）
-      upstreamNodes.forEach((n, i) => {
-        const offset = (i - (upstreamNodes.length - 1) / 2) * 250;
+      // 计算全图深度（按无向关系最短层级）
+      const adjacency = new Map<string, Set<string>>();
+      graph.edges.forEach((edge) => {
+        const fromSet = adjacency.get(edge.from) || new Set<string>();
+        fromSet.add(edge.to);
+        adjacency.set(edge.from, fromSet);
+
+        const toSet = adjacency.get(edge.to) || new Set<string>();
+        toSet.add(edge.from);
+        adjacency.set(edge.to, toSet);
+      });
+
+      const depthMap = new Map<string, number>();
+      const queue: string[] = [centerNode.id];
+      depthMap.set(centerNode.id, 0);
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current) continue;
+        const currentDepth = depthMap.get(current) ?? 0;
+        const neighbors = adjacency.get(current) || new Set<string>();
+        neighbors.forEach((neighbor) => {
+          if (depthMap.has(neighbor)) return;
+          depthMap.set(neighbor, currentDepth + 1);
+          queue.push(neighbor);
+        });
+      }
+
+      // 创建全量节点（保留中心标识）
+      graph.nodes.forEach((graphNode, idx) => {
+        const depth = depthMap.get(graphNode.id) ?? 1;
+        const x = depth === 0 ? 0 : (idx % 2 === 0 ? -1 : 1) * (200 + depth * 120);
+        const y = (idx - graph.nodes.length / 2) * 120;
+
         nodes.push({
-          id: n.id,
+          id: graphNode.id,
           type: 'relationNode',
-          position: { x: -400, y: offset },
+          position: { x, y },
           data: {
-            ...n,
-            type: resolveArchiveType(n.code || ''),
-            depth: 1,
-            isCenter: false,
+            ...graphNode,
+            type: resolveArchiveType(graphNode.code || ''),
+            depth,
+            isCenter: graphNode.id === centerNode.id,
             isExpanded: false
           }
         });
-        nodeDepths.set(n.id, 1);
-      });
-
-      // 创建中心节点
-      nodes.push({
-        id: centerNode.id,
-        type: 'relationNode',
-        position: { x: 0, y: 0 },
-        data: {
-          ...centerNode,
-          type: resolveArchiveType(centerNode.code || ''),
-          depth: 0,
-          isCenter: true,
-          isExpanded: false
-        }
-      });
-      nodeDepths.set(centerNode.id, 0);
-
-      // 创建下游节点（右侧）
-      downstreamNodes.forEach((n, i) => {
-        const offset = (i - (downstreamNodes.length - 1) / 2) * 250;
-        nodes.push({
-          id: n.id,
-          type: 'relationNode',
-          position: { x: 400, y: offset },
-          data: {
-            ...n,
-            type: resolveArchiveType(n.code || ''),
-            depth: 1,
-            isCenter: false,
-            isExpanded: false
-          }
-        });
-        nodeDepths.set(n.id, 1);
+        nodeDepths.set(graphNode.id, depth);
       });
 
       // 创建连线（只包含两端节点都存在的边）
@@ -189,7 +173,8 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
         nodeParents: new Map(),
         loadedRelations: new Map([[centerNode.id, graph]]),
         isInitialLoading: false,
-        initialError: null
+        initialError: null,
+        directionalView: graph.directionalView || null
       });
     } catch (error: any) {
       let errorMessage = '加载失败，请稍后重试';
@@ -208,7 +193,8 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
         edges: [],
         centerNodeId: '',
         isInitialLoading: false,
-        initialError: errorMessage
+        initialError: errorMessage,
+        directionalView: null
       });
     }
   },
@@ -442,7 +428,8 @@ export const useRelationGraphStore = create<RelationGraphState>((set, get) => ({
       isInitialLoading: false,
       initialError: null,
       originalQueryId: null,
-      redirectMessage: null
+      redirectMessage: null,
+      directionalView: null
     });
   },
 

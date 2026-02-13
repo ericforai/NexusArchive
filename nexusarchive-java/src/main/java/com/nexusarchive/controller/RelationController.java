@@ -29,6 +29,7 @@ import com.nexusarchive.entity.ArchiveAttachment;
 import com.nexusarchive.mapper.VoucherRelationMapper;
 import com.nexusarchive.mapper.OriginalVoucherMapper;
 import com.nexusarchive.mapper.OriginalVoucherFileMapper;
+import com.nexusarchive.service.relation.RelationDirectionResolver;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class RelationController {
     private final OriginalVoucherMapper originalVoucherMapper;
     private final OriginalVoucherFileMapper originalVoucherFileMapper;
     private final ArcFileContentMapper arcFileContentMapper;
+    private final RelationDirectionResolver relationDirectionResolver;
 
     /**
      * 获取凭证关联的文件列表
@@ -522,6 +524,8 @@ public class RelationController {
                         .build())
                 .toList();
 
+        RelationGraphDto.DirectionalView directionalView = relationDirectionResolver.resolve(finalCenterArchiveId, edges);
+
         log.debug("[RelationController] Returning graph with {} nodes and {} edges, centerId: {}",
             nodes.size(), edges.size(), finalCenterArchiveId);
 
@@ -529,7 +533,8 @@ public class RelationController {
         RelationGraphDto.RelationGraphDtoBuilder builder = RelationGraphDto.builder()
                 .centerId(finalCenterArchiveId)
                 .nodes(nodes)
-                .edges(edges);
+                .edges(edges)
+                .directionalView(directionalView);
         
         if (autoRedirected) {
             builder.originalQueryId(originalQueryId)

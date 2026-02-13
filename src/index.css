@@ -176,3 +176,9 @@ code {
 .dark-select-dropdown .ant-select-item-option {
   color: #e5e7eb !important;
 }
+
+/* Archive detail drawer tabs spacing */
+.archive-detail-tabs > .ant-tabs-nav {
+  padding-left: 16px;
+  padding-right: 16px;
+}

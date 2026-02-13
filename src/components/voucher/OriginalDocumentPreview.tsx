@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { FileText, Download, AlertCircle } from 'lucide-react';
 import { message } from 'antd';
 import { client } from '../../api/client';
+import { archivesApi } from '../../api/archives';
 
 interface AttachmentDTO {
   id: string;
@@ -16,6 +17,24 @@ interface OriginalDocumentPreviewProps {
   files: AttachmentDTO[];
   defaultFileIndex?: number;
 }
+
+const normalizePreviewUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  const legacyMatched = url.match(/^\/api\/archives\/([^/]+)\/download$/) || url.match(/^\/archives\/([^/]+)\/download$/);
+  if (legacyMatched?.[1]) {
+    return `/archive/${legacyMatched[1]}/content`;
+  }
+  if (url.startsWith('/api/')) {
+    return url.replace(/^\/api/, '');
+  }
+  return url;
+};
+
+const extractArchiveIdFromContentUrl = (url?: string): string | null => {
+  if (!url) return null;
+  const matched = url.match(/^\/archive\/([^/]+)\/content$/);
+  return matched?.[1] || null;
+};
 
 export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = ({
   files,
@@ -50,19 +69,55 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
   const fetchFileWithAuth = async (file: AttachmentDTO) => {
     setLoadingStates(prev => ({ ...prev, [file.id]: true }));
     try {
-      const url = file.fileUrl || `/archive/files/download/${file.id}`;
-      const response = await client.get(url, {
-        responseType: 'blob',
-      });
+      const normalizedFileUrl = normalizePreviewUrl(file.fileUrl);
+      const archiveIdFromContentUrl = extractArchiveIdFromContentUrl(normalizedFileUrl);
+      const candidateUrls: string[] = [];
 
-      // 从响应头中获取内容类型，如果没有则回退
-      const contentType = response.headers['content-type'] || 'application/pdf';
+      if (normalizedFileUrl) {
+        candidateUrls.push(normalizedFileUrl);
+      }
 
-      // 创建带有正确类型的 blob URL
-      const blob = new Blob([response.data], { type: contentType });
-      const blobUrl = URL.createObjectURL(blob);
+      if (archiveIdFromContentUrl) {
+        // /archive/{archiveId}/content 失败时，回退到真实 fileId 下载链接
+        try {
+          const filesResp = await archivesApi.getArchiveFiles(archiveIdFromContentUrl);
+          const archiveFiles = filesResp?.data || [];
+          archiveFiles.forEach((af: any) => {
+            if (af?.id) {
+              candidateUrls.push(`/archive/files/download/${af.id}`);
+            }
+          });
+        } catch {
+          // 继续兜底
+        }
+      }
 
-      setFileUrls(prev => ({ ...prev, [file.id]: blobUrl }));
+      // 最后兜底：按当前 id 当作 fileId 尝试下载
+      candidateUrls.push(`/archive/files/download/${file.id}`);
+
+      const dedupedUrls = Array.from(new Set(candidateUrls.filter(Boolean)));
+      let lastError: unknown = null;
+
+      for (const url of dedupedUrls) {
+        try {
+          const response = await client.get(url, {
+            responseType: 'blob',
+          });
+
+          const contentType = response.headers['content-type'] || 'application/pdf';
+          const blob = new Blob([response.data], { type: contentType });
+          const blobUrl = URL.createObjectURL(blob);
+          setFileUrls(prev => ({ ...prev, [file.id]: blobUrl }));
+          lastError = null;
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (lastError) {
+        throw lastError;
+      }
     } catch (error) {
       console.error('Failed to fetch file:', error);
       setErrorStates(prev => ({ ...prev, [file.id]: true }));

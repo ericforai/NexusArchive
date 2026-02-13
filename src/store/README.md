@@ -34,6 +34,15 @@
   - `collapseNode(nodeId)`: 折叠节点
   - `resetGraph()`: 重置图谱
 
+## 2026-02-13 更新
+
+- ✅ `useRelationGraphStore.initializeGraph` 调整为保留查询返回的全量关系图节点与边
+  - 支撑前端三栏布局的多层级链路展示与逐层展开
+  - 兼容现有错误处理、重置逻辑与节点抽屉预览流程
+- ✅ 新增 `directionalView` 状态
+  - 优先承载后端返回的上下游方向解析结果（upstream/downstream/layers/mainline）
+  - 三栏布局优先消费后端方向，避免前端固定流程推断造成“上下游重复”
+
 ## 2026-01-02 更新
 
 - ✅ 新增 `useDrawerStore` - 抽屉状态管理

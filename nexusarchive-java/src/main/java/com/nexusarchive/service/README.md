@@ -62,6 +62,7 @@
 | `RoleService.java` | 服务接口 | 角色服务 |
 | `RoleValidationService.java` | 服务接口 | 角色验证服务 |
 | `search/` | 目录入口 | search 子目录 |
+| `relation/` | 目录入口 | relation 子目录（关系方向解析） |
 | `signature/` | 目录入口 | signature 子目录 |
 | `SmartParserService.java` | 服务接口 | 智能解析服务 |
 | `StandardReportGenerator.java` | Java 类 | 标准报表生成器 |

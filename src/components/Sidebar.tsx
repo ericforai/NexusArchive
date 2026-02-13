@@ -26,6 +26,7 @@ const PATH_PREFIX_TO_VIEW: Record<string, string> = {
   '/system/operations': ViewState.ARCHIVE_OPS,
   '/system/archive': ViewState.ACCOUNT_ARCHIVES,
   '/system/utilization': ViewState.ARCHIVE_UTILIZATION,
+  '/system/warehouse': ViewState.WAREHOUSE,
   '/system/stats': ViewState.STATS,
   '/system/settings': ViewState.SETTINGS,
   '/system/admin': ViewState.ADMIN,

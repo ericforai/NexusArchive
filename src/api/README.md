@@ -19,7 +19,7 @@
 - `attachments.ts`: 附件管理接口。
 - `audit.ts`: 审计日志接口。
 - `auth.ts`: 认证与登录接口。
-- `autoAssociation.ts`: 自动关联规则接口。
+- `autoAssociation.ts`: 自动关联规则接口（含穿透联查多场景演示数据回退、`directionalView` 方向视图）。
 - `borrowing.ts`: 借阅管理接口。
 - `client.ts`: Axios 实例配置（拦截器、Token 处理）。
 - `destruction.ts`: 档案销毁接口（含批量审批）。

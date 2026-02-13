@@ -459,13 +459,15 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
             return;
         }
 
+        // [FIX] 每个 .apply() 调用独立解析模板，占位符必须始终为 {0}
         wrapper.and(w -> {
             for (int i = 0; i < statuses.size(); i++) {
                 if (i > 0) {
                     w.or();
                 }
-                w.apply("LOWER(status) = {" + i + "}", statuses.get(i));
+                w.apply("LOWER(status) = {0}", statuses.get(i));
             }
         });
     }
+
 }

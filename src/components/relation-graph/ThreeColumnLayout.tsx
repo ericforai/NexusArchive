@@ -1,11 +1,12 @@
 // Input: React、RelationNodeData、RelationEdgeData
-// Output: ThreeColumnLayout 组件（三栏布局）
+// Output: ThreeColumnLayout 组件（三栏布局，后端方向优先 + 逐层展开）
 // Pos: 关系图谱三栏布局组件
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ArchiveCard } from './ArchiveCard';
 import type { RelationNodeData, RelationEdgeData, RelationType } from '@/types/relationGraph';
+import type { RelationDirectionalView } from '@/api/autoAssociation';
 
 interface ThreeColumnLayoutProps {
   /** 中心节点 */
@@ -18,6 +19,12 @@ interface ThreeColumnLayoutProps {
   onNodeClick?: (nodeId: string, nodeData: RelationNodeData) => void;
   /** 需要高亮的档案ID（原始查询档案） */
   highlightedArchiveId?: string | null;
+  /** 付款主线节点ID */
+  mainlineNodeIds?: string[];
+  /** 主线缺口 */
+  missingSteps?: Array<{ stepLabel: string; fromNodeId: string }>;
+  /** 后端解析的上下游视图（优先使用） */
+  directionalView?: RelationDirectionalView;
 }
 
 /**
@@ -29,9 +36,17 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   nodes,
   relations,
   onNodeClick,
-  highlightedArchiveId = null
+  highlightedArchiveId = null,
+  mainlineNodeIds = [],
+  missingSteps = [],
+  directionalView
 }) => {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [visibleDepth, setVisibleDepth] = useState(1);
+
+  useEffect(() => {
+    setVisibleDepth(1);
+  }, [centerNode.id]);
   
   // Refs for position calculation
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,48 +76,164 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
     return colorMap[relationType || 'default'] || colorMap.default;
   };
 
-  // 分类上游和下游节点
-  // 业务逻辑：
-  // - 上游：中心节点的依据、原始凭证、来源（如合同→报销单，发票→报销单）
-  // - 下游：中心节点的流向、归档、结果（如报销单→付款单，付款单→银行回单，凭证→报表）
-  const { upstreamNodes, downstreamNodes } = useMemo(() => {
-    const upstream: Array<{ node: RelationNodeData; relationType?: RelationType }> = [];
-    const downstream: Array<{ node: RelationNodeData; relationType?: RelationType }> = [];
+  const nodeMap = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes]);
+  const mainlineSet = useMemo(() => new Set(mainlineNodeIds), [mainlineNodeIds]);
 
-    relations.forEach(relation => {
+  const {
+    upstreamNodes,
+    downstreamNodes,
+    maxUpstreamDepth,
+    maxDownstreamDepth
+  } = useMemo(() => {
+    type LayeredNode = { node: RelationNodeData; relationType?: RelationType; depth: number };
+    type Side = 'upstream' | 'downstream';
+
+    const outgoing = new Map<string, RelationEdgeData[]>();
+    const incoming = new Map<string, RelationEdgeData[]>();
+    const undirected = new Map<string, Array<{ neighborId: string; relationType?: RelationType }>>();
+
+    relations.forEach((relation) => {
       const relationType = (relation.relationType || 'default') as RelationType;
-      
-      // 根据关系类型判断业务方向
-      // BASIS（依据）、ORIGINAL_VOUCHER（原始凭证）表示：from 是依据/凭证（上游），to 是单据（下游）
-      // CASH_FLOW（资金流）、ARCHIVE（归档）表示：from 是源头（上游），to 是流向/归档（下游）
-      
-      if (relation.to === centerNode.id) {
-        // 关系指向中心节点
-        // 对于 BASIS 和 ORIGINAL_VOUCHER，from 是依据/凭证（上游）
-        // 对于其他类型，from 也可能是上游
-        const node = nodes.find(n => n.id === relation.from);
-        if (node && (relationType === 'BASIS' || relationType === 'ORIGINAL_VOUCHER' || relationType === 'default')) {
-          upstream.push({ node, relationType });
-        } else if (node) {
-          // 其他情况，如果指向中心节点，可能是上游（如资金流来源）
-          upstream.push({ node, relationType });
-        }
-      } else if (relation.from === centerNode.id) {
-        // 关系从中心节点出发
-        // 对于 BASIS 和 ORIGINAL_VOUCHER，to 是单据（下游）
-        // 对于 CASH_FLOW 和 ARCHIVE，to 是流向/归档（下游）
-        const node = nodes.find(n => n.id === relation.to);
-        if (node) {
-          downstream.push({ node, relationType });
-        }
+
+      const outList = outgoing.get(relation.from) || [];
+      outList.push(relation);
+      outgoing.set(relation.from, outList);
+
+      const inList = incoming.get(relation.to) || [];
+      inList.push(relation);
+      incoming.set(relation.to, inList);
+
+      const fromNeighbors = undirected.get(relation.from) || [];
+      fromNeighbors.push({ neighborId: relation.to, relationType });
+      undirected.set(relation.from, fromNeighbors);
+
+      const toNeighbors = undirected.get(relation.to) || [];
+      toNeighbors.push({ neighborId: relation.from, relationType });
+      undirected.set(relation.to, toNeighbors);
+    });
+
+    const assigned = new Set<string>([centerNode.id]);
+    const sideMap = new Map<string, Side>();
+    const depthMap = new Map<string, number>();
+    const relationTypeMap = new Map<string, RelationType | undefined>();
+    const queue: Array<{ id: string; side: Side; depth: number }> = [];
+
+    // 优先使用后端 directionalView，避免前端固定流程推断与真实业务冲突
+    const hasDirectionalView = (directionalView?.upstream?.length || 0) > 0
+      || (directionalView?.downstream?.length || 0) > 0;
+    if (hasDirectionalView) {
+      const layers = directionalView?.layers || {};
+      const upstreamIds = directionalView?.upstream || [];
+      const downstreamIds = directionalView?.downstream || [];
+
+      upstreamIds.forEach((id) => {
+        if (!id || id === centerNode.id || !nodeMap.has(id) || assigned.has(id)) return;
+        assigned.add(id);
+        sideMap.set(id, 'upstream');
+        depthMap.set(id, Math.max(1, layers[id] || 1));
+      });
+
+      downstreamIds.forEach((id) => {
+        if (!id || id === centerNode.id || !nodeMap.has(id) || assigned.has(id)) return;
+        assigned.add(id);
+        sideMap.set(id, 'downstream');
+        depthMap.set(id, Math.max(1, layers[id] || 1));
+      });
+    } else {
+      // 一跳定向作为“根归属”：指向中心的是上游，从中心发出的是下游
+      (incoming.get(centerNode.id) || []).forEach((edge) => {
+        const id = edge.from;
+        if (!id || assigned.has(id)) return;
+        assigned.add(id);
+        sideMap.set(id, 'upstream');
+        depthMap.set(id, 1);
+        relationTypeMap.set(id, (edge.relationType || 'default') as RelationType);
+        queue.push({ id, side: 'upstream', depth: 1 });
+      });
+      (outgoing.get(centerNode.id) || []).forEach((edge) => {
+        const id = edge.to;
+        if (!id || assigned.has(id)) return;
+        assigned.add(id);
+        sideMap.set(id, 'downstream');
+        depthMap.set(id, 1);
+        relationTypeMap.set(id, (edge.relationType || 'default') as RelationType);
+        queue.push({ id, side: 'downstream', depth: 1 });
+      });
+
+      // 向外扩展，继承根归属；全局去重，确保单节点只在一侧出现
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current) continue;
+        const neighbors = undirected.get(current.id) || [];
+        neighbors.forEach(({ neighborId, relationType }) => {
+          if (!neighborId || assigned.has(neighborId) || neighborId === centerNode.id) return;
+          if (!nodeMap.has(neighborId)) return;
+          assigned.add(neighborId);
+          sideMap.set(neighborId, current.side);
+          depthMap.set(neighborId, current.depth + 1);
+          relationTypeMap.set(neighborId, relationType);
+          queue.push({ id: neighborId, side: current.side, depth: current.depth + 1 });
+        });
+      }
+    }
+
+    const upstream: LayeredNode[] = [];
+    const downstream: LayeredNode[] = [];
+    let maxUpstream = 0;
+    let maxDownstream = 0;
+    const resolveRelationType = (id: string, side: Side): RelationType | undefined => {
+      if (relationTypeMap.has(id)) return relationTypeMap.get(id);
+      if (side === 'upstream') {
+        const incomingEdge = incoming.get(id)?.[0];
+        return (incomingEdge?.relationType || 'default') as RelationType;
+      }
+      const outgoingEdge = outgoing.get(id)?.[0];
+      return (outgoingEdge?.relationType || 'default') as RelationType;
+    };
+
+    sideMap.forEach((side, id) => {
+      const node = nodeMap.get(id);
+      if (!node) return;
+      const depth = depthMap.get(id) || 1;
+      const entry: LayeredNode = {
+        node,
+        relationType: resolveRelationType(id, side),
+        depth
+      };
+      if (side === 'upstream') {
+        upstream.push(entry);
+        maxUpstream = Math.max(maxUpstream, depth);
+      } else {
+        downstream.push(entry);
+        maxDownstream = Math.max(maxDownstream, depth);
       }
     });
 
+    const sorter = (a: LayeredNode, b: LayeredNode) => {
+      if (a.depth !== b.depth) return a.depth - b.depth;
+      return a.node.id.localeCompare(b.node.id);
+    };
+
+    upstream.sort(sorter);
+    downstream.sort(sorter);
+
     return {
       upstreamNodes: upstream,
-      downstreamNodes: downstream
+      downstreamNodes: downstream,
+      maxUpstreamDepth: maxUpstream,
+      maxDownstreamDepth: maxDownstream
     };
-  }, [centerNode.id, nodes, relations]);
+  }, [centerNode.id, directionalView, nodeMap, relations]);
+
+  const effectiveMaxDepth = Math.max(maxUpstreamDepth, maxDownstreamDepth, 1);
+  const visibleUpstream = useMemo(
+    () => upstreamNodes.filter(item => item.depth <= visibleDepth || mainlineSet.has(item.node.id)),
+    [upstreamNodes, visibleDepth, mainlineSet]
+  );
+  const visibleDownstream = useMemo(
+    () => downstreamNodes.filter(item => item.depth <= visibleDepth || mainlineSet.has(item.node.id)),
+    [downstreamNodes, visibleDepth, mainlineSet]
+  );
 
   // 计算连线位置
   useEffect(() => {
@@ -127,7 +258,7 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
       }> = [];
 
       // 上游到中心的连线
-      upstreamNodes.forEach(({ node, relationType }) => {
+      visibleUpstream.forEach(({ node, relationType }) => {
         const cardEl = upstreamCardRefs.current.get(node.id);
         if (cardEl) {
           const cardRect = cardEl.getBoundingClientRect();
@@ -148,7 +279,7 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
       });
 
       // 中心到下游的连线
-      downstreamNodes.forEach(({ node, relationType }) => {
+      visibleDownstream.forEach(({ node, relationType }) => {
         const cardEl = downstreamCardRefs.current.get(node.id);
         if (cardEl) {
           const cardRect = cardEl.getBoundingClientRect();
@@ -198,7 +329,7 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
       }
       clearTimeout(timer);
     };
-  }, [upstreamNodes, downstreamNodes, centerNode.id]);
+  }, [visibleUpstream, visibleDownstream, centerNode.id]);
 
   // 处理节点点击：打开右侧详情抽屉
   const handleNodeClick = (nodeId: string, nodeData: RelationNodeData) => {
@@ -254,8 +385,8 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
           <p className="text-xs text-slate-400 mt-1">依据、凭证、来源</p>
         </div>
         <div className="flex-1 overflow-y-auto space-y-4">
-          {upstreamNodes.length > 0 ? (
-            upstreamNodes.map(({ node, relationType }) => (
+          {visibleUpstream.length > 0 ? (
+            visibleUpstream.map(({ node, relationType }) => (
               <div
                 key={node.id}
                 ref={(el) => {
@@ -267,7 +398,11 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
                   node={node}
                   relationType={relationType}
                   onClick={() => handleNodeClick(node.id, node)}
-                  highlighted={highlightedNodeId === node.id || highlightedArchiveId === node.id}
+                  highlighted={
+                    highlightedNodeId === node.id ||
+                    highlightedArchiveId === node.id ||
+                    mainlineSet.has(node.id)
+                  }
                 />
               </div>
             ))
@@ -280,26 +415,66 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
       {/* 中心栏 */}
       <div className="flex-1 flex items-center justify-center relative z-20">
         <div className="flex flex-col items-center">
+          <div className="mb-3 flex items-center gap-2">
+            <button
+              onClick={() => setVisibleDepth((d) => Math.min(d + 1, effectiveMaxDepth))}
+              disabled={visibleDepth >= effectiveMaxDepth}
+              className="px-3 py-1.5 text-xs rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              展开一层
+            </button>
+            <button
+              onClick={() => setVisibleDepth(1)}
+              disabled={visibleDepth <= 1}
+              className="px-3 py-1.5 text-xs rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              收起到首层
+            </button>
+            {mainlineSet.size === 0 && (
+              <span className="text-xs text-slate-500">分支展开深度：{visibleDepth}</span>
+            )}
+            {mainlineSet.size > 0 && (
+              <span className="text-xs text-slate-500">分支展开深度：{visibleDepth}（主线始终可见）</span>
+            )}
+          </div>
+
           {/* 核心单据卡片 */}
           <div ref={centerCardRef}>
             <ArchiveCard
               node={centerNode}
               isCenter
               onClick={() => handleNodeClick(centerNode.id, centerNode)}
-              highlighted={highlightedNodeId === centerNode.id || highlightedArchiveId === centerNode.id}
+              highlighted={
+                highlightedNodeId === centerNode.id ||
+                highlightedArchiveId === centerNode.id ||
+                mainlineSet.has(centerNode.id)
+              }
             />
           </div>
 
+          {missingSteps.length > 0 && (
+            <div className="mt-3 w-full max-w-md rounded-lg border border-rose-300 bg-rose-50 px-3 py-2">
+              <div className="text-xs font-semibold text-rose-700 mb-1">主线缺口（已自动跳过）</div>
+              <div className="space-y-1">
+                {missingSteps.map((step, idx) => (
+                  <div key={`${step.fromNodeId}-${step.stepLabel}-${idx}`} className="text-xs text-rose-600">
+                    缺失：{step.stepLabel}（来源节点：{step.fromNodeId}）
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 业务逻辑说明 */}
-          {(upstreamNodes.length > 0 || downstreamNodes.length > 0) && (
+          {(visibleUpstream.length > 0 || visibleDownstream.length > 0) && (
             <div className="mt-4 text-xs text-slate-500 text-center max-w-md">
               <div className="inline-block bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
                 <div className="font-medium mb-1">业务流向说明</div>
                 <div className="text-slate-600 space-y-0.5">
-                  {upstreamNodes.length > 0 && (
+                  {visibleUpstream.length > 0 && (
                     <div>← 左侧：该单据的依据、凭证、来源</div>
                   )}
-                  {downstreamNodes.length > 0 && (
+                  {visibleDownstream.length > 0 && (
                     <div>→ 右侧：该单据的流向、归档、结果</div>
                   )}
                 </div>
@@ -316,8 +491,8 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
           <p className="text-xs text-slate-400 mt-1">流向、归档、结果</p>
         </div>
         <div className="flex-1 overflow-y-auto space-y-4">
-          {downstreamNodes.length > 0 ? (
-            downstreamNodes.map(({ node, relationType }) => (
+          {visibleDownstream.length > 0 ? (
+            visibleDownstream.map(({ node, relationType }) => (
               <div
                 key={node.id}
                 ref={(el) => {
@@ -329,7 +504,11 @@ export const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
                   node={node}
                   relationType={relationType}
                   onClick={() => handleNodeClick(node.id, node)}
-                  highlighted={highlightedNodeId === node.id || highlightedArchiveId === node.id}
+                  highlighted={
+                    highlightedNodeId === node.id ||
+                    highlightedArchiveId === node.id ||
+                    mainlineSet.has(node.id)
+                  }
                 />
               </div>
             ))
