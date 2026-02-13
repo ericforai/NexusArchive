@@ -132,7 +132,7 @@ const RfcConfigForm: React.FC<{
 }> = ({ config: _config, onChange: _onChange, disabled: _disabled }) => {
   return (
     <Alert
-      message="即将推出"
+      title="即将推出"
       description="RFC/BAPI 接口类型目前为产品能力预留，暂未实现。如需此功能，请联系产品团队。"
       type="info"
       showIcon
@@ -150,7 +150,7 @@ const IdocConfigForm: React.FC<{
 }> = ({ config: _config, onChange: _onChange, disabled: _disabled }) => {
   return (
     <Alert
-      message="即将推出"
+      title="即将推出"
       description="IDoc 接口类型目前为产品能力预留，暂未实现。如需此功能，请联系产品团队。"
       type="info"
       showIcon
@@ -168,7 +168,7 @@ const GatewayConfigForm: React.FC<{
 }> = ({ config: _config, onChange: _onChange, disabled: _disabled }) => {
   return (
     <Alert
-      message="即将推出"
+      title="即将推出"
       description="SAP Gateway 接口类型目前为产品能力预留，暂未实现。如需此功能，请联系产品团队。"
       type="info"
       showIcon

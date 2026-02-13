@@ -8,8 +8,10 @@ package com.nexusarchive.service.impl;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.service.FileStorageService;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -21,10 +23,12 @@ import java.nio.file.StandardCopyOption;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
 
     @Value("${archive.root.path:./data/archives}")
     private String archiveRootPath;
+    private final Environment environment;
 
     /**
      * 启动时自动创建存储目录
@@ -34,6 +38,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     public void initStorageDirectory() {
         try {
             Path rootPath = Paths.get(archiveRootPath).toAbsolutePath().normalize();
+            failFastOnUnsafeDevRoot(rootPath);
             if (!Files.exists(rootPath)) {
                 Files.createDirectories(rootPath);
                 log.info("Created archive root directory: {}", rootPath);
@@ -51,6 +56,22 @@ public class FileStorageServiceImpl implements FileStorageService {
         } catch (IOException e) {
             log.error("Failed to create storage directory: {}", archiveRootPath, e);
             throw new BusinessException("Failed to initialize file storage: " + e.getMessage());
+        }
+    }
+
+    private void failFastOnUnsafeDevRoot(Path rootPath) {
+        boolean isDevProfile = java.util.Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(p -> "dev".equalsIgnoreCase(p));
+        if (!isDevProfile) {
+            return;
+        }
+
+        Path unsafeRoot = Paths.get("/tmp/nexusarchive").toAbsolutePath().normalize();
+        if (rootPath.startsWith(unsafeRoot)) {
+            String message = "Unsafe archive root path in dev profile: " + rootPath +
+                    ". Please use ARCHIVE_ROOT_PATH=.../nexusarchive-java/data/archives";
+            log.error("[StorageGuard] {}", message);
+            throw new BusinessException(message);
         }
     }
 

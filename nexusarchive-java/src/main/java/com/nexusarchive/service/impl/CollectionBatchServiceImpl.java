@@ -24,6 +24,9 @@ import com.nexusarchive.service.PreArchiveCheckService;
 import com.nexusarchive.service.collection.BatchFileStorageService;
 import com.nexusarchive.service.collection.BatchFileValidator;
 import com.nexusarchive.service.collection.BatchNumberGenerator;
+import com.nexusarchive.service.collection.CollectionMetadataInheritor;
+import com.nexusarchive.service.collection.FourNatureCheckHelper;
+import com.nexusarchive.service.collection.FourNatureCheckHelper.BatchCheckStatistics;
 import com.nexusarchive.util.FileHashUtil;
 import org.springframework.dao.DuplicateKeyException;
 import com.nexusarchive.security.FondsContext;
@@ -71,6 +74,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
     private final BatchNumberGenerator batchNumberGenerator;
     private final BatchFileValidator fileValidator;
     private final BatchFileStorageService storageService;
+    private final CollectionMetadataInheritor metadataInheritor;
 
     // ===== CollectionBatchService Implementation =====
 
@@ -306,7 +310,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         );
 
         // 执行四性检测（同步）
-        BatchCheckStatistics checkResult = executeBatchCheck(batchFiles);
+        BatchCheckStatistics checkResult = executeBatchCheck(batchFiles, batch);
 
         // 记录审计日志
         auditLogService.log(
@@ -338,9 +342,10 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
      * 批量执行四性检测
      *
      * @param batchFiles 批次文件列表
+     * @param batch      所属批次信息
      * @return 检测统计结果
      */
-    private BatchCheckStatistics executeBatchCheck(List<CollectionBatchFile> batchFiles) {
+    private BatchCheckStatistics executeBatchCheck(List<CollectionBatchFile> batchFiles, CollectionBatch currentBatch) {
         BatchCheckStatistics result = new BatchCheckStatistics();
 
         for (CollectionBatchFile batchFile : batchFiles) {
@@ -351,34 +356,8 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
                     continue;
                 }
 
-                // 修复：在检测前为缺失的必填字段设置默认值
-                boolean needsUpdate = false;
-                if (file.getCreator() == null || file.getCreator().trim().isEmpty()) {
-                    file.setCreator("系统管理员");
-                    needsUpdate = true;
-                }
-                if (file.getDocDate() == null) {
-                    // 安全地设置默认日期（使用当前年度1月1日）
-                    int year = java.time.Year.now().getValue();
-                    if (file.getFiscalYear() != null && !file.getFiscalYear().trim().isEmpty()) {
-                        try {
-                            year = Integer.parseInt(file.getFiscalYear().trim());
-                        } catch (NumberFormatException e) {
-                            log.debug("无法解析会计年度，使用当前年度: {}", file.getFiscalYear());
-                        }
-                    }
-                    file.setDocDate(java.time.LocalDate.of(year, 1, 1));
-                    needsUpdate = true;
-                }
-                if (file.getSummary() == null || file.getSummary().trim().isEmpty()) {
-                    // 使用文件名作为默认摘要（去除扩展名）
-                    String summary = file.getFileName();
-                    if (summary != null && summary.contains(".")) {
-                        summary = summary.substring(0, summary.lastIndexOf('.'));
-                    }
-                    file.setSummary(summary != null && !summary.isEmpty() ? summary : file.getFileName());
-                    needsUpdate = true;
-                }
+                // 在检测前为缺失的必填字段设置方案化的默认值（智能继承）
+                metadataInheritor.inheritMissingMetadata(file, currentBatch);
 
                 // 调用四性检测服务
                 com.nexusarchive.dto.sip.report.FourNatureReport report =
@@ -391,12 +370,11 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
                     result.addPassed(file.getId(), file.getFileName());
                 } else {
                     newStatus = PreArchiveStatus.NEEDS_ACTION.getCode();
-                    result.addFailed(file.getId(), file.getFileName(), getFailureReason(report));
+                    result.addFailed(file.getId(), file.getFileName(), FourNatureCheckHelper.extractFailureReason(report));
                 }
 
                 file.setPreArchiveStatus(newStatus);
                 file.setCheckedTime(LocalDateTime.now());
-                // 合并更新：包含默认元数据和检测状态
                 arcFileContentMapper.updateById(file);
 
             } catch (Exception e) {
@@ -406,56 +384,6 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         }
 
         return result;
-    }
-
-    /**
-     * 从检测报告中提取失败原因（用于界面显示）
-     *
-     * @param report 四性检测报告
-     * @return 失败原因描述
-     */
-    private String getFailureReason(com.nexusarchive.dto.sip.report.FourNatureReport report) {
-        if (report.getAuthenticity() != null &&
-            report.getAuthenticity().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
-            return "真实性检测失败";
-        }
-        if (report.getIntegrity() != null &&
-            report.getIntegrity().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
-            return "完整性检测失败";
-        }
-        if (report.getUsability() != null &&
-            report.getUsability().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
-            return "可用性检测失败";
-        }
-        if (report.getSafety() != null &&
-            report.getSafety().getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.FAIL) {
-            return "安全性检测失败";
-        }
-        return "检测未通过";
-    }
-
-    /**
-     * 检测统计结果
-     */
-    private static class BatchCheckStatistics {
-        private int checkedCount = 0;
-        private int passedCount = 0;
-        private final java.util.List<CollectionBatchService.FailedFileInfo> failedFiles = new java.util.ArrayList<>();
-
-        public int getCheckedCount() { return checkedCount; }
-        public int getPassedCount() { return passedCount; }
-        public java.util.List<CollectionBatchService.FailedFileInfo> getFailedFiles() { return failedFiles; }
-        public int getFailedCount() { return failedFiles.size(); }
-
-        public void addPassed(String fileId, String fileName) {
-            checkedCount++;
-            passedCount++;
-        }
-
-        public void addFailed(String fileId, String fileName, String reason) {
-            checkedCount++;
-            failedFiles.add(new CollectionBatchService.FailedFileInfo(fileId, fileName, reason));
-        }
     }
 
     @Override

@@ -11,6 +11,7 @@
     "db:dump": "bash scripts/db-dump.sh",
     "db:load": "bash scripts/db-load.sh",
     "db:reset": "bash scripts/db-reset.sh",
+    "verify:seq": "bash scripts/verify-sequence-check-is-called.sh",
     "deploy": "bash scripts/deploy.sh",
     "build": "vite build",
     "preview": "vite preview",

@@ -107,7 +107,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <div>
                     <Alert
                         type="info"
-                        message="扫描结果"
+                        title="扫描结果"
                         description={
                             <Space direction="vertical">
                                 <Text>发现 {summary.totalAccounts} 个科目，{summary.totalDocTypes} 个单据类型</Text>
@@ -151,7 +151,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <div>
                     <Alert
                         type="success"
-                        message={`使用预置包: ${mappingResult.kitName}`}
+                        title={`使用预置包: ${mappingResult.kitName}`}
                         description={
                             <Space direction="vertical">
                                 <Text>科目映射: {mappingResult.accountsMapped} 个（待确认: {mappingResult.accountsPending}）</Text>

@@ -189,7 +189,7 @@ const ComplianceReport: React.FC = () => {
                 {error && (
                     <Alert
                         type="error"
-                        message={error}
+                        title={error}
                         closable
                         onClose={() => setError(null)}
                         style={{ marginBottom: 16 }}
@@ -211,7 +211,7 @@ const ComplianceReport: React.FC = () => {
                             <Statistic
                                 title="已匹配"
                                 value={stats.matchedVouchers}
-                                valueStyle={{ color: '#3f8600' }}
+                                styles={{ content: { color: '#3f8600' } }}
                                 prefix={<CheckCircleOutlined />}
                             />
                         </Card>
@@ -221,7 +221,7 @@ const ComplianceReport: React.FC = () => {
                             <Statistic
                                 title="待补证"
                                 value={stats.pendingVouchers}
-                                valueStyle={{ color: '#cf1322' }}
+                                styles={{ content: { color: '#cf1322' } }}
                                 prefix={<WarningOutlined />}
                             />
                         </Card>
@@ -231,7 +231,7 @@ const ComplianceReport: React.FC = () => {
                             <Statistic
                                 title="缺必关联"
                                 value={stats.missingMustLink}
-                                valueStyle={{ color: '#cf1322' }}
+                                styles={{ content: { color: '#cf1322' } }}
                             />
                         </Card>
                     </Col>
@@ -240,7 +240,7 @@ const ComplianceReport: React.FC = () => {
                             <Statistic
                                 title="缺应关联"
                                 value={stats.missingShouldLink}
-                                valueStyle={{ color: '#faad14' }}
+                                styles={{ content: { color: '#faad14' } }}
                             />
                         </Card>
                     </Col>
@@ -250,7 +250,7 @@ const ComplianceReport: React.FC = () => {
                                 title="合规率"
                                 value={stats.complianceRate}
                                 suffix="%"
-                                valueStyle={{ color: stats.complianceRate >= 95 ? '#3f8600' : '#faad14' }}
+                                styles={{ content: { color: stats.complianceRate >= 95 ? '#3f8600' : '#faad14' } }}
                             />
                         </Card>
                     </Col>

@@ -643,7 +643,7 @@ export const BatchUploadView: React.FC = () => {
             <Statistic
               title="已上传"
               value={stats.uploaded}
-              valueStyle={{ color: '#3f8600' }}
+              styles={{ content: { color: '#3f8600' } }}
             />
           </Card>
         </Col>
@@ -652,7 +652,7 @@ export const BatchUploadView: React.FC = () => {
             <Statistic
               title="失败"
               value={stats.failed}
-              valueStyle={{ color: stats.failed > 0 ? '#cf1322' : undefined }}
+              styles={{ content: { color: stats.failed > 0 ? '#cf1322' : undefined } }}
             />
           </Card>
         </Col>
@@ -661,7 +661,7 @@ export const BatchUploadView: React.FC = () => {
             <Statistic
               title="重复"
               value={stats.duplicate}
-              valueStyle={{ color: stats.duplicate > 0 ? '#faad14' : undefined }}
+              styles={{ content: { color: stats.duplicate > 0 ? '#faad14' : undefined } }}
             />
           </Card>
         </Col>
@@ -733,8 +733,8 @@ export const BatchUploadView: React.FC = () => {
             title={checkResult.failed > 0 ? '上传完成（部分文件检测失败）' : '上传完成！'}
             description={
               checkResult.failed > 0
-                ? `${checkResult.passed} 个文件检测通过，${checkResult.failed} 个文件检测失败。失败的文件需要处理后才能归档。`
-                : `所有 ${checkResult.passed} 个文件均已通过四性检测，可以提交归档。`
+                ? `${checkResult.passed} 个文件检测通过，${checkResult.failed} 个文件检测失败。元数据已根据批次信息初步生成，失败的文件需要处理后才能归档。`
+                : `所有 ${checkResult.passed} 个文件均已通过四性检测，元数据已根据批次信息智能补全，可以提交归档。`
             }
           />
 

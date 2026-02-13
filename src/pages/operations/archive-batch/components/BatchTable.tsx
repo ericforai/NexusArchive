@@ -461,7 +461,7 @@ export function BatchTable({
                                         )}
                                         {selectedBatch.errorMessage && (
                                             <Descriptions.Item label="错误信息" span={2}>
-                                                <Alert type="error" message={selectedBatch.errorMessage} />
+                                                <Alert type="error" title={selectedBatch.errorMessage} />
                                             </Descriptions.Item>
                                         )}
                                     </Descriptions>
@@ -507,7 +507,7 @@ export function BatchTable({
                                     <div>
                                         <Alert
                                             type={integrityReport.overallResult === 'PASS' ? 'success' : 'error'}
-                                            message={`检测结果: ${integrityReport.overallResult === 'PASS' ? '通过' : '未通过'}`}
+                                            title={`检测结果: ${integrityReport.overallResult === 'PASS' ? '通过' : '未通过'}`}
                                             className="mb-4"
                                         />
                                         {integrityReport.checks.map((check: any, idx: number) => (
@@ -582,7 +582,7 @@ export function BatchTable({
                 <div className="mb-4">
                     <Alert
                         type="info"
-                        message={`已选择 ${selectedVoucherIds.length} 条凭证`}
+                        title={`已选择 ${selectedVoucherIds.length} 条凭证`}
                         showIcon
                     />
                 </div>

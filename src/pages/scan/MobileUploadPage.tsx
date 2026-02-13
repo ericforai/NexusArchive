@@ -49,7 +49,7 @@ export const MobileUploadPage: React.FC = () => {
       <div style={{ padding: 24, maxWidth: 400, margin: '0 auto', marginTop: 100 }}>
         <Alert
           type="error"
-          message="会话无效或已过期"
+          title="会话无效或已过期"
           description="请返回扫描页面重新获取二维码"
           showIcon
         />
@@ -103,7 +103,7 @@ export const MobileUploadPage: React.FC = () => {
           <Alert
             type="success"
             icon={<CheckCircleOutlined />}
-            message={`已上传 ${uploadedFiles.length} 个文件`}
+            title={`已上传 ${uploadedFiles.length} 个文件`}
             style={{ marginBottom: 16 }}
           />
         )}

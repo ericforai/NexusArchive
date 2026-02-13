@@ -99,7 +99,7 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
       {(stats.NEEDS_ACTION > 0 || stats.READY_TO_ARCHIVE > 0) && (
         <Alert
           type={stats.NEEDS_ACTION > 0 ? 'warning' : 'info'}
-          message={
+          title={
             stats.NEEDS_ACTION > 0
               ? `有 ${stats.NEEDS_ACTION} 个文件检测失败，请处理后重新提交`
               : `有 ${stats.READY_TO_ARCHIVE} 个文件可以提交归档`
@@ -113,7 +113,7 @@ export const PoolDashboard: React.FC<PoolDashboardProps> = ({
       {stats.NEEDS_ACTION === 0 && stats.READY_TO_ARCHIVE === 0 && (
         <Alert
           type="info"
-          message="文件需通过四性检测后才能归档"
+          title="文件需通过四性检测后才能归档"
           showIcon
           className="mb-4"
         />

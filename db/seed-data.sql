@@ -7557,7 +7557,11 @@ SELECT pg_catalog.setval('public.collection_batch_file_id_seq', 1, false);
 -- Name: collection_batch_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.collection_batch_id_seq', 2025010008, true);
+SELECT pg_catalog.setval(
+    'public.collection_batch_id_seq',
+    COALESCE((SELECT MAX(id) FROM public.collection_batch), 1),
+    true
+);
 
 
 --

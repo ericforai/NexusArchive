@@ -32,7 +32,7 @@ export function BatchStats({ stats }: BatchStatsProps) {
                     <Statistic
                         title="待提交"
                         value={stats.byStatus?.PENDING || 0}
-                        valueStyle={{ color: '#999' }}
+                        styles={{ content: { color: '#999' } }}
                     />
                 </Card>
             </Col>
@@ -41,7 +41,7 @@ export function BatchStats({ stats }: BatchStatsProps) {
                     <Statistic
                         title="待审批"
                         value={stats.byStatus?.VALIDATING || 0}
-                        valueStyle={{ color: '#1890ff' }}
+                        styles={{ content: { color: '#1890ff' } }}
                     />
                 </Card>
             </Col>
@@ -50,7 +50,7 @@ export function BatchStats({ stats }: BatchStatsProps) {
                     <Statistic
                         title="待归档"
                         value={stats.byStatus?.APPROVED || 0}
-                        valueStyle={{ color: '#faad14' }}
+                        styles={{ content: { color: '#faad14' } }}
                     />
                 </Card>
             </Col>
@@ -59,7 +59,7 @@ export function BatchStats({ stats }: BatchStatsProps) {
                     <Statistic
                         title="已归档"
                         value={stats.byStatus?.ARCHIVED || 0}
-                        valueStyle={{ color: '#52c41a' }}
+                        styles={{ content: { color: '#52c41a' } }}
                     />
                 </Card>
             </Col>
@@ -68,7 +68,7 @@ export function BatchStats({ stats }: BatchStatsProps) {
                     <Statistic
                         title="已驳回"
                         value={stats.byStatus?.REJECTED || 0}
-                        valueStyle={{ color: '#ff4d4f' }}
+                        styles={{ content: { color: '#ff4d4f' } }}
                     />
                 </Card>
             </Col>

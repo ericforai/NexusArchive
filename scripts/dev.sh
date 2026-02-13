@@ -112,6 +112,18 @@ else
 fi
 
 # ==============================================================================
+# 4.2 数据库序列健康检查（防止 collection_batch 主键序列回退）
+# ==============================================================================
+echo -e ""
+echo -e "${YELLOW}🩺 检查 collection_batch 序列健康...${NC}"
+if bash scripts/check-collection-batch-sequence.sh; then
+    echo -e "${GREEN}✅ collection_batch 序列检查完成${NC}"
+else
+    echo -e "${RED}❌ collection_batch 序列检查失败，请先修复数据库后再启动${NC}"
+    exit 1
+fi
+
+# ==============================================================================
 # 4.5 同步 demo 附件到归档存储根（避免历史错误副本导致预览内容错配）
 # ==============================================================================
 if [ -d uploads/demo ]; then
@@ -129,6 +141,21 @@ fi
 echo -e ""
 echo -e "${YELLOW}☕ 启动后端...${NC}"
 cd nexusarchive-java
+
+# 检查端口 19090 是否已有监听进程（支持接管已有后端）
+BACKEND_LISTEN_PID=$(lsof -tiTCP:19090 -sTCP:LISTEN 2>/dev/null | head -n 1)
+if [ -n "$BACKEND_LISTEN_PID" ]; then
+    if [ -f ../.backend.pid ] && ps -p "$(cat ../.backend.pid)" > /dev/null 2>&1; then
+        echo -e "${YELLOW}ℹ️  后端端口正常活跃中${NC}"
+    elif ps -p "$BACKEND_LISTEN_PID" -o command= 2>/dev/null | grep -Eq "NexusArchiveApplication|spring-boot"; then
+        echo "$BACKEND_LISTEN_PID" > ../.backend.pid
+        echo -e "${YELLOW}ℹ️  检测到现有后端进程 (PID: $BACKEND_LISTEN_PID)，已接管 PID 文件${NC}"
+    else
+        echo -e "${RED}❌ 致命错误：端口 19090 被不明进程 (PID: $BACKEND_LISTEN_PID) 占用！${NC}"
+        echo -e "${YELLOW}建议运行: kill -9 $BACKEND_LISTEN_PID${NC}"
+        exit 1
+    fi
+fi
 
 # 检查是否已有进程在运行
 if [ -f ../.backend.pid ]; then
@@ -150,8 +177,16 @@ if [ ! -f ../.backend.pid ]; then
     nohup mvn spring-boot:run -Dmaven.test.skip=true -Dspring-boot.run.profiles=dev > ../backend.log 2>&1 < /dev/null &
     BACKEND_PID=$!
     echo $BACKEND_PID > ../.backend.pid
-    echo -e "${GREEN}✅ 后端启动中 (PID: $BACKEND_PID)${NC}"
-    echo -e "${CYAN}📁 文件存储路径: ${ARCHIVE_ROOT_PATH}${NC}"
+    sleep 1
+    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ 后端启动中 (PID: $BACKEND_PID)${NC}"
+        echo -e "${CYAN}📁 文件存储路径: ${ARCHIVE_ROOT_PATH}${NC}"
+    else
+        echo -e "${RED}❌ 后端进程启动失败，请检查 backend.log !${NC}"
+        rm -f ../.backend.pid
+        tail -n 20 ../backend.log || true
+        exit 1
+    fi
 fi
 
 cd ..
@@ -169,9 +204,28 @@ for i in {1..60}; do
         echo -e "${RED}❌ 后端启动超时，请检查 backend.log !${NC}"
         echo -e "${YELLOW}最后 10 行日志内容：${NC}"
         tail -n 10 backend.log
+        exit 1
     fi
     sleep 2
 done
+
+# ==============================================================================
+# 6.5 附件下载冒烟校验（防止历史 404 问题复发）
+# ==============================================================================
+echo -e "${YELLOW}🧪 执行附件下载冒烟校验...${NC}"
+# 注：冒烟测试凭据从环境变量读取，默认使用开发账号
+export SMOKE_USER="${SMOKE_USER:-admin}"
+export SMOKE_PASS="${SMOKE_PASS:-admin123}"
+ATTACHMENT_SMOKE_STRICT="${ATTACHMENT_SMOKE_STRICT:-false}"
+if bash scripts/verify_attachment_download_smoke.sh; then
+    echo -e "${GREEN}✅ 附件下载冒烟校验通过${NC}"
+else
+    if [ "$ATTACHMENT_SMOKE_STRICT" = "true" ]; then
+        echo -e "${RED}❌ 附件下载冒烟校验失败（严格模式），停止后续启动${NC}"
+        exit 1
+    fi
+    echo -e "${YELLOW}⚠️  附件下载冒烟校验失败，已跳过阻断（设置 ATTACHMENT_SMOKE_STRICT=true 可改为阻断）${NC}"
+fi
 
 # ==============================================================================
 # 7. 启动前端
@@ -180,14 +234,18 @@ echo -e ""
 echo -e "${YELLOW}⚛️  启动前端...${NC}"
 
 # 检查端口 15175 是否被意外占用（防止僵尸进程）
-if lsof -i :15175 -t >/dev/null; then
+FRONTEND_LISTEN_PID=$(lsof -tiTCP:15175 -sTCP:LISTEN 2>/dev/null | head -n 1)
+if [ -n "$FRONTEND_LISTEN_PID" ]; then
     # 如果有 PID 文件且对应进程在运行，那是正常的
-    if [ -f .frontend.pid ] && ps -p $(cat .frontend.pid) > /dev/null 2>&1; then
+    if [ -f .frontend.pid ] && ps -p "$(cat .frontend.pid)" > /dev/null 2>&1; then
         echo -e "${YELLOW}ℹ️  前端端口正常活跃中${NC}"
+    # 若没有 PID 文件，但监听进程是 vite，也视为可复用
+    elif ps -p "$FRONTEND_LISTEN_PID" -o command= 2>/dev/null | grep -q "vite"; then
+        echo "$FRONTEND_LISTEN_PID" > .frontend.pid
+        echo -e "${YELLOW}ℹ️  检测到现有 Vite 进程 (PID: $FRONTEND_LISTEN_PID)，已接管 PID 文件${NC}"
     else
-        ZOMBIE_PID=$(lsof -i :15175 -t)
-        echo -e "${RED}❌ 致命错误：端口 15175 被不明进程 (PID: $ZOMBIE_PID) 占用！${NC}"
-        echo -e "${YELLOW}建议运行: kill -9 $ZOMBIE_PID${NC}"
+        echo -e "${RED}❌ 致命错误：端口 15175 被不明进程 (PID: $FRONTEND_LISTEN_PID) 占用！${NC}"
+        echo -e "${YELLOW}建议运行: kill -9 $FRONTEND_LISTEN_PID${NC}"
         exit 1
     fi
 fi

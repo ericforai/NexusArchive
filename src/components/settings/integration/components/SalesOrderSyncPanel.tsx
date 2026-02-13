@@ -87,7 +87,7 @@ export const SalesOrderSyncPanel: React.FC<SalesOrderSyncPanelProps> = ({ classN
               <Statistic
                 title="成功"
                 value={result.success}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
                 prefix={<CheckCircle size={14} />}
               />
             </Col>
@@ -95,7 +95,7 @@ export const SalesOrderSyncPanel: React.FC<SalesOrderSyncPanelProps> = ({ classN
               <Statistic
                 title="失败"
                 value={result.failed}
-                valueStyle={{ color: result.failed > 0 ? '#ff4d4f' : undefined }}
+                styles={{ content: { color: result.failed > 0 ? '#ff4d4f' : undefined } }}
                 prefix={<XCircle size={14} />}
               />
             </Col>
@@ -107,7 +107,7 @@ export const SalesOrderSyncPanel: React.FC<SalesOrderSyncPanelProps> = ({ classN
           {result.errors.length > 0 && (
             <Alert
               type="warning"
-              message="部分订单同步失败"
+              title="部分订单同步失败"
               description={
                 <ul className="m-0 pl-5">
                   {result.errors.slice(0, 10).map((err, idx) => (

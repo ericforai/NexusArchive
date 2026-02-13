@@ -42,7 +42,8 @@ schema:
 # 文件存储根路径（开发环境）
 archive:
   root:
-    path: /tmp/nexusarchive
+    # 与 application.yml 保持一致：优先环境变量，默认项目内 data 目录，避免 /tmp 被系统清理
+    path: ${ARCHIVE_ROOT_PATH:./data/archives}
 
 # Token 黑名单服务配置（开发环境允许 Redis 降级）
 token:

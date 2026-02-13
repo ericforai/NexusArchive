@@ -328,14 +328,14 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
             {link.status === 'MISSING' && (
                 <Alert
                     type="warning"
-                    message={link.suggestion || `缺少${link.evidenceRoleName}`}
+                    title={link.suggestion || `缺少${link.evidenceRoleName}`}
                     showIcon
                 />
             )}
             {link.status === 'NEED_CONFIRM' && (
                 <Alert
                     type="info"
-                    message={`有 ${link.candidates?.length || 0} 个候选文档，请选择确认`}
+                    title={`有 ${link.candidates?.length || 0} 个候选文档，请选择确认`}
                     showIcon
                 />
             )}
@@ -549,7 +549,7 @@ const VoucherMatchingView: React.FC<VoucherMatchingViewProps> = ({
                         {result.missingDocs?.length ? (
                             <Alert
                                 type="warning"
-                                message={`缺少必关联文档: ${result.missingDocs.join('、')}`}
+                                title={`缺少必关联文档: ${result.missingDocs.join('、')}`}
                                 style={{ marginBottom: 16 }}
                                 showIcon
                             />

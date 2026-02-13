@@ -8,6 +8,8 @@
 | --- | --- | --- |
 | `lib/` | 第三方库 | 本地托管的 JS 脚本（如 Tailwind Play） |
 | `fonts/` | 字体资源 | 本地托管的 Web 字体（如 Inter） |
+| `favicon.svg` | 图标资源 | 浏览器标签页 SVG 图标 |
+| `favicon.ico` | 图标资源 | 浏览器默认请求的 ICO 图标，避免 `GET /favicon.ico` 404 |
 | `dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf` | 示例资源 | 演示用 PDF 发票样本 |
 | `metadata.json` | 配置文件 | 静态资源元数据 |
 | `robots.txt` | 站点配置 | 搜索引擎爬虫规则 |

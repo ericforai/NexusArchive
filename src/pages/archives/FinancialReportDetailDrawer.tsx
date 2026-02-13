@@ -137,7 +137,7 @@ export const FinancialReportDetailDrawer: React.FC<FinancialReportDetailDrawerPr
               <Alert
                 type="info"
                 showIcon
-                message="演示数据"
+                title="演示数据"
                 description="这是演示数据，仅用于列表展示，不包含实际的 PDF 文件。要测试 PDF 预览功能，请选择其他有文件的报告。"
               />
             )}

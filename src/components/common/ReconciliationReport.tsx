@@ -38,7 +38,7 @@ export const ReconciliationReport: React.FC<Props> = ({ record, loading }) => {
         <Card loading={loading} className="reconciliation-report">
             <Space direction="vertical" style={{ width: '100%' }} size="large">
                 <Alert
-                    message={`对账结论：${isSuccess ? '账凭证一致' : '发现业务差异'}`}
+                    title={`对账结论：${isSuccess ? '账凭证一致' : '发现业务差异'}`}
                     description={record.reconMessage}
                     type={isSuccess ? 'success' : 'warning'}
                     showIcon
@@ -49,13 +49,13 @@ export const ReconciliationReport: React.FC<Props> = ({ record, loading }) => {
                     <Col span={8}>
                         <Card size="small" title="财务账（ERP）" bordered={false} style={{ background: '#f0f5ff' }}>
                             <Statistic title="本期合计" value={record.erpDebitTotal} precision={2} prefix="¥" />
-                            <Statistic title="凭证总数" value={record.erpVoucherCount} suffix="笔" valueStyle={{ fontSize: 16 }} />
+                            <Statistic title="凭证总数" value={record.erpVoucherCount} suffix="笔" styles={{ content: { fontSize: 16 } }} />
                         </Card>
                     </Col>
                     <Col span={8}>
                         <Card size="small" title="归档凭证" bordered={false} style={{ background: '#f6ffed' }}>
                             <Statistic title="入库合计" value={record.arcDebitTotal} precision={2} prefix="¥" />
-                            <Statistic title="存档总数" value={record.arcVoucherCount} suffix="笔" valueStyle={{ fontSize: 16 }} />
+                            <Statistic title="存档总数" value={record.arcVoucherCount} suffix="笔" styles={{ content: { fontSize: 16 } }} />
                         </Card>
                     </Col>
                     <Col span={8}>

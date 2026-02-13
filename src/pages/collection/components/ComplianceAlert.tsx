@@ -97,7 +97,7 @@ export const ComplianceAlert: React.FC<ComplianceAlertProps> = ({
       closable={closable}
       onClose={onClose}
       className={className}
-      message={getComplianceMessage(category)}
+      title={getComplianceMessage(category)}
     />
   );
 };

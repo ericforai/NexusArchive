@@ -9,7 +9,7 @@
 | 文件 | 功能 | 使用场景 |
 | --- | --- | --- |
 | `create-module.sh` | DDD 模块生成 | 自动生成四层模块结构（api/app/domain/infra）|
-| `dev.sh` | 启动开发环境 | 一键启动 DB+Redis+Backend+Frontend |
+| `dev.sh` | 启动开发环境 | 一键启动 DB+Redis+Backend+Frontend（后端未就绪时失败退出；可接管已有监听进程，避免误判） |
 | `dev-stop.sh` | 停止开发环境 | 停止所有开发服务 |
 | `dev-logs.sh` | 查看开发日志 | 实时查看应用日志 |
 
@@ -38,12 +38,15 @@
 | `backup-dev-data.sh` | 开发数据备份 | 备份开发环境数据 |
 | `backup_postgres.sh` | PostgreSQL 备份 | 数据库备份 |
 | `restore_postgres.sh` | PostgreSQL 恢复 | 数据库恢复 |
+| `check-collection-batch-sequence.sh` | 数据库序列健康检查 | 检测并修复 `collection_batch_id_seq` 序列回退问题（防止主键冲突） |
 | `check-docker-health.sh` | Docker 健康检查 | 检查容器健康状态 |
 | `create_demo_files.sh` | 生成演示文件 | 创建测试数据 |
-| `self_check.sh` | 环境自检 | 校验环境配置 |
 | `diagnose_fonds_scope.sh` | 全宗范围诊断 | 诊断全宗配置 |
 | `generate_signature_keys.sh` | 生成签名密钥 | JWT 签名密钥生成 |
+| `self_check.sh` | 环境自检 | 校验环境配置 |
 | `validate-schema.sh` | Schema 验证 v2.0 | 自动对比 Entity 定义与数据库结构（Maven驱动） |
+| `verify_attachment_download_smoke.sh` | 附件下载冒烟校验 | 启动后校验关键附件下载接口（防止历史 404 复发） |
+| `verify-sequence-check-is-called.sh` | 序列检查脚本自测 | 验证 `check-collection-batch-sequence.sh` 能正确识别 `is_called=false` 隐患场景 |
 
 ### 升级脚本
 

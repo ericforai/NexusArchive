@@ -222,7 +222,7 @@ export function ConnectorForm({ state, actions }: ConnectorFormProps) {
         </Space.Compact>
         {detectedType && (
           <Alert
-            message={`检测到: ${detectedType}`}
+            title={`检测到: ${detectedType}`}
             type="success"
             showIcon
             icon={<CheckCircle size={14} />}
