@@ -16,10 +16,8 @@ import com.nexusarchive.mapper.CollectionBatchMapper;
 import com.nexusarchive.mapper.CollectionBatchFileMapper;
 import com.nexusarchive.mapper.BasFondsMapper;
 import com.nexusarchive.security.FondsContext;
-import com.nexusarchive.service.collection.BatchFileStorageService;
-import com.nexusarchive.service.collection.BatchFileValidator;
-import com.nexusarchive.service.collection.BatchNumberGenerator;
-import com.nexusarchive.service.impl.CollectionBatchServiceImpl;
+import com.nexusarchive.service.collection.CollectionMetadataInheritor;
+import com.nexusarchive.service.collection.FourNatureCheckHelper;
 import com.nexusarchive.util.FileHashUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,6 +96,9 @@ class CollectionBatchServiceTest {
 
     @Mock
     private BatchFileStorageService storageService;
+
+    @Mock
+    private CollectionMetadataInheritor metadataInheritor;
 
     @InjectMocks
     private CollectionBatchServiceImpl collectionBatchService;
@@ -310,6 +311,7 @@ class CollectionBatchServiceTest {
                 .build();
 
             when(batchFileMapper.selectList(any())).thenReturn(List.of(batchFile));
+            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
 
             ArcFileContent arcFile = ArcFileContent.builder()
                 .id("file-001")
@@ -364,6 +366,7 @@ class CollectionBatchServiceTest {
                 .build();
 
             when(batchFileMapper.selectList(any())).thenReturn(List.of(batchFile));
+            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
 
             ArcFileContent arcFile = ArcFileContent.builder()
                 .id("file-001")
@@ -412,6 +415,7 @@ class CollectionBatchServiceTest {
                 .build();
 
             when(batchFileMapper.selectList(any())).thenReturn(List.of(file1, file2));
+            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
 
             ArcFileContent arcFile1 = ArcFileContent.builder()
                 .id("file-001")
@@ -567,6 +571,7 @@ class CollectionBatchServiceTest {
                 .build();
 
             when(batchFileMapper.selectList(any())).thenReturn(List.of(file1, file2));
+            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
 
             // Mock PreArchiveCheckService
             FourNatureReport mockReport1 = new FourNatureReport();
@@ -611,6 +616,7 @@ class CollectionBatchServiceTest {
                 .build();
 
             when(batchFileMapper.selectList(any())).thenReturn(List.of(file));
+            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
 
             FourNatureReport mockReport = new FourNatureReport();
             mockReport.setStatus(OverallStatus.PASS);
