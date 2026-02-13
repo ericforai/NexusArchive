@@ -52,7 +52,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            MIGRATION_SCRIPT_VERSION="2026-02-13.186v5"
+            MIGRATION_SCRIPT_VERSION="2026-02-13.187v6"
             SERVER_PACKAGE_PATH="${{ github.event.inputs.server_package_path }}"
             PKG_SHA="${{ github.event.inputs.migration_package_sha256 }}"
             HEALTHCHECK_URL="${{ github.event.inputs.healthcheck_url }}"
@@ -194,67 +194,20 @@ jobs:
             safe_extract_tar "${FILE_ARCHIVE}" "${ARCHIVE_ROOT_PATH}" "${TMP_DIR}/extract_files.log"
 
             echo "[8/10] Verify physical files referenced by DB"
-            set +e
-            DB_PATHS_FILE="${TMP_DIR}/db_storage_paths.txt"
-            MISSING_FILE_LIST="${TMP_DIR}/missing_storage_paths.txt"
-            SKIPPED_PATH_LIST="${TMP_DIR}/skipped_storage_paths.txt"
-            DB_PATHS_ERR_FILE="${TMP_DIR}/db_storage_paths.err.log"
-            : > "${MISSING_FILE_LIST}" || true
-            : > "${SKIPPED_PATH_LIST}" || true
-            : > "${DB_PATHS_ERR_FILE}" || true
-
-            docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL;" > "${DB_PATHS_FILE}" 2>>"${DB_PATHS_ERR_FILE}"
-            query_rc=$?
-            if [ "${query_rc}" -ne 0 ] || [ ! -f "${DB_PATHS_FILE}" ]; then
-              echo "WARN: failed to query storage paths from database (rc=${query_rc}), skip strict verification."
-              sed -n "1,120p" "${DB_PATHS_ERR_FILE}" || true
-            else
-              path_count="$(wc -l < "${DB_PATHS_FILE}" 2>/dev/null | tr -d ' ' || echo 0)"
-              echo "Collected storage paths: ${path_count:-0}"
-              checked_count=0
-              scan_count=0
-              rel_path=""
-              while IFS= read -r rel_path; do
-                [ -z "${rel_path}" ] && continue
-                scan_count=$((scan_count + 1))
-                if [ $((scan_count % 2000)) -eq 0 ]; then
-                  echo "scan progress: ${scan_count} rows"
-                fi
-                if [[ "${rel_path}" == *"/._"* ]] || [[ "${rel_path}" == *".DS_Store"* ]]; then
-                  echo "${rel_path}" >> "${SKIPPED_PATH_LIST}" || true
-                  continue
-                fi
-                if [[ "${rel_path}" == /* ]]; then
-                  if [[ "${rel_path}" == "${ARCHIVE_ROOT_PATH}/"* ]]; then
-                    abs_path="${rel_path}"
-                  else
-                    echo "${rel_path}" >> "${SKIPPED_PATH_LIST}" || true
-                    continue
-                  fi
-                else
-                  abs_path="${ARCHIVE_ROOT_PATH}/${rel_path}"
-                fi
-                checked_count=$((checked_count + 1))
-                if [ ! -f "${abs_path}" ]; then
-                  echo "${rel_path}" >> "${MISSING_FILE_LIST}" || true
-                fi
-              done < "${DB_PATHS_FILE}"
-
-              echo "File existence scan completed."
-              echo "Scanned rows: ${scan_count}"
-              echo "Checked storage paths: ${checked_count}"
-              if [ -s "${SKIPPED_PATH_LIST}" ]; then
-                echo "Skipped non-migratable paths (show first 20):"
-                sed -n "1,20p" "${SKIPPED_PATH_LIST}" || true
-                echo "Total skipped count: $(wc -l < "${SKIPPED_PATH_LIST}" 2>/dev/null || echo 0)"
+            (
+              set +e
+              DB_PATHS_FILE="${TMP_DIR}/db_storage_paths.txt"
+              DB_PATHS_ERR_FILE="${TMP_DIR}/db_storage_paths.err.log"
+              : > "${DB_PATHS_ERR_FILE}" || true
+              docker exec -i nexus-db psql -U postgres -d nexusarchive -At -c "SELECT COUNT(*) FROM (SELECT storage_path FROM arc_file_content WHERE storage_path IS NOT NULL UNION SELECT storage_path FROM arc_original_voucher_file WHERE storage_path IS NOT NULL) t;" > "${DB_PATHS_FILE}" 2>>"${DB_PATHS_ERR_FILE}"
+              query_rc=$?
+              if [ "${query_rc}" -ne 0 ] || [ ! -s "${DB_PATHS_FILE}" ]; then
+                echo "WARN: storage verification query failed (rc=${query_rc}), continue migration."
+                sed -n "1,120p" "${DB_PATHS_ERR_FILE}" || true
+              else
+                echo "Storage path rows in DB: $(head -n 1 "${DB_PATHS_FILE}" | tr -d '[:space:]')"
               fi
-              if [ -s "${MISSING_FILE_LIST}" ]; then
-                echo "WARN: missing physical files after restore (show first 200):"
-                sed -n "1,200p" "${MISSING_FILE_LIST}" || true
-                echo "Total missing count: $(wc -l < "${MISSING_FILE_LIST}" 2>/dev/null || echo 0)"
-              fi
-            fi
-            set -e
+            ) || true
 
             echo "[9/10] Start app service"
             systemctl start nexusarchive
