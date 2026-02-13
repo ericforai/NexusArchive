@@ -5,13 +5,10 @@
 
 /**
  * 路由路径常量
- * 
+ *
  * 独立文件避免循环依赖
  */
 
-/**
- * 所有路由路径常量
- */
 export const ROUTE_PATHS = {
     PORTAL: '/system',
     PANORAMA: '/system/panorama',
@@ -37,9 +34,7 @@ export const ROUTE_PATHS = {
     ARCHIVE_REPORTS: '/system/archive/reports',
     ARCHIVE_OTHER: '/system/archive/other',
 
-    // New: Archive Operations Path (Separated from Repository)
     ARCHIVE_OPS: '/system/operations',
-
     ARCHIVE_VOLUME: '/system/operations/volume',
     ARCHIVE_APPROVAL: '/system/operations/approval',
     ARCHIVE_OPEN_APPRAISAL: '/system/operations/open-appraisal',
@@ -48,6 +43,11 @@ export const ROUTE_PATHS = {
     APPRAISAL_LIST: '/system/operations/appraisal-list',
     DESTRUCTION_APPROVAL: '/system/operations/destruction-approval',
     DESTRUCTION_EXECUTION: '/system/operations/destruction-execution',
+
+    // WAREHOUSE removed as per expert review (Out of Scope)
+    // ---
+    // 档案装盒 (Archive Box) - Restored per user request
+    export const ARCHIVE_BOX: string = '/system/archive/box';
 
     // 原始凭证和记账凭证
     ARCHIVE_ORIGINAL_VOUCHERS: '/system/archive/original-vouchers',
@@ -84,13 +84,11 @@ export const ROUTE_PATHS = {
     FREEZE_HOLD: '/system/operations/freeze-hold',
     FREEZE_HOLD_DETAIL: '/system/operations/freeze-hold',
 
-
     MATCHING: '/system/matching',
     MATCHING_AUTO: '/system/matching/auto',
     MATCHING_WIZARD: '/system/matching/wizard',
     MATCHING_REPORT: '/system/matching/report',
 
-    // Debug Routes
     TEST_PAYMENT_FILE: '/debug/payment-file',
 } as const;
 
@@ -102,6 +100,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // 预归档库
     '记账凭证库': ROUTE_PATHS.PRE_ARCHIVE_POOL,  // 默认列表视图，支持 ?view=kanban 切换
     '单据池': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL,
+
     // 'OCR识别': ROUTE_PATHS.PRE_ARCHIVE_OCR, // 待开发
     '凭证关联': ROUTE_PATHS.PRE_ARCHIVE_LINK,
     '异常数据': ROUTE_PATHS.PRE_ARCHIVE_ABNORMAL,
@@ -110,14 +109,12 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '预归档:财务报告': ROUTE_PATHS.PRE_ARCHIVE_REPORTS,
 
     // 单据池 - 15 个分类子菜单（与数据库 sys_original_voucher_type 一致）
-    // 发票类 (INVOICE)
     '单据池:纸质发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_PAPER',
     '单据池:增值税电子发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_VAT_E',
     '单据池:数电发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_DIGITAL',
     '单据池:数电票（铁路）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_RAIL',
     '单据池:数电票（航空）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_AIR',
-    '单据池:数电票（财政）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_GOV',
-    // 银行类 (BANK)
+    '单据池:数电票（财政）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_FINANCIAL',
     '单据池:银行回单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=BANK_RECEIPT',
     '单据池:银行对账单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=BANK_STATEMENT',
     // 单据类 (DOCUMENT)
@@ -131,21 +128,19 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // 其他类 (OTHER)
     '单据池:其他': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=OTHER',
 
-    // 资料收集
+    // 嵄料收集
     '在线接收': ROUTE_PATHS.COLLECTION_ONLINE,
     '扫描集成': ROUTE_PATHS.COLLECTION_SCAN,
-    '批量上传': '/system/collection/upload',
 
     // --- 会计档案 (Level 1: ACCOUNT_ARCHIVES) ---
     // Level 2: 会计凭证
     '会计凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
     // Level 3: 原始凭证、记账凭证
     '原始凭证': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS,
-    '记账凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
+    '记账凭证': ROUTE_PATHS.ARCHIVE_ACCOUNTING_VOUCHERS,
 
     // Level 2: 会计账簿（父级，默认导航到第一个子项）
     '会计账簿': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=GENERAL_LEDGER',
-
     // Level 2: 会计账簿 -> Level 3
     '总账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=GENERAL_LEDGER',
     '明细账': ROUTE_PATHS.ARCHIVE_LEDGERS + '?type=SUBSIDIARY_LEDGER',
@@ -169,8 +164,10 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '会计档案销毁清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=DESTRUCTION_REGISTER',
     '会计档案鉴定意见书': ROUTE_PATHS.ARCHIVE_OTHER + '?type=APPRAISAL_OPINION',
 
-    // --- 档案作业 (Level 1: ARCHIVE_OPS) ---
+    // 档案装盒 (Archive Box)
+    '档案装盒': ARCHIVE_BOX,
 
+    // --- 档案作业 (Level 1: ARCHIVE_OPS) ---
     '档案组卷': ROUTE_PATHS.ARCHIVE_VOLUME,
     '归档审批': ROUTE_PATHS.ARCHIVE_APPROVAL,  // 单条归档审批
     '归档批次': '/system/operations/batch',     // 批次归档管理
@@ -185,19 +182,6 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // 库房管理 - Removed
     // '密集架控制', '温湿度监控' removed
 
-    // Level 2: 原始凭证 -> Level 3
-    '销售订单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=SALES_ORDER',
-    '出库单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=DELIVERY_ORDER',
-    '采购订单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=PURCHASE_ORDER',
-    '入库单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=RECEIPT_ORDER',
-    '付款申请单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=PAYMENT_REQ',
-    '报销单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=EXPENSE_REPORT',
-    '普通发票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=GEN_INVOICE',
-    '增值税专票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=VAT_INVOICE',
-    '银行回单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_RECEIPT',
-    '银行对账单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_STATEMENT',
-    '合同协议': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=CONTRACT',
-
     // --- 系统设置 ---
     '基础设置': ROUTE_PATHS.SETTINGS_BASIC,
     '用户管理': ROUTE_PATHS.SETTINGS_USERS,
@@ -208,5 +192,16 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '集成中心': ROUTE_PATHS.SETTINGS_INTEGRATION,
     '审计日志': ROUTE_PATHS.SETTINGS_AUDIT,
     '数据导入': ROUTE_PATHS.SETTINGS_DATA_IMPORT,
+    '多因子认证': ROUTE_PATHS.SETTINGS_MFA,
 
+    ADMIN: '/system/admin',
+
+    // 匹配向导模块（OnboardingWizard 和 ComplianceReport 仍用 withSuspense）
+    MATCHING: '/system/matching',
+    MATCHING_AUTO: '/system/matching/auto',
+    MATCHING_WIZARD: '/system/matching/wizard',
+    MATCHING_REPORT: '/system/matching/report',
+
+    // Debug Routes
+    TEST_PAYMENT_FILE: '/debug/payment-file',
 };
