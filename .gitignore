@@ -165,3 +165,6 @@ lint_output.txt
 # Large Binaries
 deploy/offline/bin/*.jar
 skills/
+
+# 迁移备份包（动态生成，体积大，不应同步）
+migration_packages/
