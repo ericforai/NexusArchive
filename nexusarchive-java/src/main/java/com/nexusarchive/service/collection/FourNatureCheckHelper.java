@@ -27,35 +27,35 @@ public class FourNatureCheckHelper {
      * @return 失败原因描述
      */
     public static String extractFailureReason(FourNatureReport report) {
-        var authenticity = report.getAuthenticity();
-        if (authenticity != null && authenticity.getStatus() == OverallStatus.FAIL) {
-            return authenticity.getMessage() != null
-                    ? authenticity.getMessage()
-                    : "真实性检测失败";
-        }
+        // 按优先级检查各检测项：真实性 > 完整性 > 可用性 > 安全性
+        var result = extractFirstFailed(
+                report.getAuthenticity(), "真实性检测失败",
+                report.getIntegrity(), "完整性检测失败",
+                report.getUsability(), "可用性检测失败",
+                report.getSafety(), "安全性检测失败"
+        );
+        return result != null ? result : "检测未通过";
+    }
 
-        var integrity = report.getIntegrity();
-        if (integrity != null && integrity.getStatus() == OverallStatus.FAIL) {
-            return integrity.getMessage() != null
-                    ? integrity.getMessage()
-                    : "完整性检测失败";
-        }
+    /**
+     * 提取第一个失败的检测项原因
+     *
+     * @param items 检测项及其默认消息（成对传入：checkItem, defaultMessage）
+     * @return 失败原因或 null（如果全部通过）
+     */
+    private static String extractFirstFailed(Object... items) {
+        for (int i = 0; i < items.length; i += 2) {
+            com.nexusarchive.dto.sip.report.CheckItem checkItem =
+                    (com.nexusarchive.dto.sip.report.CheckItem) items[i];
+            String defaultMessage = (String) items[i + 1];
 
-        var usability = report.getUsability();
-        if (usability != null && usability.getStatus() == OverallStatus.FAIL) {
-            return usability.getMessage() != null
-                    ? usability.getMessage()
-                    : "可用性检测失败";
+            if (checkItem != null && checkItem.getStatus() == OverallStatus.FAIL) {
+                return checkItem.getMessage() != null
+                        ? checkItem.getMessage()
+                        : defaultMessage;
+            }
         }
-
-        var safety = report.getSafety();
-        if (safety != null && safety.getStatus() == OverallStatus.FAIL) {
-            return safety.getMessage() != null
-                    ? safety.getMessage()
-                    : "安全性检测失败";
-        }
-
-        return "检测未通过";
+        return null;
     }
 
     /**
