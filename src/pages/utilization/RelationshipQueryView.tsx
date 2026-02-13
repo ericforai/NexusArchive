@@ -19,6 +19,8 @@ import { toast } from 'react-hot-toast';
 import ArchiveDetailDrawer from '@/pages/archives/ArchiveDetailDrawer';
 import { autoAssociationApi } from '@/api/autoAssociation';
 import { originalVoucherApi } from '@/api/originalVoucher';
+import { attachmentsApi } from '@/api/attachments';
+import { archivesApi } from '@/api/archives';
 import type { GenericRow, ModuleConfig } from '@/types';
 
 /**
@@ -90,6 +92,17 @@ const resolvePreviewTitle = (type: RelationNodeData['type']): string => {
   return '原始凭证预览';
 };
 
+const inferFileTypeFromName = (name?: string): string | undefined => {
+  if (!name) return undefined;
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  return undefined;
+};
+
 const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRow> => {
   const attachments: Array<{
     id: string;
@@ -98,30 +111,106 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
     type?: string;
   }> = [];
 
-  try {
-    const originalFiles = await originalVoucherApi.getOriginalVoucherFiles(nodeData.id);
-    if (originalFiles.length > 0) {
-      originalFiles.forEach(file => {
+  // 1) 虚拟文件节点：FILE_{fileId}，直接预览该文件（不走中心凭证）
+  if (nodeData.id.startsWith('FILE_')) {
+    const fileId = nodeData.id.slice(5);
+    attachments.push({
+      id: fileId,
+      fileName: nodeData.name || nodeData.code || fileId,
+      fileUrl: `/archive/files/download/${fileId}`,
+      type: inferFileTypeFromName(nodeData.name || nodeData.code),
+    });
+  }
+
+  // 2) 虚拟原始凭证节点：OV_{originalVoucherId}
+  if (attachments.length === 0 && nodeData.id.startsWith('OV_')) {
+    const originalVoucherId = nodeData.id.slice(3);
+    try {
+      const originalFiles = await originalVoucherApi.getOriginalVoucherFiles(originalVoucherId);
+      if (originalFiles.length > 0) {
+        originalFiles.forEach(file => {
+          attachments.push({
+            id: file.id,
+            fileName: file.fileName,
+            fileUrl: `/original-vouchers/files/download/${file.id}`,
+            type: file.fileType,
+          });
+        });
+      }
+    } catch (error) {
+      console.error('获取原始凭证文件失败:', error);
+      // 继续后续兜底
+    }
+  }
+
+  // 3) 实体节点若是原始凭证ID，按原始凭证文件查询
+  if (attachments.length === 0) {
+    try {
+      const originalFiles = await originalVoucherApi.getOriginalVoucherFiles(nodeData.id);
+      if (originalFiles.length > 0) {
+        originalFiles.forEach(file => {
+          attachments.push({
+            id: file.id,
+            fileName: file.fileName,
+            fileUrl: `/original-vouchers/files/download/${file.id}`,
+            type: file.fileType,
+          });
+        });
+      }
+    } catch (error) {
+      console.error('按原始凭证ID查询文件失败:', error);
+      // 非原始凭证节点会进入这里，继续走通用关系附件查询
+    }
+  }
+
+  if (attachments.length === 0) {
+    try {
+      const archiveAttachments = await attachmentsApi.getByArchive(nodeData.id);
+      archiveAttachments.forEach(file => {
         attachments.push({
           id: file.id,
           fileName: file.fileName,
-          fileUrl: `/original-vouchers/files/download/${file.id}`,
+          fileUrl: `/archive/files/download/${file.id}`,
           type: file.fileType,
         });
       });
+    } catch (error) {
+      console.error('查询附件失败:', error);
+      // 继续回退到关系附件接口
     }
-  } catch {
-    // 非原始凭证节点会进入这里，继续走通用关系附件查询
+  }
+
+  // 4) 归档文件列表兜底：有些节点不是附件关系，但有自己的归档文件
+  if (attachments.length === 0) {
+    try {
+      const archiveFilesResp = await archivesApi.getArchiveFiles(nodeData.id);
+      const archiveFiles = archiveFilesResp?.data || [];
+      archiveFiles.forEach((file: any) => {
+        if (!file?.id) return;
+        attachments.push({
+          id: file.id,
+          fileName: file.fileName || file.originalName || file.name,
+          fileUrl: `/archive/files/download/${file.id}`,
+          type: file.fileType,
+        });
+      });
+    } catch (error) {
+      console.error('查询附件失败:', error);
+      // 继续回退到关系附件接口
+    }
   }
 
   if (attachments.length === 0) {
     try {
       const linkedFiles = await autoAssociationApi.getLinkedFiles(nodeData.id);
       linkedFiles.files.forEach(file => {
+        const candidateUrl = file.url?.trim();
+        // 仅使用可访问的真实 URL；跳过 "#" 等演示占位，避免触发 /archive/files/download/{demo-id} 的 404
+        if (!candidateUrl || candidateUrl === '#') return;
         attachments.push({
           id: file.id,
           fileName: file.name,
-          fileUrl: file.url && file.url !== '#' ? file.url : undefined,
+          fileUrl: candidateUrl,
           type: file.type,
         });
       });
