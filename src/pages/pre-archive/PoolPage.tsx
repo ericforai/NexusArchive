@@ -84,13 +84,19 @@ export const PoolPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
 
-  // 仪表板筛选状态：默认显示"待检测"状态
-  const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(
-    SimplifiedPreArchiveStatus.PENDING_CHECK
-  );
+  // 仪表板筛选状态：默认优先使用 URL 参数，否则默认“待检测”
+  const [dashboardFilter, setDashboardFilter] = useState<SimplifiedPreArchiveStatus | null>(() => {
+    const statusParam = searchParams.get('status') as SimplifiedPreArchiveStatus | null;
+    if (statusParam && Object.values(SimplifiedPreArchiveStatus).includes(statusParam)) {
+      return statusParam;
+    }
+    return SimplifiedPreArchiveStatus.PENDING_CHECK;
+  });
 
-  // 档案门类筛选状态 (VOUCHER/LEDGER/REPORT/OTHER)
-  const [categoryFilter, setCategoryFilter] = useState<string | null>('VOUCHER');
+  // 档案门类筛选状态：默认优先使用 URL 参数，否则默认“记账凭证”
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(() => {
+    return searchParams.get('category') || 'VOUCHER';
+  });
 
   // 获取仪表盘统计数据
   const { stats } = usePoolDashboard({ categoryFilter });
@@ -101,7 +107,17 @@ export const PoolPage: React.FC = () => {
     if (viewParam && (viewParam === 'list' || viewParam === 'kanban') && viewParam !== viewMode) {
       setViewMode(viewParam);
     }
-  }, [searchParams, viewMode]);
+
+    const statusParam = searchParams.get('status') as SimplifiedPreArchiveStatus | null;
+    if (statusParam && Object.values(SimplifiedPreArchiveStatus).includes(statusParam) && statusParam !== dashboardFilter) {
+      setDashboardFilter(statusParam);
+    }
+
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categoryParam !== categoryFilter) {
+      setCategoryFilter(categoryParam);
+    }
+  }, [searchParams, viewMode, dashboardFilter, categoryFilter]);
 
   // 处理视图切换
   const handleViewChange = useCallback((mode: ViewMode) => {
@@ -144,7 +160,6 @@ export const PoolPage: React.FC = () => {
           // 2. 刷新数据
           queryClient.invalidateQueries({ queryKey: ['pool'] });
         } catch (error: any) {
-          console.error(`${statusLabel}失败:`, error);
           message.error(`${statusLabel}执行失败: ${error.message || '系统错误'}`);
         } finally {
           hide();

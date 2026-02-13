@@ -10,15 +10,16 @@ import {
   FileText,
   AlertTriangle,
   Loader2,
-  X,
-  RotateCcw,
-  Info
+  RotateCcw
 } from 'lucide-react';
-import { SimpleGraphView, ThreeColumnLayout } from '@/components/relation-graph';
+import { ThreeColumnLayout } from '@/components/relation-graph';
 import { useRelationGraphStore } from '@/store/useRelationGraphStore';
 import type { RelationNodeData, RelationEdgeData } from '@/types/relationGraph';
-import { ARCHIVE_TYPE_STYLES } from '@/types/relationGraph';
 import { toast } from 'react-hot-toast';
+import ArchiveDetailDrawer from '@/pages/archives/ArchiveDetailDrawer';
+import { autoAssociationApi } from '@/api/autoAssociation';
+import { originalVoucherApi } from '@/api/originalVoucher';
+import type { GenericRow, ModuleConfig } from '@/types';
 
 /**
  * 搜索栏组件
@@ -52,90 +53,6 @@ const SearchBar: React.FC<{
 );
 
 /**
- * 节点详情抽屉
- */
-const NodeDetailDrawer: React.FC<{
-  nodeData: RelationNodeData | null;
-  onClose: () => void;
-}> = ({ nodeData, onClose }) => {
-  if (!nodeData) return null;
-
-  const meta = ARCHIVE_TYPE_STYLES[nodeData.type] || ARCHIVE_TYPE_STYLES.other;
-
-  return (
-    <div className="w-96 bg-white border-l border-slate-200 shadow-xl flex flex-col h-full animate-in slide-in-from-right duration-300">
-      {/* 头部 */}
-      <div className="p-6 border-b border-slate-100 flex justify-between items-start">
-        <div>
-          <span className={`text-xs font-bold uppercase tracking-wider block mb-1 ${meta.text}`}>
-            {meta.label}
-          </span>
-          <h3 className="text-xl font-bold text-slate-800 leading-tight">
-            {nodeData.code || nodeData.name}
-          </h3>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <X size={20} className="text-slate-400" />
-        </button>
-      </div>
-
-      {/* 内容 */}
-      <div className="p-6 flex-1 overflow-y-auto space-y-6">
-        {/* 状态卡片 */}
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-slate-500">当前状态</span>
-            <span className={`px-2 py-1 text-xs font-bold rounded ${nodeData.status === '已归档' || nodeData.status === 'ARCHIVED'
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'bg-slate-100 text-slate-600'
-              }`}>
-              {nodeData.status || '未知'}
-            </span>
-          </div>
-          <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-emerald-500 w-full h-full rounded-full" />
-          </div>
-        </div>
-
-        {/* 详情列表 */}
-        <div className="space-y-4 text-sm text-slate-700">
-          <div>
-            <div className="text-xs text-slate-400 font-medium">名称</div>
-            <div className="font-medium">{nodeData.name || '--'}</div>
-          </div>
-
-          {nodeData.amount && (
-            <div>
-              <div className="text-xs text-slate-400 font-medium">金额</div>
-              <div className="font-mono font-bold">{nodeData.amount}</div>
-            </div>
-          )}
-
-          <div>
-            <div className="text-xs text-slate-400 font-medium">业务日期</div>
-            <div>{nodeData.date || '--'}</div>
-          </div>
-
-          <div>
-            <div className="text-xs text-slate-400 font-medium">档案类型</div>
-            <div>{meta.label}</div>
-          </div>
-
-          <div>
-            <div className="text-xs text-slate-400 font-medium">距中心深度</div>
-            <div>{nodeData.depth} 度</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-/**
  * 空状态
  */
 const EmptyState: React.FC<{
@@ -155,6 +72,87 @@ const EmptyState: React.FC<{
   </div>
 );
 
+const EMPTY_MODULE_CONFIG: ModuleConfig = {
+  columns: [],
+  data: [],
+};
+
+const parseAmountToNumber = (amount?: string): number => {
+  if (!amount) return 0;
+  const normalized = amount.replace(/[^\d.-]/g, '');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const resolvePreviewTitle = (type: RelationNodeData['type']): string => {
+  if (type === 'voucher') return '凭证预览';
+  if (type === 'report' || type === 'ledger') return '档案预览';
+  return '原始凭证预览';
+};
+
+const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRow> => {
+  const attachments: Array<{
+    id: string;
+    fileName?: string;
+    fileUrl?: string;
+    type?: string;
+  }> = [];
+
+  try {
+    const originalFiles = await originalVoucherApi.getOriginalVoucherFiles(nodeData.id);
+    if (originalFiles.length > 0) {
+      originalFiles.forEach(file => {
+        attachments.push({
+          id: file.id,
+          fileName: file.fileName,
+          fileUrl: `/original-vouchers/files/download/${file.id}`,
+          type: file.fileType,
+        });
+      });
+    }
+  } catch {
+    // 非原始凭证节点会进入这里，继续走通用关系附件查询
+  }
+
+  if (attachments.length === 0) {
+    try {
+      const linkedFiles = await autoAssociationApi.getLinkedFiles(nodeData.id);
+      linkedFiles.files.forEach(file => {
+        attachments.push({
+          id: file.id,
+          fileName: file.name,
+          fileUrl: file.url && file.url !== '#' ? file.url : undefined,
+          type: file.type,
+        });
+      });
+    } catch {
+      // 保持空数组，交由抽屉空态展示
+    }
+  }
+
+  const amount = parseAmountToNumber(nodeData.amount);
+  const sourceData = JSON.stringify({
+    voucherNo: nodeData.code || nodeData.id,
+    voucherDate: nodeData.date || '',
+    summary: nodeData.name || '',
+    debitTotal: amount,
+    creditTotal: amount,
+    entries: [],
+  });
+
+  return {
+    id: nodeData.id,
+    code: nodeData.code || nodeData.id,
+    date: nodeData.date || '',
+    summary: nodeData.name || '',
+    archivalCode: nodeData.code || nodeData.id,
+    archivalCategory: nodeData.type === 'voucher' ? 'VOUCHER' : 'OTHER',
+    previewTitle: resolvePreviewTitle(nodeData.type),
+    sourceData,
+    attachments,
+  };
+};
+
 /**
  * 关系联查主页面 - 简化版
  */
@@ -162,20 +160,19 @@ export const RelationshipQueryView: React.FC = () => {
   const [urlSearchParams] = useSearchParams();
   // 本地状态 - 移除默认值，避免页面加载时请求不存在的档号
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedNodeData, setSelectedNodeData] = useState<RelationNodeData | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedDrawerRow, setSelectedDrawerRow] = useState<GenericRow | null>(null);
   const [highlightedArchiveId, setHighlightedArchiveId] = useState<string | null>(null);
 
   // Store 状态
   const nodes = useRelationGraphStore(s => s.nodes);
   const edges = useRelationGraphStore(s => s.edges);
-  const centerNodeId = useRelationGraphStore(s => s.centerNodeId);
   const isInitialLoading = useRelationGraphStore(s => s.isInitialLoading);
   const initialError = useRelationGraphStore(s => s.initialError);
   const originalQueryId = useRelationGraphStore(s => s.originalQueryId);
   const redirectMessage = useRelationGraphStore(s => s.redirectMessage);
   const initializeGraph = useRelationGraphStore(s => s.initializeGraph);
   const resetGraph = useRelationGraphStore(s => s.resetGraph);
-  const expandNode = useRelationGraphStore(s => s.expandNode);
 
   // 搜索处理
   const handleSearch = useCallback(async () => {
@@ -185,7 +182,8 @@ export const RelationshipQueryView: React.FC = () => {
       return;
     }
 
-    setSelectedNodeData(null);
+    setDrawerOpen(false);
+    setSelectedDrawerRow(null);
     setHighlightedArchiveId(null);
     resetGraph();
     await initializeGraph(query);
@@ -212,7 +210,8 @@ export const RelationshipQueryView: React.FC = () => {
     }
     setSearchQuery(voucherNo);
     if (autoSearch) {
-      setSelectedNodeData(null);
+      setDrawerOpen(false);
+      setSelectedDrawerRow(null);
       setHighlightedArchiveId(null);
       resetGraph();
       void initializeGraph(voucherNo);
@@ -222,21 +221,33 @@ export const RelationshipQueryView: React.FC = () => {
   // 重置处理
   const handleReset = useCallback(() => {
     setSearchQuery('');
-    setSelectedNodeData(null);
+    setDrawerOpen(false);
+    setSelectedDrawerRow(null);
     setHighlightedArchiveId(null);
     resetGraph();
     toast.success('已重置图谱');
   }, [resetGraph]);
 
-  // 节点点击处理：打开右侧详情抽屉
-  const handleNodeClick = useCallback((nodeId: string, nodeData: RelationNodeData) => {
-    // 点击任何单据卡片，都打开右侧详情抽屉
-    setSelectedNodeData(nodeData);
+  // 节点点击处理：复用标准凭证抽屉，默认定位到“关联附件”
+  const handleNodeClick = useCallback(async (nodeId: string, nodeData: RelationNodeData) => {
+    setHighlightedArchiveId(nodeId);
+    const loadingId = toast.loading('正在加载预览...');
+    try {
+      const row = await mapNodeToDrawerRow(nodeData);
+      setSelectedDrawerRow(row);
+      setDrawerOpen(true);
+    } catch (error) {
+      console.error('加载预览失败:', error);
+      toast.error('加载预览失败，请稍后重试');
+    } finally {
+      toast.dismiss(loadingId);
+    }
   }, []);
 
   // 关闭抽屉
   const handleCloseDrawer = useCallback(() => {
-    setSelectedNodeData(null);
+    setDrawerOpen(false);
+    setSelectedDrawerRow(null);
   }, []);
 
   // 判断是否显示内容
@@ -329,8 +340,15 @@ export const RelationshipQueryView: React.FC = () => {
           </div>
         )}
 
-        {/* 详情抽屉 */}
-        <NodeDetailDrawer nodeData={selectedNodeData} onClose={handleCloseDrawer} />
+        {/* 标准详情抽屉（复用档案管理同款组件） */}
+        <ArchiveDetailDrawer
+          open={drawerOpen}
+          onClose={handleCloseDrawer}
+          row={selectedDrawerRow}
+          config={EMPTY_MODULE_CONFIG}
+          isPoolView={true}
+          defaultTab="attachments"
+        />
       </div>
     </div>
   );

@@ -370,19 +370,23 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
                 com.nexusarchive.dto.sip.report.FourNatureReport report =
                     preArchiveCheckService.checkSingleFile(file.getId());
 
-                // 根据检测结果更新状态
-                String newStatus;
-                if (report.getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.PASS) {
-                    newStatus = PreArchiveStatus.READY_TO_ARCHIVE.getCode();
+                // 3.7 检测结果处理
+                // 说明：PreArchiveCheckService.checkSingleFile 内部已经根据合规性要求（DA/T 94）
+                // 自动更新了数据库中 ArcFileContent 的状态（如 PASS -> READY_TO_ARCHIVE, WARNING -> NEEDS_ACTION）
+                // 我们在此处仅根据最终状态更新批次统计结果，不再进行冗用更新。
+                //
+                // 重新从数据库读取最新状态的原因：
+                // 1. checkSingleFile 可能在事务内修改状态，但当前事务尚未提交
+                // 2. 避免读取 Hibernate 一级缓存中的旧数据
+                // 3. 确保 preArchiveStatus 字段是数据库中最新的真实值
+                ArcFileContent updatedFile = arcFileContentMapper.selectById(file.getId());
+                String finalStatusCode = (updatedFile != null) ? updatedFile.getPreArchiveStatus() : file.getPreArchiveStatus();
+
+                if (PreArchiveStatus.READY_TO_ARCHIVE.getCode().equals(finalStatusCode)) {
                     result.addPassed(file.getId(), file.getFileName());
                 } else {
-                    newStatus = PreArchiveStatus.NEEDS_ACTION.getCode();
                     result.addFailed(file.getId(), file.getFileName(), FourNatureCheckHelper.extractFailureReason(report));
                 }
-
-                file.setPreArchiveStatus(newStatus);
-                file.setCheckedTime(LocalDateTime.now());
-                arcFileContentMapper.updateById(file);
 
             } catch (Exception e) {
                 log.error("检测文件失败: fileId={}, error={}", batchFile.getFileId(), e.getMessage(), e);
@@ -504,9 +508,22 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         for (CollectionBatchFile batchFile : files) {
             if (batchFile.getFileId() != null) {
                 try {
+                    // 补全元数据
+                    ArcFileContent arcFile = arcFileContentMapper.selectById(batchFile.getFileId());
+                    if (arcFile != null) {
+                        boolean needsUpdate = metadataInheritor.inheritMissingMetadata(arcFile, batch);
+                        if (needsUpdate) {
+                            arcFileContentMapper.updateById(arcFile);
+                        }
+                    }
+
                     var report = preArchiveCheckService.checkSingleFile(batchFile.getFileId());
-                    // 修复：使用枚举比较而非字符串比较
-                    if (report.getStatus() == com.nexusarchive.dto.sip.report.OverallStatus.PASS) {
+                    
+                    // 重新查询最新状态以对齐统计
+                    ArcFileContent updatedArcFile = arcFileContentMapper.selectById(batchFile.getFileId());
+                    String finalStatus = (updatedArcFile != null) ? updatedArcFile.getPreArchiveStatus() : PreArchiveStatus.NEEDS_ACTION.getCode();
+
+                    if (PreArchiveStatus.READY_TO_ARCHIVE.getCode().equals(finalStatus)) {
                         passedFiles++;
                         batchFile.setUploadStatus(CollectionBatchFile.STATUS_VALIDATED);
                     } else {

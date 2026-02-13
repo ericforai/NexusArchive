@@ -25,6 +25,8 @@ interface ArchiveDetailDrawerProps {
   row: GenericRow | null;
   config: ModuleConfig;
   isPoolView: boolean;
+  /** 可选：指定抽屉默认标签页 */
+  defaultTab?: TabKey;
 
   // AIP 导出（仅归档模式）
   onAipExport?: (row: GenericRow) => void;
@@ -46,6 +48,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
   row,
   config: _config, // 配置预留，未来可用于自定义显示
   isPoolView,
+  defaultTab,
   onAipExport,
   isExporting,
 }) => {
@@ -77,7 +80,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
         message.info('该凭证在 YonSuite 中没有附件');
       }
     } catch (error: any) {
-      console.error('查询 YonSuite 附件失败:', error);
+      // YonSuite API 调用失败时记录日志，但不阻塞用户操作
       message.error(`查询失败: ${error.message || '未知错误'}`);
       setYonsuiteAttachments([]);
     } finally {
@@ -118,10 +121,19 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
   // This is a placeholder for any additional cleanup
   useEffect(() => {
     if (!open) {
-      // 智能默认 Tab：凭证类默认业务元数据，资料/非凭证类默认附件
-      setActiveTab(isVoucherCategory ? 'metadata' : 'attachments');
+      // 优先使用外部传入默认 Tab，否则走原有智能默认逻辑
+      const fallbackDefaultTab: TabKey = isVoucherCategory ? 'metadata' : 'attachments';
+      setActiveTab(defaultTab || fallbackDefaultTab);
     }
-  }, [open, isVoucherCategory]);
+  }, [open, isVoucherCategory, defaultTab]);
+
+  // 打开时也需要同步默认 Tab，避免复用组件时沿用上一次状态
+  useEffect(() => {
+    if (open) {
+      const fallbackDefaultTab: TabKey = isVoucherCategory ? 'metadata' : 'attachments';
+      setActiveTab(defaultTab || fallbackDefaultTab);
+    }
+  }, [open, isVoucherCategory, defaultTab, row?.id]);
 
   const handleExpandToPage = () => {
     if (!row?.id) return;
@@ -283,14 +295,14 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
       title={
         <div className="flex items-center justify-between w-full pr-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary-100 text-primary-600 rounded-lg">
-              <FileText size={18} />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-800">凭证预览</h3>
-              <p className="text-xs text-slate-500 font-mono">{row.code}</p>
-            </div>
-          </div>
+                <div className="p-2 bg-primary-100 text-primary-600 rounded-lg">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">{(row as any).previewTitle || '凭证预览'}</h3>
+                  <p className="text-xs text-slate-500 font-mono">{row.code}</p>
+                </div>
+              </div>
           <div className="flex items-center gap-2">
             {/* AIP 导出按钮（仅归档模式） */}
             {!isPoolView && onAipExport && (row.archivalCode || row.code) && (
