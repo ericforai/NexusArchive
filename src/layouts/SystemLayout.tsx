@@ -15,6 +15,7 @@ import { TopBar } from '../components/TopBar';
 import { authApi } from '../api/auth';
 import { safeStorage } from '../utils/storage';
 import { Toaster } from 'react-hot-toast';
+import { useFondsStore } from '../store/useFondsStore';
 
 // 加载占位符
 const LoadingSpinner = () => (
@@ -26,6 +27,7 @@ const LoadingSpinner = () => (
 export const SystemLayout: React.FC = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const navigate = useNavigate();
+    const hasHydrated = useFondsStore(state => state._hasHydrated);
 
     const handleLogout = () => {
         // Fire and forget logout request - don't let network hang stop the user
@@ -60,9 +62,13 @@ export const SystemLayout: React.FC = () => {
                     onNavigate={handleNavigateToPanorama}
                 />
                 <main className="flex-1 overflow-y-auto scroll-smooth p-0">
-                    <Suspense fallback={<LoadingSpinner />}>
-                        <Outlet />
-                    </Suspense>
+                    {!hasHydrated ? (
+                        <LoadingSpinner />
+                    ) : (
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <Outlet />
+                        </Suspense>
+                    )}
                 </main>
             </div>
         </div>

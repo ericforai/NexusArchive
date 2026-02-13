@@ -128,7 +128,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     poolMode = false
 }) => {
     const queryClient = useQueryClient();
-    const { currentFonds } = useFondsStore();
+    const { currentFonds, _hasHydrated: hasHydrated } = useFondsStore();
 
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
@@ -180,7 +180,8 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     const poolStatusFilter = poolMode ? 'ENTRY,PARSED,PARSE_FAILED' : 'ARCHIVED';
 
     const { data: vouchersData, isLoading, refetch } = useQuery({
-        queryKey: ['originalVouchers', page, limit, search, categoryFilter, typeFilter, statusFilter, poolMode, currentFonds?.fondsCode],
+        queryKey: ['originalVouchers', page, limit, search, categoryFilter, typeFilter, statusFilter, poolMode, currentFonds?.fondsCode, hasHydrated],
+        enabled: hasHydrated && !!currentFonds?.fondsCode,
         queryFn: async () => {
             const params = {
                 page,
@@ -217,7 +218,8 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
 
     // 查询类型列表
     const { data: types } = useQuery({
-        queryKey: ['originalVoucherTypes'],
+        queryKey: ['originalVoucherTypes', hasHydrated, currentFonds?.fondsCode],
+        enabled: hasHydrated && !!currentFonds?.fondsCode,
         queryFn: getOriginalVoucherTypes
     });
 

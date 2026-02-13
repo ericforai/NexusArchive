@@ -58,10 +58,12 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 监听全宗变化，自动刷新数据
-  const currentFondsCode = useFondsStore((state) => state.currentFonds?.fondsCode);
+  // 核心状态：当前全宗与水合状态
+  const { currentFonds, _hasHydrated: hasHydrated } = useFondsStore();
+  const currentFondsCode = currentFonds?.fondsCode;
 
   const loadData = useCallback(async () => {
+    if (!hasHydrated) return;
     setLoading(true);
     setError(null);
     try {
@@ -120,7 +122,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
   useEffect(() => {
     loadData();
-  // 当全宗变化时自动刷新数据
+    // 当全宗变化时自动刷新数据
   }, [currentFondsCode, loadData]);
 
   const statCards = [

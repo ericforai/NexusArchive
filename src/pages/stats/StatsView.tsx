@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { statsApi, DashboardStats, StorageStats, ArchivalTrendPoint, TaskStatusStats } from '../../api/stats';
+import { useFondsStore } from '../../store/useFondsStore';
 
 interface StatsViewProps {
   drillDown?: string;
@@ -23,6 +24,9 @@ export const StatsView: React.FC<StatsViewProps> = () => {
   const [taskStatus, setTaskStatus] = useState<TaskStatusStats | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { currentFonds, _hasHydrated: hasHydrated } = useFondsStore();
+  const fondsCode = currentFonds?.fondsCode;
 
   const storagePieData = useMemo(() => {
     if (!storage) return [];
@@ -43,6 +47,7 @@ export const StatsView: React.FC<StatsViewProps> = () => {
   }, [taskStatus]);
 
   const loadData = async () => {
+    if (!hasHydrated || !fondsCode) return;
     setLoading(true);
     setError(null);
     try {
@@ -93,8 +98,10 @@ export const StatsView: React.FC<StatsViewProps> = () => {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (hasHydrated && fondsCode) {
+      loadData();
+    }
+  }, [hasHydrated, fondsCode]);
 
   const statCards = [
     { label: '总归档量', value: dashboard?.totalArchives ?? '--' },
@@ -157,7 +164,7 @@ export const StatsView: React.FC<StatsViewProps> = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} />
                   <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{borderRadius: '8px', border:'none', boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                   <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
