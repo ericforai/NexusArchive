@@ -27,22 +27,34 @@ public class FourNatureCheckHelper {
      * @return 失败原因描述
      */
     public static String extractFailureReason(FourNatureReport report) {
-        if (report.getAuthenticity() != null &&
-            report.getAuthenticity().getStatus() == OverallStatus.FAIL) {
-            return "真实性检测失败";
+        var authenticity = report.getAuthenticity();
+        if (authenticity != null && authenticity.getStatus() == OverallStatus.FAIL) {
+            return authenticity.getMessage() != null
+                    ? authenticity.getMessage()
+                    : "真实性检测失败";
         }
-        if (report.getIntegrity() != null &&
-            report.getIntegrity().getStatus() == OverallStatus.FAIL) {
-            return "完整性检测失败";
+
+        var integrity = report.getIntegrity();
+        if (integrity != null && integrity.getStatus() == OverallStatus.FAIL) {
+            return integrity.getMessage() != null
+                    ? integrity.getMessage()
+                    : "完整性检测失败";
         }
-        if (report.getUsability() != null &&
-            report.getUsability().getStatus() == OverallStatus.FAIL) {
-            return "可用性检测失败";
+
+        var usability = report.getUsability();
+        if (usability != null && usability.getStatus() == OverallStatus.FAIL) {
+            return usability.getMessage() != null
+                    ? usability.getMessage()
+                    : "可用性检测失败";
         }
-        if (report.getSafety() != null &&
-            report.getSafety().getStatus() == OverallStatus.FAIL) {
-            return "安全性检测失败";
+
+        var safety = report.getSafety();
+        if (safety != null && safety.getStatus() == OverallStatus.FAIL) {
+            return safety.getMessage() != null
+                    ? safety.getMessage()
+                    : "安全性检测失败";
         }
+
         return "检测未通过";
     }
 
