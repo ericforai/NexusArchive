@@ -52,7 +52,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            MIGRATION_SCRIPT_VERSION="2026-02-12.185v4"
+            MIGRATION_SCRIPT_VERSION="2026-02-13.186v5"
             SERVER_PACKAGE_PATH="${{ github.event.inputs.server_package_path }}"
             PKG_SHA="${{ github.event.inputs.migration_package_sha256 }}"
             HEALTHCHECK_URL="${{ github.event.inputs.healthcheck_url }}"
@@ -209,11 +209,12 @@ jobs:
               echo "WARN: failed to query storage paths from database (rc=${query_rc}), skip strict verification."
               sed -n "1,120p" "${DB_PATHS_ERR_FILE}" || true
             else
-              path_count="$(wc -l < "${DB_PATHS_FILE}" 2>/dev/null | tr -d ' ')"
+              path_count="$(wc -l < "${DB_PATHS_FILE}" 2>/dev/null | tr -d ' ' || echo 0)"
               echo "Collected storage paths: ${path_count:-0}"
               checked_count=0
               scan_count=0
-              while IFS= read -r rel_path || [ -n "${rel_path}" ]; do
+              rel_path=""
+              while IFS= read -r rel_path; do
                 [ -z "${rel_path}" ] && continue
                 scan_count=$((scan_count + 1))
                 if [ $((scan_count % 2000)) -eq 0 ]; then
