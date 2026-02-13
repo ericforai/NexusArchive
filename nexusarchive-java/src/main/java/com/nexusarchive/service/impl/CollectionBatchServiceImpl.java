@@ -345,7 +345,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
      * @param batch      所属批次信息
      * @return 检测统计结果
      */
-    private BatchCheckStatistics executeBatchCheck(List<CollectionBatchFile> batchFiles, CollectionBatch currentBatch) {
+    private BatchCheckStatistics executeBatchCheck(List<CollectionBatchFile> batchFiles, CollectionBatch batch) {
         BatchCheckStatistics result = new BatchCheckStatistics();
 
         for (CollectionBatchFile batchFile : batchFiles) {
@@ -357,7 +357,14 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
                 }
 
                 // 在检测前为缺失的必填字段设置方案化的默认值（智能继承）
-                metadataInheritor.inheritMissingMetadata(file, currentBatch);
+                boolean needsUpdate = metadataInheritor.inheritMissingMetadata(file, batch);
+
+                // 3.5 在检测前先持久化元数据变更
+                // 原因：PreArchiveCheckService 会重新从数据库查询记录，如果不先落库，检测器会看到旧的空值
+                if (needsUpdate) {
+                    arcFileContentMapper.updateById(file);
+                    log.debug("检测前已持久化智能生成的元数据: fileId={}", file.getId());
+                }
 
                 // 调用四性检测服务
                 com.nexusarchive.dto.sip.report.FourNatureReport report =
