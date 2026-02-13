@@ -181,6 +181,8 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
 
     // --- 库房管理 (Warehouse) ---
     '库房管理': ROUTE_PATHS.WAREHOUSE,
+    '密集架控制': ROUTE_PATHS.WAREHOUSE + '?view=racks',
+    '温湿度监控': ROUTE_PATHS.WAREHOUSE + '?view=environment',
 
     // --- 系统设置 ---
     '基础设置': ROUTE_PATHS.SETTINGS_BASIC,

@@ -244,6 +244,10 @@ export const NAV_ITEMS: NavItem[] = [
     label: "库房管理",
     icon: Warehouse,
     permission: "nav:warehouse",
+    children: [
+      { id: "密集架控制", label: "密集架控制", path: "密集架控制" },
+      { id: "温湿度监控", label: "温湿度监控", path: "温湿度监控" },
+    ],
   },
   {
     id: ViewState.STATS,
