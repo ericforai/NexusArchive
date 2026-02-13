@@ -217,7 +217,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: FileText, // Change Icon to distinguish
     permission: "nav:operations",
     children: [
-      // { id: '档案装盒', label: '档案装盒', path: '档案装盒' }, // Hidden per user request
+      { id: '档案装盒', label: '档案装盒', path: '档案装盒' },
       { id: "档案组卷", label: "档案组卷", path: "档案组卷" },
       { id: "归档审批", label: "归档审批", path: "归档审批" },
       { id: "归档批次", label: "归档批次", path: "归档批次" },
