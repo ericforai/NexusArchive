@@ -47,7 +47,7 @@ export const ROUTE_PATHS = {
     // WAREHOUSE removed as per expert review (Out of Scope)
     // ---
     // 档案装盒 (Archive Box) - Restored per user request
-    export const ARCHIVE_BOX: string = '/system/archive/box';
+    ARCHIVE_BOX: '/system/operations/boxing',
 
     // 原始凭证和记账凭证
     ARCHIVE_ORIGINAL_VOUCHERS: '/system/archive/original-vouchers',
@@ -165,7 +165,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '会计档案鉴定意见书': ROUTE_PATHS.ARCHIVE_OTHER + '?type=APPRAISAL_OPINION',
 
     // 档案装盒 (Archive Box)
-    '档案装盒': ARCHIVE_BOX,
+    '档案装盒': ROUTE_PATHS.ARCHIVE_BOX,
 
     // --- 档案作业 (Level 1: ARCHIVE_OPS) ---
     '档案组卷': ROUTE_PATHS.ARCHIVE_VOLUME,
