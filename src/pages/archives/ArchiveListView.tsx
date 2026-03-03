@@ -146,7 +146,13 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
   const renderCell = (row: GenericRow, column: any) => {
     const value = row[column.key];
 
-
+    const renderSafeText = (raw: unknown) => {
+      if (raw === null || raw === undefined || raw === '') return <span className="text-slate-400">-</span>;
+      if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
+        return <span className="text-slate-700 font-medium">{String(raw)}</span>;
+      }
+      return <span className="text-slate-400">-</span>;
+    };
 
     if (column.key === 'selection') {
       return (
@@ -202,10 +208,23 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
 
     // Money Type
     if (column.type === 'money') {
-      if (!value || value === '-' || value === '' || value === '0' || value === '0.00') return <span className="text-slate-400 font-mono text-right block">-</span>;
-      const numValue = typeof value === 'number' ? value : parseFloat(value);
+      if (value === null || value === undefined || value === '-' || value === '' || value === '0' || value === '0.00') {
+        return <span className="text-slate-400 font-mono text-right block">-</span>;
+      }
+      const parsed = typeof value === 'string'
+        ? Number(value.replace(/[^\d.-]/g, ''))
+        : Number(value);
+      const numValue = Number.isFinite(parsed) ? parsed : NaN;
       if (isNaN(numValue)) return <span className="text-slate-400 font-mono text-right block">-</span>;
       return <span className="font-mono font-semibold text-right block text-slate-700">¥{numValue.toFixed(2)}</span>;
+    }
+
+    if (column.type === 'progress') {
+      const score = typeof value === 'number'
+        ? value
+        : Number.isFinite(Number(value)) ? Number(value) : 0;
+      const normalized = Math.max(0, Math.min(100, score));
+      return <span className="text-slate-700 font-medium">{normalized}%</span>;
     }
 
     // Date Types
@@ -240,7 +259,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
       );
     }
 
-    return <span className="text-slate-700 font-medium">{value}</span>;
+    return renderSafeText(value);
   };
 
   const handlePageChange = async (newPage: number) => {

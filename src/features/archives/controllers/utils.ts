@@ -55,8 +55,10 @@ export const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
     if (subTitle === '会计凭证' || subTitle === '凭证关联') {
         const amountValue = archive?.amount;
         const amount = typeof amountValue === 'number'
-            ? `¥ ${amountValue.toFixed(2)}`
-            : amountValue || '-';
+            ? amountValue
+            : Number.isFinite(Number(amountValue))
+                ? Number(amountValue)
+                : null;
 
         let subjectName = '-';
         try {
@@ -92,6 +94,8 @@ export const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
             type: categoryLabel,
             amount,
             date,
+            invoiceCount: archive?.invoiceCount ?? '-',
+            contractNo: archive?.contractNo ?? '-',
             status: statusText,
             matchScore: archive?.matchScore || 0,
             autoLink: archive?.matchMethod || '-',
@@ -171,4 +175,3 @@ export const mapArchiveToRow = (archive: any, subTitle: string): GenericRow => {
         rawStatus: archive?.preArchiveStatus || archive?.status
     };
 };
-
