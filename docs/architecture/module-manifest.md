@@ -11,7 +11,7 @@
 
 | 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
-| FE.PAGES | 页面容器层 | src/pages/Auth, src/pages/admin, src/pages/archives, src/pages/audit, src/pages/collection, src/pages/debug, src/pages/demo, src/pages/matching, src/pages/operations, src/pages/panorama, src/pages/portal, src/pages/pre-archive, src/pages/product-website, src/pages/quality, src/pages/scan, src/pages/security, src/pages/settings, src/pages/stats, src/pages/system, src/pages/utilization | 页面级容器组件 | 164 files | ✅ ACTIVE |
+| FE.PAGES | 页面容器层 | src/pages/Auth, src/pages/admin, src/pages/archives, src/pages/audit, src/pages/collection, src/pages/debug, src/pages/demo, src/pages/matching, src/pages/operations, src/pages/panorama, src/pages/portal, src/pages/pre-archive, src/pages/product-website, src/pages/quality, src/pages/scan, src/pages/security, src/pages/settings, src/pages/stats, src/pages/system, src/pages/utilization | 页面级容器组件 | 165 files | ✅ ACTIVE |
 | FE.COMPONENTS | 通用组件层 | src/components/GlobalSearch, src/components/Sidebar, src/components/TopBar, src/components/admin, src/components/archive, src/components/auth, src/components/borrowing, src/components/common, src/components/debug, src/components/dev, src/components/hooks, src/components/layout, src/components/matching, src/components/modals, src/components/operations, src/components/org, src/components/pages, src/components/panorama, src/components/pool-dashboard, src/components/pool-kanban, src/components/preview, src/components/relation-graph, src/components/scan, src/components/settings, src/components/table, src/components/voucher, src/components/watermark | 可复用 UI 组件 | 196 files | ✅ ACTIVE |
 | FE.STORE | 状态管理层 | src/store/__tests__ | Zustand 全局状态 | 8 files | ✅ ACTIVE |
 | FE.API | API 客户端层 | src/src/api | 后端 API 调用封装 | 48 files | ✅ ACTIVE |
@@ -24,7 +24,7 @@
 
 - `src/pages/Auth`: 6 files
 - `src/pages/admin`: 22 files
-- `src/pages/archives`: 23 files
+- `src/pages/archives`: 24 files
 - `src/pages/audit`: 3 files
 - `src/pages/collection`: 6 files
 - `src/pages/debug`: 3 files
