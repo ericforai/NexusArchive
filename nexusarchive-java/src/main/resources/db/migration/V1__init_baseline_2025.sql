@@ -4482,8 +4482,8 @@ SELECT pg_catalog.setval('public.period_lock_id_seq', 1, false);
 -- Name: sys_erp_config_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
--- ERP配置数据已删除，序列重置为 0（首次插入将从 1 开始）
-SELECT pg_catalog.setval('public.sys_erp_config_id_seq', 0, false);
+-- ERP配置数据已删除，序列重置为 1 且 is_called=false（首次插入从 1 开始）
+SELECT pg_catalog.setval('public.sys_erp_config_id_seq', 1, false);
 
 
 --
@@ -4497,16 +4497,16 @@ SELECT pg_catalog.setval('public.sys_erp_feedback_queue_id_seq', 1, false);
 -- Name: sys_erp_scenario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
--- ERP场景数据已删除，序列重置为 0（首次插入将从 1 开始）
-SELECT pg_catalog.setval('public.sys_erp_scenario_id_seq', 0, false);
+-- ERP场景数据已删除，序列重置为 1 且 is_called=false（首次插入从 1 开始）
+SELECT pg_catalog.setval('public.sys_erp_scenario_id_seq', 1, false);
 
 
 --
 -- Name: sys_erp_sub_interface_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
--- ERP子接口数据已删除，序列重置为 0（首次插入将从 1 开始）
-SELECT pg_catalog.setval('public.sys_erp_sub_interface_id_seq', 0, false);
+-- ERP子接口数据已删除，序列重置为 1 且 is_called=false（首次插入从 1 开始）
+SELECT pg_catalog.setval('public.sys_erp_sub_interface_id_seq', 1, false);
 
 
 --
