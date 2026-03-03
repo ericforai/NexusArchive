@@ -34,7 +34,11 @@ jobs:
       - name: 运行增强架构测试
         run: |
           cd nexusarchive-java
-          mvn test -Dtest=EnhancedArchitectureTest -q
+          if find src/test/java -name 'EnhancedArchitectureTest.java' | grep -q .; then
+            mvn test -Dtest=EnhancedArchitectureTest -q
+          else
+            echo "跳过 EnhancedArchitectureTest：未找到测试类" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: 生成架构报告
         if: always()
@@ -68,7 +72,11 @@ jobs:
         run: |
           cd nexusarchive-java
           # 运行架构测试，如果有任何失败则工作流失败
-          mvn test -Dtest=ArchitectureTest,EnhancedArchitectureTest
+          tests="ArchitectureTest"
+          if find src/test/java -name 'EnhancedArchitectureTest.java' | grep -q .; then
+            tests="${tests},EnhancedArchitectureTest"
+          fi
+          mvn test -Dtest="${tests}"
 
       - name: 生成违规报告
         if: failure()

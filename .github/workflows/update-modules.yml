@@ -49,10 +49,9 @@ jobs:
       - name: Commit and push changes
         if: steps.git-check.outputs.changed == 'true'
         run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add docs/architecture/module-manifest.md
-          git commit -m "chore: auto-update frontend module manifest
-
-This commit was automatically created by GitHub Actions when frontend code changes were detected."
+          git commit -m "chore: auto-update frontend module manifest"
           git push

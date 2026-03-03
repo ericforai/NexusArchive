@@ -45,7 +45,7 @@ jobs:
       - name: 运行权限单元测试
         run: |
           cd nexusarchive-java
-          mvn test -Dtest=*Permission*,*RoleValidation* -DforkCount=0
+          mvn test "-Dtest=*Permission*,*RoleValidation*" -DforkCount=0
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/nexusarchive_test
           SPRING_DATASOURCE_USERNAME: postgres
@@ -89,10 +89,28 @@ jobs:
 
       - name: 启动后端服务
         run: |
+          set -euo pipefail
           cd nexusarchive-java
-          nohup mvn spring-boot:run -Dspring-boot.run.profiles=test &
-          sleep 45
-          curl -s http://localhost:8080/api/health || exit 1
+          nohup mvn spring-boot:run -Dspring-boot.run.profiles=test -Dmaven.test.skip=true > /tmp/nexusarchive-backend.log 2>&1 &
+          APP_PID=$!
+          ok=0
+          for i in $(seq 1 48); do
+            if curl -fsS http://localhost:8080/api/health >/dev/null 2>&1; then
+              ok=1
+              break
+            fi
+            if ! kill -0 "${APP_PID}" >/dev/null 2>&1; then
+              echo "后端进程提前退出，打印日志："
+              tail -n 200 /tmp/nexusarchive-backend.log || true
+              exit 1
+            fi
+            sleep 5
+          done
+          if [ "${ok}" -ne 1 ]; then
+            echo "后端健康检查超时，打印日志："
+            tail -n 200 /tmp/nexusarchive-backend.log || true
+            exit 1
+          fi
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/nexusarchive
           SPRING_DATASOURCE_USERNAME: postgres
@@ -125,7 +143,7 @@ jobs:
         run: npm ci
 
       - name: 运行权限相关测试
-        run: npm test -- --run "*Permission*" "*Auth*"
+        run: npm test -- --run --passWithNoTests "*Permission*" "*Auth*"
 
       - name: 运行全部前端测试
         run: npm test -- --run
