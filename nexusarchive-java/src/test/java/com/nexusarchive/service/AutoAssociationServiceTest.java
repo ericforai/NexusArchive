@@ -12,6 +12,7 @@ import com.nexusarchive.dto.parser.ParsedInvoice;
 import com.nexusarchive.dto.sip.VoucherHeadDto;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArchiveRelation;
+import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.strategy.AmountDateMatchStrategy;
 import com.nexusarchive.service.strategy.ExactMatchStrategy;
@@ -39,6 +40,8 @@ class AutoAssociationServiceTest {
     @Mock
     private ArchiveMapper archiveMapper;
     @Mock
+    private ArcFileContentMapper arcFileContentMapper;
+    @Mock
     private IArchiveRelationService archiveRelationService;
 
     private AutoAssociationService autoAssociationService;
@@ -56,6 +59,7 @@ class AutoAssociationServiceTest {
 
         autoAssociationService = new AutoAssociationService(
                 archiveMapper,
+                arcFileContentMapper,
                 archiveRelationService,
                 strategies,
                 objectMapper

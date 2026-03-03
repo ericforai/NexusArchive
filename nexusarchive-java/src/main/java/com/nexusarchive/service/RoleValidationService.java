@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
 /**
  * 三员互斥校验服务
@@ -47,9 +47,11 @@ public class RoleValidationService {
         // === 规则1：检查待分配的角色中是否包含多个三员角色 ===
         Set<String> threeAdminCategories = new HashSet<>();
         for (com.nexusarchive.entity.Role role : rolesToAssign) {
+            String normalizedCategory = normalizeCategory(role.getRoleCategory());
             if (role.getIsExclusive() != null && role.getIsExclusive() 
-                && THREE_ADMIN_CATEGORIES.contains(role.getRoleCategory())) {
-                if (!threeAdminCategories.add(role.getRoleCategory())) {
+                && normalizedCategory != null
+                && THREE_ADMIN_CATEGORIES.contains(normalizedCategory)) {
+                if (!threeAdminCategories.add(normalizedCategory)) {
                     throw new BusinessException("不能同时分配同一类别的多个排他角色: " + role.getRoleCategory());
                 }
             }
@@ -66,10 +68,10 @@ public class RoleValidationService {
         if (userId != null && !threeAdminCategories.isEmpty()) {
             List<com.nexusarchive.entity.Role> existingRoles = roleMapper.findByUserId(userId);
             for (com.nexusarchive.entity.Role existingRole : existingRoles) {
+                String existingCategory = normalizeCategory(existingRole.getRoleCategory());
                 if (existingRole.getIsExclusive() != null && existingRole.getIsExclusive()
-                    && THREE_ADMIN_CATEGORIES.contains(existingRole.getRoleCategory())) {
-                    // 用户已有三员角色
-                    String existingCategory = existingRole.getRoleCategory();
+                    && existingCategory != null
+                    && THREE_ADMIN_CATEGORIES.contains(existingCategory)) {
                     
                     // 检查新分配的三员角色是否与已有的冲突
                     for (String newCategory : threeAdminCategories) {
@@ -91,9 +93,16 @@ public class RoleValidationService {
     private String getCategoryDisplayName(String category) {
         return switch (category) {
             case "system_admin" -> "系统管理员";
-            case "security_admin" -> "安全管理员";
-            case "audit_admin" -> "审计管理员";
+            case "security_admin" -> "安全保密员";
+            case "audit_admin" -> "安全审计员";
             default -> category;
         };
+    }
+
+    private String normalizeCategory(String category) {
+        if (category == null) {
+            return null;
+        }
+        return category.trim().toLowerCase(Locale.ROOT);
     }
 }
