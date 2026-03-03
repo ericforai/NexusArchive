@@ -48,6 +48,8 @@
 - nexusarchive-java/keystore/（密钥材料）
 - src/data/archives/（前端演示归档数据树）
 
+根目录文件放置规则见：[Root Directory Whitelist](docs/standards/ROOT_DIRECTORY_WHITELIST.md)
+
 ## ⚠️ 不可注释文件说明
 
 当配置格式或二进制资源不支持注释（如 `package.json`、PDF/OFD/图片/JAR/Class、归档包与日志/数据库文件），保持文件原样，并在目录 MD 的文件清单中说明其角色与用途。
