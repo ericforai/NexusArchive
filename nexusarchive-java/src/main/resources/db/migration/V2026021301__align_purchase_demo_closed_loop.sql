@@ -47,44 +47,57 @@ SET relation_type = EXCLUDED.relation_type,
     relation_desc = EXCLUDED.relation_desc,
     deleted = 0;
 
--- 4) 在原始凭证主表中补齐链路单据（用于“原始凭证”模块闭环查询）
-INSERT INTO public.arc_original_voucher (
-    id, voucher_no, voucher_category, voucher_type, business_date,
-    amount, currency, counterparty, summary, creator,
-    source_system, source_doc_id, fonds_code, fiscal_year,
-    retention_period, archive_status, archived_time, version,
-    is_latest, created_by, created_time, deleted, pool_status,
-    matched_voucher_id, matched_at
-)
-VALUES
-    ('demo-ov-purchase-fk-001', 'FK-2025-02-001', 'DOCUMENT', 'TRANSFER_VOUCHER', '2025-02-22', 450000.00, 'CNY', '阿里云', '付款单-设备采购款', '财务部', 'DEMO_SEED', 'demo-purchase-fk-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
-    ('demo-ov-purchase-sq-001', 'SQ-2025-12-001', 'DOCUMENT', 'TRANSFER_VOUCHER', '2025-02-21', 450000.00, 'CNY', '阿里云', '付款申请单-设备采购', '采购部', 'DEMO_SEED', 'demo-purchase-sq-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
-    ('demo-ov-purchase-ht-001', 'HT-2025-02-001', 'CONTRACT', 'CONTRACT', '2025-02-15', 450000.00, 'CNY', '阿里云', '服务器采购合同', '采购部', 'DEMO_SEED', 'demo-purchase-ht-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
-    ('demo-ov-purchase-fp-001', 'FP-2025-02-001', 'INVOICE', 'INV_PAPER', '2025-02-20', 450000.00, 'CNY', '阿里云', '服务器采购发票', '系统', 'DEMO_SEED', 'demo-purchase-fp-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
-    ('demo-ov-purchase-hd-001', 'HD-2025-02-001', 'BANK', 'BANK_RECEIPT', '2025-02-22', 450000.00, 'CNY', '招商银行', '银行回单-招商银行转账', '系统', 'DEMO_SEED', 'demo-purchase-hd-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW())
-ON CONFLICT (id) DO UPDATE
-SET voucher_no = EXCLUDED.voucher_no,
-    voucher_category = EXCLUDED.voucher_category,
-    voucher_type = EXCLUDED.voucher_type,
-    business_date = EXCLUDED.business_date,
-    amount = EXCLUDED.amount,
-    summary = EXCLUDED.summary,
-    source_doc_id = EXCLUDED.source_doc_id,
-    matched_voucher_id = EXCLUDED.matched_voucher_id,
-    matched_at = NOW(),
-    deleted = 0;
+-- 4) / 5) 原始凭证闭环数据仅在新结构存在时执行（兼容旧基线）
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'arc_original_voucher'
+          AND column_name = 'voucher_category'
+    ) THEN
+        -- 4) 在原始凭证主表中补齐链路单据（用于“原始凭证”模块闭环查询）
+        INSERT INTO public.arc_original_voucher (
+            id, voucher_no, voucher_category, voucher_type, business_date,
+            amount, currency, counterparty, summary, creator,
+            source_system, source_doc_id, fonds_code, fiscal_year,
+            retention_period, archive_status, archived_time, version,
+            is_latest, created_by, created_time, deleted, pool_status,
+            matched_voucher_id, matched_at
+        )
+        VALUES
+            ('demo-ov-purchase-fk-001', 'FK-2025-02-001', 'DOCUMENT', 'TRANSFER_VOUCHER', '2025-02-22', 450000.00, 'CNY', '阿里云', '付款单-设备采购款', '财务部', 'DEMO_SEED', 'demo-purchase-fk-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
+            ('demo-ov-purchase-sq-001', 'SQ-2025-12-001', 'DOCUMENT', 'TRANSFER_VOUCHER', '2025-02-21', 450000.00, 'CNY', '阿里云', '付款申请单-设备采购', '采购部', 'DEMO_SEED', 'demo-purchase-sq-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
+            ('demo-ov-purchase-ht-001', 'HT-2025-02-001', 'CONTRACT', 'CONTRACT', '2025-02-15', 450000.00, 'CNY', '阿里云', '服务器采购合同', '采购部', 'DEMO_SEED', 'demo-purchase-ht-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
+            ('demo-ov-purchase-fp-001', 'FP-2025-02-001', 'INVOICE', 'INV_PAPER', '2025-02-20', 450000.00, 'CNY', '阿里云', '服务器采购发票', '系统', 'DEMO_SEED', 'demo-purchase-fp-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW()),
+            ('demo-ov-purchase-hd-001', 'HD-2025-02-001', 'BANK', 'BANK_RECEIPT', '2025-02-22', 450000.00, 'CNY', '招商银行', '银行回单-招商银行转账', '系统', 'DEMO_SEED', 'demo-purchase-hd-001', 'BR-GROUP', '2025', '30Y', 'ARCHIVED', NOW(), 1, true, 'system', NOW(), 0, 'MATCHED', 'demo-purchase-jz-001', NOW())
+        ON CONFLICT (id) DO UPDATE
+        SET voucher_no = EXCLUDED.voucher_no,
+            voucher_category = EXCLUDED.voucher_category,
+            voucher_type = EXCLUDED.voucher_type,
+            business_date = EXCLUDED.business_date,
+            amount = EXCLUDED.amount,
+            summary = EXCLUDED.summary,
+            source_doc_id = EXCLUDED.source_doc_id,
+            matched_voucher_id = EXCLUDED.matched_voucher_id,
+            matched_at = NOW(),
+            deleted = 0;
 
--- 5) 原始凭证 <-> 记账凭证 关联补齐
-INSERT INTO public.arc_voucher_relation (
-    id, original_voucher_id, accounting_voucher_id, relation_type, relation_desc, created_by, created_time, deleted
-)
-VALUES
-    ('demo-vr-200', 'demo-ov-purchase-fk-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '付款单关联记账凭证', 'system', NOW(), 0),
-    ('demo-vr-201', 'demo-ov-purchase-sq-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '付款申请关联记账凭证', 'system', NOW(), 0),
-    ('demo-vr-202', 'demo-ov-purchase-ht-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '合同关联记账凭证', 'system', NOW(), 0),
-    ('demo-vr-203', 'demo-ov-purchase-fp-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '发票关联记账凭证', 'system', NOW(), 0),
-    ('demo-vr-204', 'demo-ov-purchase-hd-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '回单关联记账凭证', 'system', NOW(), 0)
-ON CONFLICT (id) DO UPDATE
-SET relation_desc = EXCLUDED.relation_desc,
-    deleted = 0;
-
+        -- 5) 原始凭证 <-> 记账凭证 关联补齐
+        INSERT INTO public.arc_voucher_relation (
+            id, original_voucher_id, accounting_voucher_id, relation_type, relation_desc, created_by, created_time, deleted
+        )
+        VALUES
+            ('demo-vr-200', 'demo-ov-purchase-fk-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '付款单关联记账凭证', 'system', NOW(), 0),
+            ('demo-vr-201', 'demo-ov-purchase-sq-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '付款申请关联记账凭证', 'system', NOW(), 0),
+            ('demo-vr-202', 'demo-ov-purchase-ht-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '合同关联记账凭证', 'system', NOW(), 0),
+            ('demo-vr-203', 'demo-ov-purchase-fp-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '发票关联记账凭证', 'system', NOW(), 0),
+            ('demo-vr-204', 'demo-ov-purchase-hd-001', 'demo-purchase-jz-001', 'ORIGINAL_TO_ACCOUNTING', '回单关联记账凭证', 'system', NOW(), 0)
+        ON CONFLICT (id) DO UPDATE
+        SET relation_desc = EXCLUDED.relation_desc,
+            deleted = 0;
+    ELSE
+        RAISE NOTICE 'Skip purchase original-voucher demo alignment: arc_original_voucher.voucher_category not found';
+    END IF;
+END $$;
