@@ -167,8 +167,8 @@
 - `docs/testing/TEST_OPTIMIZATION_COMPLETE.md` - 本文档
 
 ### 测试结果
-- `test-final-status.txt` - 最终测试状态
-- `test-95-percent-final.txt` - 95%目标测试结果
+- `docs/archive/root-artifacts/test-reports/test-final-status.txt` - 最终测试状态
+- `docs/archive/root-artifacts/test-reports/test-95-percent-final.txt` - 95%目标测试结果
 
 ---
 

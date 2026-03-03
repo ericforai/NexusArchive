@@ -209,9 +209,9 @@ BASE_URL=http://localhost:15175 npx playwright test tests/playwright/ui/legacy_i
 
 测试套件已执行完成。详细结果请查看：
 
-- **P0测试结果**: `test-p0-results.txt`
-- **P1测试结果**: `test-p1-results.txt`
-- **完整JSON结果**: `test-all-results.json`
+- **P0测试结果**: `docs/archive/root-artifacts/test-reports/test-p0-results.txt`
+- **P1测试结果**: `docs/archive/root-artifacts/test-reports/test-p1-results.txt`
+- **完整JSON结果**: `docs/archive/root-artifacts/test-reports/test-all-results.json`
 - **HTML报告**: 运行 `npx playwright show-report` 查看
 
 所有修复已应用，测试用例已更新。建议定期执行测试以确保功能稳定性。

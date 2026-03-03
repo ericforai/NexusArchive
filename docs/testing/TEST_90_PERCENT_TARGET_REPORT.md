@@ -275,7 +275,7 @@ const buttons = await page.locator('button').all();
 
 - **测试辅助函数**: `tests/playwright/utils/page-helpers.ts`
 - **测试用例**: `tests/playwright/ui/*.spec.ts`
-- **测试报告**: `test-final-90percent.txt`
+- **测试报告**: `docs/archive/root-artifacts/test-reports/test-final-90percent.txt`
 - **测试计划**: `docs/testing/e2e-test-plan.md`
 - **执行指南**: `docs/testing/TEST_EXECUTION_GUIDE.md`
 

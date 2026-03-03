@@ -25,4 +25,4 @@ Verify the complete lifecycle of an electronic accounting file from **Data Inges
 
 ## 4.0 Data Strategy
 - Use `tests/seed_test_data.sql` to generate specific test scenarios (e.g., "Standard Voucher", "Missing Attachment Voucher").
-- Use `create_abnormal_data.sh` to test error handling for the compliance engine.
+- Use `scripts/root-legacy/create_abnormal_data.sh` to test error handling for the compliance engine.

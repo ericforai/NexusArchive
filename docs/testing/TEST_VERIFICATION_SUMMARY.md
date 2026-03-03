@@ -233,9 +233,9 @@
 
 ## 📁 测试结果文件
 
-- **P0测试结果**: `test-p0-results.txt`
-- **P1测试结果**: `test-p1-results.txt`
-- **完整JSON结果**: `test-all-results.json`
+- **P0测试结果**: `docs/archive/root-artifacts/test-reports/test-p0-results.txt`
+- **P1测试结果**: `docs/archive/root-artifacts/test-reports/test-p1-results.txt`
+- **完整JSON结果**: `docs/archive/root-artifacts/test-reports/test-all-results.json`
 - **HTML报告**: 运行 `npx playwright show-report` 查看
 
 ---

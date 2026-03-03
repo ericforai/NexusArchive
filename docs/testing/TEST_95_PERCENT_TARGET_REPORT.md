@@ -216,8 +216,8 @@ if (!listFound) {
 - `docs/testing/TEST_95_PERCENT_TARGET_REPORT.md` - 本文档
 
 ### 测试结果
-- `test-95-percent-final.txt` - 最终测试结果
-- `test-95-percent-target.txt` - 测试执行记录
+- `docs/archive/root-artifacts/test-reports/test-95-percent-final.txt` - 最终测试结果
+- `docs/archive/root-artifacts/test-reports/test-95-percent-target.txt` - 测试执行记录
 
 ---
 

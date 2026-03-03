@@ -796,7 +796,7 @@ public class ErpAdaptationController {
 cat > /tmp/preview-request.json << 'EOF'
 {
   "erpType": "yonsuite",
-  "files": ["test-yonsuite-salesout-api.json"]
+  "files": ["docs/archive/root-artifacts/samples/test-yonsuite-salesout-api.json"]
 }
 EOF
 
@@ -804,7 +804,7 @@ EOF
 TOKEN="your-token"
 curl -X POST http://localhost:19090/api/erp-ai/preview \
   -H "Authorization: Bearer $TOKEN" \
-  -F "files=@/Users/user/nexusarchive/test-yonsuite-salesout-api.json"
+  -F "files=@/Users/user/nexusarchive/docs/archive/root-artifacts/samples/test-yonsuite-salesout-api.json"
 ```
 
 **Step 3: 提交**
@@ -1041,7 +1041,7 @@ const handleAiAdapterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               <h4 className="font-semibold text-purple-900 mb-2">📋 识别结果</h4>
               <div className="text-sm text-purple-800 space-y-1">
                 <p>ERP 类型: <strong>{previewResult.erpDisplayName}</strong></p>
-                <p>文档: test-yonsuite-salesout-api.json</p>
+                <p>文档: docs/archive/root-artifacts/samples/test-yonsuite-salesout-api.json</p>
                 <p>识别到 <strong>{previewResult.apiCount}</strong> 个 API</p>
               </div>
             </div>
@@ -1201,7 +1201,7 @@ http://localhost:15175/system/settings/integration
 
    | 用例 | 步骤 | 预期结果 |
    |------|------|---------|
-   | 上传 YonSuite 文档 | 点击 "+" → "AI 智能适配器" → 上传 test-yonsuite-salesout-api.json | 显示预览界面，识别为 YonSuite |
+   | 上传 YonSuite 文档 | 点击 "+" → "AI 智能适配器" → 上传 docs/archive/root-artifacts/samples/test-yonsuite-salesout-api.json | 显示预览界面，识别为 YonSuite |
    | 查看场景列表 | 预览界面中查看场景 | 显示 3 个场景，可编辑名称 |
    | 选择现有连接器 | 选择"添加到用友 YonSuite (生产环境)" | 单选框选中 |
    | 确认部署 | 点击"确认并部署" | 提示成功，刷新后显示新场景 |

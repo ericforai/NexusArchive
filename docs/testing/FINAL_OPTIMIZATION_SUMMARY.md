@@ -160,9 +160,9 @@
 - `docs/testing/FINAL_OPTIMIZATION_SUMMARY.md` - 本文档
 
 ### 测试结果
-- `test-final-90percent.txt` - 最终测试结果
-- `test-p0-results.txt` - P0测试结果
-- `test-p1-results.txt` - P1测试结果
+- `docs/archive/root-artifacts/test-reports/test-final-90percent.txt` - 最终测试结果
+- `docs/archive/root-artifacts/test-reports/test-p0-results.txt` - P0测试结果
+- `docs/archive/root-artifacts/test-reports/test-p1-results.txt` - P1测试结果
 
 ---
 
