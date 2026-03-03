@@ -1,6 +1,7 @@
 # Input: 配置参数
 # Output: 配置文件
 # Pos: 配置文件
+# Updated: 2026-03-03
 # 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 name: 权限系统测试
@@ -97,12 +98,13 @@ jobs:
       - name: 启动后端服务
         run: |
           set -euo pipefail
+          APP_PORT=19090
           cd nexusarchive-java
           nohup mvn spring-boot:run -Dspring-boot.run.profiles=test -Dmaven.test.skip=true > /tmp/nexusarchive-backend.log 2>&1 &
           APP_PID=$!
           ok=0
           for i in $(seq 1 48); do
-            if curl -sS http://localhost:8080/api/health >/dev/null 2>&1; then
+            if curl -sS "http://localhost:${APP_PORT}/api/health" >/dev/null 2>&1; then
               ok=1
               break
             fi

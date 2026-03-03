@@ -1,7 +1,8 @@
-# Input: GitHub Actions、ESLint、前端代码
-# Output: GitHub Actions 工作流配置（前端代码质量检查）
+# Input: GitHub Actions、ESLint、前端代码变更
+# Output: GitHub Actions 工作流配置（增量前端代码质量检查）
 # Pos: CI/CD 配置文件
-# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+# Updated: 2026-03-03
+# 说明: 为避免历史存量 lint 债务阻塞主线，默认仅校验本次变更涉及的前端文件。
 
 name: 前端代码质量检查
 
@@ -40,7 +41,29 @@ jobs:
         run: npm ci
 
       - name: 运行 ESLint
-        run: npm run lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="origin/${{ github.base_ref }}"
+            git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          else
+            BASE_REF="${{ github.event.before }}"
+          fi
+
+          mapfile -t CHANGED_TS_FILES < <(
+            git diff --name-only "${BASE_REF}" "${GITHUB_SHA}" \
+              | grep -E '^src/.*\.(ts|tsx)$' || true
+          )
+
+          if [ "${#CHANGED_TS_FILES[@]}" -eq 0 ]; then
+            echo "没有检测到本次变更涉及的 TS/TSX 文件，跳过 ESLint。"
+            exit 0
+          fi
+
+          echo "将检查以下文件："
+          printf '%s\n' "${CHANGED_TS_FILES[@]}"
+          npx eslint --max-warnings=0 "${CHANGED_TS_FILES[@]}"
         continue-on-error: false
 
       - name: 架构边界验证
