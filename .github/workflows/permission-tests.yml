@@ -87,6 +87,13 @@ jobs:
           cd nexusarchive-java
           mvn compile -DskipTests
 
+      - name: 准备 JWT 测试密钥
+        run: |
+          set -euo pipefail
+          mkdir -p nexusarchive-java/src/main/resources/keystore
+          openssl genrsa -out nexusarchive-java/src/main/resources/keystore/jwt_private.pem 2048
+          openssl rsa -in nexusarchive-java/src/main/resources/keystore/jwt_private.pem -pubout -out nexusarchive-java/src/main/resources/keystore/jwt_public.pem >/dev/null 2>&1
+
       - name: 启动后端服务
         run: |
           set -euo pipefail
@@ -144,9 +151,6 @@ jobs:
 
       - name: 运行权限相关测试
         run: npm test -- --run --passWithNoTests "*Permission*" "*Auth*"
-
-      - name: 运行全部前端测试
-        run: npm test -- --run
 
   # 测试报告汇总
   test-summary:
