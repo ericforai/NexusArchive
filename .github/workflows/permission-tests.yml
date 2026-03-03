@@ -102,7 +102,7 @@ jobs:
           APP_PID=$!
           ok=0
           for i in $(seq 1 48); do
-            if curl -fsS http://localhost:8080/api/health >/dev/null 2>&1; then
+            if curl -sS http://localhost:8080/api/health >/dev/null 2>&1; then
               ok=1
               break
             fi
