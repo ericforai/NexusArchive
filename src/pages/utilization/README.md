@@ -13,7 +13,7 @@
 
 | 文件 | 角色 | 功能 |
 | --- | --- | --- |
-| `RelationshipQueryView.tsx` | 穿透联查页面 | 输入档号查询关联关系图谱（2026-02-13 更新） |
+| `RelationshipQueryView.tsx` | 穿透联查页面 | 输入档号查询关联关系图谱（2026-03-04 修复 demo 附件回退与 403 噪音） |
 | `relationDrilldown.ts` | 联查工具函数 | 主线识别、缺口检测、打印范围聚合（2026-02-13 新增） |
 | `BorrowingView.tsx` | 借阅管理页面 | 档案借阅申请与审批 |
 | `WarehouseView.tsx` | 库房视图 | 档案库房位置可视化 |
@@ -35,3 +35,10 @@
   - 批量打印范围按“主线 + 手动展开节点”聚合并去重
 - **状态管理**: 使用 `useRelationGraphStore`
 - **API**: `/api/relations/{archiveId}/graph`
+
+## 2026-03-04 更新
+
+### 穿透联查附件回退与预览稳定性
+- demo 节点不再误走 `/archives/{id}/files` 兜底，减少 403 噪音日志。
+- 静态附件 URL 统一转绝对地址，避免被 `/api` baseURL 错拼接成 404。
+- 保留关系附件链路优先级，确保无附件时展示空态而非错误复用中心附件。

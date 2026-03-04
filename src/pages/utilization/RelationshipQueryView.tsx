@@ -1,5 +1,5 @@
 // Input: React、简单图谱组件、Zustand store
-// Output: React 组件 RelationshipQueryView（后端方向优先 + 演示数据加载）
+// Output: React 组件 RelationshipQueryView（后端方向优先 + 演示数据加载 + 附件回退修复）
 // Pos: src/pages/utilization/RelationshipQueryView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -112,14 +112,24 @@ const inferFileTypeFromName = (name?: string): string | undefined => {
 
 const normalizeClientRelativeUrl = (url?: string): string | undefined => {
   if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
   // 历史占位下载接口兼容：/api/archives/{archiveId}/download -> /archive/{archiveId}/content
   const legacyMatched = url.match(/^\/api\/archives\/([^/]+)\/download$/) || url.match(/^\/archives\/([^/]+)\/download$/);
   if (legacyMatched?.[1]) {
     return `/archive/${legacyMatched[1]}/content`;
   }
   // axios client 已包含 /api baseURL，避免传入 /api/... 产生 /api/api/...
-  return url.startsWith('/api/') ? url.replace(/^\/api/, '') : url;
+  if (url.startsWith('/api/')) return url.replace(/^\/api/, '');
+  // 静态资源 URL 需要转为绝对地址，避免 axios baseURL=/api 时被错误拼接为 /api/xxx
+  if (typeof window !== 'undefined' && url.startsWith('/') && !url.startsWith('/archive/') && !url.startsWith('/original-vouchers/')) {
+    return `${window.location.origin}${url}`;
+  }
+  return url;
 };
+
+const isDemoArchiveId = (id?: string): boolean => Boolean(id && id.startsWith('demo-'));
 
 const extractArchiveIdFromLegacyDownloadUrl = (url: string): string | null => {
   // 兼容后端历史占位 URL: /api/archives/{archiveId}/download
@@ -199,13 +209,15 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         });
       });
     } catch (error) {
-      console.error('查询附件失败:', error);
+      if ((error as any)?.response?.status !== 403) {
+        console.error('查询附件失败:', error);
+      }
       // 继续回退到关系附件接口
     }
   }
 
   // 4) 归档文件列表兜底：有些节点不是附件关系，但有自己的归档文件
-  if (attachments.length === 0) {
+  if (attachments.length === 0 && !isDemoArchiveId(nodeData.id)) {
     try {
       const archiveFilesResp = await archivesApi.getArchiveFiles(nodeData.id);
       const archiveFiles = archiveFilesResp?.data || [];
@@ -219,7 +231,9 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         });
       });
     } catch (error) {
-      console.error('查询附件失败:', error);
+      if ((error as any)?.response?.status !== 403) {
+        console.error('查询附件失败:', error);
+      }
       // 继续回退到关系附件接口
     }
   }

@@ -20,12 +20,16 @@ interface OriginalDocumentPreviewProps {
 
 const normalizePreviewUrl = (url?: string): string | undefined => {
   if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
   const legacyMatched = url.match(/^\/api\/archives\/([^/]+)\/download$/) || url.match(/^\/archives\/([^/]+)\/download$/);
   if (legacyMatched?.[1]) {
     return `/archive/${legacyMatched[1]}/content`;
   }
   if (url.startsWith('/api/')) {
     return url.replace(/^\/api/, '');
+  }
+  if (typeof window !== 'undefined' && url.startsWith('/') && !url.startsWith('/archive/') && !url.startsWith('/original-vouchers/')) {
+    return `${window.location.origin}${url}`;
   }
   return url;
 };

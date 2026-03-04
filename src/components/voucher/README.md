@@ -17,7 +17,7 @@
 | `VoucherPreview.tsx` | 凭证预览主容器组件 | ✅ 活跃 |
 | `VoucherPreviewCanvas.tsx` | 会计凭证画布（分录表格渲染） | ✅ 活跃 |
 | `VoucherPreviewTabs.tsx` | 标签页导航（业务元数据/会计凭证/关联附件） | ✅ 活跃 |
-| `OriginalDocumentPreview.tsx` | 原始凭证预览（发票/单据等） | ✅ 活跃 |
+| `OriginalDocumentPreview.tsx` | 原始凭证预览（发票/单据等） | ✅ 活跃（支持静态资源绝对 URL 归一化） |
 | `index.ts` | 统一导出入口 | ✅ 活跃 |
 | `styles.ts` | 共享样式定义 | ✅ 活跃 |
 

@@ -1,5 +1,5 @@
 // Input: API client 与 ApiResponse 类型
-// Output: autoAssociationApi（增强版演示图谱/方向视图与回退数据）
+// Output: autoAssociationApi（增强版演示图谱/方向视图与节点级附件回退）
 // Pos: 自动关联/匹配 API 层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -73,8 +73,21 @@ interface DemoScenario {
     filesByNodeId: Record<string, LinkedFile[]>;
 }
 
-const DEMO_PDF_URL = '/dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf';
-const DEMO_IMAGE_URL = '/favicon.svg';
+const toPublicAssetUrl = (path: string): string => {
+    if (/^https?:\/\//.test(path)) return path;
+    if (typeof window !== 'undefined' && path.startsWith('/')) {
+        return `${window.location.origin}${path}`;
+    }
+    return path;
+};
+
+const DEMO_PDF_URL = toPublicAssetUrl('/dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf');
+const DEMO_REIMB_FORM_URL = toPublicAssetUrl('/demo/reimb-form.pdf');
+const DEMO_REIMB_INVOICE_001_URL = toPublicAssetUrl('/demo/reimb-invoice-001.pdf');
+const DEMO_REIMB_INVOICE_002_URL = toPublicAssetUrl('/demo/reimb-invoice-002.pdf');
+const DEMO_REIMB_INVOICE_003_URL = toPublicAssetUrl('/demo/reimb-invoice-003.pdf');
+const DEMO_REIMB_INVOICE_004_URL = toPublicAssetUrl('/demo/reimb-invoice-004.pdf');
+const DEMO_REIMB_RECEIPT_URL = toPublicAssetUrl('/demo/reimb-receipt.pdf');
 
 const normalizeArchiveKey = (value?: string): string => (value || '').trim().toLowerCase();
 
@@ -201,21 +214,35 @@ const RELATIONSHIP_DEMO_SCENARIOS: DemoScenario[] = [
             { from: 'demo-reimb-jz-001', to: 'demo-reimb-bb-001', relationType: 'ARCHIVE', description: '报表归档' }
         ],
         filesByNodeId: {
-            'demo-reimb-jz-001': [
-                { id: 'demo-file-voucher-001', name: '记账凭证_JZ-2025-01-001.pdf', type: 'other', url: DEMO_PDF_URL, uploadDate: '2025-01-12', size: '158KB' },
-                { id: 'demo-file-voucher-002', name: '附件索引说明.png', type: 'other', url: DEMO_IMAGE_URL, uploadDate: '2025-01-12', size: '12KB' }
+            'demo-reimb-sq-001': [
+                { id: 'demo-file-sq-001', name: '出差申请单_SQ-2025-01-001.pdf', type: 'other', url: DEMO_REIMB_FORM_URL, uploadDate: '2025-01-05', size: '105KB' }
             ],
-            'demo-reimb-payapp-001': [
-                { id: 'demo-file-payapp-001', name: '付款申请单_SQFK-2025-01-001.pdf', type: 'other', url: DEMO_PDF_URL, uploadDate: '2025-01-11', size: '92KB' }
+            'demo-reimb-bx-001': [
+                { id: 'demo-file-bx-001', name: '差旅费报销单_BX-2025-01-001.pdf', type: 'other', url: DEMO_REIMB_FORM_URL, uploadDate: '2025-01-10', size: '105KB' }
             ],
             'demo-reimb-fp-001': [
-                { id: 'demo-file-invoice-001', name: '高铁票发票_FP-2025-01-001.pdf', type: 'invoice', url: DEMO_PDF_URL, uploadDate: '2025-01-06', size: '150KB' }
+                { id: 'demo-file-invoice-001', name: '高铁票发票_FP-2025-01-001.pdf', type: 'invoice', url: DEMO_REIMB_INVOICE_001_URL, uploadDate: '2025-01-06', size: '99KB' }
+            ],
+            'demo-reimb-fp-002': [
+                { id: 'demo-file-invoice-002', name: '酒店住宿费发票_FP-2025-01-002.pdf', type: 'invoice', url: DEMO_REIMB_INVOICE_002_URL, uploadDate: '2025-01-07', size: '99KB' }
+            ],
+            'demo-reimb-fp-003': [
+                { id: 'demo-file-invoice-003', name: '餐饮费发票_FP-2025-01-003.pdf', type: 'invoice', url: DEMO_REIMB_INVOICE_003_URL, uploadDate: '2025-01-08', size: '99KB' }
+            ],
+            'demo-reimb-fp-004': [
+                { id: 'demo-file-invoice-004', name: '出租车发票_FP-2025-01-004.pdf', type: 'invoice', url: DEMO_REIMB_INVOICE_004_URL, uploadDate: '2025-01-09', size: '25KB' }
+            ],
+            'demo-reimb-jz-001': [
+                { id: 'demo-file-voucher-001', name: '记账凭证_JZ-2025-01-001.pdf', type: 'other', url: DEMO_PDF_URL, uploadDate: '2025-01-12', size: '102KB' }
+            ],
+            'demo-reimb-payapp-001': [
+                { id: 'demo-file-payapp-001', name: '付款申请单_SQFK-2025-01-001.pdf', type: 'other', url: DEMO_REIMB_FORM_URL, uploadDate: '2025-01-11', size: '105KB' }
             ],
             'demo-reimb-fk-001': [
-                { id: 'demo-file-payment-001', name: '付款单_FK-2025-01-001.pdf', type: 'bank_slip', url: DEMO_PDF_URL, uploadDate: '2025-01-12', size: '120KB' }
+                { id: 'demo-file-payment-001', name: '付款单_FK-2025-01-001.pdf', type: 'bank_slip', url: DEMO_REIMB_RECEIPT_URL, uploadDate: '2025-01-12', size: '99KB' }
             ],
             'demo-reimb-hd-001': [
-                { id: 'demo-file-receipt-001', name: '银行回单_HD-2025-01-001.pdf', type: 'bank_slip', url: DEMO_PDF_URL, uploadDate: '2025-01-12', size: '96KB' }
+                { id: 'demo-file-receipt-001', name: '银行回单_HD-2025-01-001.pdf', type: 'bank_slip', url: DEMO_REIMB_RECEIPT_URL, uploadDate: '2025-01-12', size: '99KB' }
             ]
         }
     },
@@ -281,9 +308,7 @@ const resolveDemoScenario = (archiveId: string): { scenario: DemoScenario; cente
  */
 const getDefaultFiles = (archiveId: string): LinkedFile[] => {
     const { scenario, centerId } = resolveDemoScenario(archiveId);
-    return scenario.filesByNodeId[centerId] || scenario.filesByNodeId[scenario.defaultCenterId] || [
-        { id: 'demo-file-default-001', name: '穿透联查演示凭证.pdf', type: 'other', url: DEMO_PDF_URL, uploadDate: '2025-01-12', size: '158KB' }
-    ];
+    return scenario.filesByNodeId[centerId] || [];
 };
 
 /**
