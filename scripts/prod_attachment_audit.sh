@@ -113,7 +113,7 @@ SELECT * FROM (
   SELECT
     'arc_original_voucher_file'::text AS source_table,
     id::text AS row_id,
-    COALESCE(voucher_no, '') AS code,
+    ''::text AS code,
     COALESCE(file_name, '') AS file_name,
     COALESCE(storage_path, '') AS storage_path
   FROM arc_original_voucher_file
@@ -294,4 +294,3 @@ echo "Report: ${REPORT_FILE}"
 echo "Missing rows: ${MISSING_FILE}"
 echo "Recovery candidates: ${RECOVERY_FILE}"
 echo "SQL summary: ${SQL_SUMMARY_FILE}"
-
