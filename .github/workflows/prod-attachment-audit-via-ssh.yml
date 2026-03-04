@@ -63,9 +63,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/prod-attachment-audit
+          REMOTE_TAR="/tmp/prod-attachment-audit-${{ github.run_id }}-${{ github.run_attempt }}.tgz"
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "tar -czf '${REMOTE_TAR}' -C '${OUT_DIR}' ."
           scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
-            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:${OUT_DIR}/*" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:${REMOTE_TAR}" \
             artifacts/prod-attachment-audit/
+          tar -xzf artifacts/prod-attachment-audit/prod-attachment-audit-${{ github.run_id }}-${{ github.run_attempt }}.tgz -C artifacts/prod-attachment-audit/
           ls -la artifacts/prod-attachment-audit
 
       - name: Print report
@@ -87,4 +92,3 @@ jobs:
           name: prod-attachment-audit-${{ github.run_id }}-${{ github.run_attempt }}
           path: artifacts/prod-attachment-audit/
           retention-days: 14
-
