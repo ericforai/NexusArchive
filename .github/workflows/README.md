@@ -11,10 +11,11 @@
 | `architecture.yml` | 配置文件 | 架构相关检查入口 |
 | `complexity-check.yml` | 配置文件 | 复杂度检查 |
 | `deploy-prod-manual.yml` | 配置文件 | 生产手动部署 |
-| `deploy-prod-via-ssh.yml` | 配置文件 | 通过 SSH 部署生产 |
+| `deploy-prod-via-ssh.yml` | 配置文件 | 通过 SSH 部署生产（含附件巡检强制门禁） |
 | `frontend-quality.yml` | 配置文件 | 前端增量质量检查（ESLint/TS） |
 | `migrate-prod-via-ssh.yml` | 配置文件 | 生产迁移 |
 | `prod-attachment-audit-via-ssh.yml` | 配置文件 | 生产附件巡检（远程 SSH 执行 Runbook） |
+| `prod-attachment-external-recovery-via-ssh.yml` | 配置文件 | 生产附件外部回补（按 unresolved.tsv 定位外部备份并生成二次 SQL） |
 | `prod-attachment-repair-via-ssh.yml` | 配置文件 | 生产附件回补（dry-run/apply，自动归档修复结果） |
 | `permission-tests.yml` | 配置文件 | permission-tests 配置 |
 | `update-modules.yml` | 配置文件 | 模块清单自动更新 |

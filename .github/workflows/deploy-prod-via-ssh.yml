@@ -7,6 +7,18 @@ on:
         description: "Git ref to deploy (branch/tag/sha)"
         required: true
         default: "main"
+      attachment_scan_limit:
+        description: "Attachment gate scan limit"
+        required: true
+        default: "200000"
+      attachment_sample_limit:
+        description: "Attachment gate recovery probe sample limit"
+        required: true
+        default: "300"
+      attachment_target_file_id:
+        description: "Attachment gate target file id for metadata check"
+        required: true
+        default: "f4653466-b670-a083-acff-19ff6d55be02"
 
 concurrency:
   group: deploy-prod
@@ -56,6 +68,29 @@ jobs:
           printf "%s\n" "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/prod_key
           chmod 600 ~/.ssh/prod_key
           ssh-keyscan -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload attachment gate scripts
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            scripts/prod_attachment_audit.sh \
+            scripts/prod_attachment_audit.sql \
+            scripts/prod_attachment_gate.sh \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/"
+
+      - name: Pre-deploy attachment gate (block on missing files)
+        run: |
+          set -euo pipefail
+          GATE_OUT="/tmp/nexusarchive_attachment_gate_${{ github.run_id }}_${{ github.run_attempt }}"
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "chmod +x /tmp/prod_attachment_audit.sh /tmp/prod_attachment_gate.sh && \
+             SCAN_LIMIT='${{ github.event.inputs.attachment_scan_limit }}' \
+             SAMPLE_LIMIT='${{ github.event.inputs.attachment_sample_limit }}' \
+             TARGET_FILE_ID='${{ github.event.inputs.attachment_target_file_id }}' \
+             MAX_MISSING_ALLOWED='0' \
+             WORK_DIR='${GATE_OUT}' \
+             bash /tmp/prod_attachment_gate.sh"
 
       - name: Rsync dist and jar (incremental)
         run: |

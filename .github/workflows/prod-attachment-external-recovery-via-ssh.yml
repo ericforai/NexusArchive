@@ -1,0 +1,140 @@
+name: Prod Attachment External Recovery via SSH
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run or apply"
+        required: true
+        default: "dry-run"
+      unresolved_tsv:
+        description: "Path of unresolved.tsv on prod host, or auto"
+        required: true
+        default: "auto"
+      external_fs_dirs:
+        description: "CSV of external backup dirs"
+        required: true
+        default: "/opt/nexusarchive,/mnt,/data/backups,/backup"
+      external_tar_globs:
+        description: "CSV of tar globs"
+        required: true
+        default: "/opt/nexusarchive/migration_backups/*.tgz,/opt/nexusarchive/migration_packages/*.tar.gz,/opt/nexusarchive/backups/*.tgz,/opt/nexusarchive/backups/*.tar.gz"
+      s3_uri_prefixes:
+        description: "CSV of S3 URI prefixes"
+        required: false
+        default: ""
+      oss_uri_prefixes:
+        description: "CSV of OSS URI prefixes"
+        required: false
+        default: ""
+      minio_uri_prefixes:
+        description: "CSV of MinIO URI prefixes (mc alias path)"
+        required: false
+        default: ""
+      download_found_object:
+        description: "0=probe only, 1=download object and recover"
+        required: true
+        default: "0"
+
+concurrency:
+  group: prod-attachment-external-recovery
+  cancel-in-progress: false
+
+jobs:
+  external_recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate inputs
+        run: |
+          set -euo pipefail
+          MODE="${{ github.event.inputs.mode }}"
+          DOWNLOAD="${{ github.event.inputs.download_found_object }}"
+          if [ "$MODE" != "dry-run" ] && [ "$MODE" != "apply" ]; then
+            echo "mode must be dry-run or apply"
+            exit 1
+          fi
+          if [ "$DOWNLOAD" != "0" ] && [ "$DOWNLOAD" != "1" ]; then
+            echo "download_found_object must be 0 or 1"
+            exit 1
+          fi
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf "%s\n" "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
+          ssh-keyscan -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload scripts
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            scripts/prod_attachment_external_recovery.sh \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/"
+
+      - name: Run remote external recovery
+        run: |
+          set -euo pipefail
+          OUT_DIR="/tmp/nexusarchive_attachment_external_recovery_${{ github.run_id }}_${{ github.run_attempt }}"
+          APPLY_DB="0"
+          if [ "${{ github.event.inputs.mode }}" = "apply" ]; then
+            APPLY_DB="1"
+          fi
+
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "chmod +x /tmp/prod_attachment_external_recovery.sh && \
+             APPLY_DB='${APPLY_DB}' \
+             UNRESOLVED_TSV='${{ github.event.inputs.unresolved_tsv }}' \
+             EXTERNAL_FS_DIRS='${{ github.event.inputs.external_fs_dirs }}' \
+             EXTERNAL_TAR_GLOBS='${{ github.event.inputs.external_tar_globs }}' \
+             S3_URI_PREFIXES='${{ github.event.inputs.s3_uri_prefixes }}' \
+             OSS_URI_PREFIXES='${{ github.event.inputs.oss_uri_prefixes }}' \
+             MINIO_URI_PREFIXES='${{ github.event.inputs.minio_uri_prefixes }}' \
+             DOWNLOAD_FOUND_OBJECT='${{ github.event.inputs.download_found_object }}' \
+             WORK_DIR='${OUT_DIR}' \
+             bash /tmp/prod_attachment_external_recovery.sh"
+
+          echo "OUT_DIR=${OUT_DIR}" >> "$GITHUB_ENV"
+
+      - name: Download artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/prod-attachment-external-recovery
+          REMOTE_TAR="/tmp/prod-attachment-external-recovery-${{ github.run_id }}-${{ github.run_attempt }}.tgz"
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "tar -czf '${REMOTE_TAR}' -C '${OUT_DIR}' ."
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:${REMOTE_TAR}" \
+            artifacts/prod-attachment-external-recovery/
+          tar -xzf artifacts/prod-attachment-external-recovery/prod-attachment-external-recovery-${{ github.run_id }}-${{ github.run_attempt }}.tgz -C artifacts/prod-attachment-external-recovery/
+          ls -la artifacts/prod-attachment-external-recovery
+
+      - name: Print report
+        run: |
+          set -euo pipefail
+          echo "## Production Attachment External Recovery (${{ github.event.inputs.mode }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          REPORT="$(find artifacts/prod-attachment-external-recovery -name external_recovery_report.txt | head -n 1)"
+          if [ -n "$REPORT" ] && [ -f "$REPORT" ]; then
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "external_recovery_report.txt not found" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-attachment-external-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/prod-attachment-external-recovery/
+          retention-days: 14

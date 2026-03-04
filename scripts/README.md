@@ -39,7 +39,9 @@
 | `backup_postgres.sh` | PostgreSQL 备份 | 数据库备份 |
 | `restore_postgres.sh` | PostgreSQL 恢复 | 数据库恢复 |
 | `prod_attachment_audit.sh` | 生产附件巡检 | 判断“数据缺失 vs 文件缺失”，并探测可恢复来源 |
+| `prod_attachment_gate.sh` | 生产附件发布门禁 | 执行附件巡检并在缺失文件超阈值时阻断发布 |
 | `prod_attachment_repair.sh` | 生产附件回补 | 基于缺失清单自动找回文件并生成/可选执行 DB 修复 SQL |
+| `prod_attachment_external_recovery.sh` | 生产附件外部回补 | 基于 unresolved.tsv 从外部备份源定位文件并生成二次回补 SQL |
 | `check-collection-batch-sequence.sh` | 数据库序列健康检查 | 检测并修复 `collection_batch_id_seq` 序列回退问题（防止主键冲突） |
 | `check-docker-health.sh` | Docker 健康检查 | 检查容器健康状态 |
 | `create_demo_files.sh` | 生成演示文件 | 创建测试数据 |

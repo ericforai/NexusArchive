@@ -20,6 +20,11 @@
 #   DB_NAME                 数据库名（默认 nexusarchive）
 #   DB_USER                 数据库用户（默认 postgres）
 #   DB_PASSWORD             数据库密码（默认 pPSB3+HqgkqxM3WL）
+#   ATTACHMENT_GATE_ENABLED 是否启用附件门禁（默认 1）
+#   ATTACHMENT_GATE_SCAN_LIMIT 附件门禁扫描上限（默认 200000）
+#   ATTACHMENT_GATE_SAMPLE_LIMIT 附件门禁恢复探测采样（默认 300）
+#   ATTACHMENT_GATE_MAX_MISSING_ALLOWED 附件门禁允许的缺失文件数（默认 0）
+#   ATTACHMENT_GATE_TARGET_FILE_ID 门禁巡检目标 file_id（默认 f4653466-b670-a083-acff-19ff6d55be02）
 # ==============================================================================
 
 set -euo pipefail
@@ -36,6 +41,11 @@ HEALTH_URL="${HEALTH_URL:-https://www.digivoucher.cn/api/health}"
 HEALTH_TIMEOUT_SECONDS="${HEALTH_TIMEOUT_SECONDS:-120}"
 HEALTH_INTERVAL_SECONDS="${HEALTH_INTERVAL_SECONDS:-5}"
 SKIP_GIT_PULL="${SKIP_GIT_PULL:-0}"
+ATTACHMENT_GATE_ENABLED="${ATTACHMENT_GATE_ENABLED:-1}"
+ATTACHMENT_GATE_SCAN_LIMIT="${ATTACHMENT_GATE_SCAN_LIMIT:-200000}"
+ATTACHMENT_GATE_SAMPLE_LIMIT="${ATTACHMENT_GATE_SAMPLE_LIMIT:-300}"
+ATTACHMENT_GATE_MAX_MISSING_ALLOWED="${ATTACHMENT_GATE_MAX_MISSING_ALLOWED:-0}"
+ATTACHMENT_GATE_TARGET_FILE_ID="${ATTACHMENT_GATE_TARGET_FILE_ID:-f4653466-b670-a083-acff-19ff6d55be02}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "ERROR: docker 未安装或不可用"
@@ -62,12 +72,12 @@ if [[ ! -d "$PROJECT_ROOT" ]]; then
   exit 1
 fi
 
-echo "[0/6] 备份数据库..."
+echo "[0/7] 备份数据库..."
 BACKUP_FILE="$PROJECT_ROOT/backup_$(date +%F_%H%M%S).sql"
 docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" "$DB_NAME" > "$BACKUP_FILE"
 echo "数据库备份完成: $BACKUP_FILE"
 
-echo "[1/6] 拉取最新代码..."
+echo "[1/7] 拉取最新代码..."
 cd "$PROJECT_ROOT"
 if [[ "$SKIP_GIT_PULL" == "1" ]]; then
   echo "已跳过 git pull（SKIP_GIT_PULL=1）"
@@ -75,24 +85,43 @@ else
   git pull origin main
 fi
 
-echo "[2/6] 构建前端..."
+echo "[2/7] 构建前端..."
 npm ci
 npm run build
 
-echo "[3/6] 构建后端..."
+echo "[3/7] 构建后端..."
 cd "$PROJECT_ROOT/nexusarchive-java"
 mvn -DskipTests -Dmaven.compiler.failOnWarning=false clean package
 
-echo "[4/6] 重启服务..."
+echo "[4/7] 附件巡检门禁..."
+if [[ "$ATTACHMENT_GATE_ENABLED" == "1" ]]; then
+  GATE_SCRIPT="$PROJECT_ROOT/scripts/prod_attachment_gate.sh"
+  if [[ ! -f "$GATE_SCRIPT" ]]; then
+    echo "ERROR: 附件门禁脚本不存在: $GATE_SCRIPT"
+    exit 1
+  fi
+  chmod +x "$GATE_SCRIPT"
+  APP_DIR="$PROJECT_ROOT" \
+  SCAN_LIMIT="$ATTACHMENT_GATE_SCAN_LIMIT" \
+  SAMPLE_LIMIT="$ATTACHMENT_GATE_SAMPLE_LIMIT" \
+  MAX_MISSING_ALLOWED="$ATTACHMENT_GATE_MAX_MISSING_ALLOWED" \
+  TARGET_FILE_ID="$ATTACHMENT_GATE_TARGET_FILE_ID" \
+  WORK_DIR="/tmp/nexusarchive_attachment_gate_deploy_$(date +%Y%m%d_%H%M%S)" \
+  bash "$GATE_SCRIPT"
+else
+  echo "已跳过附件门禁（ATTACHMENT_GATE_ENABLED=${ATTACHMENT_GATE_ENABLED}）"
+fi
+
+echo "[5/7] 重启服务..."
 systemctl restart "$SERVICE_NAME"
 systemctl status "$SERVICE_NAME" --no-pager -l
 
-echo "[5/6] 检查 Flyway 迁移状态..."
+echo "[6/7] 检查 Flyway 迁移状态..."
 docker exec -e "PGPASSWORD=$DB_PASSWORD" "$DB_CONTAINER" \
   psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" \
   -c "select version,description,success from flyway_schema_history order by installed_rank desc limit 10;"
 
-echo "[6/6] 健康检查（等待服务就绪）..."
+echo "[7/7] 健康检查（等待服务就绪）..."
 ELAPSED=0
 until curl -fsS "$HEALTH_URL" >/dev/null 2>&1; do
   if (( ELAPSED >= HEALTH_TIMEOUT_SECONDS )); then
