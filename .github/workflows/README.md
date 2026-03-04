@@ -15,7 +15,7 @@
 | `frontend-quality.yml` | 配置文件 | 前端增量质量检查（ESLint/TS） |
 | `migrate-prod-via-ssh.yml` | 配置文件 | 生产迁移 |
 | `prod-attachment-audit-via-ssh.yml` | 配置文件 | 生产附件巡检（远程 SSH 执行 Runbook） |
-| `prod-attachment-external-recovery-via-ssh.yml` | 配置文件 | 生产附件外部回补（按 unresolved.tsv 定位外部备份并生成二次 SQL） |
+| `prod-attachment-external-recovery-via-ssh.yml` | 配置文件 | 生产附件外部回补（按 unresolved.tsv 定位外部备份并生成二次 SQL，支持占位回补开关） |
 | `prod-attachment-repair-via-ssh.yml` | 配置文件 | 生产附件回补（dry-run/apply，自动归档修复结果） |
 | `permission-tests.yml` | 配置文件 | permission-tests 配置 |
 | `update-modules.yml` | 配置文件 | 模块清单自动更新 |

@@ -15,6 +15,8 @@ DB_NAME="${DB_NAME:-nexusarchive}"
 APPLY_DB="${APPLY_DB:-0}"  # 0=dry-run, 1=apply
 UNRESOLVED_TSV="${UNRESOLVED_TSV:-auto}"
 DOWNLOAD_FOUND_OBJECT="${DOWNLOAD_FOUND_OBJECT:-0}"  # 0=仅定位, 1=下载后自动回补
+ALLOW_PLACEHOLDER_FALLBACK="${ALLOW_PLACEHOLDER_FALLBACK:-0}"  # 0=关闭, 1=允许占位回补
+PLACEHOLDER_SOURCE_DIRS="${PLACEHOLDER_SOURCE_DIRS:-/tmp/prod-demo-placeholders,/opt/nexusarchive/public/demo,/opt/nexusarchive/data/archives/demo,/opt/nexusarchive/public}"
 
 EXTERNAL_FS_DIRS="${EXTERNAL_FS_DIRS:-/opt/nexusarchive,/mnt,/data/backups,/backup}"
 EXTERNAL_TAR_GLOBS="${EXTERNAL_TAR_GLOBS:-/opt/nexusarchive/migration_backups/*.tgz,/opt/nexusarchive/migration_packages/*.tar.gz,/opt/nexusarchive/backups/*.tgz,/opt/nexusarchive/backups/*.tar.gz}"
@@ -135,6 +137,7 @@ IFS=',' read -r -a EXTERNAL_TAR_GLOB_ARR <<< "$EXTERNAL_TAR_GLOBS"
 IFS=',' read -r -a S3_PREFIX_ARR <<< "$S3_URI_PREFIXES"
 IFS=',' read -r -a OSS_PREFIX_ARR <<< "$OSS_URI_PREFIXES"
 IFS=',' read -r -a MINIO_PREFIX_ARR <<< "$MINIO_URI_PREFIXES"
+IFS=',' read -r -a PLACEHOLDER_DIR_ARR <<< "$PLACEHOLDER_SOURCE_DIRS"
 
 for i in "${!EXTERNAL_FS_DIR_ARR[@]}"; do
   EXTERNAL_FS_DIR_ARR[$i]="$(trim "${EXTERNAL_FS_DIR_ARR[$i]}")"
@@ -151,6 +154,9 @@ done
 for i in "${!MINIO_PREFIX_ARR[@]}"; do
   MINIO_PREFIX_ARR[$i]="$(trim "${MINIO_PREFIX_ARR[$i]}")"
 done
+for i in "${!PLACEHOLDER_DIR_ARR[@]}"; do
+  PLACEHOLDER_DIR_ARR[$i]="$(trim "${PLACEHOLDER_DIR_ARR[$i]}")"
+done
 
 TAR_FILE_LIST=()
 for pattern in "${EXTERNAL_TAR_GLOB_ARR[@]}"; do
@@ -162,8 +168,46 @@ for pattern in "${EXTERNAL_TAR_GLOB_ARR[@]}"; do
 done
 
 if [ "${#TAR_FILE_LIST[@]}" -gt 0 ]; then
-  mapfile -t TAR_FILE_LIST < <(printf "%s\n" "${TAR_FILE_LIST[@]}" | sort -u)
+  DEDUPED_TAR_FILE_LIST=()
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    DEDUPED_TAR_FILE_LIST+=("$f")
+  done < <(printf "%s\n" "${TAR_FILE_LIST[@]}" | sort -u)
+  TAR_FILE_LIST=("${DEDUPED_TAR_FILE_LIST[@]}")
 fi
+
+PLACEHOLDER_FILES=()
+if [ "$ALLOW_PLACEHOLDER_FALLBACK" = "1" ]; then
+  for dir in "${PLACEHOLDER_DIR_ARR[@]}"; do
+    [ -n "$dir" ] || continue
+    [ -d "$dir" ] || continue
+    while IFS= read -r f; do
+      [ -f "$f" ] || continue
+      PLACEHOLDER_FILES+=("$f")
+    done < <(find "$dir" -type f \( -name "*.pdf" -o -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.webp" \) 2>/dev/null | sort)
+  done
+  if [ "${#PLACEHOLDER_FILES[@]}" -gt 0 ]; then
+    DEDUPED_PLACEHOLDER_FILES=()
+    while IFS= read -r f; do
+      [ -n "$f" ] || continue
+      DEDUPED_PLACEHOLDER_FILES+=("$f")
+    done < <(printf "%s\n" "${PLACEHOLDER_FILES[@]}" | awk '!seen[$0]++')
+    PLACEHOLDER_FILES=("${DEDUPED_PLACEHOLDER_FILES[@]}")
+  fi
+fi
+
+find_placeholder_file() {
+  local slot="${1:-0}"
+  if [ "$ALLOW_PLACEHOLDER_FALLBACK" != "1" ]; then
+    return 1
+  fi
+  if [ "${#PLACEHOLDER_FILES[@]}" -eq 0 ]; then
+    return 1
+  fi
+  local idx=$((slot % ${#PLACEHOLDER_FILES[@]}))
+  local selected="${PLACEHOLDER_FILES[$idx]}"
+  printf "%s\tPLACEHOLDER:%s\n" "$selected" "$selected"
+}
 
 find_in_external_fs() {
   local row_id="$1"
@@ -209,7 +253,8 @@ find_in_tar_archives() {
   local extracted
 
   base_name="$(basename "$old_storage_path")"
-  for tar_file in "${TAR_FILE_LIST[@]}"; do
+  for tar_file in "${TAR_FILE_LIST[@]-}"; do
+    [ -n "$tar_file" ] || continue
     member=""
     if [ -n "$rel_norm" ]; then
       member="$(tar -tf "$tar_file" 2>/dev/null | grep -F "$rel_norm" | head -n 1 || true)"
@@ -347,20 +392,24 @@ find_in_minio() {
 
 printf "source_table\trow_id\tfile_name\told_storage_path\tnew_storage_path\tsource_file\tsource_hint\tnew_file_size\n" > "$RESOLVED_TSV"
 printf "source_table\trow_id\tfile_name\told_storage_path\treason\n" > "$UNRESOLVED_LEFT_TSV"
-printf "source_table\trow_id\tfile_name\told_storage_path\tfs_hit\ttar_hit\ts3_hit\toss_hit\tminio_hit\tselected_source\tstatus\n" > "$PROBE_TSV"
+printf "source_table\trow_id\tfile_name\told_storage_path\tfs_hit\ttar_hit\ts3_hit\toss_hit\tminio_hit\tplaceholder_hit\tselected_source\tstatus\n" > "$PROBE_TSV"
 
 RESOLVED_COUNT=0
 UNRESOLVED_COUNT=0
+ROW_COUNTER=0
 
 echo "=== NexusArchive External Attachment Recovery ===" | tee "$REPORT_FILE"
 echo "work_dir=${WORK_DIR}" | tee -a "$REPORT_FILE"
 echo "apply_db=${APPLY_DB}" | tee -a "$REPORT_FILE"
 echo "download_found_object=${DOWNLOAD_FOUND_OBJECT}" | tee -a "$REPORT_FILE"
+echo "allow_placeholder_fallback=${ALLOW_PLACEHOLDER_FALLBACK}" | tee -a "$REPORT_FILE"
 echo "archive_root_path=${ARCHIVE_ROOT_PATH}" | tee -a "$REPORT_FILE"
 echo "unresolved_tsv=${UNRESOLVED_TSV}" | tee -a "$REPORT_FILE"
 echo "external_fs_dirs=${EXTERNAL_FS_DIRS}" | tee -a "$REPORT_FILE"
 echo "external_tar_globs=${EXTERNAL_TAR_GLOBS}" | tee -a "$REPORT_FILE"
 echo "tar_candidates_count=${#TAR_FILE_LIST[@]}" | tee -a "$REPORT_FILE"
+echo "placeholder_source_dirs=${PLACEHOLDER_SOURCE_DIRS}" | tee -a "$REPORT_FILE"
+echo "placeholder_candidates_count=${#PLACEHOLDER_FILES[@]}" | tee -a "$REPORT_FILE"
 echo | tee -a "$REPORT_FILE"
 
 while IFS=$'\t' read -r source_table row_id file_name old_storage_path _reason; do
@@ -370,12 +419,14 @@ while IFS=$'\t' read -r source_table row_id file_name old_storage_path _reason; 
   if [ -z "$row_id" ] || [ -z "$old_storage_path" ]; then
     continue
   fi
+  ROW_COUNTER=$((ROW_COUNTER + 1))
 
   fs_hit="no"
   tar_hit="no"
   s3_hit="no"
   oss_hit="no"
   minio_hit="no"
+  placeholder_hit="no"
   selected_source="-"
   status="unresolved"
 
@@ -416,11 +467,18 @@ while IFS=$'\t' read -r source_table row_id file_name old_storage_path _reason; 
   fi
 
   if [ -z "$source_result" ]; then
+    source_result="$(find_placeholder_file "$ROW_COUNTER" || true)"
+    if [ -n "$source_result" ]; then
+      placeholder_hit="yes"
+    fi
+  fi
+
+  if [ -z "$source_result" ]; then
     status="source_not_found"
     UNRESOLVED_COUNT=$((UNRESOLVED_COUNT + 1))
     printf "%s\t%s\t%s\t%s\t%s\n" "$source_table" "$row_id" "$file_name" "$old_storage_path" "$status" >> "$UNRESOLVED_LEFT_TSV"
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-      "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$selected_source" "$status" >> "$PROBE_TSV"
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+      "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$placeholder_hit" "$selected_source" "$status" >> "$PROBE_TSV"
     continue
   fi
 
@@ -432,8 +490,8 @@ while IFS=$'\t' read -r source_table row_id file_name old_storage_path _reason; 
     status="object_found_need_download"
     UNRESOLVED_COUNT=$((UNRESOLVED_COUNT + 1))
     printf "%s\t%s\t%s\t%s\t%s\n" "$source_table" "$row_id" "$file_name" "$old_storage_path" "$status" >> "$UNRESOLVED_LEFT_TSV"
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-      "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$selected_source" "$status" >> "$PROBE_TSV"
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+      "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$placeholder_hit" "$selected_source" "$status" >> "$PROBE_TSV"
     continue
   fi
 
@@ -441,8 +499,8 @@ while IFS=$'\t' read -r source_table row_id file_name old_storage_path _reason; 
     status="source_disappeared"
     UNRESOLVED_COUNT=$((UNRESOLVED_COUNT + 1))
     printf "%s\t%s\t%s\t%s\t%s\n" "$source_table" "$row_id" "$file_name" "$old_storage_path" "$status" >> "$UNRESOLVED_LEFT_TSV"
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-      "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$selected_source" "$status" >> "$PROBE_TSV"
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+      "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$placeholder_hit" "$selected_source" "$status" >> "$PROBE_TSV"
     continue
   fi
 
@@ -453,13 +511,17 @@ while IFS=$'\t' read -r source_table row_id file_name old_storage_path _reason; 
   cp -f "$source_file" "$target_abs"
 
   new_size="$(wc -c < "$target_abs" | tr -d ' ')"
-  status="resolved"
+  if [ "$placeholder_hit" = "yes" ]; then
+    status="resolved_placeholder"
+  else
+    status="resolved"
+  fi
   RESOLVED_COUNT=$((RESOLVED_COUNT + 1))
 
   printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$source_table" "$row_id" "$file_name" "$old_storage_path" "$target_rel" "$source_file" "$source_hint" "$new_size" >> "$RESOLVED_TSV"
-  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-    "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$selected_source" "$status" >> "$PROBE_TSV"
+  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+    "$source_table" "$row_id" "$file_name" "$old_storage_path" "$fs_hit" "$tar_hit" "$s3_hit" "$oss_hit" "$minio_hit" "$placeholder_hit" "$selected_source" "$status" >> "$PROBE_TSV"
 done < "$UNRESOLVED_TSV"
 
 {

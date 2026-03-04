@@ -35,6 +35,14 @@ on:
         description: "0=probe only, 1=download object and recover"
         required: true
         default: "0"
+      allow_placeholder_fallback:
+        description: "0=disable placeholder fallback, 1=enable placeholder fallback"
+        required: true
+        default: "0"
+      placeholder_source_dirs:
+        description: "CSV of placeholder source dirs on prod host"
+        required: true
+        default: "/tmp/prod-demo-placeholders,/opt/nexusarchive/public/demo,/opt/nexusarchive/data/archives/demo,/opt/nexusarchive/public"
 
 concurrency:
   group: prod-attachment-external-recovery
@@ -54,12 +62,17 @@ jobs:
           set -euo pipefail
           MODE="${{ github.event.inputs.mode }}"
           DOWNLOAD="${{ github.event.inputs.download_found_object }}"
+          PLACEHOLDER="${{ github.event.inputs.allow_placeholder_fallback }}"
           if [ "$MODE" != "dry-run" ] && [ "$MODE" != "apply" ]; then
             echo "mode must be dry-run or apply"
             exit 1
           fi
           if [ "$DOWNLOAD" != "0" ] && [ "$DOWNLOAD" != "1" ]; then
             echo "download_found_object must be 0 or 1"
+            exit 1
+          fi
+          if [ "$PLACEHOLDER" != "0" ] && [ "$PLACEHOLDER" != "1" ]; then
+            echo "allow_placeholder_fallback must be 0 or 1"
             exit 1
           fi
 
@@ -78,6 +91,17 @@ jobs:
           scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
             scripts/prod_attachment_external_recovery.sh \
             "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/"
+
+      - name: Upload demo placeholder files
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "mkdir -p /tmp/prod-demo-placeholders"
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            public/demo/*.pdf \
+            public/dzfp_25312000000361691112_上海市徐汇区晓旻餐饮店_20251107223428.pdf \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/prod-demo-placeholders/"
 
       - name: Run remote external recovery
         run: |
@@ -99,6 +123,8 @@ jobs:
              OSS_URI_PREFIXES='${{ github.event.inputs.oss_uri_prefixes }}' \
              MINIO_URI_PREFIXES='${{ github.event.inputs.minio_uri_prefixes }}' \
              DOWNLOAD_FOUND_OBJECT='${{ github.event.inputs.download_found_object }}' \
+             ALLOW_PLACEHOLDER_FALLBACK='${{ github.event.inputs.allow_placeholder_fallback }}' \
+             PLACEHOLDER_SOURCE_DIRS='${{ github.event.inputs.placeholder_source_dirs }}' \
              WORK_DIR='${OUT_DIR}' \
              bash /tmp/prod_attachment_external_recovery.sh"
 
