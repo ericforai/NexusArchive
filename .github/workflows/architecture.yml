@@ -3,8 +3,24 @@ name: Architecture Check
 on:
   pull_request:
     branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'scripts/discover-frontend-modules.js'
+      - '.dependency-cruiser.cjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'docs/architecture/module-manifest.md'
+      - '.github/workflows/architecture.yml'
   push:
     branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'scripts/discover-frontend-modules.js'
+      - '.dependency-cruiser.cjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'docs/architecture/module-manifest.md'
+      - '.github/workflows/architecture.yml'
   workflow_dispatch:
 
 jobs:
