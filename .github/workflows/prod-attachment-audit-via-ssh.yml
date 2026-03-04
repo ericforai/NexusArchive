@@ -1,0 +1,90 @@
+name: Prod Attachment Audit via SSH
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_file_id:
+        description: "Target file id for focused diagnosis"
+        required: true
+        default: "f4653466-b670-a083-acff-19ff6d55be02"
+      scan_limit:
+        description: "Max attachment rows to scan"
+        required: true
+        default: "200000"
+      sample_limit:
+        description: "Max missing rows for recovery-source probe"
+        required: true
+        default: "300"
+
+concurrency:
+  group: prod-attachment-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf "%s\n" "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
+          ssh-keyscan -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload audit scripts
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            scripts/prod_attachment_audit.sh scripts/prod_attachment_audit.sql \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/"
+
+      - name: Run remote audit
+        run: |
+          set -euo pipefail
+          OUT_DIR="/tmp/nexusarchive_attachment_audit_${{ github.run_id }}_${{ github.run_attempt }}"
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "chmod +x /tmp/prod_attachment_audit.sh && \
+             TARGET_FILE_ID='${{ github.event.inputs.target_file_id }}' \
+             SCAN_LIMIT='${{ github.event.inputs.scan_limit }}' \
+             SAMPLE_LIMIT='${{ github.event.inputs.sample_limit }}' \
+             OUT_DIR='${OUT_DIR}' \
+             bash /tmp/prod_attachment_audit.sh"
+          echo "OUT_DIR=${OUT_DIR}" >> "$GITHUB_ENV"
+
+      - name: Download audit artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/prod-attachment-audit
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:${OUT_DIR}/*" \
+            artifacts/prod-attachment-audit/
+          ls -la artifacts/prod-attachment-audit
+
+      - name: Print report
+        run: |
+          set -euo pipefail
+          echo "## Production Attachment Audit" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f artifacts/prod-attachment-audit/report.txt ]; then
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cat artifacts/prod-attachment-audit/report.txt >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "report.txt not found" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-attachment-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/prod-attachment-audit/
+          retention-days: 14
+
