@@ -1,0 +1,117 @@
+name: Prod Attachment Repair via SSH
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run or apply"
+        required: true
+        default: "dry-run"
+      target_file_id:
+        description: "Target file id for focused diagnosis"
+        required: true
+        default: "f4653466-b670-a083-acff-19ff6d55be02"
+      scan_limit:
+        description: "Max attachment rows to scan"
+        required: true
+        default: "200000"
+      sample_limit:
+        description: "Max missing rows for recovery-source probe"
+        required: true
+        default: "300"
+
+concurrency:
+  group: prod-attachment-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate mode
+        run: |
+          set -euo pipefail
+          MODE="${{ github.event.inputs.mode }}"
+          if [ "$MODE" != "dry-run" ] && [ "$MODE" != "apply" ]; then
+            echo "mode must be dry-run or apply"
+            exit 1
+          fi
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf "%s\n" "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
+          ssh-keyscan -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload scripts
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            scripts/prod_attachment_audit.sh \
+            scripts/prod_attachment_audit.sql \
+            scripts/prod_attachment_repair.sh \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/tmp/"
+
+      - name: Run remote repair
+        run: |
+          set -euo pipefail
+          OUT_DIR="/tmp/nexusarchive_attachment_repair_${{ github.run_id }}_${{ github.run_attempt }}"
+          APPLY_DB="0"
+          if [ "${{ github.event.inputs.mode }}" = "apply" ]; then
+            APPLY_DB="1"
+          fi
+
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "chmod +x /tmp/prod_attachment_audit.sh /tmp/prod_attachment_repair.sh && \
+             APPLY_DB='${APPLY_DB}' \
+             TARGET_FILE_ID='${{ github.event.inputs.target_file_id }}' \
+             SCAN_LIMIT='${{ github.event.inputs.scan_limit }}' \
+             SAMPLE_LIMIT='${{ github.event.inputs.sample_limit }}' \
+             WORK_DIR='${OUT_DIR}' \
+             bash /tmp/prod_attachment_repair.sh"
+
+          echo "OUT_DIR=${OUT_DIR}" >> "$GITHUB_ENV"
+
+      - name: Download artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/prod-attachment-repair
+          REMOTE_TAR="/tmp/prod-attachment-repair-${{ github.run_id }}-${{ github.run_attempt }}.tgz"
+          ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "tar -czf '${REMOTE_TAR}' -C '${OUT_DIR}' ."
+          scp -i ~/.ssh/prod_key -P "${{ secrets.PROD_PORT }}" \
+            "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:${REMOTE_TAR}" \
+            artifacts/prod-attachment-repair/
+          tar -xzf artifacts/prod-attachment-repair/prod-attachment-repair-${{ github.run_id }}-${{ github.run_attempt }}.tgz -C artifacts/prod-attachment-repair/
+          ls -la artifacts/prod-attachment-repair
+
+      - name: Print report
+        run: |
+          set -euo pipefail
+          echo "## Production Attachment Repair (${{ github.event.inputs.mode }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          REPORT="$(find artifacts/prod-attachment-repair -name repair_report.txt | head -n 1)"
+          if [ -n "$REPORT" ] && [ -f "$REPORT" ]; then
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "repair_report.txt not found" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-attachment-repair-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/prod-attachment-repair/
+          retention-days: 14

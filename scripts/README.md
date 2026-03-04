@@ -39,6 +39,7 @@
 | `backup_postgres.sh` | PostgreSQL 备份 | 数据库备份 |
 | `restore_postgres.sh` | PostgreSQL 恢复 | 数据库恢复 |
 | `prod_attachment_audit.sh` | 生产附件巡检 | 判断“数据缺失 vs 文件缺失”，并探测可恢复来源 |
+| `prod_attachment_repair.sh` | 生产附件回补 | 基于缺失清单自动找回文件并生成/可选执行 DB 修复 SQL |
 | `check-collection-batch-sequence.sh` | 数据库序列健康检查 | 检测并修复 `collection_batch_id_seq` 序列回退问题（防止主键冲突） |
 | `check-docker-health.sh` | Docker 健康检查 | 检查容器健康状态 |
 | `create_demo_files.sh` | 生成演示文件 | 创建测试数据 |
@@ -83,6 +84,7 @@
 | `seed_roles.sql` | 初始化角色 | 创建初始角色和权限 |
 | `update_role_perms.sql` | 更新角色权限 | 更新角色权限映射 |
 | `prod_attachment_audit.sql` | 生产附件巡检 SQL | 统计附件表、空路径、目标 file_id 元数据 |
+| `prod_attachment_repair_template.sql` | 生产附件修复 SQL 模板 | 作为回补 SQL 模板，实际执行文件由修复脚本生成 |
 
 ## 快速命令参考
 
