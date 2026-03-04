@@ -8,16 +8,13 @@ BEGIN;
 -- 示例：修复 arc_file_content
 -- UPDATE arc_file_content
 -- SET storage_path = 'uploads/recovered/<row_id>_<file_name>',
---     file_size = <new_size>,
---     last_modified_time = NOW()
+--     file_size = <new_size>
 -- WHERE id = '<row_id>';
 
 -- 示例：修复 arc_original_voucher_file
 -- UPDATE arc_original_voucher_file
 -- SET storage_path = 'uploads/recovered/<row_id>_<file_name>',
---     file_size = <new_size>,
---     last_modified_time = NOW()
+--     file_size = <new_size>
 -- WHERE id = '<row_id>';
 
 COMMIT;
-

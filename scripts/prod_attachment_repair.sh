@@ -258,10 +258,10 @@ echo | tee -a "$REPORT_FILE"
     size_num="${new_size:-0}"
     case "$source_table" in
       arc_file_content)
-        echo "UPDATE arc_file_content SET storage_path='${storage_esc}', file_size=${size_num}::bigint, last_modified_time=NOW() WHERE id='${row_id_esc}';"
+        echo "UPDATE arc_file_content SET storage_path='${storage_esc}', file_size=${size_num}::bigint WHERE id='${row_id_esc}';"
         ;;
       arc_original_voucher_file)
-        echo "UPDATE arc_original_voucher_file SET storage_path='${storage_esc}', file_size=${size_num}::bigint, last_modified_time=NOW() WHERE id='${row_id_esc}';"
+        echo "UPDATE arc_original_voucher_file SET storage_path='${storage_esc}', file_size=${size_num}::bigint WHERE id='${row_id_esc}';"
         ;;
       *)
         ;;
@@ -288,4 +288,3 @@ fi
 echo
 echo "Attachment repair finished."
 echo "Report: ${REPORT_FILE}"
-
