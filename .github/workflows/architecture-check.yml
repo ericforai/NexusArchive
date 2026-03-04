@@ -1,7 +1,7 @@
 # Architecture Defense CI Integration
 # J3: Closed Rules - 架构违规阻止合并
 
-name: Architecture Check
+name: Architecture Check (Backend Defense)
 
 on:
   pull_request:

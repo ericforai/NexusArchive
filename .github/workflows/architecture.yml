@@ -1,4 +1,4 @@
-name: Architecture Check
+name: Architecture Check (Frontend Suite)
 
 on:
   pull_request:
