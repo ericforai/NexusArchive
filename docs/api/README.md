@@ -13,7 +13,7 @@
 | `openapi.yaml` | 机器可读的 OpenAPI 3.1 规格文件 |
 | `modules/` | 分模块导读（可选）|
 | `erp-sso-launch.md` | ERP 发起联查单点登录对接规范（签名、ticket、错误码） |
-| `yonsuite-sso-launch.md` | YonSuite 一跳式 SSO 联查对接规范（URL 参数签名 + 落地换登录态） |
+| `yonsuite-sso-launch.md` | YonSuite 两接口式 SSO 联查对接规范（token + urlPath） |
 
 ---
 

@@ -19,4 +19,7 @@ public final class SsoErrorCodes {
     public static final String TICKET_NOT_FOUND = "TICKET_NOT_FOUND";
     public static final String TICKET_EXPIRED = "TICKET_EXPIRED";
     public static final String TICKET_ALREADY_USED = "TICKET_ALREADY_USED";
+    public static final String SSO_TOKEN_INVALID = "SSO_TOKEN_INVALID";
+    public static final String SSO_TOKEN_EXPIRED = "SSO_TOKEN_EXPIRED";
+    public static final String SSO_TOKEN_ALREADY_USED = "SSO_TOKEN_ALREADY_USED";
 }

@@ -71,6 +71,8 @@ public class SecurityConfig {
                                                                 "/auth/logout",
                                                                 "/erp/sso/launch",
                                                                 "/erp/sso/consume",
+                                                                "/integration/yonsuite/sso/token",
+                                                                "/integration/yonsuite/sso/url",
                                                                 "/license/**", // License 查询和导入需要在未授权时可访问
                                                                 "/health",
                                                                 "/public/**",
