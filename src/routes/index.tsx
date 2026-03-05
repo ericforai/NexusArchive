@@ -1,5 +1,5 @@
 // Input: React Router、布局组件与懒加载页面
-// Output: routes 路由配置与路径导出
+// Output: routes 路由配置与路径导出（含菜单兼容路由）
 // Pos: 前端路由配置中心
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -13,9 +13,6 @@ import { Navigate, RouteObject } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
-import { Warehouse } from 'lucide-react';
-
-
 // 布局组件（非懒加载，因为是框架级别）
 import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
