@@ -13,6 +13,7 @@
 | `deploy-prod-manual.yml` | 配置文件 | 生产手动部署 |
 | `deploy-prod-via-ssh.yml` | 配置文件 | 通过 SSH 部署生产（含附件巡检强制门禁） |
 | `frontend-quality.yml` | 配置文件 | 前端增量质量检查（ESLint/TS） |
+| `integration-gate.yml` | 配置文件 | 联调门禁（YonSuite/Delivery 等外部依赖场景） |
 | `migrate-prod-via-ssh.yml` | 配置文件 | 生产迁移 |
 | `prod-attachment-audit-via-ssh.yml` | 配置文件 | 生产附件巡检（远程 SSH 执行 Runbook） |
 | `prod-attachment-external-recovery-via-ssh.yml` | 配置文件 | 生产附件外部回补（按 unresolved.tsv 定位外部备份并生成二次 SQL，支持占位回补开关） |

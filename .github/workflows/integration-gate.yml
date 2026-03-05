@@ -1,0 +1,80 @@
+# Input: GitHub Actions、Playwright 联调场景、系统自查脚本
+# Output: 联调门禁流水线（独立于基础 self-check）
+# Pos: CI/CD 配置文件
+
+name: 联调门禁
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/e2e/**'
+      - 'tests/playwright/delivery_v2.spec.ts'
+      - 'scripts/system-self-check/**'
+      - '.github/workflows/integration-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-gate:
+    name: Integration Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: 设置 Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 安装前端依赖
+        run: npm ci
+
+      - name: 安装 Playwright 浏览器
+        run: npx playwright install --with-deps chromium
+
+      - name: 执行联调门禁
+        run: npm run self-check:integration
+        env:
+          BASE_URL: http://localhost:15175
+          API_BASE: http://localhost:19090
+          PW_HEADLESS: "true"
+          YONSUITE_E2E: "1"
+          DELIVERY_E2E: "1"
+
+      - name: 上传联调报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-gate-report
+          path: reports/self-check/integration
+          if-no-files-found: warn
+
+      - name: 输出结果摘要
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### 联调门禁结果"
+            echo ""
+            echo "- 工作流: \`integration-gate\`"
+            echo "- 命令: \`npm run self-check:integration\`"
+            echo "- 报告目录: \`reports/self-check/integration\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
