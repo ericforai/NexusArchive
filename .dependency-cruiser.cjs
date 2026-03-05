@@ -28,7 +28,9 @@ module.exports = {
           '[.]d[.]ts$',                                                       // TypeScript declaration files
           '(^|/)tsconfig[.]json$',                                            // TypeScript config
           '(^|/)(?:babel|webpack)[.]config[.](?:js|cjs|mjs|ts|cts|mts|json)$', // other configs
-          '(^|/)manifest[.]config[.]ts$'                                      // J1 Self-Description manifests
+          '(^|/)manifest[.]config[.]ts$',                                     // J1 Self-Description manifests
+          '^src/test-clean[.]ts$',                                            // Architecture test fixture
+          '^src/test-complexity/'                                             // Complexity test fixtures
         ]
       },
       to: {},
@@ -325,7 +327,7 @@ module.exports = {
         path: '^src/components/',
         pathNot: [
           '^src/components/Sidebar\\.tsx$',
-          '^src/components/GlobalSearch\\.tsx$',
+          '^src/components/GlobalSearch/',
           '^src/components/dev/DocumentationGuardProvider\\.tsx$',
           '^src/components/pool-kanban/'
         ]

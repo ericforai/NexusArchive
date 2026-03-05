@@ -1,0 +1,23 @@
+# Architecture Defense Ownership (J3 Closed Rules)
+# 仓库当前在 GitHub 用户空间下，默认以仓库维护者账号作为 code owner。
+
+# Frontend architecture guardrails
+/.dependency-cruiser.cjs @ericforai
+/scripts/discover-frontend-modules.js @ericforai
+/.husky/pre-commit @ericforai
+/.github/workflows/architecture.yml @ericforai
+/.github/workflows/architecture-check.yml @ericforai
+
+# Frontend module self-description and public API
+/src/**/manifest.config.ts @ericforai
+/src/features/*/index.ts @ericforai
+/src/components/*/index.ts @ericforai
+/src/components/*/index.tsx @ericforai
+/src/pages/*/index.ts @ericforai
+/src/pages/*/index.tsx @ericforai
+/src/utils/index.ts @ericforai
+
+# Backend module self-description and architecture tests
+/nexusarchive-java/src/main/java/com/nexusarchive/**/package-info.java @ericforai
+/nexusarchive-java/src/test/java/com/nexusarchive/ArchitectureTest.java @ericforai
+/nexusarchive-java/src/test/java/com/nexusarchive/EnhancedArchitectureTest.java @ericforai
