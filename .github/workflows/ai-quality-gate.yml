@@ -1,0 +1,223 @@
+name: AI Quality Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'scripts/discover-frontend-modules.js'
+      - '.dependency-cruiser.cjs'
+      - '.eslintrc.cjs'
+      - 'eslint.config.cjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'nexusarchive-java/**'
+      - 'nexus-core/**'
+      - 'java-sdk-test/**'
+      - 'pom.xml'
+      - '.github/workflows/ai-quality-gate.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'scripts/discover-frontend-modules.js'
+      - '.dependency-cruiser.cjs'
+      - '.eslintrc.cjs'
+      - 'eslint.config.cjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'nexusarchive-java/**'
+      - 'nexus-core/**'
+      - 'java-sdk-test/**'
+      - 'pom.xml'
+      - '.github/workflows/ai-quality-gate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ai-quality-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    name: Detect Changed Areas
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.detect.outputs.frontend }}
+      backend: ${{ steps.detect.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect frontend/backend changes
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          # Fallback for first push / shallow base
+          if [ -z "${BASE_SHA}" ] || [ "${BASE_SHA}" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-parse "${HEAD_SHA}^" || true)"
+          fi
+
+          if [ -n "${BASE_SHA}" ]; then
+            CHANGED_FILES="$(git diff --name-only "${BASE_SHA}" "${HEAD_SHA}" || true)"
+          else
+            CHANGED_FILES="$(git ls-files)"
+          fi
+          echo "Changed files:"
+          echo "${CHANGED_FILES}"
+
+          FRONTEND_PATTERN='^(src/|scripts/discover-frontend-modules\.js$|\.dependency-cruiser\.cjs$|\.eslintrc\.cjs$|eslint\.config\.cjs$|package\.json$|package-lock\.json$|tsconfig\.json$)'
+          BACKEND_PATTERN='^(nexusarchive-java/|nexus-core/|java-sdk-test/|pom\.xml$)'
+
+          if echo "${CHANGED_FILES}" | grep -E -q "${FRONTEND_PATTERN}"; then
+            echo "frontend=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "frontend=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          if echo "${CHANGED_FILES}" | grep -E -q "${BACKEND_PATTERN}"; then
+            echo "backend=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "backend=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  frontend-gate:
+    name: Frontend Gate
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Incremental ESLint (changed files only)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          if [ -z "${BASE_SHA}" ] || [ "${BASE_SHA}" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-parse "${HEAD_SHA}^" || true)"
+          fi
+
+          if [ -n "${BASE_SHA}" ]; then
+            mapfile -t CHANGED_TS_FILES < <(
+              git diff --name-only "${BASE_SHA}" "${HEAD_SHA}" \
+                | grep -E '^src/.*\.(ts|tsx)$' || true
+            )
+          else
+            mapfile -t CHANGED_TS_FILES < <(
+              git ls-files | grep -E '^src/.*\.(ts|tsx)$' || true
+            )
+          fi
+
+          if [ "${#CHANGED_TS_FILES[@]}" -eq 0 ]; then
+            echo "No changed TS/TSX files, skip ESLint."
+            exit 0
+          fi
+
+          echo "Linting changed files:"
+          printf '%s\n' "${CHANGED_TS_FILES[@]}"
+          npx eslint --max-warnings=0 "${CHANGED_TS_FILES[@]}"
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Frontend architecture check
+        run: npm run check:arch
+
+      - name: Frontend module manifest validation
+        run: npm run modules:validate
+
+  backend-gate:
+    name: Backend Gate
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Backend compile
+        working-directory: ./nexusarchive-java
+        run: mvn -q -DskipTests compile
+
+      - name: Backend architecture test
+        working-directory: ./nexusarchive-java
+        run: mvn -q test -Dtest=ArchitectureTest
+
+  summary:
+    name: AI Quality Gate Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [detect-changes, frontend-gate, backend-gate]
+    steps:
+      - name: Summarize and enforce
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          FRONTEND_CHANGED="${{ needs.detect-changes.outputs.frontend }}"
+          BACKEND_CHANGED="${{ needs.detect-changes.outputs.backend }}"
+          FRONTEND_RESULT="${{ needs.frontend-gate.result }}"
+          BACKEND_RESULT="${{ needs.backend-gate.result }}"
+
+          echo "### AI Quality Gate" >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| Area | Changed | Result |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "|------|---------|--------|" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| Frontend | ${FRONTEND_CHANGED} | ${FRONTEND_RESULT} |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| Backend | ${BACKEND_CHANGED} | ${BACKEND_RESULT} |" >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ "${FRONTEND_CHANGED}" = "true" ] && [ "${FRONTEND_RESULT}" != "success" ]; then
+            echo "" >> "${GITHUB_STEP_SUMMARY}"
+            echo "❌ Frontend gate failed." >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          fi
+
+          if [ "${BACKEND_CHANGED}" = "true" ] && [ "${BACKEND_RESULT}" != "success" ]; then
+            echo "" >> "${GITHUB_STEP_SUMMARY}"
+            echo "❌ Backend gate failed." >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          fi
+
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "✅ AI quality gate passed." >> "${GITHUB_STEP_SUMMARY}"
