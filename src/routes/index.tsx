@@ -122,9 +122,9 @@ const WarehouseView = lazy(() => import('../pages/utilization/WarehouseView'));
 const AuthTicketApplyPage = lazy(() => import('../pages/security/AuthTicketApplyPage'));
 const AuthTicketListPage = lazy(() => import('../pages/security/AuthTicketListPage'));
 
-// [预留] 审计验真模块 - 路由待集成
-// const AuditVerificationPage = lazy(() => import('../pages/audit/AuditVerificationPage'));
-// const AuditEvidencePackagePage = lazy(() => import('../pages/audit/AuditEvidencePackagePage'));
+// 审计验真模块
+const AuditVerificationPage = lazy(() => import('../pages/audit/AuditVerificationPage'));
+const AuditEvidencePackagePage = lazy(() => import('../pages/audit/AuditEvidencePackagePage'));
 
 // 代码质量监控模块
 const QualityView = lazy(() => import('../pages/quality/QualityView').then(m => ({ default: m.QualityView })));
@@ -325,6 +325,11 @@ export const routes: RouteObject[] = [
             { path: 'security/auth-ticket/apply', element: withSuspense(AuthTicketApplyPage) },
             { path: 'security/auth-ticket', element: withSuspense(AuthTicketListPage) },
             { path: 'security/auth-ticket/list', element: withSuspense(AuthTicketListPage) },
+
+            // ========== 审计验真 ==========
+            { path: 'audit/verification', element: withSuspense(AuditVerificationPage) },
+            { path: 'audit/evidence', element: withSuspense(AuditEvidencePackagePage) },
+            { path: 'audit', element: <Navigate to="/system/audit/verification" replace /> },
 
             // ========== 冻结/保全管理 ==========
             { path: 'operations/freeze-hold', element: withSuspense(FreezeHoldPage) },

@@ -34,6 +34,7 @@ const PATH_PREFIX_TO_VIEW: Record<string, string> = {
   '/system/panorama': ViewState.PANORAMA,
   '/system/matching': ViewState.MATCHING,
   '/system/quality': ViewState.QUALITY,
+  '/system/audit': ViewState.AUDIT,
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({

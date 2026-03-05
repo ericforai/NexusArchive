@@ -16,6 +16,7 @@ import {
   Cloud,
   Server,
   Warehouse,
+  ShieldCheck,
 } from "lucide-react";
 import { ROUTE_PATHS } from "./routes/paths";
 import { NavItem, ViewState, AppNotification } from "./types";
@@ -254,6 +255,16 @@ export const NAV_ITEMS: NavItem[] = [
     label: "数据统计",
     icon: BarChart3,
     permission: "nav:stats",
+  },
+  {
+    id: ViewState.AUDIT,
+    label: "审计验真",
+    icon: ShieldCheck,
+    permission: "nav:audit",
+    children: [
+      { id: "audit-verification", label: "证据链验真", path: "/system/audit/verification" },
+      { id: "audit-evidence", label: "证据包导出", path: "/system/audit/evidence" },
+    ],
   },
   {
     id: ViewState.SETTINGS,
