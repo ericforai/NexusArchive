@@ -9,3 +9,8 @@
 | `__tests__/` | 测试 | 路由常量与映射规则测试 |
 | `index.tsx` | 路由入口 | 路由表与路由配置 |
 | `paths.ts` | 路径常量 | 路由路径枚举 |
+
+## 测试说明
+
+- `__tests__/paths.test.ts`：关键菜单键到路径映射断言。
+- `__tests__/menu-routing-integrity.test.ts`：递归校验二级/三级叶子菜单均命中有效路由（不会落入 `*` 兜底）。

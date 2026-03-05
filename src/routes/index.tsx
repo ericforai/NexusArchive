@@ -218,6 +218,7 @@ export const routes: RouteObject[] = [
             // ========== 档案管理 (Repository) ==========
             { path: 'archive', element: <ArchiveListPage routeConfig="view" /> },
             { path: 'archive/vouchers', element: <ArchiveListPage routeConfig="voucher" /> },
+            { path: 'archive/accounting-vouchers', element: <ArchiveListPage routeConfig="voucher" /> },
             { path: 'archive/ledgers', element: <ArchiveListPage routeConfig="ledger" /> },
             { path: 'archive/original-vouchers', element: withSuspense(OriginalVoucherListView) },
             { path: 'archive/reports', element: <ArchiveListPage routeConfig="report" /> },

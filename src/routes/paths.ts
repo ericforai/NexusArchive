@@ -1,5 +1,5 @@
 // Input: 无外部依赖
-// Output: ROUTE_PATHS 与 SUBITEM_TO_PATH 常量（原始凭证类型映射对齐）
+// Output: ROUTE_PATHS 与 SUBITEM_TO_PATH 常量（全量菜单路径映射）
 // Pos: 路由路径常量定义
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -27,6 +27,7 @@ export const ROUTE_PATHS = {
     COLLECTION: '/system/collection',
     COLLECTION_ONLINE: '/system/collection/online',
     COLLECTION_SCAN: '/system/collection/scan',
+    COLLECTION_UPLOAD: '/system/collection/upload',
 
     ARCHIVE: '/system/archive',
     ARCHIVE_VOUCHERS: '/system/archive/vouchers',
@@ -114,7 +115,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '单据池:数电发票': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_DIGITAL',
     '单据池:数电票（铁路）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_RAIL',
     '单据池:数电票（航空）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_AIR',
-    '单据池:数电票（财政）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_FINANCIAL',
+    '单据池:数电票（财政）': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=INV_GOV',
     '单据池:银行回单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=BANK_RECEIPT',
     '单据池:银行对账单': ROUTE_PATHS.PRE_ARCHIVE_DOC_POOL + '?type=BANK_STATEMENT',
     // 单据类 (DOCUMENT)
@@ -131,12 +132,24 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     // 嵄料收集
     '在线接收': ROUTE_PATHS.COLLECTION_ONLINE,
     '扫描集成': ROUTE_PATHS.COLLECTION_SCAN,
+    '批量上传': ROUTE_PATHS.COLLECTION_UPLOAD,
 
     // --- 会计档案 (Level 1: ACCOUNT_ARCHIVES) ---
     // Level 2: 会计凭证
     '会计凭证': ROUTE_PATHS.ARCHIVE_VOUCHERS,
     // Level 3: 原始凭证、记账凭证
     '原始凭证': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS,
+    '销售订单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=SALES_ORDER',
+    '出库单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=DELIVERY_ORDER',
+    '采购订单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=PURCHASE_ORDER',
+    '入库单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=RECEIPT_ORDER',
+    '付款申请单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=PAYMENT_REQ',
+    '报销单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=EXPENSE_REPORT',
+    '普通发票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=GEN_INVOICE',
+    '增值税专票': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=VAT_INVOICE',
+    '银行回单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_RECEIPT',
+    '银行对账单': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=BANK_STATEMENT',
+    '合同协议': ROUTE_PATHS.ARCHIVE_ORIGINAL_VOUCHERS + '?type=CONTRACT',
     '记账凭证': ROUTE_PATHS.ARCHIVE_ACCOUNTING_VOUCHERS,
 
     // Level 2: 会计账簿（父级，默认导航到第一个子项）
@@ -157,6 +170,7 @@ export const SUBITEM_TO_PATH: Record<string, string> = {
     '专项财务报告': ROUTE_PATHS.ARCHIVE_REPORTS + '?type=SPECIAL',
 
     // Level 2: 其他会计资料 -> Level 3
+    '其他会计资料:银行对账单': ROUTE_PATHS.ARCHIVE_OTHER + '?type=BANK_STATEMENT',
     '银行存款余额调节表': ROUTE_PATHS.ARCHIVE_OTHER + '?type=BANK_RECONCILIATION',
     '纳税申报表': ROUTE_PATHS.ARCHIVE_OTHER + '?type=TAX_RETURN',
     '会计档案移交清册': ROUTE_PATHS.ARCHIVE_OTHER + '?type=HANDOVER_REGISTER',
