@@ -39,6 +39,16 @@ for i in {1..300}; do
   sleep 1
 done
 
+# 如果后端未就绪，输出 backend.log 诊断
+if [ "$BACKEND_READY" != "1" ]; then
+  echo "[integration-gate] 后端 API 未就绪，输出 backend.log:"
+  if [ -f backend.log ]; then
+    tail -n 50 backend.log
+  else
+    echo "[integration-gate] backend.log 不存在"
+  fi
+fi
+
 # 前端启动等待（最多 3 分钟）
 for i in {1..180}; do
   if curl -sS -I http://localhost:15175 >/dev/null 2>&1; then
