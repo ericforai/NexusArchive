@@ -24,8 +24,9 @@ let archiveId = '';
 
 test.skip(!RUN_DELIVERY_E2E, '未启用 Delivery 联调门禁（设置 DELIVERY_E2E=1 后执行）');
 
-function authHeader(token: string | null | undefined) {
-  return token ? { Authorization: `Bearer ${token}` } : {};
+function authHeader(token: string | null | undefined): Record<string, string> | {} {
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` } as Record<string, string>;
 }
 
 function unwrapData(payload: any) {

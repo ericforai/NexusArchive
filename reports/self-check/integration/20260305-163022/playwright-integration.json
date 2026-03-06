@@ -1,0 +1,1303 @@
+{
+  "config": {
+    "configFile": "/Users/user/nexusarchive/playwright.config.ts",
+    "rootDir": "/Users/user/nexusarchive",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/user/nexusarchive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/Users/user/nexusarchive",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "src/e2e/yonsuite-scenarios.spec.ts",
+      "file": "src/e2e/yonsuite-scenarios.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Final invariant: UI count matches database count",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 13,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 3643,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mundefined\u001b[39m\nReceived: \u001b[31m0\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mundefined\u001b[39m\nReceived: \u001b[31m0\u001b[39m\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:391:27",
+                    "location": {
+                      "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                      "column": 27,
+                      "line": 391
+                    },
+                    "snippet": "  389 |\n  390 |   // Invariant: UI must show exactly what's in database\n> 391 |   expect(uiScenarioCount).toBe(dbScenarios.length);\n      |                           ^\n  392 |   console.log(`✅ Cross-layer invariant verified: UI=${uiScenarioCount}, DB=${dbScenarios.length}`);\n  393 | });\n  394 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                        "column": 27,
+                        "line": 391
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mundefined\u001b[39m\nReceived: \u001b[31m0\u001b[39m\n\n  389 |\n  390 |   // Invariant: UI must show exactly what's in database\n> 391 |   expect(uiScenarioCount).toBe(dbScenarios.length);\n      |                           ^\n  392 |   console.log(`✅ Cross-layer invariant verified: UI=${uiScenarioCount}, DB=${dbScenarios.length}`);\n  393 | });\n  394 |\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:391:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-03-05T08:31:17.024Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-scenarios-eeed7-ount-matches-database-count/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                    "column": 27,
+                    "line": 391
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "416902ceb741d37817bc-03e08a31f722f389d9fc",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 375,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "YonSuite Scenarios - Shadow Inspector",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 75,
+          "column": 6,
+          "specs": [
+            {
+              "title": "VOUCHER_SYNC: scenario consistency across all layers",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 8132,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=用友YonSuite').first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=用友YonSuite').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=用友YonSuite').first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=用友YonSuite').first()\u001b[22m\n\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:89:32",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                          "column": 32,
+                          "line": 89
+                        },
+                        "snippet": "  87 |     // Step 1: UI Verification - Find YonSuite connector\n  88 |     const yonSuiteCard = page.locator('text=用友YonSuite').first();\n> 89 |     await expect(yonSuiteCard).toBeVisible();\n     |                                ^\n  90 |\n  91 |     // Click \"查看详情\" to view scenarios\n  92 |     const viewDetailsBtn = page.locator('button:has-text(\"查看详情\")').first();"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                            "column": 32,
+                            "line": 89
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=用友YonSuite').first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=用友YonSuite').first()\u001b[22m\n\n\n  87 |     // Step 1: UI Verification - Find YonSuite connector\n  88 |     const yonSuiteCard = page.locator('text=用友YonSuite').first();\n> 89 |     await expect(yonSuiteCard).toBeVisible();\n     |                                ^\n  90 |\n  91 |     // Click \"查看详情\" to view scenarios\n  92 |     const viewDetailsBtn = page.locator('button:has-text(\"查看详情\")').first();\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:89:32"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:45.784Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-scenarios-36fdb-nsistency-across-all-layers/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                        "column": 32,
+                        "line": 89
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-f7ba4abedde7c68a9748",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 86,
+              "column": 3
+            },
+            {
+              "title": "YonSuite: all real scenarios are registered",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3529,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:139:27",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                          "column": 27,
+                          "line": 139
+                        },
+                        "snippet": "  137 |     });\n  138 |\n> 139 |     expect(response.ok()).toBeTruthy();\n      |                           ^\n  140 |     const scenariosRaw = await response.json();\n  141 |     const scenarios = Array.isArray(scenariosRaw) ? scenariosRaw : (scenariosRaw?.data ?? []);\n  142 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                            "column": 27,
+                            "line": 139
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n\n  137 |     });\n  138 |\n> 139 |     expect(response.ok()).toBeTruthy();\n      |                           ^\n  140 |     const scenariosRaw = await response.json();\n  141 |     const scenarios = Array.isArray(scenariosRaw) ? scenariosRaw : (scenariosRaw?.data ?? []);\n  142 |\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:139:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:54.727Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-scenarios-347ba-al-scenarios-are-registered/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                        "column": 27,
+                        "line": 139
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-397505edb5667ee3e9a3",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 133,
+              "column": 3
+            },
+            {
+              "title": "Sync History: SUCCESS scenarios have audit records",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3741,
+                      "error": {
+                        "message": "Error: Should have at least one scenario with SUCCESS status\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                        "stack": "Error: Should have at least one scenario with SUCCESS status\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:179:94",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                          "column": 94,
+                          "line": 179
+                        },
+                        "snippet": "  177 |     const successScenarios = scenarios.filter((s: any) => s.last_sync_status === 'SUCCESS');\n  178 |\n> 179 |     expect(successScenarios.length, 'Should have at least one scenario with SUCCESS status').toBeGreaterThan(0);\n      |                                                                                              ^\n  180 |\n  181 |     // For each SUCCESS scenario, verify sync history exists\n  182 |     for (const scenario of successScenarios) {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                            "column": 94,
+                            "line": 179
+                          },
+                          "message": "Error: Should have at least one scenario with SUCCESS status\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  177 |     const successScenarios = scenarios.filter((s: any) => s.last_sync_status === 'SUCCESS');\n  178 |\n> 179 |     expect(successScenarios.length, 'Should have at least one scenario with SUCCESS status').toBeGreaterThan(0);\n      |                                                                                              ^\n  180 |\n  181 |     // For each SUCCESS scenario, verify sync history exists\n  182 |     for (const scenario of successScenarios) {\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:179:94"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:58.916Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-scenarios-52fef-cenarios-have-audit-records/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                        "column": 94,
+                        "line": 179
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-14a8309b5c024dec848a",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 169,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite Scenarios - State Machine Transitions",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 208,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Scenario status transitions respect FSM rules",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3351,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:31:03.138Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-e814c6c85b5f972d744d",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 216,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite API - Implementation Verification",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 252,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Connection test: real API call succeeds",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3326,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:273:27",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                          "column": 27,
+                          "line": 273
+                        },
+                        "snippet": "  271 |     });\n  272 |\n> 273 |     expect(response.ok()).toBeTruthy();\n      |                           ^\n  274 |     const result = await response.json();\n  275 |\n  276 |     // Should have response time (indicates real API call)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                            "column": 27,
+                            "line": 273
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n\n  271 |     });\n  272 |\n> 273 |     expect(response.ok()).toBeTruthy();\n      |                           ^\n  274 |     const result = await response.json();\n  275 |\n  276 |     // Should have response time (indicates real API call)\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:273:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:31:06.615Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-scenarios-293b2-test-real-API-call-succeeds/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                        "column": 27,
+                        "line": 273
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-6e471cb598f65cd7c519",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 259,
+              "column": 3
+            },
+            {
+              "title": "Scenario sync: database state updates correctly",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2696,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m404\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m404\u001b[39m\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:318:35",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                          "column": 35,
+                          "line": 318
+                        },
+                        "snippet": "  316 |     });\n  317 |\n> 318 |     expect(syncResponse.status()).toBe(200);\n      |                                   ^\n  319 |\n  320 |     // Verify database state changed\n  321 |     // Note: Sync is async, so we might need to poll"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                            "column": 35,
+                            "line": 318
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m404\u001b[39m\n\n  316 |     });\n  317 |\n> 318 |     expect(syncResponse.status()).toBe(200);\n      |                                   ^\n  319 |\n  320 |     // Verify database state changed\n  321 |     // Note: Sync is async, so we might need to poll\n    at /Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts:318:35"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:31:10.308Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-scenarios-fcd1d-ase-state-updates-correctly/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-scenarios.spec.ts",
+                        "column": 35,
+                        "line": 318
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-5033749555ef7f2a74d2",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 295,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite Placeholders - Should Not Execute",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 334,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Placeholder scenarios: return 501 or 400 error",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3423,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:31:13.486Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-875fe69c6820f2ca9897",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 344,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "src/e2e/yonsuite-verification.spec.ts",
+      "file": "src/e2e/yonsuite-verification.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "YonSuite Scenarios - Database Verification",
+          "file": "src/e2e/yonsuite-verification.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have exactly 5 real scenarios in database",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "API endpoint not implemented",
+                      "location": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                        "line": 40,
+                        "column": 12
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "skipped",
+                      "duration": 125,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "⚠️ API endpoint /erp/scenario/list not found (404)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:45.780Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "API endpoint not implemented",
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                            "line": 40,
+                            "column": 12
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "5db9549fb1b18ad746f2-0f69a27e43b7760f9f67",
+              "file": "src/e2e/yonsuite-verification.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "should show YonSuite connector in UI",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 8886,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=用友YonSuite')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=用友YonSuite')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=用友YonSuite')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=用友YonSuite')\u001b[22m\n\n    at /Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts:102:32",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                          "column": 32,
+                          "line": 102
+                        },
+                        "snippet": "  100 |     // Verify YonSuite card is visible\n  101 |     const yonSuiteCard = page.locator('text=用友YonSuite');\n> 102 |     await expect(yonSuiteCard).toBeVisible();\n      |                                ^\n  103 |     console.log('✅ YonSuite connector visible in UI');\n  104 |   });\n  105 | });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                            "column": 32,
+                            "line": 102
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=用友YonSuite')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=用友YonSuite')\u001b[22m\n\n\n  100 |     // Verify YonSuite card is visible\n  101 |     const yonSuiteCard = page.locator('text=用友YonSuite');\n> 102 |     await expect(yonSuiteCard).toBeVisible();\n      |                                ^\n  103 |     console.log('✅ YonSuite connector visible in UI');\n  104 |   });\n  105 | });\n    at /Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts:102:32"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:45.916Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/src-e2e-yonsuite-verificat-3ad31-ow-YonSuite-connector-in-UI/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                        "column": 32,
+                        "line": 102
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5db9549fb1b18ad746f2-b484360292e0a5877eb4",
+              "file": "src/e2e/yonsuite-verification.spec.ts",
+              "line": 80,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite Scenarios - Success Status Verification",
+          "file": "src/e2e/yonsuite-verification.spec.ts",
+          "line": 107,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have at least one scenario with SUCCESS status",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "API endpoint not implemented",
+                      "location": {
+                        "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                        "line": 128,
+                        "column": 12
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "skipped",
+                      "duration": 106,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:55.504Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "API endpoint not implemented",
+                          "location": {
+                            "file": "/Users/user/nexusarchive/src/e2e/yonsuite-verification.spec.ts",
+                            "line": 128,
+                            "column": 12
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "5db9549fb1b18ad746f2-e94c0312b7a6cd1f0078",
+              "file": "src/e2e/yonsuite-verification.spec.ts",
+              "line": 109,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/delivery_v2.spec.ts",
+      "file": "tests/playwright/delivery_v2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Delivery Acceptance v2 (Smoke + SoD)",
+          "file": "tests/playwright/delivery_v2.spec.ts",
+          "line": 38,
+          "column": 6,
+          "specs": [
+            {
+              "title": "1. Login Success/Failure",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 512,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:45.783Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-6dd467b311716658d834",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 73,
+              "column": 5
+            },
+            {
+              "title": "2. Separation of Duties (Admin/Auditor/User)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 1329,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m403\u001b[39m\nReceived: \u001b[31m200\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m403\u001b[39m\nReceived: \u001b[31m200\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:106:39",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                          "column": 39,
+                          "line": 106
+                        },
+                        "snippet": "  104 |\n  105 |         const auditorUsers = await request.get(`${BASE_URL}/admin/users`, { headers: { Authorization: `Bearer ${auditorToken}` } });\n> 106 |         expect(auditorUsers.status()).toBe(403); // Auditor cannot manage users\n      |                                       ^\n  107 |\n  108 |         // C. User: +Archive, -AuditLog, -UserMgmt\n  109 |         const userArchives = await request.get(`${BASE_URL}/archives`, { headers: { Authorization: `Bearer ${userToken}` } });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 39,
+                            "line": 106
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m403\u001b[39m\nReceived: \u001b[31m200\u001b[39m\n\n  104 |\n  105 |         const auditorUsers = await request.get(`${BASE_URL}/admin/users`, { headers: { Authorization: `Bearer ${auditorToken}` } });\n> 106 |         expect(auditorUsers.status()).toBe(403); // Auditor cannot manage users\n      |                                       ^\n  107 |\n  108 |         // C. User: +Archive, -AuditLog, -UserMgmt\n  109 |         const userArchives = await request.get(`${BASE_URL}/archives`, { headers: { Authorization: `Bearer ${userToken}` } });\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:106:39"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:47.794Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                        "column": 39,
+                        "line": 106
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-d44515cf45c4460e6c65",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 90,
+              "column": 5
+            },
+            {
+              "title": "3. Archive Flow",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 3,
+                      "error": {
+                        "message": "ReferenceError: __dirname is not defined",
+                        "stack": "ReferenceError: __dirname is not defined\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:122:36",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                          "column": 36,
+                          "line": 122
+                        },
+                        "snippet": "  120 |     let archiveId = '';\n  121 |     test('3. Archive Flow', async ({ request }) => {\n> 122 |         const filePath = path.join(__dirname, '../fixtures/test.pdf');\n      |                                    ^\n  123 |         const fileBuffer = fs.readFileSync(filePath);\n  124 |\n  125 |         const res = await request.post(`${BASE_URL}/archives`, {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 36,
+                            "line": 122
+                          },
+                          "message": "ReferenceError: __dirname is not defined\n\n  120 |     let archiveId = '';\n  121 |     test('3. Archive Flow', async ({ request }) => {\n> 122 |         const filePath = path.join(__dirname, '../fixtures/test.pdf');\n      |                                    ^\n  123 |         const fileBuffer = fs.readFileSync(filePath);\n  124 |\n  125 |         const res = await request.post(`${BASE_URL}/archives`, {\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:122:36"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:49.626Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                        "column": 36,
+                        "line": 122
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-5f17bca3e9bc3207f47a",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 121,
+              "column": 5
+            },
+            {
+              "title": "4. Search",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 10,
+                      "error": {
+                        "message": "SyntaxError: Unexpected token '<', \"<!-- Input\"... is not valid JSON",
+                        "stack": "SyntaxError: Unexpected token '<', \"<!-- Input\"... is not valid JSON\n    at Object.generator (/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:164:26)\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:160:9",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                          "column": 26,
+                          "line": 164
+                        },
+                        "snippet": "  162 |                 headers: { Authorization: `Bearer ${userToken}` }\n  163 |             });\n> 164 |             const body = await res.json();\n      |                          ^\n  165 |             const records = (body.data?.records ?? []) as Array<{ id?: string }>;\n  166 |             return records.some((record) => record.id === archiveId);\n  167 |         }).toBeTruthy();"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 26,
+                            "line": 164
+                          },
+                          "message": "SyntaxError: Unexpected token '<', \"<!-- Input\"... is not valid JSON\n\n  162 |                 headers: { Authorization: `Bearer ${userToken}` }\n  163 |             });\n> 164 |             const body = await res.json();\n      |                          ^\n  165 |             const records = (body.data?.records ?? []) as Array<{ id?: string }>;\n  166 |             return records.some((record) => record.id === archiveId);\n  167 |         }).toBeTruthy();\n    at Object.generator (/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:164:26)\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:160:9"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:51.448Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                        "column": 26,
+                        "line": 164
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-7204862b14ac7903e928",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 159,
+              "column": 5
+            },
+            {
+              "title": "7. Delete (Admin Only)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 5,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m403\u001b[39m\nReceived: \u001b[31m404\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m403\u001b[39m\nReceived: \u001b[31m404\u001b[39m\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:176:34",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                          "column": 34,
+                          "line": 176
+                        },
+                        "snippet": "  174 |             headers: { Authorization: `Bearer ${userToken}` }\n  175 |         });\n> 176 |         expect(userDel.status()).toBe(403); // User cannot delete? (Assuming only Manage/Admin can, or User can delete own draft? Status=archived usually immutable)\n      |                                  ^\n  177 |\n  178 |         // Admin delete\n  179 |         const adminDel = await request.delete(`${BASE_URL}/archives/${archiveId}`, {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 34,
+                            "line": 176
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m403\u001b[39m\nReceived: \u001b[31m404\u001b[39m\n\n  174 |             headers: { Authorization: `Bearer ${userToken}` }\n  175 |         });\n> 176 |         expect(userDel.status()).toBe(403); // User cannot delete? (Assuming only Manage/Admin can, or User can delete own draft? Status=archived usually immutable)\n      |                                  ^\n  177 |\n  178 |         // Admin delete\n  179 |         const adminDel = await request.delete(`${BASE_URL}/archives/${archiveId}`, {\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:176:34"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:53.254Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                        "column": 34,
+                        "line": 176
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-8280e4946b01fceb38dd",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 171,
+              "column": 5
+            },
+            {
+              "title": "8. View Audit Logs",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 9,
+                      "error": {
+                        "message": "SyntaxError: Unexpected token '<', \"<!-- Input\"... is not valid JSON",
+                        "stack": "SyntaxError: Unexpected token '<', \"<!-- Input\"... is not valid JSON\n    at Object.generator (/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:192:26)\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:188:9",
+                        "location": {
+                          "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                          "column": 26,
+                          "line": 192
+                        },
+                        "snippet": "  190 |                 headers: { Authorization: `Bearer ${auditorToken}` }\n  191 |             });\n> 192 |             const body = await res.json();\n      |                          ^\n  193 |             const records = (body.data?.records ?? []) as Array<{ operationType?: string; resourceId?: string }>;\n  194 |             // Look for DELETE operation on our resource\n  195 |             return records.some((log) => log.operationType === 'DELETE' && log.resourceId === archiveId);"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 26,
+                            "line": 192
+                          },
+                          "message": "SyntaxError: Unexpected token '<', \"<!-- Input\"... is not valid JSON\n\n  190 |                 headers: { Authorization: `Bearer ${auditorToken}` }\n  191 |             });\n> 192 |             const body = await res.json();\n      |                          ^\n  193 |             const records = (body.data?.records ?? []) as Array<{ operationType?: string; resourceId?: string }>;\n  194 |             // Look for DELETE operation on our resource\n  195 |             return records.some((log) => log.operationType === 'DELETE' && log.resourceId === archiveId);\n    at Object.generator (/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:192:26)\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:188:9"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:55.167Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                        "column": 26,
+                        "line": 192
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-2eb6c10bec22b7743c5d",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 186,
+              "column": 5
+            },
+            {
+              "title": "9. UI Golden Path (User)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 30040,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 20,
+                            "line": 203
+                          },
+                          "message": "Error: page.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"username\"]')\u001b[22m\n\n\n  201 |         // Login\n  202 |         await page.goto(`${BASE_URL}/login`);\n> 203 |         await page.fill('input[name=\"username\"]', 'user');\n      |                    ^\n  204 |         await page.fill('input[name=\"password\"]', 'user123');\n  205 |         await page.click('button[type=\"submit\"]');\n  206 |         await expect(page).toHaveURL(`${BASE_URL}/`); // or dashboard\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:203:20"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:30:56.875Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-delivery_-0d346--SoD-9-UI-Golden-Path-User-/error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-dfefc125e0f32e364d15",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 200,
+              "column": 5
+            },
+            {
+              "title": "10. UI Permissions (User)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30037,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts",
+                            "column": 20,
+                            "line": 216
+                          },
+                          "message": "Error: page.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"username\"]')\u001b[22m\n\n\n  214 |     test('10. UI Permissions (User)', async ({ page }) => {\n  215 |         await page.goto(`${BASE_URL}/login`);\n> 216 |         await page.fill('input[name=\"username\"]', 'user');\n      |                    ^\n  217 |         await page.fill('input[name=\"password\"]', 'user123');\n  218 |         await page.click('button[type=\"submit\"]');\n  219 |\n    at /Users/user/nexusarchive/tests/playwright/delivery_v2.spec.ts:216:20"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Creating user auditor...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        },
+                        {
+                          "text": "Creating user user...\n"
+                        },
+                        {
+                          "text": "Create user result: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:31:29.014Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/user/nexusarchive/test-results/tests-playwright-delivery_-3f32a-SoD-10-UI-Permissions-User-/error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-1ed0c0c7c0acdcc6306a",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 214,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-03-05T08:30:44.159Z",
+    "duration": 76444.75099999999,
+    "expected": 3,
+    "skipped": 2,
+    "unexpected": 14,
+    "flaky": 0
+  }
+}

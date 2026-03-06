@@ -1,0 +1,827 @@
+{
+  "config": {
+    "configFile": "/Users/user/nexusarchive/playwright.config.ts",
+    "rootDir": "/Users/user/nexusarchive",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/user/nexusarchive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/Users/user/nexusarchive",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "src/e2e/yonsuite-scenarios.spec.ts",
+      "file": "src/e2e/yonsuite-scenarios.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Final invariant: UI count matches database count",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2782,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-03-05T08:52:28.127Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "416902ceb741d37817bc-03e08a31f722f389d9fc",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 196,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "YonSuite Scenarios - Shadow Inspector",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 69,
+          "column": 6,
+          "specs": [
+            {
+              "title": "VOUCHER_SYNC: scenario consistency across all layers",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3414,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:07.631Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-f7ba4abedde7c68a9748",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "YonSuite: all real scenarios are registered",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2689,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:11.475Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-397505edb5667ee3e9a3",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 83,
+              "column": 3
+            },
+            {
+              "title": "Sync History: SUCCESS scenarios have audit records",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2355,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:14.170Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-14a8309b5c024dec848a",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 102,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite Scenarios - State Machine Transitions",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 125,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Scenario status transitions respect FSM rules",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2727,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:16.532Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-e814c6c85b5f972d744d",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 126,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite API - Implementation Verification",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 139,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Connection test: real API call succeeds",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3282,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:19.266Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-6e471cb598f65cd7c519",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 140,
+              "column": 3
+            },
+            {
+              "title": "Scenario sync: database state updates correctly",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2641,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:22.554Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-5033749555ef7f2a74d2",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 154,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite Placeholders - Should Not Execute",
+          "file": "src/e2e/yonsuite-scenarios.spec.ts",
+          "line": 173,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Placeholder scenarios: return 501 or 400 error",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2913,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:25.203Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "416902ceb741d37817bc-875fe69c6820f2ca9897",
+              "file": "src/e2e/yonsuite-scenarios.spec.ts",
+              "line": 174,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "src/e2e/yonsuite-verification.spec.ts",
+      "file": "src/e2e/yonsuite-verification.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "YonSuite Scenarios - Database Verification",
+          "file": "src/e2e/yonsuite-verification.spec.ts",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have exactly 5 real scenarios in database",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 192,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ Database has 7 scenarios (expected >= 5)\n"
+                        },
+                        {
+                          "text": "✅ Scenario VOUCHER_SYNC: verified\n"
+                        },
+                        {
+                          "text": "✅ Scenario ATTACHMENT_SYNC: verified\n"
+                        },
+                        {
+                          "text": "✅ Scenario COLLECTION_FILE_SYNC: verified\n"
+                        },
+                        {
+                          "text": "✅ Scenario PAYMENT_FILE_SYNC: verified\n"
+                        },
+                        {
+                          "text": "✅ Scenario REFUND_FILE_SYNC: verified\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:07.622Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5db9549fb1b18ad746f2-0f69a27e43b7760f9f67",
+              "file": "src/e2e/yonsuite-verification.spec.ts",
+              "line": 26,
+              "column": 3
+            },
+            {
+              "title": "should show YonSuite connector in UI",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3272,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ YonSuite connector visible in UI\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:07.824Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5db9549fb1b18ad746f2-b484360292e0a5877eb4",
+              "file": "src/e2e/yonsuite-verification.spec.ts",
+              "line": 79,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "YonSuite Scenarios - Success Status Verification",
+          "file": "src/e2e/yonsuite-verification.spec.ts",
+          "line": 106,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have at least one scenario with SUCCESS status",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 95,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ Found 2 scenarios with SUCCESS status\n"
+                        },
+                        {
+                          "text": "  - ORG_SYNC: SUCCESS at 2025,12,27,2,0\n"
+                        },
+                        {
+                          "text": "  - VOUCHER_SYNC: SUCCESS at 2026,1,24,11,21,42,616560000\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:11.334Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5db9549fb1b18ad746f2-e94c0312b7a6cd1f0078",
+              "file": "src/e2e/yonsuite-verification.spec.ts",
+              "line": 108,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tests/playwright/delivery_v2.spec.ts",
+      "file": "tests/playwright/delivery_v2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Delivery Acceptance v2 (Smoke + SoD)",
+          "file": "tests/playwright/delivery_v2.spec.ts",
+          "line": 59,
+          "column": 6,
+          "specs": [
+            {
+              "title": "1. Login Success/Failure",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 753,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:07.625Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-6dd467b311716658d834",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 67,
+              "column": 3
+            },
+            {
+              "title": "2. Separation of Duties (Admin/Auditor/User)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1474,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:09.519Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-d44515cf45c4460e6c65",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 81,
+              "column": 3
+            },
+            {
+              "title": "3. Archive Flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 414,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:11.000Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-5f17bca3e9bc3207f47a",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 103,
+              "column": 3
+            },
+            {
+              "title": "4. Search",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 660,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:11.420Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-7204862b14ac7903e928",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 127,
+              "column": 3
+            },
+            {
+              "title": "7. Delete (Admin Only)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 648,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:12.085Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-8280e4946b01fceb38dd",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 160,
+              "column": 3
+            },
+            {
+              "title": "8. View Audit Logs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 384,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:12.737Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-2eb6c10bec22b7743c5d",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 172,
+              "column": 3
+            },
+            {
+              "title": "9. UI Golden Path (User)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 14090,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:13.125Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-dfefc125e0f32e364d15",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 184,
+              "column": 3
+            },
+            {
+              "title": "10. UI Permissions (User)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 13605,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-05T08:52:27.395Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f3995d27866129d188c9-1ed0c0c7c0acdcc6306a",
+              "file": "tests/playwright/delivery_v2.spec.ts",
+              "line": 193,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-03-05T08:52:05.902Z",
+    "duration": 35139.654,
+    "expected": 19,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
