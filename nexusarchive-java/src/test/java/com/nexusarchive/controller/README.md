@@ -12,8 +12,10 @@
 | `AdminUserControllerTest.java` | Java 类 | AdminUserControllerTest 类 |
 | `ArchiveControllerTest.java` | Java 类 | ArchiveControllerTest 类 |
 | `AuthControllerTest.java` | Java 类 | AuthControllerTest 类 |
+| `ComplianceControllerAsyncResultTest.java` | Java 类 | ComplianceController 异步四性检测结果单元测试 |
 | `ComplianceControllerIntegrationTest.java` | Java 类 | ComplianceControllerIntegrationTest 类 |
 | `DestructionControllerTest.java` | Java 类 | DestructionControllerTest 类 |
 | `IngestFlowTest.java` | Java 类 | IngestFlowTest 类 |
 | `OfdConvertControllerTest.java` | Java 类 | OfdConvertControllerTest 类 |
+| `SignatureControllerLogQueryTest.java` | Java 类 | SignatureController 已持久化验签日志查询单元测试 |
 | `VolumeControllerIntegrationTest.java` | Java 类 | VolumeControllerIntegrationTest 类 |
