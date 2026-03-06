@@ -31,6 +31,14 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 设置 Docker Compose
+        run: |
+          # GitHub Actions ubuntu-latest 已预装 Docker，只需安装 docker-compose
+          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker --version
+          docker-compose --version
+
       - name: 设置 Node.js 20
         uses: actions/setup-node@v4
         with:
