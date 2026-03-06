@@ -59,40 +59,44 @@ echo -e "${YELLOW}📦 启动 PostgreSQL + Redis...${NC}"
 docker-compose -f docker-compose.infra.yml --env-file .env.local up -d
 
 # ==============================================================================
-# 3. 等待数据库就绪（带超时保护）
+# 3. 等待数据库就绪（使用 Docker healthcheck）
 # ==============================================================================
 echo -e "${YELLOW}⏳ 等待数据库就绪...${NC}"
 
-# 等待 PostgreSQL（超时 120 秒，CI 环境可能需要更长时间）
-PG_TIMEOUT=120
+# 等待 PostgreSQL（超时 180 秒，CI 环境首次启动需要更长时间）
+PG_TIMEOUT=180
 PG_COUNT=0
-until docker exec nexus-db pg_isready -U postgres > /dev/null 2>&1; do
+until docker inspect nexus-db --format='{{.State.Health.Status}}' 2>/dev/null | grep -q "healthy"; do
     sleep 1
     PG_COUNT=$((PG_COUNT + 1))
     if [ $PG_COUNT -ge $PG_TIMEOUT ]; then
         echo -e "${RED}❌ PostgreSQL 启动超时（${PG_TIMEOUT}秒）${NC}"
-        echo -e "${YELLOW}📋 查看容器日志: docker logs nexus-db${NC}"
+        echo -e "${YELLOW}📋 容器状态: docker inspect nexus-db${NC}"
+        echo -e "${YELLOW}📋 容器日志: docker logs nexus-db${NC}"
+        docker inspect nexus-db --format='{{.State.Health.Status}}' 2>/dev/null || echo "无法获取健康状态"
         exit 1
     fi
-    if [ $((PG_COUNT % 10)) -eq 0 ]; then
-        echo -e "${YELLOW}⏳ 等待 PostgreSQL... (${PG_COUNT}/${PG_TIMEOUT}秒)${NC}"
+    if [ $((PG_COUNT % 15)) -eq 0 ] && [ $PG_COUNT -gt 0 ]; then
+        echo -e "${YELLOW}⏳ 等待 PostgreSQL 健康检查... (${PG_COUNT}/${PG_TIMEOUT}秒)${NC}"
     fi
 done
 echo -e "${GREEN}✅ PostgreSQL 就绪${NC}"
 
-# 等待 Redis（超时 30 秒）
-REDIS_TIMEOUT=30
+# 等待 Redis（超时 60 秒）
+REDIS_TIMEOUT=60
 REDIS_COUNT=0
-until docker exec nexus-redis redis-cli ping > /dev/null 2>&1; do
+until docker inspect nexus-redis --format='{{.State.Health.Status}}' 2>/dev/null | grep -q "healthy"; do
     sleep 1
     REDIS_COUNT=$((REDIS_COUNT + 1))
     if [ $REDIS_COUNT -ge $REDIS_TIMEOUT ]; then
         echo -e "${RED}❌ Redis 启动超时（${REDIS_TIMEOUT}秒）${NC}"
-        echo -e "${YELLOW}📋 查看容器日志: docker logs nexus-redis${NC}"
+        echo -e "${YELLOW}📋 容器状态: docker inspect nexus-redis${NC}"
+        echo -e "${YELLOW}📋 容器日志: docker logs nexus-redis${NC}"
+        docker inspect nexus-redis --format='{{.State.Health.Status}}' 2>/dev/null || echo "无法获取健康状态"
         exit 1
     fi
-    if [ $((REDIS_COUNT % 10)) -eq 0 ]; then
-        echo -e "${YELLOW}⏳ 等待 Redis... (${REDIS_COUNT}/${REDIS_TIMEOUT}秒)${NC}"
+    if [ $((REDIS_COUNT % 15)) -eq 0 ] && [ $REDIS_COUNT -gt 0 ]; then
+        echo -e "${YELLOW}⏳ 等待 Redis 健康检查... (${REDIS_COUNT}/${REDIS_TIMEOUT}秒)${NC}"
     fi
 done
 echo -e "${GREEN}✅ Redis 就绪${NC}"
