@@ -61,6 +61,11 @@ jobs:
       - name: 安装 Playwright 浏览器
         run: npx playwright install --with-deps chromium
 
+      - name: 生成测试 JWT 密钥
+        run: |
+          sudo apt-get install -y openssl
+          bash scripts/generate-test-jwt-keys.sh
+
       - name: 执行联调门禁
         run: npm run self-check:integration
         env:
