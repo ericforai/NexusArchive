@@ -23,16 +23,24 @@ services:
       POSTGRES_DB: ${DB_NAME:-nexusarchive}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      # 首次启动时自动执行 seed-data.sql
-      POSTGRES_INITDB_SCRIPTS_PATH: /docker-entrypoint-initdb.d
+      # CI 环境优化：减少内存使用
+      POSTGRES_SHARED_BUFFERS: 128MB
+      POSTGRES_MAINTENANCE_WORK_MEM: 32MB
+      POSTGRES_WORK_MEM: 8MB
     ports:
       # 本地开发使用 54321 避免与本地 PostgreSQL 冲突
       # 服务器部署可通过 .env.server 设置为 5432
       - "${DB_PORT:-54321}:5432"
     volumes:
       - nexus-db-data:/var/lib/postgresql/data
-      # Seed data 挂载（首次启动或 volume 为空时自动执行）
-      - ./db/seed-data.sql:/docker-entrypoint-initdb.d/99-seed.sql:ro
+    # CI 环境优化：增加内存限制
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    shm_size: 128mb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
