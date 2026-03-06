@@ -59,17 +59,41 @@ echo -e "${YELLOW}📦 启动 PostgreSQL + Redis...${NC}"
 docker-compose -f docker-compose.infra.yml --env-file .env.local up -d
 
 # ==============================================================================
-# 3. 等待数据库就绪
+# 3. 等待数据库就绪（带超时保护）
 # ==============================================================================
 echo -e "${YELLOW}⏳ 等待数据库就绪...${NC}"
+
+# 等待 PostgreSQL（超时 60 秒）
+PG_TIMEOUT=60
+PG_COUNT=0
 until docker exec nexus-db pg_isready -U postgres > /dev/null 2>&1; do
     sleep 1
+    PG_COUNT=$((PG_COUNT + 1))
+    if [ $PG_COUNT -ge $PG_TIMEOUT ]; then
+        echo -e "${RED}❌ PostgreSQL 启动超时（${PG_TIMEOUT}秒）${NC}"
+        echo -e "${YELLOW}📋 查看容器日志: docker logs nexus-db${NC}"
+        exit 1
+    fi
+    if [ $((PG_COUNT % 10)) -eq 0 ]; then
+        echo -e "${YELLOW}⏳ 等待 PostgreSQL... (${PG_COUNT}/${PG_TIMEOUT}秒)${NC}"
+    fi
 done
 echo -e "${GREEN}✅ PostgreSQL 就绪${NC}"
 
-# 等待 Redis
+# 等待 Redis（超时 30 秒）
+REDIS_TIMEOUT=30
+REDIS_COUNT=0
 until docker exec nexus-redis redis-cli ping > /dev/null 2>&1; do
     sleep 1
+    REDIS_COUNT=$((REDIS_COUNT + 1))
+    if [ $REDIS_COUNT -ge $REDIS_TIMEOUT ]; then
+        echo -e "${RED}❌ Redis 启动超时（${REDIS_TIMEOUT}秒）${NC}"
+        echo -e "${YELLOW}📋 查看容器日志: docker logs nexus-redis${NC}"
+        exit 1
+    fi
+    if [ $((REDIS_COUNT % 10)) -eq 0 ]; then
+        echo -e "${YELLOW}⏳ 等待 Redis... (${REDIS_COUNT}/${REDIS_TIMEOUT}秒)${NC}"
+    fi
 done
 echo -e "${GREEN}✅ Redis 就绪${NC}"
 
