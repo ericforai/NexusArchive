@@ -63,8 +63,8 @@ docker-compose -f docker-compose.infra.yml --env-file .env.local up -d
 # ==============================================================================
 echo -e "${YELLOW}⏳ 等待数据库就绪...${NC}"
 
-# 等待 PostgreSQL（超时 60 秒）
-PG_TIMEOUT=60
+# 等待 PostgreSQL（超时 120 秒，CI 环境可能需要更长时间）
+PG_TIMEOUT=120
 PG_COUNT=0
 until docker exec nexus-db pg_isready -U postgres > /dev/null 2>&1; do
     sleep 1
