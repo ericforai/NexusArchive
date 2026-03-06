@@ -119,8 +119,14 @@ if [ "$SYS_USER_TABLE_EXISTS" = "0" ]; then
     if [ -f db/seed-data.sql ]; then
         echo -e "${YELLOW}📥 首次启动（sys_user 表不存在），导入 seed data...${NC}"
         sleep 2
-        cat db/seed-data.sql | docker exec -i nexus-db psql -U postgres -d nexusarchive -q > /dev/null 2>&1
-        echo -e "${GREEN}✅ Seed data 导入完成${NC}"
+        # 导入 seed data，保留错误输出用于调试
+        if cat db/seed-data.sql | docker exec -i nexus-db psql -U postgres -d nexusarchive -q 2>&1 | tee /tmp/seed-import.log; then
+            echo -e "${GREEN}✅ Seed data 导入完成${NC}"
+        else
+            echo -e "${RED}❌ Seed data 导入失败${NC}"
+            echo -e "${YELLOW}📋 查看错误日志: cat /tmp/seed-import.log${NC}"
+            exit 1
+        fi
     else
         echo -e "${YELLOW}⚠️  db/seed-data.sql 不存在，数据库为空${NC}"
         echo -e "${YELLOW}  如需从另一台 Mac 同步数据，请运行: npm run db:load${NC}"
@@ -132,8 +138,13 @@ else
     fi
     if [ "$SYS_USER_COUNT" = "0" ] && [ -f db/seed-data.sql ]; then
         echo -e "${YELLOW}📥 检测到数据库为空（sys_user=0），导入 seed data...${NC}"
-        cat db/seed-data.sql | docker exec -i nexus-db psql -U postgres -d nexusarchive -q > /dev/null 2>&1
-        echo -e "${GREEN}✅ Seed data 导入完成${NC}"
+        if cat db/seed-data.sql | docker exec -i nexus-db psql -U postgres -d nexusarchive -q 2>&1 | tee /tmp/seed-import.log; then
+            echo -e "${GREEN}✅ Seed data 导入完成${NC}"
+        else
+            echo -e "${RED}❌ Seed data 导入失败${NC}"
+            echo -e "${YELLOW}📋 查看错误日志: cat /tmp/seed-import.log${NC}"
+            exit 1
+        fi
     else
         echo -e "${GREEN}✅ 检测到已有业务数据（sys_user=${SYS_USER_COUNT}），跳过 seed 导入${NC}"
     fi
