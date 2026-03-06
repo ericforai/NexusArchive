@@ -26,18 +26,28 @@ echo "[integration-gate] output=$OUT_DIR"
 npm run dev
 DEV_RC=$?
 
-for i in {1..90}; do
+# CI 环境首次启动需要更长时间（最多 5 分钟）
+for i in {1..300}; do
   if curl -sS http://localhost:19090/api/health >/dev/null 2>&1; then
     BACKEND_READY=1
     break
   fi
+  # 每 30 秒输出一次进度
+  if [ $((i % 30)) -eq 0 ] && [ $i -gt 0 ]; then
+    echo "[integration-gate] 等待后端 API 就绪... (${i}s)"
+  fi
   sleep 1
 done
 
-for i in {1..90}; do
+# 前端启动等待（最多 3 分钟）
+for i in {1..180}; do
   if curl -sS -I http://localhost:15175 >/dev/null 2>&1; then
     FRONTEND_READY=1
     break
+  fi
+  # 每 30 秒输出一次进度
+  if [ $((i % 30)) -eq 0 ] && [ $i -gt 0 ]; then
+    echo "[integration-gate] 等待前端就绪... (${i}s)"
   fi
   sleep 1
 done
