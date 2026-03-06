@@ -11,6 +11,8 @@ on:
       - 'src/e2e/**'
       - 'tests/playwright/delivery_v2.spec.ts'
       - 'scripts/system-self-check/**'
+      - 'scripts/dev.sh'
+      - 'scripts/dev-stop.sh'
       - '.github/workflows/integration-gate.yml'
   workflow_dispatch:
 
