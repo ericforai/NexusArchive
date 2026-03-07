@@ -104,25 +104,13 @@ Suggested test plan:
 
 - `mvn -f nexusarchive-java/pom.xml test -Dtest=PdfSignatureVerificationServiceTest`
 
-## Current Blockers
+## PR Status
 
-The code is ready for branch/commit/PR work, but this session cannot complete those steps:
+- Branch: `ericluwenrong/eri-11-build-pdf-signature-verification-service-with`
+- Commit: `b4016f83`
+- PR: https://github.com/ericforai/NexusArchive/pull/5
 
-- `gh auth status` reports the default GitHub token is invalid
-- the current sandbox rejects writes under `.git`, so branch creation and commit flows fail
+## Next Step
 
-## Resume Checklist
-
-When GitHub auth and `.git` writes are available again:
-
-1. Create or switch to branch `ericluwenrong/eri-11-build-pdf-signature-verification-service-with`
-2. Stage the files listed above
-3. Commit with a message similar to:
-
-```text
-feat: add normalized PDF signature verification service
-```
-
-4. Push the branch
-5. Create the PR using the draft notes above
-6. Move the Linear issue from `In Progress` to `In Review`
+1. Address review feedback on PR #5 if any
+2. Move the Linear issue from `In Progress` to `In Review`
