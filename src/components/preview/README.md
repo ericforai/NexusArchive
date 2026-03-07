@@ -113,6 +113,38 @@ return <iframe src={blobUrl} />;
 
 ---
 
+### OfdViewer ⭐ NEW
+
+**OFD 版式文档查看器**，符合 GB/T 33190 标准。
+
+**Features:**
+- ✅ 本地解析渲染，无需后端转换服务
+- ✅ 完整还原 OFD 文档的文本、图片和版式布局
+- ✅ 支持缩放、旋转、多页切换
+- ✅ 下载 OFD 文件功能
+
+**Usage:**
+```tsx
+import { OfdViewer } from '@/components/preview';
+
+<OfdViewer
+  url="/api/files/sample.ofd"
+  fileName="示例文件.ofd"
+  scale={1.5}
+  rotation={0}
+  downloadUrl="/api/files/sample.ofd/download"
+  onLoad={() => console.log('OFD 加载完成')}
+  onError={(msg) => console.error('加载失败:', msg)}
+/>
+```
+
+**技术实现:**
+- 使用 `ofdParser.ts` 本地解析 OFD 二进制格式
+- 基于 PX_PER_MM = 3.8 的毫米到像素转换
+- 支持文本图层和图像图层叠加渲染
+
+---
+
 ## 迁移指南
 
 ### 从 ArchiveDetailDrawer 的 OfdViewer 迁移
