@@ -23,7 +23,7 @@ export const ArchiveDetailPage: React.FC = () => {
 
   // 档案数据状态（从 API 获取）
   const [archiveData, setArchiveData] = React.useState<any>(null);
-  const [archiveLoading, setArchiveLoading] = React.useState(false);
+  const [_archiveLoading, setArchiveLoading] = React.useState(false);
 
   // 从 API 获取真实档案数据
   useEffect(() => {

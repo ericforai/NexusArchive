@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  FileText, File, Loader2, AlertCircle
+  File, Loader2, AlertCircle
 } from 'lucide-react';
 import { PdfViewer } from './PdfViewer';
 import { ImageViewer } from './ImageViewer';
