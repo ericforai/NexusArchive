@@ -40,6 +40,7 @@ export const previewApi = {
             const response = await client.post('/archive/preview/presigned', null, {
                 params: {
                     archiveId: params.archiveId,
+                    fileId: params.fileId,
                 },
             });
             const data = response.data?.data || response.data;
@@ -55,6 +56,7 @@ export const previewApi = {
         const response = await client.post('/archive/preview', null, {
             params: {
                 archiveId: params.archiveId,
+                fileId: params.fileId,
                 mode,
             },
             responseType: 'blob',

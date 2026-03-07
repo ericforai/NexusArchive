@@ -20,6 +20,28 @@ vi.mock('antd', async () => {
   };
 });
 
+vi.mock('../../preview', () => ({
+  SmartFilePreview: ({
+    archiveId,
+    fileId,
+    currentFileId,
+    files,
+  }: {
+    archiveId?: string;
+    fileId?: string;
+    currentFileId?: string;
+    files?: Array<{ fileType?: string }>;
+  }) => (
+    <div
+      data-testid="smart-file-preview"
+      data-archive-id={archiveId}
+      data-file-id={fileId}
+      data-current-file-id={currentFileId}
+      data-file-type={files?.[0]?.fileType}
+    />
+  ),
+}));
+
 describe('OriginalDocumentPreview', () => {
   const createObjectURLSpy = vi.fn(() => 'blob:mock-url');
   const revokeObjectURLSpy = vi.fn();
@@ -63,5 +85,24 @@ describe('OriginalDocumentPreview', () => {
     });
 
     expect(client.get).toHaveBeenCalledWith('/archive/files/download/f3', { responseType: 'blob' });
+  });
+
+  it('在归档详情场景下应走共享预览链路并将 OFD 明确分流', () => {
+    render(
+      <OriginalDocumentPreview
+        archiveId="archive-001"
+        files={[
+          { id: 'ofd-1', fileName: 'invoice.ofd', fileUrl: '/archive/files/download/ofd-1', type: 'application/ofd' },
+        ]}
+      />,
+    );
+
+    const preview = screen.getByTestId('smart-file-preview');
+
+    expect(preview).toHaveAttribute('data-archive-id', 'archive-001');
+    expect(preview).toHaveAttribute('data-file-id', 'ofd-1');
+    expect(preview).toHaveAttribute('data-current-file-id', 'ofd-1');
+    expect(preview).toHaveAttribute('data-file-type', 'ofd');
+    expect(client.get).not.toHaveBeenCalled();
   });
 });

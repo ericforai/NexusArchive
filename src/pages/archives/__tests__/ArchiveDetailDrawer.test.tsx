@@ -3,6 +3,59 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ArchiveDetailDrawer from '../ArchiveDetailDrawer';
 
+vi.mock('antd', async () => {
+  const React = await import('react');
+
+  const createComponentMock = (name: string) => {
+    const Component = ({ children, ...props }: any) => React.createElement('div', { 'data-mock': name, ...props }, children);
+    Component.displayName = name;
+    return Component;
+  };
+
+  const Drawer = ({ children, title, ...props }: any) => React.createElement(
+    'div',
+    { 'data-mock': 'Drawer', ...props },
+    title ? React.createElement('div', { className: 'drawer-title' }, title) : null,
+    children,
+  );
+
+  const Tabs = ({ items, activeKey, onChange, ...props }: any) => {
+    const activeItem = (items || []).find((item: any) => item.key === activeKey) || items?.[0];
+    return React.createElement(
+      'div',
+      { 'data-mock': 'Tabs', ...props },
+      React.createElement(
+        'div',
+        { className: 'tabs-nav' },
+        ...(items || []).map((item: any) => React.createElement('button', {
+          key: item.key,
+          role: 'tab',
+          'aria-selected': activeKey === item.key,
+          onClick: () => onChange?.(item.key),
+        }, item.label)),
+      ),
+      React.createElement('div', { className: 'tabs-content' }, activeItem?.children),
+    );
+  };
+
+  return {
+    Drawer,
+    Tabs,
+    Button: createComponentMock('Button'),
+    List: createComponentMock('List'),
+    Tag: createComponentMock('Tag'),
+    Space: createComponentMock('Space'),
+    Spin: createComponentMock('Spin'),
+    Empty: createComponentMock('Empty'),
+    message: {
+      warning: vi.fn(),
+      success: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
+
 // Mock the hooks
 vi.mock('../../../hooks/useFilePreview', () => ({
   useFilePreview: () => ({ previewUrl: null, loading: false })
@@ -15,11 +68,23 @@ vi.mock('../hooks/useVoucherData', () => ({
       voucherWord: '记',
       debitTotal: 10000,
       voucherDate: '2024-01-01',
-      attachments: [],
+      attachments: [
+        { id: 'att-1', fileName: 'invoice.ofd', type: 'application/ofd' },
+      ],
       entries: []
     }
   })
 }));
+
+vi.mock('../../../components/voucher', async () => {
+  const actual = await vi.importActual<typeof import('../../../components/voucher')>('../../../components/voucher');
+  return {
+    ...actual,
+    OriginalDocumentPreview: ({ archiveId }: { archiveId?: string }) => (
+      <div data-testid="original-document-preview" data-archive-id={archiveId} />
+    ),
+  };
+});
 
 const mockRow = {
   id: '123',
@@ -113,5 +178,19 @@ describe('ArchiveDetailDrawer', () => {
     // Mock Tabs renders with data-mock attribute
     const tabsElement = container.querySelector('[data-mock="Tabs"]');
     expect(tabsElement).toBeInTheDocument();
+  });
+
+  it('should pass row id into attachment preview entry', () => {
+    renderWithRouter(
+      <ArchiveDetailDrawer
+        open={true}
+        onClose={() => { }}
+        row={mockRow}
+        config={mockConfig}
+        isPoolView={true}
+      />
+    );
+
+    expect(screen.getByTestId('original-document-preview')).toHaveAttribute('data-archive-id', '123');
   });
 });

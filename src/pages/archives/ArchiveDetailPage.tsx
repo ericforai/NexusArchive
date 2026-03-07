@@ -124,7 +124,7 @@ export const ArchiveDetailPage: React.FC = () => {
               <p>加载中...</p>
             </div>
           ) : voucherData?.attachments && voucherData.attachments.length > 0 ? (
-            <OriginalDocumentPreview files={voucherData.attachments} />
+            <OriginalDocumentPreview archiveId={row?.id || id} files={voucherData.attachments} />
           ) : (
             <div className="flex items-center justify-center h-full text-slate-400">
               <p>暂无附件</p>

@@ -1,4 +1,4 @@
-// Input: React、lucide-react 图标、本地模块 api/attachments、common/OfdViewer
+// Input: React、lucide-react 图标、本地模块 api/attachments、preview/SmartFilePreview
 // Output: React 组件 EvidencePreview
 // Pos: src/pages/panorama/EvidencePreview.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -9,6 +9,7 @@ import { attachmentsApi, AttachmentFile } from '../../api/attachments';
 import { originalVoucherApi } from '../../api/originalVoucher';
 import { useAuthStore } from '../../store';
 import { FileViewer } from '../../components/common';
+import { SmartFilePreview } from '@/components/preview';
 
 interface EvidencePreviewProps {
     voucherId: string;
@@ -106,6 +107,12 @@ const InvoiceOverlay: React.FC<InvoiceOverlayProps> = ({ highlightField, onInter
         </div>
     );
 };
+
+function isOfdAttachment(file: AttachmentFile): boolean {
+    const fileType = file.fileType?.toLowerCase() || '';
+    const fileName = file.fileName?.toLowerCase() || '';
+    return fileType === 'ofd' || fileType.includes('application/ofd') || fileName.endsWith('.ofd');
+}
 
 export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, highlightField, onInteract, sourceType, simpleMode = false }) => {
     const [files, setFiles] = useState<AttachmentFile[]>([]);
@@ -362,8 +369,28 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 />
                             )}
 
-                            {/* [FIXED] Use direct iframe for PDF to avoid fetch/blob issues */}
-                            {selectedFile.fileType?.toLowerCase() === 'pdf' ? (
+                            {/* [FIXED] OFD 走共享预览链路，PDF 保持现有高亮能力 */}
+                            {isOfdAttachment(selectedFile) ? (
+                                <SmartFilePreview
+                                    isPool={true}
+                                    fileId={selectedFile.id}
+                                    fileName={selectedFile.fileName}
+                                    files={currentTabFiles.map(file => ({
+                                        id: file.id,
+                                        fileName: file.fileName,
+                                        fileType: file.fileType,
+                                    }))}
+                                    currentFileId={selectedFile.id}
+                                    onFileChange={(fileId) => {
+                                        const nextFile = currentTabFiles.find(file => file.id === fileId);
+                                        if (nextFile) {
+                                            setSelectedFile(nextFile);
+                                        }
+                                    }}
+                                    showFileNav={false}
+                                    className="h-full"
+                                />
+                            ) : selectedFile.fileType?.toLowerCase() === 'pdf' ? (
                                 <iframe
                                     src={`${getPreviewUrl(selectedFile)}?access_token=${token || ''}`}
                                     className="w-full h-full border-0 bg-white"
