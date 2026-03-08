@@ -449,16 +449,27 @@ public class AsyncFourNatureCheckServiceImpl implements AsyncFourNatureCheckServ
         if (result == null) {
             return "签名验证结果不可用";
         }
-        if (result.getStatus() == OverallStatus.FAIL
-                && result.getErrors() != null
-                && !result.getErrors().isEmpty()) {
-            return String.join("; ", result.getErrors());
-        }
-        if (result.getMessage() != null && !result.getMessage().isBlank()) {
-            return result.getMessage();
-        }
+        String message = result.getMessage();
+        String errors = null;
         if (result.getErrors() != null && !result.getErrors().isEmpty()) {
-            return String.join("; ", result.getErrors());
+            errors = String.join("; ", result.getErrors());
+        }
+        if (result.getStatus() == OverallStatus.FAIL) {
+            if (message != null && !message.isBlank() && errors != null && !errors.isBlank()) {
+                return message + "; " + errors;
+            }
+            if (message != null && !message.isBlank()) {
+                return message;
+            }
+            if (errors != null && !errors.isBlank()) {
+                return errors;
+            }
+        }
+        if (message != null && !message.isBlank()) {
+            return message;
+        }
+        if (errors != null && !errors.isBlank()) {
+            return errors;
         }
         return "签名验证结果为空";
     }
@@ -473,19 +484,10 @@ public class AsyncFourNatureCheckServiceImpl implements AsyncFourNatureCheckServ
         if (result.getStatus() == OverallStatus.WARNING) {
             return "UNKNOWN";
         }
-        return containsSignatureFailure(verifyMessage) ? "INVALID" : "UNKNOWN";
-    }
-
-    private boolean containsSignatureFailure(String verifyMessage) {
-        if (verifyMessage == null || verifyMessage.isBlank()) {
-            return false;
+        if (result.getStatus() == OverallStatus.FAIL) {
+            return "INVALID";
         }
-        return verifyMessage.contains("签章")
-                || verifyMessage.contains("签名")
-                || verifyMessage.contains("数字签名")
-                || verifyMessage.contains("证书")
-                || verifyMessage.contains("时间戳")
-                || verifyMessage.contains("验签");
+        return "UNKNOWN";
     }
 
     /**

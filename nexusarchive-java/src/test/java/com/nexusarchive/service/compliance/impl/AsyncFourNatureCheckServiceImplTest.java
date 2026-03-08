@@ -137,6 +137,79 @@ class AsyncFourNatureCheckServiceImplTest {
     }
 
     @Test
+    void performParallelCheck_shouldPersistInvalidResultForAnyFailureStatus() throws Exception {
+        TestFixture fixture = arrangePdfArchive("哈希校验失败", OverallStatus.FAIL);
+        String taskId = "task-invalid-generic";
+        taskManager.createTask(taskId, fixture.archive().getId(), fixture.archive().getArchiveCode());
+
+        service.performParallelCheck(taskId, fixture.archive().getId())
+                .get(5, TimeUnit.SECONDS);
+
+        ArgumentCaptor<ArcSignatureLog> logCaptor = ArgumentCaptor.forClass(ArcSignatureLog.class);
+        verify(arcSignatureLogMapper).insert(logCaptor.capture());
+
+        ArcSignatureLog persistedLog = logCaptor.getValue();
+        assertThat(persistedLog.getVerifyResult()).isEqualTo("INVALID");
+        assertThat(persistedLog.getVerifyMessage()).contains("哈希校验失败");
+    }
+
+    @Test
+    void performParallelCheck_shouldPreserveMessageAndErrorsForFailure() throws Exception {
+        Archive archive = new Archive();
+        archive.setId("archive-1");
+        archive.setArchiveCode("ARCH-2026-0001");
+        archive.setUniqueBizId("biz-1");
+        archive.setAmount(java.math.BigDecimal.TEN);
+        archive.setDocDate(LocalDate.of(2026, 3, 6));
+        archive.setStandardMetadata("{\"ok\":true}");
+
+        Path filePath = tempDir.resolve("invoice.pdf");
+        Files.writeString(filePath, "%PDF-1.4\nminimal");
+
+        ArcFileContent file = new ArcFileContent();
+        file.setId("file-1");
+        file.setItemId(archive.getId());
+        file.setArchivalCode(archive.getArchiveCode());
+        file.setFileName("invoice.pdf");
+        file.setFileType("PDF");
+        file.setStoragePath(filePath.toString());
+        file.setOriginalHash("hash-1");
+        file.setHashAlgorithm("SM3");
+
+        when(archiveService.getArchiveById(archive.getId())).thenReturn(archive);
+        when(archiveFileContentService.getFilesByItemId(eq(archive.getId()), eq(null))).thenReturn(List.of(file));
+
+        CheckItem authenticity = CheckItem.pass("真实性检测", "PDF签章校验失败");
+        authenticity.setStatus(OverallStatus.FAIL);
+        authenticity.addError("证书链无效");
+
+        when(fourNatureCoreService.checkSingleFileAuthenticity(
+                any(),
+                eq(file.getFileName()),
+                eq(file.getOriginalHash()),
+                eq(file.getHashAlgorithm()),
+                eq(file.getFileType())
+        )).thenReturn(authenticity);
+        when(fourNatureCoreService.checkSingleFileUsability(any(), eq(file.getFileName()), eq(file.getFileType())))
+                .thenReturn(CheckItem.pass("可用性检测", "文件可读"));
+        when(fourNatureCoreService.checkSingleFileSafety(any(), eq(file.getFileName())))
+                .thenReturn(CheckItem.pass("安全性检测", "未发现威胁"));
+
+        String taskId = "task-invalid-message-errors";
+        taskManager.createTask(taskId, archive.getId(), archive.getArchiveCode());
+
+        service.performParallelCheck(taskId, archive.getId()).get(5, TimeUnit.SECONDS);
+
+        ArgumentCaptor<ArcSignatureLog> logCaptor = ArgumentCaptor.forClass(ArcSignatureLog.class);
+        verify(arcSignatureLogMapper).insert(logCaptor.capture());
+
+        ArcSignatureLog persistedLog = logCaptor.getValue();
+        assertThat(persistedLog.getVerifyResult()).isEqualTo("INVALID");
+        assertThat(persistedLog.getVerifyMessage()).contains("PDF签章校验失败");
+        assertThat(persistedLog.getVerifyMessage()).contains("证书链无效");
+    }
+
+    @Test
     void performParallelCheck_shouldKeepWorkflowRunningWhenSignatureLogPersistenceFails() throws Exception {
         TestFixture fixture = arrangePdfArchive("Hash verified (SM3); PDF签章校验通过", OverallStatus.PASS);
         String taskId = "task-persist-fallback";
