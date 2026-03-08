@@ -1,75 +1,38 @@
-# SEO 优化实现计划 (DigiVoucher 数凭系统)
+# 实现计划：针对法律法规与国标生成深度解读文章 (SEO 专项优化)
 
-优化系统的搜索引擎友好度与内部搜索的可访问性，即使在私有化部署环境下，标准化的 SEO 实践也是系统专业性的体现。
+## 目标
+为系统内置的法律法规库中的每一个标准生成高质量的解读文章，建立“支柱-集群”内容结构，大幅提升搜索引擎排名。
 
-## 用户评审要求
+## 拟议更改
 
-- [!IMPORTANT]
-- **私有化安全**：Sitemap 和 Robots.txt 仅包含公开路径（如 `/`, `/system/login`），避免泄露内网业务路径。
-- **信创适配**：所有改动需保持对国产浏览器（双核架构）的良好支持。
+### 1. 新增解读文章 (Cluster Pages)
+在 `src/pages/product-website/blog/` 目录下创建以下组件，遵循语义化 HTML 结构（H1, H2, Schema 链接）：
 
-## 拟议变更
+- **[NEW] [DAT92Interpretation.tsx](file:///src/pages/product-website/blog/DAT92Interpretation.tsx)**
+  - 主题：DA/T 92-2022 电子档案单套制管理要求深度解析。
+- **[NEW] [DAT95Interpretation.tsx](file:///src/pages/product-website/blog/DAT95Interpretation.tsx)**
+  - 主题：DA/T 95-2022 电子会计凭证报销入账技术规范指南。
+- **[NEW] [ERP104Interpretation.tsx](file:///src/pages/product-website/blog/ERP104Interpretation.tsx)**
+  - 主题：DA/T 104-2024 ERP系统电子会计凭证归档接口规范。
+- **[NEW] [GBT18894Interpretation.tsx](file:///src/pages/product-website/blog/GBT18894Interpretation.tsx)**
+  - 主题：GB/T 18894 电子档案管理基本规范的实操要点。
+- **[NEW] [GBT39784Interpretation.tsx](file:///src/pages/product-website/blog/GBT39784Interpretation.tsx)**
+  - 主题：GB/T 39784 电子档案系统建设的功能与安全要求。
 
-### 1. 全局基础 SEO (index.html)
+### 2. 路由与入口更新
 
-#### [MODIFY] [index.html](file:///Users/user/nexusarchive/index.html)
-- 优化 `<title>` 为更具吸引力的格式。
-- 精简并增强 `keywords` 和 `description`，确保包含核心关键词（单套制、DA/T 94-2022）。
+#### [修改] [index.tsx](file:///src/routes/index.tsx)
+- 注册上述所有新页面的路由路径（如 `/blog/dat-92-interpretation`）。
 
----
+#### [修改] [index.tsx](file:///src/pages/product-website/blog/index.tsx)
+- 将新文章添加到博客列表卡片中，展示精彩摘要。
 
-### 2. 动态路由 Title 优化 (React SPA)
+### 3. 内链增强 (Internal Linking)
 
-#### [NEW] [useDocumentTitle.ts](file:///Users/user/nexusarchive/src/hooks/useDocumentTitle.ts)
-- 创建自定义 Hook，根据当前路由自动更新 `document.title`。
-
-#### [MODIFY] [index.tsx](file:///Users/user/nexusarchive/src/routes/index.tsx)
-- 为 `routes` 配置项添加 `title` 属性，用于标识各页面功能。
-
-#### [MODIFY] [SystemLayout.tsx](file:///Users/user/nexusarchive/src/layouts/SystemLayout.tsx)
-- 调用 `useDocumentTitle` Hook，实现页面切换时的标题实时更新。
-
----
-
-### 3. 产品落地页语义化与可访问性
-
-#### [MODIFY] [XinchuangPartnersSection.tsx](file:///Users/user/nexusarchive/src/pages/product-website/components/XinchuangPartnersSection.tsx)
-- 为合作伙伴 Logo 添加 `alt` 属性，增强可访问性。
-
-#### [MODIFY] [Footer.tsx](file:///Users/user/nexusarchive/src/pages/product-website/components/Footer.tsx)
-- 使用 `<footer>` 和 `<nav>` 语义标签优化结构。
-
----
-
-### 4. 技术 SEO 基础建设
-
-#### [NEW] [robots.txt](file:///Users/user/nexusarchive/public/robots.txt)
-- 规范化搜索引擎爬取规则。
-
-#### [NEW] [sitemap.xml](file:///Users/user/nexusarchive/public/sitemap.xml)
-- 建立站点地图，引导索引核心页面。
+#### [修改] [index.tsx](file:///src/pages/product-website/regulations/index.tsx)
+- 在法规列表或详情弹窗中添加“💡 专家解读”按钮，引导用户跳转至对应的 Blog Cluster 页面。
 
 ## 验证计划
-
-### 自动化测试
-- 运行 `npm run test` 确保路由逻辑未受损。
-- 使用 `Lighthouse` (需手动运行) 检查 SEO 分数。
-
-### 手动验证
-1. 导航至 `/system/archives`，检查浏览器卷标是否显示“档案中心 - DigiVoucher”。
-2. 查看源代码，确认各页面 `h1` 唯一且准确。
-3. 验证 `robots.txt` 可通过 `http://localhost:5173/robots.txt` 访问。
-
----
-
-## 专家组预审建议 (Expert Review)
-
-### 合规专家 (Compliance Authority)
-- **建议**：确保 SEO 关键词中引用的标准号（如 DA/T 94-2022）准确无误。
-- **注意**：不对未公开的业务接口进行 SEO 描述，防止敏感信息通过 Meta 标签泄露。
-
-### 信创架构师 (Xinchuang Architect)
-- **建议**：Meta 标签中应通过 `renderer` 强制 360/QQ 浏览器使用 Webkit 内核，提升渲染兼容性。
-
-### 交付专家 (Delivery Strategist)
-- **建议**：私有化部署时，Sitemap 应支持通过配置文件控制是否生成，默认仅包含公共引导页。
+- 确认所有新路由均可访问且样式一致。
+- 检查 Meta Title 与 H1 标签是否包含核心关键词。
+- 验证内链是否闭环（法规 -> 解读 -> 方案）。

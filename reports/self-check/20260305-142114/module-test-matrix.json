@@ -1,0 +1,911 @@
+{
+  "generatedAt": "2026-03-05T06:25:54.171Z",
+  "input": {
+    "playwrightJson": "/Users/user/nexusarchive/reports/self-check/20260305-142114/playwright.json",
+    "vitestJson": "/Users/user/nexusarchive/reports/self-check/20260305-142114/vitest.json"
+  },
+  "summary": {
+    "totalModules": 41,
+    "mappedModules": 28,
+    "uncoveredModules": 13,
+    "passed": 0,
+    "failed": 11,
+    "mappedNotRun": 16,
+    "uncovered": 13,
+    "skippedOnly": 1
+  },
+  "modules": [
+    {
+      "id": "component.admin",
+      "manifestPath": "src/components/admin/manifest.config.ts",
+      "tokens": [
+        "admin"
+      ],
+      "mappedTests": [
+        "src/__tests__/pages/admin/LegacyImportPage.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.archive",
+      "manifestPath": "src/components/archive/manifest.config.ts",
+      "tokens": [
+        "archive"
+      ],
+      "mappedTests": [
+        "src/__tests__/components/ArchiveListView.test.tsx",
+        "src/features/archives/controllers/__tests__/useArchiveDataLoader.test.tsx",
+        "src/features/archives/controllers/__tests__/utils.test.ts",
+        "src/pages/archives/__tests__/ArchiveDetailDrawer.test.tsx",
+        "src/pages/archives/__tests__/ArchiveDetailPage.test.tsx",
+        "src/pages/archives/__tests__/ArchiveListView.link.test.tsx",
+        "src/pages/archives/__tests__/OriginalVoucherListView.test.tsx",
+        "src/pages/pre-archive/__tests__/PoolKanbanPage.test.tsx",
+        "src/pages/pre-archive/__tests__/PoolPage.test.tsx",
+        "tests/playwright/api/archive_concurrency.spec.ts",
+        "tests/playwright/ui/archives_detail_drawer_route_close.spec.ts",
+        "tests/playwright/ui/archives_detail_drawer_self_verify.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 0,
+        "failed": 3,
+        "skipped": 2,
+        "timedOut": 5,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 3
+    },
+    {
+      "id": "component.auth",
+      "manifestPath": "src/components/auth/manifest.config.ts",
+      "tokens": [
+        "auth"
+      ],
+      "mappedTests": [
+        "src/__tests__/store/useAuthStore.test.ts",
+        "src/pages/Auth/__tests__/SsoLaunchPage.test.tsx",
+        "tests/playwright/api/authz_audit.spec.ts",
+        "tests/playwright/ui/auth_ticket.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 4,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "component.common",
+      "manifestPath": "src/components/common/manifest.config.ts",
+      "tokens": [
+        "common"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.debug",
+      "manifestPath": "src/components/debug/manifest.config.ts",
+      "tokens": [
+        "debug"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.layout",
+      "manifestPath": "src/components/layout/manifest.config.ts",
+      "tokens": [
+        "layout"
+      ],
+      "mappedTests": [
+        "src/hooks/__tests__/useKanbanLayout.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.matching",
+      "manifestPath": "src/components/matching/manifest.config.ts",
+      "tokens": [
+        "matching"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.modals",
+      "manifestPath": "src/components/modals/manifest.config.ts",
+      "tokens": [
+        "modals"
+      ],
+      "mappedTests": [
+        "src/components/modals/__tests__/BaseModal.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.operations",
+      "manifestPath": "src/components/operations/manifest.config.ts",
+      "tokens": [
+        "operations"
+      ],
+      "mappedTests": [
+        "src/components/operations/__tests__/BatchApprovalDialog.test.tsx",
+        "src/components/operations/__tests__/BatchOperationBar.test.tsx",
+        "src/components/operations/__tests__/BatchResultModal.test.tsx",
+        "src/components/operations/__tests__/useBatchSelection.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.org",
+      "manifestPath": "src/components/org/manifest.config.ts",
+      "tokens": [
+        "org"
+      ],
+      "mappedTests": [
+        "tests/playwright/api/org_sync_self_verify.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 8,
+        "failed": 2,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.pages",
+      "manifestPath": "src/components/pages/manifest.config.ts",
+      "tokens": [],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.panorama",
+      "manifestPath": "src/components/panorama/manifest.config.ts",
+      "tokens": [
+        "panorama"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.preview",
+      "manifestPath": "src/components/preview/manifest.config.ts",
+      "tokens": [
+        "preview"
+      ],
+      "mappedTests": [
+        "src/__tests__/api/preview.test.ts",
+        "src/components/table/__tests__/TablePreviewAction.test.tsx",
+        "src/components/voucher/__tests__/OriginalDocumentPreview.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreview.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreviewCanvas.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreviewTabs.test.tsx",
+        "tests/playwright/ui/preview_watermark.spec.ts",
+        "tests/playwright/ui/search_preview.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "timedOut": 1,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "component.scan",
+      "manifestPath": "src/components/scan/manifest.config.ts",
+      "tokens": [
+        "scan"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.settings",
+      "manifestPath": "src/components/settings/manifest.config.ts",
+      "tokens": [
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/components/SettingsNavigation.test.ts",
+        "src/components/settings/integration/components/__tests__/ConnectionHealthBadge.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigCard.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigList.test.tsx",
+        "src/components/settings/integration/components/__tests__/IntegrationSettingsPage.test.tsx",
+        "src/components/settings/integration/components/__tests__/SapInterfaceConfigForm.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioDrawer.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioSummaryCard.test.tsx",
+        "src/components/settings/integration/hooks/__tests__/useAiAdapterHandler.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useConnectorModal.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useErpConfigManager.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useIntegrationDiagnosis.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useParamsEditor.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useScenarioSyncManager.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.table",
+      "manifestPath": "src/components/table/manifest.config.ts",
+      "tokens": [
+        "table"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx",
+        "src/__tests__/performance/BatchTable.performance.test.tsx",
+        "src/components/table/__tests__/TablePreviewAction.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.voucher",
+      "manifestPath": "src/components/voucher/manifest.config.ts",
+      "tokens": [
+        "voucher"
+      ],
+      "mappedTests": [
+        "src/components/voucher/__tests__/OriginalDocumentPreview.test.tsx",
+        "src/components/voucher/__tests__/VoucherMetadata.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreview.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreviewCanvas.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreviewTabs.test.tsx",
+        "src/pages/archives/__tests__/OriginalVoucherListView.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "component.watermark",
+      "manifestPath": "src/components/watermark/manifest.config.ts",
+      "tokens": [
+        "watermark"
+      ],
+      "mappedTests": [
+        "tests/playwright/ui/preview_watermark.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.archives",
+      "manifestPath": "src/features/archives/manifest.config.ts",
+      "tokens": [
+        "archives"
+      ],
+      "mappedTests": [
+        "src/features/archives/controllers/__tests__/useArchiveDataLoader.test.tsx",
+        "src/features/archives/controllers/__tests__/utils.test.ts",
+        "src/pages/archives/__tests__/ArchiveDetailDrawer.test.tsx",
+        "src/pages/archives/__tests__/ArchiveDetailPage.test.tsx",
+        "src/pages/archives/__tests__/ArchiveListView.link.test.tsx",
+        "src/pages/archives/__tests__/OriginalVoucherListView.test.tsx",
+        "tests/playwright/ui/archives_detail_drawer_route_close.spec.ts",
+        "tests/playwright/ui/archives_detail_drawer_self_verify.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 0,
+        "failed": 3,
+        "skipped": 0,
+        "timedOut": 5,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "feature.borrowing",
+      "manifestPath": "src/features/borrowing/manifest.config.ts",
+      "tokens": [
+        "borrowing"
+      ],
+      "mappedTests": [
+        "tests/playwright/api/borrowing_self_verify.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 1,
+        "failed": 1,
+        "skipped": 6,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.compliance",
+      "manifestPath": "src/features/compliance/manifest.config.ts",
+      "tokens": [
+        "compliance"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "feature.integration-settings",
+      "manifestPath": "src/components/settings/integration/manifest.config.ts",
+      "tokens": [
+        "integration",
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/components/SettingsNavigation.test.ts",
+        "src/components/settings/integration/components/__tests__/ConnectionHealthBadge.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigCard.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigList.test.tsx",
+        "src/components/settings/integration/components/__tests__/IntegrationSettingsPage.test.tsx",
+        "src/components/settings/integration/components/__tests__/SapInterfaceConfigForm.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioDrawer.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioSummaryCard.test.tsx",
+        "src/components/settings/integration/hooks/__tests__/useAiAdapterHandler.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useConnectorModal.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useErpConfigManager.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useIntegrationDiagnosis.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useParamsEditor.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useScenarioSyncManager.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "feature.settings",
+      "manifestPath": "src/features/settings/manifest.config.ts",
+      "tokens": [
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/components/SettingsNavigation.test.ts",
+        "src/components/settings/integration/components/__tests__/ConnectionHealthBadge.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigCard.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigList.test.tsx",
+        "src/components/settings/integration/components/__tests__/IntegrationSettingsPage.test.tsx",
+        "src/components/settings/integration/components/__tests__/SapInterfaceConfigForm.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioDrawer.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioSummaryCard.test.tsx",
+        "src/components/settings/integration/hooks/__tests__/useAiAdapterHandler.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useConnectorModal.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useErpConfigManager.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useIntegrationDiagnosis.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useParamsEditor.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useScenarioSyncManager.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "nexusarchive.collection-batch",
+      "manifestPath": "nexusarchive-java/src/main/java/com/nexusarchive/collection/manifest.config.ts",
+      "tokens": [
+        "collection",
+        "batch"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx",
+        "src/__tests__/performance/BatchTable.performance.test.tsx",
+        "src/components/operations/__tests__/BatchApprovalDialog.test.tsx",
+        "src/components/operations/__tests__/BatchOperationBar.test.tsx",
+        "src/components/operations/__tests__/BatchResultModal.test.tsx",
+        "src/components/operations/__tests__/useBatchSelection.test.ts",
+        "src/components/pool-kanban/__tests__/BatchActionBar.test.tsx",
+        "src/hooks/__tests__/usePoolBatchAction.test.ts",
+        "src/pages/collection/__tests__/BatchUploadView.test.tsx",
+        "tests/playwright/api/batch_import_export_spec.ts",
+        "tests/playwright/api/batch_upload.spec.ts"
+      ],
+      "status": "skipped_only",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 13,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.admin",
+      "manifestPath": "src/pages/admin/manifest.config.ts",
+      "tokens": [
+        "admin"
+      ],
+      "mappedTests": [
+        "src/__tests__/pages/admin/LegacyImportPage.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.archives",
+      "manifestPath": "src/pages/archives/manifest.config.ts",
+      "tokens": [
+        "archives"
+      ],
+      "mappedTests": [
+        "src/features/archives/controllers/__tests__/useArchiveDataLoader.test.tsx",
+        "src/features/archives/controllers/__tests__/utils.test.ts",
+        "src/pages/archives/__tests__/ArchiveDetailDrawer.test.tsx",
+        "src/pages/archives/__tests__/ArchiveDetailPage.test.tsx",
+        "src/pages/archives/__tests__/ArchiveListView.link.test.tsx",
+        "src/pages/archives/__tests__/OriginalVoucherListView.test.tsx",
+        "tests/playwright/ui/archives_detail_drawer_route_close.spec.ts",
+        "tests/playwright/ui/archives_detail_drawer_self_verify.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 0,
+        "failed": 3,
+        "skipped": 0,
+        "timedOut": 5,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "page.audit",
+      "manifestPath": "src/pages/audit/manifest.config.ts",
+      "tokens": [
+        "audit"
+      ],
+      "mappedTests": [
+        "tests/playwright/api/authz_audit.spec.ts",
+        "tests/playwright/ui/audit_evidence_package.spec.ts",
+        "tests/playwright/ui/audit_verification.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 3,
+        "failed": 6,
+        "skipped": 4,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 3
+    },
+    {
+      "id": "page.auth",
+      "manifestPath": "src/pages/Auth/manifest.config.ts",
+      "tokens": [
+        "auth"
+      ],
+      "mappedTests": [
+        "src/__tests__/store/useAuthStore.test.ts",
+        "src/pages/Auth/__tests__/SsoLaunchPage.test.tsx",
+        "tests/playwright/api/authz_audit.spec.ts",
+        "tests/playwright/ui/auth_ticket.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 4,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "page.collection",
+      "manifestPath": "src/pages/collection/manifest.config.ts",
+      "tokens": [
+        "collection"
+      ],
+      "mappedTests": [
+        "src/pages/collection/__tests__/BatchUploadView.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.debug",
+      "manifestPath": "src/pages/debug/manifest.config.ts",
+      "tokens": [
+        "debug"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.demo",
+      "manifestPath": "src/pages/demo/manifest.config.ts",
+      "tokens": [
+        "demo"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.matching",
+      "manifestPath": "src/pages/matching/manifest.config.ts",
+      "tokens": [
+        "matching"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.operations",
+      "manifestPath": "src/pages/operations/manifest.config.ts",
+      "tokens": [
+        "operations"
+      ],
+      "mappedTests": [
+        "src/components/operations/__tests__/BatchApprovalDialog.test.tsx",
+        "src/components/operations/__tests__/BatchOperationBar.test.tsx",
+        "src/components/operations/__tests__/BatchResultModal.test.tsx",
+        "src/components/operations/__tests__/useBatchSelection.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.panorama",
+      "manifestPath": "src/pages/panorama/manifest.config.ts",
+      "tokens": [
+        "panorama"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.portal",
+      "manifestPath": "src/pages/portal/manifest.config.ts",
+      "tokens": [
+        "portal"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.pre-archive",
+      "manifestPath": "src/pages/pre-archive/manifest.config.ts",
+      "tokens": [
+        "pre",
+        "archive"
+      ],
+      "mappedTests": [
+        "src/__tests__/api/preview.test.ts",
+        "src/__tests__/components/ArchiveListView.test.tsx",
+        "src/components/table/__tests__/TablePreviewAction.test.tsx",
+        "src/components/voucher/__tests__/OriginalDocumentPreview.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreview.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreviewCanvas.test.tsx",
+        "src/components/voucher/__tests__/VoucherPreviewTabs.test.tsx",
+        "src/features/archives/controllers/__tests__/useArchiveDataLoader.test.tsx",
+        "src/features/archives/controllers/__tests__/utils.test.ts",
+        "src/pages/archives/__tests__/ArchiveDetailDrawer.test.tsx",
+        "src/pages/archives/__tests__/ArchiveDetailPage.test.tsx",
+        "src/pages/archives/__tests__/ArchiveListView.link.test.tsx",
+        "src/pages/archives/__tests__/OriginalVoucherListView.test.tsx",
+        "src/pages/pre-archive/__tests__/PoolKanbanPage.test.tsx",
+        "src/pages/pre-archive/__tests__/PoolPage.test.tsx",
+        "tests/playwright/api/archive_concurrency.spec.ts",
+        "tests/playwright/ui/archives_detail_drawer_route_close.spec.ts",
+        "tests/playwright/ui/archives_detail_drawer_self_verify.spec.ts",
+        "tests/playwright/ui/preview_watermark.spec.ts",
+        "tests/playwright/ui/search_preview.spec.ts"
+      ],
+      "status": "failed",
+      "counts": {
+        "passed": 0,
+        "failed": 4,
+        "skipped": 2,
+        "timedOut": 6,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 5
+    },
+    {
+      "id": "page.security",
+      "manifestPath": "src/pages/security/manifest.config.ts",
+      "tokens": [
+        "security"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.settings",
+      "manifestPath": "src/pages/settings/manifest.config.ts",
+      "tokens": [
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/components/SettingsNavigation.test.ts",
+        "src/components/settings/integration/components/__tests__/ConnectionHealthBadge.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigCard.test.tsx",
+        "src/components/settings/integration/components/__tests__/ErpConfigList.test.tsx",
+        "src/components/settings/integration/components/__tests__/IntegrationSettingsPage.test.tsx",
+        "src/components/settings/integration/components/__tests__/SapInterfaceConfigForm.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioDrawer.test.tsx",
+        "src/components/settings/integration/components/__tests__/ScenarioSummaryCard.test.tsx",
+        "src/components/settings/integration/hooks/__tests__/useAiAdapterHandler.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useConnectorModal.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useErpConfigManager.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useIntegrationDiagnosis.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useParamsEditor.test.ts",
+        "src/components/settings/integration/hooks/__tests__/useScenarioSyncManager.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.stats",
+      "manifestPath": "src/pages/stats/manifest.config.ts",
+      "tokens": [
+        "stats"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "page.utilization",
+      "manifestPath": "src/pages/utilization/manifest.config.ts",
+      "tokens": [
+        "utilization"
+      ],
+      "mappedTests": [
+        "src/__tests__/pages/utilization/relationDrilldown.test.ts"
+      ],
+      "status": "mapped_not_run",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    },
+    {
+      "id": "shared.utils",
+      "manifestPath": "src/utils/manifest.config.ts",
+      "tokens": [
+        "shared"
+      ],
+      "mappedTests": [],
+      "status": "uncovered",
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 0
+    }
+  ]
+}

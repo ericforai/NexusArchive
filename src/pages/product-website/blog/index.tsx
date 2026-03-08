@@ -18,6 +18,46 @@ const FEATURED_POSTS = [
         icon: ShieldCheck
     },
     {
+        slug: 'dat-92-interpretation',
+        title: 'DA/T 92-2022 解析：如何实现电子档案的合规“单套制”',
+        excerpt: '单套制管理不仅是技术升级，更是法律效力的保障。了解单套制落地的“四性”要求与实施路径。',
+        category: '行业规范',
+        date: '2026-03-08',
+        icon: ShieldCheck
+    },
+    {
+        slug: 'dat-95-interpretation',
+        title: 'DA/T 95-2022 解读：电子会计凭证从报销到归档的全流程',
+        excerpt: '数电发票时代，如何处理 XML 原件？深度解析电子会计凭证的唯一性校验与长期保存。',
+        category: '技术规范',
+        date: '2026-03-08',
+        icon: Zap
+    },
+    {
+        slug: 'dat-104-interpretation',
+        title: 'DA/T 104-2024 新标：ERP 系统与档案系统的接口红线',
+        excerpt: '2024年最新接口标准发布！解析 SIP 提交包结构以及 ERP 元数据自动捕获的关键技术。',
+        category: '行业趋势',
+        date: '2026-03-08',
+        icon: Zap
+    },
+    {
+        slug: 'gbt-18894-interpretation',
+        title: 'GB/T 18894 深度解码：企业数字化档案管理的底层逻辑',
+        excerpt: '作为电子档案管理的“母法”，GB/T 18894 规定了全生命周期受控的核心原则。',
+        category: '国家标准',
+        date: '2026-03-08',
+        icon: BookOpen
+    },
+    {
+        slug: 'gbt-39784-interpretation',
+        title: 'GB/T 39784 功能要求：衡量合规档案系统的“黄金标尺”',
+        excerpt: '深入理解三权分立与高强度审计日志。如何构建一个经得起国家审计的电子档案系统？',
+        category: '国标解读',
+        date: '2026-03-08',
+        icon: ShieldCheck
+    },
+    {
         slug: 'single-set-system-implementation',
         title: '企业单套制归档实施指南：从纸质到数字的平滑路径',
         excerpt: '如何确保电子凭证与原始单据的一一对应？单套制实施中常见的坑有哪些？点击查看完整指南。',

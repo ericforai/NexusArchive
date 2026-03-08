@@ -109,8 +109,30 @@ export const RegulationsIndex: React.FC = () => {
                                     {reg.desc}
                                 </p>
                             </div>
-                            <div className="mt-6 md:mt-0 flex items-center text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                                查看全文 <ExternalLink className="w-5 h-5 ml-2" />
+                            <div className="mt-6 md:mt-0 flex flex-col items-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                                {(() => {
+                                    const interpretationMap: Record<string, string> = {
+                                        'dat-94-spec': 'dat-94-2022-interpretation',
+                                        'dat-92-spec': 'dat-92-interpretation',
+                                        'dat-95-spec': 'dat-95-interpretation',
+                                        'erp-archive-spec': 'dat-104-interpretation',
+                                        'gbt-18894-spec': 'gbt-18894-interpretation',
+                                        'system-functional-req': 'gbt-39784-interpretation'
+                                    };
+                                    const interpSlug = interpretationMap[reg.slug];
+                                    return interpSlug && (
+                                        <Link
+                                            to={`/blog/${interpSlug}`}
+                                            className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/20 flex items-center gap-1.5"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            💡 查看专家解读
+                                        </Link>
+                                    );
+                                })()}
+                                <div className="text-amber-500 font-bold flex items-center">
+                                    查看全文 <ExternalLink className="w-5 h-5 ml-2" />
+                                </div>
                             </div>
                         </Link>
                     ))}

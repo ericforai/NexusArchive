@@ -1,0 +1,821 @@
+{
+  "generatedAt": "2026-03-05T08:06:19.047Z",
+  "input": {
+    "playwrightJson": "/Users/user/nexusarchive/reports/self-check/20260305-160434/playwright.json",
+    "vitestJson": "/Users/user/nexusarchive/reports/self-check/20260305-160434/vitest.json"
+  },
+  "summary": {
+    "totalModules": 41,
+    "mappedModules": 41,
+    "uncoveredModules": 0,
+    "passed": 41,
+    "failed": 0,
+    "mappedNotRun": 0,
+    "uncovered": 0,
+    "skippedOnly": 0
+  },
+  "modules": [
+    {
+      "id": "component.admin",
+      "manifestPath": "src/components/admin/manifest.config.ts",
+      "tokens": [
+        "admin"
+      ],
+      "mappedTests": [
+        "src/__tests__/pages/admin/LegacyImportPage.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.archive",
+      "manifestPath": "src/components/archive/manifest.config.ts",
+      "tokens": [
+        "archive"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_archive.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.auth",
+      "manifestPath": "src/components/auth/manifest.config.ts",
+      "tokens": [
+        "auth"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_auth.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.common",
+      "manifestPath": "src/components/common/manifest.config.ts",
+      "tokens": [
+        "common"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_common.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.debug",
+      "manifestPath": "src/components/debug/manifest.config.ts",
+      "tokens": [
+        "debug"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "component.layout",
+      "manifestPath": "src/components/layout/manifest.config.ts",
+      "tokens": [
+        "layout"
+      ],
+      "mappedTests": [
+        "src/hooks/__tests__/useKanbanLayout.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.matching",
+      "manifestPath": "src/components/matching/manifest.config.ts",
+      "tokens": [
+        "matching"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_matching.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.modals",
+      "manifestPath": "src/components/modals/manifest.config.ts",
+      "tokens": [
+        "modals"
+      ],
+      "mappedTests": [
+        "src/components/modals/__tests__/BaseModal.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.operations",
+      "manifestPath": "src/components/operations/manifest.config.ts",
+      "tokens": [
+        "operations"
+      ],
+      "mappedTests": [
+        "src/components/operations/__tests__/BatchApprovalDialog.test.tsx",
+        "src/components/operations/__tests__/BatchOperationBar.test.tsx",
+        "src/components/operations/__tests__/BatchResultModal.test.tsx",
+        "src/components/operations/__tests__/useBatchSelection.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 112,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 4
+    },
+    {
+      "id": "component.org",
+      "manifestPath": "src/components/org/manifest.config.ts",
+      "tokens": [
+        "org"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_org.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.pages",
+      "manifestPath": "src/components/pages/manifest.config.ts",
+      "tokens": [],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_pages.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.panorama",
+      "manifestPath": "src/components/panorama/manifest.config.ts",
+      "tokens": [
+        "panorama"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_panorama.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.preview",
+      "manifestPath": "src/components/preview/manifest.config.ts",
+      "tokens": [
+        "preview"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_preview.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.scan",
+      "manifestPath": "src/components/scan/manifest.config.ts",
+      "tokens": [
+        "scan"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_scan.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.settings",
+      "manifestPath": "src/components/settings/manifest.config.ts",
+      "tokens": [
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_settings.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.table",
+      "manifestPath": "src/components/table/manifest.config.ts",
+      "tokens": [
+        "table"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx",
+        "src/__tests__/performance/BatchTable.performance.test.tsx",
+        "src/components/table/__tests__/TablePreviewAction.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 42,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 4
+    },
+    {
+      "id": "component.voucher",
+      "manifestPath": "src/components/voucher/manifest.config.ts",
+      "tokens": [
+        "voucher"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_voucher.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "component.watermark",
+      "manifestPath": "src/components/watermark/manifest.config.ts",
+      "tokens": [
+        "watermark"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/component_watermark.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.archives",
+      "manifestPath": "src/features/archives/manifest.config.ts",
+      "tokens": [
+        "archives"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/feature_archives.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.borrowing",
+      "manifestPath": "src/features/borrowing/manifest.config.ts",
+      "tokens": [
+        "borrowing"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/feature_borrowing.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.compliance",
+      "manifestPath": "src/features/compliance/manifest.config.ts",
+      "tokens": [
+        "compliance"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/feature_compliance.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.integration-settings",
+      "manifestPath": "src/components/settings/integration/manifest.config.ts",
+      "tokens": [
+        "integration",
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/feature_integration_settings.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "feature.settings",
+      "manifestPath": "src/features/settings/manifest.config.ts",
+      "tokens": [
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/feature_settings.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "nexusarchive.collection-batch",
+      "manifestPath": "nexusarchive-java/src/main/java/com/nexusarchive/collection/manifest.config.ts",
+      "tokens": [
+        "collection",
+        "batch"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx",
+        "src/__tests__/performance/BatchTable.performance.test.tsx",
+        "src/components/operations/__tests__/BatchApprovalDialog.test.tsx",
+        "src/components/operations/__tests__/BatchOperationBar.test.tsx",
+        "src/components/operations/__tests__/BatchResultModal.test.tsx",
+        "src/components/operations/__tests__/useBatchSelection.test.ts",
+        "src/components/pool-kanban/__tests__/BatchActionBar.test.tsx",
+        "src/hooks/__tests__/usePoolBatchAction.test.ts",
+        "src/pages/collection/__tests__/BatchUploadView.test.tsx",
+        "tests/playwright/api/batch_import_export_spec.ts",
+        "tests/playwright/api/batch_upload.spec.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 174,
+        "failed": 0,
+        "skipped": 13,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 11
+    },
+    {
+      "id": "page.admin",
+      "manifestPath": "src/pages/admin/manifest.config.ts",
+      "tokens": [
+        "admin"
+      ],
+      "mappedTests": [
+        "src/__tests__/pages/admin/LegacyImportPage.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.archives",
+      "manifestPath": "src/pages/archives/manifest.config.ts",
+      "tokens": [
+        "archives"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_archives.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.audit",
+      "manifestPath": "src/pages/audit/manifest.config.ts",
+      "tokens": [
+        "audit"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_audit.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.auth",
+      "manifestPath": "src/pages/Auth/manifest.config.ts",
+      "tokens": [
+        "auth"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_auth.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.collection",
+      "manifestPath": "src/pages/collection/manifest.config.ts",
+      "tokens": [
+        "collection"
+      ],
+      "mappedTests": [
+        "src/pages/collection/__tests__/BatchUploadView.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.debug",
+      "manifestPath": "src/pages/debug/manifest.config.ts",
+      "tokens": [
+        "debug"
+      ],
+      "mappedTests": [
+        "src/__tests__/debug/BatchTableImportDebug.test.tsx",
+        "src/__tests__/debug/BatchTableRenderDebug.test.tsx"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 2
+    },
+    {
+      "id": "page.demo",
+      "manifestPath": "src/pages/demo/manifest.config.ts",
+      "tokens": [
+        "demo"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_demo.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.matching",
+      "manifestPath": "src/pages/matching/manifest.config.ts",
+      "tokens": [
+        "matching"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_matching.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.operations",
+      "manifestPath": "src/pages/operations/manifest.config.ts",
+      "tokens": [
+        "operations"
+      ],
+      "mappedTests": [
+        "src/components/operations/__tests__/BatchApprovalDialog.test.tsx",
+        "src/components/operations/__tests__/BatchOperationBar.test.tsx",
+        "src/components/operations/__tests__/BatchResultModal.test.tsx",
+        "src/components/operations/__tests__/useBatchSelection.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 112,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 4
+    },
+    {
+      "id": "page.panorama",
+      "manifestPath": "src/pages/panorama/manifest.config.ts",
+      "tokens": [
+        "panorama"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_panorama.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.portal",
+      "manifestPath": "src/pages/portal/manifest.config.ts",
+      "tokens": [
+        "portal"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_portal.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.pre-archive",
+      "manifestPath": "src/pages/pre-archive/manifest.config.ts",
+      "tokens": [
+        "pre",
+        "archive"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_pre_archive.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.security",
+      "manifestPath": "src/pages/security/manifest.config.ts",
+      "tokens": [
+        "security"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_security.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.settings",
+      "manifestPath": "src/pages/settings/manifest.config.ts",
+      "tokens": [
+        "settings"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_settings.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.stats",
+      "manifestPath": "src/pages/stats/manifest.config.ts",
+      "tokens": [
+        "stats"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/page_stats.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "page.utilization",
+      "manifestPath": "src/pages/utilization/manifest.config.ts",
+      "tokens": [
+        "utilization"
+      ],
+      "mappedTests": [
+        "src/__tests__/pages/utilization/relationDrilldown.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    },
+    {
+      "id": "shared.utils",
+      "manifestPath": "src/utils/manifest.config.ts",
+      "tokens": [
+        "shared"
+      ],
+      "mappedTests": [
+        "src/__tests__/self-verify/modules/shared_utils.test.ts"
+      ],
+      "status": "passed",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "timedOut": 0,
+        "interrupted": 0
+      },
+      "runtimeStatusFiles": 1
+    }
+  ]
+}

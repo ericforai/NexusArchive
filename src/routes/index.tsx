@@ -24,6 +24,11 @@ const ProductWebsite = lazy(() => import('../pages/product-website'));
 // 内容集群 (SEO 增长重构)
 const BlogIndex = lazy(() => import('../pages/product-website/blog/index'));
 const DAT94Interpretation = lazy(() => import('../pages/product-website/blog/DAT94Interpretation'));
+const DAT92Interpretation = lazy(() => import('../pages/product-website/blog/DAT92Interpretation'));
+const DAT95Interpretation = lazy(() => import('../pages/product-website/blog/DAT95Interpretation'));
+const ERP104Interpretation = lazy(() => import('../pages/product-website/blog/ERP104Interpretation'));
+const GBT18894Interpretation = lazy(() => import('../pages/product-website/blog/GBT18894Interpretation'));
+const GBT39784Interpretation = lazy(() => import('../pages/product-website/blog/GBT39784Interpretation'));
 const FinanceSolution = lazy(() => import('../pages/product-website/solutions/FinanceSolution'));
 // 法律法规库 (SEO 增长重构 - Regulatory Hub)
 const RegulationsIndex = lazy(() => import('../pages/product-website/regulations/index'));
@@ -186,7 +191,12 @@ export const routes: RouteObject[] = [
 
     // ========== 内容集群 (SEO Hub-Cluster) ==========
     { path: '/blog', element: withSuspense(BlogIndex), handle: { title: '知识库中心 - DigiVoucher' } },
-    { path: '/blog/dat-94-2022-interpretation', element: withSuspense(DAT94Interpretation), handle: { title: '标准解读: DA/T 94-2022 | DigiVoucher' } },
+    { path: '/blog/dat-94-2022-interpretation', element: withSuspense(DAT94Interpretation), handle: { title: '标准解读: DA/T 94-2022 会计档案管理规范 | DigiVoucher' } },
+    { path: '/blog/dat-92-interpretation', element: withSuspense(DAT92Interpretation), handle: { title: '标准解读: DA/T 92-2022 电子档案单套制 | DigiVoucher' } },
+    { path: '/blog/dat-95-interpretation', element: withSuspense(DAT95Interpretation), handle: { title: '标准解读: DA/T 95-2022 电子会计凭证入账 | DigiVoucher' } },
+    { path: '/blog/dat-104-interpretation', element: withSuspense(ERP104Interpretation), handle: { title: '标准解读: DA/T 104-2024 ERP归档接口规范 | DigiVoucher' } },
+    { path: '/blog/gbt-18894-interpretation', element: withSuspense(GBT18894Interpretation), handle: { title: '标准解读: GB/T 18894 电子档案管理基本要求 | DigiVoucher' } },
+    { path: '/blog/gbt-39784-interpretation', element: withSuspense(GBT39784Interpretation), handle: { title: '标准解读: GB/T 39784 电子档案系统工程要求 | DigiVoucher' } },
     { path: '/solutions/finance', element: withSuspense(FinanceSolution), handle: { title: '金融行业电子档案方案 | DigiVoucher' } },
     { path: '/regulations', element: withSuspense(RegulationsIndex), handle: { title: '电子会计档案法律法规库 | DigiVoucher' } },
     { path: '/regulations/erp-archive-spec', element: withSuspense(ERPArchiveSpec), handle: { title: 'DA/T 104-2024 ERP系统归档规范 | DigiVoucher' } },
