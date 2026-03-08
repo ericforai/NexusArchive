@@ -30,6 +30,8 @@ const ERPArchiveSpec = lazy(() => import('../pages/product-website/regulations/E
 const DAT94Spec = lazy(() => import('../pages/product-website/regulations/DAT94Spec'));
 const DAT95Spec = lazy(() => import('../pages/product-website/regulations/DAT95Spec'));
 const SystemFunctionalReq = lazy(() => import('../pages/product-website/regulations/SystemFunctionalReq'));
+const DAT92Spec = lazy(() => import('../pages/product-website/regulations/DAT92Spec'));
+const GBT18894Spec = lazy(() => import('../pages/product-website/regulations/GBT18894Spec'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -185,6 +187,8 @@ export const routes: RouteObject[] = [
     { path: '/regulations/dat-94-spec', element: withSuspense(DAT94Spec), handle: { title: 'DA/T 94-2022 电子会计档案管理规范 | DigiVoucher' } },
     { path: '/regulations/dat-95-spec', element: withSuspense(DAT95Spec), handle: { title: 'DA/T 95-2022 财务报销技术规范 | DigiVoucher' } },
     { path: '/regulations/system-functional-req', element: withSuspense(SystemFunctionalReq), handle: { title: 'GB/T 39784 电子档案系统要求 | DigiVoucher' } },
+    { path: '/regulations/dat-92-spec', element: withSuspense(DAT92Spec), handle: { title: 'DA/T 92-2022 电子档案单套管理要求 | DigiVoucher' } },
+    { path: '/regulations/gbt-18894-spec', element: withSuspense(GBT18894Spec), handle: { title: 'GB/T 18894 电子档案管理规范 | DigiVoucher' } },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },
