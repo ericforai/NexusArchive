@@ -1,7 +1,6 @@
 import React from 'react';
 import { BlogLayout } from './BlogLayout';
 import { ArrowRightLeft, FileLock, Layers } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export const SingleSetImplementation: React.FC = () => {
     return (
@@ -61,9 +60,12 @@ export const SingleSetImplementation: React.FC = () => {
                         <p className="text-slate-400 text-sm">看看 DigiVoucher 的合规交付专家是如何为世界 500 强企业平稳裁剪纸电双轨制的。</p>
                     </div>
                     <div className="flex gap-4">
-                        <Link to="/solutions/finance" className="px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-colors whitespace-nowrap">
+                        <a
+                            href="tel:15317270756"
+                            className="px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-colors whitespace-nowrap"
+                        >
                             联系咨询专家
-                        </Link>
+                        </a>
                     </div>
                 </div>
 

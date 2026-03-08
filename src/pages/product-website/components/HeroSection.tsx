@@ -50,18 +50,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
           {HERO_SECTION.subtitle}
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-          {HERO_SECTION.buttons.map((btn, i) => (
+          {HERO_SECTION.buttons.map((btn, i) => btn.primary ? (
             <button
               key={i}
-              onClick={() => btn.primary && onNavigate('/system')}
-              className={`px-8 py-4 rounded-xl transition-all flex items-center justify-center ${btn.primary
-                  ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transform hover:scale-105'
-                  : 'bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-white backdrop-blur-sm'
-                }`}
+              onClick={() => onNavigate('/system')}
+              className="px-8 py-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transform hover:scale-105 transition-all flex items-center justify-center"
             >
               {btn.text}
-              {btn.primary && <ChevronRight className="w-5 h-5 ml-2" />}
+              <ChevronRight className="w-5 h-5 ml-2" />
             </button>
+          ) : (
+            <a
+              key={i}
+              href="tel:15317270756"
+              className="px-8 py-4 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-white backdrop-blur-sm transition-all flex items-center justify-center"
+            >
+              {btn.text}
+            </a>
           ))}
         </div>
       </div>

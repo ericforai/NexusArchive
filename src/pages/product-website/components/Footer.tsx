@@ -22,10 +22,13 @@ export const Footer: React.FC = () => {
               </a>
             ))}
           </nav>
-          <button className="mt-4 md:mt-0 px-6 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-full text-sm font-bold transition-all flex items-center gap-2">
+          <a
+            href="tel:15317270756"
+            className="mt-4 md:mt-0 px-6 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-full text-sm font-bold transition-all flex items-center gap-2"
+          >
             <Activity className="w-4 h-4" />
             立即咨询专家
-          </button>
+          </a>
         </div>
         <div className="text-center md:text-left text-xs text-slate-700">
           <p>© 2025 DigiVoucher. All rights reserved. | 沪ICP备2025125372号-4</p>
