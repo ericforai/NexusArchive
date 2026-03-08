@@ -83,6 +83,24 @@ class SignatureVerificationRecordServiceTest {
         assertEquals("triggerSource must not be blank", error.getMessage());
     }
 
+    @Test
+    void save_should_require_result_status() {
+        SignatureVerificationResult result = SignatureVerificationResult.builder()
+                .providerCode("pdfbox-bc")
+                .build();
+        ArchiveSignatureVerification verification = ArchiveSignatureVerification.builder()
+                .archiveId("archive-1")
+                .documentType(SignatureDocumentType.PDF)
+                .triggerSource("MANUAL")
+                .result(result)
+                .build();
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.save(verification));
+
+        assertEquals("result.status must not be null", error.getMessage());
+    }
+
     private ArchiveSignatureVerification sampleVerification() {
         SignatureVerificationResult result = SignatureVerificationResult.builder()
                 .status(SignatureVerificationStatus.PASSED)

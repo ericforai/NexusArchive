@@ -30,6 +30,9 @@ public class SignatureVerificationRecordService implements SignatureVerification
         if (verification.getResult() == null) {
             throw new IllegalArgumentException("result must not be null");
         }
+        if (verification.getResult().getStatus() == null) {
+            throw new IllegalArgumentException("result.status must not be null");
+        }
         return repository.save(verification);
     }
 
