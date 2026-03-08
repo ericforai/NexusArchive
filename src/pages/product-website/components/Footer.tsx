@@ -1,12 +1,26 @@
-// Input: 页脚链接数据
+// Input: 页脚链接数据、模态框回调
 // Output: 页脚组件
 // Pos: src/pages/product-website/components/Footer.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Shield, Activity } from 'lucide-react';
 import { FOOTER_LINKS } from '../data/sections';
+import { ConsultationModal } from './ConsultationModal';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onConsultClick?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onConsultClick }) => {
+  const [showModal, setShowModal] = useState(false);
+
+  const handleConsultClick = () => {
+    if (onConsultClick) {
+      onConsultClick();
+    } else {
+      setShowModal(true);
+    }
+  };
   return (
     <footer className="bg-[#050911] border-t border-slate-800 py-12">
       <div className="max-w-7xl mx-auto px-6">
@@ -22,18 +36,19 @@ export const Footer: React.FC = () => {
               </a>
             ))}
           </nav>
-          <a
-            href="tel:15317270756"
+          <button 
+            onClick={handleConsultClick}
             className="mt-4 md:mt-0 px-6 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-full text-sm font-bold transition-all flex items-center gap-2"
           >
             <Activity className="w-4 h-4" />
             立即咨询专家
-          </a>
+          </button>
         </div>
         <div className="text-center md:text-left text-xs text-slate-700">
           <p>© 2025 DigiVoucher. All rights reserved. | 沪ICP备2025125372号-4</p>
           <p className="mt-2">本系统符合《会计档案管理办法》及 DA/T 94-2022 标准要求。</p>
         </div>
+        <ConsultationModal isOpen={showModal} onClose={() => setShowModal(false)} />
       </div>
     </footer>
   );

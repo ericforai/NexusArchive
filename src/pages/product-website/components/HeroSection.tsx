@@ -1,10 +1,11 @@
 // Input: Hero 区域配置、路由跳转函数
-// Output: Hero 落地区域组件
+// Output: Hero 落地区域组件（含咨询模态框）
 // Pos: src/pages/product-website/components/HeroSection.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { HERO_SECTION } from '../data/sections';
+import { ConsultationModal } from './ConsultationModal';
 
 interface HeroSectionProps {
   onNavigate: (path: string) => void;
@@ -12,6 +13,7 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
   const BadgeIcon = HERO_SECTION.badge.icon;
+  const [showConsultModal, setShowConsultModal] = useState(false);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -50,29 +52,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
           {HERO_SECTION.subtitle}
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-          {HERO_SECTION.buttons.map((btn, i) => btn.primary ? (
+          {HERO_SECTION.buttons.map((btn, i) => (
             <button
               key={i}
-              onClick={() => onNavigate('/system')}
-              className="px-8 py-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transform hover:scale-105 transition-all flex items-center justify-center"
+              onClick={() => btn.primary ? onNavigate('/system') : setShowConsultModal(true)}
+              className={`px-8 py-4 rounded-xl transition-all flex items-center justify-center ${btn.primary
+                  ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transform hover:scale-105'
+                  : 'bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-white backdrop-blur-sm'
+                }`}
             >
               {btn.text}
-              <ChevronRight className="w-5 h-5 ml-2" />
+              {btn.primary && <ChevronRight className="w-5 h-5 ml-2" />}
             </button>
-          ) : (
-            <a
-              key={i}
-              href="tel:15317270756"
-              className="px-8 py-4 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-white backdrop-blur-sm transition-all flex items-center justify-center"
-            >
-              {btn.text}
-            </a>
           ))}
         </div>
       </div>
 
       {/* Animated Stream (Abstract Representation) */}
       <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0B1120] to-transparent z-20"></div>
+
+      {/* Consultation Modal */}
+      <ConsultationModal isOpen={showConsultModal} onClose={() => setShowConsultModal(false)} />
     </section>
   );
 };
