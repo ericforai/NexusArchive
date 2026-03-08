@@ -132,6 +132,20 @@ class PdfSignatureVerificationServiceTest {
         assertThat(result.getMessage()).contains("覆盖");
     }
 
+    @Test
+    void verify_pdf_with_multiple_incremental_signatures_returns_valid() throws Exception {
+        SignedPdfFixture firstSignature = createSignedPdf("multi-signed-pdf");
+        SignedPdfFixture secondSignature = appendSignature(firstSignature.pdfBytes(), "Second Signer");
+
+        var result = service.verify(secondSignature.pdfBytes());
+
+        assertThat(result.getStatus()).isEqualTo(PdfSignatureVerificationStatus.VALID);
+        assertThat(result.getSigned()).isTrue();
+        assertThat(result.getSignatureCount()).isEqualTo(2);
+        assertThat(result.getSignerName()).isNotBlank();
+        assertThat(result.getMessage()).contains("验证通过");
+    }
+
     private byte[] createUnsignedPdf(String text) throws IOException {
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -171,6 +185,29 @@ class PdfSignatureVerificationServiceTest {
             signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
             signature.setName("Test Signer");
             signature.setReason("test-signature");
+            signature.setSignDate(signDate);
+
+            document.addSignature(signature,
+                    content -> signCms(content, keyPair.getPrivate(), certificate, signDate.getTime()));
+            document.saveIncremental(outputStream);
+            return new SignedPdfFixture(outputStream.toByteArray(), certificate);
+        }
+    }
+
+    private SignedPdfFixture appendSignature(byte[] existingPdfBytes, String signerName) throws Exception {
+        KeyPair keyPair = generateKeyPair();
+        Date notBefore = new Date(System.currentTimeMillis() - 60_000L);
+        Date notAfter = new Date(System.currentTimeMillis() + 86_400_000L);
+        X509Certificate certificate = generateCertificate(keyPair, notBefore, notAfter);
+        Calendar signDate = Calendar.getInstance();
+
+        try (PDDocument document = PDDocument.load(existingPdfBytes);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            signature.setName(signerName);
+            signature.setReason("incremental-signature");
             signature.setSignDate(signDate);
 
             document.addSignature(signature,

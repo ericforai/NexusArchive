@@ -80,8 +80,15 @@ public class PdfBoxPdfSignatureVerificationService implements PdfSignatureVerifi
 
             SignatureInspection firstValid = null;
             SignatureInspection firstUnknown = null;
+            int latestCoveredLength = signatures.stream()
+                    .map(PDSignature::getByteRange)
+                    .filter(byteRange -> byteRange != null && byteRange.length >= 4)
+                    .mapToInt(this::coveredLength)
+                    .max()
+                    .orElse(pdfBytes.length);
             for (PDSignature signature : signatures) {
-                SignatureInspection inspection = inspect(signature, pdfBytes);
+                boolean requiresWholeDocumentCoverage = coveredLength(signature.getByteRange()) == latestCoveredLength;
+                SignatureInspection inspection = inspect(signature, pdfBytes, requiresWholeDocumentCoverage);
                 if (inspection.status() == PdfSignatureVerificationStatus.INVALID) {
                     return toInvalidResult(inspection, signatures.size());
                 }
@@ -108,7 +115,7 @@ public class PdfBoxPdfSignatureVerificationService implements PdfSignatureVerifi
         }
     }
 
-    private SignatureInspection inspect(PDSignature signature, byte[] pdfBytes) {
+    private SignatureInspection inspect(PDSignature signature, byte[] pdfBytes, boolean requiresWholeDocumentCoverage) {
         LocalDateTime signTime = toLocalDateTime(signature.getSignDate());
         String fallbackSignerName = signature.getName();
         String fallbackAlgorithm = signature.getSubFilter();
@@ -124,7 +131,7 @@ public class PdfBoxPdfSignatureVerificationService implements PdfSignatureVerifi
                     signTime);
         }
 
-        if (!coversWholeDocument(byteRange, pdfBytes.length)) {
+        if (requiresWholeDocumentCoverage && !coversWholeDocument(byteRange, pdfBytes.length)) {
             return SignatureInspection.invalid(
                     "PDF 签名未覆盖整个文档",
                     fallbackSignerName,
@@ -259,6 +266,17 @@ public class PdfBoxPdfSignatureVerificationService implements PdfSignatureVerifi
                     fallbackAlgorithm,
                     signTime);
         }
+    }
+
+    private int coveredLength(int[] byteRange) {
+        if (byteRange == null || byteRange.length < 4) {
+            return -1;
+        }
+        long coveredLength = (long) byteRange[2] + byteRange[3];
+        if (coveredLength > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        return (int) coveredLength;
     }
 
     private boolean coversWholeDocument(int[] byteRange, int pdfLength) {
