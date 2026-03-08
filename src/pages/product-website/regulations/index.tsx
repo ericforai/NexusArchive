@@ -90,10 +90,10 @@ export const RegulationsIndex: React.FC = () => {
 
                 <section className="grid grid-cols-1 gap-6">
                     {REG_LIST.map((reg, i) => (
-                        <Link
+                        <div
                             key={i}
-                            to={`/regulations/${reg.slug}`}
-                            className="group flex flex-col md:flex-row md:items-center justify-between p-8 bg-slate-900/50 border border-slate-800 rounded-3xl hover:border-amber-500/50 transition-all"
+                            className="group flex flex-col md:flex-row md:items-center justify-between p-8 bg-slate-900/50 border border-slate-800 rounded-3xl hover:border-amber-500/50 transition-all cursor-pointer"
+                            onClick={() => window.location.href = `/regulations/${reg.slug}`}
                         >
                             <div className="flex-1 pr-8">
                                 <div className="flex items-center gap-3 mb-4">
@@ -121,20 +121,22 @@ export const RegulationsIndex: React.FC = () => {
                                     };
                                     const interpSlug = interpretationMap[reg.slug];
                                     return interpSlug && (
-                                        <Link
-                                            to={`/blog/${interpSlug}`}
-                                            className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/20 flex items-center gap-1.5"
-                                            onClick={(e) => e.stopPropagation()}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.location.href = `/blog/${interpSlug}`;
+                                            }}
+                                            className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 border border-cyan-500/20 flex items-center gap-1.5 transition-all"
                                         >
-                                            💡 查看专家解读
-                                        </Link>
+                                            💡 查看专家深度解读
+                                        </button>
                                     );
                                 })()}
                                 <div className="text-amber-500 font-bold flex items-center">
                                     查看全文 <ExternalLink className="w-5 h-5 ml-2" />
                                 </div>
                             </div>
-                        </Link>
+                        </div>
                     ))}
                 </section>
 

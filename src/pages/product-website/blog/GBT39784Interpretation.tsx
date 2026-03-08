@@ -4,44 +4,71 @@ import { BlogLayout } from './BlogLayout';
 export const GBT39784Interpretation: React.FC = () => {
     return (
         <BlogLayout
-            title="深入理解 GB/T 39784：电子档案管理系统的功能架构与安全基准"
-            category="国标解读"
+            title="深入理解 GB/T 39784：电子档案管理系统的“合规金标准”"
+            category="专家会诊"
             publishDate="2026-03-08"
         >
-            <section className="space-y-6">
-                <p className="text-lg leading-relaxed mb-8">
-                    <strong>GB/T 39784-2021《电子档案管理系统通用功能要求》</strong>是衡量一个档案软件“好不好用”的核心量目，
-                    更是系统通过合规性审计的最终考卷。
-                </p>
-
-                <h2 className="text-2xl font-bold text-white mt-12 mb-6">1. 核心功能：三员管理与权限隔离</h2>
-                <p className="leading-relaxed text-slate-400">
-                    规范明确了系统必须具备系统管理员、审计员和安全管理员的“三权分立”。
-                    DigiVoucher 严格遵循此原则，确保最高权限者也无法在无审计的情况下删除档案数据。
-                </p>
-
-                <h2 className="text-2xl font-bold text-white mt-12 mb-6">2. 全覆盖的审计日志逻辑</h2>
-                <p className="leading-relaxed text-slate-400">
-                    任何对此份标准有深入研究的人都会发现，国标对审计粒度要求极高。
-                    DigiVoucher 记录包括查看、打印、下载在内的 100% 用户操作日志，并采用 HMAC 算法对日志进行防篡改处理。
-                </p>
-
-                <div className="bg-red-500/10 border-l-4 border-red-500 p-6 my-10 rounded-r-xl">
-                    <h4 className="font-bold text-white mb-2">⚠️ 安全警告</h4>
-                    <p className="text-slate-400 text-sm">
-                        未适配 GB/T 39784 的档案系统在面对国资委、审计署的数字化审计时，将面临极高的合规风险。
-                    </p>
+            <section className="space-y-8">
+                <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-3xl mb-12">
+                    <h3 className="text-xl font-bold text-red-500 mb-6 flex items-center">
+                        <span className="w-1.5 h-6 bg-red-500 mr-3 rounded-full"></span>
+                        合规专家组安全通告
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                            <h4 className="font-bold text-white text-sm">🛡️ 安全专家：</h4>
+                            <p className="text-slate-400 text-xs leading-relaxed">必须严格落地“三员管理”模型（系统员、安全员、审计员），任何超级管理员权限的滥用都将导致系统合规性失效。</p>
+                        </div>
+                        <div className="space-y-2">
+                            <h4 className="font-bold text-white text-sm">⚖️ 审计专家：</h4>
+                            <p className="text-slate-400 text-xs leading-relaxed">审计日志必须具备不可篡改性，应采用 HMAC 或区块链技术对日志链进行加固。</p>
+                        </div>
+                    </div>
                 </div>
 
-                <h2 className="text-2xl font-bold text-white mt-12 mb-6">结论</h2>
-                <p className="leading-relaxed text-slate-400 italic">
-                    DigiVoucher 基于 GB/T 39784 框架构建，不仅是工具，更是您的合规保障屏障。
+                <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">1. 三权分立：从理论到 DigiVoucher 的实操</h2>
+                <p className="leading-relaxed text-slate-300">
+                    GB/T 39784-2021 定义了合格系统的“职能底座”。在 DigiVoucher 中，我们不仅仅是创建了三个角色，而是通过<strong>内核级拦截</strong>实现了权限隔离：
+                </p>
+                <ul className="list-disc pl-6 space-y-4 text-slate-400">
+                    <li><strong className="text-white">系统管理员：</strong> 仅负责配置服务器参数，无权查看任何业务档案内容。</li>
+                    <li><strong className="text-white">审计员：</strong> 拥有“上帝视角”监控所有人的操作，但无法修改任何一条系统配置。</li>
+                    <li><strong className="text-white">档案业务员：</strong> 仅能在被授权的范围内进行归档与利用。</li>
+                </ul>
+
+                <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">2. 审计日志的“法律防线”</h2>
+                <p className="leading-relaxed text-slate-300">
+                    当面临国家审计时，系统日志是唯一的判据。GB/T 39784 要求对敏感操作（导出、打印、解密）进行 100% 记录。
+                    DigiVoucher 引入了<strong>审计链技术</strong>：每一条日志都包含上一条日志的唯一摘要值，形成有序链条，任何中间删除逻辑都会触发全局报警。
                 </p>
 
-                <div className="mt-12 p-8 border-2 border-slate-800 rounded-3xl text-center">
-                    <h3 className="text-xl font-bold text-white mb-4">查看系统的安全审核机制</h3>
-                    <a href="/regulations/system-functional-req" className="text-cyan-500 font-bold hover:underline">
-                        功能要求原文对比 →
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10">
+                    <div className="p-6 bg-red-500/5 rounded-2xl border border-red-500/20">
+                        <h4 className="text-white font-bold mb-2">等保 2.0</h4>
+                        <p className="text-xs text-slate-400 text-center">深度适配三级要求</p>
+                    </div>
+                    <div className="p-6 bg-cyan-500/5 rounded-2xl border border-cyan-500/20">
+                        <h4 className="text-white font-bold mb-2">日志加固</h4>
+                        <p className="text-xs text-slate-400 text-center">HMAC-SHA256 算法</p>
+                    </div>
+                    <div className="p-6 bg-green-500/5 rounded-2xl border border-green-500/20">
+                        <h4 className="text-white font-bold mb-2">多端审计</h4>
+                        <p className="text-xs text-slate-400 text-center">含移动端操作轨迹</p>
+                    </div>
+                </div>
+
+                <h2 className="text-3xl font-bold text-white border-b border-slate-800 pb-4">3. 总结</h2>
+                <p className="leading-relaxed text-slate-300 italic">
+                    如果您正面临系统等保验收或国家级档案局测评，GB/T 39784 的实操建议将是您最稳固的支撑。
+                </p>
+
+                <div className="flex flex-col md:flex-row items-center gap-6 mt-16 p-8 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-3xl">
+                    <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white mb-2">担心系统无法通过合规测评？</h3>
+                        <p className="text-slate-400 text-sm">下载我们的《GB/T 39784 合规技术对照表》，快速自检</p>
+                    </div>
+                    <a href="/regulations/system-functional-req" className="px-8 py-3 bg-slate-100 text-slate-900 font-bold rounded-xl hover:bg-white transition-colors text-center whitespace-nowrap">
+                        立即获取自检表 →
                     </a>
                 </div>
             </section>
