@@ -13,7 +13,7 @@
     "db:reset": "bash scripts/db-reset.sh",
     "verify:seq": "bash scripts/verify-sequence-check-is-called.sh",
     "deploy": "bash scripts/deploy.sh",
-    "build": "vite build",
+    "build": "vite build && cp dist/index.html dist/regulations/index.html",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
