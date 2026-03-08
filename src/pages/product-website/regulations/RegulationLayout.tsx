@@ -7,10 +7,13 @@ import { Navigation } from '../components/Navigation';
 import { Footer } from '../components/Footer';
 import { ChevronLeft, Scale } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SEO } from '../components/SEO';
 
 interface RegulationLayoutProps {
     children?: React.ReactNode;
     title: string;
+    description?: string;
+    keywords?: string;
     source?: string;
     effectiveDate?: string;
     category?: string;
@@ -18,10 +21,16 @@ interface RegulationLayoutProps {
 }
 
 export const RegulationLayout: React.FC<RegulationLayoutProps> = ({
-    children, title, source, effectiveDate, category, pdfUrl
+    children, title, description, keywords, source, effectiveDate, category, pdfUrl
 }) => {
     return (
         <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans">
+            <SEO
+                title={title}
+                description={description || `DigiVoucher 专业解读：${title}。本规范详细规定了电子会计档案的管理要求，助力企业合规实现单套制归档。`}
+                keywords={keywords}
+                parentTitle="法律法规库"
+            />
             <Navigation scrolled={true} onNavigate={(path) => window.location.href = path} />
 
             <main className="max-w-6xl mx-auto px-6 pt-32 pb-20">

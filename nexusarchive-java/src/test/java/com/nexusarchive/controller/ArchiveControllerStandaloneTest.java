@@ -7,8 +7,8 @@ package com.nexusarchive.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.dto.mapper.DtoMapper;
-import com.nexusarchive.modules.archivecore.api.dto.ArchiveUpdateRequest;
-import com.nexusarchive.modules.archivecore.app.ArchiveFacade;
+import com.nexusarchive.entity.Archive;
+import com.nexusarchive.service.ArchiveService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ArchiveControllerStandaloneTest {
 
     @Mock
-    private ArchiveFacade archiveFacade;
+    private ArchiveService archiveService;
 
     @Mock
     private DtoMapper dtoMapper;
@@ -42,24 +42,29 @@ class ArchiveControllerStandaloneTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        mockMvc = MockMvcBuilders.standaloneSetup(new ArchiveController(archiveFacade, dtoMapper)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new ArchiveController(archiveService, dtoMapper)).build();
     }
 
     @Test
     void updateShouldAcceptPartialPayload() throws Exception {
         String archiveId = "arc-001";
-        ArchiveUpdateRequest request = new ArchiveUpdateRequest();
+        Archive request = new Archive();
+        request.setFondsNo("F001");
+        request.setArchiveCode("ARC-001");
         request.setTitle("Partial Update");
         request.setSummary("summary only");
         request.setStatus("PENDING_ARCHIVE");
+        request.setFiscalYear("2026");
+        request.setRetentionPeriod("10年");
+        request.setOrgName("财务部");
 
-        doNothing().when(archiveFacade).updateArchive(eq(archiveId), any(ArchiveUpdateRequest.class));
+        doNothing().when(archiveService).updateArchive(eq(archiveId), any(Archive.class));
 
         mockMvc.perform(put("/archives/{id}", archiveId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(archiveFacade).updateArchive(eq(archiveId), any(ArchiveUpdateRequest.class));
+        verify(archiveService).updateArchive(eq(archiveId), any(Archive.class));
     }
 }

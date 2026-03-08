@@ -4,10 +4,10 @@
 
 package com.nexusarchive.integration.yundun.service.impl;
 
-import com.dbappsecurity.aitrust.appSecSso.InvokeResult;
 import com.nexusarchive.exception.ErpSsoException;
 import com.nexusarchive.integration.yundun.config.YundunSdkProperties;
 import com.nexusarchive.integration.yundun.sdk.YundunSdkFacade;
+import com.nexusarchive.integration.yundun.sdk.YundunSdkResult;
 import com.nexusarchive.integration.yundun.service.YundunTokenService;
 import com.nexusarchive.service.sso.SsoErrorCodes;
 import lombok.RequiredArgsConstructor;
@@ -33,14 +33,14 @@ public class YundunTokenServiceImpl implements YundunTokenService {
         }
 
         try {
-            InvokeResult result = sdkFacade.applyAppToken(privateKey, properties.getIdpBaseUrl());
-            if (result == null || result.getCode() != 0) {
-                String msg = result == null ? "SDK 未返回结果" : result.getMsg();
+            YundunSdkResult result = sdkFacade.applyAppToken(privateKey, properties.getIdpBaseUrl());
+            if (result == null || result.code() != 0) {
+                String msg = result == null ? "SDK 未返回结果" : result.message();
                 throw new ErpSsoException(SsoErrorCodes.YUNDUN_SDK_TOKEN_FETCH_FAILED,
                         "获取云盾 appToken 失败: " + StringUtils.defaultIfBlank(msg, "unknown error"), 502);
             }
 
-            String token = StringUtils.trimToEmpty(String.valueOf(result.getContent()));
+            String token = StringUtils.trimToEmpty(String.valueOf(result.content()));
             if (StringUtils.isBlank(token) || "null".equalsIgnoreCase(token)) {
                 throw new ErpSsoException(SsoErrorCodes.YUNDUN_SDK_TOKEN_FETCH_FAILED, "云盾 SDK 返回空 token", 502);
             }

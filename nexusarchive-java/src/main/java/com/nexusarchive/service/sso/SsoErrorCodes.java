@@ -22,4 +22,12 @@ public final class SsoErrorCodes {
     public static final String SSO_TOKEN_INVALID = "SSO_TOKEN_INVALID";
     public static final String SSO_TOKEN_EXPIRED = "SSO_TOKEN_EXPIRED";
     public static final String SSO_TOKEN_ALREADY_USED = "SSO_TOKEN_ALREADY_USED";
+    public static final String YUNDUN_SDK_DISABLED = "YUNDUN_SDK_DISABLED";
+    public static final String YUNDUN_SDK_CONFIG_INVALID = "YUNDUN_SDK_CONFIG_INVALID";
+    public static final String YUNDUN_SDK_TOKEN_FETCH_FAILED = "YUNDUN_SDK_TOKEN_FETCH_FAILED";
+    public static final String YUNDUN_OIDC_DISABLED = "YUNDUN_OIDC_DISABLED";
+    public static final String YUNDUN_OIDC_CONFIG_INVALID = "YUNDUN_OIDC_CONFIG_INVALID";
+    public static final String YUNDUN_OIDC_TOKEN_EXCHANGE_FAILED = "YUNDUN_OIDC_TOKEN_EXCHANGE_FAILED";
+    public static final String YUNDUN_OIDC_USERINFO_FETCH_FAILED = "YUNDUN_OIDC_USERINFO_FETCH_FAILED";
+    public static final String YUNDUN_OIDC_USERINFO_INVALID = "YUNDUN_OIDC_USERINFO_INVALID";
 }

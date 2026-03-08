@@ -3,10 +3,11 @@
 // Pos: src/pages/product-website/regulations/index.tsx
 
 import React from 'react';
+import { Gavel, Search, ExternalLink, ShieldCheck } from 'lucide-react';
+import { SEO } from '../components/SEO';
 import { Navigation } from '../components/Navigation';
 import { Footer } from '../components/Footer';
 import { Link } from 'react-router-dom';
-import { Gavel, Search, ExternalLink, ShieldCheck } from 'lucide-react';
 
 const REG_LIST = [
     {
@@ -56,6 +57,11 @@ const REG_LIST = [
 export const RegulationsIndex: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans">
+            <SEO
+                title="电子会计档案法律法规库"
+                description="权威收录国家档案局、财政部颁布的核心电子会计档案标准，包括 DA/T 94, DA/T 104, GB/T 39784 等。DigiVoucher 为您提供专业的合规解读与在线 PDF 预览。"
+                keywords="电子会计档案法规, DA/T 94-2022, 电子凭证归档标准, 国家档案局规范, 数字化转型合规"
+            />
             <Navigation scrolled={true} onNavigate={(path) => window.location.href = path} />
 
             <main className="max-w-7xl mx-auto px-6 pt-32 pb-20">

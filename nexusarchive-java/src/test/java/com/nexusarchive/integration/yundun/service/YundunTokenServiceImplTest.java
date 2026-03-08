@@ -1,9 +1,9 @@
 package com.nexusarchive.integration.yundun.service;
 
-import com.dbappsecurity.aitrust.appSecSso.InvokeResult;
 import com.nexusarchive.exception.ErpSsoException;
 import com.nexusarchive.integration.yundun.config.YundunSdkProperties;
 import com.nexusarchive.integration.yundun.sdk.YundunSdkFacade;
+import com.nexusarchive.integration.yundun.sdk.YundunSdkResult;
 import com.nexusarchive.integration.yundun.service.impl.YundunTokenServiceImpl;
 import com.nexusarchive.service.sso.SsoErrorCodes;
 import org.junit.jupiter.api.DisplayName;
@@ -63,9 +63,7 @@ class YundunTokenServiceImplTest {
         when(properties.getPrivateKey()).thenReturn("private-key");
         when(properties.getIdpBaseUrl()).thenReturn("https://idp.example.com");
 
-        InvokeResult fail = new InvokeResult();
-        fail.setCode(1);
-        fail.setMsg("Apply token fail");
+        YundunSdkResult fail = new YundunSdkResult(1, "Apply token fail", null);
         when(sdkFacade.applyAppToken(eq("private-key"), eq("https://idp.example.com"))).thenReturn(fail);
 
         ErpSsoException ex = assertThrows(ErpSsoException.class, () -> service.fetchAppToken());
@@ -79,9 +77,7 @@ class YundunTokenServiceImplTest {
         when(properties.getPrivateKey()).thenReturn("private-key");
         when(properties.getIdpBaseUrl()).thenReturn("https://idp.example.com");
 
-        InvokeResult success = new InvokeResult();
-        success.setCode(0);
-        success.setContent("token-value");
+        YundunSdkResult success = new YundunSdkResult(0, "", "token-value");
         when(sdkFacade.applyAppToken(eq("private-key"), eq("https://idp.example.com"))).thenReturn(success);
 
         String token = service.fetchAppToken();
