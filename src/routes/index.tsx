@@ -187,41 +187,41 @@ export const routes: RouteObject[] = [
         errorElement: <RouteErrorBoundary />,
         children: [
             // 门户首页
-            { index: true, element: <Dashboard /> },
+            { index: true, element: <Dashboard />, handle: { title: '数字化管理门户' } },
 
             // 全景视图（支持可选参数）
-            { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView) },
+            { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView), handle: { title: '档案全景视图' } },
 
             // ========== 预归档库 ==========
             // PoolPage 作为容器，支持列表/看板双视图
-            { path: 'pre-archive', element: <PoolPage /> },
-            { path: 'pre-archive/pool', element: <PoolPage /> },
-            { path: 'pre-archive/pool/kanban', element: <PoolPage /> },  // 兼容旧路由
-            { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }) },
-            { path: 'pre-archive/ledgers', element: withSuspense(LedgersPreArchiveView) },
-            { path: 'pre-archive/reports', element: withSuspense(ReportsPreArchiveView) },
-            { path: 'pre-archive/other', element: withSuspense(OtherAccountingMaterialsView) },
-            { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView) },
-            { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" /> },
-            { path: 'pre-archive/abnormal', element: withSuspense(AbnormalDataView) },
+            { path: 'pre-archive', element: <PoolPage />, handle: { title: '预归档库' } },
+            { path: 'pre-archive/pool', element: <PoolPage />, handle: { title: '预归档库 - 全部' } },
+            { path: 'pre-archive/pool/kanban', element: <PoolPage />, handle: { title: '预归档库 - 看板' } },  // 兼容旧路由
+            { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }), handle: { title: '待处理单据池' } },
+            { path: 'pre-archive/ledgers', element: withSuspense(LedgersPreArchiveView), handle: { title: '账簿预归档' } },
+            { path: 'pre-archive/reports', element: withSuspense(ReportsPreArchiveView), handle: { title: '报表预归档' } },
+            { path: 'pre-archive/other', element: withSuspense(OtherAccountingMaterialsView), handle: { title: '其他材料预归档' } },
+            { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView), handle: { title: 'OCR 智能识别' } },
+            { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" />, handle: { title: '凭证单据挂接' } },
+            { path: 'pre-archive/abnormal', element: withSuspense(AbnormalDataView), handle: { title: '异常数据清洗' } },
 
             // ========== 资料收集 ==========
-            { path: 'collection', element: <ArchiveListPage routeConfig="collection" /> },
-            { path: 'collection/online', element: withSuspense(OnlineReceptionView) },
-            { path: 'collection/scan', element: withSuspense(OCRProcessingView) },
-            { path: 'collection/upload', element: withSuspense(BatchUploadView) },
+            { path: 'collection', element: <ArchiveListPage routeConfig="collection" />, handle: { title: '资料收集' } },
+            { path: 'collection/online', element: withSuspense(OnlineReceptionView), handle: { title: '单据在线接收' } },
+            { path: 'collection/scan', element: withSuspense(OCRProcessingView), handle: { title: '纸质扫描归档' } },
+            { path: 'collection/upload', element: withSuspense(BatchUploadView), handle: { title: '凭证批量上传' } },
             { path: 'scan/mobile/:sessionId', element: withSuspense(MobileUploadPage) },
 
             // ========== 档案管理 (Repository) ==========
-            { path: 'archive', element: <ArchiveListPage routeConfig="view" /> },
-            { path: 'archive/vouchers', element: <ArchiveListPage routeConfig="voucher" /> },
-            { path: 'archive/accounting-vouchers', element: <ArchiveListPage routeConfig="voucher" /> },
-            { path: 'archive/ledgers', element: <ArchiveListPage routeConfig="ledger" /> },
-            { path: 'archive/original-vouchers', element: withSuspense(OriginalVoucherListView) },
-            { path: 'archive/reports', element: <ArchiveListPage routeConfig="report" /> },
-            { path: 'archive/other', element: <ArchiveListPage routeConfig="other" /> },
-            { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView) },
-            { path: 'archives/:id', element: withSuspense(ArchiveDetailPage) },
+            { path: 'archive', element: <ArchiveListPage routeConfig="view" />, handle: { title: '档案中心' } },
+            { path: 'archive/vouchers', element: <ArchiveListPage routeConfig="voucher" />, handle: { title: '会计凭证中心' } },
+            { path: 'archive/accounting-vouchers', element: <ArchiveListPage routeConfig="voucher" />, handle: { title: '会计凭证' } },
+            { path: 'archive/ledgers', element: <ArchiveListPage routeConfig="ledger" />, handle: { title: '会计账簿' } },
+            { path: 'archive/original-vouchers', element: withSuspense(OriginalVoucherListView), handle: { title: '原始凭证' } },
+            { path: 'archive/reports', element: <ArchiveListPage routeConfig="report" />, handle: { title: '财务报告' } },
+            { path: 'archive/other', element: <ArchiveListPage routeConfig="other" />, handle: { title: '其他档案' } },
+            { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView), handle: { title: '合规性报告' } },
+            { path: 'archives/:id', element: withSuspense(ArchiveDetailPage), handle: { title: '档案详情预览' } },
 
             // ========== 档案作业 (Operations) ==========
             { path: 'operations', element: <ArchiveListPage routeConfig="view" /> }, // Fallback/Default

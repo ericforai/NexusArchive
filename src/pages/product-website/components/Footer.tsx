@@ -15,13 +15,13 @@ export const Footer: React.FC = () => {
             <Shield className="w-6 h-6 text-slate-600" />
             <span className="text-xl font-bold text-slate-500">DigiVoucher</span>
           </div>
-          <div className="flex gap-8 text-sm text-slate-500">
+          <nav className="flex gap-8 text-sm text-slate-500" aria-label="页脚导航">
             {FOOTER_LINKS.map((link, i) => (
-              <a key={i} href="#" className="hover:text-cyan-400 transition-colors">
+              <a key={i} href="#" className="hover:text-cyan-400 transition-colors" title={link}>
                 {link}
               </a>
             ))}
-          </div>
+          </nav>
           <button className="mt-4 md:mt-0 px-6 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-full text-sm font-bold transition-all flex items-center gap-2">
             <Activity className="w-4 h-4" />
             立即咨询专家

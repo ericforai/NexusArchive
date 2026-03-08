@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Input: 站点 URL 列表 -->
-<!-- Output: 站点地图 -->
-<!-- Pos: 前端 SEO 资源 -->
-<!-- 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.digivoucher.cn/</loc>
-    <lastmod>2025-12-03</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.digivoucher.cn/system/login</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

@@ -16,6 +16,8 @@ import { authApi } from '../api/auth';
 import { safeStorage } from '../utils/storage';
 import { Toaster } from 'react-hot-toast';
 import { useFondsStore } from '../store/useFondsStore';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useLocation, useMatches } from 'react-router-dom';
 
 // 加载占位符
 const LoadingSpinner = () => (
@@ -27,7 +29,15 @@ const LoadingSpinner = () => (
 export const SystemLayout: React.FC = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const navigate = useNavigate();
+    const matches = useMatches();
     const hasHydrated = useFondsStore(state => state._hasHydrated);
+
+    // 从 match record 中提取 handle.title
+    const currentMatch = matches[matches.length - 1];
+    const pageTitle = (currentMatch?.handle as any)?.title;
+
+    // 动态设置标题
+    useDocumentTitle(pageTitle);
 
     const handleLogout = () => {
         // Fire and forget logout request - don't let network hang stop the user

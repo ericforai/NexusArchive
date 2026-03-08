@@ -21,10 +21,12 @@ export const XinchuangPartnersSection: React.FC = () => {
             return (
               <div key={i} className="flex items-center gap-2 group cursor-default">
                 <div className="p-2 bg-slate-800 rounded-lg group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors">
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-300 group-hover:text-white transition-colors">{partner.name}</div>
+                  <div className="font-bold text-slate-300 group-hover:text-white transition-colors" aria-label={`合作伙伴: ${partner.name}`}>
+                    {partner.name}
+                  </div>
                   <div className="text-xs text-slate-600 group-hover:text-cyan-500/70 transition-colors">{partner.en}</div>
                 </div>
               </div>

@@ -1,9 +1,8 @@
-# Input: 搜索引擎爬虫规则
-# Output: robots 爬虫访问策略
-# Pos: 前端 SEO 资源
-# 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
-
+# DigiVoucher robots.txt
 User-agent: *
 Allow: /
+Allow: /system/login
+Disallow: /system/  # 保护内网业务路径不被索引
+Disallow: /api/     # 禁止爬取后端接口路径
 
 Sitemap: https://www.digivoucher.cn/sitemap.xml
