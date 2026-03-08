@@ -10,7 +10,7 @@ import { originalVoucherApi } from '../../api/originalVoucher';
 import { client } from '../../api/client';
 import { useAuthStore } from '../../store';
 import { FileViewer } from '../../components/common';
-import { OfdViewer } from '@/components/preview/OfdViewer';
+import { OfdViewer } from '@/components/preview';
 
 interface EvidencePreviewProps {
     voucherId: string;

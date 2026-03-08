@@ -34,7 +34,7 @@ vi.mock('@/store', () => ({
   useAuthStore: (selector: (state: { token: string }) => string) => selector({ token: 'token-123' }),
 }));
 
-vi.mock('@/components/preview/OfdViewer', () => ({
+vi.mock('@/components/preview', () => ({
   OfdViewer: ({ fileName }: { fileName?: string }) => (
     <div data-testid="ofd-viewer">ofd:{fileName}</div>
   ),

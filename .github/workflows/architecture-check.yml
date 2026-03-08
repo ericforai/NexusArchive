@@ -205,17 +205,19 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 依赖关系图" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "生成 integration 模块依赖图..." >> $GITHUB_STEP_SUMMARY
-
-          npm run check:arch:graph -- \
-            --focus src/components/settings/integration/ \
-            --output-type dot \
-            | dot -T svg -o integration-deps.svg
-
-          echo "依赖图已生成: \`integration-deps.svg\`" >> $GITHUB_STEP_SUMMARY
+          if command -v dot >/dev/null 2>&1; then
+            echo "生成 integration 模块依赖图..." >> $GITHUB_STEP_SUMMARY
+            npm run check:arch:graph -- \
+              --focus src/components/settings/integration/ \
+              --output-type dot \
+              | dot -T svg -o integration-deps.svg
+            echo "依赖图已生成: \`integration-deps.svg\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "跳过依赖图生成：当前 Runner 未安装 dot" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: 上传依赖图
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && hashFiles('integration-deps.svg') != ''
         uses: actions/upload-artifact@v4
         with:
           name: integration-dependencies
