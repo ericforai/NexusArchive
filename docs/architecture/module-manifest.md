@@ -2,7 +2,7 @@
 
 > 本清单是模块边界与依赖关系的单一事实来源（SSOT）。
 > **版本**: 2.3.0
-> **更新日期**: 2026-03-07
+> **更新日期**: 2026-03-08
 > **自动生成**: 通过 scripts/discover-frontend-modules.js
 
 ---
@@ -15,7 +15,7 @@
 | FE.COMPONENTS | 通用组件层 | src/components/GlobalSearch, src/components/Sidebar, src/components/TopBar, src/components/admin, src/components/archive, src/components/auth, src/components/borrowing, src/components/common, src/components/debug, src/components/dev, src/components/hooks, src/components/layout, src/components/matching, src/components/modals, src/components/operations, src/components/org, src/components/pages, src/components/panorama, src/components/pool-dashboard, src/components/pool-kanban, src/components/preview, src/components/relation-graph, src/components/scan, src/components/settings, src/components/table, src/components/voucher, src/components/watermark | 可复用 UI 组件 | 196 files | ✅ ACTIVE |
 | FE.STORE | 状态管理层 | src/store/__tests__ | Zustand 全局状态 | 8 files | ✅ ACTIVE |
 | FE.API | API 客户端层 | src/src/api | 后端 API 调用封装 | 48 files | ✅ ACTIVE |
-| FE.HOOKS | 自定义 Hooks | src/hooks/__tests__ | React 自定义 Hooks | 18 files | ✅ ACTIVE |
+| FE.HOOKS | 自定义 Hooks | src/hooks/__tests__ | React 自定义 Hooks | 19 files | ✅ ACTIVE |
 | FE.UTILS | 工具函数层 | src/src/utils | 通用工具函数 | 6 files | ✅ ACTIVE |
 
 ### 前端子模块详情
