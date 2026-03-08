@@ -20,6 +20,10 @@ import { ActivationPage } from '../pages/ActivationPage';
 
 // ProductWebsite 使用懒加载避免 React 实例问题
 const ProductWebsite = lazy(() => import('../pages/product-website'));
+// 内容集群 (SEO 增长重构)
+const BlogIndex = lazy(() => import('../pages/product-website/blog/index'));
+const DAT94Interpretation = lazy(() => import('../pages/product-website/blog/DAT94Interpretation'));
+const FinanceSolution = lazy(() => import('../pages/product-website/solutions/FinanceSolution'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -165,6 +169,11 @@ function withSuspense<P extends object>(
 export const routes: RouteObject[] = [
     // 根路径显示产品首页（公开访问）
     { path: '/', element: withSuspense(ProductWebsite) },
+
+    // ========== 内容集群 (SEO Hub-Cluster) ==========
+    { path: '/blog', element: withSuspense(BlogIndex), handle: { title: '知识库中心 - DigiVoucher' } },
+    { path: '/blog/dat-94-2022-interpretation', element: withSuspense(DAT94Interpretation), handle: { title: '标准解读: DA/T 94-2022 | DigiVoucher' } },
+    { path: '/solutions/finance', element: withSuspense(FinanceSolution), handle: { title: '金融行业电子档案方案 | DigiVoucher' } },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },
