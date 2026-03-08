@@ -10,6 +10,14 @@ import { ArrowRight, BookOpen, ShieldCheck, Zap } from 'lucide-react';
 
 const FEATURED_POSTS = [
     {
+        slug: 'electronic-accounting-archives-law-standard-interpretation',
+        title: '【合规白皮书】电子会计档案法律法规与国标深度解读',
+        excerpt: '系统解读最新会计法、档案法以及 GB/T 44555、DA/T 94 等核心标准，全面解析大型企业如何合规实现电子归档与长期保存。',
+        category: '深度指南',
+        date: '2026-03-08',
+        icon: ShieldCheck
+    },
+    {
         slug: 'dat-94-2022-interpretation',
         title: '深度解读 DA/T 94-2022：会计档案电子化归档的新标准',
         excerpt: '国家标准 DA/T 94-2022 的发布标志着会计档案管理进入了全数字化时代。本文将为您拆解核心合规要点。',

@@ -1,13 +1,9 @@
-// Input: 无
-// Output: 法律法规库列表页 (Regulations Hub)
-// Pos: src/pages/product-website/regulations/index.tsx
-
 import React from 'react';
 import { Gavel, Search, ExternalLink, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { SEO } from '../components/SEO';
 import { Navigation } from '../components/Navigation';
 import { Footer } from '../components/Footer';
-import { Link } from 'react-router-dom';
 
 const REG_LIST = [
     {
@@ -55,6 +51,8 @@ const REG_LIST = [
 ];
 
 export const RegulationsIndex: React.FC = () => {
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans">
             <SEO
@@ -62,7 +60,7 @@ export const RegulationsIndex: React.FC = () => {
                 description="权威收录国家档案局、财政部颁布的核心电子会计档案标准，包括 DA/T 94, DA/T 104, GB/T 39784 等。DigiVoucher 为您提供专业的合规解读与在线 PDF 预览。"
                 keywords="电子会计档案法规, DA/T 94-2022, 电子凭证归档标准, 国家档案局规范, 数字化转型合规"
             />
-            <Navigation scrolled={true} onNavigate={(path) => window.location.href = path} />
+            <Navigation scrolled={true} onNavigate={(path) => navigate(path)} />
 
             <main className="max-w-7xl mx-auto px-6 pt-32 pb-20">
                 <header className="mb-16">
@@ -93,7 +91,7 @@ export const RegulationsIndex: React.FC = () => {
                         <div
                             key={i}
                             className="group flex flex-col md:flex-row md:items-center justify-between p-8 bg-slate-900/50 border border-slate-800 rounded-3xl hover:border-amber-500/50 transition-all cursor-pointer"
-                            onClick={() => window.location.href = `/regulations/${reg.slug}`}
+                            onClick={() => navigate(`/regulations/${reg.slug}`)}
                         >
                             <div className="flex-1 pr-8">
                                 <div className="flex items-center gap-3 mb-4">
@@ -124,9 +122,9 @@ export const RegulationsIndex: React.FC = () => {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                window.location.href = `/blog/${interpSlug}`;
+                                                navigate(`/blog/${interpSlug}`);
                                             }}
-                                            className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 border border-cyan-500/20 flex items-center gap-1.5 transition-all"
+                                            className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 border border-cyan-500/20 flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.1)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.2)]"
                                         >
                                             💡 查看专家深度解读
                                         </button>
@@ -150,12 +148,12 @@ export const RegulationsIndex: React.FC = () => {
                             </p>
                         </div>
                     </div>
-                    <Link
-                        to="/solutions/finance"
-                        className="whitespace-nowrap px-8 py-3 bg-amber-500 text-slate-900 font-bold rounded-xl hover:bg-amber-400 transition-colors"
+                    <button
+                        onClick={() => navigate('/solutions/finance')}
+                        className="whitespace-nowrap px-8 py-3 bg-amber-500 text-slate-900 font-bold rounded-xl hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20"
                     >
                         下载合规白皮书
-                    </Link>
+                    </button>
                 </div>
             </main>
 

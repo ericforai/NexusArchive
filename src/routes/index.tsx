@@ -22,6 +22,8 @@ import { ActivationPage } from '../pages/ActivationPage';
 const ProductWebsite = lazy(() => import('../pages/product-website'));
 // 内容集群 (SEO 增长重构)
 const BlogIndex = lazy(() => import('../pages/product-website/blog/index'));
+const LawStandardInterpretation = lazy(() => import('../pages/product-website/blog/LawStandardInterpretation'));
+const SingleSetImplementation = lazy(() => import('../pages/product-website/blog/SingleSetImplementation'));
 const DAT94Interpretation = lazy(() => import('../pages/product-website/blog/DAT94Interpretation'));
 const DAT92Interpretation = lazy(() => import('../pages/product-website/blog/DAT92Interpretation'));
 const DAT95Interpretation = lazy(() => import('../pages/product-website/blog/DAT95Interpretation'));
@@ -186,6 +188,8 @@ export const routes: RouteObject[] = [
 
     // ========== 内容集群 (SEO Hub-Cluster) ==========
     { path: '/blog', element: withSuspense(BlogIndex), handle: { title: '知识库中心 - DigiVoucher' } },
+    { path: '/blog/electronic-accounting-archives-law-standard-interpretation', element: withSuspense(LawStandardInterpretation), handle: { title: '电子会计档案法律法规与国标解读 | DigiVoucher' } },
+    { path: '/blog/single-set-system-implementation', element: withSuspense(SingleSetImplementation), handle: { title: '企业单套制归档实施指南 | DigiVoucher' } },
     { path: '/blog/dat-94-2022-interpretation', element: withSuspense(DAT94Interpretation), handle: { title: '标准解读: DA/T 94-2022 会计档案管理规范 | DigiVoucher' } },
     { path: '/blog/dat-92-interpretation', element: withSuspense(DAT92Interpretation), handle: { title: '标准解读: DA/T 92-2022 电子档案单套制 | DigiVoucher' } },
     { path: '/blog/dat-95-interpretation', element: withSuspense(DAT95Interpretation), handle: { title: '标准解读: DA/T 95-2022 电子会计凭证入账 | DigiVoucher' } },
