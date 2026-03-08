@@ -24,6 +24,12 @@ const ProductWebsite = lazy(() => import('../pages/product-website'));
 const BlogIndex = lazy(() => import('../pages/product-website/blog/index'));
 const DAT94Interpretation = lazy(() => import('../pages/product-website/blog/DAT94Interpretation'));
 const FinanceSolution = lazy(() => import('../pages/product-website/solutions/FinanceSolution'));
+// 法律法规库 (SEO 增长重构 - Regulatory Hub)
+const RegulationsIndex = lazy(() => import('../pages/product-website/regulations/index'));
+const ERPArchiveSpec = lazy(() => import('../pages/product-website/regulations/ERPArchiveSpec'));
+const DAT94Spec = lazy(() => import('../pages/product-website/regulations/DAT94Spec'));
+const DAT95Spec = lazy(() => import('../pages/product-website/regulations/DAT95Spec'));
+const SystemFunctionalReq = lazy(() => import('../pages/product-website/regulations/SystemFunctionalReq'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
 import LoginPage from '../pages/Auth/Login';
@@ -174,6 +180,11 @@ export const routes: RouteObject[] = [
     { path: '/blog', element: withSuspense(BlogIndex), handle: { title: '知识库中心 - DigiVoucher' } },
     { path: '/blog/dat-94-2022-interpretation', element: withSuspense(DAT94Interpretation), handle: { title: '标准解读: DA/T 94-2022 | DigiVoucher' } },
     { path: '/solutions/finance', element: withSuspense(FinanceSolution), handle: { title: '金融行业电子档案方案 | DigiVoucher' } },
+    { path: '/regulations', element: withSuspense(RegulationsIndex), handle: { title: '电子会计档案法律法规库 | DigiVoucher' } },
+    { path: '/regulations/erp-archive-spec', element: withSuspense(ERPArchiveSpec), handle: { title: 'DA/T 104-2024 ERP系统归档规范 | DigiVoucher' } },
+    { path: '/regulations/dat-94-spec', element: withSuspense(DAT94Spec), handle: { title: 'DA/T 94-2022 电子会计档案管理规范 | DigiVoucher' } },
+    { path: '/regulations/dat-95-spec', element: withSuspense(DAT95Spec), handle: { title: 'DA/T 95-2022 财务报销技术规范 | DigiVoucher' } },
+    { path: '/regulations/system-functional-req', element: withSuspense(SystemFunctionalReq), handle: { title: 'GB/T 39784 电子档案系统要求 | DigiVoucher' } },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
     { path: '/system/login', element: <LoginPage /> },

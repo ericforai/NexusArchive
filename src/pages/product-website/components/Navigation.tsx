@@ -14,8 +14,8 @@ interface NavigationProps {
 export const Navigation: React.FC<NavigationProps> = ({ scrolled, onNavigate }) => {
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 border-b ${scrolled
-        ? 'bg-[#0B1120]/90 backdrop-blur border-slate-800 py-4'
-        : 'bg-transparent border-transparent py-6'
+      ? 'bg-[#0B1120]/90 backdrop-blur border-slate-800 py-4'
+      : 'bg-transparent border-transparent py-6'
       }`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         <div className="flex items-center gap-3">
@@ -30,6 +30,7 @@ export const Navigation: React.FC<NavigationProps> = ({ scrolled, onNavigate }) 
         <nav className="hidden md:flex items-center gap-10" aria-label="主导航">
           <a href="/" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">首页</a>
           <a href="/blog" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">知识库</a>
+          <a href="/regulations" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">法律法规</a>
           <a href="/solutions/finance" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">金融方案</a>
         </nav>
 
