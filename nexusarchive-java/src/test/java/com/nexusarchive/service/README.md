@@ -21,5 +21,6 @@
 | `PreArchiveSubmitServiceTest.java` | Java 类 | PreArchiveSubmitServiceTest 类 |
 | `erp/` | 目录入口 | ERP 服务测试子目录 |
 | `impl/` | 目录入口 | impl 子目录 |
+| `signature/` | 目录入口 | PDF 签名验证测试子目录 |
 | `OrgServiceTest.java` | Java 类 | OrgServiceTest 类 |
 | `VolumeServiceTest.java` | Java 类 | VolumeServiceTest 类 |
