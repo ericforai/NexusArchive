@@ -5,6 +5,7 @@ import { message } from 'antd';
 import { client } from '../../api/client';
 import { archivesApi } from '../../api/archives';
 import { SmartFilePreview } from '../preview';
+import { OfdViewer } from '../preview/OfdViewer';
 
 interface AttachmentDTO {
   id: string;
@@ -81,7 +82,8 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
   const selectedFile = useMemo(() => {
     return selectedIndex >= 0 ? files[selectedIndex] : null;
   }, [selectedIndex, files]);
-  const useSharedPreview = Boolean(archiveId);
+  const selectedFileType = selectedFile ? detectPreviewFileType(selectedFile) : 'unknown';
+  const useSharedPreview = Boolean(archiveId && files.length === 1 && selectedFileType !== 'ofd');
 
   const previewFiles = useMemo(() => {
     return files.map(file => ({
@@ -267,8 +269,7 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
               </div>
             ) : fileUrls[selectedFile.id] ? (
               <div className="w-full h-full flex flex-col relative overflow-hidden">
-                {selectedFile.type?.startsWith('image/') ||
-                  selectedFile.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                {selectedFileType === 'image' ? (
                   <div className="flex-1 flex items-center justify-center bg-slate-200 overflow-auto p-4">
                     <img
                       src={fileUrls[selectedFile.id]}
@@ -276,6 +277,13 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
                       className="max-w-full max-h-full object-contain shadow-2xl transition-transform hover:scale-105"
                     />
                   </div>
+                ) : selectedFileType === 'ofd' ? (
+                  <OfdViewer
+                    url={fileUrls[selectedFile.id]}
+                    fileName={selectedFile.fileName || selectedFile.name}
+                    downloadUrl={fileUrls[selectedFile.id]}
+                    className="h-full"
+                  />
                 ) : (
                   <iframe
                     src={fileUrls[selectedFile.id] + '#view=FitH'}

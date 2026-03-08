@@ -7,9 +7,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { FileText, Paperclip, ExternalLink, Download, AlertCircle } from 'lucide-react';
 import { attachmentsApi, AttachmentFile } from '../../api/attachments';
 import { originalVoucherApi } from '../../api/originalVoucher';
+import { client } from '../../api/client';
 import { useAuthStore } from '../../store';
 import { FileViewer } from '../../components/common';
-import { SmartFilePreview } from '@/components/preview';
+import { OfdViewer } from '@/components/preview/OfdViewer';
 
 interface EvidencePreviewProps {
     voucherId: string;
@@ -113,6 +114,94 @@ function isOfdAttachment(file: AttachmentFile): boolean {
     const fileName = file.fileName?.toLowerCase() || '';
     return fileType === 'ofd' || fileType.includes('application/ofd') || fileName.endsWith('.ofd');
 }
+
+const AuthenticatedOfdPreview: React.FC<{
+    fileUrl: string;
+    fileName: string;
+}> = ({ fileUrl, fileName }) => {
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const blobUrlRef = React.useRef<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        let nextBlobUrl: string | null = null;
+
+        const load = async () => {
+            if (!fileUrl) {
+                setError('缺少 OFD 文件地址');
+                return;
+            }
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await client.get(fileUrl, { responseType: 'blob' });
+                nextBlobUrl = URL.createObjectURL(response.data);
+                if (cancelled) {
+                    URL.revokeObjectURL(nextBlobUrl);
+                    return;
+                }
+                setBlobUrl(prev => {
+                    if (prev) {
+                        URL.revokeObjectURL(prev);
+                    }
+                    blobUrlRef.current = nextBlobUrl;
+                    return nextBlobUrl;
+                });
+            } catch (loadError: any) {
+                if (cancelled) {
+                    return;
+                }
+                setError(loadError?.message || 'OFD 文件加载失败');
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        load();
+
+        return () => {
+            cancelled = true;
+            if (nextBlobUrl) {
+                URL.revokeObjectURL(nextBlobUrl);
+            }
+        };
+    }, [fileUrl]);
+
+    useEffect(() => {
+        return () => {
+            if (blobUrlRef.current) {
+                URL.revokeObjectURL(blobUrlRef.current);
+                blobUrlRef.current = null;
+            }
+        };
+    }, []);
+
+    if (loading) {
+        return <div className="h-full flex items-center justify-center text-slate-500">正在加载 OFD...</div>;
+    }
+
+    if (error || !blobUrl) {
+        return (
+            <div className="h-full flex items-center justify-center text-slate-500">
+                {error || 'OFD 文件加载失败'}
+            </div>
+        );
+    }
+
+    return (
+        <OfdViewer
+            url={blobUrl}
+            fileName={fileName}
+            downloadUrl={blobUrl}
+            className="h-full"
+        />
+    );
+};
 
 export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, highlightField, onInteract, sourceType, simpleMode = false }) => {
     const [files, setFiles] = useState<AttachmentFile[]>([]);
@@ -369,26 +458,11 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 />
                             )}
 
-                            {/* [FIXED] OFD 走共享预览链路，PDF 保持现有高亮能力 */}
+                            {/* OFD 直接走真实下载链路，避免 archive/pool 预览接口带来的权限和多附件回归 */}
                             {isOfdAttachment(selectedFile) ? (
-                                <SmartFilePreview
-                                    isPool={true}
-                                    fileId={selectedFile.id}
+                                <AuthenticatedOfdPreview
+                                    fileUrl={getPreviewUrl(selectedFile)}
                                     fileName={selectedFile.fileName}
-                                    files={currentTabFiles.map(file => ({
-                                        id: file.id,
-                                        fileName: file.fileName,
-                                        fileType: file.fileType,
-                                    }))}
-                                    currentFileId={selectedFile.id}
-                                    onFileChange={(fileId) => {
-                                        const nextFile = currentTabFiles.find(file => file.id === fileId);
-                                        if (nextFile) {
-                                            setSelectedFile(nextFile);
-                                        }
-                                    }}
-                                    showFileNav={false}
-                                    className="h-full"
                                 />
                             ) : selectedFile.fileType?.toLowerCase() === 'pdf' ? (
                                 <iframe

@@ -42,6 +42,12 @@ vi.mock('../../preview', () => ({
   ),
 }));
 
+vi.mock('../../preview/OfdViewer', () => ({
+  OfdViewer: ({ fileName }: { fileName?: string }) => (
+    <div data-testid="ofd-viewer">ofd:{fileName}</div>
+  ),
+}));
+
 describe('OriginalDocumentPreview', () => {
   const createObjectURLSpy = vi.fn(() => 'blob:mock-url');
   const revokeObjectURLSpy = vi.fn();
@@ -87,7 +93,31 @@ describe('OriginalDocumentPreview', () => {
     expect(client.get).toHaveBeenCalledWith('/archive/files/download/f3', { responseType: 'blob' });
   });
 
-  it('在归档详情场景下应走共享预览链路并将 OFD 明确分流', () => {
+  it('在归档详情单文件非 OFD 场景下应走共享预览链路', () => {
+    render(
+      <OriginalDocumentPreview
+        archiveId="archive-001"
+        files={[
+          { id: 'pdf-1', fileName: 'invoice.pdf', fileUrl: '/archive/files/download/pdf-1', type: 'application/pdf' },
+        ]}
+      />,
+    );
+
+    const preview = screen.getByTestId('smart-file-preview');
+
+    expect(preview).toHaveAttribute('data-archive-id', 'archive-001');
+    expect(preview).toHaveAttribute('data-file-id', 'pdf-1');
+    expect(preview).toHaveAttribute('data-current-file-id', 'pdf-1');
+    expect(preview).toHaveAttribute('data-file-type', 'pdf');
+    expect(client.get).not.toHaveBeenCalled();
+  });
+
+  it('在归档详情 OFD 场景下应改走真实文件下载而不是共享预览', async () => {
+    vi.mocked(client.get).mockResolvedValue({
+      data: new Blob(['ofd'], { type: 'application/ofd' }),
+      headers: { 'content-type': 'application/ofd' },
+    } as any);
+
     render(
       <OriginalDocumentPreview
         archiveId="archive-001"
@@ -97,12 +127,8 @@ describe('OriginalDocumentPreview', () => {
       />,
     );
 
-    const preview = screen.getByTestId('smart-file-preview');
-
-    expect(preview).toHaveAttribute('data-archive-id', 'archive-001');
-    expect(preview).toHaveAttribute('data-file-id', 'ofd-1');
-    expect(preview).toHaveAttribute('data-current-file-id', 'ofd-1');
-    expect(preview).toHaveAttribute('data-file-type', 'ofd');
-    expect(client.get).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('smart-file-preview')).not.toBeInTheDocument();
+    expect(await screen.findByTestId('ofd-viewer')).toBeInTheDocument();
+    expect(client.get).toHaveBeenCalledWith('/archive/files/download/ofd-1', { responseType: 'blob' });
   });
 });

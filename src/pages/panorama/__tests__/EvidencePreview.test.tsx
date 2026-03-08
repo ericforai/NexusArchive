@@ -3,12 +3,13 @@
 // Pos: Panorama 页面测试
 
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EvidencePreview } from '../EvidencePreview';
 
-const { getByArchive, getOriginalVoucherFiles } = vi.hoisted(() => ({
+const { getByArchive, getOriginalVoucherFiles, get } = vi.hoisted(() => ({
   getByArchive: vi.fn(),
   getOriginalVoucherFiles: vi.fn(),
+  get: vi.fn(),
 }));
 
 vi.mock('@/api/attachments', () => ({
@@ -23,18 +24,35 @@ vi.mock('@/api/originalVoucher', () => ({
   },
 }));
 
+vi.mock('@/api/client', () => ({
+  client: {
+    get,
+  },
+}));
+
 vi.mock('@/store', () => ({
   useAuthStore: (selector: (state: { token: string }) => string) => selector({ token: 'token-123' }),
 }));
 
-vi.mock('@/components/preview', () => ({
-  SmartFilePreview: ({ fileId }: { fileId?: string }) => (
-    <div data-testid="smart-file-preview">preview:{fileId}</div>
+vi.mock('@/components/preview/OfdViewer', () => ({
+  OfdViewer: ({ fileName }: { fileName?: string }) => (
+    <div data-testid="ofd-viewer">ofd:{fileName}</div>
   ),
 }));
 
 describe('EvidencePreview', () => {
-  it('routes selected ofd attachment to the shared preview flow', async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:ofd-preview'),
+      revokeObjectURL: vi.fn(),
+    });
+    get.mockResolvedValue({
+      data: new Blob(['ofd'], { type: 'application/ofd' }),
+    });
+  });
+
+  it('loads archive ofd through the authenticated download flow', async () => {
     getByArchive.mockResolvedValue([
       {
         id: 'file-ofd',
@@ -52,6 +70,7 @@ describe('EvidencePreview', () => {
     render(<EvidencePreview voucherId="archive-1" sourceType="ARCHIVE" />);
 
     await screen.findByText('invoice.ofd');
-    expect(screen.getByTestId('smart-file-preview')).toBeInTheDocument();
+    expect(await screen.findByTestId('ofd-viewer')).toBeInTheDocument();
+    expect(get).toHaveBeenCalledWith('/api/archive/files/download/file-ofd', { responseType: 'blob' });
   });
 });
