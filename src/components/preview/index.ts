@@ -10,6 +10,8 @@ export type { ImageViewerProps } from './ImageViewer';
 
 export { PreviewToolbar } from './PreviewToolbar';
 export type { PreviewToolbarProps } from './PreviewToolbar';
+export { OfdViewer } from './OfdViewer';
+export type { OfdViewerProps } from './OfdViewer';
 
 // Smart 预览组件（使用 previewApi）
 export { SmartFilePreview } from './SmartFilePreview';

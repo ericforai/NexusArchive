@@ -10,6 +10,6 @@
 | --- | --- | --- |
 | `ArchivalPanoramaView.tsx` | React组件 | 档案全景主视图。 |
 | `ArchiveStructureTree.tsx` | React组件 | 案卷/文件结构树展示。 |
-| `EvidencePreview.tsx` | React组件 | 电子证据/附件预览组件，支持 PDF、OFD 及各类图片。 |
+| `EvidencePreview.tsx` | React组件 | 电子证据/附件预览组件；OFD 走共享预览链路，PDF 保持现有高亮预览。 |
 | `VoucherPlayer.tsx` | React组件 | 凭证播放器，用于连续查看关联的会计凭证。 |
 | `VoucherPreviewDrawer.tsx` | React组件 | 凭证预览侧边栏。 |

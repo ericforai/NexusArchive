@@ -4,6 +4,13 @@
 
 统一的文件预览组件，支持多种文件格式的预览。
 
+## 当前能力
+
+- PDF：分页查看、缩放、旋转
+- 图片：缩放、旋转
+- OFD：内置轻量解析与渲染，支持图片页与文本页
+- 降级：解析失败或浏览器不支持时显示明确错误并提供下载入口
+
 ## 问题修复
 
 **修复了 "Not Found" 预览错误：**
@@ -20,6 +27,7 @@
 - ✅ 统一调用 previewApi（权限 + 水印）
 - ✅ 支持多文件切换
 - ✅ 缩放、旋转
+- ✅ OFD 在线预览（轻量解析）
 - ✅ 友好错误处理 + 重试按钮
 - ✅ 自动下载功能
 
@@ -110,6 +118,10 @@ return <iframe src={blobUrl} />;
 ### PdfViewer & ImageViewer
 
 底层查看器，通常不需要直接使用，由 SmartFilePreview 自动选择。
+
+### OfdViewer
+
+OFD 专用查看器，基于仓库内轻量解析器实现，不依赖运行时新增 npm 包。
 
 ---
 
@@ -204,7 +216,7 @@ import { FilePreviewModal } from '@/components/preview';
 | 预归档库-凭证关联 | ❌ Not Found | ✅ 使用 SmartFilePreview |
 | 档案列表 → 详情 | ❌ Not Found | ✅ 使用 SmartFilePreview |
 | 记账凭证库 | ⚠️ 缺少预览按钮 | ✅ 添加 FilePreviewModal |
-| 全景视图 | ⚠️ 不稳定 | ✅ 使用 SmartFilePreview |
+| 全景视图 | ⚠️ OFD 缺少在线阅读 | ✅ OFD 分流到 SmartFilePreview |
 
 ---
 

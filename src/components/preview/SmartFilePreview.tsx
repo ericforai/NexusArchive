@@ -18,6 +18,7 @@ import {
 import { useFilePreview, UseFilePreviewParams } from './useFilePreview';
 import { PdfViewer } from './PdfViewer';
 import { ImageViewer } from './ImageViewer';
+import { OfdViewer } from './OfdViewer';
 
 export interface FileItem {
   id: string;
@@ -174,15 +175,27 @@ export function SmartFilePreview({
       );
     }
 
-    // OFD 或其他格式
+    if (fileType === 'ofd') {
+      return (
+        <OfdViewer
+          url={url}
+          fileName={fileName}
+          scale={scale}
+          rotation={rotation}
+          downloadUrl={url}
+        />
+      );
+    }
+
+    // 其他格式
     return (
       <div className="flex flex-col items-center justify-center h-full bg-slate-100">
         <FileText size={48} className="mb-4 text-slate-400" />
         <p className="text-slate-600 font-medium">
-          {fileType === 'ofd' ? 'OFD 电子凭证' : '文件预览'}
+          文件预览
         </p>
         <p className="text-sm text-slate-500 mt-2">
-          {fileType === 'ofd' ? '请下载后使用专业阅读器查看' : '此文件类型暂不支持在线预览'}
+          此文件类型暂不支持在线预览
         </p>
         {blobUrl && (
           <button
@@ -198,7 +211,10 @@ export function SmartFilePreview({
   };
 
   return (
-    <div className={`smart-file-preview relative bg-white dark:bg-slate-800 ${className}`}>
+    <div
+      data-testid="smart-file-preview"
+      className={`smart-file-preview relative bg-white dark:bg-slate-800 ${className}`}
+    >
       {/* 悬浮工具栏 */}
       {showToolbar && !loading && !error && (
         <div className="preview-toolbar absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">

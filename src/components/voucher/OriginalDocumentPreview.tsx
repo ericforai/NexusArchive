@@ -4,6 +4,8 @@ import { FileText, Download, AlertCircle } from 'lucide-react';
 import { message } from 'antd';
 import { client } from '../../api/client';
 import { archivesApi } from '../../api/archives';
+import { SmartFilePreview } from '../preview';
+import { OfdViewer } from '../preview/OfdViewer';
 
 interface AttachmentDTO {
   id: string;
@@ -16,6 +18,7 @@ interface AttachmentDTO {
 interface OriginalDocumentPreviewProps {
   files: AttachmentDTO[];
   defaultFileIndex?: number;
+  archiveId?: string;
 }
 
 const normalizePreviewUrl = (url?: string): string | undefined => {
@@ -40,9 +43,34 @@ const extractArchiveIdFromContentUrl = (url?: string): string | null => {
   return matched?.[1] || null;
 };
 
+const detectPreviewFileType = (file: AttachmentDTO): 'pdf' | 'image' | 'ofd' | 'unknown' => {
+  const normalizedType = file.type?.toLowerCase() || '';
+  const normalizedName = (file.fileName || file.name || '').toLowerCase();
+
+  if (normalizedType.includes('pdf') || normalizedName.endsWith('.pdf')) {
+    return 'pdf';
+  }
+  if (
+    normalizedType.startsWith('image/') ||
+    /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(normalizedName)
+  ) {
+    return 'image';
+  }
+  if (
+    normalizedType === 'ofd' ||
+    normalizedType.includes('application/ofd') ||
+    normalizedName.endsWith('.ofd')
+  ) {
+    return 'ofd';
+  }
+
+  return 'unknown';
+};
+
 export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = ({
   files,
   defaultFileIndex = 0,
+  archiveId,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(
     files.length > 0 ? Math.min(defaultFileIndex, files.length - 1) : -1
@@ -54,6 +82,16 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
   const selectedFile = useMemo(() => {
     return selectedIndex >= 0 ? files[selectedIndex] : null;
   }, [selectedIndex, files]);
+  const selectedFileType = selectedFile ? detectPreviewFileType(selectedFile) : 'unknown';
+  const useSharedPreview = Boolean(archiveId && files.length === 1 && selectedFileType !== 'ofd');
+
+  const previewFiles = useMemo(() => {
+    return files.map(file => ({
+      id: file.id,
+      fileName: file.fileName || file.name || file.id,
+      fileType: detectPreviewFileType(file),
+    }));
+  }, [files]);
 
   // 当外部文件列表切换（例如点击联查中的不同节点）时，重置当前选中文件
   useEffect(() => {
@@ -62,13 +100,14 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
 
   // 获取文件并创建 blob URL
   useEffect(() => {
+    if (useSharedPreview) return;
     files.forEach(file => {
       if (!fileUrls[file.id] && !loadingStates[file.id] && !errorStates[file.id]) {
         fetchFileWithAuth(file);
       }
     });
     // 依赖项：仅 files 变化时重新获取文件
-  }, [files]);
+  }, [errorStates, fileUrls, files, loadingStates, useSharedPreview]);
 
   const fetchFileWithAuth = async (file: AttachmentDTO) => {
     setLoadingStates(prev => ({ ...prev, [file.id]: true }));
@@ -153,6 +192,13 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
     }
   };
 
+  const handleSmartPreviewFileChange = (fileId: string) => {
+    const nextIndex = files.findIndex(file => file.id === fileId);
+    if (nextIndex >= 0) {
+      setSelectedIndex(nextIndex);
+    }
+  };
+
   // 如果没有文件
   if (files.length === 0) {
     return (
@@ -186,62 +232,88 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
       )}
 
       {/* PDF 预览区域 */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        {!selectedFile ? null : loadingStates[selectedFile.id] ? (
-          <div className="text-slate-500">加载中...</div>
-        ) : errorStates[selectedFile.id] ? (
-          <div className="flex flex-col items-center text-slate-400">
-            <AlertCircle size={48} className="mb-4 text-amber-400" />
-            <p>文件加载失败</p>
-            <button
-              onClick={() => {
-                setErrorStates(prev => ({ ...prev, [selectedFile.id]: false }));
-                fetchFileWithAuth(selectedFile);
-              }}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              重试
-            </button>
-          </div>
-        ) : fileUrls[selectedFile.id] ? (
-          <div className="w-full h-full flex flex-col relative overflow-hidden">
-            {selectedFile.type?.startsWith('image/') ||
-              selectedFile.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-              <div className="flex-1 flex items-center justify-center bg-slate-200 overflow-auto p-4">
-                <img
-                  src={fileUrls[selectedFile.id]}
-                  alt={selectedFile.fileName || selectedFile.name}
-                  className="max-w-full max-h-full object-contain shadow-2xl transition-transform hover:scale-105"
-                />
-              </div>
-            ) : (
-              <iframe
-                src={fileUrls[selectedFile.id] + '#view=FitH'}
-                title={selectedFile.fileName || selectedFile.name}
-                className="w-full h-full rounded border-0 bg-white shadow-lg"
+      <div className="flex-1 overflow-hidden">
+        {!selectedFile ? null : useSharedPreview ? (
+          <div className="h-full p-4">
+            <div className="h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <SmartFilePreview
+                key={`${archiveId}-${selectedFile.id}`}
+                archiveId={archiveId}
+                fileId={selectedFile.id}
+                fileName={selectedFile.fileName || selectedFile.name}
+                files={previewFiles}
+                currentFileId={selectedFile.id}
+                onFileChange={handleSmartPreviewFileChange}
+                showFileNav={false}
+                className="h-full"
               />
-            )}
-            {/* 浮动下载按钮 */}
-            <div className="absolute bottom-6 right-6">
-              <button
-                onClick={() => handleDownload(selectedFile)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-all"
-              >
-                <Download size={16} />
-                下载
-              </button>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center text-slate-400">
-            <FileText size={48} className="mb-4 opacity-20" />
-            <p>该文件无法预览</p>
-            <button
-              onClick={() => fetchFileWithAuth(selectedFile)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              下载文件
-            </button>
+          <div className="h-full flex items-center justify-center p-4 overflow-hidden">
+            {loadingStates[selectedFile.id] ? (
+              <div className="text-slate-500">加载中...</div>
+            ) : errorStates[selectedFile.id] ? (
+              <div className="flex flex-col items-center text-slate-400">
+                <AlertCircle size={48} className="mb-4 text-amber-400" />
+                <p>文件加载失败</p>
+                <button
+                  onClick={() => {
+                    setErrorStates(prev => ({ ...prev, [selectedFile.id]: false }));
+                    fetchFileWithAuth(selectedFile);
+                  }}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  重试
+                </button>
+              </div>
+            ) : fileUrls[selectedFile.id] ? (
+              <div className="w-full h-full flex flex-col relative overflow-hidden">
+                {selectedFileType === 'image' ? (
+                  <div className="flex-1 flex items-center justify-center bg-slate-200 overflow-auto p-4">
+                    <img
+                      src={fileUrls[selectedFile.id]}
+                      alt={selectedFile.fileName || selectedFile.name}
+                      className="max-w-full max-h-full object-contain shadow-2xl transition-transform hover:scale-105"
+                    />
+                  </div>
+                ) : selectedFileType === 'ofd' ? (
+                  <OfdViewer
+                    url={fileUrls[selectedFile.id]}
+                    fileName={selectedFile.fileName || selectedFile.name}
+                    downloadUrl={fileUrls[selectedFile.id]}
+                    className="h-full"
+                  />
+                ) : (
+                  <iframe
+                    src={fileUrls[selectedFile.id] + '#view=FitH'}
+                    title={selectedFile.fileName || selectedFile.name}
+                    className="w-full h-full rounded border-0 bg-white shadow-lg"
+                  />
+                )}
+                {/* 浮动下载按钮 */}
+                <div className="absolute bottom-6 right-6">
+                  <button
+                    onClick={() => handleDownload(selectedFile)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-all"
+                  >
+                    <Download size={16} />
+                    下载
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center text-slate-400">
+                <FileText size={48} className="mb-4 opacity-20" />
+                <p>该文件无法预览</p>
+                <button
+                  onClick={() => fetchFileWithAuth(selectedFile)}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  下载文件
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

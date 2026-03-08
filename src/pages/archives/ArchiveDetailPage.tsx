@@ -23,7 +23,7 @@ export const ArchiveDetailPage: React.FC = () => {
 
   // 档案数据状态（从 API 获取）
   const [archiveData, setArchiveData] = React.useState<any>(null);
-  const [archiveLoading, setArchiveLoading] = React.useState(false);
+  const [_archiveLoading, setArchiveLoading] = React.useState(false);
 
   // 从 API 获取真实档案数据
   useEffect(() => {
@@ -124,7 +124,7 @@ export const ArchiveDetailPage: React.FC = () => {
               <p>加载中...</p>
             </div>
           ) : voucherData?.attachments && voucherData.attachments.length > 0 ? (
-            <OriginalDocumentPreview files={voucherData.attachments} />
+            <OriginalDocumentPreview archiveId={row?.id || id} files={voucherData.attachments} />
           ) : (
             <div className="flex items-center justify-center h-full text-slate-400">
               <p>暂无附件</p>

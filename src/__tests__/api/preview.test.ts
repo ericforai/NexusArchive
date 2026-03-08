@@ -104,4 +104,31 @@ describe('previewApi', () => {
         expect(result.traceId).toBe('trace-456');
         expect(result.watermark?.text).toBe('user-2 2025-01-02 trace-456');
     });
+
+    it('should include fileId when previewing a specific archive attachment', async () => {
+        let requestConfig: any;
+
+        client.defaults.adapter = async (config) => {
+            requestConfig = config;
+            return {
+                data: new Blob(['preview']),
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config,
+            };
+        };
+
+        await previewApi.getPreview({
+            archiveId: 'A3',
+            fileId: 'F3',
+            mode: 'stream',
+        });
+
+        expect(requestConfig?.params).toMatchObject({
+            archiveId: 'A3',
+            fileId: 'F3',
+            mode: 'stream',
+        });
+    });
 });

@@ -185,7 +185,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
       label: `关联附件${voucherData?.attachments && voucherData.attachments.length > 0 ? ` (${voucherData.attachments.length})` : ''}`,
       children: (
         <div className="p-0" style={{ height: 'calc(100vh - 140px)' }}>
-          <OriginalDocumentPreview files={voucherData?.attachments || []} />
+          <OriginalDocumentPreview archiveId={String(row.id)} files={voucherData?.attachments || []} />
         </div>
       ),
     },

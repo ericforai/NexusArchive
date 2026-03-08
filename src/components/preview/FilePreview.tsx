@@ -4,10 +4,11 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  FileText, File, Loader2, AlertCircle
+  File, Loader2, AlertCircle
 } from 'lucide-react';
 import { PdfViewer } from './PdfViewer';
 import { ImageViewer } from './ImageViewer';
+import { OfdViewer } from './OfdViewer';
 import { PreviewToolbar } from './PreviewToolbar';
 
 export type FileType = 'pdf' | 'image' | 'ofd' | 'unknown';
@@ -124,13 +125,18 @@ export function FilePreview({
 
       case 'ofd':
         return (
-          <div className="flex items-center justify-center h-full text-slate-500">
-            <div className="text-center">
-              <FileText size={48} className="mx-auto mb-4 opacity-50" />
-              <p>OFD 文件预览需要专用组件</p>
-              <p className="text-sm mt-2">请使用 OfdViewer 组件</p>
-            </div>
-          </div>
+          <OfdViewer
+            url={url}
+            fileName={fileName}
+            scale={scale}
+            rotation={rotation}
+            downloadUrl={url}
+            onLoad={() => setLoading(false)}
+            onError={(err) => {
+              setError(err);
+              setLoading(false);
+            }}
+          />
         );
 
       default:
@@ -169,13 +175,13 @@ export function FilePreview({
 
       {/* Preview Content */}
       <div className="flex items-center justify-center h-full overflow-auto p-4">
-        {loading && (
+        {loading && fileType !== 'ofd' && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50">
             <Loader2 size={32} className="animate-spin text-blue-500" />
           </div>
         )}
 
-        {error && (
+        {error && fileType !== 'ofd' && (
           <div className="text-center text-slate-400">
             <AlertCircle size={48} className="mx-auto mb-4 text-rose-500" />
             <p>加载失败</p>
@@ -183,7 +189,7 @@ export function FilePreview({
           </div>
         )}
 
-        {!loading && !error && renderPreview()}
+        {(fileType === 'ofd' || (!loading && !error)) && renderPreview()}
       </div>
     </div>
   );
