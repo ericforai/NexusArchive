@@ -1,5 +1,5 @@
-// Input: Spring Framework、Lombok、Java 标准库、本地模块
-// Output: AsyncFourNatureCheckServiceImpl 类
+// Input: Spring Framework、Lombok、Java 标准库、本地模块、签名日志持久化
+// Output: AsyncFourNatureCheckServiceImpl 类（异步四性检测 + 验签结果留痕）
 // Pos: 业务服务实现层 - 异步四性检测服务
 
 package com.nexusarchive.service.compliance.impl;
@@ -12,7 +12,9 @@ import com.nexusarchive.dto.sip.report.FourNatureReport;
 import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.entity.ArcSignatureLog;
 import com.nexusarchive.mapper.ArcFileContentMapper;
+import com.nexusarchive.mapper.ArcSignatureLogMapper;
 import com.nexusarchive.service.ArchiveFileContentService;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.FourNatureCheckService;
@@ -56,6 +58,7 @@ public class AsyncFourNatureCheckServiceImpl implements AsyncFourNatureCheckServ
     private final FourNatureCoreService fourNatureCoreService;
     private final FourNatureCheckService fourNatureCheckService;
     private final ArcFileContentMapper arcFileContentMapper;
+    private final ArcSignatureLogMapper arcSignatureLogMapper;
 
     /**
      * 线程本地缓存，用于存储检测过程中的文件内容
@@ -188,6 +191,7 @@ public class AsyncFourNatureCheckServiceImpl implements AsyncFourNatureCheckServ
                                 file.getFileType()
                         );
 
+                        persistSignatureVerificationLog(archive.getId(), file, singleResult);
                         mergeResult(combinedItem, singleResult, details, file.getFileName());
                     }
 
@@ -414,6 +418,76 @@ public class AsyncFourNatureCheckServiceImpl implements AsyncFourNatureCheckServ
                 detailsCollector.add(fileName + ": " + source.getMessage());
             }
         }
+    }
+
+    private void persistSignatureVerificationLog(String archiveId, ArcFileContent file, CheckItem result) {
+        if (!supportsSignatureVerification(file.getFileType())) {
+            return;
+        }
+
+        String verifyMessage = resolveVerifyMessage(result);
+        ArcSignatureLog logEntry = new ArcSignatureLog();
+        logEntry.setArchiveId(archiveId);
+        logEntry.setFileId(file.getId());
+        logEntry.setVerifyResult(resolveVerifyResult(result, verifyMessage));
+        logEntry.setVerifyTime(LocalDateTime.now());
+        logEntry.setVerifyMessage(verifyMessage);
+
+        try {
+            arcSignatureLogMapper.insert(logEntry);
+        } catch (Exception ex) {
+            log.warn("签名验证结果持久化失败: archiveId={}, fileId={}, error={}",
+                    archiveId, file.getId(), ex.getMessage());
+        }
+    }
+
+    private boolean supportsSignatureVerification(String fileType) {
+        return "PDF".equalsIgnoreCase(fileType) || "OFD".equalsIgnoreCase(fileType);
+    }
+
+    private String resolveVerifyMessage(CheckItem result) {
+        if (result == null) {
+            return "签名验证结果不可用";
+        }
+        String message = result.getMessage();
+        String errors = null;
+        if (result.getErrors() != null && !result.getErrors().isEmpty()) {
+            errors = String.join("; ", result.getErrors());
+        }
+        if (result.getStatus() == OverallStatus.FAIL) {
+            if (message != null && !message.isBlank() && errors != null && !errors.isBlank()) {
+                return message + "; " + errors;
+            }
+            if (message != null && !message.isBlank()) {
+                return message;
+            }
+            if (errors != null && !errors.isBlank()) {
+                return errors;
+            }
+        }
+        if (message != null && !message.isBlank()) {
+            return message;
+        }
+        if (errors != null && !errors.isBlank()) {
+            return errors;
+        }
+        return "签名验证结果为空";
+    }
+
+    private String resolveVerifyResult(CheckItem result, String verifyMessage) {
+        if (result == null) {
+            return "UNKNOWN";
+        }
+        if (result.getStatus() == OverallStatus.PASS) {
+            return "VALID";
+        }
+        if (result.getStatus() == OverallStatus.WARNING) {
+            return "UNKNOWN";
+        }
+        if (result.getStatus() == OverallStatus.FAIL) {
+            return "INVALID";
+        }
+        return "UNKNOWN";
     }
 
     /**
