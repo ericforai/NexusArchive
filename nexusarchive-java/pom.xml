@@ -335,6 +335,14 @@
             <version>1.37</version>
             <scope>test</scope>
         </dependency>
+        <!-- 本地 SSO SDK 依赖 -->
+        <dependency>
+            <groupId>com.dbappsecurity</groupId>
+            <artifactId>app-sec-sso</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/app-sec-sso-1.0.0.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <repositories>

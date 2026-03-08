@@ -13,6 +13,7 @@ import { Navigate, RouteObject } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { RouteErrorBoundary } from '../components/common/RouteErrorBoundary';
+import { BaiduAnalytics } from '../components/common/BaiduAnalytics';
 // 布局组件（非懒加载，因为是框架级别）
 import { SystemLayout } from '../layouts/SystemLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
@@ -162,10 +163,15 @@ const LoadingFallback = () => (
 // 包装懒加载组件（泛型版本，提供类型安全）
 function withSuspense<P extends object>(
     Component: React.LazyExoticComponent<React.ComponentType<P>>,
-    props?: P
+    propsOrAnalytics?: P | boolean,
+    maybeProps?: P
 ): React.ReactElement {
+    const withAnalytics = typeof propsOrAnalytics === 'boolean' ? propsOrAnalytics : false;
+    const props = typeof propsOrAnalytics === 'boolean' ? maybeProps : propsOrAnalytics;
+
     return (
         <Suspense fallback={<LoadingFallback />}>
+            {withAnalytics && <BaiduAnalytics />}
             <Component {...(props as any)} />
         </Suspense>
     );
@@ -176,7 +182,7 @@ function withSuspense<P extends object>(
  */
 export const routes: RouteObject[] = [
     // 根路径显示产品首页（公开访问）
-    { path: '/', element: withSuspense(ProductWebsite) },
+    { path: '/', element: withSuspense(ProductWebsite, true) },
 
     // ========== 内容集群 (SEO Hub-Cluster) ==========
     { path: '/blog', element: withSuspense(BlogIndex), handle: { title: '知识库中心 - DigiVoucher' } },
@@ -191,7 +197,14 @@ export const routes: RouteObject[] = [
     { path: '/regulations/gbt-18894-spec', element: withSuspense(GBT18894Spec), handle: { title: 'GB/T 18894 电子档案管理规范 | DigiVoucher' } },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
-    { path: '/system/login', element: <LoginPage /> },
+    {
+        path: '/system/login', element: (
+            <>
+                <BaiduAnalytics />
+                <LoginPage />
+            </>
+        )
+    },
     { path: '/system/sso/launch', element: withSuspense(SsoLaunchPage) },
 
     // 激活页（独立于 SystemLayout，但需要基础环境）
