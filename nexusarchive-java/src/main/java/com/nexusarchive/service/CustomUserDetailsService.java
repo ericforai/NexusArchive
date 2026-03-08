@@ -58,6 +58,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         for (Role role : roles) {
             // 角色前缀 ROLE_ 以符合 Spring Security 习惯
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getCode()));
+            String upperRoleCode = role.getCode() != null ? role.getCode().toUpperCase() : null;
+            if (upperRoleCode != null && !upperRoleCode.equals(role.getCode())) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + upperRoleCode));
+            }
             if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
                 try {
                     List<String> perms = objectMapper.readValue(role.getPermissions(), new TypeReference<List<String>>() {});
