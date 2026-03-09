@@ -35,7 +35,7 @@
 | `ReconciliationRecord.java` | Java 类 | 对账记录实体 |
 | `Role.java` | Java 类 | 角色实体 |
 | `SyncHistory.java` | Java 类 | 同步历史实体 |
-| `SysAuditLog.java` | Java 类 | 审计日志实体（SM3 哈希链防篡改、跨全宗范围字段） |
+| `SysAuditLog.java` | Java 类 | 审计日志实体（SM3 哈希链、防篡改、trace/source/target/authTicket 上下文） |
 | `SysEntity.java` | Java 类 | 法人实体（含 parentId/orderNum 支持树形结构） |
 | `SystemSetting.java` | Java 类 | 系统设置实体 |
 | `User.java` | Java 类 | 用户实体 |
