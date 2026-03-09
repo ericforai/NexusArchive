@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
 | `ArchiveExportServiceImplTest.java` | Java 类 | ArchiveExportServiceImplTest 类 |
+| `FondsHistoryServiceImplTest.java` | Java 类 | FondsHistoryServiceImplTest 类（全宗重命名审计快照） |
 | `IngestServiceTest.java` | Java 类 | IngestServiceTest 类 |
 | `PoolServiceImplTest.java` | Java 类 | PoolServiceImplTest 类 |
 | `ReconciliationServiceImplTest.java` | Java 类 | ReconciliationServiceImplTest 类 |

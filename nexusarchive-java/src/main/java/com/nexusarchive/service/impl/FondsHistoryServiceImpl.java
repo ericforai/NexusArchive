@@ -1,5 +1,5 @@
-// Input: FondsHistoryService, FondsHistoryMapper, ArchiveMapper, BasFondsService, ObjectMapper
-// Output: FondsHistoryServiceImpl 类
+// Input: FondsHistoryService、FondsHistoryMapper、ArchiveMapper、BasFondsService、AuditLogService、ObjectMapper
+// Output: FondsHistoryServiceImpl 类（含关键业务链路审计快照）
 // Pos: 业务服务实现层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -14,6 +14,7 @@ import com.nexusarchive.entity.BasFonds;
 import com.nexusarchive.entity.FondsHistory;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.FondsHistoryMapper;
+import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.service.BasFondsService;
 import com.nexusarchive.service.FondsHistoryService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class FondsHistoryServiceImpl implements FondsHistoryService {
     private final FondsHistoryMapper fondsHistoryMapper;
     private final ArchiveMapper archiveMapper;
     private final BasFondsService basFondsService;
+    private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
     
     @Override
@@ -247,8 +249,8 @@ public class FondsHistoryServiceImpl implements FondsHistoryService {
             throw new IllegalArgumentException("新全宗号已存在: " + newFondsNo);
         }
         
-        // 3. 生成快照信息
-        Map<String, Object> snapshot = generateSnapshot(oldFonds);
+        // 3. 生成变更前快照
+        Map<String, Object> beforeSnapshot = generateSnapshot(oldFonds);
         
         // 4. 创建沿革记录
         FondsHistory history = new FondsHistory();
@@ -264,7 +266,7 @@ public class FondsHistoryServiceImpl implements FondsHistoryService {
         history.setDeleted(0);
         
         try {
-            history.setSnapshotJson(objectMapper.writeValueAsString(snapshot));
+            history.setSnapshotJson(objectMapper.writeValueAsString(beforeSnapshot));
         } catch (Exception e) {
             log.error("序列化快照信息失败", e);
             throw new RuntimeException("序列化快照信息失败: " + e.getMessage(), e);
@@ -281,6 +283,17 @@ public class FondsHistoryServiceImpl implements FondsHistoryService {
         updateWrapper.eq(Archive::getFondsNo, oldFondsNo)
             .set(Archive::getFondsNo, newFondsNo);
         archiveMapper.update(null, updateWrapper);
+
+        Map<String, Object> afterSnapshot = buildRenameAfterSnapshot(
+                oldFonds,
+                oldFondsNo,
+                newFondsNo,
+                effectiveDate,
+                reason,
+                approvalTicketId,
+                history.getId()
+        );
+        recordRenameAudit(operatorId, oldFondsNo, newFondsNo, approvalTicketId, beforeSnapshot, afterSnapshot);
         
         log.info("全宗重命名完成: oldFondsNo={}, newFondsNo={}, historyId={}", 
                 oldFondsNo, newFondsNo, history.getId());
@@ -342,5 +355,37 @@ public class FondsHistoryServiceImpl implements FondsHistoryService {
         
         return snapshot;
     }
-}
 
+    private Map<String, Object> buildRenameAfterSnapshot(BasFonds updatedFonds, String oldFondsNo, String newFondsNo,
+                                                         LocalDate effectiveDate, String reason,
+                                                         String approvalTicketId, String historyId) {
+        Map<String, Object> afterSnapshot = generateSnapshot(updatedFonds);
+        afterSnapshot.put("previousFondsNo", oldFondsNo);
+        afterSnapshot.put("currentFondsNo", newFondsNo);
+        afterSnapshot.put("effectiveDate", effectiveDate);
+        afterSnapshot.put("reason", reason);
+        afterSnapshot.put("approvalTicketId", approvalTicketId);
+        afterSnapshot.put("historyId", historyId);
+        return afterSnapshot;
+    }
+
+    private void recordRenameAudit(String operatorId, String oldFondsNo, String newFondsNo,
+                                   String approvalTicketId, Map<String, Object> beforeSnapshot,
+                                   Map<String, Object> afterSnapshot) {
+        auditLogService.logBusinessSnapshot(
+                operatorId,
+                operatorId,
+                "FONDS_RENAME",
+                "FONDS_HISTORY",
+                oldFondsNo,
+                "SUCCESS",
+                "关键业务链路审计：全宗重命名",
+                "LOW",
+                beforeSnapshot,
+                afterSnapshot,
+                oldFondsNo,
+                newFondsNo,
+                approvalTicketId
+        );
+    }
+}

@@ -12,6 +12,7 @@ import { ApiResponse } from '../types';
 export interface VerificationResult {
     valid: boolean;
     logId: string;
+    issueType?: 'OK' | 'MISSING_LOG' | 'BROKEN_CHAIN' | 'HASH_MISMATCH';
     expectedHash?: string;
     actualHash?: string;
     reason?: string;
@@ -26,6 +27,9 @@ export interface ChainVerificationResult {
     totalLogs: number;
     validLogs: number;
     invalidLogs: number;
+    missingLogs?: number;
+    brokenChainLogs?: number;
+    tamperedLogs?: number;
     invalidResults: VerificationResult[];
     verifiedAt?: string;
 }
@@ -143,4 +147,3 @@ export const auditVerificationApi = {
         return response.data;
     }
 };
-

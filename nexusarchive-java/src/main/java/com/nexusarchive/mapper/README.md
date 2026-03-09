@@ -34,7 +34,7 @@
 | `ReconciliationRecordMapper.java` | Mapper 接口 | 对账记录数据访问 |
 | `RoleMapper.java` | Mapper 接口 | 角色数据访问 |
 | `SyncHistoryMapper.java` | Mapper 接口 | 同步历史数据访问 |
-| `SysAuditLogMapper.java` | Mapper 接口 | 审计日志数据访问 |
+| `SysAuditLogMapper.java` | Mapper 接口 | 审计日志数据访问（含链验真范围查询） |
 | `SysEntityMapper.java` | Mapper 接口 | 法人数据访问（含树形查询） |
 | `SystemSettingMapper.java` | Mapper 接口 | 系统设置数据访问 |
 | `UserMapper.java` | Mapper 接口 | 用户数据访问 |

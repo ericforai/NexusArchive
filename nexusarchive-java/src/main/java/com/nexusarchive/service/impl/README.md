@@ -15,9 +15,12 @@
 | `ArchiveSearchServiceImpl.java` | 服务实现 | ArchiveSearchServiceImpl 业务实现 |
 | `ArchiveSecurityServiceImpl.java` | 服务实现 | ArchiveSecurityServiceImpl 业务实现 |
 | `AttachmentServiceImpl.java` | 服务实现 | AttachmentServiceImpl 业务实现 |
+| `AuditLogSamplingServiceImpl.java` | 服务实现 | AuditLogSamplingServiceImpl 业务实现 |
+| `AuditLogVerificationServiceImpl.java` | 服务实现 | AuditLogVerificationServiceImpl 业务实现 |
 | `BasFondsServiceImpl.java` | 服务实现 | BasFondsServiceImpl 业务实现 |
 | `DestructionServiceImpl.java` | 服务实现 | DestructionServiceImpl 业务实现 |
 | `FileStorageServiceImpl.java` | 服务实现 | FileStorageServiceImpl 业务实现 |
+| `FondsHistoryServiceImpl.java` | 服务实现 | FondsHistoryServiceImpl 业务实现（全宗关键链路审计快照） |
 | `FourNatureCheckServiceImpl.java` | 服务实现 | FourNatureCheckServiceImpl 业务实现 |
 | `FourNatureCoreServiceImpl.java` | 服务实现 | FourNatureCoreServiceImpl 业务实现 |
 | `GlobalSearchServiceImpl.java` | 服务实现 | GlobalSearchServiceImpl 业务实现 |

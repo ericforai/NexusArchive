@@ -1,21 +1,20 @@
 // Input: JUnit 5、Mockito、本地模块
-// Output: AuditLogVerificationServiceImplTest 测试类（校验验真服务与哈希链服务协作）
+// Output: AuditLogVerificationServiceImplTest 测试类（补充按范围与按 ID 的回归覆盖）
 // Pos: 后端测试用例
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.service.impl;
 
 import com.nexusarchive.dto.ChainVerificationResult;
-import com.nexusarchive.dto.VerificationResult;
 import com.nexusarchive.entity.SysAuditLog;
 import com.nexusarchive.mapper.SysAuditLogMapper;
-import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.util.SM3Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -39,26 +38,26 @@ class AuditLogVerificationServiceImplTest {
     @Mock
     private SM3Utils sm3Utils;
 
-    private AuditLogService auditLogService;
+    @InjectMocks
     private AuditLogVerificationServiceImpl verificationService;
 
     @BeforeEach
     void setUp() {
-        auditLogService = new AuditLogService(auditLogMapper, sm3Utils);
-        verificationService = new AuditLogVerificationServiceImpl(auditLogService, auditLogMapper, sm3Utils);
-        ReflectionTestUtils.setField(auditLogService, "auditLogHmacKey", "test-hmac-key");
         ReflectionTestUtils.setField(verificationService, "auditLogHmacKey", "test-hmac-key");
     }
 
     @Test
-    @DisplayName("按日期范围验真时会透传真实链路错误并统计无效日志")
-    void verifyChain_detectsBrokenLinkFromAuditLogService() {
+    @DisplayName("按日期范围验真时会识别断链并统计 brokenChainLogs")
+    void verifyChain_detectsBrokenLinkWithinRange() {
         SysAuditLog firstLog = createLog("log-201", null, "hash-201", LocalDateTime.of(2026, 3, 9, 10, 0));
         SysAuditLog secondLog = createLog("log-202", "wrong-prev-hash", "hash-202", LocalDateTime.of(2026, 3, 9, 10, 5));
 
-        when(auditLogMapper.findByDateRange(LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 9)))
-                .thenReturn(List.of(firstLog, secondLog));
-        when(sm3Utils.hmac(anyString(), anyString())).thenReturn("hash-201", "hash-202");
+        when(auditLogMapper.findByDateRangeAndFondsNo(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 9),
+                null
+        )).thenReturn(List.of(firstLog, secondLog));
+        when(sm3Utils.hmac(any(), anyString())).thenReturn("hash-201", "hash-202");
 
         ChainVerificationResult result = verificationService.verifyChain(
                 LocalDate.of(2026, 3, 1),
@@ -70,10 +69,7 @@ class AuditLogVerificationServiceImplTest {
         assertThat(result.getTotalLogs()).isEqualTo(2);
         assertThat(result.getValidLogs()).isEqualTo(1);
         assertThat(result.getInvalidLogs()).isEqualTo(1);
-        assertThat(result.getInvalidResults()).singleElement()
-                .extracting(VerificationResult::getReason)
-                .asString()
-                .contains("链条断裂");
+        assertThat(result.getBrokenChainLogs()).isEqualTo(1);
     }
 
     @Test
@@ -81,9 +77,8 @@ class AuditLogVerificationServiceImplTest {
     void verifyChainByLogIds_detectsTamperedLog() {
         SysAuditLog tamperedLog = createLog("log-301", null, "persisted-hash", LocalDateTime.of(2026, 3, 9, 11, 0));
 
-        when(auditLogMapper.selectBatchIds(List.of("log-301"))).thenReturn(List.of(tamperedLog));
-        when(auditLogMapper.selectById("log-301")).thenReturn(tamperedLog);
-        when(sm3Utils.hmac(anyString(), anyString())).thenReturn("recalculated-hash");
+        when(auditLogMapper.findByIdsInOrder(List.of("log-301"))).thenReturn(List.of(tamperedLog));
+        when(sm3Utils.hmac(any(), anyString())).thenReturn("recalculated-hash");
 
         ChainVerificationResult result = verificationService.verifyChainByLogIds(List.of("log-301"));
 
@@ -91,10 +86,7 @@ class AuditLogVerificationServiceImplTest {
         assertThat(result.getTotalLogs()).isEqualTo(1);
         assertThat(result.getValidLogs()).isZero();
         assertThat(result.getInvalidLogs()).isEqualTo(1);
-        assertThat(result.getInvalidResults()).singleElement()
-                .extracting(VerificationResult::getReason)
-                .asString()
-                .contains("哈希值不匹配");
+        assertThat(result.getTamperedLogs()).isEqualTo(1);
     }
 
     @Test
