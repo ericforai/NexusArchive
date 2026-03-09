@@ -12,3 +12,4 @@
 | `IngestServiceTest.java` | Java 类 | IngestServiceTest 类 |
 | `PoolServiceImplTest.java` | Java 类 | PoolServiceImplTest 类 |
 | `ReconciliationServiceImplTest.java` | Java 类 | ReconciliationServiceImplTest 类 |
+| `AuditLogVerificationServiceImplTest.java` | Java 类 | AuditLogVerificationServiceImplTest 类（验真服务与哈希链服务协作回归） |
