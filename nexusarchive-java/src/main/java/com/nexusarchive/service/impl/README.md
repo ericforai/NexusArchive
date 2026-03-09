@@ -18,6 +18,7 @@
 | `BasFondsServiceImpl.java` | 服务实现 | BasFondsServiceImpl 业务实现 |
 | `DestructionServiceImpl.java` | 服务实现 | DestructionServiceImpl 业务实现 |
 | `FileStorageServiceImpl.java` | 服务实现 | FileStorageServiceImpl 业务实现 |
+| `FondsHistoryServiceImpl.java` | 服务实现 | FondsHistoryServiceImpl 业务实现（全宗关键链路审计快照） |
 | `FourNatureCheckServiceImpl.java` | 服务实现 | FourNatureCheckServiceImpl 业务实现 |
 | `FourNatureCoreServiceImpl.java` | 服务实现 | FourNatureCoreServiceImpl 业务实现 |
 | `GlobalSearchServiceImpl.java` | 服务实现 | GlobalSearchServiceImpl 业务实现 |
