@@ -22,6 +22,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,6 +71,41 @@ class AuditLogVerificationServiceImplTest {
         assertThat(result.getIssueType()).isEqualTo("HASH_MISMATCH");
         assertThat(result.getExpectedHash()).isEqualTo("stored-hash");
         assertThat(result.getActualHash()).isEqualTo("recalculated-hash");
+    }
+
+    @Test
+    @DisplayName("单条验真在前序日志缺失时返回缺失结果")
+    void verifySingleLog_WhenPreviousLogMissing_ReturnsMissingPreviousResult() {
+        SysAuditLog log = createLog("log-001", "missing-prev-hash", "stored-hash");
+        when(auditLogMapper.selectById("log-001")).thenReturn(log);
+        when(sm3Utils.hmac(any(), anyString())).thenReturn("stored-hash");
+        when(auditLogMapper.selectOne(argThat(wrapper -> wrapper != null))).thenReturn(null);
+
+        VerificationResult result = verificationService.verifySingleLog("log-001");
+
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getIssueType()).isEqualTo("MISSING_LOG");
+        assertThat(result.getExpectedHash()).isEqualTo("missing-prev-hash");
+        assertThat(result.getReason()).contains("前序审计日志缺失");
+    }
+
+    @Test
+    @DisplayName("单条验真按 prevLogHash 查找前序日志并通过链校验")
+    void verifySingleLog_WhenPreviousLogResolvedByPrevHash_ReturnsValidResult() {
+        SysAuditLog previous = createLog("log-000", null, "prev-hash");
+        previous.setCreatedTime(baseTime.plusMinutes(5));
+        SysAuditLog current = createLog("log-001", "prev-hash", "current-hash");
+        current.setCreatedTime(baseTime);
+
+        when(auditLogMapper.selectById("log-001")).thenReturn(current);
+        when(auditLogMapper.selectOne(argThat(wrapper -> wrapper != null))).thenReturn(previous);
+        when(sm3Utils.hmac(any(), anyString())).thenReturn("current-hash");
+
+        VerificationResult result = verificationService.verifySingleLog("log-001");
+
+        assertThat(result.isValid()).isTrue();
+        assertThat(result.getIssueType()).isEqualTo("OK");
+        assertThat(result.getExpectedHash()).isEqualTo("current-hash");
     }
 
     @Test

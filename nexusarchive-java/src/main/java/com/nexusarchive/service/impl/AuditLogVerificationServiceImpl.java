@@ -61,6 +61,15 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
         }
 
         SysAuditLog previousLog = resolvePreviousLog(log);
+        if (hasPreviousHash(log) && previousLog == null) {
+            return VerificationResult.invalid(
+                    logId,
+                    VerificationResult.ISSUE_TYPE_MISSING_LOG,
+                    "前序审计日志缺失，无法完成链验真",
+                    log.getPrevLogHash(),
+                    null
+            );
+        }
         if (previousLog != null && !Objects.equals(previousLog.getLogHash(), log.getPrevLogHash())) {
             return VerificationResult.invalid(
                     logId,
@@ -236,11 +245,17 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
     }
 
     private SysAuditLog resolvePreviousLog(SysAuditLog log) {
+        if (!hasPreviousHash(log)) {
+            return null;
+        }
+
         LambdaQueryWrapper<SysAuditLog> queryWrapper = new LambdaQueryWrapper<SysAuditLog>()
-                .lt(SysAuditLog::getCreatedTime, log.getCreatedTime())
-                .orderByDesc(SysAuditLog::getCreatedTime)
-                .orderByDesc(SysAuditLog::getId)
+                .eq(SysAuditLog::getLogHash, log.getPrevLogHash())
                 .last("LIMIT 1");
         return auditLogMapper.selectOne(queryWrapper);
+    }
+
+    private boolean hasPreviousHash(SysAuditLog log) {
+        return log.getPrevLogHash() != null && !log.getPrevLogHash().isBlank();
     }
 }
