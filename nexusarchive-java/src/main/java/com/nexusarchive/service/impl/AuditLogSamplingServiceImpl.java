@@ -16,6 +16,7 @@ import com.nexusarchive.service.AuditLogVerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class AuditLogSamplingServiceImpl implements AuditLogSamplingService {
     @Override
     public com.nexusarchive.dto.SamplingResult randomSample(int sampleSize, LocalDate startDate, LocalDate endDate) {
         // 1. 查询指定日期范围内的所有日志
-        List<SysAuditLog> allLogs = auditLogMapper.findByDateRange(startDate, endDate);
+        List<SysAuditLog> allLogs = auditLogMapper.findByDateRangeAndFondsNo(startDate, endDate, null);
         
         if (allLogs.isEmpty()) {
             return SamplingResult.builder()
@@ -86,10 +87,12 @@ public class AuditLogSamplingServiceImpl implements AuditLogSamplingService {
         if (criteria.getResourceType() != null && !criteria.getResourceType().isEmpty()) {
             queryWrapper.eq(SysAuditLog::getResourceType, criteria.getResourceType());
         }
-        // TODO: SysAuditLog 可能没有 fondsNo 字段，需要检查实体类
-        // if (criteria.getFondsNo() != null && !criteria.getFondsNo().isEmpty()) {
-        //     queryWrapper.eq(SysAuditLog::getFondsNo, criteria.getFondsNo());
-        // }
+        if (StringUtils.hasText(criteria.getFondsNo())) {
+            queryWrapper.and(wrapper -> wrapper
+                    .eq(SysAuditLog::getSourceFonds, criteria.getFondsNo())
+                    .or()
+                    .eq(SysAuditLog::getTargetFonds, criteria.getFondsNo()));
+        }
         if (criteria.getStartDate() != null && criteria.getEndDate() != null) {
             queryWrapper.between(SysAuditLog::getCreatedTime, 
                 criteria.getStartDate().atStartOfDay(), 
@@ -145,4 +148,3 @@ public class AuditLogSamplingServiceImpl implements AuditLogSamplingService {
         return shuffled.subList(0, sampleSize);
     }
 }
-
