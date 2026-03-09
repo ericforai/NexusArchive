@@ -21,7 +21,7 @@
 | `ArchiveService.java` | 服务接口 | 档案核心服务 |
 | `AttachmentService.java` | 服务接口 | 附件服务 |
 | `AuditLogQueryService.java` | 服务接口 | 审计日志查询服务 |
-| `AuditLogService.java` | 服务接口 | 审计日志服务 |
+| `AuditLogService.java` | 服务接口 | 审计日志服务（链路上下文补齐、脱敏快照、哈希链） |
 | `AuthService.java` | 服务接口 | 认证服务 |
 | `AutoAssociationService.java` | 服务接口 | 自动关联服务 |
 | `BasFondsService.java` | 服务接口 | 全宗服务 |

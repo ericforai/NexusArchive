@@ -1,5 +1,5 @@
-// Input: MyBatis-Plus、Lombok、Java 标准库
-// Output: SysAuditLog 类
+// Input: MyBatis-Plus、Lombok、Java 标准库、审计上下文字段映射
+// Output: SysAuditLog 类（含链路追踪与脱敏快照字段）
 // Pos: 领域实体/模型
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -65,6 +65,12 @@ public class SysAuditLog {
      */
     private String dataAfter;
 
+    /**
+     * 脱敏后的审计快照汇总 (对应 data_snapshot)
+     */
+    @TableField("data_snapshot")
+    private String dataSnapshot;
+
     private String sessionId;
 
     /**
@@ -112,6 +118,24 @@ public class SysAuditLog {
      */
     @TableField("trace_id")
     private String traceId;
+
+    /**
+     * 源全宗号
+     */
+    @TableField("source_fonds")
+    private String sourceFonds;
+
+    /**
+     * 目标全宗号
+     */
+    @TableField("target_fonds")
+    private String targetFonds;
+
+    /**
+     * 授权票据ID
+     */
+    @TableField("auth_ticket_id")
+    private String authTicketId;
 
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
