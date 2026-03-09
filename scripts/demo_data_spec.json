@@ -1,0 +1,168 @@
+{
+  "year": 2025,
+  "default": {
+    "retention_period": "30Y",
+    "security_level": "internal",
+    "creator": "系统",
+    "sequence_start": 900
+  },
+  "fonds": [
+    {
+      "fonds_code": "BR-GROUP",
+      "fonds_id": "fonds-br-group",
+      "fonds_name": "泊冉集团有限公司",
+      "org_name": "泊冉集团有限公司",
+      "creator": "张三",
+      "month": "01",
+      "scene": {
+        "label": "投融资付款",
+        "amount": 800000.0,
+        "counterparty": "招商银行",
+        "titles": {
+          "basis": "融资协议-2025年一期",
+          "invoice": "融资手续费发票",
+          "voucher": "记账凭证-融资手续费",
+          "payment": "付款单-融资手续费",
+          "bank": "银行回单-融资手续费",
+          "report": "2025年1月资金管理报表"
+        },
+        "report_type": "MONTHLY"
+      }
+    },
+    {
+      "fonds_code": "BR-SALES",
+      "fonds_id": "fonds-br-sales",
+      "fonds_name": "泊冉销售有限公司",
+      "org_name": "泊冉销售有限公司",
+      "creator": "李四",
+      "month": "02",
+      "scene": {
+        "label": "销售开票回款",
+        "amount": 126500.0,
+        "counterparty": "华东零售客户",
+        "titles": {
+          "basis": "销售合同-2025华东客户",
+          "invoice": "销售发票-华东客户",
+          "voucher": "记账凭证-销售回款",
+          "payment": "收款单-销售回款",
+          "bank": "银行回单-销售回款",
+          "report": "2025年2月销售回款统计表"
+        },
+        "report_type": "MONTHLY"
+      }
+    },
+    {
+      "fonds_code": "BR-TRADE",
+      "fonds_id": "fonds-br-trade",
+      "fonds_name": "泊冉国际贸易有限公司",
+      "org_name": "泊冉国际贸易有限公司",
+      "creator": "王五",
+      "month": "03",
+      "scene": {
+        "label": "进口采购报关结汇",
+        "amount": 452000.0,
+        "counterparty": "新加坡供应商",
+        "titles": {
+          "basis": "进口采购合同-新加坡供应商",
+          "invoice": "进口货物发票",
+          "voucher": "记账凭证-进口采购",
+          "payment": "付款单-进口货款",
+          "bank": "银行回单-结汇付款",
+          "report": "2025年3月进出口结算表"
+        },
+        "report_type": "MONTHLY"
+      }
+    },
+    {
+      "fonds_code": "BR-MFG",
+      "fonds_id": "fonds-br-mfg",
+      "fonds_name": "泊冉制造有限公司",
+      "org_name": "泊冉制造有限公司",
+      "creator": "赵六",
+      "month": "05",
+      "scene": {
+        "label": "原材料采购入库成本",
+        "amount": 98000.0,
+        "counterparty": "江苏原材供应商",
+        "titles": {
+          "basis": "原材料采购合同-江苏供应商",
+          "invoice": "原材料采购发票",
+          "voucher": "记账凭证-原材料采购",
+          "payment": "付款单-原材料采购",
+          "bank": "银行回单-原材料采购",
+          "report": "2025年5月生产成本汇总表"
+        },
+        "report_type": "MONTHLY"
+      }
+    },
+    {
+      "fonds_code": "COMP001",
+      "fonds_id": "fonds-comp001",
+      "fonds_name": "总公司档案全宗",
+      "org_name": "总公司",
+      "creator": "钱七",
+      "month": "07",
+      "prefixes": {
+        "basis": "SQ"
+      },
+      "scene": {
+        "label": "员工差旅报销",
+        "amount": 3280.0,
+        "counterparty": "员工张三",
+        "titles": {
+          "basis": "差旅申请单-张三",
+          "invoice": "差旅发票-交通与住宿",
+          "voucher": "记账凭证-差旅报销",
+          "payment": "付款单-差旅报销",
+          "bank": "银行回单-差旅报销",
+          "report": "2025年7月报销费用统计表"
+        },
+        "report_type": "MONTHLY"
+      }
+    },
+    {
+      "fonds_code": "BRJT",
+      "fonds_id": "fonds-brjt",
+      "fonds_name": "Boran Joint Venture",
+      "org_name": "Boran Joint Venture",
+      "creator": "周八",
+      "month": "09",
+      "scene": {
+        "label": "合资项目进度款",
+        "amount": 260000.0,
+        "counterparty": "项目业主方",
+        "titles": {
+          "basis": "项目合同-一期工程",
+          "invoice": "进度款发票-一期",
+          "voucher": "记账凭证-项目进度款",
+          "payment": "付款单-项目进度款",
+          "bank": "银行回单-项目进度款",
+          "report": "2025年9月项目进度款汇总表"
+        },
+        "report_type": "MONTHLY"
+      }
+    },
+    {
+      "fonds_code": "DEMO",
+      "fonds_id": "demo-fonds-001",
+      "fonds_name": "演示全宗",
+      "org_name": "演示公司",
+      "creator": "系统",
+      "month": "11",
+      "scene": {
+        "label": "服务合同费用支付",
+        "amount": 120000.0,
+        "counterparty": "年度审计服务商",
+        "titles": {
+          "basis": "年度审计服务合同",
+          "invoice": "审计服务发票",
+          "voucher": "记账凭证-审计服务费",
+          "payment": "付款单-审计服务费",
+          "bank": "银行回单-审计服务费",
+          "report": "2025年11月服务费用统计表"
+        },
+        "report_type": "MONTHLY"
+      }
+    }
+  ]
+}
