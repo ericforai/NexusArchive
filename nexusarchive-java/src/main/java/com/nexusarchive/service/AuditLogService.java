@@ -136,6 +136,11 @@ public class AuditLogService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveAuditLogWithHash(SysAuditLog auditLog) {
+        if (auditLog.getCreatedTime() == null) {
+            auditLog.setCreatedTime(LocalDateTime.now());
+        }
+
+        populateHashChainFields(auditLog);
         auditLogMapper.insert(auditLog);
 
         log.debug("审计日志已记录: 用户={}, 操作={}",
@@ -255,5 +260,30 @@ public class AuditLogService {
         content.append("|");
         content.append(prevHash != null ? prevHash : "");
         return content.toString();
+    }
+
+    private void populateHashChainFields(SysAuditLog auditLog) {
+        try {
+            String prevHash = auditLogMapper.getLatestLogHash();
+            auditLog.setPrevLogHash(prevHash);
+
+            String createdTimeStr = auditLog.getCreatedTime() != null
+                    ? auditLog.getCreatedTime().format(TIME_FORMATTER)
+                    : null;
+            String payload = buildLogChainPayload(
+                    auditLog.getUserId(),
+                    auditLog.getAction(),
+                    auditLog.getObjectDigest(),
+                    createdTimeStr,
+                    prevHash
+            );
+
+            auditLog.setLogHash(sm3Utils.hmac(auditLogHmacKey, payload));
+        } catch (Exception ex) {
+            auditLog.setPrevLogHash(null);
+            auditLog.setLogHash(null);
+            log.warn("审计日志哈希链计算失败，将以降级模式写入日志: userId={}, action={}",
+                    auditLog.getUserId(), auditLog.getAction(), ex);
+        }
     }
 }
