@@ -109,7 +109,7 @@ public class SM3Utils {
         if (content == null || content.isEmpty()) {
             return null;
         }
-        if (key == null || key.isEmpty()) {
+        if (key == null || key.trim().isEmpty()) {
             return hash(content);
         }
 
