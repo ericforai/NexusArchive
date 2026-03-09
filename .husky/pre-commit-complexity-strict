@@ -20,3 +20,4 @@ fi
 
 echo "✅ Complexity check passed. Generating snapshot..."
 node scripts/complexity-snapshot.cjs
+git add docs/metrics/complexity-history.json
