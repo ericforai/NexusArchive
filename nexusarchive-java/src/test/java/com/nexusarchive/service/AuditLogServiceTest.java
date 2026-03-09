@@ -27,18 +27,24 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit")
 class AuditLogServiceTest {
+
+    private static final String TEST_HMAC_KEY = "test-hmac-key";
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     @Mock
     private SysAuditLogMapper auditLogMapper;
@@ -54,7 +60,7 @@ class AuditLogServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(auditLogService, "auditLogHmacKey", "test-hmac-key");
+        ReflectionTestUtils.setField(auditLogService, "auditLogHmacKey", TEST_HMAC_KEY);
     }
 
     @AfterEach
@@ -147,19 +153,69 @@ class AuditLogServiceTest {
     }
 
     @Test
+    @DisplayName("正确计算哈希链 - 包含前一条哈希")
+    void saveAuditLogWithHash_calculatesHashChain() {
+        SysAuditLog auditLog = createAuditLog("log-001");
+        when(auditLogMapper.getLatestLogHash()).thenReturn("prev-hash-123");
+        when(sm3Utils.hmac(eq(TEST_HMAC_KEY), anyString())).thenReturn("new-hash-456");
+
+        auditLogService.saveAuditLogWithHash(auditLog);
+
+        verify(auditLogMapper).insert(auditLog);
+        assertThat(auditLog.getPrevLogHash()).isEqualTo("prev-hash-123");
+        assertThat(auditLog.getLogHash()).isEqualTo("new-hash-456");
+        verify(sm3Utils).hmac(eq(TEST_HMAC_KEY), eq(String.format(
+                "%s|%s|%s|%s|%s",
+                auditLog.getUserId(),
+                auditLog.getAction(),
+                "",
+                auditLog.getCreatedTime().format(TIME_FORMATTER),
+                "prev-hash-123"
+        )));
+    }
+
+    @Test
+    @DisplayName("第一条日志会写入空 prevLogHash")
+    void saveAuditLogWithHash_firstLog_noPrevHash() {
+        SysAuditLog auditLog = createAuditLog("log-001");
+        when(auditLogMapper.getLatestLogHash()).thenReturn(null);
+        when(sm3Utils.hmac(eq(TEST_HMAC_KEY), anyString())).thenReturn("first-hash");
+
+        auditLogService.saveAuditLogWithHash(auditLog);
+
+        verify(auditLogMapper).insert(auditLog);
+        assertThat(auditLog.getPrevLogHash()).isNull();
+        assertThat(auditLog.getLogHash()).isEqualTo("first-hash");
+    }
+
+    @Test
     @DisplayName("哈希链查询失败时仍会写入日志")
     void saveAuditLogWithHash_whenPreviousHashLookupFails_stillInserts() {
-        SysAuditLog auditLog = new SysAuditLog();
-        auditLog.setUserId("user-003");
-        auditLog.setAction("UPDATE");
-        auditLog.setCreatedTime(LocalDateTime.of(2026, 3, 9, 12, 0));
-
+        SysAuditLog auditLog = createAuditLog("log-003");
         when(auditLogMapper.getLatestLogHash()).thenThrow(new RuntimeException("db unavailable"));
 
         auditLogService.saveAuditLogWithHash(auditLog);
 
         verify(auditLogMapper).insert(auditLog);
+        assertThat(auditLog.getPrevLogHash()).isNull();
         assertThat(auditLog.getLogHash()).isNull();
+        verify(sm3Utils, never()).hmac(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("空 HMAC key 时仍会走统一哈希路径")
+    void saveAuditLogWithHash_blankHmacKey_stillHashes() {
+        SysAuditLog auditLog = createAuditLog("log-004");
+        ReflectionTestUtils.setField(auditLogService, "auditLogHmacKey", "");
+        when(auditLogMapper.getLatestLogHash()).thenReturn("prev-hash");
+        when(sm3Utils.hmac(eq(""), anyString())).thenReturn("fallback-hash");
+
+        auditLogService.saveAuditLogWithHash(auditLog);
+
+        verify(auditLogMapper).insert(auditLog);
+        assertThat(auditLog.getPrevLogHash()).isEqualTo("prev-hash");
+        assertThat(auditLog.getLogHash()).isEqualTo("fallback-hash");
+        verify(sm3Utils).hmac(eq(""), anyString());
     }
 
     @Test
@@ -181,6 +237,76 @@ class AuditLogServiceTest {
         assertThat(result.isValid()).isTrue();
         assertThat(result.getVerifiedLogs()).isEqualTo(2);
         assertThat(result.getMessage()).contains("验证通过");
+    }
+
+    @Test
+    @DisplayName("日志链断裂检测")
+    void verifyLogChain_brokenChain_returnsInvalid() {
+        SysAuditLog log1 = createLog("log-001", null, "hash-001");
+        SysAuditLog log2 = createLog("log-002", "wrong-hash", "hash-002");
+
+        when(auditLogMapper.findByDateRange(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(List.of(log1, log2));
+        when(sm3Utils.hmac(anyString(), anyString()))
+                .thenReturn("hash-001", "hash-002");
+
+        AuditLogService.LogChainVerifyResult result = auditLogService.verifyLogChain(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 9)
+        );
+
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getMessage()).contains("链条断裂");
+    }
+
+    @Test
+    @DisplayName("日志篡改检测")
+    void verifyLogChain_tamperedLog_returnsInvalid() {
+        SysAuditLog log1 = createLog("log-001", null, "original-hash");
+
+        when(auditLogMapper.findByDateRange(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(List.of(log1));
+        when(sm3Utils.hmac(anyString(), anyString()))
+                .thenReturn("tampered-hash");
+
+        AuditLogService.LogChainVerifyResult result = auditLogService.verifyLogChain(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 9)
+        );
+
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getMessage()).contains("日志篡改");
+    }
+
+    @Test
+    @DisplayName("空日志范围视为验证通过")
+    void verifyLogChain_noLogs_returnsValid() {
+        when(auditLogMapper.findByDateRange(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(List.of());
+
+        AuditLogService.LogChainVerifyResult result = auditLogService.verifyLogChain(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 9)
+        );
+
+        assertThat(result.isValid()).isTrue();
+        assertThat(result.getTotalLogs()).isEqualTo(0);
+        assertThat(result.getMessage()).contains("无日志");
+    }
+
+    private SysAuditLog createAuditLog(String id) {
+        SysAuditLog auditLog = new SysAuditLog();
+        auditLog.setId(id);
+        auditLog.setUserId("user-001");
+        auditLog.setUsername("admin");
+        auditLog.setAction("ARCHIVE_CREATE");
+        auditLog.setResourceType("ARCHIVE");
+        auditLog.setResourceId("arc-001");
+        auditLog.setOperationResult("SUCCESS");
+        auditLog.setDetails("创建了档案 ARC-2023-001");
+        auditLog.setClientIp("192.168.1.100");
+        auditLog.setCreatedTime(LocalDateTime.of(2026, 3, 9, 12, 0, 0));
+        return auditLog;
     }
 
     private SysAuditLog createLog(String id, String prevHash, String logHash) {

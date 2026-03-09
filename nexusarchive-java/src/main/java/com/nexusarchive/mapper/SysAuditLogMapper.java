@@ -42,6 +42,6 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
     /**
      * 获取最新日志的哈希值（用于哈希链）
      */
-    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_time DESC LIMIT 1")
+    @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_time DESC, id DESC LIMIT 1")
     String getLatestLogHash();
 }
