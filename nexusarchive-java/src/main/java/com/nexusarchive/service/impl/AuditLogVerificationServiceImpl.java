@@ -22,7 +22,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 审计日志验真服务实现
@@ -79,16 +81,19 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
         
         // 转换结果格式
         List<VerificationResult> invalidResults = new ArrayList<>();
+        int invalidCount = 0;
         if (result.getMessage() != null && !result.getMessage().isEmpty() && !result.isValid()) {
-            // 解析错误消息，创建无效结果
-            invalidResults.add(VerificationResult.invalid("", result.getMessage()));
+            for (String violation : splitViolations(result.getMessage())) {
+                invalidResults.add(VerificationResult.invalid("", violation));
+            }
+            invalidCount = invalidResults.size();
         }
         
         return ChainVerificationResult.builder()
             .chainIntact(result.isValid())
             .totalLogs(result.getTotalLogs())
-            .validLogs(result.getVerifiedLogs())
-            .invalidLogs(result.getTotalLogs() - result.getVerifiedLogs())
+            .validLogs(result.isValid() ? result.getVerifiedLogs() : Math.max(0, result.getTotalLogs() - invalidCount))
+            .invalidLogs(result.isValid() ? 0 : invalidCount)
             .invalidResults(invalidResults)
             .verifiedAt(LocalDateTime.now())
             .build();
@@ -107,7 +112,7 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
         }
         
         // 1. 查询所有日志
-        List<SysAuditLog> logs = auditLogMapper.selectBatchIds(logIds);
+        List<SysAuditLog> logs = new ArrayList<>(auditLogMapper.selectBatchIds(logIds));
         if (logs.size() != logIds.size()) {
             log.warn("部分审计日志不存在: 请求数量={}, 实际数量={}", logIds.size(), logs.size());
         }
@@ -121,17 +126,14 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
         });
         
         // 3. 验证每条日志
-        List<VerificationResult> invalidResults = new ArrayList<>();
-        int validCount = 0;
+        Map<String, VerificationResult> invalidByLogId = new LinkedHashMap<>();
         
         for (int i = 0; i < logs.size(); i++) {
             SysAuditLog current = logs.get(i);
             VerificationResult result = verifySingleLog(current.getId());
             
             if (!result.isValid()) {
-                invalidResults.add(result);
-            } else {
-                validCount++;
+                invalidByLogId.put(current.getId(), result);
             }
             
             // 4. 验证与前一条日志的哈希关联
@@ -139,18 +141,24 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
                 SysAuditLog prev = logs.get(i - 1);
                 if (current.getPrevLogHash() != null && prev.getLogHash() != null) {
                     if (!current.getPrevLogHash().equals(prev.getLogHash())) {
-                        invalidResults.add(VerificationResult.invalid(
-                            current.getId(), "与前一条日志的哈希关联不匹配"));
+                        invalidByLogId.merge(
+                                current.getId(),
+                                VerificationResult.invalid(current.getId(), "与前一条日志的哈希关联不匹配"),
+                                this::mergeVerificationResult
+                        );
                     }
                 }
             }
         }
+
+        List<VerificationResult> invalidResults = new ArrayList<>(invalidByLogId.values());
+        int invalidCount = invalidResults.size();
         
         return ChainVerificationResult.builder()
             .chainIntact(invalidResults.isEmpty())
             .totalLogs(logs.size())
-            .validLogs(validCount)
-            .invalidLogs(invalidResults.size())
+            .validLogs(logs.size() - invalidCount)
+            .invalidLogs(invalidCount)
             .invalidResults(invalidResults)
             .verifiedAt(LocalDateTime.now())
             .build();
@@ -203,5 +211,29 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
         SysAuditLog prevLog = auditLogMapper.selectOne(queryWrapper);
         return prevLog != null ? prevLog.getLogHash() : null;
     }
-}
 
+    private List<String> splitViolations(String message) {
+        return message.lines()
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .toList();
+    }
+
+    private VerificationResult mergeVerificationResult(VerificationResult existing, VerificationResult incoming) {
+        if (existing == null) {
+            return incoming;
+        }
+        if (incoming == null) {
+            return existing;
+        }
+        String mergedReason = existing.getReason();
+        if (incoming.getReason() != null && !incoming.getReason().isBlank()
+                && (mergedReason == null || !mergedReason.contains(incoming.getReason()))) {
+            mergedReason = mergedReason == null || mergedReason.isBlank()
+                    ? incoming.getReason()
+                    : mergedReason + "；" + incoming.getReason();
+        }
+        existing.setReason(mergedReason);
+        return existing;
+    }
+}
