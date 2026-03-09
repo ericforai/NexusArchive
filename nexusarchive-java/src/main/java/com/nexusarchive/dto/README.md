@@ -9,6 +9,7 @@
 | `README.md` | 说明文档 | 本目录说明 |
 | `aip/` | 目录入口 | aip 子目录 |
 | `ArchiveRequest.java` | Java 类 | ArchiveRequest 类 |
+| `ChainVerificationResult.java` | DTO | 审计日志哈希链验真结果 |
 | `ErpScenarioDTO.java` | DTO | ErpScenarioDTO 数据传输对象 |
 | `FileUploadResponse.java` | Java 类 | FileUploadResponse 类 |
 | `GlobalSearchDTO.java` | DTO | GlobalSearchDTO 数据传输对象 |
@@ -26,4 +27,5 @@
 | `signature/` | 目录入口 | signature 子目录 |
 | `sip/` | 目录入口 | sip 子目录 |
 | `stats/` | 目录入口 | stats 子目录 |
+| `VerificationResult.java` | DTO | 单条审计日志验真结果 |
 | `workflow/` | 目录入口 | workflow 子目录 |

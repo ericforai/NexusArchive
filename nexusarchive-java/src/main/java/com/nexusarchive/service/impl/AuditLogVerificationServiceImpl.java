@@ -1,4 +1,4 @@
-// Input: AuditLogVerificationService, AuditLogService, SysAuditLogMapper
+// Input: AuditLogVerificationService、SysAuditLogMapper、SM3Utils
 // Output: AuditLogVerificationServiceImpl 类
 // Pos: 业务服务实现层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
@@ -10,7 +10,6 @@ import com.nexusarchive.dto.ChainVerificationResult;
 import com.nexusarchive.dto.VerificationResult;
 import com.nexusarchive.entity.SysAuditLog;
 import com.nexusarchive.mapper.SysAuditLogMapper;
-import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.service.AuditLogVerificationService;
 import com.nexusarchive.util.SM3Utils;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * 审计日志验真服务实现
@@ -31,156 +35,197 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AuditLogVerificationServiceImpl implements AuditLogVerificationService {
-    
-    private final AuditLogService auditLogService;
+
     private final SysAuditLogMapper auditLogMapper;
     private final SM3Utils sm3Utils;
-    
+
     @Value("${audit.log.hmac-key:}")
     private String auditLogHmacKey;
-    
+
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-    
+
     @Override
     public VerificationResult verifySingleLog(String logId) {
-        // 1. 查询审计日志
         SysAuditLog log = auditLogMapper.selectById(logId);
         if (log == null) {
-            return VerificationResult.invalid(logId, "审计日志不存在: " + logId);
+            return VerificationResult.invalid(
+                    logId,
+                    VerificationResult.ISSUE_TYPE_MISSING_LOG,
+                    "审计日志不存在: " + logId
+            );
         }
-        
-        // 2. 重新计算当前日志的哈希值
-        String recalculatedHash = calculateLogHash(log);
-        
-        // 3. 比较计算出的哈希值与存储的哈希值
-        if (log.getLogHash() == null || !log.getLogHash().equals(recalculatedHash)) {
-            return VerificationResult.invalid(logId, "哈希值不匹配", 
-                log.getLogHash(), recalculatedHash);
+
+        VerificationResult hashResult = verifyHash(log);
+        if (!hashResult.isValid()) {
+            return hashResult;
         }
-        
-        // 4. 验证与前一条日志的关联（如果存在）
-        if (log.getPrevLogHash() != null) {
-            String prevLogHash = getPreviousLogHash(log);
-            if (prevLogHash != null && !log.getPrevLogHash().equals(prevLogHash)) {
-                return VerificationResult.invalid(logId, "与前一条日志的哈希关联不匹配");
-            }
+
+        SysAuditLog previousLog = resolvePreviousLog(log);
+        if (previousLog != null && !Objects.equals(previousLog.getLogHash(), log.getPrevLogHash())) {
+            return VerificationResult.invalid(
+                    logId,
+                    VerificationResult.ISSUE_TYPE_BROKEN_CHAIN,
+                    "与前一条日志的哈希关联不匹配",
+                    previousLog.getLogHash(),
+                    log.getPrevLogHash()
+            );
         }
-        
+
         return VerificationResult.valid(logId, log.getLogHash());
     }
-    
+
     @Override
     public ChainVerificationResult verifyChain(LocalDate startDate, LocalDate endDate, String fondsNo) {
-        // 复用 AuditLogService.verifyLogChain() 方法
-        var result = auditLogService.verifyLogChain(startDate, endDate);
-        
-        // 如果指定了全宗号，需要额外过滤（AuditLogService 当前不支持全宗过滤）
-        // TODO: 扩展 AuditLogService.verifyLogChain() 支持全宗过滤
-        
-        // 转换结果格式
-        List<VerificationResult> invalidResults = new ArrayList<>();
-        if (result.getMessage() != null && !result.getMessage().isEmpty() && !result.isValid()) {
-            // 解析错误消息，创建无效结果
-            invalidResults.add(VerificationResult.invalid("", result.getMessage()));
-        }
-        
-        return ChainVerificationResult.builder()
-            .chainIntact(result.isValid())
-            .totalLogs(result.getTotalLogs())
-            .validLogs(result.getVerifiedLogs())
-            .invalidLogs(result.getTotalLogs() - result.getVerifiedLogs())
-            .invalidResults(invalidResults)
-            .verifiedAt(LocalDateTime.now())
-            .build();
+        List<SysAuditLog> logs = auditLogMapper.findByDateRangeAndFondsNo(startDate, endDate, fondsNo);
+        return evaluateChain(logs, null);
     }
-    
+
     @Override
     public ChainVerificationResult verifyChainByLogIds(List<String> logIds) {
         if (logIds == null || logIds.isEmpty()) {
-            return ChainVerificationResult.builder()
+            return emptyResult();
+        }
+
+        List<SysAuditLog> logs = auditLogMapper.findByIdsInOrder(logIds);
+        return evaluateChain(logs, new LinkedHashSet<>(logIds));
+    }
+
+    private ChainVerificationResult evaluateChain(List<SysAuditLog> logs, Set<String> requestedLogIds) {
+        if (logs == null || logs.isEmpty()) {
+            if (requestedLogIds == null || requestedLogIds.isEmpty()) {
+                return emptyResult();
+            }
+
+            List<VerificationResult> missingResults = new ArrayList<>();
+            for (String requestedLogId : requestedLogIds) {
+                missingResults.add(VerificationResult.invalid(
+                        requestedLogId,
+                        VerificationResult.ISSUE_TYPE_MISSING_LOG,
+                        "审计日志不存在: " + requestedLogId
+                ));
+            }
+            return buildResult(requestedLogIds.size(), missingResults);
+        }
+
+        Map<String, VerificationResult> invalidResults = new LinkedHashMap<>();
+        Set<String> foundLogIds = new LinkedHashSet<>();
+        SysAuditLog previous = null;
+
+        for (SysAuditLog log : logs) {
+            foundLogIds.add(log.getId());
+
+            VerificationResult hashResult = verifyHash(log);
+            if (!hashResult.isValid()) {
+                invalidResults.put(log.getId(), hashResult);
+                previous = log;
+                continue;
+            }
+
+            if (previous != null && !Objects.equals(previous.getLogHash(), log.getPrevLogHash())) {
+                invalidResults.put(log.getId(), VerificationResult.invalid(
+                        log.getId(),
+                        VerificationResult.ISSUE_TYPE_BROKEN_CHAIN,
+                        "与前一条日志的哈希关联不匹配",
+                        previous.getLogHash(),
+                        log.getPrevLogHash()
+                ));
+            }
+
+            previous = log;
+        }
+
+        if (requestedLogIds != null && !requestedLogIds.isEmpty()) {
+            for (String requestedLogId : requestedLogIds) {
+                if (!foundLogIds.contains(requestedLogId)) {
+                    invalidResults.put(requestedLogId, VerificationResult.invalid(
+                            requestedLogId,
+                            VerificationResult.ISSUE_TYPE_MISSING_LOG,
+                            "审计日志不存在: " + requestedLogId
+                    ));
+                }
+            }
+        }
+
+        int totalLogs = requestedLogIds != null && !requestedLogIds.isEmpty() ? requestedLogIds.size() : logs.size();
+        return buildResult(totalLogs, new ArrayList<>(invalidResults.values()));
+    }
+
+    private ChainVerificationResult buildResult(int totalLogs, List<VerificationResult> invalidResults) {
+        int missingLogs = 0;
+        int brokenChainLogs = 0;
+        int tamperedLogs = 0;
+
+        for (VerificationResult invalidResult : invalidResults) {
+            switch (invalidResult.getIssueType()) {
+                case VerificationResult.ISSUE_TYPE_MISSING_LOG -> missingLogs++;
+                case VerificationResult.ISSUE_TYPE_BROKEN_CHAIN -> brokenChainLogs++;
+                case VerificationResult.ISSUE_TYPE_HASH_MISMATCH -> tamperedLogs++;
+                default -> {
+                }
+            }
+        }
+
+        int invalidCount = invalidResults.size();
+        int validLogs = Math.max(totalLogs - invalidCount, 0);
+
+        return ChainVerificationResult.builder()
+                .chainIntact(invalidCount == 0)
+                .totalLogs(totalLogs)
+                .validLogs(validLogs)
+                .invalidLogs(invalidCount)
+                .missingLogs(missingLogs)
+                .brokenChainLogs(brokenChainLogs)
+                .tamperedLogs(tamperedLogs)
+                .invalidResults(invalidResults)
+                .verifiedAt(LocalDateTime.now())
+                .build();
+    }
+
+    private ChainVerificationResult emptyResult() {
+        return ChainVerificationResult.builder()
                 .chainIntact(true)
                 .totalLogs(0)
                 .validLogs(0)
                 .invalidLogs(0)
+                .missingLogs(0)
+                .brokenChainLogs(0)
+                .tamperedLogs(0)
+                .invalidResults(new ArrayList<>())
                 .verifiedAt(LocalDateTime.now())
                 .build();
-        }
-        
-        // 1. 查询所有日志
-        List<SysAuditLog> logs = auditLogMapper.selectBatchIds(logIds);
-        if (logs.size() != logIds.size()) {
-            log.warn("部分审计日志不存在: 请求数量={}, 实际数量={}", logIds.size(), logs.size());
-        }
-        
-        // 2. 按时间排序
-        logs.sort((a, b) -> {
-            if (a.getCreatedTime() == null || b.getCreatedTime() == null) {
-                return 0;
-            }
-            return a.getCreatedTime().compareTo(b.getCreatedTime());
-        });
-        
-        // 3. 验证每条日志
-        List<VerificationResult> invalidResults = new ArrayList<>();
-        int validCount = 0;
-        
-        for (int i = 0; i < logs.size(); i++) {
-            SysAuditLog current = logs.get(i);
-            VerificationResult result = verifySingleLog(current.getId());
-            
-            if (!result.isValid()) {
-                invalidResults.add(result);
-            } else {
-                validCount++;
-            }
-            
-            // 4. 验证与前一条日志的哈希关联
-            if (i > 0) {
-                SysAuditLog prev = logs.get(i - 1);
-                if (current.getPrevLogHash() != null && prev.getLogHash() != null) {
-                    if (!current.getPrevLogHash().equals(prev.getLogHash())) {
-                        invalidResults.add(VerificationResult.invalid(
-                            current.getId(), "与前一条日志的哈希关联不匹配"));
-                    }
-                }
-            }
-        }
-        
-        return ChainVerificationResult.builder()
-            .chainIntact(invalidResults.isEmpty())
-            .totalLogs(logs.size())
-            .validLogs(validCount)
-            .invalidLogs(invalidResults.size())
-            .invalidResults(invalidResults)
-            .verifiedAt(LocalDateTime.now())
-            .build();
     }
-    
-    /**
-     * 计算审计日志的哈希值（与 AuditLogService 中的逻辑一致）
-     */
+
+    private VerificationResult verifyHash(SysAuditLog log) {
+        String recalculatedHash = calculateLogHash(log);
+        if (!Objects.equals(log.getLogHash(), recalculatedHash)) {
+            return VerificationResult.invalid(
+                    log.getId(),
+                    VerificationResult.ISSUE_TYPE_HASH_MISMATCH,
+                    "哈希值不匹配",
+                    log.getLogHash(),
+                    recalculatedHash
+            );
+        }
+        return VerificationResult.valid(log.getId(), log.getLogHash());
+    }
+
     private String calculateLogHash(SysAuditLog log) {
-        String createdTimeStr = log.getCreatedTime() != null 
-            ? log.getCreatedTime().format(TIME_FORMATTER) 
-            : null;
-        
+        String createdTimeStr = log.getCreatedTime() != null
+                ? log.getCreatedTime().format(TIME_FORMATTER)
+                : null;
+
         String payload = buildHashPayload(
-            log.getUserId(),
-            log.getAction(),
-            log.getObjectDigest(),
-            createdTimeStr,
-            log.getPrevLogHash()
+                log.getUserId(),
+                log.getAction(),
+                log.getObjectDigest(),
+                createdTimeStr,
+                log.getPrevLogHash()
         );
-        
-        // 使用 SM3 HMAC 计算哈希值（与 AuditLogService 逻辑一致）
         return sm3Utils.hmac(auditLogHmacKey, payload);
     }
-    
-    /**
-     * 构建哈希载荷（与 AuditLogService.buildLogChainPayload 逻辑一致）
-     */
-    private String buildHashPayload(String userId, String action, String objectDigest, 
-                                   String createdTime, String prevLogHash) {
+
+    private String buildHashPayload(String userId, String action, String objectDigest,
+                                    String createdTime, String prevLogHash) {
         StringBuilder sb = new StringBuilder();
         sb.append(userId != null ? userId : "").append("|");
         sb.append(action != null ? action : "").append("|");
@@ -189,19 +234,13 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
         sb.append(prevLogHash != null ? prevLogHash : "");
         return sb.toString();
     }
-    
-    /**
-     * 获取前一条日志的哈希值
-     */
-    private String getPreviousLogHash(SysAuditLog log) {
-        // 查询前一条日志（按时间排序）
-        LambdaQueryWrapper<SysAuditLog> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.lt(SysAuditLog::getCreatedTime, log.getCreatedTime())
-            .orderByDesc(SysAuditLog::getCreatedTime)
-            .last("LIMIT 1");
-        
-        SysAuditLog prevLog = auditLogMapper.selectOne(queryWrapper);
-        return prevLog != null ? prevLog.getLogHash() : null;
+
+    private SysAuditLog resolvePreviousLog(SysAuditLog log) {
+        LambdaQueryWrapper<SysAuditLog> queryWrapper = new LambdaQueryWrapper<SysAuditLog>()
+                .lt(SysAuditLog::getCreatedTime, log.getCreatedTime())
+                .orderByDesc(SysAuditLog::getCreatedTime)
+                .orderByDesc(SysAuditLog::getId)
+                .last("LIMIT 1");
+        return auditLogMapper.selectOne(queryWrapper);
     }
 }
-

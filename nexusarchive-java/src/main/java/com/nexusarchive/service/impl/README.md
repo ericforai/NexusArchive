@@ -15,6 +15,8 @@
 | `ArchiveSearchServiceImpl.java` | 服务实现 | ArchiveSearchServiceImpl 业务实现 |
 | `ArchiveSecurityServiceImpl.java` | 服务实现 | ArchiveSecurityServiceImpl 业务实现 |
 | `AttachmentServiceImpl.java` | 服务实现 | AttachmentServiceImpl 业务实现 |
+| `AuditLogSamplingServiceImpl.java` | 服务实现 | AuditLogSamplingServiceImpl 业务实现 |
+| `AuditLogVerificationServiceImpl.java` | 服务实现 | AuditLogVerificationServiceImpl 业务实现 |
 | `BasFondsServiceImpl.java` | 服务实现 | BasFondsServiceImpl 业务实现 |
 | `DestructionServiceImpl.java` | 服务实现 | DestructionServiceImpl 业务实现 |
 | `FileStorageServiceImpl.java` | 服务实现 | FileStorageServiceImpl 业务实现 |

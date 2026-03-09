@@ -120,6 +120,9 @@ public class AuditLogService {
         auditLog.setClientIp(clientIp);
         auditLog.setMacAddress("UNKNOWN");
         auditLog.setTraceId(traceId);
+        auditLog.setSourceFonds(sourceFonds);
+        auditLog.setTargetFonds(targetFonds);
+        auditLog.setAuthTicketId(ticketId);
         auditLog.setCreatedTime(LocalDateTime.now());
         auditLog.setRiskLevel("medium");
         
@@ -136,6 +139,18 @@ public class AuditLogService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveAuditLogWithHash(SysAuditLog auditLog) {
+        if (auditLog.getCreatedTime() == null) {
+            auditLog.setCreatedTime(LocalDateTime.now());
+        }
+
+        try {
+            String prevLogHash = auditLogMapper.getLatestLogHash();
+            auditLog.setPrevLogHash(prevLogHash);
+            auditLog.setLogHash(calculateLogHash(auditLog, prevLogHash));
+        } catch (Exception e) {
+            log.warn("计算审计日志哈希链失败，按降级模式保存日志: logId={}", auditLog.getId(), e);
+        }
+
         auditLogMapper.insert(auditLog);
 
         log.debug("审计日志已记录: 用户={}, 操作={}",
@@ -255,5 +270,19 @@ public class AuditLogService {
         content.append("|");
         content.append(prevHash != null ? prevHash : "");
         return content.toString();
+    }
+
+    private String calculateLogHash(SysAuditLog auditLog, String prevLogHash) {
+        String createdTimeStr = auditLog.getCreatedTime() != null
+                ? auditLog.getCreatedTime().format(TIME_FORMATTER)
+                : null;
+        String payload = buildLogChainPayload(
+                auditLog.getUserId(),
+                auditLog.getAction(),
+                auditLog.getObjectDigest(),
+                createdTimeStr,
+                prevLogHash
+        );
+        return sm3Utils.hmac(auditLogHmacKey, payload);
     }
 }

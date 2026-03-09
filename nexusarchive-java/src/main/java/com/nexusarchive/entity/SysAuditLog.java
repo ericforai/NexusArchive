@@ -113,6 +113,24 @@ public class SysAuditLog {
     @TableField("trace_id")
     private String traceId;
 
+    /**
+     * 源全宗号
+     */
+    @TableField("source_fonds")
+    private String sourceFonds;
+
+    /**
+     * 目标全宗号
+     */
+    @TableField("target_fonds")
+    private String targetFonds;
+
+    /**
+     * 跨全宗授权票据ID
+     */
+    @TableField("auth_ticket_id")
+    private String authTicketId;
+
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdTime;
 }

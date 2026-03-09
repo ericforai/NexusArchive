@@ -10,6 +10,7 @@ import com.nexusarchive.entity.SysAuditLog;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.SelectProvider;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,6 +33,14 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
     @Select("SELECT * FROM sys_audit_log WHERE DATE(created_time) >= #{startDate} AND DATE(created_time) <= #{endDate} ORDER BY created_time ASC")
     List<SysAuditLog> findByDateRange(@Param("startDate") LocalDate startDate, 
                                       @Param("endDate") LocalDate endDate);
+
+    @SelectProvider(type = SysAuditLogSqlProvider.class, method = "buildFindByDateRangeAndFondsNo")
+    List<SysAuditLog> findByDateRangeAndFondsNo(@Param("startDate") LocalDate startDate,
+                                                @Param("endDate") LocalDate endDate,
+                                                @Param("fondsNo") String fondsNo);
+
+    @SelectProvider(type = SysAuditLogSqlProvider.class, method = "buildFindByIdsInOrder")
+    List<SysAuditLog> findByIdsInOrder(@Param("logIds") List<String> logIds);
     
     /**
      * 按用户ID查询日志
@@ -44,4 +53,35 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
      */
     @Select("SELECT log_hash FROM sys_audit_log ORDER BY created_time DESC LIMIT 1")
     String getLatestLogHash();
+
+    class SysAuditLogSqlProvider {
+        public String buildFindByDateRangeAndFondsNo() {
+            return """
+                    <script>
+                    SELECT *
+                    FROM sys_audit_log
+                    WHERE DATE(created_time) &gt;= #{startDate}
+                      AND DATE(created_time) &lt;= #{endDate}
+                    <if test="fondsNo != null and fondsNo != ''">
+                      AND (source_fonds = #{fondsNo} OR target_fonds = #{fondsNo})
+                    </if>
+                    ORDER BY created_time ASC, id ASC
+                    </script>
+                    """;
+        }
+
+        public String buildFindByIdsInOrder() {
+            return """
+                    <script>
+                    SELECT *
+                    FROM sys_audit_log
+                    WHERE id IN
+                    <foreach collection="logIds" item="logId" open="(" separator="," close=")">
+                      #{logId}
+                    </foreach>
+                    ORDER BY created_time ASC, id ASC
+                    </script>
+                    """;
+        }
+    }
 }

@@ -11,6 +11,7 @@ import com.nexusarchive.util.SM3Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -43,6 +44,7 @@ import static org.mockito.Mockito.*;
  * @author Agent E - 质量保障工程师
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class AuditLogServiceTest {
 
     @Mock
@@ -82,7 +84,7 @@ class AuditLogServiceTest {
         void log_SimpleMethod_Success() {
             // Arrange
             when(auditLogMapper.getLatestLogHash()).thenReturn("prev-hash-123");
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), any())).thenReturn("new-hash-456");
+            when(sm3Utils.hmac(any(), any())).thenReturn("new-hash-456");
             when(auditLogMapper.insert(any(SysAuditLog.class))).thenReturn(1);
 
             // Act
@@ -108,7 +110,7 @@ class AuditLogServiceTest {
         void log_DirectObject_Success() {
             // Arrange
             when(auditLogMapper.getLatestLogHash()).thenReturn(null); // 第一条日志
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), any())).thenReturn("first-hash");
+            when(sm3Utils.hmac(any(), any())).thenReturn("first-hash");
             when(auditLogMapper.insert(any(SysAuditLog.class))).thenReturn(1);
 
             // Act
@@ -129,7 +131,7 @@ class AuditLogServiceTest {
             logWithoutIdAndTime.setAction("CREATE");
             
             when(auditLogMapper.getLatestLogHash()).thenReturn("prev-hash");
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), any())).thenReturn("new-hash");
+            when(sm3Utils.hmac(any(), any())).thenReturn("new-hash");
             when(auditLogMapper.insert(any(SysAuditLog.class))).thenReturn(1);
 
             // Act
@@ -155,13 +157,7 @@ class AuditLogServiceTest {
             String expectedHash = "xyz789";
             
             when(auditLogMapper.getLatestLogHash()).thenReturn(prevHash);
-            when(sm3Utils.calculateLogHash(
-                    eq("user-001"),
-                    eq("ARCHIVE_CREATE"),
-                    any(),
-                    anyString(),
-                    eq(prevHash)
-            )).thenReturn(expectedHash);
+            when(sm3Utils.hmac(any(), anyString())).thenReturn(expectedHash);
             when(auditLogMapper.insert(any(SysAuditLog.class))).thenReturn(1);
 
             // Act
@@ -177,7 +173,7 @@ class AuditLogServiceTest {
         void saveAuditLogWithHash_FirstLog_NoPrevHash() {
             // Arrange
             when(auditLogMapper.getLatestLogHash()).thenReturn(null);
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), isNull())).thenReturn("first-hash");
+            when(sm3Utils.hmac(any(), any())).thenReturn("first-hash");
             when(auditLogMapper.insert(any(SysAuditLog.class))).thenReturn(1);
 
             // Act
@@ -221,9 +217,8 @@ class AuditLogServiceTest {
             when(auditLogMapper.findByDateRange(any(LocalDate.class), any(LocalDate.class))).thenReturn(logs);
             
             // Mock hash calculation to return same hash
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), isNull())).thenReturn("hash-001");
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), eq("hash-001"))).thenReturn("hash-002");
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), eq("hash-002"))).thenReturn("hash-003");
+            when(sm3Utils.hmac(any(), any()))
+                    .thenReturn("hash-001", "hash-002", "hash-003");
 
             // Act
             AuditLogService.LogChainVerifyResult result = auditLogService.verifyLogChain(
@@ -246,7 +241,7 @@ class AuditLogServiceTest {
             
             List<SysAuditLog> logs = Arrays.asList(log1, log2);
             when(auditLogMapper.findByDateRange(any(LocalDate.class), any(LocalDate.class))).thenReturn(logs);
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), any())).thenReturn("hash-001", "hash-002");
+            when(sm3Utils.hmac(any(), any())).thenReturn("hash-001", "hash-002");
 
             // Act
             AuditLogService.LogChainVerifyResult result = auditLogService.verifyLogChain(
@@ -267,7 +262,7 @@ class AuditLogServiceTest {
             List<SysAuditLog> logs = Collections.singletonList(log1);
             when(auditLogMapper.findByDateRange(any(LocalDate.class), any(LocalDate.class))).thenReturn(logs);
             // 重新计算得到不同的哈希，表明日志被篡改
-            when(sm3Utils.calculateLogHash(any(), any(), any(), any(), any())).thenReturn("tampered-hash");
+            when(sm3Utils.hmac(any(), any())).thenReturn("tampered-hash");
 
             // Act
             AuditLogService.LogChainVerifyResult result = auditLogService.verifyLogChain(
