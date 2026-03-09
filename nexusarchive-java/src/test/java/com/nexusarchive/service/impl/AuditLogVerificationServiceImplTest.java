@@ -1,11 +1,10 @@
-// Input: JUnit 5、Mockito、Jackson、本地模块
+// Input: JUnit 5、Mockito、本地模块
 // Output: AuditLogVerificationServiceImplTest 测试类（校验验真服务与哈希链服务协作）
 // Pos: 后端测试用例
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.dto.ChainVerificationResult;
 import com.nexusarchive.dto.VerificationResult;
 import com.nexusarchive.entity.SysAuditLog;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -41,15 +39,12 @@ class AuditLogVerificationServiceImplTest {
     @Mock
     private SM3Utils sm3Utils;
 
-    @Spy
-    private ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
-
     private AuditLogService auditLogService;
     private AuditLogVerificationServiceImpl verificationService;
 
     @BeforeEach
     void setUp() {
-        auditLogService = new AuditLogService(auditLogMapper, sm3Utils, objectMapper);
+        auditLogService = new AuditLogService(auditLogMapper, sm3Utils);
         verificationService = new AuditLogVerificationServiceImpl(auditLogService, auditLogMapper, sm3Utils);
         ReflectionTestUtils.setField(auditLogService, "auditLogHmacKey", "test-hmac-key");
         ReflectionTestUtils.setField(verificationService, "auditLogHmacKey", "test-hmac-key");

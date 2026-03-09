@@ -136,6 +136,32 @@ public class AuditLogService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveAuditLogWithHash(SysAuditLog auditLog) {
+        if (auditLog.getCreatedTime() == null) {
+            auditLog.setCreatedTime(LocalDateTime.now());
+        }
+        if (auditLog.getMacAddress() == null || auditLog.getMacAddress().isBlank()) {
+            auditLog.setMacAddress("UNKNOWN");
+        }
+        if (auditLog.getClientIp() == null || auditLog.getClientIp().isBlank()) {
+            auditLog.setClientIp("UNKNOWN");
+        }
+
+        try {
+            String prevHash = auditLogMapper.getLatestLogHash();
+            auditLog.setPrevLogHash(prevHash);
+            String createdTimeStr = auditLog.getCreatedTime().format(TIME_FORMATTER);
+            String payload = buildLogChainPayload(
+                    auditLog.getUserId(),
+                    auditLog.getAction(),
+                    auditLog.getObjectDigest(),
+                    createdTimeStr,
+                    prevHash
+            );
+            auditLog.setLogHash(sm3Utils.hmac(auditLogHmacKey, payload));
+        } catch (Exception e) {
+            log.warn("计算审计日志哈希链失败，按降级模式继续写入", e);
+        }
+
         auditLogMapper.insert(auditLog);
 
         log.debug("审计日志已记录: 用户={}, 操作={}",

@@ -10,7 +10,7 @@
 | `README.md` | 说明文档 | 本目录说明 |
 | `ArchiveRelationServiceTest.java` | Java 类 | ArchiveRelationServiceTest 类 |
 | `ArchiveServiceTest.java` | Java 类 | ArchiveServiceTest 类 |
-| `AuditLogServiceTest.java` | Java 类 | AuditLogServiceTest 类（脱敏快照、上下文补齐、哈希链写入与验真） |
+| `AuditLogServiceTest.java` | Java 类 | AuditLogServiceTest 类（哈希链写入与验真） |
 | `AuthServiceTest.java` | Java 类 | AuthServiceTest 类 |
 | `AutoAssociationServiceTest.java` | Java 类 | AutoAssociationServiceTest 类 |
 | `ComplianceCheckServiceTest.java` | Java 类 | ComplianceCheckServiceTest 类 |
