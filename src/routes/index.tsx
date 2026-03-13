@@ -41,12 +41,12 @@ const DAT92Spec = lazy(() => import('../pages/product-website/regulations/DAT92S
 const GBT18894Spec = lazy(() => import('../pages/product-website/regulations/GBT18894Spec'));
 
 // 页面容器（Page 层）- 封装懒加载和业务组件
-import LoginPage from '../pages/Auth/Login';
+const LoginPage = lazy(() => import('../pages/Auth/Login'));
 const SsoLaunchPage = lazy(() => import('../pages/Auth/SsoLaunchPage'));
-import { ArchiveListPage } from '../pages/archives/ArchiveListPage';
 import { VoucherMatchingPage } from '../pages/matching/VoucherMatchingPage';
-import { PoolPage } from '@/pages/pre-archive/PoolPage';
-import { Dashboard } from '../pages/portal/Dashboard';
+const ArchiveListPage = lazy(() => import('../pages/archives/ArchiveListPage').then(m => ({ default: m.ArchiveListPage })));
+const PoolPage = lazy(() => import('@/pages/pre-archive/PoolPage').then(m => ({ default: m.PoolPage })));
+const Dashboard = lazy(() => import('../pages/portal/Dashboard').then(m => ({ default: m.Dashboard })));
 
 // 懒加载各功能模块（Page 层）
 const ArchivalPanoramaView = lazy(() => import('../pages/panorama/ArchivalPanoramaView'));
@@ -206,7 +206,7 @@ export const routes: RouteObject[] = [
     { path: '/regulations/gbt-18894-spec', element: withSuspense(GBT18894Spec), handle: { title: 'GB/T 18894 电子档案管理规范 | DigiVoucher' } },
 
     // 登录页（独立于 SystemLayout，使用 Page 层）
-    { path: '/system/login', element: <LoginPage /> },
+    { path: '/system/login', element: withSuspense(LoginPage) },
     { path: '/system/sso/launch', element: withSuspense(SsoLaunchPage) },
 
     // 激活页（独立于 SystemLayout，但需要基础环境）
@@ -226,45 +226,45 @@ export const routes: RouteObject[] = [
         errorElement: <RouteErrorBoundary />,
         children: [
             // 门户首页
-            { index: true, element: <Dashboard />, handle: { title: '数字化管理门户' } },
+            { index: true, element: withSuspense(Dashboard), handle: { title: '数字化管理门户' } },
 
             // 全景视图（支持可选参数）
             { path: 'panorama/:id?', element: withSuspense(ArchivalPanoramaView), handle: { title: '档案全景视图' } },
 
             // ========== 预归档库 ==========
             // PoolPage 作为容器，支持列表/看板双视图
-            { path: 'pre-archive', element: <PoolPage />, handle: { title: '预归档库' } },
-            { path: 'pre-archive/pool', element: <PoolPage />, handle: { title: '预归档库 - 全部' } },
-            { path: 'pre-archive/pool/kanban', element: <PoolPage />, handle: { title: '预归档库 - 看板' } },  // 兼容旧路由
+            { path: 'pre-archive', element: withSuspense(PoolPage), handle: { title: '预归档库' } },
+            { path: 'pre-archive/pool', element: withSuspense(PoolPage), handle: { title: '预归档库 - 全部' } },
+            { path: 'pre-archive/pool/kanban', element: withSuspense(PoolPage), handle: { title: '预归档库 - 看板' } },  // 兼容旧路由
             { path: 'pre-archive/doc-pool', element: withSuspense(OriginalVoucherListView, { title: '单据池', subTitle: '原始单据管理', poolMode: true }), handle: { title: '待处理单据池' } },
             { path: 'pre-archive/ledgers', element: withSuspense(LedgersPreArchiveView), handle: { title: '账簿预归档' } },
             { path: 'pre-archive/reports', element: withSuspense(ReportsPreArchiveView), handle: { title: '报表预归档' } },
             { path: 'pre-archive/other', element: withSuspense(OtherAccountingMaterialsView), handle: { title: '其他材料预归档' } },
             { path: 'pre-archive/ocr', element: withSuspense(OCRProcessingView), handle: { title: 'OCR 智能识别' } },
-            { path: 'pre-archive/link', element: <ArchiveListPage routeConfig="link" />, handle: { title: '凭证单据挂接' } },
+            { path: 'pre-archive/link', element: withSuspense(ArchiveListPage, { routeConfig: 'link' }), handle: { title: '凭证单据挂接' } },
             { path: 'pre-archive/abnormal', element: withSuspense(AbnormalDataView), handle: { title: '异常数据清洗' } },
 
             // ========== 资料收集 ==========
-            { path: 'collection', element: <ArchiveListPage routeConfig="collection" />, handle: { title: '资料收集' } },
+            { path: 'collection', element: withSuspense(ArchiveListPage, { routeConfig: 'collection' }), handle: { title: '资料收集' } },
             { path: 'collection/online', element: withSuspense(OnlineReceptionView), handle: { title: '单据在线接收' } },
             { path: 'collection/scan', element: withSuspense(OCRProcessingView), handle: { title: '纸质扫描归档' } },
             { path: 'collection/upload', element: withSuspense(BatchUploadView), handle: { title: '凭证批量上传' } },
             { path: 'scan/mobile/:sessionId', element: withSuspense(MobileUploadPage) },
 
             // ========== 档案管理 (Repository) ==========
-            { path: 'archive', element: <ArchiveListPage routeConfig="view" />, handle: { title: '档案中心' } },
-            { path: 'archive/vouchers', element: <ArchiveListPage routeConfig="voucher" />, handle: { title: '会计凭证中心' } },
-            { path: 'archive/accounting-vouchers', element: <ArchiveListPage routeConfig="voucher" />, handle: { title: '会计凭证' } },
-            { path: 'archive/ledgers', element: <ArchiveListPage routeConfig="ledger" />, handle: { title: '会计账簿' } },
+            { path: 'archive', element: withSuspense(ArchiveListPage, { routeConfig: 'view' }), handle: { title: '档案中心' } },
+            { path: 'archive/vouchers', element: withSuspense(ArchiveListPage, { routeConfig: 'voucher' }), handle: { title: '会计凭证中心' } },
+            { path: 'archive/accounting-vouchers', element: withSuspense(ArchiveListPage, { routeConfig: 'voucher' }), handle: { title: '会计凭证' } },
+            { path: 'archive/ledgers', element: withSuspense(ArchiveListPage, { routeConfig: 'ledger' }), handle: { title: '会计账簿' } },
             { path: 'archive/original-vouchers', element: withSuspense(OriginalVoucherListView), handle: { title: '原始凭证' } },
-            { path: 'archive/reports', element: <ArchiveListPage routeConfig="report" />, handle: { title: '财务报告' } },
-            { path: 'archive/other', element: <ArchiveListPage routeConfig="other" />, handle: { title: '其他档案' } },
+            { path: 'archive/reports', element: withSuspense(ArchiveListPage, { routeConfig: 'report' }), handle: { title: '财务报告' } },
+            { path: 'archive/other', element: withSuspense(ArchiveListPage, { routeConfig: 'other' }), handle: { title: '其他档案' } },
             { path: 'archive/compliance/:id', element: withSuspense(ComplianceReportView), handle: { title: '合规性报告' } },
             { path: 'archives/:id', element: withSuspense(ArchiveDetailPage), handle: { title: '档案详情预览' } },
 
             // ========== 档案作业 (Operations) ==========
-            { path: 'operations', element: <ArchiveListPage routeConfig="view" /> }, // Fallback/Default
-            { path: 'operations/boxing', element: <ArchiveListPage routeConfig="box" /> },
+            { path: 'operations', element: withSuspense(ArchiveListPage, { routeConfig: 'view' }) }, // Fallback/Default
+            { path: 'operations/boxing', element: withSuspense(ArchiveListPage, { routeConfig: 'box' }) },
             { path: 'operations/volume', element: withSuspense(VolumeManagement) },
             { path: 'operations/approval', element: withSuspense(ArchiveApprovalView) },
             { path: 'operations/batch', element: withSuspense(ArchiveBatchView) },  // 归档批次
@@ -276,8 +276,8 @@ export const routes: RouteObject[] = [
             { path: 'operations/destruction-execution', element: withSuspense(DestructionExecutionPage) },
 
             // ========== 档案利用 (Utilization) ==========
-            { path: 'utilization', element: <ArchiveListPage routeConfig="query" /> }, // Fallback
-            { path: 'utilization/query', element: <ArchiveListPage routeConfig="query" /> },
+            { path: 'utilization', element: withSuspense(ArchiveListPage, { routeConfig: 'query' }) }, // Fallback
+            { path: 'utilization/query', element: withSuspense(ArchiveListPage, { routeConfig: 'query' }) },
             { path: 'utilization/relationship', element: withSuspense(RelationshipQueryView) },
             { path: 'utilization/borrowing', element: withSuspense(BorrowingView) },
 

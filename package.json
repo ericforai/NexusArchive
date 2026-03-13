@@ -65,6 +65,7 @@
     "@typescript-eslint/parser": "^8.50.1",
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^4.0.16",
+    "autoprefixer": "^10.4.21",
     "dependency-cruiser": "^17.3.5",
     "eslint": "^9.39.2",
     "eslint-plugin-boundaries": "^4.2.0",
@@ -72,9 +73,12 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "husky": "^9.1.7",
     "jsdom": "^27.2.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.2",
     "vite": "^5.4.10",
+    "vite-plugin-compression": "^0.5.1",
     "vitest": "^4.0.15"
   },
   "overrides": {
