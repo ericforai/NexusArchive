@@ -1,3 +1,8 @@
+// Input: Hutool JSON/Base64, Local DTOs, ErpAdapterFactory
+// Output: IngestHelper (采集入库辅助类)
+// Pos: Service Helper Layer
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.helper;
 
 import cn.hutool.core.codec.Base64;

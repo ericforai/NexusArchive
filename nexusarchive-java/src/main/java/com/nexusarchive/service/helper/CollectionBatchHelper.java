@@ -1,3 +1,8 @@
+// Input: MyBatis-Plus, Local DTOs/Entities, MetadataInheritor
+// Output: CollectionBatchHelper (采集批次辅助类)
+// Pos: Service Helper Layer
+// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
+
 package com.nexusarchive.service.helper;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

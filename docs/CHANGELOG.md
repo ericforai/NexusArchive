@@ -7,6 +7,30 @@
 ## [Unreleased]
 
 ### Added
+- **系统架构治理辅助层** (`com.nexusarchive.service.helper`)
+  - 引入 Helper 模式拆解大型类，显著提升代码可读性与可维护性
+  - 新增 9 个领域辅助组件：`PoolHelper`, `IngestHelper`, `CollectionBatchHelper`, `AuditLogHelper`, `ComplianceCheckHelper`, `RelationGraphHelper`, `OriginalVoucherHelper`, `PreviewHelper`, `FourNatureAsyncHelper`
+- **全量类型安全支持**
+  - 强制推行 MyBatis-Plus `LambdaQueryWrapper` / `LambdaUpdateWrapper`
+  - 消除核心模块（借阅、入库、统计、全宗）中的硬编码字符串字段名
+
+### Fixed
+- **后端质量工程修复**
+  - 修复了 24+ 个单元测试失败，涉及 Mockito 桩代码匹配、MyBatis Lambda 缓存初始化及数据库连接依赖
+  - 达成 `ArchUnit` 架构规则 100% 合规
+- **前端测试套件修复**
+  - 修复了 22 个 Vitest 失败用例，重点解决 `QueryClientProvider` 环境缺失及 Mock 重定向问题
+- **代码复杂度控制**
+  - 成功拆解 10 个以上超过 500 行的“上帝类”，核心业务类行数降至 300 以内
+
+### Changed
+- **借阅模块架构优化**
+  - `BorrowingScopePolicyImpl` 已全量迁移至 Lambda 表达式，满足严格的架构防御规则
+- **架构防御规则调整**
+  - 更新 `ArchitectureTest.java` 允许 Service 实现层依赖对应的 Helper 辅助层
+  - 优化循环依赖检测逻辑
+
+### Added
 - **ERP 发起联查 SSO 接口与对接文档**
   - 新增 `POST /api/erp/sso/launch`（HMAC 签名、nonce 防重放、一次性 ticket）
   - 新增 `POST /api/erp/sso/consume`（ticket 换取登录态）
