@@ -47,12 +47,25 @@ public interface AuthTicketService {
     
     /**
      * 撤销授权票据（仅申请人或管理员可撤销）
-     * 
+     *
      * @param ticketId 授权票据ID
      * @param operatorId 操作人ID
      * @param reason 撤销原因
      */
     void revokeAuthTicket(String ticketId, String operatorId, String reason);
+
+    /**
+     * 查询授权票据列表
+     *
+     * @param status 状态过滤（可选）
+     * @param applicantId 申请人ID过滤（可选）
+     * @param sourceFonds 源全宗号过滤（可选）
+     * @param targetFonds 目标全宗号过滤（可选）
+     * @param page 页码
+     * @param limit 每页数量
+     * @return 授权票据列表
+     */
+    java.util.List<AuthTicketDetail> listAuthTickets(String status, String applicantId, String sourceFonds, String targetFonds, int page, int limit);
 }
 
 

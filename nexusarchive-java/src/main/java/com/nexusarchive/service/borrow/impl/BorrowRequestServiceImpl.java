@@ -160,6 +160,19 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
         borrowRequestMapper.updateById(request);
     }
 
+    @Override
+    @Transactional
+    public void cancel(String requestId) {
+        BorrowRequest request = getOrThrow(requestId);
+        if (request.getStatus() != BorrowStatus.PENDING) {
+            throw new BusinessException(ErrorCode.BORROW_INVALID_STATUS);
+        }
+
+        request.setStatus(BorrowStatus.CANCELLED);
+        request.setUpdatedTime(LocalDateTime.now());
+        borrowRequestMapper.updateById(request);
+    }
+
     private BorrowRequest getOrThrow(String id) {
         BorrowRequest request = borrowRequestMapper.selectById(id);
         if (request == null) {

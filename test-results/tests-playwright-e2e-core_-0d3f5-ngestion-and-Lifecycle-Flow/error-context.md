@@ -1,0 +1,64 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - generic [ref=e10]:
+        - heading "DigiVoucher" [level=1] [ref=e11]
+        - paragraph [ref=e12]: 电子会计档案管理系统
+    - heading "让每一张凭证都成为 合法的数字资产" [level=2] [ref=e13]:
+      - text: 让每一张凭证都成为
+      - text: 合法的数字资产
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - paragraph [ref=e18]: 符合 DA/T 94-2022
+      - generic [ref=e19]:
+        - img [ref=e20]
+        - paragraph [ref=e23]: 国密 SM2/SM3/SM4 加密
+      - generic [ref=e24]:
+        - img [ref=e25]
+        - paragraph [ref=e27]: 四性检测保障
+    - paragraph [ref=e28]: © 2025 DigiVoucher. 符合 DA/T 94-2022 标准
+  - generic [ref=e30]:
+    - generic [ref=e31]:
+      - img [ref=e33]
+      - text: DigiVoucher
+    - generic [ref=e35]:
+      - heading "欢迎回来" [level=2] [ref=e36]
+      - paragraph [ref=e37]: 登录您的账户以继续
+      - paragraph [ref=e38]: "登录后将跳转到: /system/collection/upload"
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - text: 用户名
+          - generic [ref=e41]:
+            - img [ref=e42]
+            - textbox "用户名" [ref=e45]:
+              - /placeholder: 请输入用户名
+        - generic [ref=e46]:
+          - text: 密码
+          - generic [ref=e47]:
+            - img [ref=e48]
+            - textbox "密码" [ref=e51]:
+              - /placeholder: 请输入密码
+            - button [ref=e52]:
+              - img [ref=e53]
+        - button "登录" [ref=e56]:
+          - text: 登录
+          - img [ref=e57]
+      - generic [ref=e59]:
+        - button "访问产品官网" [ref=e60]:
+          - img [ref=e61]
+          - text: 访问产品官网
+        - text: "|"
+        - button "忘记密码？" [ref=e63]
+    - paragraph [ref=e64]:
+      - text: 登录即表示您同意我们的
+      - link "服务条款" [ref=e65] [cursor=pointer]:
+        - /url: "#"
+      - text: 和
+      - link "隐私政策" [ref=e66] [cursor=pointer]:
+        - /url: "#"
+```

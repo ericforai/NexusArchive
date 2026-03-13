@@ -184,7 +184,8 @@ public class BorrowRequest {
         REJECTED("已拒绝", "审批未通过"),
         BORROWING("借阅中", "档案已借出"),
         RETURNED("已归还", "档案已归还"),
-        OVERDUE("逾期未还", "超过归还期限");
+        OVERDUE("逾期未还", "超过归还期限"),
+        CANCELLED("已取消", "申请人取消");
 
         private final String label;
         private final String description;

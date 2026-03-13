@@ -91,7 +91,7 @@ public class DestructionServiceImpl implements DestructionService {
         try {
             // Parse archive IDs
             List<String> archiveIds = objectMapper.readValue(destruction.getArchiveIds(), List.class);
-            
+
             // Logically delete archives
             for (String archiveId : archiveIds) {
                 archiveMapper.deleteById(archiveId); // Logic delete if @TableLogic is set
@@ -104,5 +104,23 @@ public class DestructionServiceImpl implements DestructionService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to execute destruction: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    @Transactional
+    public void rejectDestruction(String id, String approverId, String comment) {
+        Destruction destruction = destructionMapper.selectById(id);
+        if (destruction == null) {
+            throw new RuntimeException("Destruction record not found");
+        }
+        if (!"PENDING".equals(destruction.getStatus())) {
+            throw new RuntimeException("Only pending destruction requests can be rejected");
+        }
+
+        destruction.setStatus("REJECTED");
+        destruction.setApproverId(approverId);
+        destruction.setApprovalComment(comment);
+        destruction.setApprovalTime(LocalDateTime.now());
+        destructionMapper.updateById(destruction);
     }
 }

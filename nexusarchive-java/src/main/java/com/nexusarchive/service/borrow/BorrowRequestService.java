@@ -51,4 +51,10 @@ public interface BorrowRequestService {
     com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequestVO> list(com.baomidou.mybatisplus.extension.plugins.pagination.Page<BorrowRequest> page, String status, String keyword);
 
     void returnArchives(String requestId, String operatorId);
+
+    /**
+     * 取消借阅申请 (转为 CANCELLED 状态)
+     * @param requestId 申请ID
+     */
+    void cancel(String requestId);
 }

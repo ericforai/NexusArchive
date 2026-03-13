@@ -88,4 +88,46 @@ public class DestructionController {
 
         return Result.success(stats);
     }
+
+    @PostMapping("/batch-approve")
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "BATCH_APPROVE_DESTRUCTION", resourceType = "DESTRUCTION", description = "批量批准销毁")
+    public Result<com.nexusarchive.dto.approval.BatchApprovalResponse> batchApprove(
+            @Valid @RequestBody com.nexusarchive.dto.approval.BatchApprovalRequest request,
+            @AuthenticationPrincipal CustomUserDetails user) {
+        com.nexusarchive.dto.approval.BatchApprovalResponse response = new com.nexusarchive.dto.approval.BatchApprovalResponse();
+        String approverId = user != null ? user.getId() : "system";
+
+        for (String id : request.getIds()) {
+            try {
+                destructionService.approveDestruction(id, approverId, request.getComment());
+                response.incrementSuccess();
+            } catch (Exception e) {
+                response.addError(id, e.getMessage());
+            }
+        }
+
+        return Result.success(response);
+    }
+
+    @PostMapping("/batch-reject")
+    @PreAuthorize("hasAnyAuthority('archive:destruction','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "BATCH_REJECT_DESTRUCTION", resourceType = "DESTRUCTION", description = "批量拒绝销毁")
+    public Result<com.nexusarchive.dto.approval.BatchApprovalResponse> batchReject(
+            @Valid @RequestBody com.nexusarchive.dto.approval.BatchApprovalRequest request,
+            @AuthenticationPrincipal CustomUserDetails user) {
+        com.nexusarchive.dto.approval.BatchApprovalResponse response = new com.nexusarchive.dto.approval.BatchApprovalResponse();
+        String approverId = user != null ? user.getId() : "system";
+
+        for (String id : request.getIds()) {
+            try {
+                destructionService.rejectDestruction(id, approverId, request.getComment());
+                response.incrementSuccess();
+            } catch (Exception e) {
+                response.addError(id, e.getMessage());
+            }
+        }
+
+        return Result.success(response);
+    }
 }

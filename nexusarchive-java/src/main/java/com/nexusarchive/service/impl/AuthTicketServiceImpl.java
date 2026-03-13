@@ -172,5 +172,59 @@ public class AuthTicketServiceImpl implements AuthTicketService {
         
         log.info("授权票据撤销成功: ticketId={}, operatorId={}, reason={}", ticketId, operatorId, reason);
     }
+
+    @Override
+    public java.util.List<AuthTicketDetail> listAuthTickets(String status, String applicantId, String sourceFonds, String targetFonds, int page, int limit) {
+        // 构建查询条件
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AuthTicket> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+
+        if (status != null && !status.isEmpty()) {
+            wrapper.eq(AuthTicket::getStatus, status);
+        }
+        if (applicantId != null && !applicantId.isEmpty()) {
+            wrapper.eq(AuthTicket::getApplicantId, applicantId);
+        }
+        if (sourceFonds != null && !sourceFonds.isEmpty()) {
+            wrapper.eq(AuthTicket::getSourceFonds, sourceFonds);
+        }
+        if (targetFonds != null && !targetFonds.isEmpty()) {
+            wrapper.eq(AuthTicket::getTargetFonds, targetFonds);
+        }
+
+        wrapper.eq(AuthTicket::getDeleted, 0)
+                .orderByDesc(AuthTicket::getCreatedAt);
+
+        // 分页查询
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<AuthTicket> pageParam =
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, limit);
+
+        com.baomidou.mybatisplus.core.metadata.IPage<AuthTicket> ticketPage = authTicketMapper.selectPage(pageParam, wrapper);
+
+        // 转换为 DTO
+        return ticketPage.getRecords().stream().map(ticket -> {
+            AuthTicketDetail detail = new AuthTicketDetail();
+            detail.setId(ticket.getId());
+            detail.setApplicantId(ticket.getApplicantId());
+            detail.setApplicantName(ticket.getApplicantName());
+            detail.setSourceFonds(ticket.getSourceFonds());
+            detail.setTargetFonds(ticket.getTargetFonds());
+            detail.setStatus(ticket.getStatus());
+            detail.setExpiresAt(ticket.getExpiresAt());
+            detail.setReason(ticket.getReason());
+            detail.setCreatedAt(ticket.getCreatedAt());
+            detail.setLastModifiedTime(ticket.getLastModifiedTime());
+
+            // 反序列化访问范围
+            try {
+                AuthScope scope = objectMapper.readValue(ticket.getScope(), AuthScope.class);
+                detail.setScope(scope);
+            } catch (Exception e) {
+                detail.setScope(new AuthScope());
+            }
+
+            return detail;
+        }).toList();
+    }
 }
 

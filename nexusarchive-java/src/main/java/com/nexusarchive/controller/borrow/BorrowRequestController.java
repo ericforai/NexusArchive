@@ -73,4 +73,11 @@ public class BorrowRequestController {
         borrowRequestService.returnArchives(id, operatorId);
         return Result.success();
     }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyAuthority('borrow:apply', 'borrow:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    public Result<Void> cancel(@PathVariable String id) {
+        borrowRequestService.cancel(id);
+        return Result.success();
+    }
 }

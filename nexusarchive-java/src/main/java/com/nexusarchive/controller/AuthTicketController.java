@@ -124,13 +124,33 @@ public class AuthTicketController {
             @RequestParam boolean approved,
             @RequestHeader("X-User-Id") String approverId,
             @RequestHeader("X-User-Name") String approverName) {
-        
+
         try {
             authTicketApprovalService.secondApproval(ticketId, approverId, approverName, comment, approved);
             return Result.success(null);
         } catch (Exception e) {
             log.error("第二审批失败: ticketId={}", ticketId, e);
             return Result.error("第二审批失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/list")
+    @Operation(summary = "查询授权票据列表")
+    @PreAuthorize("hasAnyAuthority('archive:view', 'archive:manage')")
+    public Result<java.util.List<AuthTicketDetail>> listAuthTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String applicantId,
+            @RequestParam(required = false) String sourceFonds,
+            @RequestParam(required = false) String targetFonds,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        try {
+            java.util.List<AuthTicketDetail> tickets = authTicketService.listAuthTickets(status, applicantId, sourceFonds, targetFonds, page, limit);
+            return Result.success(tickets);
+        } catch (Exception e) {
+            log.error("查询授权票据列表失败", e);
+            return Result.error("查询授权票据列表失败: " + e.getMessage());
         }
     }
 }
