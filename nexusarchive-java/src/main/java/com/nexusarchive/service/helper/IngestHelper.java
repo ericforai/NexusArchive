@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.helper;
 
+import java.util.UUID;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -80,7 +81,9 @@ public class IngestHelper {
         if (fonds == null || fonds.isBlank()) throw new BusinessException(400, "全宗号未配置");
         String year = file.getFiscalYear() != null ? file.getFiscalYear() : String.valueOf(LocalDate.now().getYear());
         String category = file.getVoucherType() != null ? file.getVoucherType() : "AC04";
-        return String.format("%s-%s-30Y-FIN-%s-V%04d", fonds, year, category, System.currentTimeMillis() % 10000);
+        // 使用 UUID 确保唯一性，取前4位作为序列号
+        String sequence = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        return String.format("%s-%s-30Y-FIN-%s-V%s", fonds, year, category, sequence);
     }
 
     public AccountingSipDto buildSimpleSip(String code, String itemId, String fileName, ArcFileContent file) {

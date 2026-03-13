@@ -1,0 +1,547 @@
+src/components/relation-graph/ThreeColumnLayout.tsx:419:            <button
+src/components/relation-graph/ThreeColumnLayout.tsx:426:            <button
+src/components/relation-graph/SimpleGraphView.tsx:170:        <button onClick={handleZoomIn} className="p-2 bg-white border border-slate-200 rounded-lg shadow-md hover:bg-slate-50" title="放大">
+src/components/relation-graph/SimpleGraphView.tsx:173:        <button onClick={handleZoomOut} className="p-2 bg-white border border-slate-200 rounded-lg shadow-md hover:bg-slate-50" title="缩小">
+src/components/relation-graph/SimpleGraphView.tsx:176:        <button onClick={handleReset} className="p-2 bg-white border border-slate-200 rounded-lg shadow-md hover:bg-slate-50" title="重置">
+src/components/Sidebar/NavNode.tsx:156:    <button
+src/components/settings/LicenseSettings.tsx:130:                        <button
+src/components/settings/UserFondsScopeDrawer.tsx:108:                    <button
+src/components/settings/UserFondsScopeDrawer.tsx:116:                    <button
+src/components/settings/UserFondsScopeDrawer.tsx:142:                        <button
+src/components/settings/UserFondsScopeDrawer.tsx:168:                                    <button
+src/components/settings/integration/IntegrationSettingsPage.tsx:148:        <Button
+src/components/settings/integration/components/ErpConfigCard.tsx:141:          <button
+src/components/settings/integration/components/ErpConfigCard.tsx:149:          <button
+src/components/settings/integration/components/ErpConfigCard.tsx:157:          <button
+src/components/settings/integration/components/ErpConfigCard.tsx:165:          <button
+src/components/settings/integration/components/ErpConfigCard.tsx:218:                <button
+src/components/settings/integration/components/ErpConfigCard.tsx:253:        <button
+src/components/settings/integration/components/DiagnosisPanel.tsx:85:          <button
+src/components/settings/integration/components/DiagnosisPanel.tsx:107:              <button
+src/components/settings/integration/components/DiagnosisPanel.tsx:169:                <button
+src/components/settings/integration/components/DiagnosisPanel.tsx:175:                <button
+src/components/settings/integration/components/ParamsEditor.tsx:30:          <button
+src/components/settings/integration/components/ParamsEditor.tsx:113:          <button
+src/components/settings/integration/components/ParamsEditor.tsx:120:          <button
+src/components/settings/integration/components/ScenarioDrawer.tsx:96:          <Button
+src/components/settings/integration/components/ScenarioDrawer.tsx:133:                <Button
+src/components/settings/integration/components/SalesOrderSyncPanel.tsx:68:          <Button
+src/components/settings/integration/components/ConnectorForm.tsx:66:        <Button
+src/components/settings/integration/components/ConnectorForm.tsx:83:          <Button
+src/components/settings/integration/components/ConnectorForm.tsx:97:          <Button onClick={actions.closeModal}>
+src/components/settings/integration/components/ConnectorForm.tsx:100:          <Button
+src/components/settings/integration/components/ConnectorForm.tsx:216:          <Button
+src/components/settings/integration/components/ConnectorForm.tsx:329:          <Button
+src/components/settings/integration/components/ConnectorForm.tsx:347:        <Button
+src/components/settings/integration/components/ScenarioCard.tsx:69:          <button
+src/components/settings/integration/components/ScenarioCard.tsx:87:          <button
+src/components/settings/integration/components/ScenarioCard.tsx:95:          <button
+src/components/settings/BasicSettings.tsx:85:                    <button
+src/components/settings/UserSettings.tsx:354:                                <button
+src/components/settings/UserSettings.tsx:422:                        <button
+src/components/settings/UserSettings.tsx:440:                    <button
+src/components/settings/UserSettings.tsx:493:                                                <button
+src/components/settings/UserSettings.tsx:501:                                                <button
+src/components/settings/UserSettings.tsx:509:                                                    <button
+src/components/settings/UserSettings.tsx:517:                                                    <button
+src/components/settings/UserSettings.tsx:540:                            <button
+src/components/settings/UserSettings.tsx:547:                            <button
+src/components/settings/SecuritySettings.tsx:94:                    <button
+src/components/settings/RoleSettings.tsx:277:                            <button
+src/components/settings/RoleSettings.tsx:295:                        <button
+src/components/settings/RoleSettings.tsx:345:                                            <button
+src/components/settings/RoleSettings.tsx:352:                                                <button
+src/components/borrowing/BorrowApprovalDrawer.tsx:166:                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+src/components/borrowing/BorrowApprovalDrawer.tsx:309:                        <button
+src/components/borrowing/BorrowApprovalDrawer.tsx:351:                            <button
+src/components/borrowing/BorrowApprovalDrawer.tsx:363:                            <button
+src/components/borrowing/BorrowApplicationDialog.tsx:161:                    <button
+src/components/borrowing/BorrowApplicationDialog.tsx:289:                    <button
+src/components/borrowing/BorrowApplicationDialog.tsx:296:                    <button
+src/components/auth/LoginCard.tsx:146:                                        <button
+src/components/auth/LoginCard.tsx:157:                                <button
+src/components/auth/LoginCard.tsx:175:                                    <button
+src/components/auth/LoginCard.tsx:185:                                <button className="text-sm text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer">
+src/components/org/OrgTreePicker.tsx:229:                <button
+src/components/org/OrgTreePicker.tsx:254:        <button
+src/components/org/OrgTreePicker.tsx:260:        <button
+src/components/org/OrgSelector.tsx:215:                                    <button
+src/components/org/OrgSelector.tsx:226:                        <button
+src/components/org/OrgBreadcrumb.tsx:58:          <button
+src/components/org/OrgBreadcrumb.tsx:73:          <button
+src/components/org/OrgBreadcrumb.tsx:113:          <button
+src/components/layout/ProfileDrawer.tsx:45:                    <Button type="text" onClick={onClose}>✕</Button>
+src/components/layout/ProfileDrawer.tsx:67:                    <Button danger block onClick={handleLogout}>
+src/components/modals/BaseModal.tsx:83:                  <button
+src/components/modals/ConfirmModal.tsx:71:      <button
+src/components/modals/ConfirmModal.tsx:79:      <button
+src/components/modals/__tests__/BaseModal.test.tsx:96:        footer={<button data-testid="footer-btn">Footer Button</button>}
+src/components/modals/DetailModal.tsx:41:        <button
+src/components/modals/FormModal.tsx:32:      <button
+src/components/modals/FormModal.tsx:40:      <button
+src/components/scan/FolderMonitorDialog.tsx:164:          <button
+src/components/scan/FolderMonitorDialog.tsx:237:              <button
+src/components/scan/FolderMonitorDialog.tsx:279:                      <button
+src/components/scan/FolderMonitorDialog.tsx:301:                    <button
+src/components/scan/FolderMonitorDialog.tsx:330:          <button
+src/components/operations/BatchResultModal.tsx:157:        <button
+src/components/operations/BatchResultModal.tsx:168:          <button
+src/components/operations/BatchResultModal.tsx:181:          <button
+src/components/operations/BatchOperationBar.tsx:92:          <button
+src/components/operations/BatchOperationBar.tsx:104:        <button
+src/components/operations/BatchOperationBar.tsx:124:        <button
+src/components/operations/BatchOperationBar.tsx:147:        <button
+src/components/operations/BatchApprovalDialog.tsx:183:          <button
+src/components/operations/BatchApprovalDialog.tsx:191:          <button
+src/components/operations/BatchApprovalDialog.tsx:294:        <button
+src/components/common/FilterModal.tsx:48:                    <button onClick={onClose}>
+src/components/common/FilterModal.tsx:60:                    <button
+src/components/common/FilterModal.tsx:66:                    <button
+src/components/common/FondsSwitcher.tsx:103:            <button
+src/components/common/FondsSwitcher.tsx:137:                                <button
+src/components/common/RouteErrorBoundary.tsx:25:                <button
+src/components/common/FondsSwitcher/FondsDropdown.tsx:28:            <button
+src/components/common/FondsSwitcher/FondsDropdown.tsx:62:                                <button
+src/components/common/OfdViewer.tsx:240:                    <button
+src/components/common/OfdViewer.tsx:298:                <button
+src/components/common/RootErrorBoundary.tsx:203:                <button
+src/components/common/RootErrorBoundary.tsx:211:              <button
+src/components/common/ErrorBoundary.tsx:78:                        <button
+src/components/table/TablePreviewAction.tsx:54:      <button
+src/components/table/TablePreviewAction.tsx:74:        <button
+src/components/table/TableActions.tsx:86:      <button
+src/components/table/TableActions.tsx:113:          <button
+src/components/table/TableActions.tsx:126:                  <button
+src/components/table/TableFilters.tsx:107:        <button
+src/components/table/TableFilters.tsx:138:              <button
+src/components/table/TableFilters.tsx:146:            <button
+src/components/voucher/OriginalDocumentPreview.tsx:268:              <button
+src/components/voucher/OriginalDocumentPreview.tsx:311:                <button
+src/components/voucher/OriginalDocumentPreview.tsx:347:                  <button
+src/components/voucher/OriginalDocumentPreview.tsx:360:                <button
+src/components/preview/SmartFilePreview.tsx:134:          <button
+src/components/preview/SmartFilePreview.tsx:202:          <button
+src/components/preview/SmartFilePreview.tsx:242:                <button
+src/components/preview/SmartFilePreview.tsx:251:                <button
+src/components/preview/SmartFilePreview.tsx:260:                  <button
+src/components/preview/SmartFilePreview.tsx:267:                <button
+src/components/preview/SmartFilePreview.tsx:279:              <button
+src/components/preview/SmartFilePreview.tsx:292:              <button
+src/components/preview/SmartFilePreview.tsx:300:              <button
+src/components/preview/PreviewToolbar.tsx:101:        <button
+src/components/preview/PreviewToolbar.tsx:109:        <button
+src/components/preview/PreviewToolbar.tsx:116:        <button
+src/components/preview/PreviewToolbar.tsx:126:        <button
+src/components/preview/PreviewToolbar.tsx:136:          <button
+src/components/preview/PreviewToolbar.tsx:147:          <button
+src/components/preview/PreviewToolbar.tsx:158:          <button
+src/components/Sidebar.tsx:149:        <button
+src/components/pool-dashboard/DashboardCard.tsx:72:          <button
+src/components/pool-dashboard/PoolDashboard.tsx:144:              <button
+src/components/pool-dashboard/PoolDashboard.tsx:160:            <button
+src/components/pool-kanban/KanbanCard.tsx:111:            <Button
+src/components/pool-kanban/KanbanCard.tsx:121:          <Button
+src/components/pool-kanban/KanbanCard.tsx:134:        <button
+src/components/pool-kanban/CollapsedColumn.tsx:43:        <button
+src/components/pool-kanban/BatchActionBar.tsx:59:            <Button onClick={onCancel} disabled={isExecuting}>
+src/components/pool-kanban/BatchActionBar.tsx:64:            <Button
+src/components/pool-kanban/BatchActionBar.tsx:74:            <Button onClick={onCancel}>
+src/components/pool-kanban/PoolKanbanView.tsx:166:              <Button size="small" onClick={() => onBatchAction?.('edit')}>
+src/components/pool-kanban/PoolKanbanView.tsx:169:              <Button size="small" onClick={() => onBatchAction?.('recheck')}>
+src/components/pool-kanban/PoolKanbanView.tsx:172:              <Button size="small" danger onClick={() => onBatchAction?.('delete')}>
+src/components/pool-kanban/PoolKanbanView.tsx:175:              <Button size="small" onClick={() => onClearSelection?.()}>
+src/components/pool-kanban/PoolKanbanView.tsx:183:                <Button
+src/components/pool-kanban/PoolKanbanView.tsx:191:              <Button
+src/components/pool-kanban/PoolKanbanView.tsx:401:        <button onClick={() => refetch()}>重试</button>
+src/components/pool-kanban/KanbanColumn.test.tsx:40:        <button onClick={() => onSelect?.(card.id)}>select</button>
+src/components/pool-kanban/KanbanColumn.test.tsx:41:        <button onClick={() => onAction?.(card.id, 'view')}>view</button>
+src/components/pool-kanban/__tests__/PoolKanbanView.test.tsx:14:    <button
+src/components/pool-kanban/__tests__/PoolKanbanView.test.tsx:71:          <button
+src/components/pool-kanban/__tests__/PoolKanbanView.test.tsx:88:      <button onClick={onExpand}>展开</button>
+src/components/pool-kanban/__tests__/PoolKanbanView.test.tsx:100:        <button>取消</button>
+src/components/pool-kanban/__tests__/PoolKanbanView.test.tsx:101:        <button>执行</button>
+src/components/pool-kanban/__tests__/PoolKanbanView.test.tsx:113:        <button onClick={onClose}>关闭</button>
+src/components/GlobalSearch/SearchResults.tsx:25:        <button
+src/pages/matching/VoucherMatchingView.tsx:298:                    <Button
+src/pages/matching/VoucherMatchingView.tsx:371:                    <Button
+src/pages/matching/VoucherMatchingView.tsx:445:                                <Button
+src/pages/matching/VoucherMatchingView.tsx:475:                                                            <Button
+src/pages/matching/VoucherMatchingView.tsx:523:                    <Button
+src/pages/matching/OnboardingWizard.tsx:90:                        <Button
+src/pages/matching/OnboardingWizard.tsx:135:                        <Button
+src/pages/matching/OnboardingWizard.tsx:164:                        <Button
+src/pages/matching/OnboardingWizard.tsx:185:                        <Button type="primary" onClick={onComplete}>
+src/pages/matching/ComplianceReport.tsx:151:                <Button type="link" size="small">补证</Button>
+src/pages/matching/ComplianceReport.tsx:173:                    <Button
+src/pages/matching/ComplianceReport.tsx:180:                    <Button
+src/pages/pre-archive/LedgersPreArchiveView.tsx:33:            <button
+src/pages/pre-archive/LedgersPreArchiveView.tsx:42:            <button
+src/pages/pre-archive/AbnormalDataView.tsx:118:                                        <button
+src/pages/pre-archive/AbnormalDataView.tsx:124:                                        <button
+src/pages/pre-archive/ReportsPreArchiveView.tsx:33:            <button
+src/pages/pre-archive/ReportsPreArchiveView.tsx:42:            <button
+src/pages/pre-archive/OtherAccountingMaterialsView.tsx:36:      <button
+src/pages/pre-archive/OtherAccountingMaterialsView.tsx:45:      <button
+src/pages/pre-archive/PoolPage.tsx:35:      <button
+src/pages/pre-archive/PoolPage.tsx:44:      <button
+src/pages/pre-archive/components/AbnormalEditModal.tsx:76:                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+src/pages/pre-archive/components/AbnormalEditModal.tsx:115:                    <button
+src/pages/pre-archive/components/AbnormalEditModal.tsx:122:                    <button
+src/pages/pre-archive/__tests__/PoolPage.test.tsx:31:      <button onClick={() => onFilterChange(null)}>Clear Filter</button>
+src/pages/pre-archive/OCRProcessingView.tsx:397:            <button
+src/pages/pre-archive/OCRProcessingView.tsx:418:            <button
+src/pages/pre-archive/OCRProcessingView.tsx:512:                    <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors" title="重新识别"><RefreshCw size={16} /></button>
+src/pages/pre-archive/OCRProcessingView.tsx:513:                    <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors" title="查看原件"><Eye size={16} /></button>
+src/pages/pre-archive/OCRProcessingView.tsx:620:                  <button
+src/pages/pre-archive/OCRProcessingView.tsx:649:              <button
+src/pages/pre-archive/OCRProcessingView.tsx:700:            <button
+src/pages/settings/RoleSettingsPage.tsx:32:                            <button
+src/pages/settings/MfaSettingsPage.tsx:197:                    <button
+src/pages/settings/MfaSettingsPage.tsx:226:                    <button
+src/pages/settings/MfaSettingsPage.tsx:238:                        <button
+src/pages/settings/MfaSettingsPage.tsx:244:                        <button
+src/pages/settings/MfaSettingsPage.tsx:294:                            <button
+src/pages/settings/MfaSettingsPage.tsx:321:                        <button
+src/pages/settings/MfaSettingsPage.tsx:343:                        <button
+src/pages/settings/MfaSettingsPage.tsx:350:                        <button
+src/pages/settings/MfaSettingsPage.tsx:357:                        <button
+src/pages/settings/UserSettingsPage.tsx:32:                            <button
+src/pages/settings/AuditLogView.tsx:103:        <button
+src/pages/settings/AuditLogView.tsx:133:        <button
+src/pages/settings/AuditLogView.tsx:139:        <button
+src/pages/settings/AuditLogView.tsx:172:                      <button
+src/pages/settings/AuditLogView.tsx:205:          <button
+src/pages/settings/AuditLogView.tsx:210:          <button
+src/pages/settings/AuditLogView.tsx:236:              <button
+src/pages/settings/ErpPreviewPage.tsx:133:                    <button
+src/pages/settings/ErpPreviewPage.tsx:147:                <button
+src/pages/settings/ErpPreviewPage.tsx:272:                    <button
+src/pages/settings/ErpPreviewPage.tsx:289:                    <button
+src/pages/settings/ErpPreviewPage.tsx:308:                    <button
+src/pages/collection/BatchUploadView.tsx:382:          <button
+src/pages/collection/BatchUploadView.tsx:530:              <Button
+src/pages/collection/BatchUploadView.tsx:559:                    <Button size="small" onClick={() => handleRetryFile(item.uid)}>
+src/pages/collection/BatchUploadView.tsx:563:                  <Button
+src/pages/collection/BatchUploadView.tsx:579:          <Button onClick={() => navigate('/system/collection')}>取消</Button>
+src/pages/collection/BatchUploadView.tsx:580:          <Button
+src/pages/collection/BatchUploadView.tsx:599:          <button
+src/pages/collection/BatchUploadView.tsx:617:            <Button
+src/pages/collection/BatchUploadView.tsx:623:            <Button
+src/pages/collection/BatchUploadView.tsx:780:            <Button
+src/pages/collection/BatchUploadView.tsx:789:            <Button onClick={() => navigate('/system/collection/upload')}>
+src/pages/collection/BatchUploadView.tsx:792:            <Button danger onClick={handleCancelBatch}>
+src/pages/collection/FourNatureReportView.tsx:149:                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+src/pages/collection/FourNatureReportView.tsx:223:                    <button onClick={onClose} className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-medium transition-colors">
+src/pages/collection/FourNatureReportView.tsx:226:                    <button 
+src/pages/collection/OnlineReceptionView.tsx:224:                <button
+src/pages/collection/OnlineReceptionView.tsx:292:                                    <button onClick={() => handleSync(channel.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-1"><RefreshCw className="w-4 h-4" /></button>
+src/pages/collection/OnlineReceptionView.tsx:293:                                    <button onClick={() => handleViewLog(channel)} className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg mr-1"><Eye className="w-4 h-4" /></button>
+src/pages/collection/OnlineReceptionView.tsx:294:                                    <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+src/pages/collection/OnlineReceptionView.tsx:350:                            <button
+src/pages/collection/OnlineReceptionView.tsx:357:                            <button
+src/pages/collection/OnlineReceptionView.tsx:391:                            <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded">取消</button>
+src/pages/collection/OnlineReceptionView.tsx:392:                            <button onClick={handleAddChannel} className="px-4 py-2 bg-blue-600 text-white rounded">确认</button>
+src/pages/portal/Dashboard.tsx:146:          <button
+src/pages/portal/Dashboard.tsx:218:            <button
+src/pages/portal/Dashboard.tsx:248:            <button
+src/pages/quality/QualityView.tsx:62:                <button
+src/pages/quality/QualityView.tsx:96:                    <button
+src/pages/quality/QualityView.tsx:103:                    <button
+src/pages/security/AuthTicketListPage.tsx:211:                        <button
+src/pages/security/AuthTicketListPage.tsx:312:                                        <button
+src/pages/security/AuthTicketListPage.tsx:322:                                                    <button
+src/pages/security/AuthTicketListPage.tsx:331:                                                    <button
+src/pages/security/AuthTicketListPage.tsx:342:                                            <button
+src/pages/security/AuthTicketListPage.tsx:364:                            <button
+src/pages/security/AuthTicketListPage.tsx:371:                            <button
+src/pages/security/AuthTicketListPage.tsx:389:                            <button
+src/pages/security/AuthTicketListPage.tsx:494:                                <button
+src/pages/security/AuthTicketListPage.tsx:502:                                <button
+src/pages/security/AuthTicketApplyPage.tsx:115:                        <button
+src/pages/security/AuthTicketApplyPage.tsx:265:                        <button
+src/pages/Auth/MfaVerifyPage.tsx:138:                    <button
+src/pages/Auth/MfaVerifyPage.tsx:157:                        <button
+src/pages/Auth/LoginView.tsx:195:                                <button
+src/pages/Auth/LoginView.tsx:211:                                <button
+src/pages/Auth/LoginView.tsx:220:                                <button className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
+src/pages/admin/AccessReviewPage.tsx:131:                    <button
+src/pages/admin/AccessReviewPage.tsx:201:                                                <button
+src/pages/admin/AccessReviewPage.tsx:210:                                                <button
+src/pages/admin/AccessReviewPage.tsx:229:                                <button
+src/pages/admin/AccessReviewPage.tsx:236:                                <button
+src/pages/admin/AccessReviewPage.tsx:255:                            <button
+src/pages/admin/AccessReviewPage.tsx:355:                                <button
+src/pages/admin/AccessReviewPage.tsx:367:                                <button
+src/pages/admin/LegacyImportPage/index.tsx:310:        <button
+src/pages/admin/LegacyImportPage/components/HistoryTab.tsx:117:            <button
+src/pages/admin/LegacyImportPage/components/HistoryTab.tsx:209:                    <button
+src/pages/admin/LegacyImportPage/components/HistoryTab.tsx:247:                <button
+src/pages/admin/LegacyImportPage/components/HistoryTab.tsx:255:                <button
+src/pages/admin/LegacyImportPage/components/ImportTab.tsx:168:                        <button
+src/pages/admin/LegacyImportPage/components/ImportTab.tsx:273:                <button
+src/pages/admin/LegacyImportPage/components/ImportTab.tsx:281:                <button
+src/pages/admin/LegacyImportPage/components/ImportTab.tsx:455:                        <button
+src/pages/admin/LegacyImportPage/components/FileUploader.tsx:146:                            <button
+src/pages/admin/LegacyImportPage/components/FileUploader.tsx:160:                    <button
+src/pages/admin/LegacyImportPage/components/FileUploader.tsx:175:                    <button
+src/pages/admin/EntityConfigPage.tsx:174:                                <button
+src/pages/admin/EntityConfigPage.tsx:207:                        <button
+src/pages/admin/EntityConfigPage.tsx:229:                                    <button
+src/pages/admin/EntityConfigPage.tsx:276:                                                    <button
+src/pages/admin/EntityConfigPage.tsx:282:                                                    <button
+src/pages/admin/EntityConfigPage.tsx:315:                            <button
+src/pages/admin/EntityConfigPage.tsx:395:                                <button
+src/pages/admin/EntityConfigPage.tsx:403:                                <button
+src/pages/admin/FondsHistoryPage.tsx:219:                        <button
+src/pages/admin/FondsHistoryPage.tsx:231:                        <button
+src/pages/admin/FondsHistoryPage.tsx:242:                        <button
+src/pages/admin/FondsHistoryPage.tsx:253:                        <button
+src/pages/admin/FondsHistoryPage.tsx:264:                        <button
+src/pages/admin/FondsHistoryPage.tsx:350:                                    <button
+src/pages/admin/FondsHistoryPage.tsx:430:                                    <button
+src/pages/admin/FondsHistoryPage.tsx:481:                                                    <button
+src/pages/admin/FondsHistoryPage.tsx:494:                                        <button
+src/pages/admin/FondsHistoryPage.tsx:527:                                    <button
+src/pages/admin/FondsHistoryPage.tsx:597:                                    <button
+src/pages/admin/FondsManagement.tsx:144:                <button
+src/pages/admin/FondsManagement.tsx:195:                                        <button
+src/pages/admin/FondsManagement.tsx:202:                                        <button
+src/pages/admin/FondsManagement.tsx:224:                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
+src/pages/admin/FondsManagement.tsx:300:                                <button
+src/pages/admin/FondsManagement.tsx:307:                                <button
+src/pages/admin/AdminLayout.tsx:44:                    <button
+src/pages/admin/AdminLayout.tsx:50:                    <button
+src/pages/admin/AdminLayout.tsx:56:                    <button
+src/pages/admin/AdminLayout.tsx:62:                    <button
+src/pages/admin/AdminLayout.tsx:68:                    <button
+src/pages/admin/AdminLayout.tsx:74:                    <button
+src/pages/admin/AdminLayout.tsx:85:                    <button onClick={onExit} className="text-blue-600 hover:underline">退出管理</button>
+src/pages/admin/EntityManagementPage.tsx:84:                    <button
+src/pages/admin/EntityManagementPage.tsx:96:                    <button
+src/pages/admin/EntityManagementPage.tsx:383:                            <button
+src/pages/admin/EntityManagementPage.tsx:391:                            <button
+src/pages/admin/EntityManagementPage.tsx:415:                        <button
+src/pages/admin/EntityManagementPage.tsx:434:                            <button
+src/pages/admin/EntityManagementPage.tsx:470:                            <button
+src/pages/admin/EntityManagementPage.tsx:579:                                <button
+src/pages/admin/EntityManagementPage.tsx:587:                                <button
+src/pages/admin/PositionManagement.tsx:103:        <button
+src/pages/admin/PositionManagement.tsx:151:                    <button onClick={() => openEdit(p)} className="text-primary-600 hover:text-primary-700 text-xs inline-flex items-center gap-1">
+src/pages/admin/PositionManagement.tsx:154:                    <button onClick={() => handleDelete(p.id)} className="text-rose-600 hover:text-rose-700 text-xs inline-flex items-center gap-1">
+src/pages/admin/PositionManagement.tsx:170:              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+src/pages/admin/PositionManagement.tsx:221:                <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 text-slate-600">取消</button>
+src/pages/admin/PositionManagement.tsx:222:                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg">{editing ? '保存' : '创建'}</button>
+src/pages/admin/UserLifecyclePage.tsx:199:                    <button
+src/pages/admin/UserLifecyclePage.tsx:211:                    <button
+src/pages/admin/UserLifecyclePage.tsx:222:                    <button
+src/pages/admin/UserLifecyclePage.tsx:233:                    <button
+src/pages/admin/UserLifecyclePage.tsx:309:                            <button
+src/pages/admin/UserLifecyclePage.tsx:360:                            <button
+src/pages/admin/UserLifecyclePage.tsx:445:                            <button
+src/pages/admin/FondsHistoryListPage.tsx:120:                        <button
+src/pages/admin/EnterpriseArchitecturePage.tsx:137:                        <button
+src/pages/ActivationPage.tsx:35:                        <button
+src/pages/archives/OriginalVoucherListView.tsx:279:                    <button
+src/pages/archives/OriginalVoucherListView.tsx:286:                    <button
+src/pages/archives/OriginalVoucherListView.tsx:335:                    <button
+src/pages/archives/OriginalVoucherListView.tsx:437:                                                <button
+src/pages/archives/OriginalVoucherListView.tsx:455:                        <button
+src/pages/archives/OriginalVoucherListView.tsx:465:                        <button
+src/pages/archives/ArchiveDetailPage.tsx:153:              <button
+src/pages/archives/ComplianceReportView.tsx:116:                <button onClick={onBack} className="mt-4 text-indigo-600 hover:underline">返回</button>
+src/pages/archives/ComplianceReportView.tsx:128:                    <button
+src/pages/archives/ComplianceReportView.tsx:140:                    <button
+src/pages/archives/ComplianceReportView.tsx:147:                    <button
+src/pages/archives/CreateOriginalVoucherDialog.tsx:108:                    <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" /></button>
+src/pages/archives/CreateOriginalVoucherDialog.tsx:179:                                    <button
+src/pages/archives/CreateOriginalVoucherDialog.tsx:201:                        <button
+src/pages/archives/CreateOriginalVoucherDialog.tsx:210:                            <button
+src/pages/archives/CreateOriginalVoucherDialog.tsx:217:                            <button
+src/pages/archives/AddRecordModal.tsx:41:                    <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
+src/pages/archives/AddRecordModal.tsx:55:                        <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600">取消</button>
+src/pages/archives/AddRecordModal.tsx:56:                        <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg">确认</button>
+src/pages/archives/components/VoucherUploadButton.tsx:46:      <button
+src/pages/archives/components/VoucherExportButton.tsx:24:    <button
+src/pages/archives/MatchPreviewModal.tsx:52:                    <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
+src/pages/archives/MatchPreviewModal.tsx:116:                    <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">取消</button>
+src/pages/archives/MatchPreviewModal.tsx:117:                    <button
+src/pages/archives/ArchiveListView.tsx:254:        <button
+src/pages/archives/ArchiveListView.tsx:283:        <button
+src/pages/archives/ArchiveListView.tsx:330:                <button
+src/pages/archives/ArchiveListView.tsx:337:                <button
+src/pages/archives/ArchiveListView.tsx:360:            <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50">
+src/pages/archives/ArchiveListView.tsx:364:            <button onClick={controller.actions.exportCsv} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50">
+src/pages/archives/ArchiveListView.tsx:369:              <button
+src/pages/archives/ArchiveListView.tsx:388:                <button onClick={archiveActions.executeArchiving} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 disabled:opacity-50">
+src/pages/archives/ArchiveListView.tsx:392:                <button className="text-xs bg-white border border-slate-300 px-3 py-1.5 rounded hover:bg-slate-50">导出所选</button>
+src/pages/archives/ArchiveListView.tsx:394:              <button onClick={archiveActions.handleBatchDelete} className="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded hover:bg-rose-100 border border-rose-200">批量删除</button>
+src/pages/archives/ArchiveListView.tsx:493:                  <button
+src/pages/archives/ArchiveListView.tsx:500:                  <button
+src/pages/archives/ArchiveListView.tsx:551:              <button onClick={() => setIsRuleModalOpen(false)}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+src/pages/archives/ArchiveListView.tsx:588:              <button onClick={() => setIsRuleModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">取消</button>
+src/pages/archives/ArchiveListView.tsx:589:              <button
+src/pages/archives/ArchiveListView.tsx:610:              <button onClick={() => setIsFilterOpen(false)}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+src/pages/archives/ArchiveListView.tsx:660:              <button
+src/pages/archives/ArchiveListView.tsx:670:              <button
+src/pages/archives/RuleConfigModal.tsx:40:                    <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
+src/pages/archives/RuleConfigModal.tsx:67:                    <button onClick={onClose} className="px-4 py-2 text-slate-600">取消</button>
+src/pages/archives/RuleConfigModal.tsx:68:                    <button onClick={onSaveAndRun} className="px-4 py-2 bg-primary-600 text-white rounded-lg">保存并运行</button>
+src/pages/archives/LinkModal.tsx:115:                    <button
+src/pages/archives/LinkModal.tsx:137:                        <button
+src/pages/archives/LinkModal.tsx:144:                        <button
+src/pages/archives/LinkModal.tsx:271:                        <button
+src/pages/archives/LinkModal.tsx:277:                        <button
+src/pages/archives/FinancialReportDetailDrawer.tsx:208:            <button
+src/pages/archives/ComplianceModal.tsx:166:                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+src/pages/archives/ComplianceModal.tsx:179:                            <button onClick={loadData} className="mt-4 text-indigo-600 underline">重试</button>
+src/pages/archives/ComplianceModal.tsx:246:                    <button onClick={onClose} className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all active:scale-95">确定</button>
+src/pages/archives/ArchiveDetailDrawer.tsx:213:              <Button
+src/pages/archives/ArchiveDetailDrawer.tsx:237:                        <Button
+src/pages/archives/ArchiveDetailDrawer.tsx:269:                <Button
+src/pages/archives/ArchiveDetailDrawer.tsx:318:            <button
+src/pages/archives/ArchiveDetailDrawer.tsx:326:            <button
+src/pages/scan/MobileUploadPage.tsx:112:            <Button icon={<UploadOutlined />} size="large" block>
+src/pages/scan/MobileUploadPage.tsx:116:          <Button type="primary" icon={<CameraOutlined />} size="large" block>
+src/pages/operations/DestructionApprovalPage.tsx:291:                                        <button
+src/pages/operations/DestructionApprovalPage.tsx:324:                                                    <button
+src/pages/operations/DestructionApprovalPage.tsx:367:                                                        <button
+src/pages/operations/DestructionApprovalPage.tsx:375:                                                        <button
+src/pages/operations/DestructionApprovalPage.tsx:395:                                <button
+src/pages/operations/DestructionApprovalPage.tsx:402:                                <button
+src/pages/operations/DestructionApprovalPage.tsx:449:                                <button
+src/pages/operations/DestructionApprovalPage.tsx:467:                                <button
+src/pages/operations/OpenAppraisalView.tsx:167:                        <button
+src/pages/operations/OpenAppraisalView.tsx:222:                                                <button
+src/pages/operations/OpenAppraisalView.tsx:291:                                                    <button
+src/pages/operations/OpenAppraisalView.tsx:376:                            <button
+src/pages/operations/OpenAppraisalView.tsx:387:                                <button
+src/pages/operations/VolumeManagement.tsx:267:                    <button
+src/pages/operations/VolumeManagement.tsx:274:                    <button
+src/pages/operations/VolumeManagement.tsx:323:                                        <button
+src/pages/operations/VolumeManagement.tsx:332:                                            <button
+src/pages/operations/VolumeManagement.tsx:338:                                            <button
+src/pages/operations/VolumeManagement.tsx:348:                                            <button
+src/pages/operations/VolumeManagement.tsx:354:                                            <button
+src/pages/operations/VolumeManagement.tsx:442:                            <button
+src/pages/operations/VolumeManagement.tsx:448:                            <button
+src/pages/operations/VolumeManagement.tsx:535:                            <button
+src/pages/operations/FreezeHoldDetailPage.tsx:120:                    <button
+src/pages/operations/FreezeHoldDetailPage.tsx:135:                    <button
+src/pages/operations/FreezeHoldDetailPage.tsx:280:                            <button
+src/pages/operations/FreezeHoldDetailPage.tsx:307:                                <button
+src/pages/operations/FreezeHoldDetailPage.tsx:319:                                <button
+src/pages/operations/DestructionView.tsx:150:               <button
+src/pages/operations/DestructionView.tsx:156:               <button
+src/pages/operations/DestructionView.tsx:172:                           <button onClick={() => handleAction('加入销毁清单')} disabled={selectedRows.length === 0} className="text-sm font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50 flex items-center gap-1">
+src/pages/operations/DestructionView.tsx:175:                           <button onClick={() => handleAction('延长保管期限')} disabled={selectedRows.length === 0} className="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50 flex items-center gap-1">
+src/pages/operations/DestructionView.tsx:274:                                          <button
+src/pages/operations/DestructionView.tsx:281:                                          <button className="px-6 py-2 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50">
+src/pages/operations/FreezeHoldPage.tsx:162:                <button
+src/pages/operations/FreezeHoldPage.tsx:210:                    <button
+src/pages/operations/FreezeHoldPage.tsx:274:                                                <button
+src/pages/operations/FreezeHoldPage.tsx:282:                                                    <button
+src/pages/operations/FreezeHoldPage.tsx:305:                                <button
+src/pages/operations/FreezeHoldPage.tsx:312:                                <button
+src/pages/operations/FreezeHoldPage.tsx:331:                            <button
+src/pages/operations/FreezeHoldPage.tsx:417:                                <button
+src/pages/operations/FreezeHoldPage.tsx:429:                                <button
+src/pages/operations/FreezeHoldPage.tsx:447:                            <button
+src/pages/operations/FreezeHoldPage.tsx:474:                                <button
+src/pages/operations/FreezeHoldPage.tsx:486:                                <button
+src/pages/operations/ArchiveApprovalView.tsx:325:                <button
+src/pages/operations/ArchiveApprovalView.tsx:409:                        <button
+src/pages/operations/ArchiveApprovalView.tsx:564:                            <button
+src/pages/operations/ArchiveApprovalView.tsx:576:                                    <button
+src/pages/operations/ArchiveApprovalView.tsx:583:                                    <button
+src/pages/operations/AppraisalListPage.tsx:141:                    <button
+src/pages/operations/AppraisalListPage.tsx:190:                                                <button
+src/pages/operations/AppraisalListPage.tsx:197:                                                <button
+src/pages/operations/AppraisalListPage.tsx:204:                                                <button
+src/pages/operations/AppraisalListPage.tsx:223:                                <button
+src/pages/operations/AppraisalListPage.tsx:230:                                <button
+src/pages/operations/AppraisalListPage.tsx:249:                            <button
+src/pages/operations/AppraisalListPage.tsx:286:                                <button
+src/pages/operations/AppraisalListPage.tsx:293:                                <button
+src/pages/operations/ExpiredArchivesPage.tsx:155:                    <button
+src/pages/operations/ExpiredArchivesPage.tsx:168:                        <button
+src/pages/operations/ExpiredArchivesPage.tsx:182:                    <button
+src/pages/operations/ExpiredArchivesPage.tsx:222:                                            <button
+src/pages/operations/ExpiredArchivesPage.tsx:249:                                <button
+src/pages/operations/ExpiredArchivesPage.tsx:256:                                <button
+src/pages/operations/archive-batch/components/BatchTable.tsx:245:                        <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:254:                            <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:265:                                <Button type="text" danger icon={<DeleteOutlined />} />
+src/pages/operations/archive-batch/components/BatchTable.tsx:272:                            <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:280:                            <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:296:                            <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:362:                        <Button icon={<ReloadOutlined />} onClick={onRefresh}>
+src/pages/operations/archive-batch/components/BatchTable.tsx:365:                        <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:477:                                                <Button
+src/pages/operations/archive-batch/components/BatchTable.tsx:531:                                        <Button
+src/pages/operations/DestructionExecutionPage.tsx:110:                <button
+src/pages/operations/DestructionExecutionPage.tsx:170:                                                <button
+src/pages/operations/DestructionExecutionPage.tsx:200:                                <button
+src/pages/operations/DestructionExecutionPage.tsx:207:                                <button
+src/pages/product-website/blog/SingleSetImplementation.tsx:66:                        <button
+src/pages/product-website/components/ProductShowcaseSection.tsx:80:                  <button
+src/pages/product-website/components/ProductShowcaseSection.tsx:197:      <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-lg text-sm font-medium transition-colors">
+src/pages/product-website/components/ProductShowcaseSection.tsx:229:        <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors">
+src/pages/product-website/components/ProductShowcaseSection.tsx:232:        <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-lg text-sm font-medium transition-colors">
+src/pages/product-website/components/ProductShowcaseSection.tsx:261:                <button className="text-cyan-400 hover:text-cyan-300 text-xs flex items-center gap-1 transition-colors">
+src/pages/product-website/components/ProductShowcaseSection.tsx:282:      <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-lg text-sm font-medium transition-colors">
+src/pages/product-website/components/Footer.tsx:39:          <button 
+src/pages/product-website/components/HeroSection.tsx:63:            <button
+src/pages/product-website/components/Navigation.tsx:38:          <button
+src/pages/product-website/components/ConsultationModal.tsx:51:        <button
+src/pages/product-website/regulations/index.tsx:122:                                        <button
+src/pages/product-website/regulations/index.tsx:151:                    <button
+src/pages/audit/AuditVerificationPage.tsx:281:                    <button
+src/pages/audit/AuditVerificationPage.tsx:291:                    <button
+src/pages/audit/AuditVerificationPage.tsx:301:                    <button
+src/pages/audit/AuditVerificationPage.tsx:311:                    <button
+src/pages/audit/AuditVerificationPage.tsx:341:                        <button
+src/pages/audit/AuditVerificationPage.tsx:370:                        <button
+src/pages/audit/AuditVerificationPage.tsx:426:                        <button
+src/pages/audit/AuditVerificationPage.tsx:483:                        <button
+src/pages/audit/AuditEvidencePackagePage.tsx:217:                        <button
+src/pages/utilization/WarehouseView.tsx:134:              <button
+src/pages/utilization/WarehouseView.tsx:142:                <button
+src/pages/utilization/WarehouseView.tsx:149:                <button
+src/pages/utilization/WarehouseView.tsx:226:          <button
+src/pages/utilization/WarehouseView.tsx:348:          <button
+src/pages/utilization/BorrowingView.tsx:297:                    <button
+src/pages/utilization/BorrowingView.tsx:303:                    <button
+src/pages/utilization/BorrowingView.tsx:309:                    <button
+src/pages/utilization/BorrowingView.tsx:331:                        <button
+src/pages/utilization/BorrowingView.tsx:346:                <button
+src/pages/utilization/BorrowingView.tsx:364:                    <button onClick={fetchBorrowings} className="text-sm text-rose-700 underline">
+src/pages/utilization/BorrowingView.tsx:401:                                            <button
+src/pages/utilization/BorrowingView.tsx:438:                                                    <button
+src/pages/utilization/BorrowingView.tsx:445:                                                    <button
+src/pages/utilization/BorrowingView.tsx:452:                                                    <button
+src/pages/utilization/BorrowingView.tsx:462:                                                <button
+src/pages/utilization/BorrowingView.tsx:499:                        <button
+src/pages/utilization/BorrowingView.tsx:509:                        <button
+src/pages/utilization/BorrowingView.tsx:528:                            <button
+src/pages/utilization/BorrowingView.tsx:568:                            <button
+src/pages/utilization/BorrowingView.tsx:574:                            <button
+src/pages/utilization/RelationshipQueryView.tsx:52:    <button
+src/pages/utilization/RelationshipQueryView.tsx:72:      <button
+src/pages/utilization/RelationshipQueryView.tsx:543:          <button
+src/pages/utilization/RelationshipQueryView.tsx:557:          <button
+src/pages/panorama/VoucherPreviewDrawer.tsx:143:                    <Button
+src/pages/panorama/VoucherPreviewDrawer.tsx:200:                                                                    <Button
+src/pages/panorama/VoucherPreviewDrawer.tsx:261:                                            <Button
+src/pages/panorama/VoucherPreviewDrawer.tsx:295:                                                                    <Button
+src/pages/panorama/ArchivalPanoramaView.tsx:276:                    <button
+src/pages/panorama/ArchivalPanoramaView.tsx:302:                            <button
+src/pages/panorama/ArchivalPanoramaView.tsx:312:                            <button
+src/pages/panorama/ArchivalPanoramaView.tsx:352:                                            <Button
+src/pages/panorama/VoucherPlayer.tsx:93:                    <button onClick={onClose} className="p-1 hover:bg-slate-700 rounded-full text-slate-400 hover:text-white transition-colors">
+src/pages/panorama/VoucherPlayer.tsx:134:                <button
+src/pages/panorama/VoucherPlayer.tsx:156:                <button
+src/pages/panorama/EvidencePreview.tsx:354:                        <button
+src/pages/panorama/EvidencePreview.tsx:388:                    <button onClick={() => setError(null)} className="ml-auto text-xs underline">关闭</button>
+src/pages/panorama/EvidencePreview.tsx:396:                        <button
+src/pages/debug/PaymentFileTestView.tsx:87:                        <button
+src/pages/debug/PreviewWatermarkTestView.tsx:22:                <button

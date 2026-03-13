@@ -148,6 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Toggle Button */}
         <button
           onClick={onToggle}
+          title={collapsed ? "展开菜单" : "折叠菜单"}
           className="w-full h-8 flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 rounded-lg transition-colors mt-2"
         >
           {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}

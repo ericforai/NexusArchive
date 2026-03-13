@@ -51,8 +51,17 @@ public class PoolHelper {
     }
 
     public void updateFields(MetadataUpdateDTO dto) {
-        jdbcTemplate.update("UPDATE arc_file_content SET fiscal_year = ?, voucher_type = ?, creator = ?, fonds_code = ? WHERE id = ?",
+        if (dto == null) {
+            throw new IllegalArgumentException("DTO cannot be null");
+        }
+        if (dto.getId() == null || dto.getId().isBlank()) {
+            throw new IllegalArgumentException("File ID is required");
+        }
+        int updated = jdbcTemplate.update("UPDATE arc_file_content SET fiscal_year = ?, voucher_type = ?, creator = ?, fonds_code = ? WHERE id = ?",
                 dto.getFiscalYear(), dto.getVoucherType(), dto.getCreator(), dto.getFondsCode(), dto.getId());
+        if (updated == 0) {
+            throw new IllegalArgumentException("File not found with ID: " + dto.getId());
+        }
     }
 
     public void generateDemo() throws Exception {

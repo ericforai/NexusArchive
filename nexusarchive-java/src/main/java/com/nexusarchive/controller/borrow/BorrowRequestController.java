@@ -14,6 +14,8 @@ import com.nexusarchive.service.borrow.BorrowRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 /**
  * 借阅申请控制器
  * 
@@ -27,6 +29,7 @@ public class BorrowRequestController {
     private final BorrowRequestService borrowRequestService;
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('borrow:view', 'borrow:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<com.baomidou.mybatisplus.core.metadata.IPage<BorrowRequestVO>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -41,11 +44,13 @@ public class BorrowRequestController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('borrow:apply', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<BorrowRequest> submit(@RequestBody SubmitBorrowRequestCommand command) {
         return Result.success(borrowRequestService.submit(command));
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAnyAuthority('borrow:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> approve(@PathVariable String id, @RequestBody ApproveBorrowRequestCommand command) {
         // 确保 ID 一致
         ApproveBorrowRequestCommand finalCommand = new ApproveBorrowRequestCommand(
@@ -56,12 +61,14 @@ public class BorrowRequestController {
     }
 
     @PostMapping("/{id}/confirm-out")
+    @PreAuthorize("hasAnyAuthority('borrow:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> confirmOut(@PathVariable String id) {
         borrowRequestService.confirmOut(id);
         return Result.success();
     }
 
     @PostMapping("/{id}/return")
+    @PreAuthorize("hasAnyAuthority('borrow:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> returnArchives(@PathVariable String id, @RequestParam String operatorId) {
         borrowRequestService.returnArchives(id, operatorId);
         return Result.success();

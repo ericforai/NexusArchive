@@ -56,6 +56,9 @@ public class RelationGraphHelper {
 
     public RelationGraphDto buildGraph(Archive inputArchive, String originalQueryId, boolean autoRedirected, String redirectMessage, String currentFonds) {
         String centerArchiveId = inputArchive.getId();
+        if (centerArchiveId == null || centerArchiveId.isBlank()) {
+            throw new IllegalArgumentException("Archive ID cannot be null or empty");
+        }
         final String finalCenterArchiveId = centerArchiveId;
 
         // Step 2.1: 查询 acc_archive_relation 表中的关系

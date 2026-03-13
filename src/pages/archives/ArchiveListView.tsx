@@ -357,11 +357,11 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
               />
             </div>
 
-            <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50">
+            <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50" title="展开/收起高级筛选">
               <Filter size={18} />
             </button>
 
-            <button onClick={controller.actions.exportCsv} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50">
+            <button onClick={controller.actions.exportCsv} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50" title="导出当前列表为 CSV">
               <Download size={18} />
             </button>
 

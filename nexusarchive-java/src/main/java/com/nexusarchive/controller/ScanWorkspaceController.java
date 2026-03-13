@@ -51,7 +51,7 @@ public class ScanWorkspaceController {
      * @return 工作区文件列表
      */
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('scan:view', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:view', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<ScanWorkspace>> getWorkspaceFiles(
             @AuthenticationPrincipal com.nexusarchive.security.CustomUserDetails user) {
 
@@ -72,7 +72,7 @@ public class ScanWorkspaceController {
      * @return 文件流
      */
     @GetMapping("/file/{id}")
-    @PreAuthorize("hasAnyAuthority('scan:view', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:view', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_VIEW_FILE", resourceType = "SCAN_WORKSPACE",
                   description = "预览工作区文件")
     public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> getFile(
@@ -113,7 +113,7 @@ public class ScanWorkspaceController {
      * @return 创建的工作区项
      */
     @PostMapping("/upload")
-    @PreAuthorize("hasAnyAuthority('scan:upload', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:upload', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_UPLOAD", resourceType = "SCAN_WORKSPACE",
                   description = "上传文件到扫描工作区")
     public Result<ScanWorkspace> uploadFile(
@@ -144,7 +144,7 @@ public class ScanWorkspaceController {
      * @return 更新后的工作区项
      */
     @PostMapping("/{id}/ocr")
-    @PreAuthorize("hasAnyAuthority('scan:ocr', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:ocr', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_OCR", resourceType = "SCAN_WORKSPACE",
                   description = "触发OCR识别")
     public Result<Void> triggerOcr(
@@ -170,7 +170,7 @@ public class ScanWorkspaceController {
      * @return 更新后的工作区项
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('scan:edit', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:edit', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_UPDATE", resourceType = "SCAN_WORKSPACE",
                   description = "更新扫描工作区数据")
     public Result<ScanWorkspace> updateWorkspace(
@@ -196,7 +196,7 @@ public class ScanWorkspaceController {
      * @return 提交结果（包含预归档池ID等信息）
      */
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyAuthority('scan:submit', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:submit', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_SUBMIT", resourceType = "SCAN_WORKSPACE",
                   description = "提交工作区项到预归档池")
     public Result<ScanWorkspaceService.SubmitResult> submitToPreArchive(
@@ -220,7 +220,7 @@ public class ScanWorkspaceController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('scan:delete', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:delete', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_DELETE", resourceType = "SCAN_WORKSPACE",
                   description = "删除工作区项")
     public Result<Void> deleteWorkspace(
@@ -275,7 +275,7 @@ public class ScanWorkspaceController {
      * @return 会话信息（sessionId 和过期时间）
      */
     @PostMapping("/mobile/session")
-    @PreAuthorize("hasAnyAuthority('scan:upload', 'scan:manage', 'nav:all') or hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('scan:upload', 'scan:manage', 'nav:pre_archive', 'nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SCAN_SESSION_CREATE", resourceType = "SCAN_WORKSPACE",
                   description = "创建移动端扫描会话")
     public Result<MobileSessionResponse> createMobileSession(

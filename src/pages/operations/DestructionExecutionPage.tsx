@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Flame, Loader2, CheckCircle2, AlertTriangle, Play, RefreshCw } from 'lucide-react';
+import { Modal } from 'antd';
 import { destructionApi, Destruction } from '../../api/destruction';
 import { toast } from '../../utils/notificationService';
 
@@ -15,8 +16,6 @@ import { toast } from '../../utils/notificationService';
  * 1. 已审批的销毁任务列表
  * 2. 执行销毁操作
  * 3. 销毁进度显示
- * 
- * PRD 来源: Section 13 - 档案销毁
  */
 export const DestructionExecutionPage: React.FC = () => {
     const [destructions, setDestructions] = useState<Destruction[]>([]);
@@ -50,24 +49,30 @@ export const DestructionExecutionPage: React.FC = () => {
     }, [page]);
 
     const handleExecute = async (id: string) => {
-        if (!window.confirm('确认执行销毁操作吗？此操作不可逆！')) {
-            return;
-        }
-
-        setExecuting(id);
-        try {
-            const res = await destructionApi.executeDestruction(id);
-            if (res.code === 200) {
-                toast.success('销毁执行成功');
-                loadDestructions();
-            } else {
-                toast.error(res.message || '执行失败');
-            }
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || '执行失败');
-        } finally {
-            setExecuting(null);
-        }
+        Modal.confirm({
+            title: '确认执行物理销毁吗？',
+            icon: <AlertTriangle className="text-red-600" />,
+            content: '此操作将永久删除电子文件及相关元数据，根据合规要求，此过程不可逆且将产生永久销毁审计存证。',
+            okText: '确认销毁',
+            okType: 'danger',
+            cancelText: '取消',
+            onOk: async () => {
+                setExecuting(id);
+                try {
+                    const res = await destructionApi.executeDestruction(id);
+                    if (res.code === 200) {
+                        toast.success('销毁执行成功');
+                        loadDestructions();
+                    } else {
+                        toast.error(res.message || '执行失败');
+                    }
+                } catch (error: any) {
+                    toast.error(error?.response?.data?.message || '执行失败');
+                } finally {
+                    setExecuting(null);
+                }
+            },
+        });
     };
 
     const getStatusBadge = (status: string) => {
@@ -116,7 +121,6 @@ export const DestructionExecutionPage: React.FC = () => {
                 </button>
             </div>
 
-            {/* 警告提示 */}
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                 <AlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
                 <div className="text-sm text-red-800">
@@ -125,7 +129,6 @@ export const DestructionExecutionPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* 销毁任务列表 */}
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center h-64">
@@ -191,7 +194,6 @@ export const DestructionExecutionPage: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
-                        {/* 分页 */}
                         <div className="px-4 py-3 border-t flex items-center justify-between">
                             <div className="text-sm text-slate-600">
                                 共 {total} 条，第 {page} / {Math.ceil(total / pageSize)} 页
@@ -221,9 +223,3 @@ export const DestructionExecutionPage: React.FC = () => {
 };
 
 export default DestructionExecutionPage;
-
-
-
-
-
-
