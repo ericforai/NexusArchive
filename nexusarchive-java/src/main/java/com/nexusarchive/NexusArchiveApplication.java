@@ -30,6 +30,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
     org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration.class
 })
 @EnableAsync
+@MapperScan({
+    "com.nexusarchive.mapper",
+    "com.nexusarchive.modules.borrowing.infra.mapper",
+    "com.nexusarchive.modules.document.infra.mapper",
+    "com.nexusarchive.modules.signature.infra.mapper"
+})
 public class NexusArchiveApplication {
 
     public static void main(String[] args) {
