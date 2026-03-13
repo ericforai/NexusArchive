@@ -23,6 +23,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * PRD 来源: Section 2.2 - 流式预览与动态水印
  */
 public interface StreamingPreviewService {
+    String RESOURCE_TYPE_ARCHIVE_MAIN = "archiveMain";
+    String RESOURCE_TYPE_FILE = "file";
     
     /**
      * 流式预览
@@ -35,6 +37,17 @@ public interface StreamingPreviewService {
      */
     PreviewResponse streamPreview(String archiveId, String mode, 
                                  HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 统一资源预览。
+     *
+     * @param resourceType 资源类型：archiveMain / file
+     * @param archiveId    档案主文件预览时的档案 ID
+     * @param fileId       附件/原始凭证文件预览时的文件 ID
+     * @param mode         预览模式
+     */
+    PreviewResponse streamPreview(String resourceType, String archiveId, String fileId, String mode,
+                                  HttpServletRequest request, HttpServletResponse response);
     
     /**
      * 生成预签名 URL
@@ -44,6 +57,11 @@ public interface StreamingPreviewService {
      * @return 预签名 URL 和水印元数据
      */
     PreviewResponse generatePresignedUrl(String archiveId, int expiresInSeconds);
+
+    /**
+     * 统一资源预签名预览。
+     */
+    PreviewResponse generatePresignedUrl(String resourceType, String archiveId, String fileId, int expiresInSeconds);
     
     /**
      * 服务端渲染带水印的内容（高敏模式）
@@ -56,7 +74,6 @@ public interface StreamingPreviewService {
     void renderWithWatermark(String archiveId, int pageNumber, 
                             HttpServletRequest request, HttpServletResponse response);
 }
-
 
 
 

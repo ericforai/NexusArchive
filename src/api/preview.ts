@@ -1,7 +1,10 @@
 import { client } from './client';
 
+export type PreviewResourceType = 'archiveMain' | 'file';
+
 export interface PreviewRequest {
-    archiveId: string;
+    resourceType?: PreviewResourceType;
+    archiveId?: string;
     fileId?: string;
     mode?: 'stream' | 'presigned' | 'rendered';
 }
@@ -31,16 +34,46 @@ export interface PreviewPresignedResult {
 export type PreviewResult = PreviewStreamResult | PreviewPresignedResult;
 
 export const previewApi = {
+    normalizeRequest: (params: PreviewRequest): Required<Pick<PreviewRequest, 'resourceType' | 'mode'>> & Pick<PreviewRequest, 'archiveId' | 'fileId'> => {
+        const mode = params.mode || 'stream';
+        if (params.resourceType) {
+            return {
+                resourceType: params.resourceType,
+                archiveId: params.archiveId,
+                fileId: params.fileId,
+                mode,
+            };
+        }
+
+        if (params.fileId && !params.archiveId) {
+            return {
+                resourceType: 'file',
+                fileId: params.fileId,
+                archiveId: undefined,
+                mode,
+            };
+        }
+
+        return {
+            resourceType: 'archiveMain',
+            archiveId: params.archiveId,
+            fileId: params.fileId,
+            mode,
+        };
+    },
+
     /**
      * 预览已归档档案
      */
     getPreview: async (params: PreviewRequest): Promise<PreviewResult> => {
-        const mode = params.mode || 'stream';
+        const normalized = previewApi.normalizeRequest(params);
+        const mode = normalized.mode;
         if (mode === 'presigned') {
-            const response = await client.post('/archive/preview/presigned', null, {
+            const response = await client.post('/preview/presigned', null, {
                 params: {
-                    archiveId: params.archiveId,
-                    fileId: params.fileId,
+                    resourceType: normalized.resourceType,
+                    archiveId: normalized.archiveId,
+                    fileId: normalized.fileId,
                 },
             });
             const data = response.data?.data || response.data;
@@ -53,10 +86,11 @@ export const previewApi = {
             };
         }
 
-        const response = await client.post('/archive/preview', null, {
+        const response = await client.post('/preview', null, {
             params: {
-                archiveId: params.archiveId,
-                fileId: params.fileId,
+                resourceType: normalized.resourceType,
+                archiveId: normalized.archiveId,
+                fileId: normalized.fileId,
                 mode,
             },
             responseType: 'blob',

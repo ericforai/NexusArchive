@@ -143,6 +143,9 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
     fileName?: string;
     fileUrl?: string;
     type?: string;
+    fileId?: string;
+    archiveId?: string;
+    previewResourceType?: 'archiveMain' | 'file';
   }> = [];
 
   // 1) 虚拟文件节点：FILE_{fileId}，直接预览该文件（不走中心凭证）
@@ -150,9 +153,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
     const fileId = nodeData.id.slice(5);
     attachments.push({
       id: fileId,
+      fileId,
       fileName: nodeData.name || nodeData.code || fileId,
       fileUrl: `/archive/files/download/${fileId}`,
       type: inferFileTypeFromName(nodeData.name || nodeData.code),
+      previewResourceType: 'file',
     });
   }
 
@@ -165,9 +170,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         originalFiles.forEach(file => {
           attachments.push({
             id: file.id,
+            fileId: file.id,
             fileName: file.fileName,
             fileUrl: `/original-vouchers/files/download/${file.id}`,
             type: file.fileType,
+            previewResourceType: 'file',
           });
         });
       }
@@ -185,9 +192,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         originalFiles.forEach(file => {
           attachments.push({
             id: file.id,
+            fileId: file.id,
             fileName: file.fileName,
             fileUrl: `/original-vouchers/files/download/${file.id}`,
             type: file.fileType,
+            previewResourceType: 'file',
           });
         });
       }
@@ -203,9 +212,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
       archiveAttachments.forEach(file => {
         attachments.push({
           id: file.id,
+          fileId: file.id,
           fileName: file.fileName,
           fileUrl: `/archive/files/download/${file.id}`,
           type: file.fileType,
+          previewResourceType: 'file',
         });
       });
     } catch (error) {
@@ -225,9 +236,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         if (!file?.id) return;
         attachments.push({
           id: file.id,
+          fileId: file.id,
           fileName: file.fileName || file.originalName || file.name,
           fileUrl: `/archive/files/download/${file.id}`,
           type: file.fileType,
+          previewResourceType: 'file',
         });
       });
     } catch (error) {
@@ -259,9 +272,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
               seenIds.add(af.id);
               attachments.push({
                 id: af.id,
+                fileId: af.id,
                 fileName: af.fileName || af.originalName || af.name || file.name,
                 fileUrl: `/archive/files/download/${af.id}`,
                 type: af.fileType || inferFileTypeFromName(af.fileName || af.name),
+                previewResourceType: 'file',
               });
               resolved = true;
             }
@@ -273,9 +288,12 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
           if (!resolved) {
             attachments.push({
               id: file.id || legacyArchiveId,
+              fileId: file.id,
+              archiveId: legacyArchiveId,
               fileName: file.name || legacyArchiveId,
               fileUrl: `/archive/${legacyArchiveId}/content`,
               type: inferFileTypeFromName(file.name),
+              previewResourceType: file.id ? 'file' : 'archiveMain',
             });
           }
           continue;
@@ -284,9 +302,11 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         const normalizedUrl = normalizeClientRelativeUrl(candidateUrl);
         attachments.push({
           id: file.id,
+          fileId: file.id,
           fileName: file.name,
           fileUrl: normalizedUrl,
           type: file.type,
+          previewResourceType: file.id ? 'file' : undefined,
         });
       }
     } catch {

@@ -7,22 +7,33 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.dto.PreviewResponse;
 import com.nexusarchive.entity.Archive;
+import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.SysAuditLog;
+import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.mapper.OriginalVoucherMapper;
+import com.nexusarchive.service.ArchiveFileContentService;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.AuditLogService;
+import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.FileStorageService;
+import com.nexusarchive.service.OriginalVoucherService;
 import com.nexusarchive.service.StreamingPreviewService;
 import com.nexusarchive.service.preview.PdfWatermarkRenderer;
 import com.nexusarchive.service.preview.PreviewFilePathResolver;
+import com.nexusarchive.service.preview.PreviewFilePathResolver.ResolvedPreviewFile;
 import com.nexusarchive.service.preview.WatermarkGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,7 +65,12 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
 
     private final FileStorageService fileStorageService;
     private final ArchiveService archiveService;
+    private final ArchiveFileContentService archiveFileContentService;
+    private final OriginalVoucherService originalVoucherService;
     private final AuditLogService auditLogService;
+    private final DataScopeService dataScopeService;
+    private final ArchiveMapper archiveMapper;
+    private final OriginalVoucherMapper originalVoucherMapper;
     private final WatermarkGenerator watermarkGenerator;
     private final PreviewFilePathResolver filePathResolver;
     private final PdfWatermarkRenderer pdfWatermarkRenderer;
@@ -63,13 +79,20 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
     public PreviewResponse streamPreview(String archiveId, String mode,
                                         HttpServletRequest request,
                                         HttpServletResponse response) {
-        // 1. 查询档案
-        Archive archive = archiveService.getArchiveById(archiveId);
+        validateArchiveMainRequest(archiveId);
+        return streamPreview(RESOURCE_TYPE_ARCHIVE_MAIN, archiveId, null, mode, request, response);
+    }
+
+    @Override
+    public PreviewResponse streamPreview(String resourceType, String archiveId, String fileId, String mode,
+                                         HttpServletRequest request,
+                                         HttpServletResponse response) {
+        PreviewTarget target = resolvePreviewTarget(resourceType, archiveId, fileId);
 
         // 2. 生成追踪ID和水印元数据
         String traceId = watermarkGenerator.generateTraceId();
         PreviewResponse.WatermarkMetadata watermark =
-            watermarkGenerator.generateWatermarkMetadata(traceId, archive.getFondsNo());
+            watermarkGenerator.generateWatermarkMetadata(traceId, target.fondsCode());
 
         // 3. 构建响应
         PreviewResponse previewResponse = new PreviewResponse();
@@ -80,7 +103,7 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
         // 4. 根据模式处理
         switch (mode) {
             case "stream":
-                handleStreamMode(archive, request, response, traceId);
+                handleStreamMode(target, request, response, traceId);
                 break;
             case "presigned":
                 // TODO: 实现预签名 URL 生成
@@ -89,32 +112,37 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
             case "rendered":
                 // 服务端渲染模式，需要按页渲染
                 // TODO: 实现按页渲染逻辑
-                handleStreamMode(archive, request, response, traceId);
+                handleStreamMode(target, request, response, traceId);
                 break;
             default:
                 throw new IllegalArgumentException("不支持的预览模式: " + mode);
         }
 
         // 5. 记录审计日志
-        recordPreviewAuditLog(archiveId, mode, traceId);
+        recordPreviewAuditLog(target.auditResourceId(), mode, traceId);
 
         return previewResponse;
     }
     
     @Override
     public PreviewResponse generatePresignedUrl(String archiveId, int expiresInSeconds) {
-        // 1. 查询档案
-        Archive archive = archiveService.getArchiveById(archiveId);
+        validateArchiveMainRequest(archiveId);
+        return generatePresignedUrl(RESOURCE_TYPE_ARCHIVE_MAIN, archiveId, null, expiresInSeconds);
+    }
+
+    @Override
+    public PreviewResponse generatePresignedUrl(String resourceType, String archiveId, String fileId, int expiresInSeconds) {
+        PreviewTarget target = resolvePreviewTarget(resourceType, archiveId, fileId);
 
         // 2. 生成追踪ID和水印
         String traceId = watermarkGenerator.generateTraceId();
         PreviewResponse.WatermarkMetadata watermark =
-            watermarkGenerator.generateWatermarkMetadata(traceId, archive.getFondsNo());
+            watermarkGenerator.generateWatermarkMetadata(traceId, target.fondsCode());
 
         // 3. 生成预签名 URL
         // TODO: 实现预签名 URL 生成
         String presignedUrl = null; // 占位符，待实现
-        log.warn("预签名 URL 生成功能待实现: archiveId={}", archiveId);
+        log.warn("预签名 URL 生成功能待实现: resourceType={}, archiveId={}, fileId={}", resourceType, archiveId, fileId);
 
         // 4. 构建响应
         PreviewResponse response = new PreviewResponse();
@@ -125,7 +153,7 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
         response.setWatermark(watermark);
 
         // 5. 记录审计日志
-        recordPreviewAuditLog(archiveId, "presigned", traceId);
+        recordPreviewAuditLog(target.auditResourceId(), "presigned", traceId);
 
         return response;
     }
@@ -134,11 +162,11 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
     public void renderWithWatermark(String archiveId, int pageNumber,
                                    HttpServletRequest request, HttpServletResponse response) {
         try {
-            // 1. 查询档案
-            Archive archive = archiveService.getArchiveById(archiveId);
+            validateArchiveMainRequest(archiveId);
+            PreviewTarget target = resolvePreviewTarget(RESOURCE_TYPE_ARCHIVE_MAIN, archiveId, null);
 
             // 2. 获取文件路径
-            String filePath = filePathResolver.resolveArchiveFilePath(archiveId);
+            String filePath = target.resolvedFile().storagePath();
             if (filePath == null) {
                 log.warn("档案文件不存在: archiveId={}", archiveId);
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -155,14 +183,14 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
             // 4. 生成追踪ID和水印文本
             String traceId = watermarkGenerator.generateTraceId();
             String watermarkText = watermarkGenerator.generateWatermarkText(traceId);
-            String watermarkSubtext = watermarkGenerator.generateWatermarkSubtext(traceId, archive.getFondsNo());
+            String watermarkSubtext = watermarkGenerator.generateWatermarkSubtext(traceId, target.fondsCode());
 
             // 5. 使用 PdfWatermarkRenderer 渲染指定页面并添加水印
             pdfWatermarkRenderer.renderPageWithWatermark(file, pageNumber, watermarkText,
                                                          watermarkSubtext, traceId, response);
 
             // 6. 记录审计日志
-            recordPreviewAuditLog(archiveId, "rendered", traceId);
+            recordPreviewAuditLog(target.auditResourceId(), "rendered", traceId);
 
         } catch (Exception e) {
             log.error("服务端渲染带水印失败: archiveId={}, pageNumber={}", archiveId, pageNumber, e);
@@ -178,14 +206,13 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
     /**
      * 处理流式模式
      */
-    private void handleStreamMode(Archive archive, HttpServletRequest request,
+    private void handleStreamMode(PreviewTarget target, HttpServletRequest request,
                                  HttpServletResponse response, String traceId) {
         try {
-            // 1. 获取文件路径
-            String relativePath = filePathResolver.resolveArchiveFilePath(archive.getArchiveCode());
+            String relativePath = target.resolvedFile().storagePath();
             log.debug("[handleStreamMode] relativePath={}", relativePath);
             if (relativePath == null) {
-                log.warn("[handleStreamMode] 档案文件不存在: archiveId={}", archive.getId());
+                log.warn("[handleStreamMode] 预览文件不存在: resourceId={}", target.auditResourceId());
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
@@ -203,10 +230,10 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
 
             // 2. 生成水印文本
             String watermarkText = watermarkGenerator.generateWatermarkText(traceId);
-            String watermarkSubtext = watermarkGenerator.generateWatermarkSubtext(traceId, archive.getFondsNo());
+            String watermarkSubtext = watermarkGenerator.generateWatermarkSubtext(traceId, target.fondsCode());
 
             // 3. 设置响应头
-            response.setContentType("application/pdf");
+            response.setContentType(resolveMediaType(target.resolvedFile()).toString());
             response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
             response.setHeader("X-Trace-Id", traceId);
             response.setHeader("X-Watermark-Text", watermarkText);
@@ -224,9 +251,173 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
                 handleFullFileTransfer(fileResource, fileLength, response);
             }
         } catch (IOException e) {
-            log.error("流式预览失败: archiveId={}", archive.getId(), e);
+            log.error("流式预览失败: resourceId={}", target.auditResourceId(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private PreviewTarget resolvePreviewTarget(String resourceType, String archiveId, String fileId) {
+        String normalizedMode = StringUtils.hasText(resourceType) ? resourceType : RESOURCE_TYPE_ARCHIVE_MAIN;
+        return switch (normalizedMode) {
+            case RESOURCE_TYPE_ARCHIVE_MAIN -> resolveArchiveMainTarget(archiveId);
+            case RESOURCE_TYPE_FILE -> resolveFileTarget(fileId);
+            default -> throw new IllegalArgumentException("不支持的资源类型: " + resourceType);
+        };
+    }
+
+    private PreviewTarget resolveArchiveMainTarget(String archiveId) {
+        validateArchiveMainRequest(archiveId);
+        Archive archive = archiveService.getArchiveById(archiveId);
+        ResolvedPreviewFile resolvedFile = filePathResolver.resolveArchiveMainFile(archive.getArchiveCode());
+        if (resolvedFile == null) {
+            throw new IllegalArgumentException("未找到档案主文件: " + archiveId);
+        }
+        return new PreviewTarget(RESOURCE_TYPE_ARCHIVE_MAIN, archive.getId(), archive.getFondsNo(), resolvedFile);
+    }
+
+    private PreviewTarget resolveFileTarget(String fileId) {
+        if (!StringUtils.hasText(fileId)) {
+            throw new IllegalArgumentException("fileId 不能为空");
+        }
+
+        String operatorId = resolveCurrentUserId();
+        ArcFileContent archiveFile = archiveFileContentService.getFileContentById(fileId, operatorId);
+        if (archiveFile != null) {
+            authorizeArchiveBackedFile(archiveFile);
+            ResolvedPreviewFile resolvedFile = filePathResolver.resolveFileById(fileId);
+            if (resolvedFile == null) {
+                throw new IllegalArgumentException("未找到文件: " + fileId);
+            }
+            String fondsCode = StringUtils.hasText(archiveFile.getFondsCode()) ? archiveFile.getFondsCode() : resolveFondsCode(archiveFile.getArchivalCode());
+            return new PreviewTarget(RESOURCE_TYPE_FILE, fileId, fondsCode, resolvedFile);
+        }
+
+        var originalVoucherFile = originalVoucherService.getFileById(fileId);
+        if (originalVoucherFile == null || originalVoucherFile.getDeleted() != 0) {
+            throw new IllegalArgumentException("未找到文件: " + fileId);
+        }
+        OriginalVoucher voucher = originalVoucherMapper.selectById(originalVoucherFile.getVoucherId());
+        if (voucher == null) {
+            throw new IllegalArgumentException("未找到原始凭证文件归属: " + fileId);
+        }
+        if (!dataScopeService.canAccessOriginalVoucher(voucher, dataScopeService.resolve())) {
+            throw new AccessDeniedException("无权访问该原始凭证文件");
+        }
+        ResolvedPreviewFile resolvedFile = filePathResolver.resolveFileById(fileId);
+        if (resolvedFile == null) {
+            throw new IllegalArgumentException("未找到文件: " + fileId);
+        }
+        return new PreviewTarget(RESOURCE_TYPE_FILE, fileId, voucher.getFondsCode(), resolvedFile);
+    }
+
+    private void validateArchiveMainRequest(String archiveId) {
+        if (!StringUtils.hasText(archiveId)) {
+            throw new IllegalArgumentException("archiveId 不能为空");
+        }
+        if (archiveId.startsWith("FILE_") || archiveId.startsWith("OV_")) {
+            throw new IllegalArgumentException("archive/preview 仅支持真实档案主文件预览");
+        }
+    }
+
+    private void authorizeArchiveBackedFile(ArcFileContent file) {
+        String archivalCode = file.getArchivalCode();
+        if (!StringUtils.hasText(archivalCode)) {
+            throw new IllegalArgumentException("文件未绑定档案资源");
+        }
+        Archive archive = archiveMapper.selectById(archivalCode);
+        if (archive == null) {
+            archive = archiveMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Archive>()
+                    .eq(Archive::getArchiveCode, archivalCode)
+                    .last("LIMIT 1")
+            );
+        }
+        if (archive != null) {
+            if (!dataScopeService.canAccessArchive(archive, dataScopeService.resolve())) {
+                throw new AccessDeniedException("无权访问该档案文件");
+            }
+            return;
+        }
+
+        OriginalVoucher voucher = originalVoucherMapper.selectById(archivalCode);
+        if (voucher == null) {
+            voucher = originalVoucherMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<OriginalVoucher>()
+                    .eq(OriginalVoucher::getVoucherNo, archivalCode)
+                    .last("LIMIT 1")
+            );
+        }
+        if (voucher == null) {
+            voucher = originalVoucherMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<OriginalVoucher>()
+                    .eq(OriginalVoucher::getSourceDocId, archivalCode)
+                    .last("LIMIT 1")
+            );
+        }
+        if (voucher == null) {
+            throw new IllegalArgumentException("无法解析文件归属资源: " + archivalCode);
+        }
+        if (!dataScopeService.canAccessOriginalVoucher(voucher, dataScopeService.resolve())) {
+            throw new AccessDeniedException("无权访问该原始凭证文件");
+        }
+    }
+
+    private String resolveFondsCode(String archivalCode) {
+        if (!StringUtils.hasText(archivalCode)) {
+            return "UNKNOWN";
+        }
+        Archive archive = archiveMapper.selectById(archivalCode);
+        if (archive == null) {
+            archive = archiveMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Archive>()
+                    .eq(Archive::getArchiveCode, archivalCode)
+                    .last("LIMIT 1")
+            );
+        }
+        if (archive != null && StringUtils.hasText(archive.getFondsNo())) {
+            return archive.getFondsNo();
+        }
+        OriginalVoucher voucher = originalVoucherMapper.selectById(archivalCode);
+        if (voucher == null) {
+            voucher = originalVoucherMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<OriginalVoucher>()
+                    .eq(OriginalVoucher::getVoucherNo, archivalCode)
+                    .last("LIMIT 1")
+            );
+        }
+        return voucher != null && StringUtils.hasText(voucher.getFondsCode()) ? voucher.getFondsCode() : "UNKNOWN";
+    }
+
+    private MediaType resolveMediaType(ResolvedPreviewFile resolvedFile) {
+        String fileType = resolvedFile.fileType();
+        String fileName = resolvedFile.fileName();
+        if (StringUtils.hasText(fileType)) {
+            return switch (fileType.toLowerCase()) {
+                case "pdf" -> MediaType.APPLICATION_PDF;
+                case "ofd", "application/ofd" -> MediaType.parseMediaType("application/ofd");
+                case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+                case "png" -> MediaType.IMAGE_PNG;
+                case "xml" -> MediaType.APPLICATION_XML;
+                default -> MediaType.APPLICATION_OCTET_STREAM;
+            };
+        }
+        if (StringUtils.hasText(fileName)) {
+            String lowerName = fileName.toLowerCase();
+            if (lowerName.endsWith(".pdf")) return MediaType.APPLICATION_PDF;
+            if (lowerName.endsWith(".ofd")) return MediaType.parseMediaType("application/ofd");
+            if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return MediaType.IMAGE_JPEG;
+            if (lowerName.endsWith(".png")) return MediaType.IMAGE_PNG;
+            if (lowerName.endsWith(".xml")) return MediaType.APPLICATION_XML;
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
+    }
+
+    private String resolveCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof com.nexusarchive.security.CustomUserDetails details) {
+            return details.getId();
+        }
+        return authentication != null ? authentication.getName() : null;
     }
 
     /**
@@ -315,5 +506,13 @@ public class StreamingPreviewServiceImpl implements StreamingPreviewService {
     private String getClientIp() {
         // TODO: 从请求中获取客户端IP
         return "UNKNOWN";
+    }
+
+    private record PreviewTarget(
+        String resourceType,
+        String auditResourceId,
+        String fondsCode,
+        ResolvedPreviewFile resolvedFile
+    ) {
     }
 }

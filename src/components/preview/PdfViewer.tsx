@@ -2,13 +2,7 @@
 // Output: PdfViewer 组件
 // Pos: 通用复用组件 - PDF 查看器
 
-import React, { useRef, useState } from 'react';
-import { Page, Document, pdfjs } from 'react-pdf';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-// 配置 PDF.js worker - 使用 ?url 获取实际的 URL 字符串
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+import React, { useMemo, useState } from 'react';
 
 export interface PdfViewerProps {
   url: string;
@@ -30,120 +24,56 @@ export interface PdfViewerProps {
  */
 export function PdfViewer({
   url,
-  scale,
-  rotation,
-  currentPage,
-  onPageChange,
+  scale: _scale,
+  rotation: _rotation,
+  currentPage: _currentPage,
+  onPageChange: _onPageChange,
   onPageCountChange,
   onLoad,
   onError,
   className = '',
 }: PdfViewerProps) {
-  const [numPages, setNumPages] = useState(0);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-    onPageCountChange?.(numPages);
+  const viewerUrl = useMemo(() => {
+    if (!url) return '';
+    return url.includes('#') ? url : `${url}#view=FitH`;
+  }, [url]);
+
+  const handleLoad = () => {
+    // 原生 PDF 查看器不会暴露页数，这里只通知加载完成。
+    onPageCountChange?.(1);
     onLoad?.();
   };
 
-  const handleLoadError = (error: Error) => {
-    const errorMsg = error.message || 'PDF 加载失败';
+  const handleLoadError = () => {
+    const errorMsg = 'PDF 加载失败';
     setPdfError(errorMsg);
     onError?.(errorMsg);
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < numPages) {
-      onPageChange(currentPage + 1);
-    }
-  };
-
   return (
-    <div className={`pdf-viewer flex flex-col h-full ${className}`}>
-      {/* PDF 渲染区域 */}
-      <div
-        ref={containerRef}
-        className="flex-1 flex items-center justify-center overflow-auto"
-        style={{
-          transform: `scale(${scale}) rotate(${rotation}deg)`,
-          transition: 'transform 0.3s ease',
-        }}
-      >
-        <Document
-          file={url}
-          onLoadSuccess={handleLoadSuccess}
-          onLoadError={handleLoadError}
-          loading={
-            <div className="flex items-center justify-center p-8">
-              <div className="text-slate-400">加载中...</div>
-            </div>
-          }
-          error={
-            <div className="text-center text-slate-400">
-              <p>PDF 加载失败</p>
-              {pdfError && <p className="text-sm mt-2 text-rose-400">{pdfError}</p>}
-            </div>
-          }
-        >
-          <Page
-            pageNumber={currentPage}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
-            className="shadow-lg"
+    <div className={`pdf-viewer flex h-full w-full min-w-0 flex-col ${className}`}>
+      <div className="flex-1 overflow-hidden bg-slate-50">
+        {viewerUrl ? (
+          <iframe
+            src={viewerUrl}
+            title="PDF Preview"
+            className="h-full w-full border-0 bg-white"
+            onLoad={handleLoad}
           />
-        </Document>
+        ) : (
+          <div className="flex h-full items-center justify-center text-slate-400">
+            <p>暂无 PDF 内容</p>
+          </div>
+        )}
+        {pdfError && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 text-center text-slate-400">
+            <p>PDF 加载失败</p>
+            <p className="text-sm mt-2 text-rose-400">{pdfError}</p>
+          </div>
+        )}
       </div>
-
-      {/* 分页导航栏 */}
-      {numPages > 1 && (
-        <div className="flex items-center justify-center gap-4 py-3 border-t border-slate-200 bg-white">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage <= 1}
-            className="p-2 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-40 disabled:cursor-not-allowed"
-            title="上一页"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <span className="text-sm text-slate-700">
-            {currentPage} / {numPages}
-          </span>
-
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage >= numPages}
-            className="p-2 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-40 disabled:cursor-not-allowed"
-            title="下一页"
-          >
-            <ChevronRight size={20} />
-          </button>
-
-          {/* 页面输入框 */}
-          <input
-            type="number"
-            min={1}
-            max={numPages}
-            value={currentPage}
-            onChange={(e) => {
-              const page = parseInt(e.target.value);
-              if (page >= 1 && page <= numPages) {
-                onPageChange(page);
-              }
-            }}
-            className="w-16 px-2 py-1 text-center text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      )}
     </div>
   );
 }

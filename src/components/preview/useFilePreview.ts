@@ -3,9 +3,11 @@
 // Pos: 通用复用组件 - 预览数据获取 Hook
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { previewApi, PreviewRequest, WatermarkMetadata } from '../../api/preview';
+import { previewApi, PreviewRequest, PreviewResourceType, WatermarkMetadata } from '../../api/preview';
 
 export interface UseFilePreviewParams {
+  /** 资源类型：档案主文件 / 文件附件 */
+  resourceType?: PreviewResourceType;
   /** 档案ID（已归档档案使用） */
   archiveId?: string;
   /** 文件ID（记账凭证库或附件使用） */
@@ -43,7 +45,7 @@ export interface UseFilePreviewReturn {
  * </p>
  */
 export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewReturn {
-  const { archiveId, fileId, isPool = false, mode = 'stream', autoLoad = true } = params;
+  const { resourceType, archiveId, fileId, isPool = false, mode = 'stream', autoLoad = true } = params;
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null);
@@ -84,13 +86,18 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
 
   // 加载预览
   const loadPreview = useCallback(async () => {
-    // Pool 模式需要 fileId
-    if (isPool && !fileId) {
+    const normalizedRequest = previewApi.normalizeRequest({
+      resourceType: resourceType ?? (isPool ? 'file' : undefined),
+      archiveId,
+      fileId,
+      mode,
+    });
+
+    if ((isPool || normalizedRequest.resourceType === 'file') && !normalizedRequest.fileId) {
       setError('缺少文件ID');
       return;
     }
-    // Archive 模式需要 archiveId
-    if (!isPool && !archiveId) {
+    if (!isPool && normalizedRequest.resourceType === 'archiveMain' && !normalizedRequest.archiveId) {
       setError('缺少档案ID');
       return;
     }
@@ -103,15 +110,10 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
 
       if (isPool) {
         // 记账凭证库模式：使用 fileId 调用 pool preview API
-        result = await previewApi.getPoolPreview(fileId!);
+        result = await previewApi.getPoolPreview(normalizedRequest.fileId!);
       } else {
-        // 已归档档案模式：使用 archiveId 调用 archive preview API
-        console.log("[useFilePreview] archiveId:", archiveId, "row data:", { archiveId, fileId, mode });
-        const requestParams: PreviewRequest = {
-          archiveId: archiveId!,
-          fileId,
-          mode,
-        };
+        console.log("[useFilePreview] preview request:", normalizedRequest);
+        const requestParams: PreviewRequest = normalizedRequest;
         result = await previewApi.getPreview(requestParams);
       }
 
@@ -143,7 +145,7 @@ export function useFilePreview(params: UseFilePreviewParams): UseFilePreviewRetu
     } finally {
       setLoading(false);
     }
-  }, [archiveId, fileId, isPool, mode, getErrorMessage]);
+  }, [resourceType, archiveId, fileId, isPool, mode, getErrorMessage]);
 
   // 自动加载
   useEffect(() => {

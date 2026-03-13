@@ -35,11 +35,14 @@ interface ArchiveDetailDrawerProps {
 
 type TabKey = 'metadata' | 'voucher' | 'attachments' | 'yonsuite';
 
-// Responsive size calculation
-const getDrawerSize = (): DrawerProps['size'] => {
-  const width = window.innerWidth;
-  if (width >= 1280) return 'large'; // Large screens
-  return 'default';  // Medium and small screens
+// Responsive width calculation
+const getDrawerWidth = (): DrawerProps['width'] => {
+  const viewportWidth = window.innerWidth;
+  if (viewportWidth >= 1600) return 1180;
+  if (viewportWidth >= 1360) return 1080;
+  if (viewportWidth >= 1200) return 980;
+  if (viewportWidth >= 1024) return 900;
+  return '100vw';
 };
 
 export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
@@ -140,9 +143,9 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
     navigate(`/system/archives/${row.id}`);
   };
 
-  const drawerSize: DrawerProps['size'] = useMemo(() => {
-    if (typeof window === 'undefined') return 'large';
-    return getDrawerSize();
+  const drawerWidth: DrawerProps['width'] = useMemo(() => {
+    if (typeof window === 'undefined') return 1080;
+    return getDrawerWidth();
   }, []);
 
   // Don't render if closed or no row
@@ -184,9 +187,9 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
       key: 'attachments',
       label: `关联附件${voucherData?.attachments && voucherData.attachments.length > 0 ? ` (${voucherData.attachments.length})` : ''}`,
       children: (
-        <div className="p-0" style={{ height: 'calc(100vh - 140px)' }}>
-          <OriginalDocumentPreview archiveId={String(row.id)} files={voucherData?.attachments || []} />
-        </div>
+          <div className="p-0" style={{ height: 'calc(100vh - 108px)' }}>
+            <OriginalDocumentPreview files={voucherData?.attachments || []} />
+          </div>
       ),
     },
     {
@@ -282,7 +285,7 @@ export const ArchiveDetailDrawer: React.FC<ArchiveDetailDrawerProps> = ({
       data-testid="archive-detail-drawer"
       open={open}
       onClose={onClose}
-      size={drawerSize}
+      width={drawerWidth}
       placement="right"
       maskClosable={true}
       keyboard={true}

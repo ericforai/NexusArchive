@@ -22,11 +22,13 @@ vi.mock('antd', async () => {
 
 vi.mock('../../preview', () => ({
   SmartFilePreview: ({
+    resourceType,
     archiveId,
     fileId,
     currentFileId,
     files,
   }: {
+    resourceType?: string;
     archiveId?: string;
     fileId?: string;
     currentFileId?: string;
@@ -34,6 +36,7 @@ vi.mock('../../preview', () => ({
   }) => (
     <div
       data-testid="smart-file-preview"
+      data-resource-type={resourceType}
       data-archive-id={archiveId}
       data-file-id={fileId}
       data-current-file-id={currentFileId}
@@ -87,25 +90,31 @@ describe('OriginalDocumentPreview', () => {
     rerender(<OriginalDocumentPreview files={filesB} defaultFileIndex={0} />);
 
     await waitFor(() => {
-      expect(screen.getByTitle('c.pdf')).toBeInTheDocument();
+      expect(screen.getByTestId('smart-file-preview')).toHaveAttribute('data-current-file-id', 'f3');
     });
 
-    expect(client.get).toHaveBeenCalledWith('/archive/files/download/f3', { responseType: 'blob' });
+    expect(client.get).toHaveBeenCalledTimes(3);
   });
 
   it('在归档详情单文件非 OFD 场景下应走共享预览链路', () => {
     render(
       <OriginalDocumentPreview
-        archiveId="archive-001"
         files={[
-          { id: 'pdf-1', fileName: 'invoice.pdf', fileUrl: '/archive/files/download/pdf-1', type: 'application/pdf' },
+          {
+            id: 'pdf-1',
+            fileId: 'pdf-1',
+            fileName: 'invoice.pdf',
+            fileUrl: '/archive/files/download/pdf-1',
+            type: 'application/pdf',
+            previewResourceType: 'file',
+          },
         ]}
       />,
     );
 
     const preview = screen.getByTestId('smart-file-preview');
 
-    expect(preview).toHaveAttribute('data-archive-id', 'archive-001');
+    expect(preview).toHaveAttribute('data-resource-type', 'file');
     expect(preview).toHaveAttribute('data-file-id', 'pdf-1');
     expect(preview).toHaveAttribute('data-current-file-id', 'pdf-1');
     expect(preview).toHaveAttribute('data-file-type', 'pdf');
@@ -120,9 +129,15 @@ describe('OriginalDocumentPreview', () => {
 
     render(
       <OriginalDocumentPreview
-        archiveId="archive-001"
         files={[
-          { id: 'ofd-1', fileName: 'invoice.ofd', fileUrl: '/archive/files/download/ofd-1', type: 'application/ofd' },
+          {
+            id: 'ofd-1',
+            fileId: 'ofd-1',
+            fileName: 'invoice.ofd',
+            fileUrl: '/archive/files/download/ofd-1',
+            type: 'application/ofd',
+            previewResourceType: 'file',
+          },
         ]}
       />,
     );

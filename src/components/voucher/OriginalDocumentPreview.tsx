@@ -13,6 +13,9 @@ interface AttachmentDTO {
   name?: string;
   fileUrl?: string;
   type?: string;
+  fileId?: string;
+  archiveId?: string;
+  previewResourceType?: 'archiveMain' | 'file';
 }
 
 interface OriginalDocumentPreviewProps {
@@ -67,6 +70,43 @@ const detectPreviewFileType = (file: AttachmentDTO): 'pdf' | 'image' | 'ofd' | '
   return 'unknown';
 };
 
+const resolvePreviewResource = (
+  file: AttachmentDTO,
+  fallbackArchiveId?: string,
+): { resourceType: 'archiveMain' | 'file'; archiveId?: string; fileId?: string } | null => {
+  if (file.previewResourceType === 'file') {
+    return {
+      resourceType: 'file',
+      fileId: file.fileId || file.id,
+    };
+  }
+
+  if (file.previewResourceType === 'archiveMain') {
+    return {
+      resourceType: 'archiveMain',
+      archiveId: file.archiveId || fallbackArchiveId,
+      fileId: file.fileId,
+    };
+  }
+
+  if (file.fileId || file.fileUrl?.includes('/files/download/')) {
+    return {
+      resourceType: 'file',
+      fileId: file.fileId || file.id,
+    };
+  }
+
+  if (file.archiveId || fallbackArchiveId) {
+    return {
+      resourceType: 'archiveMain',
+      archiveId: file.archiveId || fallbackArchiveId,
+      fileId: file.fileId,
+    };
+  }
+
+  return null;
+};
+
 export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = ({
   files,
   defaultFileIndex = 0,
@@ -83,7 +123,15 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
     return selectedIndex >= 0 ? files[selectedIndex] : null;
   }, [selectedIndex, files]);
   const selectedFileType = selectedFile ? detectPreviewFileType(selectedFile) : 'unknown';
-  const useSharedPreview = Boolean(archiveId && files.length === 1 && selectedFileType !== 'ofd');
+  const shouldUseCompactPdfLayout = selectedFileType === 'pdf' && files.length === 1;
+  const selectedPreviewResource = selectedFile ? resolvePreviewResource(selectedFile, archiveId) : null;
+  const useSharedPreview = Boolean(
+    selectedPreviewResource
+      && files.length === 1
+      && selectedFileType !== 'ofd'
+      && ((selectedPreviewResource.resourceType === 'archiveMain' && selectedPreviewResource.archiveId)
+        || (selectedPreviewResource.resourceType === 'file' && selectedPreviewResource.fileId)),
+  );
 
   const previewFiles = useMemo(() => {
     return files.map(file => ({
@@ -115,6 +163,7 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
       const normalizedFileUrl = normalizePreviewUrl(file.fileUrl);
       const archiveIdFromContentUrl = extractArchiveIdFromContentUrl(normalizedFileUrl);
       const candidateUrls: string[] = [];
+      const fileId = file.fileId || file.id;
 
       if (normalizedFileUrl) {
         candidateUrls.push(normalizedFileUrl);
@@ -136,7 +185,7 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
       }
 
       // 最后兜底：按当前 id 当作 fileId 尝试下载
-      candidateUrls.push(`/archive/files/download/${file.id}`);
+      candidateUrls.push(`/archive/files/download/${fileId}`);
 
       const dedupedUrls = Array.from(new Set(candidateUrls.filter(Boolean)));
       let lastError: unknown = null;
@@ -234,16 +283,18 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
       {/* PDF 预览区域 */}
       <div className="flex-1 overflow-hidden">
         {!selectedFile ? null : useSharedPreview ? (
-          <div className="h-full p-4">
-            <div className="h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className={shouldUseCompactPdfLayout ? 'h-full' : 'h-full p-3 md:p-4'}>
+            <div className={`h-full overflow-hidden bg-white ${shouldUseCompactPdfLayout ? '' : 'rounded-xl border border-slate-200 shadow-sm'}`}>
               <SmartFilePreview
-                key={`${archiveId}-${selectedFile.id}`}
-                archiveId={archiveId}
-                fileId={selectedFile.id}
+                key={`${selectedPreviewResource?.resourceType || 'unknown'}-${selectedPreviewResource?.archiveId || selectedPreviewResource?.fileId || selectedFile.id}`}
+                resourceType={selectedPreviewResource?.resourceType}
+                archiveId={selectedPreviewResource?.archiveId}
+                fileId={selectedPreviewResource?.fileId}
                 fileName={selectedFile.fileName || selectedFile.name}
                 files={previewFiles}
                 currentFileId={selectedFile.id}
                 onFileChange={handleSmartPreviewFileChange}
+                showToolbar={!shouldUseCompactPdfLayout}
                 showFileNav={false}
                 className="h-full"
               />
