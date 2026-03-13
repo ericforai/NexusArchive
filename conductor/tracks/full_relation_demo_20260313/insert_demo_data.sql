@@ -1,5 +1,5 @@
--- 全链路演示数据构建脚本 (v4)
--- 目标：修正存储路径并补全上下游关系
+-- 全链路演示数据构建脚本 (v5)
+-- 目标：修正为 FileStorageService 认可的相对路径
 
 -- 1. 清理
 DELETE FROM public.acc_archive_relation WHERE id LIKE 'demo-rel-%';
@@ -24,11 +24,12 @@ VALUES
 ('demo-rel-4', 'demo-con-001',     'demo-inv-001',     'RELATED', '关联发票'),
 ('demo-rel-5', 'demo-inv-001',     'demo-rec-001',     'RELATED', '支付回单');
 
--- 4. 插入文件内容 (使用相对路径 ./data/archives/...)
+-- 4. 插入文件内容
+-- 注意：relativePath 不能以 / 或 ./ 开头，系统会自动拼接 data/archives
 INSERT INTO public.arc_file_content (id, archival_code, file_name, file_type, file_size, storage_path, item_id, pre_archive_status)
 VALUES 
-('f-demo-payment-001', 'FK-202311-001', '付款单_FK-202311-001.pdf', 'pdf', 104331, './data/archives/demo/FK-202311-001.pdf', 'demo-payment-001', 'COMPLETED'),
-('f-demo-app-001',     'SQ-202311-001', '付款申请_SQ-202311-001.pdf', 'pdf', 104331, './data/archives/demo/SQ-202311-001.pdf', 'demo-app-001',     'COMPLETED'),
-('f-demo-con-001',     'HT-202311-001', '采购合同_HT-202311-001.pdf', 'pdf', 104331, './data/archives/demo/HT-202311-001.pdf', 'demo-con-001',     'COMPLETED'),
-('f-demo-inv-001',     'FP-202311-001', '增值税发票_FP-202311-001.pdf', 'pdf', 104331, './data/archives/demo/FP-202311-001.pdf', 'demo-inv-001',     'COMPLETED'),
-('f-demo-rec-001',     'HD-202311-001', '银行回单_HD-202311-001.pdf', 'pdf', 104331, './data/archives/demo/HD-202311-001.pdf', 'demo-rec-001',     'COMPLETED');
+('f-demo-payment-001', 'FK-202311-001', '付款单_FK-202311-001.pdf', 'pdf', 104331, 'demo/FK-202311-001.pdf', 'demo-payment-001', 'COMPLETED'),
+('f-demo-app-001',     'SQ-202311-001', '付款申请_SQ-202311-001.pdf', 'pdf', 104331, 'demo/SQ-202311-001.pdf', 'demo-app-001',     'COMPLETED'),
+('f-demo-con-001',     'HT-202311-001', '采购合同_HT-202311-001.pdf', 'pdf', 104331, 'demo/HT-202311-001.pdf', 'demo-con-001',     'COMPLETED'),
+('f-demo-inv-001',     'FP-202311-001', '增值税发票_FP-202311-001.pdf', 'pdf', 104331, 'demo/FP-202311-001.pdf', 'demo-inv-001',     'COMPLETED'),
+('f-demo-rec-001',     'HD-202311-001', '银行回单_HD-202311-001.pdf', 'pdf', 104331, 'demo/HD-202311-001.pdf', 'demo-rec-001',     'COMPLETED');
