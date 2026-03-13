@@ -141,9 +141,219 @@ public class VoucherMatchingController {
         templateManager.reloadTemplates();
         return Result.success();
     }
-    
+
+    // ========== 向导功能 (Onboarding) ==========
+
+    /**
+     * 数据扫描 - 扫描企业数据，分析凭证关联模式
+     */
+    @PostMapping("/legacy-onboarding/scan/{companyId}")
+    public Result<OnboardingScanResult> scanCompanyData(@PathVariable String companyId) {
+        OnboardingScanResult result = matchingEngine.scanForOnboarding(companyId);
+        return Result.success(result);
+    }
+
+    /**
+     * 应用规则 - 应用预设规则模板
+     */
+    @PostMapping("/legacy-onboarding/apply-preset/{companyId}")
+    public Result<Void> applyPresetRules(
+            @PathVariable String companyId,
+            @RequestBody ApplyPresetRequest request) {
+        matchingEngine.applyPresetRules(companyId, request.getPresetId(), request.isOverwrite());
+        return Result.success();
+    }
+
+    /**
+     * 确认映射 - 确认并保存配置的映射关系
+     */
+    @PostMapping("/legacy-onboarding/confirm/{companyId}")
+    public Result<Void> confirmMappings(
+            @PathVariable String companyId,
+            @Valid @RequestBody ConfirmMappingRequest request) {
+        matchingEngine.confirmMappings(companyId, convertMappingsToMapList(request.getMappings()));
+        return Result.success();
+    }
+
+    private List<java.util.Map<String, Object>> convertMappingsToMapList(List<MappingItem> mappings) {
+        if (mappings == null) return java.util.Collections.emptyList();
+        return mappings.stream().map(item -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("sourceType", item.getSourceType());
+            map.put("targetType", item.getTargetType());
+            map.put("fieldMappings", item.getFieldMappings());
+            return map;
+        }).toList();
+    }
+
+    // ========== 合规功能 (Compliance) ==========
+
+    /**
+     * 合规报告 - 生成凭证关联合规性报告
+     */
+    @GetMapping("/compliance/report")
+    public Result<ComplianceReport> getComplianceReport(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) String companyId) {
+        ComplianceReport report = matchingEngine.generateComplianceReport(startDate, endDate, companyId);
+        return Result.success(report);
+    }
+
+    /**
+     * 缺失文档 - 查找缺失的凭证文档
+     */
+    @GetMapping("/compliance/missing-docs")
+    public Result<MissingDocsResult> getMissingDocs(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) String companyId) {
+        MissingDocsResult result = matchingEngine.findMissingDocuments(startDate, endDate, companyId);
+        return Result.success(result);
+    }
+
+    /**
+     * 导出报告 - 导出合规报告
+     */
+    @GetMapping("/compliance/export")
+    public org.springframework.http.ResponseEntity<byte[]> exportComplianceReport(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) String companyId) {
+
+        byte[] reportData = matchingEngine.exportComplianceReport(startDate, endDate, companyId);
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"compliance-report-" + startDate + "-to-" + endDate + ".xlsx\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(reportData);
+    }
+
+    /**
+     * 确认关联 - 手动确认凭证关联关系
+     */
+    @PostMapping("/confirm/{voucherId}")
+    public Result<Void> confirmMatching(
+            @PathVariable String voucherId,
+            @RequestBody ConfirmMatchingRequest request) {
+        matchingEngine.confirmMatching(voucherId, request.getTargetArchiveId(), request.getConfirmationReason());
+        return Result.success();
+    }
+
     // ========== DTO ==========
-    
+
+    /**
+     * 向导扫描结果
+     */
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class OnboardingScanResult {
+        private String companyId;
+        private int totalVouchers;
+        private int matchedVouchers;
+        private int unmatchedVouchers;
+        private java.util.Map<String, Integer> typeDistribution;
+    }
+
+    /**
+     * 应用预设规则请求
+     */
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ApplyPresetRequest {
+        private String presetId;
+        private boolean overwrite;
+    }
+
+    /**
+     * 确认映射请求
+     */
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ConfirmMappingRequest {
+        private java.util.List<MappingItem> mappings;
+    }
+
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class MappingItem {
+        private String sourceType;
+        private String targetType;
+        private java.util.Map<String, String> fieldMappings;
+    }
+
+    /**
+     * 合规报告
+     */
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ComplianceReport {
+        private String period;
+        private int totalVouchers;
+        private int matchedVouchers;
+        private int unmatchedVouchers;
+        private double complianceRate;
+        private java.util.List<ComplianceIssue> issues;
+    }
+
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ComplianceIssue {
+        private String type;
+        private String description;
+        private int count;
+        private String severity;
+    }
+
+    /**
+     * 缺失文档结果
+     */
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class MissingDocsResult {
+        private int missingCount;
+        private java.util.List<MissingDocItem> items;
+    }
+
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class MissingDocItem {
+        private String voucherId;
+        private String voucherType;
+        private String voucherDate;
+        private String reason;
+    }
+
+    /**
+     * 确认关联请求
+     */
+    @Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class ConfirmMatchingRequest {
+        private String targetArchiveId;
+        private String confirmationReason;
+    }
+
+    // ========== 原有 DTO ==========
     @Data
     public static class MatchTask {
         private final String taskId;

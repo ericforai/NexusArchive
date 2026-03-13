@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -221,5 +222,19 @@ public class PoolController {
     public Result<String> generateDemoData() {
         try { helper.generateDemo(); return Result.success("成功生成10条演示数据"); }
         catch (Exception e) { return Result.error("生成失败: " + e.getMessage()); }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
+    @ArchivalAudit(operationType = "DELETE_POOL_ITEM", resourceType = "ARC_FILE_CONTENT", description = "删除预归档记录")
+    public Result<String> deletePoolItem(@PathVariable String id, HttpServletRequest request) {
+        ArcFileContent file = poolService.getFileById(id);
+        if (file == null) return Result.error("文件不存在");
+
+        String before = String.format("id=%s, fileName=%s, status=%s", file.getId(), file.getFileName(), file.getPreArchiveStatus());
+        poolService.deletePoolItem(id);
+        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "DELETE_POOL_ITEM", "ARC_FILE_CONTENT", id, "SUCCESS", "删除预归档记录 | " + before, request.getRemoteAddr());
+
+        return Result.success("删除成功");
     }
 }

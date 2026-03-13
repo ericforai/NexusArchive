@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.function.Function;
 
@@ -24,10 +26,22 @@ public class YonSuiteClient {
 
     private final YonAuthService yonAuthService;
     private final YonSuiteRequestBuilder requestBuilder;
+    private final YonSuiteVoucherClient yonSuiteVoucherClient;
+    private final YonSuiteCollectionClient yonSuiteCollectionClient;
+    private final YonSuitePaymentClient yonSuitePaymentClient;
 
-    public YonSuiteClient(YonAuthService yonAuthService, YonSuiteRequestBuilder requestBuilder) {
+    public YonSuiteClient(
+            YonAuthService yonAuthService,
+            YonSuiteRequestBuilder requestBuilder,
+            YonSuiteVoucherClient yonSuiteVoucherClient,
+            YonSuiteCollectionClient yonSuiteCollectionClient,
+            YonSuitePaymentClient yonSuitePaymentClient
+    ) {
         this.yonAuthService = yonAuthService;
         this.requestBuilder = requestBuilder;
+        this.yonSuiteVoucherClient = yonSuiteVoucherClient;
+        this.yonSuiteCollectionClient = yonSuiteCollectionClient;
+        this.yonSuitePaymentClient = yonSuitePaymentClient;
     }
 
     private String getToken(String accessToken) {
@@ -35,23 +49,55 @@ public class YonSuiteClient {
     }
 
     public YonVoucherListResponse queryVouchers(String accessToken, YonVoucherListRequest request) {
-        return requestBuilder.post(baseUrl + "/yonbip/fi/ficloud/openapi/voucher/queryVouchers", getToken(accessToken), request, YonVoucherListResponse.class);
+        return yonSuiteVoucherClient.queryVouchers(accessToken, request);
     }
 
     public YonVoucherDetailResponse queryVoucherById(String accessToken, String voucherId) {
-        JSONObject body = new JSONObject(); body.putOnce("voucherId", voucherId);
-        return requestBuilder.post(baseUrl + "/yonbip/EFI/openapi/voucher/queryVoucherById", getToken(accessToken), body.toString(), YonVoucherDetailResponse.class);
+        return yonSuiteVoucherClient.queryVoucherById(accessToken, voucherId);
     }
 
     public YonAttachmentListResponse queryVoucherAttachments(String accessToken, String voucherId) {
-        JSONObject body = new JSONObject(); body.putOnce("id", voucherId);
-        return requestBuilder.post(baseUrl + "/yonbip/digitalModel/adm/attachmentInfo/query", getToken(accessToken), body.toString(), YonAttachmentListResponse.class);
+        return yonSuiteVoucherClient.queryVoucherAttachments(accessToken, voucherId);
+    }
+
+    public YonAttachmentListResponse queryAttachments(String accessToken, String businessId) {
+        return queryVoucherAttachments(accessToken, businessId);
+    }
+
+    public YonPaymentDetailResponse queryPaymentDetail(String accessToken, String paymentId) {
+        return yonSuitePaymentClient.queryPaymentDetail(accessToken, paymentId);
+    }
+
+    public YonRefundFileResponse queryRefundFileUrls(String accessToken, YonRefundFileRequest request) {
+        return yonSuitePaymentClient.queryRefundFileUrls(accessToken, request);
+    }
+
+    public YonCollectionFileResponse queryCollectionFiles(String accessToken, YonCollectionFileRequest request) {
+        return yonSuiteCollectionClient.queryCollectionFiles(accessToken, request);
+    }
+
+    public YonPaymentApplyFileResponse queryPaymentApplyFileUrls(String accessToken, YonPaymentApplyFileRequest request) {
+        return requestBuilder.post(
+                baseUrl + "/yonbip/EFI/paymentApply/file/url",
+                getToken(accessToken),
+                request,
+                YonPaymentApplyFileResponse.class
+        );
+    }
+
+    public String getTokenWithCredentials(String appKey, String appSecret) {
+        return yonAuthService.getAccessToken(appKey, appSecret);
     }
 
     public byte[] downloadFile(String url) {
         if (url == null || url.isEmpty() || !isValidDownloadUrl(url)) return null;
         try (var resp = cn.hutool.http.HttpRequest.get(url).timeout(60_000).execute()) { return resp.bodyBytes(); }
         catch (Exception e) { throw new RuntimeException("Download failed"); }
+    }
+
+    public InputStream downloadStream(String url) {
+        byte[] bytes = downloadFile(url);
+        return bytes == null ? null : new ByteArrayInputStream(bytes);
     }
 
     public <T> T downloadFileWithCallback(String url, Function<java.io.InputStream, T> callback) {
@@ -72,10 +118,10 @@ public class YonSuiteClient {
     }
     
     public YonCollectionBillResponse queryCollectionBills(String accessToken, YonCollectionBillRequest request) {
-        return requestBuilder.post(baseUrl + "/yonbip/EFI/collection/list", getToken(accessToken), request, YonCollectionBillResponse.class);
+        return yonSuiteCollectionClient.queryCollectionBills(accessToken, request);
     }
 
     public YonCollectionDetailResponse queryCollectionDetail(String accessToken, String collectionId) {
-        return requestBuilder.get(baseUrl + "/yonbip/EFI/collection/detail", getToken(accessToken), collectionId, YonCollectionDetailResponse.class);
+        return yonSuiteCollectionClient.queryCollectionDetail(accessToken, collectionId);
     }
 }
