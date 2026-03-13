@@ -282,7 +282,7 @@ const RELATIONSHIP_DEMO_SCENARIOS: DemoScenario[] = [
     }
 ];
 
-const resolveDemoScenario = (archiveId: string): { scenario: DemoScenario; centerId: string } => {
+const resolveDemoScenario = (archiveId: string): { scenario: DemoScenario; centerId: string; matched: boolean } => {
     const normalized = normalizeArchiveKey(archiveId);
 
     for (const scenario of RELATIONSHIP_DEMO_SCENARIOS) {
@@ -290,24 +290,27 @@ const resolveDemoScenario = (archiveId: string): { scenario: DemoScenario; cente
             normalizeArchiveKey(node.id) === normalized || normalizeArchiveKey(node.code) === normalized
         );
         if (matchedNode) {
-            return { scenario, centerId: matchedNode.id };
+            return { scenario, centerId: matchedNode.id, matched: true };
         }
 
         const matchedAlias = scenario.aliases.some(alias => normalizeArchiveKey(alias) === normalized);
         if (matchedAlias) {
-            return { scenario, centerId: scenario.defaultCenterId };
+            return { scenario, centerId: scenario.defaultCenterId, matched: true };
         }
     }
 
     const defaultScenario = RELATIONSHIP_DEMO_SCENARIOS[0];
-    return { scenario: defaultScenario, centerId: defaultScenario.defaultCenterId };
+    return { scenario: defaultScenario, centerId: defaultScenario.defaultCenterId, matched: false };
 };
 
 /**
  * 默认关联文件数据（当后端无数据时使用）
  */
 const getDefaultFiles = (archiveId: string): LinkedFile[] => {
-    const { scenario, centerId } = resolveDemoScenario(archiveId);
+    const { scenario, centerId, matched } = resolveDemoScenario(archiveId);
+    if (!matched) {
+        return [];
+    }
     return scenario.filesByNodeId[centerId] || [];
 };
 

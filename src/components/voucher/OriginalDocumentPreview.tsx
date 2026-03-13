@@ -46,6 +46,12 @@ const extractArchiveIdFromContentUrl = (url?: string): string | null => {
   return matched?.[1] || null;
 };
 
+const extractDownloadFileId = (url?: string): string | null => {
+  if (!url) return null;
+  const matched = url.match(/^\/(?:archive|original-vouchers)\/files\/download\/([^/?#]+)/);
+  return matched?.[1] || null;
+};
+
 const detectPreviewFileType = (file: AttachmentDTO): 'pdf' | 'image' | 'ofd' | 'unknown' => {
   const normalizedType = file.type?.toLowerCase() || '';
   const normalizedName = (file.fileName || file.name || '').toLowerCase();
@@ -74,25 +80,35 @@ const resolvePreviewResource = (
   file: AttachmentDTO,
   fallbackArchiveId?: string,
 ): { resourceType: 'archiveMain' | 'file'; archiveId?: string; fileId?: string } | null => {
+  const fileIdFromUrl = extractDownloadFileId(normalizePreviewUrl(file.fileUrl));
+
   if (file.previewResourceType === 'file') {
+    const resolvedFileId = file.fileId || fileIdFromUrl;
+    if (!resolvedFileId) {
+      return null;
+    }
     return {
       resourceType: 'file',
-      fileId: file.fileId || file.id,
+      fileId: resolvedFileId,
     };
   }
 
   if (file.previewResourceType === 'archiveMain') {
+    const resolvedArchiveId = file.archiveId || fallbackArchiveId;
+    if (!resolvedArchiveId) {
+      return null;
+    }
     return {
       resourceType: 'archiveMain',
-      archiveId: file.archiveId || fallbackArchiveId,
-      fileId: file.fileId,
+      archiveId: resolvedArchiveId,
+      fileId: file.fileId || fileIdFromUrl || undefined,
     };
   }
 
-  if (file.fileId || file.fileUrl?.includes('/files/download/')) {
+  if (file.fileId || fileIdFromUrl) {
     return {
       resourceType: 'file',
-      fileId: file.fileId || file.id,
+      fileId: file.fileId || fileIdFromUrl || undefined,
     };
   }
 
@@ -162,8 +178,9 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
     try {
       const normalizedFileUrl = normalizePreviewUrl(file.fileUrl);
       const archiveIdFromContentUrl = extractArchiveIdFromContentUrl(normalizedFileUrl);
+      const fileIdFromDownloadUrl = extractDownloadFileId(normalizedFileUrl);
       const candidateUrls: string[] = [];
-      const fileId = file.fileId || file.id;
+      const resolvedFileId = file.fileId || fileIdFromDownloadUrl;
 
       if (normalizedFileUrl) {
         candidateUrls.push(normalizedFileUrl);
@@ -184,8 +201,9 @@ export const OriginalDocumentPreview: React.FC<OriginalDocumentPreviewProps> = (
         }
       }
 
-      // 最后兜底：按当前 id 当作 fileId 尝试下载
-      candidateUrls.push(`/archive/files/download/${fileId}`);
+      if (resolvedFileId) {
+        candidateUrls.push(`/archive/files/download/${resolvedFileId}`);
+      }
 
       const dedupedUrls = Array.from(new Set(candidateUrls.filter(Boolean)));
       let lastError: unknown = null;

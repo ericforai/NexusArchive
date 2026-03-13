@@ -137,6 +137,11 @@ const extractArchiveIdFromLegacyDownloadUrl = (url: string): string | null => {
   return matched?.[1] || null;
 };
 
+const extractFileIdFromDownloadUrl = (url: string): string | null => {
+  const matched = url.match(/^\/(?:archive|original-vouchers)\/files\/download\/([^/?#]+)/);
+  return matched?.[1] || null;
+};
+
 const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRow> => {
   const attachments: Array<{
     id: string;
@@ -288,25 +293,26 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
           if (!resolved) {
             attachments.push({
               id: file.id || legacyArchiveId,
-              fileId: file.id,
+              fileId: undefined,
               archiveId: legacyArchiveId,
               fileName: file.name || legacyArchiveId,
               fileUrl: `/archive/${legacyArchiveId}/content`,
               type: inferFileTypeFromName(file.name),
-              previewResourceType: file.id ? 'file' : 'archiveMain',
+              previewResourceType: 'archiveMain',
             });
           }
           continue;
         }
 
         const normalizedUrl = normalizeClientRelativeUrl(candidateUrl);
+        const resolvedFileId = extractFileIdFromDownloadUrl(normalizedUrl);
         attachments.push({
-          id: file.id,
-          fileId: file.id,
+          id: resolvedFileId || file.id || normalizedUrl,
+          fileId: resolvedFileId || undefined,
           fileName: file.name,
           fileUrl: normalizedUrl,
           type: file.type,
-          previewResourceType: file.id ? 'file' : undefined,
+          previewResourceType: resolvedFileId ? 'file' : undefined,
         });
       }
     } catch {

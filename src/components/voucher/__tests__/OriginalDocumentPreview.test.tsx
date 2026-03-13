@@ -146,4 +146,26 @@ describe('OriginalDocumentPreview', () => {
     expect(await screen.findByTestId('ofd-viewer')).toBeInTheDocument();
     expect(client.get).toHaveBeenCalledWith('/archive/files/download/ofd-1', { responseType: 'blob' });
   });
+
+  it('当附件只有不可信业务ID但提供直接 URL 时应回退到直连加载而不是统一预览', async () => {
+    render(
+      <OriginalDocumentPreview
+        files={[
+          {
+            id: 'relation-record-1',
+            fileName: 'statement.pdf',
+            fileUrl: 'https://static.example.com/files/statement.pdf',
+            type: 'application/pdf',
+            previewResourceType: 'file',
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.queryByTestId('smart-file-preview')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(client.get).toHaveBeenCalledWith('https://static.example.com/files/statement.pdf', { responseType: 'blob' });
+    });
+  });
 });
