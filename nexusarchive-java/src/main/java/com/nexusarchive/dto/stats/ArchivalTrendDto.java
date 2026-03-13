@@ -7,9 +7,13 @@ package com.nexusarchive.dto.stats;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ArchivalTrendDto {
     private String date;
     private long count;

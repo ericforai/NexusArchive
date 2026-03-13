@@ -7,11 +7,15 @@ package com.nexusarchive.dto.stats;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DashboardStatsDto {
     private long totalArchives;
     private String storageUsed;

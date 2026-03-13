@@ -5,7 +5,6 @@
 
 package com.nexusarchive.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.stats.ArchivalTrendDto;
 import com.nexusarchive.dto.stats.DashboardStatsDto;
@@ -31,6 +30,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +104,7 @@ public class StatsServiceImpl implements StatsService {
     @Override
     @Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
     public List<ArchivalTrendDto> getArchivalTrend() {
-        // 近 30 天归档趋势，使用 SQL 聚合
+        // 近 30 天归档趋势，直接使用参数化 SQL，避免 LambdaQueryWrapper + apply/last 生成不稳定 SQL。
         Map<LocalDate, Long> dailyCounts = new LinkedHashMap<>();
         LocalDate today = LocalDate.now();
         for (int i = 29; i >= 0; i--) {
@@ -113,18 +113,26 @@ public class StatsServiceImpl implements StatsService {
         }
 
         DataScopeContext scope = dataScopeService.resolve();
-        LambdaQueryWrapper<Archive> trendWrapper = new LambdaQueryWrapper<>();
-        dataScopeService.applyArchiveScope(trendWrapper, scope);
-        trendWrapper.select(Archive::getCreatedTime) // Placeholder for columns
-                .apply("to_char(date(created_time), 'YYYY-MM-DD') AS date")
-                .apply("COUNT(*) AS count")
-                .ge(Archive::getCreatedTime, LocalDate.now().minusDays(29))
-                .groupBy(Archive::getCreatedTime) // This might need manual adjustment if group by function is strictly required
-                .last("GROUP BY date(created_time) ORDER BY date(created_time) ASC");
-        // Actually, MyBatis Plus LambdaQueryWrapper select doesn't support aliasing with functions easily
-        // Let's use a more compatible way for ArchUnit compliance while keeping functionality.
-        // Let's try to use LambdaQueryWrapper and see if it passes the ArchUnit test.
-        List<Map<String, Object>> rows = archiveMapper.selectMaps(trendWrapper);
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+                SELECT
+                  date_trunc('day', created_time)::date AS date,
+                  COUNT(*) AS count
+                FROM acc_archive
+                WHERE deleted = 0
+                  AND created_time >= ?
+                """);
+
+        params.add(LocalDate.now().minusDays(29));
+        applyArchiveScope(sql, params, scope);
+
+        sql.append("""
+                
+                GROUP BY date_trunc('day', created_time)
+                ORDER BY date
+                """);
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
         for (Map<String, Object> row : rows) {
             String dateStr = String.valueOf(row.get("date"));
             LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
@@ -140,6 +148,44 @@ public class StatsServiceImpl implements StatsService {
                         .count(entry.getValue())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private void applyArchiveScope(StringBuilder sql, List<Object> params, DataScopeContext scope) {
+        if (scope == null || scope.isAll()) {
+            return;
+        }
+
+        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        if (currentFondsNo != null && !currentFondsNo.isBlank()) {
+            sql.append(" AND fonds_no = ?");
+            params.add(currentFondsNo);
+            return;
+        }
+
+        if (!scope.allowedFonds().isEmpty()) {
+            sql.append(" AND fonds_no IN (");
+            for (int i = 0; i < scope.allowedFonds().size(); i++) {
+                if (i > 0) {
+                    sql.append(", ");
+                }
+                sql.append("?");
+            }
+            sql.append(")");
+            params.addAll(scope.allowedFonds());
+            return;
+        }
+
+        if (scope.isSelf()) {
+            if (scope.userId() != null) {
+                sql.append(" AND created_by = ?");
+                params.add(scope.userId());
+            } else {
+                sql.append(" AND 1 = 0");
+            }
+            return;
+        }
+
+        sql.append(" AND 1 = 0");
     }
 
     @Override

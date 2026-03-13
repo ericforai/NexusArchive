@@ -5,14 +5,11 @@
 
 package com.nexusarchive.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nexusarchive.common.enums.DataScopeType;
 import com.nexusarchive.dto.stats.ArchivalTrendDto;
 import com.nexusarchive.dto.stats.DashboardStatsDto;
 import com.nexusarchive.dto.stats.StorageStatsDto;
 import com.nexusarchive.dto.stats.TaskStatusStatsDto;
-import com.nexusarchive.entity.Archive;
-import com.nexusarchive.entity.ArcFileContent;
-import com.nexusarchive.entity.IngestRequestStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
@@ -31,6 +28,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.*;
 
 /**
@@ -69,7 +67,8 @@ class StatsServiceImplTest {
         when(archiveMapper.selectCount(any())).thenReturn(1500L); // total
         when(arcFileContentMapper.sumFileSize()).thenReturn(1024L * 1024 * 500); // 500 MB
         when(ingestRequestStatusMapper.selectCount(any())).thenReturn(5L); // pending tasks
-        
+        when(jdbcTemplate.queryForList(anyString(), any(Object[].class))).thenReturn(Collections.emptyList());
+
         // Mock data scope resolve
         when(dataScopeService.resolve()).thenReturn(DataScopeService.DataScopeContext.all());
 
@@ -116,7 +115,7 @@ class StatsServiceImplTest {
         mockDbResult.add(row2);
 
         when(dataScopeService.resolve()).thenReturn(DataScopeService.DataScopeContext.all());
-        when(archiveMapper.selectMaps(any())).thenReturn(mockDbResult);
+        when(jdbcTemplate.queryForList(anyString(), any(Object[].class))).thenReturn(mockDbResult);
 
         // Act
         List<ArchivalTrendDto> result = statsService.getArchivalTrend();
@@ -183,5 +182,17 @@ class StatsServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals("1.0 KB", result.getUsed());
+    }
+
+    @Test
+    void getArchivalTrend_ShouldUseAllowedFondsScopeInSql() {
+        when(dataScopeService.resolve()).thenReturn(
+                new DataScopeService.DataScopeContext(DataScopeType.SELF, "user-1", new LinkedHashSet<>(List.of("F001", "F002")))
+        );
+        when(jdbcTemplate.queryForList(anyString(), any(Object[].class))).thenReturn(Collections.emptyList());
+
+        statsService.getArchivalTrend();
+
+        verify(jdbcTemplate).queryForList(contains("fonds_no IN (?, ?)"), any(Object[].class));
     }
 }
