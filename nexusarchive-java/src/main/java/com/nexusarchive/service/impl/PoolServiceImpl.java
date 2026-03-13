@@ -384,4 +384,22 @@ public class PoolServiceImpl implements PoolService {
     public void insertDemoMetadata(ArcFileMetadataIndex metadata) {
         arcFileMetadataIndexMapper.insert(metadata);
     }
+
+    @Override
+    @Transactional
+    public void deletePoolItem(String id) {
+        ArcFileContent fileContent = arcFileContentMapper.selectById(id);
+        if (fileContent == null) {
+            throw new RuntimeException("文件不存在: " + id);
+        }
+
+        // 删除元数据索引
+        arcFileMetadataIndexMapper.delete(new LambdaQueryWrapper<ArcFileMetadataIndex>()
+                .eq(ArcFileMetadataIndex::getFileId, id));
+
+        // 删除文件内容记录
+        arcFileContentMapper.deleteById(id);
+
+        log.info("已删除预归档记录: id={}, fileName={}", id, fileContent.getFileName());
+    }
 }
