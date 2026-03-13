@@ -81,7 +81,7 @@ public class PoolServiceImpl implements PoolService {
         log.info("开始搜索候选凭证: {}", request);
 
         // 1. 构建元数据查询 (针对金额、发票号、销售方、日期等)
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileMetadataIndex> metaQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<ArcFileMetadataIndex> metaQuery = new LambdaQueryWrapper<>();
         
         if (request.getMinAmount() != null) {
             metaQuery.ge(ArcFileMetadataIndex::getTotalAmount, request.getMinAmount());
@@ -114,7 +114,7 @@ public class PoolServiceImpl implements PoolService {
                 .collect(Collectors.toMap(ArcFileMetadataIndex::getFileId, m -> m, (m1, m2) -> m1));
 
         // 2. 构建主表查询
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> contentQuery = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<ArcFileContent> contentQuery = new LambdaQueryWrapper<>();
         
         // 排除已归档
         contentQuery.ne(ArcFileContent::getPreArchiveStatus, "COMPLETED");
@@ -145,7 +145,7 @@ public class PoolServiceImpl implements PoolService {
             if (meta == null) {
                 // 如果是没走元数据索引的简单查询，补查一下 (使用 selectList 并取第一条以防重复数据导致 selectOne 报错)
                 List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
-                        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileMetadataIndex>()
+                        new LambdaQueryWrapper<ArcFileMetadataIndex>()
                                 .eq(ArcFileMetadataIndex::getFileId, c.getId()).last("LIMIT 1"));
                 meta = metas.isEmpty() ? null : metas.get(0);
             }
@@ -197,7 +197,7 @@ public class PoolServiceImpl implements PoolService {
 
     @Override
     public List<PoolItemDto> listPoolItems(String category) {
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.and(w -> w.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
                 .or()
                 .isNotNull(ArcFileContent::getPreArchiveStatus));
@@ -218,7 +218,7 @@ public class PoolServiceImpl implements PoolService {
     @Override
     public List<PoolItemDto> listByStatus(String status, String category) {
         String normalizedStatus = normalizeLegacyStatus(status);
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ArcFileContent::getPreArchiveStatus, normalizedStatus);
 
         applyCategoryFilter(queryWrapper, category);
@@ -326,7 +326,7 @@ public class PoolServiceImpl implements PoolService {
 
     @Override
     public List<ArcFileContent> listPendingCheckFiles() {
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ArcFileContent> queryWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
                 .and(w -> w.isNull(ArcFileContent::getPreArchiveStatus)
                         .or().eq(ArcFileContent::getPreArchiveStatus, "PENDING_CHECK")
@@ -338,16 +338,16 @@ public class PoolServiceImpl implements PoolService {
 
     @Override
     public List<ArcFileContent> getLegacyAttachments(String businessDocNo) {
-        QueryWrapper<ArcFileContent> query = new QueryWrapper<>();
-        query.likeRight("business_doc_no", businessDocNo + "_ATT_")
-                .orderByAsc("business_doc_no");
+        LambdaQueryWrapper<ArcFileContent> query = new LambdaQueryWrapper<>();
+        query.likeRight(ArcFileContent::getBusinessDocNo, businessDocNo + "_ATT_")
+                .orderByAsc(ArcFileContent::getBusinessDocNo);
         return arcFileContentMapper.selectList(query);
     }
 
     @Override
     public ArcFileMetadataIndex getMetadataByFileId(String fileId) {
         List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
-                new QueryWrapper<ArcFileMetadataIndex>().eq("file_id", fileId).last("LIMIT 1"));
+                new LambdaQueryWrapper<ArcFileMetadataIndex>().eq(ArcFileMetadataIndex::getFileId, fileId).last("LIMIT 1"));
         return metas.isEmpty() ? null : metas.get(0);
     }
 
@@ -360,13 +360,13 @@ public class PoolServiceImpl implements PoolService {
     @Override
     @Transactional
     public int cleanupDemoData() {
-        QueryWrapper<ArcFileContent> queryWrapper = new QueryWrapper<>();
-        queryWrapper.likeRight("file_hash", "DEMO_HASH_");
+        LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.likeRight(ArcFileContent::getFileHash, "DEMO_HASH_");
         List<ArcFileContent> oldFiles = arcFileContentMapper.selectList(queryWrapper);
 
         if (!oldFiles.isEmpty()) {
             List<String> oldFileIds = oldFiles.stream().map(ArcFileContent::getId).collect(Collectors.toList());
-            arcFileMetadataIndexMapper.delete(new QueryWrapper<ArcFileMetadataIndex>().in("file_id", oldFileIds));
+            arcFileMetadataIndexMapper.delete(new LambdaQueryWrapper<ArcFileMetadataIndex>().in(ArcFileMetadataIndex::getFileId, oldFileIds));
         }
 
         int deletedCount = arcFileContentMapper.delete(queryWrapper);

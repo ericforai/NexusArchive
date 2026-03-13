@@ -57,6 +57,7 @@ describe('previewApi', () => {
         };
 
         const result = await previewApi.getPreview({
+            resourceType: 'archiveMain',
             archiveId: 'A1',
             mode: 'stream',
         });
@@ -93,6 +94,7 @@ describe('previewApi', () => {
         };
 
         const result = await previewApi.getPreview({
+            resourceType: 'archiveMain',
             archiveId: 'A2',
             mode: 'presigned',
         });
@@ -105,7 +107,7 @@ describe('previewApi', () => {
         expect(result.watermark?.text).toBe('user-2 2025-01-02 trace-456');
     });
 
-    it('should include fileId when previewing a specific archive attachment', async () => {
+    it('should use unified file preview contract when previewing attachments', async () => {
         let requestConfig: any;
 
         client.defaults.adapter = async (config) => {
@@ -120,13 +122,13 @@ describe('previewApi', () => {
         };
 
         await previewApi.getPreview({
-            archiveId: 'A3',
             fileId: 'F3',
+            resourceType: 'file',
             mode: 'stream',
         });
 
         expect(requestConfig?.params).toMatchObject({
-            archiveId: 'A3',
+            resourceType: 'file',
             fileId: 'F3',
             mode: 'stream',
         });

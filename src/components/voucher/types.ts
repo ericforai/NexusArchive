@@ -34,6 +34,9 @@ export interface AttachmentDTO {
   name?: string;
   fileUrl?: string;
   type?: string;
+  fileId?: string;
+  archiveId?: string;
+  previewResourceType?: 'archiveMain' | 'file';
 }
 
 /**

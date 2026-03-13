@@ -22,9 +22,11 @@ const convertAttachments = (apiAttachments: VoucherDataResponse['attachments']):
   if (!apiAttachments || apiAttachments.length === 0) return undefined;
   return apiAttachments.map(att => ({
     id: att.id,
+    fileId: att.id,
     fileName: att.fileName,
     fileUrl: `/archive/files/download/${att.id}`,  // 修复：移除重复的 /api 前缀
     type: att.fileType,
+    previewResourceType: 'file',
   }));
 };
 

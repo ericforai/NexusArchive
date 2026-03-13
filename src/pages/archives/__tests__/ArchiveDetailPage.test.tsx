@@ -48,7 +48,7 @@ vi.mock('../hooks/useVoucherData', () => ({
       debitTotal: 10000,
       voucherDate: '2024-01-01',
       attachments: [
-        { id: 'att-1', fileName: 'invoice.ofd', type: 'application/ofd' },
+        { id: 'att-1', fileId: 'att-1', fileName: 'invoice.ofd', type: 'application/ofd', previewResourceType: 'file' },
       ],
       entries: []
     },
@@ -60,8 +60,12 @@ vi.mock('../../../components/voucher', async () => {
   const actual = await vi.importActual<typeof import('../../../components/voucher')>('../../../components/voucher');
   return {
     ...actual,
-    OriginalDocumentPreview: ({ archiveId }: { archiveId?: string }) => (
-      <div data-testid="original-document-preview" data-archive-id={archiveId} />
+    OriginalDocumentPreview: ({ files }: { files?: Array<{ previewResourceType?: string; fileId?: string }> }) => (
+      <div
+        data-testid="original-document-preview"
+        data-file-id={files?.[0]?.fileId}
+        data-resource-type={files?.[0]?.previewResourceType}
+      />
     ),
   };
 });
@@ -117,9 +121,10 @@ describe('ArchiveDetailPage', () => {
     expect(screen.getAllByText('凭证详情')).toHaveLength(2);
   });
 
-  it('should pass archive id into attachment preview entry', () => {
+  it('should pass file preview resource metadata into attachment preview entry', () => {
     renderWithRouter(<ArchiveDetailPage />);
     fireEvent.click(screen.getByRole('tab', { name: /关联附件/ }));
-    expect(screen.getByTestId('original-document-preview')).toHaveAttribute('data-archive-id', 'test-archive-123');
+    expect(screen.getByTestId('original-document-preview')).toHaveAttribute('data-file-id', 'att-1');
+    expect(screen.getByTestId('original-document-preview')).toHaveAttribute('data-resource-type', 'file');
   });
 });

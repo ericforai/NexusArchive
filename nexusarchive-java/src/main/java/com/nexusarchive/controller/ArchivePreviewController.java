@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 
 /**
  * 档案预览控制器
@@ -40,18 +42,16 @@ public class ArchivePreviewController {
             @RequestParam(defaultValue = "stream") String mode,
             HttpServletRequest request,
             HttpServletResponse response) {
-        
+
         try {
             streamingPreviewService.streamPreview(archiveId, mode, request, response);
+        } catch (IllegalArgumentException e) {
+            writeErrorResponse(response, HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (AccessDeniedException e) {
+            writeErrorResponse(response, HttpStatus.FORBIDDEN, e.getMessage());
         } catch (Exception e) {
             log.error("预览失败: archiveId={}, mode={}", archiveId, mode, e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json;charset=UTF-8");
-            try {
-                response.getWriter().write("{\"code\":500,\"message\":\"预览失败\"}");
-            } catch (Exception writeException) {
-                log.warn("预览失败响应写入异常", writeException);
-            }
+            writeErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "预览失败");
         }
     }
     
@@ -61,11 +61,15 @@ public class ArchivePreviewController {
     public Result<PreviewResponse> generatePresignedUrl(
             @RequestParam String archiveId,
             @RequestParam(defaultValue = "3600") int expiresInSeconds) {
-        
+
         try {
             PreviewResponse previewResponse = streamingPreviewService.generatePresignedUrl(
                 archiveId, expiresInSeconds);
             return Result.success(previewResponse);
+        } catch (IllegalArgumentException e) {
+            return Result.fail(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        } catch (AccessDeniedException e) {
+            return Result.fail(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             log.error("生成预签名URL失败: archiveId={}", archiveId, e);
             return Result.fail("生成预签名URL失败: " + e.getMessage());
@@ -80,16 +84,34 @@ public class ArchivePreviewController {
             @RequestParam int pageNumber,
             HttpServletRequest request,
             HttpServletResponse response) {
-        
+
         try {
             streamingPreviewService.renderWithWatermark(archiveId, pageNumber, request, response);
+        } catch (IllegalArgumentException e) {
+            writeErrorResponse(response, HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (AccessDeniedException e) {
+            writeErrorResponse(response, HttpStatus.FORBIDDEN, e.getMessage());
         } catch (Exception e) {
             log.error("服务端渲染失败: archiveId={}, pageNumber={}", archiveId, pageNumber, e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
+
+    private void writeErrorResponse(HttpServletResponse response, HttpStatus status, String message) {
+        response.setStatus(status.value());
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            response.getWriter().write(String.format("{\"code\":%d,\"message\":\"%s\"}", status.value(), escapeJson(message)));
+        } catch (Exception writeException) {
+            log.warn("预览失败响应写入异常", writeException);
+        }
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
 }
-
-
-
 
