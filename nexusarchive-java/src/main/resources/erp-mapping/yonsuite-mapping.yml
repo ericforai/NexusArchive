@@ -14,6 +14,9 @@ headerMappings:
   voucherNumber:
     field: header.displayname
 
+  attachmentCount:
+    field: header.attachmentCount
+
   voucherDate:
     field: header.maketime
 

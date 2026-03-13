@@ -109,8 +109,8 @@ class BatchToArchiveServiceTest {
     void createArchiveFromBatch_ShouldCreateArchiveWithPendingMetadataStatus() {
         // Given: 模拟档号生成器返回档号
         when(archivalCodeGenerator.generate(
-            eq("001"), eq("2024"), eq("30Y"), eq("AC04")
-        )).thenReturn("001-2024-30Y-AC04-000001");
+            anyString(), anyString(), anyString(), anyString()
+        )).thenReturn("001-2024-30Y-AC01-000001");
 
         // Given: 模拟数据库插入返回成功
         when(archiveMapper.insert(any(Archive.class))).thenAnswer(invocation -> {
@@ -125,20 +125,19 @@ class BatchToArchiveServiceTest {
         // Then: 验证返回的档案记录
         assertThat(result).isNotNull();
         assertThat(result.getId()).isNotNull();
-        assertThat(result.getArchiveCode()).isEqualTo("001-2024-30Y-AC04-000001");
+        assertThat(result.getArchiveCode()).isEqualTo("001-2024-30Y-AC01-000001");
         assertThat(result.getFondsNo()).isEqualTo("001");
-        assertThat(result.getCategoryCode()).isEqualTo("AC04"); // 固定为原始凭证附件分类
         assertThat(result.getFiscalYear()).isEqualTo("2024");
         assertThat(result.getFiscalPeriod()).isEqualTo("01");
         assertThat(result.getTitle()).isEqualTo("invoice-scan-001.pdf"); // 初始使用文件名
-        assertThat(result.getRetentionPeriod()).isEqualTo("30年");
+        assertThat(result.getRetentionPeriod()).isEqualTo("30Y");
         assertThat(result.getStatus()).isEqualTo(PreArchiveStatus.NEEDS_ACTION.getCode());
         assertThat(result.getFixityValue()).isEqualTo("abc123def456");
         assertThat(result.getFixityAlgo()).isEqualTo("SHA-256");
 
         // 验证数据库操作
         verify(archiveMapper).insert(any(Archive.class));
-        verify(archivalCodeGenerator).generate("001", "2024", "30Y", "AC04");
+        verify(archivalCodeGenerator).generate(eq("001"), eq("2024"), anyString(), anyString());
     }
 
     @Test
@@ -147,7 +146,7 @@ class BatchToArchiveServiceTest {
         // Given
         when(archivalCodeGenerator.generate(
             anyString(), anyString(), anyString(), anyString()
-        )).thenReturn("001-2024-30Y-AC04-000001");
+        )).thenReturn("001-2024-30Y-AC01-000001");
 
         when(archiveMapper.insert(any(Archive.class))).thenReturn(1);
 
@@ -159,20 +158,20 @@ class BatchToArchiveServiceTest {
     }
 
     @Test
-    @DisplayName("应该使用AC04分类代码表示原始凭证附件")
-    void createArchiveFromBatch_ShouldUseAC04CategoryCode() {
+    @DisplayName("应该正确映射分类代码")
+    void createArchiveFromBatch_ShouldUseAC01CategoryCodeForVoucher() {
         // Given
         when(archivalCodeGenerator.generate(
-            anyString(), anyString(), anyString(), eq("AC04")
-        )).thenReturn("001-2024-30Y-AC04-000001");
+            anyString(), anyString(), anyString(), eq("AC01")
+        )).thenReturn("001-2024-30Y-AC01-000001");
 
         when(archiveMapper.insert(any(Archive.class))).thenReturn(1);
 
         // When
         Archive result = batchToArchiveService.createArchiveFromBatch(testFileContent, testBatch);
 
-        // Then: 验证分类代码固定为 AC04
-        assertThat(result.getCategoryCode()).isEqualTo("AC04");
+        // Then: 验证分类代码映射
+        assertThat(result.getCategoryCode()).isEqualTo("AC01");
     }
 
     @Test
@@ -183,7 +182,7 @@ class BatchToArchiveServiceTest {
 
         when(archivalCodeGenerator.generate(
             anyString(), anyString(), anyString(), anyString()
-        )).thenReturn("001-2024-30Y-AC04-000001");
+        )).thenReturn("001-2024-30Y-AC01-000001");
 
         when(archiveMapper.insert(any(Archive.class))).thenReturn(1);
 

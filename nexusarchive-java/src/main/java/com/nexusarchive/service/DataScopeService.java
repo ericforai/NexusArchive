@@ -78,35 +78,28 @@ public class DataScopeService {
             return;
         }
 
-        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
-        // 这是系统的核心数据隔离机制，必须优先检查
         String currentFondsNo = FondsContext.getCurrentFondsNo();
         if (StringUtils.hasText(currentFondsNo)) {
-            // 用户已切换到特定全宗，只返回该全宗的数据
-            wrapper.eq("fonds_no", currentFondsNo);
+            wrapper.lambda().eq(Archive::getFondsNo, currentFondsNo);
             return;
         }
 
-        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
         Set<String> allowedFonds = context.allowedFonds();
         if (!allowedFonds.isEmpty()) {
-            wrapper.in("fonds_no", allowedFonds);
+            wrapper.lambda().in(Archive::getFondsNo, allowedFonds);
             return;
         }
 
-        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
-        // 这是为了确保用户至少能看到自己创建的数据
         if (context.isSelf()) {
             if (context.userId() != null) {
-                wrapper.eq("created_by", context.userId());
+                wrapper.lambda().eq(Archive::getCreatedBy, context.userId());
             } else {
-                wrapper.eq("1", "0");
+                wrapper.apply("1=0");
             }
             return;
         }
 
-        // 如果没有任何权限，不允许访问任何数据
-        wrapper.eq("1", "0");
+        wrapper.apply("1=0");
     }
 
     /**
@@ -198,32 +191,28 @@ public class DataScopeService {
             return;
         }
 
-        // 优先级1：优先使用当前选中的全宗（从 FondsContext 获取）
         String currentFondsNo = FondsContext.getCurrentFondsNo();
         if (StringUtils.hasText(currentFondsNo)) {
-            wrapper.eq("fonds_code", currentFondsNo);
+            wrapper.lambda().eq(OriginalVoucher::getFondsCode, currentFondsNo);
             return;
         }
 
-        // 优先级2：后备方案 - 基于 allowedFonds 列表进行数据隔离
         Set<String> allowedFonds = context.allowedFonds();
         if (!allowedFonds.isEmpty()) {
-            wrapper.in("fonds_code", allowedFonds);
+            wrapper.lambda().in(OriginalVoucher::getFondsCode, allowedFonds);
             return;
         }
 
-        // 优先级3：仅在没有任何全宗权限时，才使用 created_by 过滤
         if (context.isSelf()) {
             if (context.userId() != null) {
-                wrapper.eq("created_by", context.userId());
+                wrapper.lambda().eq(OriginalVoucher::getCreatedBy, context.userId());
             } else {
-                wrapper.eq("1", "0");
+                wrapper.apply("1=0");
             }
             return;
         }
 
-        // 如果没有任何权限，不允许访问任何数据
-        wrapper.eq("1", "0");
+        wrapper.apply("1=0");
     }
 
     /**

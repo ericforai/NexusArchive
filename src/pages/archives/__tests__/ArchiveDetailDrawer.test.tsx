@@ -77,12 +77,14 @@ vi.mock('../hooks/useVoucherData', () => ({
 }));
 
 vi.mock('../../../components/voucher', async () => {
+  const React = await import('react');
   const actual = await vi.importActual<typeof import('../../../components/voucher')>('../../../components/voucher');
   return {
     ...actual,
-    OriginalDocumentPreview: ({ archiveId }: { archiveId?: string }) => (
-      <div data-testid="original-document-preview" data-archive-id={archiveId} />
-    ),
+    OriginalDocumentPreview: ({ files }: { files?: any[] }) => React.createElement('div', {
+      'data-testid': 'original-document-preview',
+      'data-files-count': files?.length || 0
+    }),
   };
 });
 
@@ -180,7 +182,7 @@ describe('ArchiveDetailDrawer', () => {
     expect(tabsElement).toBeInTheDocument();
   });
 
-  it('should pass row id into attachment preview entry', () => {
+  it('should pass voucher attachments into attachment preview entry', () => {
     renderWithRouter(
       <ArchiveDetailDrawer
         open={true}
@@ -191,6 +193,6 @@ describe('ArchiveDetailDrawer', () => {
       />
     );
 
-    expect(screen.getByTestId('original-document-preview')).toHaveAttribute('data-archive-id', '123');
+    expect(screen.getByTestId('original-document-preview')).toHaveAttribute('data-files-count', '1');
   });
 });

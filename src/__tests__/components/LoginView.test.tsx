@@ -73,7 +73,7 @@ describe('LoginView', () => {
         it('应显示登录表单标题', () => {
             renderLoginView();
 
-            expect(screen.getByRole('heading', { name: '登录' })).toBeInTheDocument();
+            expect(screen.getByText(/欢迎回来/)).toBeInTheDocument();
         });
 
         it('应包含用户名和密码输入框', () => {

@@ -24,6 +24,13 @@ vi.mock('@/api/originalVoucher', async () => {
   };
 });
 
+vi.mock('@/store/useFondsStore', () => ({
+  useFondsStore: vi.fn(() => ({
+    currentFonds: { fondsCode: '001', fondsName: 'Test Fonds' },
+    _hasHydrated: true,
+  })),
+}));
+
 describe('OriginalVoucherListView', () => {
   let queryClient: QueryClient;
 

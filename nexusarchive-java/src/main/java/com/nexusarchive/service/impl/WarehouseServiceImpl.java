@@ -5,7 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.Location;
 import com.nexusarchive.mapper.ArchiveMapper;
@@ -38,8 +38,8 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Override
     public List<Location> getShelves() {
         // Return all locations of type SHELF
-        return locationMapper.selectList(new QueryWrapper<Location>()
-                .eq("type", "SHELF"));
+        return locationMapper.selectList(new LambdaQueryWrapper<Location>()
+                .eq(Location::getType, "SHELF"));
     }
 
     @Override

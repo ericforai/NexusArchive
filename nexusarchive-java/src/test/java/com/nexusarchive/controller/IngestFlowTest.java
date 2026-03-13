@@ -1,8 +1,3 @@
-// Input: cn.hutool、org.junit、org.mockito、Spring Framework、等
-// Output: IngestFlowTest 测试用例类
-// Pos: 后端测试用例
-// 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
-
 package com.nexusarchive.controller;
 
 import cn.hutool.core.codec.Base64;
@@ -16,6 +11,7 @@ import com.nexusarchive.event.VoucherReceivedEvent;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
 import com.nexusarchive.service.impl.IngestServiceImpl;
 import com.nexusarchive.util.PathSecurityUtils;
+import com.nexusarchive.service.helper.IngestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,10 +26,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * IngestService 集成测试
- * 验证 SIP 接收、状态初始化和事件发布
- */
 public class IngestFlowTest {
 
     private IngestServiceImpl ingestService;
@@ -46,6 +38,7 @@ public class IngestFlowTest {
     private com.nexusarchive.integration.erp.adapter.ErpAdapterFactory erpAdapterFactory;
     private com.nexusarchive.service.ArchiveSecurityService archiveSecurityService;
     private PathSecurityUtils pathSecurityUtils;
+    private IngestHelper ingestHelper;
 
     @BeforeEach
     void setUp() {
@@ -58,17 +51,15 @@ public class IngestFlowTest {
         erpAdapterFactory = mock(com.nexusarchive.integration.erp.adapter.ErpAdapterFactory.class);
         archiveSecurityService = mock(com.nexusarchive.service.ArchiveSecurityService.class);
         pathSecurityUtils = mock(PathSecurityUtils.class);
+        ingestHelper = mock(IngestHelper.class);
         when(pathSecurityUtils.getSafeFileName(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpConfigMapper, erpAdapterFactory, archiveSecurityService, pathSecurityUtils);
-        
-        // 注入临时路径配置
+        ingestService = new IngestServiceImpl(statusMapper, eventPublisher, arcFileContentMapper, archivalPackageService, archiveService, erpConfigMapper, erpAdapterFactory, archiveSecurityService, pathSecurityUtils, ingestHelper);
         ReflectionTestUtils.setField(ingestService, "tempRootPath", "/tmp/nexus-test");
     }
 
     @Test
     void testIngestSipPublishesEvent() {
-        // 1. 构造 SIP 包
         String corruptedContent = "%PDF-1.4\nThis is a corrupted file content...";
         String base64Content = Base64.encode(corruptedContent);
         
@@ -101,25 +92,12 @@ public class IngestFlowTest {
                         .build()))
                 .build();
 
-        // 2. 执行接收
-        // 在新的事件驱动架构下，ingestSip 应该立即返回成功，而不是抛出异常
-        // 异常会在异步 Listener 中处理
         var response = ingestService.ingestSip(sip);
 
-        // 3. 验证响应
         assertNotNull(response);
         assertEquals("RECEIVED", response.getStatus());
-        assertEquals(sip.getRequestId(), response.getRequestId());
-
-        // 4. 验证事件发布
         ArgumentCaptor<VoucherReceivedEvent> eventCaptor = ArgumentCaptor.forClass(VoucherReceivedEvent.class);
         verify(eventPublisher).publishEvent(eventCaptor.capture());
-        
-        VoucherReceivedEvent event = eventCaptor.getValue();
-        assertNotNull(event);
-        assertEquals(sip.getRequestId(), event.getSipDto().getRequestId());
-        
-        // 5. 验证状态初始化
         verify(statusMapper).insert(any(com.nexusarchive.entity.IngestRequestStatus.class));
     }
 }

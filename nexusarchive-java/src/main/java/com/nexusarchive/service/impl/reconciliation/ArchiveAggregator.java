@@ -5,7 +5,7 @@
 
 package com.nexusarchive.service.impl.reconciliation;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.entity.Archive;
@@ -73,14 +73,15 @@ public class ArchiveAggregator {
      */
     private List<Archive> fetchArchives(YearMonth period, String accbookCode) {
         List<String> periodCandidates = buildPeriodCandidates(period);
-        QueryWrapper<Archive> archiveQuery = new QueryWrapper<>();
-        archiveQuery.select("id", "archive_code", "unique_biz_id", "custom_metadata", "doc_date", "fiscal_year",
-                        "fiscal_period", "fonds_no", "status")
-                .eq("fiscal_year", String.valueOf(period.getYear()))
-                .in("fiscal_period", periodCandidates)
-                .eq("status", ARCHIVE_STATUS_ARCHIVED);
+        LambdaQueryWrapper<Archive> archiveQuery = new LambdaQueryWrapper<>();
+        archiveQuery.select(Archive::getId, Archive::getArchiveCode, Archive::getUniqueBizId,
+                        Archive::getCustomMetadata, Archive::getDocDate, Archive::getFiscalYear,
+                        Archive::getFiscalPeriod, Archive::getFondsNo, Archive::getStatus)
+                .eq(Archive::getFiscalYear, String.valueOf(period.getYear()))
+                .in(Archive::getFiscalPeriod, periodCandidates)
+                .eq(Archive::getStatus, ARCHIVE_STATUS_ARCHIVED);
         if (hasText(accbookCode)) {
-            archiveQuery.eq("fonds_no", accbookCode);
+            archiveQuery.eq(Archive::getFondsNo, accbookCode);
         }
         List<Archive> archivedItems = archiveMapper.selectList(archiveQuery);
         return archivedItems == null ? Collections.emptyList() : archivedItems;

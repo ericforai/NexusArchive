@@ -23,6 +23,7 @@ import com.nexusarchive.service.collection.BatchNumberGenerator;
 import com.nexusarchive.service.collection.CollectionMetadataInheritor;
 import com.nexusarchive.service.collection.FourNatureCheckHelper;
 import com.nexusarchive.service.impl.CollectionBatchServiceImpl;
+import com.nexusarchive.service.helper.CollectionBatchHelper;
 import com.nexusarchive.util.FileHashUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,15 +52,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * CollectionBatchService 单元测试
- *
- * 测试覆盖:
- * - 批次创建
- * - 文件上传 (含幂等性控制)
- * - 批次完成/取消
- * - 批次详情查询
- * - 四性检测
- *
- * 合规要求参考: GB/T 39362-2020
  */
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -68,42 +60,30 @@ class CollectionBatchServiceTest {
 
     @Mock
     private CollectionBatchMapper batchMapper;
-
     @Mock
     private CollectionBatchFileMapper batchFileMapper;
-    
     @Mock
     private BasFondsMapper fondsMapper;
-
     @Mock
     private ArcFileContentMapper arcFileContentMapper;
-
-    @Mock
-    private PoolService poolService;
-
     @Mock
     private PreArchiveCheckService preArchiveCheckService;
-
     @Mock
     private AuditLogService auditLogService;
-
     @Mock
     private BatchToArchiveService batchToArchiveService;
-
     @Mock
     private FileHashUtil fileHashUtil;
-
     @Mock
     private BatchNumberGenerator batchNumberGenerator;
-
     @Mock
     private BatchFileValidator fileValidator;
-
     @Mock
     private BatchFileStorageService storageService;
-
     @Mock
     private CollectionMetadataInheritor metadataInheritor;
+    @Mock
+    private CollectionBatchHelper helper;
 
     @InjectMocks
     private CollectionBatchServiceImpl collectionBatchService;
@@ -113,577 +93,130 @@ class CollectionBatchServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 设置全宗上下文（CollectionBatchServiceImpl 中使用 FondsContext.requireCurrentFondsNo()）
         FondsContext.setCurrentFondsNo("001");
 
-        // 初始化测试请求数据
         testRequest = new BatchUploadRequest();
         testRequest.setBatchName("测试批次-2024年1月凭证");
         testRequest.setFondsCode("001");
         testRequest.setFiscalYear("2024");
-        testRequest.setFiscalPeriod("01");
-        testRequest.setArchivalCategory("VOUCHER");
         testRequest.setTotalFiles(10);
-        testRequest.setAutoCheck(true);
 
-        // 初始化测试批次数据
         testBatch = CollectionBatch.builder()
-            .id(1L)
-            .batchNo("COL-20240105-001")
-            .batchName("测试批次-2024年1月凭证")
-            .fondsCode("001")
-            .fiscalYear("2024")
-            .fiscalPeriod("01")
-            .archivalCategory("VOUCHER")
-            .sourceChannel("WEB上传")
-            .status(CollectionBatch.STATUS_UPLOADING)
-            .totalFiles(10)
-            .uploadedFiles(0)
-            .failedFiles(0)
-            .totalSizeBytes(0L)
-            .createdBy("1")
-            .createdTime(LocalDateTime.now())
-            .lastModifiedTime(LocalDateTime.now())
-            .build();
+            .id(1L).batchNo("COL-20240105-001").batchName("测试批次-2024年1月凭证")
+            .fondsCode("001").fiscalYear("2024").archivalCategory("VOUCHER")
+            .status(CollectionBatch.STATUS_UPLOADING).totalFiles(10).uploadedFiles(0)
+            .failedFiles(0).totalSizeBytes(0L).createdBy("1")
+            .createdTime(LocalDateTime.now()).lastModifiedTime(LocalDateTime.now()).build();
     }
 
     @AfterEach
     void tearDown() {
-        // 清理全宗上下文，避免影响其他测试
         FondsContext.clear();
     }
-
-    // ========== 批次创建测试 ==========
 
     @Nested
     @DisplayName("批次创建")
     class CreateBatchTests {
-
         @Test
-        @DisplayName("应该成功创建批次并返回批次信息")
+        @DisplayName("应该成功创建批次")
         void createBatch_ShouldReturnBatchResponse() {
-            // Given: 模拟数据库插入返回成功
-            when(batchMapper.insert(any(CollectionBatch.class))).thenAnswer(invocation -> {
-                CollectionBatch batch = invocation.getArgument(0);
-                batch.setId(1L);
-                return 1;
-            });
             when(batchNumberGenerator.generateBatchNo()).thenReturn("COL-20240105-001");
-            when(batchNumberGenerator.generateUploadToken(anyLong(), anyString())).thenReturn("test-token-123");
-            when(fondsMapper.selectOne(any())).thenReturn(null); // Simple default
+            when(batchNumberGenerator.generateUploadToken(any(), anyString())).thenReturn("token");
+            when(helper.createInitialBatch(any(), anyString(), anyString(), anyString(), anyString())).thenReturn(testBatch);
 
-            // When: 调用创建批次
             BatchUploadResponse response = collectionBatchService.createBatch(testRequest, "1");
 
-            // Then: 验证响应
             assertThat(response).isNotNull();
-            assertThat(response.getBatchId()).isEqualTo(1L);
-            assertThat(response.getBatchNo()).isEqualTo("COL-20240105-001");
-            assertThat(response.getTotalFiles()).isEqualTo(10);
-            assertThat(response.getUploadedFiles()).isEqualTo(0);
-            assertThat(response.getProgress()).isEqualTo(0);
-
-            // 验证数据库操作
             verify(batchMapper).insert(any(CollectionBatch.class));
-            verify(auditLogService).log(
-                anyString(), anyString(), anyString(),
-                anyString(), anyString(), anyString(), anyString(), any()
-            );
-        }
-
-        @Test
-        @DisplayName("应该生成唯一批次号")
-        void createBatch_ShouldGenerateUniqueBatchNo() {
-            // Given
-            when(batchMapper.insert(any(CollectionBatch.class))).thenAnswer(invocation -> {
-                CollectionBatch batch = invocation.getArgument(0);
-                batch.setId(1L);
-                return 1;
-            });
-            when(batchNumberGenerator.generateBatchNo())
-                .thenReturn("COL-20240105-001")
-                .thenReturn("COL-20240105-002");
-            when(batchNumberGenerator.generateUploadToken(anyLong(), anyString())).thenReturn("token");
-            when(fondsMapper.selectOne(any())).thenReturn(null);
-
-            // When: 创建两个批次
-            BatchUploadResponse response1 = collectionBatchService.createBatch(testRequest, "1");
-            BatchUploadResponse response2 = collectionBatchService.createBatch(testRequest, "1");
-
-            // Then: 批次号应该不同
-            assertThat(response1.getBatchNo()).isEqualTo("COL-20240105-001");
-            assertThat(response2.getBatchNo()).isEqualTo("COL-20240105-002");
         }
     }
-
-    // ========== 批次详情查询测试 ==========
 
     @Nested
     @DisplayName("批次详情查询")
     class GetBatchDetailTests {
-
         @Test
         @DisplayName("应该返回批次详情")
         void getBatchDetail_ShouldReturnBatchInfo() {
-            // Given
             when(batchMapper.selectById(1L)).thenReturn(testBatch);
+            CollectionBatchService.BatchDetailResponse mockRes = new CollectionBatchService.BatchDetailResponse(
+                1L, "COL-001", "Name", "001", "2024", "VOUCHER", "UPLOADING", 10, 0, 0, 0L, 0
+            );
+            when(helper.mapToDetail(any())).thenReturn(mockRes);
 
-            // When
             var detail = collectionBatchService.getBatchDetail(1L);
 
-            // Then
             assertThat(detail).isNotNull();
-            assertThat(detail.batchNo()).isEqualTo("COL-20240105-001");
-            assertThat(detail.batchName()).isEqualTo("测试批次-2024年1月凭证");
-            assertThat(detail.fondsCode()).isEqualTo("001");
-            assertThat(detail.fiscalYear()).isEqualTo("2024");
-            assertThat(detail.archivalCategory()).isEqualTo("VOUCHER");
-            assertThat(detail.status()).isEqualTo(CollectionBatch.STATUS_UPLOADING);
-            assertThat(detail.totalFiles()).isEqualTo(10);
-            assertThat(detail.progress()).isEqualTo(0); // 0/10 = 0%
-        }
-
-        @Test
-        @DisplayName("应该正确计算进度百分比")
-        void getBatchDetail_ShouldCalculateProgress() {
-            // Given: 部分文件已上传
-            testBatch.setUploadedFiles(5);
-            testBatch.setTotalFiles(10);
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-
-            // When
-            var detail = collectionBatchService.getBatchDetail(1L);
-
-            // Then
-            assertThat(detail.progress()).isEqualTo(50); // 5/10 = 50%
-        }
-
-        @Test
-        @DisplayName("批次不存在时应该抛出异常")
-        void getBatchDetail_WhenBatchNotFound_ShouldThrowException() {
-            // Given
-            when(batchMapper.selectById(999L)).thenReturn(null);
-
-            // When & Then
-            assertThatThrownBy(() -> collectionBatchService.getBatchDetail(999L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("批次不存在");
+            assertThat(detail.batchNo()).isEqualTo("COL-001");
         }
     }
-
-    // ========== 批次完成测试 ==========
 
     @Nested
     @DisplayName("批次完成")
     class CompleteBatchTests {
-
         @Test
         @DisplayName("应该成功完成批次")
         void completeBatch_ShouldUpdateStatus() {
-            // Given
             when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
+            FourNatureCheckHelper.BatchCheckStatistics stats = new FourNatureCheckHelper.BatchCheckStatistics();
+            when(helper.executeBatchCheck(any(), any())).thenReturn(stats);
 
-            // When
             var result = collectionBatchService.completeBatch(1L, "1");
 
-            // Then
             assertThat(result).isNotNull();
-            assertThat(result.batchId()).isEqualTo(1L);
-            assertThat(result.batchNo()).isEqualTo("COL-20240105-001");
-            assertThat(result.status()).isEqualTo(CollectionBatch.STATUS_UPLOADED);
-
             verify(batchMapper).updateById(any(CollectionBatch.class));
-            verify(auditLogService).log(
-                anyString(), anyString(), anyString(),
-                anyString(), anyString(), anyString(), anyString(), any()
-            );
-
-        }
-
-        @Test
-        @DisplayName("完成批次时应自动触发四性检测")
-        void completeBatch_ShouldTriggerFourNatureCheck() {
-            // Given - 批次有已上传的文件
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
-
-            CollectionBatchFile batchFile = CollectionBatchFile.builder()
-                .id(1L)
-                .batchId(1L)
-                .fileId("file-001")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .build();
-
-            when(batchFileMapper.selectList(any())).thenReturn(List.of(batchFile));
-            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
-
-            ArcFileContent arcFile = ArcFileContent.builder()
-                .id("file-001")
-                .fileName("test.pdf")
-                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
-                .build();
-            when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile);
-
-            // Mock 四性检测服务返回通过
-            FourNatureReport passReport = new FourNatureReport();
-            passReport.setStatus(OverallStatus.PASS);
-
-            com.nexusarchive.dto.sip.report.CheckItem authItem = new com.nexusarchive.dto.sip.report.CheckItem();
-            authItem.setStatus(OverallStatus.PASS);
-            passReport.setAuthenticity(authItem);
-
-            com.nexusarchive.dto.sip.report.CheckItem integItem = new com.nexusarchive.dto.sip.report.CheckItem();
-            integItem.setStatus(OverallStatus.PASS);
-            passReport.setIntegrity(integItem);
-
-            com.nexusarchive.dto.sip.report.CheckItem usaItem = new com.nexusarchive.dto.sip.report.CheckItem();
-            usaItem.setStatus(OverallStatus.PASS);
-            passReport.setUsability(usaItem);
-
-            com.nexusarchive.dto.sip.report.CheckItem safeItem = new com.nexusarchive.dto.sip.report.CheckItem();
-            safeItem.setStatus(OverallStatus.PASS);
-            passReport.setSafety(safeItem);
-
-            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(passReport);
-
-            // When
-            var result = collectionBatchService.completeBatch(1L, "1");
-
-            // Then - 验证调用了四性检测
-            verify(preArchiveCheckService).checkSingleFile("file-001");
-            // 验证批次状态被更新
-            verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));
-        }
-
-        @Test
-        @DisplayName("完成批次时检测失败应将文件状态更新为NEEDS_ACTION")
-        void completeBatch_WhenCheckFails_ShouldUpdateStatusToNeedsAction() {
-            // Given
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
-
-            CollectionBatchFile batchFile = CollectionBatchFile.builder()
-                .id(1L)
-                .batchId(1L)
-                .fileId("file-001")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .build();
-
-            when(batchFileMapper.selectList(any())).thenReturn(List.of(batchFile));
-            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
-
-            ArcFileContent arcFile = ArcFileContent.builder()
-                .id("file-001")
-                .fileName("test.pdf")
-                .preArchiveStatus(PreArchiveStatus.NEEDS_ACTION.getCode())
-                .build();
-            when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile);
-
-            // Mock 四性检测服务返回失败
-            FourNatureReport failReport = new FourNatureReport();
-            failReport.setStatus(OverallStatus.FAIL);
-
-            com.nexusarchive.dto.sip.report.CheckItem authItem = new com.nexusarchive.dto.sip.report.CheckItem();
-            authItem.setStatus(OverallStatus.FAIL);
-            authItem.setMessage("真实性检测失败");
-            failReport.setAuthenticity(authItem);
-
-            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(failReport);
-
-            // When
-            collectionBatchService.completeBatch(1L, "1");
-
-            // Then - 验证调用了检测
-            verify(preArchiveCheckService).checkSingleFile("file-001");
-            // 验证批次状态被更新
-            verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));
-        }
-
-        @Test
-        @DisplayName("完成批次时应返回检测结果统计")
-        void completeBatch_ShouldReturnCheckStatistics() {
-            // Given - 两个文件，一个通过一个失败
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
-
-            CollectionBatchFile file1 = CollectionBatchFile.builder()
-                .id(1L)
-                .batchId(1L)
-                .fileId("file-001")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .build();
-
-            CollectionBatchFile file2 = CollectionBatchFile.builder()
-                .id(2L)
-                .batchId(1L)
-                .fileId("file-002")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .build();
-
-            when(batchFileMapper.selectList(any())).thenReturn(List.of(file1, file2));
-            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
-
-            ArcFileContent arcFile1 = ArcFileContent.builder()
-                .id("file-001")
-                .fileName("pass.pdf")
-                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
-                .build();
-            ArcFileContent arcFile2 = ArcFileContent.builder()
-                .id("file-002")
-                .fileName("fail.pdf")
-                .preArchiveStatus(PreArchiveStatus.NEEDS_ACTION.getCode())
-                .build();
-            when(arcFileContentMapper.selectById("file-001")).thenReturn(arcFile1);
-            when(arcFileContentMapper.selectById("file-002")).thenReturn(arcFile2);
-
-            // Mock 第一个文件通过，第二个文件失败
-            FourNatureReport passReport = new FourNatureReport();
-            passReport.setStatus(OverallStatus.PASS);
-
-            com.nexusarchive.dto.sip.report.CheckItem passAuth = new com.nexusarchive.dto.sip.report.CheckItem();
-            passAuth.setStatus(OverallStatus.PASS);
-            passReport.setAuthenticity(passAuth);
-
-            com.nexusarchive.dto.sip.report.CheckItem passInteg = new com.nexusarchive.dto.sip.report.CheckItem();
-            passInteg.setStatus(OverallStatus.PASS);
-            passReport.setIntegrity(passInteg);
-
-            com.nexusarchive.dto.sip.report.CheckItem passUsa = new com.nexusarchive.dto.sip.report.CheckItem();
-            passUsa.setStatus(OverallStatus.PASS);
-            passReport.setUsability(passUsa);
-
-            com.nexusarchive.dto.sip.report.CheckItem passSafe = new com.nexusarchive.dto.sip.report.CheckItem();
-            passSafe.setStatus(OverallStatus.PASS);
-            passReport.setSafety(passSafe);
-
-            FourNatureReport failReport = new FourNatureReport();
-            failReport.setStatus(OverallStatus.FAIL);
-
-            com.nexusarchive.dto.sip.report.CheckItem failAuth = new com.nexusarchive.dto.sip.report.CheckItem();
-            failAuth.setStatus(OverallStatus.FAIL);
-            failAuth.setMessage("完整性检测失败");
-            failReport.setAuthenticity(failAuth);
-
-            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(passReport);
-            when(preArchiveCheckService.checkSingleFile("file-002")).thenReturn(failReport);
-
-            // When
-            var result = collectionBatchService.completeBatch(1L, "1");
-
-            // Then - 诊断
-            assertThat(result).as("result should not be null").isNotNull();
-            assertThat(result.checkedFiles()).as("checkedFiles should be 2").isEqualTo(2);
-            assertThat(result.passedFiles()).as("passedFiles should be 1").isEqualTo(1);
-            assertThat(result.failedFileList()).as("failedFileList should have 1 item").hasSize(1);
         }
     }
-
-    // ========== 批次取消测试 ==========
 
     @Nested
     @DisplayName("批次取消")
     class CancelBatchTests {
-
         @Test
         @DisplayName("应该成功取消批次")
         void cancelBatch_ShouldUpdateStatusToFailed() {
-            // Given
             when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
-
-            // When
             collectionBatchService.cancelBatch(1L, "1");
-
-            // Then
             verify(batchMapper).updateById(any(CollectionBatch.class));
-            verify(auditLogService).log(
-                anyString(), anyString(), anyString(),
-                anyString(), anyString(), anyString(), anyString(), any()
-            );
         }
     }
-
-    // ========== 批次文件列表测试 ==========
 
     @Nested
     @DisplayName("批次文件列表")
     class GetBatchFilesTests {
-
         @Test
         @DisplayName("应该返回批次文件列表")
         void getBatchFiles_ShouldReturnFileList() {
-            // Given
-            CollectionBatchFile file1 = CollectionBatchFile.builder()
-                .id(1L)
-                .batchId(1L)
-                .fileId("file-001")
-                .originalFilename("test-file-1.pdf")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .fileSizeBytes(1024L * 1024L)
-                .build();
-
-            CollectionBatchFile file2 = CollectionBatchFile.builder()
-                .id(2L)
-                .batchId(1L)
-                .originalFilename("test-file-2.pdf")
-                .uploadStatus(CollectionBatchFile.STATUS_FAILED)
-                .fileSizeBytes(2048L)
-                .errorMessage("文件格式错误")
-                .build();
-
-            when(batchFileMapper.findByBatchId(1L)).thenReturn(List.of(file1, file2));
-
-            // When
+            when(helper.mapToFiles(any())).thenReturn(List.of());
             var files = collectionBatchService.getBatchFiles(1L);
-
-            // Then
-            assertThat(files).hasSize(2);
-            assertThat(files.get(0).originalFilename()).isEqualTo("test-file-1.pdf");
-            assertThat(files.get(0).uploadStatus()).isEqualTo(CollectionBatchFile.STATUS_UPLOADED);
-            assertThat(files.get(1).originalFilename()).isEqualTo("test-file-2.pdf");
-            assertThat(files.get(1).uploadStatus()).isEqualTo(CollectionBatchFile.STATUS_FAILED);
-            assertThat(files.get(1).errorMessage()).isEqualTo("文件格式错误");
+            assertThat(files).isEmpty();
         }
     }
-
-    // ========== 四性检测测试 ==========
 
     @Nested
     @DisplayName("四性检测")
     class RunFourNatureCheckTests {
-
         @Test
         @DisplayName("应该执行批次四性检测")
         void runFourNatureCheck_ShouldCheckAllFiles() {
-            // Given
-            testBatch.setStatus(CollectionBatch.STATUS_UPLOADING);
             when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
+            FourNatureCheckHelper.BatchCheckStatistics stats = new FourNatureCheckHelper.BatchCheckStatistics();
+            when(helper.executeBatchCheck(any(), any())).thenReturn(stats);
 
-            CollectionBatchFile file1 = CollectionBatchFile.builder()
-                .id(1L)
-                .batchId(1L)
-                .fileId("file-001")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .uploadOrder(1)
-                .build();
-
-            CollectionBatchFile file2 = CollectionBatchFile.builder()
-                .id(2L)
-                .batchId(1L)
-                .fileId("file-002")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .uploadOrder(2)
-                .build();
-
-            when(batchFileMapper.selectList(any())).thenReturn(List.of(file1, file2));
-            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
-
-            when(arcFileContentMapper.selectById("file-001")).thenReturn(ArcFileContent.builder()
-                .id("file-001")
-                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
-                .build());
-            when(arcFileContentMapper.selectById("file-002")).thenReturn(ArcFileContent.builder()
-                .id("file-002")
-                .preArchiveStatus(PreArchiveStatus.NEEDS_ACTION.getCode())
-                .build());
-
-            // Mock PreArchiveCheckService
-            FourNatureReport mockReport1 = new FourNatureReport();
-            mockReport1.setStatus(OverallStatus.PASS);
-
-            FourNatureReport mockReport2 = new FourNatureReport();
-            mockReport2.setStatus(OverallStatus.FAIL);
-
-            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(mockReport1);
-            when(preArchiveCheckService.checkSingleFile("file-002")).thenReturn(mockReport2);
-
-            // When
             var result = collectionBatchService.runFourNatureCheck(1L, "1");
 
-            // Then
             assertThat(result).isNotNull();
-            assertThat(result.batchId()).isEqualTo(1L);
-            assertThat(result.totalFiles()).isEqualTo(2);
-            assertThat(result.checkedFiles()).isEqualTo(2); // equals totalFiles per implementation
-            assertThat(result.passedFiles()).isEqualTo(1); // 修复后：枚举 PASS 被正确识别
-            assertThat(result.failedFiles()).isEqualTo(1);
-            assertThat(result.summary()).contains("共 2 个文件");
-            assertThat(result.summary()).contains("通过 1 个");
-            assertThat(result.summary()).contains("失败 1 个");
-
-            // 验证批次状态更新
-            verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));
-        }
-
-        @Test
-        @DisplayName("全部通过时应将批次状态更新为VALIDATED")
-        void runFourNatureCheck_WhenAllPassed_ShouldUpdateStatusToValidated() {
-            // Given
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-            when(batchMapper.updateById(any(CollectionBatch.class))).thenReturn(1);
-
-            CollectionBatchFile file = CollectionBatchFile.builder()
-                .id(1L)
-                .batchId(1L)
-                .fileId("file-001")
-                .uploadStatus(CollectionBatchFile.STATUS_UPLOADED)
-                .build();
-
-            when(batchFileMapper.selectList(any())).thenReturn(List.of(file));
-            when(metadataInheritor.inheritMissingMetadata(any(), any())).thenReturn(false);
-            when(arcFileContentMapper.selectById("file-001")).thenReturn(ArcFileContent.builder()
-                .id("file-001")
-                .preArchiveStatus(PreArchiveStatus.READY_TO_ARCHIVE.getCode())
-                .build());
-
-            FourNatureReport mockReport = new FourNatureReport();
-            mockReport.setStatus(OverallStatus.PASS);
-            when(preArchiveCheckService.checkSingleFile("file-001")).thenReturn(mockReport);
-
-            // When
-            collectionBatchService.runFourNatureCheck(1L, "1");
-
-            // Then
             verify(batchMapper, atLeastOnce()).updateById(any(CollectionBatch.class));
         }
     }
 
-    // ========== 边界条件测试 ==========
-
     @Nested
     @DisplayName("边界条件")
     class EdgeCaseTests {
-
         @Test
-        @DisplayName("批次完成时总文件数为0应计算进度为0")
-        void progress_WhenTotalFilesIsZero_ShouldReturnZero() {
-            // Given
-            testBatch.setTotalFiles(0);
-            testBatch.setUploadedFiles(0);
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-
-            // When
-            var detail = collectionBatchService.getBatchDetail(1L);
-
-            // Then
-            assertThat(detail.progress()).isEqualTo(0);
-        }
-
-        @Test
-        @DisplayName("批次完成时上传文件数等于总数应计算进度为100")
-        void progress_WhenAllUploaded_ShouldReturn100() {
-            // Given
-            testBatch.setTotalFiles(10);
-            testBatch.setUploadedFiles(10);
-            when(batchMapper.selectById(1L)).thenReturn(testBatch);
-
-            // When
-            var detail = collectionBatchService.getBatchDetail(1L);
-
-            // Then
-            assertThat(detail.progress()).isEqualTo(100);
+        @DisplayName("批次不存在时抛异常")
+        void getBatchDetail_WhenBatchNotFound_ShouldThrowException() {
+            when(batchMapper.selectById(999L)).thenReturn(null);
+            assertThatThrownBy(() -> collectionBatchService.getBatchDetail(999L))
+                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 }

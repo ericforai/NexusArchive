@@ -4,8 +4,8 @@ import { POOL_COLUMN_GROUPS, getColumnByState, getSubStateLabel, getColumnStates
 
 describe('PoolColumnsConfig', () => {
   describe('SimplifiedPreArchiveStatus', () => {
-    it('should have 5 core states', () => {
-      expect(Object.values(SimplifiedPreArchiveStatus)).toHaveLength(5);
+    it('should have 6 core states', () => {
+      expect(Object.values(SimplifiedPreArchiveStatus)).toHaveLength(6);
     });
 
     it('should have PENDING_CHECK state', () => {
@@ -24,14 +24,18 @@ describe('PoolColumnsConfig', () => {
       expect(SimplifiedPreArchiveStatus.READY_TO_ARCHIVE).toBe('READY_TO_ARCHIVE');
     });
 
+    it('should have SUBMITTED state', () => {
+      expect(SimplifiedPreArchiveStatus.SUBMITTED).toBe('SUBMITTED');
+    });
+
     it('should have COMPLETED state', () => {
       expect(SimplifiedPreArchiveStatus.COMPLETED).toBe('COMPLETED');
     });
   });
 
   describe('STATUS_CONFIG', () => {
-    it('should have config for all 5 states', () => {
-      expect(Object.keys(STATUS_CONFIG)).toHaveLength(5);
+    it('should have config for all 6 states', () => {
+      expect(Object.keys(STATUS_CONFIG)).toHaveLength(6);
     });
 
     it('should have color, icon, label, and description for each state', () => {

@@ -68,569 +68,158 @@ public class PoolController {
     private final com.nexusarchive.service.AttachmentService attachmentService;
     private final com.nexusarchive.service.PoolService poolService;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final com.nexusarchive.service.helper.PoolHelper helper;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    private static final String[] SOURCE_SYSTEMS = {
-            "Web上传", "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"
-    };
-
     // ===== 元数据补录 API =====
 
-    /**
-     * 搜索可关联的候选凭证
-     * 
-     * @param request 搜索请求
-     * @return 候选凭证列表
-     */
     @PostMapping("/candidates/search")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<List<PoolItemDto>> searchCandidates(@Valid @RequestBody com.nexusarchive.dto.search.CandidateSearchRequest request) {
-        log.info("API 搜索候选凭证: {}", request);
-        try {
-            List<PoolItemDto> results = poolService.searchCandidates(request);
-            log.info("API 搜索成功, 结果条数: {}", results.size());
-            return Result.success(results);
-        } catch (Exception e) {
-            log.error("API 搜索候选凭证失败: {}", e.getMessage(), e);
-            return Result.error("搜索失败: " + e.getMessage());
-        }
+        try { return Result.success(poolService.searchCandidates(request)); }
+        catch (Exception e) { return Result.error("搜索失败: " + e.getMessage()); }
     }
 
-    /**
-     * 获取文件详情 (包含元数据)
-     * 
-     * @param id 文件ID
-     * @return 文件详情
-     */
     @GetMapping("/detail/{id}")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<PoolItemDetailDto> getFileDetail(@PathVariable String id) {
-        log.info("获取文件详情: {}", id);
-
         ArcFileContent file = poolService.getFileById(id);
-        if (file == null) {
-            return Result.error("文件不存在");
-        }
-
-        PoolItemDetailDto dto = new PoolItemDetailDto();
-        dto.setId(file.getId());
-        dto.setFileName(file.getFileName());
-        dto.setFileType(file.getFileType());
-        dto.setFileSize(file.getFileSize());
-        dto.setStatus(file.getPreArchiveStatus());
-        dto.setCreatedTime(file.getCreatedTime());
-        dto.setFiscalYear(file.getFiscalYear());
-        dto.setVoucherType(file.getVoucherType());
-        dto.setCreator(file.getCreator());
-        dto.setFondsCode(file.getFondsCode());
-        dto.setSourceSystem(file.getSourceSystem());
-
-        return Result.success(dto);
+        return file == null ? Result.error("文件不存在") : Result.success(helper.mapToDetail(file));
     }
 
-    /**
-     * 获取关联附件列表
-     * <p>
-     * 优先查询关联表(archive_attachment)，同时兼容旧的命名约定(business_doc_no + _ATT_)
-     * </p>
-     * 
-     * @param id 主文件ID
-     * @return 附件列表
-     */
     @GetMapping("/related/{id}")
     public Result<List<PoolItemDto>> getRelatedFiles(@PathVariable String id) {
-        log.info("查询关联附件: id={}", id);
-        ArcFileContent mainFile = poolService.getFileById(id);
-        if (mainFile == null) {
-            return Result.error("文件不存在");
+        ArcFileContent main = poolService.getFileById(id);
+        if (main == null) return Result.error("文件不存在");
+        List<ArcFileContent> linked = attachmentService.getAttachmentsByArchive(id);
+        if (main.getBusinessDocNo() != null && !main.getBusinessDocNo().isEmpty()) {
+            poolService.getLegacyAttachments(main.getBusinessDocNo()).forEach(l -> {
+                if (linked.stream().noneMatch(a -> a.getId().equals(l.getId()))) linked.add(l);
+            });
         }
-
-        // 1. 通过关联表查询 (新逻辑)
-        List<ArcFileContent> linkedAttachments = attachmentService.getAttachmentsByArchive(id);
-
-        // 2. 通过命名约定查询 (旧逻辑兼容)
-        String businessDocNo = mainFile.getBusinessDocNo();
-        if (businessDocNo != null && !businessDocNo.isEmpty()) {
-            List<ArcFileContent> legacyAttachments = poolService.getLegacyAttachments(businessDocNo);
-
-            // 合并并去重
-            for (ArcFileContent legacy : legacyAttachments) {
-                boolean exists = linkedAttachments.stream().anyMatch(a -> a.getId().equals(legacy.getId()));
-                if (!exists) {
-                    linkedAttachments.add(legacy);
-                }
-            }
-        }
-
-        List<PoolItemDto> dtos = linkedAttachments.stream()
-                .map(this::convertToPoolItemDto)
-                .collect(Collectors.toList());
-
-        return Result.success(dtos);
+        return Result.success(linked.stream().map(poolService::convertToPoolItemDto).toList());
     }
 
-    /**
-     * 更新文件元数据 (用于待补录状态)
-     * 合规要求：记录审计日志 (GB/T 39784-2021)
-     * 
-     * @param dto     元数据更新请求
-     * @param request HTTP请求 (获取用户信息)
-     * @return 更新结果
-     */
     @PostMapping("/metadata/update")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "METADATA_UPDATE", resourceType = "ARC_FILE_CONTENT", description = "更新预归档元数据")
-    public Result<String> updateMetadata(
-            @RequestBody @Validated MetadataUpdateDTO dto,
-            HttpServletRequest request) {
-        log.info("更新文件元数据: fileId={}, reason={}", dto.getId(), dto.getModifyReason());
-
+    public Result<String> updateMetadata(@RequestBody @Validated MetadataUpdateDTO dto, HttpServletRequest request) {
         ArcFileContent file = poolService.getFileById(dto.getId());
-        if (file == null) {
-            return Result.error("文件不存在");
-        }
-
-        // 1. 记录修改前的值 (用于审计)
-        String beforeValue = String.format(
-                "fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s",
-                file.getFiscalYear(), file.getVoucherType(), file.getCreator(), file.getFondsCode());
-
-        // 2. 执行更新
-        file.setFiscalYear(dto.getFiscalYear());
-        file.setVoucherType(dto.getVoucherType());
-        file.setCreator(dto.getCreator());
-        if (dto.getFondsCode() != null && !dto.getFondsCode().isEmpty()) {
-            file.setFondsCode(dto.getFondsCode());
-        }
-
-        // 使用 PoolService 更新状态（复用 updateStatus 逻辑）
-        poolService.updateStatus(file.getId(), file.getPreArchiveStatus());
-        // 更新其他字段需要重新实现或添加到 PoolService
-
-        // 由于 updateStatus 只更新状态，我们需要添加一个专门的更新方法
-        // 为了简化，这里暂时使用 JdbcTemplate 更新特定字段
-        jdbcTemplate.update(
-            "UPDATE arc_file_content SET fiscal_year = ?, voucher_type = ?, creator = ?, fonds_code = ? WHERE id = ?",
-            dto.getFiscalYear(), dto.getVoucherType(), dto.getCreator(), dto.getFondsCode(), dto.getId()
-        );
-
-        // 3. 记录审计日志 (合规要求)
-        String afterValue = String.format(
-                "fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s",
-                dto.getFiscalYear(), dto.getVoucherType(), dto.getCreator(), dto.getFondsCode());
-
-        String userId = (String) request.getAttribute("userId");
-        String username = (String) request.getAttribute("username");
-        String clientIp = request.getRemoteAddr();
-        try {
-            auditLogService.log(
-                    userId != null ? userId : "anonymous",
-                    username != null ? username : "未知用户",
-                    "METADATA_UPDATE",
-                    "ARC_FILE_CONTENT",
-                    dto.getId(),
-                    "SUCCESS",
-                    "元数据补录: " + dto.getModifyReason() + " | 修改前:" + beforeValue + " | 修改后:" + afterValue,
-                    clientIp);
-        } catch (Exception e) {
-            log.warn("审计日志记录失败: {}", e.getMessage());
-        }
-
-        // 4. 自动重新触发四性检测
-        log.info("自动触发四性检测: {}", dto.getId());
-        FourNatureReport report = preArchiveCheckService.checkSingleFile(dto.getId());
-
-        return Result.success("元数据更新成功，检测结果: " + report.getStatus());
+        if (file == null) return Result.error("文件不存在");
+        String before = String.format("fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s", file.getFiscalYear(), file.getVoucherType(), file.getCreator(), file.getFondsCode());
+        helper.updateFields(dto);
+        String after = String.format("fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s", dto.getFiscalYear(), dto.getVoucherType(), dto.getCreator(), dto.getFondsCode());
+        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "METADATA_UPDATE", "ARC_FILE_CONTENT", dto.getId(), "SUCCESS", "补录: " + dto.getModifyReason() + " | " + before + " -> " + after, request.getRemoteAddr());
+        FourNatureReport r = preArchiveCheckService.checkSingleFile(dto.getId());
+        return Result.success("更新成功，结果: " + r.getStatus());
     }
 
-    /**
-     * 文件详情 DTO
-     */
     @lombok.Data
     public static class PoolItemDetailDto {
-        private String id;
-        private String fileName;
-        private String fileType;
-        private Long fileSize;
-        private String status;
-        private LocalDateTime createdTime;
-        private String fiscalYear;
-        private String voucherType;
-        private String creator;
-        private String fondsCode;
-        private String sourceSystem;
+        private String id; private String fileName; private String fileType; private Long fileSize;
+        private String status; private LocalDateTime createdTime; private String fiscalYear;
+        private String voucherType; private String creator; private String fondsCode; private String sourceSystem;
     }
 
-    /**
-     * 查询电子凭证池列表
-     * 
-     * @return 凭证池列表
-     */
     @GetMapping("/list")
     public Result<List<PoolItemDto>> listPoolItems(@RequestParam(required = false) String category) {
-        log.error("DEBUG: Controller listPoolItems called with category='{}'", category);
-        List<PoolItemDto> poolItems = poolService.listPoolItems(category);
-        log.error("DEBUG: Controller listPoolItems returning {} items", poolItems.size());
-        return Result.success(poolItems);
+        return Result.success(poolService.listPoolItems(category));
     }
 
-    /**
-     * 按状态查询预归档文件
-     * 
-     * @param status   状态: PENDING_CHECK/NEEDS_ACTION/READY_TO_MATCH/READY_TO_ARCHIVE/COMPLETED
-     * @param category 门类 (DA/T 94 标准码): VOUCHER/AC01/AC02/AC03/AC04 (可选)
-     * @return 文件列表
-     */
     @GetMapping("/list/status/{status}")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<List<PoolItemDto>> listByStatus(
-            @PathVariable String status,
-            @RequestParam(required = false) String category) {
-        log.info("按状态查询预归档文件: status={}, category={}", status, category);
-        List<PoolItemDto> poolItems = poolService.listByStatus(status, category);
-        log.info("状态 {} 门类 {} 共有 {} 条记录", status, category, poolItems.size());
-        return Result.success(poolItems);
+    public Result<List<PoolItemDto>> listByStatus(@PathVariable String status, @RequestParam(required = false) String category) {
+        return Result.success(poolService.listByStatus(status, category));
     }
 
-    /**
-     * 统计各状态数量
-     *
-     * @param category 门类过滤 (DA/T 94 标准码): VOUCHER/AC01/AC02/AC03/AC04 (可选)
-     * @return 各状态计数
-     */
     @GetMapping("/stats/status")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
-    public Result<java.util.Map<String, Long>> getStatusStats(
-            @RequestParam(required = false) String category) {
-        log.info("统计预归档各状态数量, category={}", category);
+    public Result<java.util.Map<String, Long>> getStatusStats(@RequestParam(required = false) String category) {
         return Result.success(poolService.getStatusStats(category));
     }
 
-    /**
-     * 更新预归档状态
-     *
-     * @param id     文件ID
-     * @param status 新状态
-     * @return 结果
-     */
     @GetMapping("/status/{id}/{status}")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "STATUS_UPDATE", resourceType = "PRE_ARCHIVE", description = "更新预归档状态")
     public Result<String> updateStatus(@PathVariable String id, @PathVariable String status) {
-        log.info("更新文件状态: {} -> {}", id, status);
         poolService.updateStatus(id, status);
-        log.info("文件 {} 状态已更新为 {}", id, status);
         return Result.success("状态更新成功");
     }
 
-    /**
-     * 执行单个文件四性检测
-     * 
-     * @param id 文件ID
-     * @return 检测报告
-     */
     @GetMapping("/check/{id}")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<FourNatureReport> checkSingleFile(@PathVariable String id) {
-        log.info("执行四性检测: {}", id);
-        FourNatureReport report = preArchiveCheckService.checkSingleFile(id);
-        return Result.success(report);
+        return Result.success(preArchiveCheckService.checkSingleFile(id));
     }
 
-    /**
-     * 批量执行四性检测
-     * 
-     * @param fileIds 文件ID列表
-     * @return 检测报告列表
-     */
     @PostMapping("/check/batch")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.List<FourNatureReport>> checkBatchFiles(@RequestBody java.util.List<String> fileIds) {
-        log.info("批量执行四性检测: {} 个文件", fileIds.size());
-        java.util.List<FourNatureReport> reports = preArchiveCheckService.checkMultipleFiles(fileIds);
-        return Result.success(reports);
+        return Result.success(preArchiveCheckService.checkMultipleFiles(fileIds));
     }
 
-    /**
-     * 检测所有待检测文件
-     * 
-     * @return 检测报告列表
-     */
     @GetMapping("/check/all-pending")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<java.util.List<FourNatureReport>> checkAllPendingFiles() {
-        log.info("检测所有待检测文件");
-        java.util.List<ArcFileContent> pendingFiles = poolService.listPendingCheckFiles();
-        java.util.List<String> fileIds = pendingFiles.stream()
-                .map(ArcFileContent::getId)
-                .collect(Collectors.toList());
-
-        log.info("找到 {} 个待检测文件", fileIds.size());
-        java.util.List<FourNatureReport> reports = preArchiveCheckService.checkMultipleFiles(fileIds);
-        return Result.success(reports);
+        java.util.List<String> ids = poolService.listPendingCheckFiles().stream().map(ArcFileContent::getId).toList();
+        return Result.success(preArchiveCheckService.checkMultipleFiles(ids));
     }
 
-    /**
-     * 提交单个文件归档申请
-     * 
-     * @param id      文件ID
-     * @param request 申请信息
-     * @return 审批记录
-     */
     @PostMapping("/submit/{id}")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SUBMIT_ARCHIVE", resourceType = "PRE_ARCHIVE", description = "提交归档申请")
-    public Result<ArchiveApproval> submitForArchival(
-            @PathVariable String id,
-            @Valid @RequestBody SubmitRequest request) {
-        log.info("提交归档申请: fileId={}", id);
-        try {
-            ArchiveApproval approval = preArchiveSubmitService.submitForArchival(
-                    id, request.getApplicantId(), request.getApplicantName(), request.getReason());
-            return Result.success(approval);
-        } catch (Exception e) {
-            log.error("提交归档申请失败: {}", e.getMessage());
-            return Result.error(500, e.getMessage());
-        }
+    public Result<ArchiveApproval> submitForArchival(@PathVariable String id, @Valid @RequestBody SubmitRequest request) {
+        try { return Result.success(preArchiveSubmitService.submitForArchival(id, request.getApplicantId(), request.getApplicantName(), request.getReason())); }
+        catch (Exception e) { return Result.error(500, e.getMessage()); }
     }
 
-    /**
-     * 批量提交归档申请
-     * 
-     * @param request 批量申请信息
-     * @return 审批记录列表
-     */
     @PostMapping("/submit/batch")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "SUBMIT_ARCHIVE_BATCH", resourceType = "PRE_ARCHIVE", description = "批量提交归档申请")
-    public Result<BatchOperationResult<ArchiveApproval>> submitBatchForArchival(
-            @Valid @RequestBody BatchSubmitRequest request) {
-        log.info("批量提交归档申请: {} 个文件", request.getFileIds().size());
-        try {
-            BatchOperationResult<ArchiveApproval> result = preArchiveSubmitService.submitBatchForArchival(
-                    request.getFileIds(), request.getApplicantId(),
-                    request.getApplicantName(), request.getReason());
-            return Result.success(result);
-        } catch (Exception e) {
-            log.error("批量提交归档申请失败: {}", e.getMessage());
-            return Result.error(500, e.getMessage());
-        }
+    public Result<BatchOperationResult<ArchiveApproval>> submitBatchForArchival(@Valid @RequestBody BatchSubmitRequest request) {
+        try { return Result.success(preArchiveSubmitService.submitBatchForArchival(request.getFileIds(), request.getApplicantId(), request.getApplicantName(), request.getReason())); }
+        catch (Exception e) { return Result.error(500, e.getMessage()); }
     }
 
-    /**
-     * 完成归档（审批通过后调用）
-     * 
-     * @param archiveId 档案ID
-     * @return 结果
-     */
     @PostMapping("/complete/{archiveId}")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     @ArchivalAudit(operationType = "COMPLETE_ARCHIVE", resourceType = "ARCHIVE", description = "完成归档")
     public Result<String> completeArchival(@PathVariable String archiveId) {
-        log.info("完成归档: archiveId={}", archiveId);
         preArchiveSubmitService.completeArchival(archiveId);
         return Result.success("归档完成");
     }
 
-    /**
-     * 提交申请请求DTO
-     */
     @lombok.Data
-    public static class SubmitRequest {
-        private String applicantId;
-        private String applicantName;
-        private String reason;
-    }
+    public static class SubmitRequest { private String applicantId; private String applicantName; private String reason; }
 
-    /**
-     * 批量提交申请请求DTO
-     */
     @lombok.Data
-    public static class BatchSubmitRequest {
-        private java.util.List<String> fileIds;
-        private String applicantId;
-        private String applicantName;
-        private String reason;
-    }
+    public static class BatchSubmitRequest { private java.util.List<String> fileIds; private String applicantId; private String applicantName; private String reason; }
 
-    private final com.nexusarchive.service.VoucherPdfGeneratorService pdfGeneratorService;
-
-    /**
-     * 预览文件
-     * 
-     * @param id 文件ID
-     * @return 文件流
-     */
     @GetMapping("/preview/{id}")
     @PreAuthorize("hasAnyAuthority('archive:view','archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<Resource> previewFile(@PathVariable String id) {
-        log.info("请求预览文件: {}", id);
-
-        String storagePath = null;
-        String fileName = null;
-
-        // 1. 先查 arc_file_content
-        ArcFileContent fileContent = poolService.getFileById(id);
-        if (fileContent != null) {
-            storagePath = fileContent.getStoragePath();
-            fileName = fileContent.getFileName();
-        } else {
-            // 2. 如果找不到，查 arc_original_voucher_file (智能匹配关联的文件)
-            log.debug("arc_file_content 未找到 {}, 尝试查询 arc_original_voucher_file", id);
+        ArcFileContent fc = poolService.getFileById(id);
+        String path = null, name = null, data = null;
+        if (fc != null) { path = fc.getStoragePath(); name = fc.getFileName(); data = fc.getSourceData(); }
+        else {
             try {
-                String sql = "SELECT storage_path, file_name FROM arc_original_voucher_file WHERE id = ? AND deleted = 0";
-                java.util.List<java.util.Map<String, Object>> rows = jdbcTemplate.queryForList(sql, id);
-                
-                if (!rows.isEmpty()) {
-                    storagePath = (String) rows.get(0).get("storage_path");
-                    fileName = (String) rows.get(0).get("file_name");
-                    log.info("从 arc_original_voucher_file 找到文件: {} -> {}", id, storagePath);
-                }
-            } catch (Exception e) {
-                log.debug("查询 arc_original_voucher_file 失败: {}", e.getMessage());
-            }
-            
-            if (storagePath == null) {
-                log.error("文件不存在: {}", id);
-                return ResponseEntity.notFound().build();
-            }
+                var row = jdbcTemplate.queryForMap("SELECT storage_path, file_name FROM arc_original_voucher_file WHERE id = ? AND deleted = 0", id);
+                path = (String) row.get("storage_path"); name = (String) row.get("file_name");
+            } catch (Exception e) { return ResponseEntity.notFound().build(); }
         }
-
         try {
-            Path filePath = Paths.get(storagePath);
-            Resource resource = new UrlResource(filePath.toUri());
-
-            // 如果文件不存在，但在 arc_file_content 表记录存在，且是 PDF，则尝试实时生成
-            if (!resource.exists() && fileContent != null) {
-                if (fileName.toLowerCase().endsWith(".pdf")) {
-                    log.info("PDF 文件未找到，尝试实时生成: {}", filePath);
-                    try {
-                        // 优先使用数据库中保存的原始JSON数据
-                        String sourceData = fileContent.getSourceData();
-                        String voucherJson = (sourceData != null && !sourceData.isEmpty()) ? sourceData : "{}";
-
-                        pdfGeneratorService.generatePdfForPreArchive(id, voucherJson);
-                        log.debug("PDF 实时生成完成");
-                        resource = new UrlResource(filePath.toUri()); // 重新加载
-                    } catch (Exception e) {
-                        log.error("实时生成 PDF 失败", e);
-                    }
-                }
-            }
-
-            if (resource.exists() || resource.isReadable()) {
-                String contentType = "application/octet-stream";
-                String fileNameLower = fileName.toLowerCase();
-                if (fileNameLower.endsWith(".pdf")) {
-                    contentType = "application/pdf";
-                } else if (fileNameLower.endsWith(".ofd")) {
-                    contentType = "application/ofd";
-                } else if (fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".jpeg")) {
-                    contentType = "image/jpeg";
-                } else if (fileNameLower.endsWith(".png")) {
-                    contentType = "image/png";
-                } else if (fileNameLower.endsWith(".xml")) {
-                    contentType = "text/xml";
-                }
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                                "inline; filename=\"" + fileName + "\"")
-                        .body(resource);
-            } else {
-                log.error("文件无法读取: {}", filePath);
-                return ResponseEntity.notFound().build();
-            }
-        } catch (MalformedURLException e) {
-            log.error("文件路径错误", e);
-            return ResponseEntity.badRequest().build();
-        }
+            Resource r = helper.loadPreview(id, path, name, data);
+            if (!r.exists()) return ResponseEntity.notFound().build();
+            String n = name.toLowerCase();
+            String type = n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".ofd") ? "application/ofd" : (n.endsWith(".jpg") || n.endsWith(".jpeg")) ? "image/jpeg" : n.endsWith(".png") ? "image/png" : n.endsWith(".xml") ? "text/xml" : "application/octet-stream";
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(type)).header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + name + "\"").body(r);
+        } catch (Exception e) { return ResponseEntity.status(500).build(); }
     }
 
-    /**
-     * 生成演示数据
-     * 
-     * @return 结果
-     */
     @GetMapping("/generate-demo")
     public Result<String> generateDemoData() {
-        log.info("开始生成演示数据...");
-
-        try {
-            ClassPathResource templateResource = new ClassPathResource("templates/default_voucher.pdf");
-            if (!templateResource.exists()) {
-                return Result.error("模板文件不存在(classpath): templates/default_voucher.pdf");
-            }
-            Random random = new Random();
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            String dateStr = LocalDateTime.now().format(dateFormatter);
-
-            // 1. 清理旧的演示数据
-            int deletedCount = poolService.cleanupDemoData();
-            log.info("已清理 {} 条旧演示数据", deletedCount);
-
-            // 2. 生成新数据
-            for (int i = 0; i < 10; i++) {
-                String fileId = UUID.randomUUID().toString();
-                String targetFileName = fileId + ".pdf";
-                Path targetPath = Paths.get("/tmp/nexusarchive/uploads", targetFileName);
-
-                // 确保目录存在
-                Files.createDirectories(targetPath.getParent());
-
-                // 复制模板文件 (从Classpath读取)
-                try (java.io.InputStream is = templateResource.getInputStream()) {
-                    Files.copy(is, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                }
-
-                // 使用固定金额 (与模板 default_voucher.pdf 一致)
-                // 凭证金额 = 借方合计 = 贷方合计 (不能双算)
-                BigDecimal amount = new BigDecimal("43758.00");
-
-                // 随机来源系统 (0-6)
-                int sourceIndex = random.nextInt(SOURCE_SYSTEMS.length);
-
-                // 创建记录
-                ArcFileContent content = ArcFileContent.builder()
-                        .id(fileId)
-                        .archivalCode("TEMP-POOL-" + dateStr + "-" + fileId.substring(0, 8).toUpperCase())
-                        .fileName("凭证_" + dateStr + "_" + (1000 + i) + ".pdf")
-                        .fileType("PDF")
-                        .fileSize(Files.size(targetPath))
-                        .fileHash("DEMO_HASH_" + fileId.substring(0, 8) + "_" + sourceIndex) // 演示数据用伪哈希 + 来源索引
-                        .hashAlgorithm("SHA-256")
-                        .storagePath(targetPath.toString())
-                        .createdTime(LocalDateTime.now().minusMinutes(random.nextInt(60)))
-                        .build();
-
-                poolService.insertDemoFile(content);
-
-                // 创建元数据索引 (包含金额)
-                ArcFileMetadataIndex metadata = ArcFileMetadataIndex.builder()
-                        .fileId(fileId)
-                        .totalAmount(amount)
-                        .invoiceNumber("INV-" + dateStr + "-" + (1000 + i))
-                        .issueDate(java.time.LocalDate.now())
-                        .sellerName("演示供应商 " + (char) ('A' + random.nextInt(26)))
-                        .parsedTime(LocalDateTime.now())
-                        .parserType("DEMO_GENERATOR")
-                        .build();
-                poolService.insertDemoMetadata(metadata);
-            }
-
-            return Result.success("成功生成10条演示数据");
-        } catch (Exception e) {
-            log.error("生成演示数据失败", e);
-            return Result.error("生成失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 转换实体为DTO（调用 Service 方法）
-     */
-    private PoolItemDto convertToPoolItemDto(ArcFileContent fileContent) {
-        return poolService.convertToPoolItemDto(fileContent);
+        try { helper.generateDemo(); return Result.success("成功生成10条演示数据"); }
+        catch (Exception e) { return Result.error("生成失败: " + e.getMessage()); }
     }
 }

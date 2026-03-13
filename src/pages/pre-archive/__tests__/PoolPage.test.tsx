@@ -49,22 +49,34 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PoolPage } from '../PoolPage';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 describe('PoolPage', () => {
   beforeEach(() => {
     localStorageMock.clear();
     mockNavigate.mockClear();
     vi.clearAllMocks();
+    queryClient.clear();
   });
 
   it('应默认显示列表视图', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     expect(screen.getByTestId('list-view')).toBeInTheDocument();
@@ -73,11 +85,13 @@ describe('PoolPage', () => {
 
   it('应支持 URL 参数切换到看板视图', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool?view=kanban']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool?view=kanban']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     expect(screen.getByTestId('kanban-view')).toBeInTheDocument();
@@ -86,11 +100,13 @@ describe('PoolPage', () => {
 
   it('应通过切换按钮改变视图', async () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     // 初始是列表视图
@@ -111,11 +127,13 @@ describe('PoolPage', () => {
     localStorageMock.setItem('pool.viewMode', 'kanban');
 
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     expect(screen.getByTestId('kanban-view')).toBeInTheDocument();
@@ -123,11 +141,13 @@ describe('PoolPage', () => {
 
   it('应包含视图切换器', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     expect(screen.getByTitle('列表视图 - 适合查看大量数据和批量操作')).toBeInTheDocument();
@@ -136,11 +156,13 @@ describe('PoolPage', () => {
 
   it('应显示正确的激活状态', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool?view=list']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool?view=list']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     const listButton = screen.getByTitle('列表视图 - 适合查看大量数据和批量操作');
@@ -152,11 +174,13 @@ describe('PoolPage', () => {
 
   it('看板视图激活状态应正确显示', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool?view=kanban']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool?view=kanban']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     const listButton = screen.getByTitle('列表视图 - 适合查看大量数据和批量操作');
@@ -168,11 +192,13 @@ describe('PoolPage', () => {
 
   it('应显示页面标题', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     expect(screen.getByText('记账凭证库')).toBeInTheDocument();
@@ -180,11 +206,13 @@ describe('PoolPage', () => {
 
   it('应将 routeConfig 传递给 ArchiveListPage', () => {
     render(
-      <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
-        <Routes>
-          <Route path="/system/pre-archive/pool" element={<PoolPage />} />
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/system/pre-archive/pool']}>
+          <Routes>
+            <Route path="/system/pre-archive/pool" element={<PoolPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     const listView = screen.getByTestId('list-view');

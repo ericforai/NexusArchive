@@ -459,11 +459,11 @@ public class ReconciliationServiceImpl implements ReconciliationService {
                 || record.getReconEndDate() == null || !ReconciliationUtils.hasText(record.getSubjectCode())) {
             return null;
         }
-        QueryWrapper<ReconciliationRecord> query = new QueryWrapper<>();
-        query.eq("config_id", record.getConfigId())
-                .eq("subject_code", record.getSubjectCode())
-                .eq("recon_start_date", record.getReconStartDate())
-                .eq("recon_end_date", record.getReconEndDate());
+        LambdaQueryWrapper<ReconciliationRecord> query = new LambdaQueryWrapper<>();
+        query.eq(ReconciliationRecord::getConfigId, record.getConfigId())
+                .eq(ReconciliationRecord::getSubjectCode, record.getSubjectCode())
+                .eq(ReconciliationRecord::getReconStartDate, record.getReconStartDate())
+                .eq(ReconciliationRecord::getReconEndDate, record.getReconEndDate());
         return reconciliationRecordMapper.selectOne(query);
     }
 

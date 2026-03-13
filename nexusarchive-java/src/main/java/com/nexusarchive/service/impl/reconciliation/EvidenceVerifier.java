@@ -5,7 +5,7 @@
 
 package com.nexusarchive.service.impl.reconciliation;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import lombok.RequiredArgsConstructor;
@@ -49,11 +49,13 @@ public class EvidenceVerifier {
         for (int i = 0; i < uniqueCodes.size(); i += ATTACHMENT_BATCH_SIZE) {
             int end = Math.min(i + ATTACHMENT_BATCH_SIZE, uniqueCodes.size());
             List<String> batch = uniqueCodes.subList(i, end);
-            QueryWrapper<ArcFileContent> fileQuery = new QueryWrapper<>();
-            fileQuery.select("archival_code", "file_name", "file_type", "file_hash", "hash_algorithm",
-                            "original_hash", "current_hash", "timestamp_token", "sign_value", "certificate",
-                            "pre_archive_status")
-                    .in("archival_code", batch);
+            LambdaQueryWrapper<ArcFileContent> fileQuery = new LambdaQueryWrapper<>();
+            fileQuery.select(ArcFileContent::getArchivalCode, ArcFileContent::getFileName, ArcFileContent::getFileType,
+                            ArcFileContent::getFileHash, ArcFileContent::getHashAlgorithm,
+                            ArcFileContent::getOriginalHash, ArcFileContent::getCurrentHash,
+                            ArcFileContent::getTimestampToken, ArcFileContent::getSignValue,
+                            ArcFileContent::getCertificate, ArcFileContent::getPreArchiveStatus)
+                    .in(ArcFileContent::getArchivalCode, batch);
 
             List<ArcFileContent> batchFiles = arcFileContentMapper.selectList(fileQuery);
             if (batchFiles == null) {

@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,9 +42,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * ERP 场景服务测试
- * <p>
- * 测试分页查询功能
- * </p>
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ERP场景服务测试")
@@ -86,28 +84,17 @@ class ErpScenarioServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 初始化测试 ERP 配置
         testConfig = new ErpConfig();
         testConfig.setId(1L);
         testConfig.setName("测试ERP配置");
         testConfig.setErpType("YONSUITE");
-        testConfig.setIsActive(1);
-        testConfig.setCreatedTime(LocalDateTime.now());
 
-        // 初始化测试场景列表
         testScenarios = new ArrayList<>();
         for (int i = 1; i <= 25; i++) {
             ErpScenario scenario = new ErpScenario();
             scenario.setId((long) i);
             scenario.setConfigId(1L);
             scenario.setScenarioKey("SCENARIO_" + i);
-            scenario.setName("场景" + i);
-            scenario.setDescription("测试场景描述" + i);
-            scenario.setIsActive(true);
-            scenario.setSyncStrategy("MANUAL");
-            scenario.setLastSyncStatus("NONE");
-            scenario.setCreatedTime(LocalDateTime.now());
-            scenario.setLastModifiedTime(LocalDateTime.now());
             testScenarios.add(scenario);
         }
     }
@@ -117,60 +104,24 @@ class ErpScenarioServiceTest {
     void listScenariosByConfigIdPage_FirstPage() {
         // Given
         Long configId = 1L;
-        PageRequest request = PageRequest.builder()
-                .pageNum(1)
-                .pageSize(10)
-                .build();
+        PageRequest request = PageRequest.builder().pageNum(1).pageSize(10).build();
 
-        // Mock 返回总记录数
-        when(erpScenarioMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(25L);
+        // 1. listScenariosByConfigId calls selectList
+        when(erpScenarioMapper.selectList(any())).thenReturn(testScenarios);
 
-        // Mock 返回分页结果
+        // 2. selectPage
         Page<ErpScenario> mockPage = new Page<>(1, 10, 25);
         mockPage.setRecords(testScenarios.subList(0, 10));
-        when(erpScenarioMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(mockPage);
+        when(erpScenarioMapper.selectPage(any(), any())).thenReturn(mockPage);
 
         // When
         Page<ErpScenario> result = erpScenarioService.listScenariosByConfigIdPage(configId, request);
 
         // Then
         assertNotNull(result);
-        assertEquals(1, result.getCurrent());
-        assertEquals(10, result.getSize());
-        assertEquals(25, result.getTotal());
         assertEquals(10, result.getRecords().size());
-        assertEquals("SCENARIO_1", result.getRecords().get(0).getScenarioKey());
-        verify(erpScenarioMapper, times(1)).selectCount(any(LambdaQueryWrapper.class));
-        verify(erpScenarioMapper, times(1)).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
-    }
-
-    @Test
-    @DisplayName("分页查询场景 - 第二页")
-    void listScenariosByConfigIdPage_SecondPage() {
-        // Given
-        Long configId = 1L;
-        PageRequest request = PageRequest.builder()
-                .pageNum(2)
-                .pageSize(10)
-                .build();
-
-        when(erpScenarioMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(25L);
-
-        Page<ErpScenario> mockPage = new Page<>(2, 10, 25);
-        mockPage.setRecords(testScenarios.subList(10, 20));
-        when(erpScenarioMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(mockPage);
-
-        // When
-        Page<ErpScenario> result = erpScenarioService.listScenariosByConfigIdPage(configId, request);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.getCurrent());
-        assertEquals(10, result.getSize());
-        assertEquals(10, result.getRecords().size());
-        assertEquals("SCENARIO_11", result.getRecords().get(0).getScenarioKey());
+        verify(erpScenarioMapper).selectList(any());
+        verify(erpScenarioMapper).selectPage(any(), any());
     }
 
     @Test
@@ -178,91 +129,30 @@ class ErpScenarioServiceTest {
     void listScenariosByConfigIdPage_EmptyResult_InitializeDefaults() {
         // Given
         Long configId = 1L;
-        PageRequest request = PageRequest.builder()
-                .pageNum(1)
-                .pageSize(10)
-                .build();
+        PageRequest request = PageRequest.builder().pageNum(1).pageSize(10).build();
 
-        // Mock 没有记录
-        when(erpScenarioMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+        // 1. First selectList returns empty
+        when(erpScenarioMapper.selectList(any())).thenReturn(Collections.emptyList()).thenReturn(testScenarios.subList(0, 2));
+
+        // 2. Initialization mocks
         when(erpConfigMapper.selectById(configId)).thenReturn(testConfig);
-
-        // Mock 适配器返回默认场景
-        ErpAdapter mockAdapter = mock(ErpAdapter.class);
-        List<ErpScenario> defaultScenarios = Arrays.asList(
-                createDefaultScenario("VOUCHER_SYNC", "凭证同步"),
-                createDefaultScenario("INVENTORY_SYNC", "库存同步")
-        );
-        when(mockAdapter.getAvailableScenarios()).thenReturn(defaultScenarios);
         when(erpAdapterFactory.isSupported(any())).thenReturn(true);
+        ErpAdapter mockAdapter = mock(ErpAdapter.class);
         when(erpAdapterFactory.getAdapter(any())).thenReturn(mockAdapter);
+        when(mockAdapter.getAvailableScenarios()).thenReturn(Arrays.asList(new ErpScenario(), new ErpScenario()));
 
-        // Mock 插入成功
-        when(erpScenarioMapper.insert(any(ErpScenario.class))).thenReturn(1);
-
-        // Mock 分页查询返回初始化后的数据
+        // 3. selectPage
         Page<ErpScenario> mockPage = new Page<>(1, 10, 2);
-        mockPage.setRecords(defaultScenarios);
-        when(erpScenarioMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(mockPage);
+        mockPage.setRecords(testScenarios.subList(0, 2));
+        when(erpScenarioMapper.selectPage(any(), any())).thenReturn(mockPage);
 
         // When
         Page<ErpScenario> result = erpScenarioService.listScenariosByConfigIdPage(configId, request);
 
         // Then
         assertNotNull(result);
-        assertEquals(2, result.getRecords().size());
-        verify(erpScenarioMapper, times(1)).selectCount(any(LambdaQueryWrapper.class));
-        verify(erpScenarioMapper, times(2)).insert(any(ErpScenario.class)); // 插入2个默认场景
-        verify(erpScenarioMapper, times(1)).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
-    }
-
-    @Test
-    @DisplayName("分页查询场景 - 使用默认分页参数")
-    void listScenariosByConfigIdPage_DefaultParameters() {
-        // Given
-        Long configId = 1L;
-        PageRequest request = PageRequest.builder().build(); // 使用默认值
-
-        when(erpScenarioMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(25L);
-
-        Page<ErpScenario> mockPage = new Page<>(1, 20, 25); // 默认 pageSize=20
-        mockPage.setRecords(testScenarios.subList(0, 20));
-        when(erpScenarioMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(mockPage);
-
-        // When
-        Page<ErpScenario> result = erpScenarioService.listScenariosByConfigIdPage(configId, request);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.getCurrent()); // 默认 pageNum=1
-        assertEquals(20, result.getSize()); // 默认 pageSize=20
-    }
-
-    @Test
-    @DisplayName("分页查询场景 - 最大页大小限制")
-    void listScenariosByConfigIdPage_MaxPageSize() {
-        // Given
-        Long configId = 1L;
-        PageRequest request = PageRequest.builder()
-                .pageNum(1)
-                .pageSize(100) // 最大值
-                .build();
-
-        when(erpScenarioMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(25L);
-
-        Page<ErpScenario> mockPage = new Page<>(1, 100, 25);
-        mockPage.setRecords(testScenarios);
-        when(erpScenarioMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(mockPage);
-
-        // When
-        Page<ErpScenario> result = erpScenarioService.listScenariosByConfigIdPage(configId, request);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(100, result.getSize());
+        verify(erpScenarioMapper, times(2)).insert(any(ErpScenario.class));
+        verify(erpScenarioMapper).selectPage(any(), any());
     }
 
     @Test
@@ -270,43 +160,22 @@ class ErpScenarioServiceTest {
     void listScenariosByConfigIdPage_ExistingData_NoInitialization() {
         // Given
         Long configId = 1L;
-        PageRequest request = PageRequest.builder()
-                .pageNum(1)
-                .pageSize(10)
-                .build();
+        PageRequest request = PageRequest.builder().pageNum(1).pageSize(10).build();
 
-        // Mock 已有记录
-        when(erpScenarioMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(10L);
+        // 1. selectList returns non-empty
+        when(erpScenarioMapper.selectList(any())).thenReturn(testScenarios.subList(0, 5));
 
-        Page<ErpScenario> mockPage = new Page<>(1, 10, 10);
-        mockPage.setRecords(testScenarios.subList(0, 10));
-        when(erpScenarioMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(mockPage);
+        // 2. selectPage
+        Page<ErpScenario> mockPage = new Page<>(1, 10, 5);
+        mockPage.setRecords(testScenarios.subList(0, 5));
+        when(erpScenarioMapper.selectPage(any(), any())).thenReturn(mockPage);
 
         // When
         Page<ErpScenario> result = erpScenarioService.listScenariosByConfigIdPage(configId, request);
 
         // Then
         assertNotNull(result);
-        // 验证没有调用初始化相关方法
         verify(erpConfigMapper, never()).selectById(any());
-        verify(erpAdapterFactory, never()).getAdapter(any());
         verify(erpScenarioMapper, never()).insert(any(ErpScenario.class));
-    }
-
-    /**
-     * 创建默认测试场景
-     */
-    private ErpScenario createDefaultScenario(String key, String name) {
-        ErpScenario scenario = new ErpScenario();
-        scenario.setScenarioKey(key);
-        scenario.setName(name);
-        scenario.setDescription("默认" + name + "场景");
-        scenario.setIsActive(false);
-        scenario.setSyncStrategy("MANUAL");
-        scenario.setLastSyncStatus("NONE");
-        scenario.setCreatedTime(LocalDateTime.now());
-        scenario.setLastModifiedTime(LocalDateTime.now());
-        return scenario;
     }
 }

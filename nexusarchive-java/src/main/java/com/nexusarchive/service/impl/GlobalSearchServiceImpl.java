@@ -108,10 +108,10 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
     }
 
     private void searchArchives(String keyword, List<GlobalSearchDTO> results, DataScopeContext scope) {
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive> wrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
-        wrapper.like("archive_code", keyword)
-                .or().like("title", keyword)
-                .or().like("fonds_no", keyword)
+        LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
+        wrapper.and(w -> w.like(Archive::getArchiveCode, keyword)
+                .or().like(Archive::getTitle, keyword)
+                .or().like(Archive::getFondsNo, keyword))
                 .last("LIMIT 20"); // Limit to prevent too many results
         dataScopeService.applyArchiveScope(wrapper, scope);
 
@@ -161,8 +161,8 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
         }
 
         // Resolve Archival Code -> Archive
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Archive> archiveWrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
-        archiveWrapper.in("archive_code", archivalCodes);
+        LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
+        archiveWrapper.in(Archive::getArchiveCode, archivalCodes);
         dataScopeService.applyArchiveScope(archiveWrapper, scope);
         List<Archive> archives = archiveMapper.selectList(archiveWrapper);
         Map<String, Archive> archiveMap = archives.stream()

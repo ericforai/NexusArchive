@@ -49,10 +49,25 @@ vi.mock('@/utils/env', () => ({
     isDemoMode: vi.fn(() => false),
 }));
 
-// Mock audit
-vi.mock('@/utils/audit', () => ({
-    triggerAuditRefresh: vi.fn(),
+// Mock auth store
+vi.mock('@/store/useAuthStore', () => ({
+    useAuthStore: {
+        getState: () => ({
+            isAuthenticated: true,
+            user: { id: 'admin', roles: ['ADMIN'] },
+        }),
+    },
 }));
+
+// Mock fonds store
+vi.mock('@/store/useFondsStore', () => ({
+    useFondsStore: vi.fn(() => ({
+        currentFonds: { fondsCode: '001', fondsName: 'Test Fonds' },
+        _hasHydrated: true,
+    })),
+}));
+
+// Mock triggerAuditRefresh
 
 /**
  * ArchiveListView 组件测试

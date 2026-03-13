@@ -26,23 +26,18 @@ public class BorrowingScopePolicyImpl implements BorrowingScopePolicy {
             return;
         }
 
-        // 优先级1：基于 fonds_no（全宗号）进行数据隔离
         Set<String> allowedFonds = context.allowedFonds();
         if (!allowedFonds.isEmpty()) {
-            // 根据允许的全宗号列表过滤借阅记录
-            wrapper.in("fonds_no", allowedFonds);
+            wrapper.lambda().in(Borrowing::getFondsNo, allowedFonds);
             return;
         }
 
-        // 优先级2：没有全宗权限时，回退到只能查看自己的借阅记录
-        // 这确保用户即使没有全宗权限也能使用借阅功能
         if (context.userId() != null) {
-            wrapper.eq("user_id", context.userId());
+            wrapper.lambda().eq(Borrowing::getUserId, context.userId());
             return;
         }
 
-        // 如果既没有全宗权限也没有用户ID，则不允许访问任何数据
-        wrapper.eq("1", "0");
+        wrapper.apply("1=0");
     }
 
     @Override

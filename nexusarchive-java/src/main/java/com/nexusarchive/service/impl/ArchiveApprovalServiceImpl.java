@@ -89,9 +89,9 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         approval.setApprovalTime(LocalDateTime.now());
         approval.setLastModifiedTime(LocalDateTime.now()); // Manual update
 
-        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<ArchiveApproval> wrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
-        wrapper.eq("id", id).eq("status", "PENDING");
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ArchiveApproval> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        wrapper.eq(ArchiveApproval::getId, id).eq(ArchiveApproval::getStatus, "PENDING");
         int updated = approvalMapper.update(approval, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Approval already processed");
@@ -122,9 +122,9 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         approval.setApprovalTime(LocalDateTime.now());
         approval.setLastModifiedTime(LocalDateTime.now());
 
-        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<ArchiveApproval> wrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
-        wrapper.eq("id", id).eq("status", "PENDING");
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ArchiveApproval> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        wrapper.eq(ArchiveApproval::getId, id).eq(ArchiveApproval::getStatus, "PENDING");
         int updated = approvalMapper.update(approval, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Approval already processed");
@@ -140,8 +140,8 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             // Sync status to ArcFileContent (Back to PENDING_METADATA or PENDING_ARCHIVE?)
             // If rejected, user needs to fix issue. Let's send back to PENDING_ARCHIVE so they can re-submit if it was just a mistake,
             // or they can edit metadata then re-submit. PENDING_ARCHIVE is safest.
-            QueryWrapper<com.nexusarchive.entity.ArcFileContent> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("archival_code", archive.getArchiveCode());
+            LambdaQueryWrapper<com.nexusarchive.entity.ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(com.nexusarchive.entity.ArcFileContent::getArchivalCode, archive.getArchiveCode());
             java.util.List<com.nexusarchive.entity.ArcFileContent> files = arcFileContentMapper.selectList(queryWrapper);
             
             for (com.nexusarchive.entity.ArcFileContent file : files) {

@@ -61,6 +61,7 @@ class ArchitectureTest {
                 .or(resideInAPackage("..common.."))
                 .or(resideInAPackage("..modules.."))
                 .or(resideInAPackage("..integration.."))
+                .or(resideInAPackage("..service.helper.."))
         ));
 
         ArchRule rule = slices()
@@ -409,6 +410,7 @@ class ArchitectureTest {
                     "..config..",
                     "..security..",
                     "..util..",
+                    "..service.helper..",
                     "java..",
                     "jakarta..",
                     "org.springframework..",

@@ -248,8 +248,8 @@ public class UserService {
         response.setAssignedFonds(assignedFonds);
 
         // 获取所有可用的全宗列表
-        QueryWrapper<BasFonds> wrapper = new QueryWrapper<>();
-        wrapper.orderByAsc("fonds_code");
+        LambdaQueryWrapper<BasFonds> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByAsc(BasFonds::getFondsCode);
         List<BasFonds> allFonds = basFondsMapper.selectList(wrapper);
 
         // 转换为 FondsInfo
@@ -290,8 +290,8 @@ public class UserService {
         // 插入新的全宗权限
         for (String fondsCode : fondsCodes) {
             // 验证全宗存在
-            QueryWrapper<BasFonds> wrapper = new QueryWrapper<>();
-            wrapper.eq("fonds_code", fondsCode);
+            LambdaQueryWrapper<BasFonds> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(BasFonds::getFondsCode, fondsCode);
             BasFonds fonds = basFondsMapper.selectOne(wrapper);
             if (fonds == null) {
                 throw new BusinessException(ErrorCode.NOT_FOUND);

@@ -80,8 +80,8 @@ public class ArchiveBatchService {
         }
         
         // 获取所有批次,按创建时间排序
-        QueryWrapper<ArchiveBatch> query = new QueryWrapper<>();
-        query.orderByAsc("created_time");
+        LambdaQueryWrapper<ArchiveBatch> query = new LambdaQueryWrapper<>();
+        query.orderByAsc(ArchiveBatch::getCreatedTime);
         var allBatches = archiveBatchMapper.selectList(query);
         
         if (allBatches == null || allBatches.isEmpty()) {

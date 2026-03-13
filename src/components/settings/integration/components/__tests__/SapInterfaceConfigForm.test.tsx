@@ -46,7 +46,7 @@ describe('SapInterfaceConfigForm', () => {
         />
       );
 
-      expect(screen.getByText('即将推出')).toBeInTheDocument();
+      expect(screen.getByTitle(/即将推出/)).toBeInTheDocument();
       expect(screen.getByText(/RFC\/BAPI 接口类型目前为产品能力预留/)).toBeInTheDocument();
     });
 
@@ -59,7 +59,7 @@ describe('SapInterfaceConfigForm', () => {
         />
       );
 
-      expect(screen.getByText('即将推出')).toBeInTheDocument();
+      expect(screen.getByTitle(/即将推出/)).toBeInTheDocument();
       expect(screen.getByText(/IDoc 接口类型目前为产品能力预留/)).toBeInTheDocument();
     });
 
@@ -72,7 +72,7 @@ describe('SapInterfaceConfigForm', () => {
         />
       );
 
-      expect(screen.getByText('即将推出')).toBeInTheDocument();
+      expect(screen.getByTitle(/即将推出/)).toBeInTheDocument();
       expect(screen.getByText(/SAP Gateway 接口类型目前为产品能力预留/)).toBeInTheDocument();
     });
 

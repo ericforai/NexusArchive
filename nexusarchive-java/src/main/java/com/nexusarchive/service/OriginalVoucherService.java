@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.common.exception.ErrorCode;
+import com.nexusarchive.service.helper.OriginalVoucherHelper;
 import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.OriginalVoucherFile;
 import com.nexusarchive.entity.VoucherRelation;
@@ -27,7 +28,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.core.io.FileSystemResource;
@@ -38,11 +38,6 @@ import org.springframework.http.ResponseEntity;
 
 /**
  * 原始凭证服务
- * <p>
- * 管理原始凭证的生命周期：创建、检索、更新、删除
- * 包含编号生成、版本控制、关联管理
- * </p>
- * Reference: DA/T 94-2022, GB/T 39362-2020
  */
 @Slf4j
 @Service
@@ -56,115 +51,60 @@ public class OriginalVoucherService {
     private final FileStorageService fileStorageService;
     private final com.nexusarchive.service.parser.PdfInvoiceParser pdfInvoiceParser;
     private final DataScopeService dataScopeService;
+    private final OriginalVoucherHelper helper;
 
-    // ===== 查询接口 =====
-
-    /**
-     * 分页查询原始凭证
-     *
-     * @param poolStatus 单据池状态 (ENTRY,PARSED,PARSE_FAILED)，映射到 archiveStatus=DRAFT
-     */
     public Page<OriginalVoucher> getVouchers(int page, int limit, String search,
             String category, String type, String status, String fondsCode, String fiscalYear, String poolStatus) {
         Page<OriginalVoucher> pageObj = new Page<>(page, limit);
         LambdaQueryWrapper<OriginalVoucher> wrapper = new LambdaQueryWrapper<>();
-
-        // 只查询最新版本
         wrapper.eq(OriginalVoucher::getIsLatest, true);
 
-        // 条件过滤
         if (StringUtils.hasText(search)) {
-            wrapper.and(w -> w
-                    .like(OriginalVoucher::getVoucherNo, search)
+            wrapper.and(w -> w.like(OriginalVoucher::getVoucherNo, search)
                     .or().like(OriginalVoucher::getCounterparty, search)
                     .or().like(OriginalVoucher::getSummary, search));
         }
-        if (StringUtils.hasText(category)) {
-            wrapper.eq(OriginalVoucher::getVoucherCategory, category);
-        }
+        if (StringUtils.hasText(category)) wrapper.eq(OriginalVoucher::getVoucherCategory, category);
         if (StringUtils.hasText(type)) {
-            // 类型别名映射：前端使用的类型代码可能和数据库存储的不一致
-            // BANK_RECEIPT → BANK_RECEIPT, BANK_SLIP
-            // INV_VAT_E → INV_VAT_E, VAT_INVOICE
-            List<String> typeAliases = getTypeAliases(type);
-            if (typeAliases.size() == 1) {
-                wrapper.eq(OriginalVoucher::getVoucherType, type);
-            } else {
-                wrapper.in(OriginalVoucher::getVoucherType, typeAliases);
-            }
+            List<String> typeAliases = helper.getTypeAliases(type);
+            if (typeAliases.size() == 1) wrapper.eq(OriginalVoucher::getVoucherType, type);
+            else wrapper.in(OriginalVoucher::getVoucherType, typeAliases);
         }
 
-        // poolStatus 映射：ENTRY,PARSED,PARSE_FAILED → DRAFT；ARCHIVED → ARCHIVED
         if (StringUtils.hasText(poolStatus)) {
-            if (poolStatus.contains("ARCHIVED")) {
-                wrapper.eq(OriginalVoucher::getArchiveStatus, "ARCHIVED");
-            } else {
-                // ENTRY, PARSED, PARSE_FAILED 都对应 DRAFT 状态
-                wrapper.eq(OriginalVoucher::getArchiveStatus, "DRAFT");
-            }
-        } else if (StringUtils.hasText(status)) {
-            wrapper.eq(OriginalVoucher::getArchiveStatus, status);
-        }
+            if (poolStatus.contains("ARCHIVED")) wrapper.eq(OriginalVoucher::getArchiveStatus, "ARCHIVED");
+            else wrapper.eq(OriginalVoucher::getArchiveStatus, "DRAFT");
+        } else if (StringUtils.hasText(status)) wrapper.eq(OriginalVoucher::getArchiveStatus, status);
 
-        if (StringUtils.hasText(fondsCode)) {
-            wrapper.eq(OriginalVoucher::getFondsCode, fondsCode);
-        } else {
-            // 后备：依赖 DataScopeService 的自动隔离机制
-            dataScopeService.applyOriginalVoucherScope(wrapper, dataScopeService.resolve());
-        }
-        if (StringUtils.hasText(fiscalYear)) {
-            wrapper.eq(OriginalVoucher::getFiscalYear, fiscalYear);
-        }
+        if (StringUtils.hasText(fondsCode)) wrapper.eq(OriginalVoucher::getFondsCode, fondsCode);
+        else dataScopeService.applyOriginalVoucherScope(wrapper, dataScopeService.resolve());
+        
+        if (StringUtils.hasText(fiscalYear)) wrapper.eq(OriginalVoucher::getFiscalYear, fiscalYear);
 
         wrapper.orderByDesc(OriginalVoucher::getCreatedTime);
         return voucherMapper.selectPage(pageObj, wrapper);
     }
 
-    /**
-     * 根据ID获取原始凭证详情
-     */
     public OriginalVoucher getById(String id) {
-        OriginalVoucher voucher = voucherMapper.selectById(id);
-        if (voucher == null || voucher.getDeleted() == 1) {
-            throw new BusinessException("原始凭证不存在: " + id);
-        }
-        return voucher;
+        OriginalVoucher v = voucherMapper.selectById(id);
+        if (v == null || v.getDeleted() == 1) throw new BusinessException("原始凭证不存在: " + id);
+        return v;
     }
 
-    /**
-     * 获取原始凭证关联的文件列表
-     */
-    public List<OriginalVoucherFile> getFiles(String voucherId) {
-        return fileMapper.findByVoucherId(voucherId);
-    }
+    public List<OriginalVoucherFile> getFiles(String voucherId) { return fileMapper.findByVoucherId(voucherId); }
 
-    /**
-     * 根据 ID 获取文件详情
-     */
-    public OriginalVoucherFile getFileById(String fileId) {
-        return fileMapper.selectById(fileId);
-    }
+    public OriginalVoucherFile getFileById(String fileId) { return fileMapper.selectById(fileId); }
 
-    /**
-     * 下载原始凭证文件内容
-     */
     public ResponseEntity<Resource> downloadFile(String fileId) {
-        OriginalVoucherFile fileInfo = getFileById(fileId);
-        if (fileInfo == null || !StringUtils.hasText(fileInfo.getStoragePath())) {
-            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, fileId);
-        }
+        OriginalVoucherFile f = getFileById(fileId);
+        if (f == null || !StringUtils.hasText(f.getStoragePath())) throw new BusinessException(ErrorCode.FILE_NOT_FOUND, fileId);
 
-        Path filePath = fileStorageService.resolvePath(fileInfo.getStoragePath());
-        if (!fileStorageService.exists(fileInfo.getStoragePath())) {
-            throw new BusinessException(ErrorCode.PHYSICAL_FILE_NOT_FOUND, fileInfo.getStoragePath());
-        }
+        Path filePath = fileStorageService.resolvePath(f.getStoragePath());
+        if (!fileStorageService.exists(f.getStoragePath())) throw new BusinessException(ErrorCode.PHYSICAL_FILE_NOT_FOUND, f.getStoragePath());
 
         Resource resource = new FileSystemResource(filePath.toFile());
-        String contentType = determineContentType(fileInfo.getFileType(), fileInfo.getFileName());
-
-        // 使用 RFC 5987 标准编码处理中文文件名
-        String encodedFileName = URLEncoder.encode(fileInfo.getFileName(), StandardCharsets.UTF_8)
-                .replace("+", "%20");
+        String contentType = helper.determineContentType(f.getFileType(), f.getFileName());
+        String encodedFileName = URLEncoder.encode(f.getFileName(), StandardCharsets.UTF_8).replace("+", "%20");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
@@ -172,556 +112,192 @@ public class OriginalVoucherService {
                 .body(resource);
     }
 
-    private String determineContentType(String fileType, String fileName) {
-        if (StringUtils.hasText(fileType)) {
-            switch (fileType.toLowerCase()) {
-                case "ofd": return "application/ofd";
-                case "pdf": return "application/pdf";
-                case "jpg":
-                case "jpeg": return "image/jpeg";
-                case "png": return "image/png";
-                case "xml": return "application/xml";
-            }
-        }
-        if (fileName != null) {
-            String lowerName = fileName.toLowerCase();
-            if (lowerName.endsWith(".ofd")) return "application/ofd";
-            if (lowerName.endsWith(".pdf")) return "application/pdf";
-            if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
-            if (lowerName.endsWith(".png")) return "image/png";
-        }
-        return "application/octet-stream";
-    }
+    public List<OriginalVoucher> getVersionHistory(String id) { return voucherMapper.findVersionHistory(id); }
 
-    /**
-     * 获取版本历史
-     */
-    public List<OriginalVoucher> getVersionHistory(String id) {
-        return voucherMapper.findVersionHistory(id);
-    }
+    public List<VoucherRelation> getAccountingRelations(String voucherId) { return relationMapper.findByOriginalVoucherId(voucherId); }
 
-    /**
-     * 获取关联的记账凭证
-     */
-    public List<VoucherRelation> getAccountingRelations(String voucherId) {
-        return relationMapper.findByOriginalVoucherId(voucherId);
-    }
-
-    // ===== 创建接口 =====
-
-    /**
-     * 创建原始凭证
-     * 
-     * @param voucher 原始凭证数据
-     * @param userId  创建人ID
-     * @return 创建后的原始凭证
-     */
     @Transactional
     public OriginalVoucher create(OriginalVoucher voucher, String userId) {
-        // 1. 校验类型
-        validateVoucherType(voucher.getVoucherCategory(), voucher.getVoucherType());
-
-        // 2. 生成凭证编号
-        String voucherNo = generateVoucherNo(voucher.getFondsCode(),
-                voucher.getFiscalYear(), voucher.getVoucherCategory());
-        voucher.setVoucherNo(voucherNo);
-
-        // 3. 设置默认值
-        if (voucher.getId() == null) {
-            voucher.setId(UUID.randomUUID().toString());
-        }
-        // 设置默认业务日期（如果未提供）
-        if (voucher.getBusinessDate() == null) {
-            voucher.setBusinessDate(java.time.LocalDate.now());
-        }
+        helper.validateVoucherType(voucher.getVoucherCategory(), voucher.getVoucherType());
+        voucher.setVoucherNo(helper.generateVoucherNo(voucher.getFondsCode(), voucher.getFiscalYear(), voucher.getVoucherCategory()));
+        if (voucher.getId() == null) voucher.setId(UUID.randomUUID().toString());
+        if (voucher.getBusinessDate() == null) voucher.setBusinessDate(java.time.LocalDate.now());
         voucher.setVersion(1);
         voucher.setIsLatest(true);
         voucher.setArchiveStatus("DRAFT");
         voucher.setCreatedBy(userId);
         voucher.setCreatedTime(LocalDateTime.now());
 
-        // 4. 根据类型设置默认保管期限
         if (!StringUtils.hasText(voucher.getRetentionPeriod())) {
             OriginalVoucherType typeInfo = typeMapper.findByTypeCode(voucher.getVoucherType());
-            if (typeInfo != null) {
-                voucher.setRetentionPeriod(typeInfo.getDefaultRetention());
-            } else {
-                voucher.setRetentionPeriod("30Y");
-            }
+            voucher.setRetentionPeriod(typeInfo != null ? typeInfo.getDefaultRetention() : "30Y");
         }
 
         voucherMapper.insert(voucher);
-        log.info("Created original voucher: {} by user: {}", voucherNo, userId);
         return voucher;
     }
 
-    /**
-     * 生成原始凭证编号
-     * 格式: OV-{年度}-{类型简码}-{6位序号}
-     */
-    private synchronized String generateVoucherNo(String fondsCode, String fiscalYear, String category) {
-        if (!StringUtils.hasText(fiscalYear)) {
-            fiscalYear = String.valueOf(Year.now().getValue());
-        }
-
-        // 获取并更新序号
-        Long seq = voucherMapper.getNextSequence(fondsCode, fiscalYear, category);
-        voucherMapper.updateSequence(
-                UUID.randomUUID().toString(),
-                fondsCode, fiscalYear, category, seq);
-
-        // 类型简码映射
-        String typeCode = getCategoryShortCode(category);
-
-        return String.format("OV-%s-%s-%06d", fiscalYear, typeCode, seq);
-    }
-
-    private String getCategoryShortCode(String category) {
-        return switch (category) {
-            case "INVOICE" -> "INV";
-            case "BANK" -> "BNK";
-            case "DOCUMENT" -> "DOC";
-            case "CONTRACT" -> "CON";
-            default -> "OTH";
-        };
-    }
-
-    // ===== 更新接口 =====
-
-    /**
-     * 更新原始凭证 (创建新版本)
-     * 
-     * @param id      原始凭证ID
-     * @param updates 更新数据
-     * @param reason  变更原因
-     * @param userId  操作人ID
-     * @return 新版本
-     */
     @Transactional
     public OriginalVoucher update(String id, OriginalVoucher updates, String reason, String userId) {
         OriginalVoucher existing = getById(id);
+        if ("ARCHIVED".equals(existing.getArchiveStatus())) return createNewVersion(existing, updates, reason, userId);
 
-        // 已归档的凭证不允许直接修改，需要创建新版本
-        if ("ARCHIVED".equals(existing.getArchiveStatus())) {
-            return createNewVersion(existing, updates, reason, userId);
-        }
-
-        // 草稿/待归档状态可以直接修改
         updateFields(existing, updates);
         existing.setLastModifiedBy(userId);
         existing.setLastModifiedTime(LocalDateTime.now());
         voucherMapper.updateById(existing);
-
-        log.info("Updated original voucher: {} by user: {}", existing.getVoucherNo(), userId);
         return existing;
     }
 
-    /**
-     * 创建新版本 (原始凭证的版本控制)
-     */
     @Transactional
-    public OriginalVoucher createNewVersion(OriginalVoucher oldVersion, OriginalVoucher updates,
-            String reason, String userId) {
-        // 1. 标记旧版本为非最新
-        oldVersion.setIsLatest(false);
-        voucherMapper.updateById(oldVersion);
+    public OriginalVoucher createNewVersion(OriginalVoucher old, OriginalVoucher updates, String reason, String userId) {
+        old.setIsLatest(false);
+        voucherMapper.updateById(old);
 
-        // 2. 创建新版本
-        OriginalVoucher newVersion = OriginalVoucher.builder()
-                .id(UUID.randomUUID().toString())
-                .voucherNo(oldVersion.getVoucherNo())
-                .voucherCategory(oldVersion.getVoucherCategory())
-                .voucherType(oldVersion.getVoucherType())
-                .businessDate(
-                        updates.getBusinessDate() != null ? updates.getBusinessDate() : oldVersion.getBusinessDate())
-                .amount(updates.getAmount() != null ? updates.getAmount() : oldVersion.getAmount())
-                .currency(updates.getCurrency() != null ? updates.getCurrency() : oldVersion.getCurrency())
-                .counterparty(
-                        updates.getCounterparty() != null ? updates.getCounterparty() : oldVersion.getCounterparty())
-                .summary(updates.getSummary() != null ? updates.getSummary() : oldVersion.getSummary())
-                .creator(oldVersion.getCreator())
-                .auditor(updates.getAuditor() != null ? updates.getAuditor() : oldVersion.getAuditor())
-                .bookkeeper(updates.getBookkeeper() != null ? updates.getBookkeeper() : oldVersion.getBookkeeper())
-                .approver(updates.getApprover() != null ? updates.getApprover() : oldVersion.getApprover())
-                .sourceSystem(oldVersion.getSourceSystem())
-                .sourceDocId(oldVersion.getSourceDocId())
-                .fondsCode(oldVersion.getFondsCode())
-                .fiscalYear(oldVersion.getFiscalYear())
-                .retentionPeriod(oldVersion.getRetentionPeriod())
-                .archiveStatus("DRAFT")
-                .version(oldVersion.getVersion() + 1)
-                .parentVersionId(oldVersion.getId())
-                .versionReason(reason)
-                .isLatest(true)
-                .createdBy(userId)
-                .createdTime(LocalDateTime.now())
+        OriginalVoucher nv = OriginalVoucher.builder()
+                .id(UUID.randomUUID().toString()).voucherNo(old.getVoucherNo())
+                .voucherCategory(old.getVoucherCategory()).voucherType(old.getVoucherType())
+                .businessDate(updates.getBusinessDate() != null ? updates.getBusinessDate() : old.getBusinessDate())
+                .amount(updates.getAmount() != null ? updates.getAmount() : old.getAmount())
+                .currency(updates.getCurrency() != null ? updates.getCurrency() : old.getCurrency())
+                .counterparty(updates.getCounterparty() != null ? updates.getCounterparty() : old.getCounterparty())
+                .summary(updates.getSummary() != null ? updates.getSummary() : old.getSummary())
+                .creator(old.getCreator())
+                .auditor(updates.getAuditor() != null ? updates.getAuditor() : old.getAuditor())
+                .bookkeeper(updates.getBookkeeper() != null ? updates.getBookkeeper() : old.getBookkeeper())
+                .approver(updates.getApprover() != null ? updates.getApprover() : old.getApprover())
+                .sourceSystem(old.getSourceSystem()).sourceDocId(old.getSourceDocId())
+                .fondsCode(old.getFondsCode()).fiscalYear(old.getFiscalYear())
+                .retentionPeriod(old.getRetentionPeriod()).archiveStatus("DRAFT")
+                .version(old.getVersion() + 1).parentVersionId(old.getId())
+                .versionReason(reason).isLatest(true).createdBy(userId).createdTime(LocalDateTime.now())
                 .build();
 
-        voucherMapper.insert(newVersion);
-        log.info("Created new version {} for voucher: {} by user: {}",
-                newVersion.getVersion(), newVersion.getVoucherNo(), userId);
-
-        return newVersion;
+        voucherMapper.insert(nv);
+        return nv;
     }
 
-    private void updateFields(OriginalVoucher existing, OriginalVoucher updates) {
-        if (updates.getBusinessDate() != null)
-            existing.setBusinessDate(updates.getBusinessDate());
-        if (updates.getAmount() != null)
-            existing.setAmount(updates.getAmount());
-        if (updates.getCurrency() != null)
-            existing.setCurrency(updates.getCurrency());
-        if (updates.getCounterparty() != null)
-            existing.setCounterparty(updates.getCounterparty());
-        if (updates.getSummary() != null)
-            existing.setSummary(updates.getSummary());
-        if (updates.getAuditor() != null)
-            existing.setAuditor(updates.getAuditor());
-        if (updates.getBookkeeper() != null)
-            existing.setBookkeeper(updates.getBookkeeper());
-        if (updates.getApprover() != null)
-            existing.setApprover(updates.getApprover());
+    private void updateFields(OriginalVoucher e, OriginalVoucher u) {
+        if (u.getBusinessDate() != null) e.setBusinessDate(u.getBusinessDate());
+        if (u.getAmount() != null) e.setAmount(u.getAmount());
+        if (u.getCurrency() != null) e.setCurrency(u.getCurrency());
+        if (u.getCounterparty() != null) e.setCounterparty(u.getCounterparty());
+        if (u.getSummary() != null) e.setSummary(u.getSummary());
+        if (u.getAuditor() != null) e.setAuditor(u.getAuditor());
+        if (u.getBookkeeper() != null) e.setBookkeeper(u.getBookkeeper());
+        if (u.getApprover() != null) e.setApprover(u.getApprover());
     }
 
-    // ===== 删除接口 =====
-
-    /**
-     * 逻辑删除原始凭证
-     */
     @Transactional
     public void delete(String id, String userId) {
-        OriginalVoucher voucher = getById(id);
-
-        // 已归档的凭证不允许删除
-        if ("ARCHIVED".equals(voucher.getArchiveStatus())) {
-            throw new BusinessException("已归档的原始凭证不允许删除");
-        }
-
-        voucher.setDeleted(1);
-        voucher.setLastModifiedBy(userId);
-        voucher.setLastModifiedTime(LocalDateTime.now());
-        voucherMapper.updateById(voucher);
-
-        log.info("Deleted original voucher: {} by user: {}", voucher.getVoucherNo(), userId);
+        OriginalVoucher v = getById(id);
+        if ("ARCHIVED".equals(v.getArchiveStatus())) throw new BusinessException("已归档的原始凭证不允许删除");
+        v.setDeleted(1);
+        v.setLastModifiedBy(userId);
+        v.setLastModifiedTime(LocalDateTime.now());
+        voucherMapper.updateById(v);
     }
 
-    // ===== 文件管理 =====
-
-    /**
-     * 添加文件到原始凭证 (MultipartFile 版本)
-     */
     @Transactional
-    public OriginalVoucherFile addFile(String voucherId, org.springframework.web.multipart.MultipartFile file, String fileRole, String userId) {
-        // 校验凭证存在
+    public OriginalVoucherFile addFile(String voucherId, org.springframework.web.multipart.MultipartFile file, String role, String userId) {
         getById(voucherId);
-
-        if (file.isEmpty()) {
-            throw new BusinessException("上传文件为空");
-        }
+        if (file.isEmpty()) throw new BusinessException("上传文件为空");
 
         try {
             String originalFilename = file.getOriginalFilename();
             String fileId = UUID.randomUUID().toString();
-            String extension = "";
-            
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String fileType = extension.replace(".", "").toUpperCase();
+            String ext = (originalFilename != null && originalFilename.contains(".")) ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+            String type = ext.replace(".", "").toUpperCase();
+            String path = "original-vouchers/" + voucherId + "/" + fileId + ext;
+            fileStorageService.saveFile(file.getInputStream(), path);
 
-            // 存储文件 (使用 FileStorageService 标准化流程)
-            // 注意：relativePath 不能以 ./ 或 / 开头
-            String relativePath = "original-vouchers/" + voucherId + "/" + fileId + extension;
-            fileStorageService.saveFile(file.getInputStream(), relativePath);
-
-            // 计算哈希
-            byte[] content = file.getBytes();
-            String fileHash = calculateHash(content);
-
-            // 设置序号
-            List<OriginalVoucherFile> existingFiles = getFiles(voucherId);
-            int sequenceNo = existingFiles.size() + 1;
-
-            // 构建文件记录
-            OriginalVoucherFile voucherFile = OriginalVoucherFile.builder()
-                    .id(fileId)
-                    .voucherId(voucherId)
-                    .fileName(originalFilename)
-                    .fileType(fileType)
-                    .fileSize(file.getSize())
-                    .storagePath(relativePath)
-                    .fileHash(fileHash)
-                    .hashAlgorithm("SM3")
-                    .fileRole(fileRole != null ? fileRole : "PRIMARY")
-                    .sequenceNo(sequenceNo)
-                    .createdBy(userId)
-                    .createdTime(LocalDateTime.now())
+            OriginalVoucherFile vf = OriginalVoucherFile.builder()
+                    .id(fileId).voucherId(voucherId).fileName(originalFilename).fileType(type)
+                    .fileSize(file.getSize()).storagePath(path).fileHash(helper.calculateHash(file.getBytes()))
+                    .hashAlgorithm("SM3").fileRole(role != null ? role : "PRIMARY")
+                    .sequenceNo(getFiles(voucherId).size() + 1).createdBy(userId).createdTime(LocalDateTime.now())
                     .build();
 
-            fileMapper.insert(voucherFile);
+            fileMapper.insert(vf);
 
-
-            // 解析发票逻辑 (自动识别金额和日期)
-            if ("PDF".equals(fileType) && ("PRIMARY".equals(voucherFile.getFileRole()) || "ORIGINAL".equals(voucherFile.getFileRole()))) {
+            if ("PDF".equals(type) && ("PRIMARY".equals(vf.getFileRole()) || "ORIGINAL".equals(vf.getFileRole()))) {
                 try {
-                    java.util.Map<String, Object> parseResult = pdfInvoiceParser.parse(fileStorageService.resolvePath(relativePath).toFile());
-                    OriginalVoucher voucher = getById(voucherId);
-                    boolean updated = false;
-
-                    // 1. 金额识别
-                    if (parseResult.containsKey("total_amount_value")) {
-                        String amountStr = (String) parseResult.get("total_amount_value");
-                        log.info("OCR Identified amount string: {}", amountStr);
-                        try {
-                            java.math.BigDecimal amount = new java.math.BigDecimal(amountStr);
-                            // 修正：即使凭证为 0 也更新，除非已经有人工输入了大于 0 的值
-                            if (voucher.getAmount() == null || voucher.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0) {
-                                voucher.setAmount(amount);
-                                updated = true;
-                                log.info("Automatically filled amount {} for voucher {}", amount, voucherId);
-                            }
-                        } catch (Exception e) {
-                            log.warn("Failed to convert amount: {}", amountStr);
-                        }
+                    java.util.Map<String, Object> res = pdfInvoiceParser.parse(fileStorageService.resolvePath(path).toFile());
+                    OriginalVoucher v = getById(voucherId);
+                    boolean upd = false;
+                    if (res.containsKey("total_amount_value") && (v.getAmount() == null || v.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0)) {
+                        v.setAmount(new java.math.BigDecimal((String) res.get("total_amount_value")));
+                        upd = true;
                     }
-
-                    // 2. 日期识别
-                    if (parseResult.containsKey("invoice_date_value")) {
-                        String dateStr = (String) parseResult.get("invoice_date_value");
-                        log.info("OCR Identified date string: {}", dateStr);
-                        try {
-                            java.time.LocalDate invoiceDate = java.time.LocalDate.parse(dateStr);
-                            // 业务日期应该等于开票日期
-                            // 如果当前业务日期是默认的（例如今天），则更新为开票日期
-                            // 或者始终更新为开票日期（因为开票日期更准确）
-                            voucher.setBusinessDate(invoiceDate);
-                            updated = true;
-                            log.info("Automatically filled business date {} for voucher {}", invoiceDate, voucherId);
-                        } catch (Exception e) {
-                             log.warn("Failed to parse date: {}", dateStr);
-                        }
+                    if (res.containsKey("invoice_date_value")) {
+                        v.setBusinessDate(java.time.LocalDate.parse((String) res.get("invoice_date_value")));
+                        upd = true;
                     }
-
-                    if (updated) {
-                        voucherMapper.updateById(voucher);
-                    }
-
-                } catch (Exception e) {
-                    log.error("Parsing failed", e);
-                }
+                    if (upd) voucherMapper.updateById(v);
+                } catch (Exception e) { log.error("Parsing failed", e); }
             }
-
-            log.info("Added file {} to original voucher: {}", originalFilename, voucherId);
-            return voucherFile;
-
-        } catch (java.io.IOException e) {
-            log.error("文件上传失败", e);
-            throw new BusinessException("文件上传失败: " + e.getMessage());
-        }
+            return vf;
+        } catch (java.io.IOException e) { throw new BusinessException("文件上传失败: " + e.getMessage()); }
     }
 
-    /**
-     * 计算文件哈希 (SM3 或 SHA-256)
-     */
-    private String calculateHash(byte[] content) {
-        try {
-            java.security.MessageDigest md;
-            try {
-                md = java.security.MessageDigest.getInstance("SM3");
-            } catch (Exception e) {
-                md = java.security.MessageDigest.getInstance("SHA-256");
-            }
-            byte[] digest = md.digest(content);
-            StringBuilder sb = new StringBuilder();
-            for (byte b : digest) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            log.error("Hash calculation failed", e);
-            return UUID.randomUUID().toString();
-        }
-    }
-
-
-    // ===== 关联管理 =====
-
-    /**
-     * 建立原始凭证与记账凭证的关联
-     */
     @Transactional
-    public VoucherRelation createRelation(String originalVoucherId, String accountingVoucherId,
-            String desc, String userId) {
-        // 校验原始凭证存在
-        getById(originalVoucherId);
-
-        // 检查关联是否已存在
-        if (relationMapper.countRelation(originalVoucherId, accountingVoucherId) > 0) {
-            throw new BusinessException("关联关系已存在");
-        }
-
-        VoucherRelation relation = VoucherRelation.builder()
-                .id(UUID.randomUUID().toString())
-                .originalVoucherId(originalVoucherId)
-                .accountingVoucherId(accountingVoucherId)
-                .relationType("ORIGINAL_TO_ACCOUNTING")
-                .relationDesc(desc)
-                .createdBy(userId)
-                .createdTime(LocalDateTime.now())
-                .build();
-
-        relationMapper.insert(relation);
-        log.info("Created relation: {} -> {}", originalVoucherId, accountingVoucherId);
-        return relation;
+    public VoucherRelation createRelation(String ovId, String avId, String desc, String userId) {
+        getById(ovId);
+        if (relationMapper.countRelation(ovId, avId) > 0) throw new BusinessException("关联关系已存在");
+        VoucherRelation r = VoucherRelation.builder().id(UUID.randomUUID().toString()).originalVoucherId(ovId).accountingVoucherId(avId).relationType("ORIGINAL_TO_ACCOUNTING").relationDesc(desc).createdBy(userId).createdTime(LocalDateTime.now()).build();
+        relationMapper.insert(r);
+        return r;
     }
 
-    /**
-     * 删除关联关系
-     */
     @Transactional
-    public void deleteRelation(String relationId) {
-        VoucherRelation relation = relationMapper.selectById(relationId);
-        if (relation != null) {
-            relation.setDeleted(1);
-            relationMapper.updateById(relation);
-            log.info("Deleted relation: {}", relationId);
-        }
+    public void deleteRelation(String id) {
+        VoucherRelation r = relationMapper.selectById(id);
+        if (r != null) { r.setDeleted(1); relationMapper.updateById(r); }
     }
 
-    // ===== 类型管理 =====
+    public List<OriginalVoucherType> getAllTypes() { return typeMapper.findAllEnabled(); }
+    public List<OriginalVoucherType> getTypesByCategory(String cat) { return typeMapper.findByCategory(cat); }
 
-    /**
-     * 获取所有启用的凭证类型
-     */
-    public List<OriginalVoucherType> getAllTypes() {
-        return typeMapper.findAllEnabled();
-    }
-
-    /**
-     * 按类别获取凭证类型
-     */
-    public List<OriginalVoucherType> getTypesByCategory(String categoryCode) {
-        return typeMapper.findByCategory(categoryCode);
-    }
-
-    /**
-     * 校验凭证类型有效性
-     */
-    private void validateVoucherType(String category, String type) {
-        OriginalVoucherType typeInfo = typeMapper.findByTypeCode(type);
-        if (typeInfo == null || !typeInfo.getEnabled()) {
-            throw new BusinessException("无效的凭证类型: " + type);
-        }
-        if (!typeInfo.getCategoryCode().equals(category)) {
-            throw new BusinessException("凭证类型与类别不匹配: " + category + " / " + type);
-        }
-    }
-
-    // ===== 归档状态管理 =====
-
-    /**
-     * 提交归档
-     */
     @Transactional
     public void submitForArchive(String id, String userId) {
-        OriginalVoucher voucher = getById(id);
-        if (!"DRAFT".equals(voucher.getArchiveStatus())) {
-            throw new BusinessException("只有草稿状态的凭证可以提交归档");
-        }
-
-        // 校验必填项
-        validateForArchive(voucher);
-
-        voucher.setArchiveStatus("PENDING");
-        voucher.setLastModifiedBy(userId);
-        voucher.setLastModifiedTime(LocalDateTime.now());
-        voucherMapper.updateById(voucher);
-
-        log.info("Submitted voucher for archive: {} by user: {}", voucher.getVoucherNo(), userId);
+        OriginalVoucher v = getById(id);
+        if (!"DRAFT".equals(v.getArchiveStatus())) throw new BusinessException("只有草稿状态的凭证可以提交归档");
+        validateForArchive(v);
+        v.setArchiveStatus("PENDING");
+        v.setLastModifiedBy(userId);
+        v.setLastModifiedTime(LocalDateTime.now());
+        voucherMapper.updateById(v);
     }
 
-    /**
-     * 确认归档
-     */
     @Transactional
     public void confirmArchive(String id, String userId) {
-        OriginalVoucher voucher = getById(id);
-        if (!"PENDING".equals(voucher.getArchiveStatus())) {
-            throw new BusinessException("只有待归档状态的凭证可以确认归档");
-        }
-
-        voucher.setArchiveStatus("ARCHIVED");
-        voucher.setArchivedTime(LocalDateTime.now());
-        voucher.setLastModifiedBy(userId);
-        voucher.setLastModifiedTime(LocalDateTime.now());
-        voucherMapper.updateById(voucher);
-
-        log.info("Confirmed archive for voucher: {} by user: {}", voucher.getVoucherNo(), userId);
+        OriginalVoucher v = getById(id);
+        if (!"PENDING".equals(v.getArchiveStatus())) throw new BusinessException("只有待归档状态的凭证可以确认归档");
+        v.setArchiveStatus("ARCHIVED");
+        v.setArchivedTime(LocalDateTime.now());
+        v.setLastModifiedBy(userId);
+        v.setLastModifiedTime(LocalDateTime.now());
+        voucherMapper.updateById(v);
     }
 
-    private void validateForArchive(OriginalVoucher voucher) {
-        if (!StringUtils.hasText(voucher.getBusinessDate().toString())) {
-            throw new BusinessException("业务日期不能为空");
-        }
-        if (!StringUtils.hasText(voucher.getFondsCode())) {
-            throw new BusinessException("全宗号不能为空");
-        }
-        // 检查是否至少有一个文件
-        List<OriginalVoucherFile> files = getFiles(voucher.getId());
-        if (files.isEmpty()) {
-            throw new BusinessException("原始凭证必须至少包含一个文件");
-        }
+    private void validateForArchive(OriginalVoucher v) {
+        if (!StringUtils.hasText(v.getBusinessDate().toString())) throw new BusinessException("业务日期不能为空");
+        if (!StringUtils.hasText(v.getFondsCode())) throw new BusinessException("全宗号不能为空");
+        if (getFiles(v.getId()).isEmpty()) throw new BusinessException("原始凭证必须至少包含一个文件");
     }
 
-    // ===== 统计接口 =====
+    public OriginalVoucherStats getStats(String fonds, String year) {
+        LambdaQueryWrapper<OriginalVoucher> w = new LambdaQueryWrapper<>();
+        w.eq(OriginalVoucher::getIsLatest, true);
+        if (StringUtils.hasText(fonds)) w.eq(OriginalVoucher::getFondsCode, fonds);
+        else dataScopeService.applyOriginalVoucherScope(w, dataScopeService.resolve());
+        if (StringUtils.hasText(year)) w.eq(OriginalVoucher::getFiscalYear, year);
 
-    /**
-     * 获取统计数据
-     */
-    public OriginalVoucherStats getStats(String fondsCode, String fiscalYear) {
-        LambdaQueryWrapper<OriginalVoucher> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(OriginalVoucher::getIsLatest, true);
-        if (StringUtils.hasText(fondsCode)) {
-            wrapper.eq(OriginalVoucher::getFondsCode, fondsCode);
-        } else {
-            dataScopeService.applyOriginalVoucherScope(wrapper, dataScopeService.resolve());
-        }
-        if (StringUtils.hasText(fiscalYear)) {
-            wrapper.eq(OriginalVoucher::getFiscalYear, fiscalYear);
-        }
-
-        Long total = voucherMapper.selectCount(wrapper);
-
-        LambdaQueryWrapper<OriginalVoucher> archivedWrapper = wrapper.clone();
-        archivedWrapper.eq(OriginalVoucher::getArchiveStatus, "ARCHIVED");
-        Long archived = voucherMapper.selectCount(archivedWrapper);
-
-        LambdaQueryWrapper<OriginalVoucher> pendingWrapper = wrapper.clone();
-        pendingWrapper.eq(OriginalVoucher::getArchiveStatus, "PENDING");
-        Long pending = voucherMapper.selectCount(pendingWrapper);
-
+        Long total = voucherMapper.selectCount(w);
+        Long archived = voucherMapper.selectCount(w.clone().eq(OriginalVoucher::getArchiveStatus, "ARCHIVED"));
+        Long pending = voucherMapper.selectCount(w.clone().eq(OriginalVoucher::getArchiveStatus, "PENDING"));
         return new OriginalVoucherStats(total, archived, pending, total - archived - pending);
     }
 
-    /**
-     * 统计数据DTO
-     */
-    public record OriginalVoucherStats(Long total, Long archived, Long pending, Long draft) {
-    }
-
-    /**
-     * 获取类型别名列表
-     * 用于处理前端类型代码与数据库存储不一致的问题
-     */
-    private List<String> getTypeAliases(String typeCode) {
-        // 定义类型别名映射
-        return switch (typeCode) {
-            // 银行回单的两种表示
-            case "BANK_RECEIPT" -> List.of("BANK_RECEIPT", "BANK_SLIP");
-            // 增值税电子发票的两种表示
-            case "INV_VAT_E" -> List.of("INV_VAT_E", "VAT_INVOICE");
-            // 其他类型直接返回自身
-            default -> List.of(typeCode);
-        };
-    }
+    public record OriginalVoucherStats(Long total, Long archived, Long pending, Long draft) {}
 }
