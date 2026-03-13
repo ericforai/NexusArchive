@@ -92,4 +92,10 @@ public interface PoolService {
      * 插入演示元数据
      */
     void insertDemoMetadata(ArcFileMetadataIndex metadata);
+
+    /**
+     * 删除预归档记录
+     * @param id 文件ID
+     */
+    void deletePoolItem(String id);
 }

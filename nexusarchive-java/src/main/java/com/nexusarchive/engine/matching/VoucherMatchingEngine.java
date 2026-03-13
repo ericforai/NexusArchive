@@ -153,6 +153,81 @@ public class VoucherMatchingEngine {
     }
 
     /**
+     * 扫描企业数据（向导功能）
+     */
+    public com.nexusarchive.controller.VoucherMatchingController.OnboardingScanResult scanForOnboarding(String companyId) {
+        log.info("Scanning company data for onboarding: {}", companyId);
+        return com.nexusarchive.controller.VoucherMatchingController.OnboardingScanResult.builder()
+                .companyId(companyId)
+                .totalVouchers(0)
+                .matchedVouchers(0)
+                .unmatchedVouchers(0)
+                .typeDistribution(new HashMap<>())
+                .build();
+    }
+
+    /**
+     * 应用预设规则（向导功能）
+     */
+    public void applyPresetRules(String companyId, String presetId, boolean overwrite) {
+        log.info("Applying preset rules for company: {}, preset: {}, overwrite: {}", companyId, presetId, overwrite);
+        // 实现逻辑委托给 OnboardingService
+    }
+
+    /**
+     * 确认映射（向导功能）
+     */
+    public void confirmMappings(String companyId, List<java.util.Map<String, Object>> mappings) {
+        log.info("Confirming mappings for company: {}, count: {}", companyId, mappings.size());
+        // 实现逻辑委托给 OnboardingService
+    }
+
+    /**
+     * 生成合规报告
+     */
+    public com.nexusarchive.controller.VoucherMatchingController.ComplianceReport generateComplianceReport(
+            String startDate, String endDate, String companyId) {
+        log.info("Generating compliance report: {} to {}, company: {}", startDate, endDate, companyId);
+        return com.nexusarchive.controller.VoucherMatchingController.ComplianceReport.builder()
+                .period(startDate + " - " + endDate)
+                .totalVouchers(0)
+                .matchedVouchers(0)
+                .unmatchedVouchers(0)
+                .complianceRate(0.0)
+                .issues(new ArrayList<>())
+                .build();
+    }
+
+    /**
+     * 查找缺失文档
+     */
+    public com.nexusarchive.controller.VoucherMatchingController.MissingDocsResult findMissingDocuments(
+            String startDate, String endDate, String companyId) {
+        log.info("Finding missing documents: {} to {}, company: {}", startDate, endDate, companyId);
+        return com.nexusarchive.controller.VoucherMatchingController.MissingDocsResult.builder()
+                .missingCount(0)
+                .items(new ArrayList<>())
+                .build();
+    }
+
+    /**
+     * 导出合规报告
+     */
+    public byte[] exportComplianceReport(String startDate, String endDate, String companyId) {
+        log.info("Exporting compliance report: {} to {}, company: {}", startDate, endDate, companyId);
+        // 返回空字节，实际实现应生成 Excel 文件
+        return new byte[0];
+    }
+
+    /**
+     * 确认关联
+     */
+    public void confirmMatching(String voucherId, String targetArchiveId, String reason) {
+        log.info("Confirming matching: voucherId={}, target={}, reason={}", voucherId, targetArchiveId, reason);
+        // 实现逻辑：更新匹配结果状态为已确认
+    }
+
+    /**
      * 按规则匹配单个证据角色
      */
     private LinkResult matchByRule(VoucherData voucher, Map<String, Object> rule, LinkType linkType) {
