@@ -87,11 +87,29 @@ public class OriginalVoucherService {
 
     public OriginalVoucher getById(String id) {
         OriginalVoucher v = voucherMapper.selectById(id);
+        if (v == null) {
+            // 支持通过凭证编号查询
+            v = voucherMapper.selectOne(new LambdaQueryWrapper<OriginalVoucher>()
+                    .eq(OriginalVoucher::getVoucherNo, id)
+                    .last("LIMIT 1"));
+        }
         if (v == null || v.getDeleted() == 1) throw new BusinessException("原始凭证不存在: " + id);
         return v;
     }
 
-    public List<OriginalVoucherFile> getFiles(String voucherId) { return fileMapper.findByVoucherId(voucherId); }
+    public List<OriginalVoucherFile> getFiles(String voucherId) {
+        // 支持通过凭证编号查询
+        OriginalVoucher v = voucherMapper.selectById(voucherId);
+        if (v == null) {
+            v = voucherMapper.selectOne(new LambdaQueryWrapper<OriginalVoucher>()
+                    .eq(OriginalVoucher::getVoucherNo, voucherId)
+                    .last("LIMIT 1"));
+        }
+        if (v == null) {
+            throw new BusinessException("原始凭证不存在: " + voucherId);
+        }
+        return fileMapper.findByVoucherId(v.getId());
+    }
 
     public OriginalVoucherFile getFileById(String fileId) { return fileMapper.selectById(fileId); }
 

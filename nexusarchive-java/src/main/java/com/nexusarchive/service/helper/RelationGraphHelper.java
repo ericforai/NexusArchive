@@ -1,6 +1,6 @@
-// Input: Relation DTOs, Archive Mappers
-// Output: RelationGraphHelper (关系图谱辅助类)
-// Pos: Service Helper Layer
+// Input: 关系图数据
+// Output: RelationGraphDto
+// Pos: Service Helper 层
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 package com.nexusarchive.service.helper;
@@ -10,13 +10,7 @@ import com.nexusarchive.dto.relation.LinkedFileDto;
 import com.nexusarchive.dto.relation.RelationEdgeDto;
 import com.nexusarchive.dto.relation.RelationGraphDto;
 import com.nexusarchive.dto.relation.RelationNodeDto;
-import com.nexusarchive.entity.Archive;
-import com.nexusarchive.entity.ArchiveAttachment;
-import com.nexusarchive.entity.ArchiveRelation;
-import com.nexusarchive.entity.OriginalVoucher;
-import com.nexusarchive.entity.OriginalVoucherFile;
-import com.nexusarchive.entity.VoucherRelation;
-import com.nexusarchive.entity.ArcFileContent;
+import com.nexusarchive.entity.*;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.OriginalVoucherFileMapper;
@@ -30,13 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,150 +42,97 @@ public class RelationGraphHelper {
     private final ArcFileContentMapper arcFileContentMapper;
     private final RelationDirectionResolver relationDirectionResolver;
 
+    private void fetchRelationsRecursive(String nodeId, Set<ArchiveRelation> allRelations, Set<String> allNodeIds, int depth) {
+        if (depth <= 0) return;
+
+        List<ArchiveRelation> currentLevelRelations = archiveRelationService.list(new LambdaQueryWrapper<ArchiveRelation>()
+                .eq(ArchiveRelation::getSourceId, nodeId)
+                .or()
+                .eq(ArchiveRelation::getTargetId, nodeId));
+
+        for (ArchiveRelation rel : currentLevelRelations) {
+            if (allRelations.add(rel)) {
+                String nextNodeId = rel.getSourceId().equals(nodeId) ? rel.getTargetId() : rel.getSourceId();
+                if (!nextNodeId.startsWith("FILE_") && !nextNodeId.startsWith("OV_")) {
+                    allNodeIds.add(nextNodeId);
+                    fetchRelationsRecursive(nextNodeId, allRelations, allNodeIds, depth - 1);
+                }
+            }
+        }
+    }
+
     public RelationGraphDto buildGraph(Archive inputArchive, String originalQueryId, boolean autoRedirected, String redirectMessage, String currentFonds) {
         String centerArchiveId = inputArchive.getId();
         if (centerArchiveId == null || centerArchiveId.isBlank()) {
             throw new IllegalArgumentException("Archive ID cannot be null or empty");
         }
-        final String finalCenterArchiveId = centerArchiveId;
 
-        // Step 2.1: 查询 acc_archive_relation 表中的关系
-        List<ArchiveRelation> relations = archiveRelationService.list(new LambdaQueryWrapper<ArchiveRelation>()
-                .eq(ArchiveRelation::getSourceId, finalCenterArchiveId)
-                .or()
-                .eq(ArchiveRelation::getTargetId, finalCenterArchiveId));
-        
-        // Step 2.1.1: 查询 acc_archive_attachment 表中的附件关联
-        List<ArchiveAttachment> attachments = attachmentService.getAttachmentLinks(finalCenterArchiveId);
+        Set<ArchiveRelation> allRelations = new HashSet<>();
+        Set<String> allNodeIds = new HashSet<>();
+        allNodeIds.add(centerArchiveId);
+
+        // 递归获取所有相关关系
+        fetchRelationsRecursive(centerArchiveId, allRelations, allNodeIds, 3);
+
+        // 附加附件关系
+        List<ArchiveAttachment> attachments = attachmentService.getAttachmentLinks(centerArchiveId);
         for (ArchiveAttachment attachment : attachments) {
             ArchiveRelation ar = new ArchiveRelation();
             ar.setSourceId("FILE_" + attachment.getFileId());
-            ar.setTargetId(finalCenterArchiveId);
+            ar.setTargetId(centerArchiveId);
             ar.setRelationType("ORIGINAL_VOUCHER");
             ar.setRelationDesc(attachment.getRelationDesc() != null ? attachment.getRelationDesc() : "附件");
-            relations.add(ar);
+            allRelations.add(ar);
         }
 
-        // Step 2.2: 查询 arc_voucher_relation 表中的原始凭证关联
-        List<VoucherRelation> voucherRelations = voucherRelationMapper.findByAccountingVoucherId(finalCenterArchiveId);
-        if (!voucherRelations.isEmpty()) {
-            processVoucherRelations(voucherRelations, finalCenterArchiveId, relations);
+        // 处理原始凭证关联
+        List<VoucherRelation> voucherRelations = voucherRelationMapper.findByAccountingVoucherId(centerArchiveId);
+        for (VoucherRelation vr : voucherRelations) {
+            ArchiveRelation ar = new ArchiveRelation();
+            ar.setSourceId("OV_" + vr.getOriginalVoucherId());
+            ar.setTargetId(centerArchiveId);
+            ar.setRelationType("ORIGINAL_VOUCHER");
+            ar.setRelationDesc("原始凭证");
+            allRelations.add(ar);
         }
 
-        // Step 3: 收集所有相关档案ID
-        Set<String> realArchiveIds = new HashSet<>();
+        List<ArchiveRelation> relations = new ArrayList<>(allRelations);
         Map<String, String> virtualNodeToOriginalVoucherId = new HashMap<>();
         Map<String, String> virtualNodeToFileId = new HashMap<>();
         
-        collectIds(relations, realArchiveIds, virtualNodeToOriginalVoucherId, virtualNodeToFileId);
+        collectIds(relations, allNodeIds, virtualNodeToOriginalVoucherId, virtualNodeToFileId);
         
-        realArchiveIds.add(finalCenterArchiveId);
-        if (originalQueryId != null && !originalQueryId.equals(finalCenterArchiveId)) {
-            realArchiveIds.add(originalQueryId);
+        if (originalQueryId != null && !originalQueryId.equals(centerArchiveId)) {
+            allNodeIds.add(originalQueryId);
         }
 
-        List<Archive> relatedArchives = archiveService.getArchivesByIds(realArchiveIds);
+        List<Archive> relatedArchives = archiveService.getArchivesByIds(allNodeIds);
         Map<String, Archive> archiveMap = relatedArchives.stream()
-                .collect(Collectors.toMap(Archive::getId, a -> a));
-
-        if (!archiveMap.containsKey(finalCenterArchiveId)) {
-            archiveMap.put(finalCenterArchiveId, inputArchive);
-        }
-        
-        fillMissingNodes(relations, archiveMap, inputArchive, currentFonds);
-        createVirtualNodes(virtualNodeToOriginalVoucherId, virtualNodeToFileId, archiveMap, attachments, finalCenterArchiveId);
-
-        List<RelationNodeDto> nodes = archiveMap.values().stream()
-                .map(this::toNode)
-                .toList();
-
-        List<RelationEdgeDto> edges = relations.stream()
-                .map(r -> RelationEdgeDto.builder()
-                        .from(r.getSourceId())
-                        .to(r.getTargetId())
-                        .relationType(r.getRelationType())
-                        .description(r.getRelationDesc())
-                        .build())
-                .toList();
-
-        RelationGraphDto.DirectionalView directionalView = relationDirectionResolver.resolve(finalCenterArchiveId, edges);
-
-        RelationGraphDto.RelationGraphDtoBuilder builder = RelationGraphDto.builder()
-                .centerId(finalCenterArchiveId)
-                .nodes(nodes)
-                .edges(edges)
-                .directionalView(directionalView);
-        
-        if (autoRedirected) {
-            builder.originalQueryId(originalQueryId)
-                   .autoRedirected(true)
-                   .redirectMessage(redirectMessage);
-        }
-
-        return builder.build();
-    }
-
-    private void processVoucherRelations(List<VoucherRelation> voucherRelations, String centerArchiveId, List<ArchiveRelation> relations) {
-        List<String> originalVoucherIds = voucherRelations.stream()
-            .map(VoucherRelation::getOriginalVoucherId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-        
-        List<OriginalVoucher> originalVouchers = originalVoucherMapper.selectBatchIds(originalVoucherIds);
-        Map<String, OriginalVoucher> voucherMap = originalVouchers.stream()
-            .filter(Objects::nonNull)
-            .collect(Collectors.toMap(OriginalVoucher::getId, v -> v));
-        
-        Set<String> archiveIdsToQuery = new HashSet<>();
-        for (OriginalVoucher voucher : originalVouchers) {
-            if (voucher.getSourceDocId() != null && !voucher.getSourceDocId().isEmpty()) {
-                archiveIdsToQuery.add(voucher.getSourceDocId());
-            }
-            archiveIdsToQuery.add(voucher.getId());
-        }
-        
-        Map<String, Archive> archiveMapById = new HashMap<>();
-        if (!archiveIdsToQuery.isEmpty()) {
-            List<Archive> archives = archiveMapper.selectBatchIds(new ArrayList<>(archiveIdsToQuery));
-            archiveMapById = archives.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Archive::getId, a -> a));
+
+        if (!archiveMap.containsKey(centerArchiveId)) {
+            archiveMap.put(centerArchiveId, inputArchive);
         }
-        
-        for (VoucherRelation vr : voucherRelations) {
-            OriginalVoucher originalVoucher = voucherMap.get(vr.getOriginalVoucherId());
-            if (originalVoucher == null) continue;
-            
-            String invoiceArchiveId = null;
-            if (originalVoucher.getSourceDocId() != null && !originalVoucher.getSourceDocId().isEmpty()) {
-                if (archiveMapById.containsKey(originalVoucher.getSourceDocId())) {
-                    invoiceArchiveId = originalVoucher.getSourceDocId();
-                }
-            }
-            
-            if (invoiceArchiveId == null && archiveMapById.containsKey(vr.getOriginalVoucherId())) {
-                invoiceArchiveId = vr.getOriginalVoucherId();
-            }
-            
-            if (invoiceArchiveId != null) {
-                ArchiveRelation ar = new ArchiveRelation();
-                ar.setSourceId(invoiceArchiveId);
-                ar.setTargetId(centerArchiveId);
-                ar.setRelationType("ORIGINAL_VOUCHER");
-                ar.setRelationDesc("原始凭证");
-                relations.add(ar);
-            } else {
-                List<OriginalVoucherFile> files = originalVoucherFileMapper.findByVoucherId(vr.getOriginalVoucherId());
-                if (!files.isEmpty()) {
-                    ArchiveRelation ar = new ArchiveRelation();
-                    ar.setSourceId("OV_" + vr.getOriginalVoucherId());
-                    ar.setTargetId(centerArchiveId);
-                    ar.setRelationType("ORIGINAL_VOUCHER");
-                    ar.setRelationDesc("原始凭证");
-                    relations.add(ar);
-                }
-            }
-        }
+
+        fillMissingNodes(relations, archiveMap, inputArchive, currentFonds);
+        createVirtualNodes(virtualNodeToOriginalVoucherId, virtualNodeToFileId, archiveMap, attachments, centerArchiveId);
+
+        return RelationGraphDto.builder()
+                .centerId(centerArchiveId)
+                .nodes(archiveMap.values().stream().map(this::toNode).collect(Collectors.toList()))
+                .edges(relations.stream().map(rel -> RelationEdgeDto.builder()
+                        .from(rel.getSourceId())
+                        .to(rel.getTargetId())
+                        .relationType(rel.getRelationType())
+                        .description(rel.getRelationDesc())
+                        .build()).collect(Collectors.toList()))
+                .autoRedirected(autoRedirected)
+                .redirectMessage(redirectMessage)
+                .directionalView(relationDirectionResolver.resolve(centerArchiveId, 
+                    relations.stream().map(rel -> RelationEdgeDto.builder()
+                        .from(rel.getSourceId()).to(rel.getTargetId()).build()).collect(Collectors.toList())))
+                .build();
     }
 
     private void collectIds(List<ArchiveRelation> relations, Set<String> realArchiveIds, 
@@ -205,18 +140,10 @@ public class RelationGraphHelper {
         for (ArchiveRelation relation : relations) {
             String sourceId = relation.getSourceId();
             String targetId = relation.getTargetId();
-            
-            if (sourceId.startsWith("OV_")) {
-                virtualNodeToOriginalVoucherId.put(sourceId, sourceId.substring(3));
-            } else if (sourceId.startsWith("FILE_")) {
-                virtualNodeToFileId.put(sourceId, sourceId.substring(5));
-            } else {
-                realArchiveIds.add(sourceId);
-            }
-            
-            if (!targetId.startsWith("OV_") && !targetId.startsWith("FILE_")) {
-                realArchiveIds.add(targetId);
-            }
+            if (sourceId.startsWith("OV_")) virtualNodeToOriginalVoucherId.put(sourceId, sourceId.substring(3));
+            else if (sourceId.startsWith("FILE_")) virtualNodeToFileId.put(sourceId, sourceId.substring(5));
+            else realArchiveIds.add(sourceId);
+            if (!targetId.startsWith("OV_") && !targetId.startsWith("FILE_")) realArchiveIds.add(targetId);
         }
     }
 
@@ -229,7 +156,6 @@ public class RelationGraphHelper {
             if (!archiveMap.containsKey(sourceId)) missingNodeIds.add(sourceId);
             if (!archiveMap.containsKey(targetId)) missingNodeIds.add(targetId);
         }
-        
         if (!missingNodeIds.isEmpty()) {
             List<Archive> missingArchives = archiveMapper.selectBatchIds(new ArrayList<>(missingNodeIds));
             for (Archive archive : missingArchives) {
@@ -248,18 +174,15 @@ public class RelationGraphHelper {
             if (ov != null) {
                 Archive va = new Archive();
                 va.setId(entry.getKey());
-                va.setArchiveCode("OV-" + ov.getVoucherNo());
+                va.setArchiveCode(ov.getVoucherNo());
                 va.setTitle(ov.getSummary() != null ? ov.getSummary() : "原始凭证");
                 va.setCategoryCode("AC04");
                 va.setAmount(ov.getAmount() != null ? ov.getAmount() : java.math.BigDecimal.ZERO);
                 va.setDocDate(ov.getBusinessDate());
-                va.setFondsNo(ov.getFondsCode());
-                va.setFiscalYear(ov.getFiscalYear());
                 va.setStatus("DRAFT");
                 archiveMap.put(entry.getKey(), va);
             }
         }
-        
         for (Map.Entry<String, String> entry : virtualNodeToFileId.entrySet()) {
             String fileId = entry.getValue();
             List<ArcFileContent> files = attachmentService.getAttachmentsByArchive(centerId);
@@ -267,8 +190,8 @@ public class RelationGraphHelper {
             if (file != null) {
                 Archive va = new Archive();
                 va.setId(entry.getKey());
-                va.setArchiveCode("FILE-" + fileId.substring(0, Math.min(8, fileId.length())));
-                va.setTitle(file.getFileName() != null ? file.getFileName() : "附件文件");
+                va.setArchiveCode(fileId.substring(0, Math.min(8, fileId.length())));
+                va.setTitle(file.getFileName());
                 va.setCategoryCode("AC04");
                 va.setStatus("ARCHIVED");
                 archiveMap.put(entry.getKey(), va);
@@ -296,8 +219,6 @@ public class RelationGraphHelper {
             case "FP" -> "invoice";
             case "JZ", "PZ" -> "voucher";
             case "HD" -> "receipt";
-            case "BB" -> "report";
-            case "ZB" -> "ledger";
             case "FK" -> "payment";
             case "BX" -> "reimbursement";
             case "SQ" -> "application";
@@ -319,29 +240,20 @@ public class RelationGraphHelper {
     public OriginalVoucher resolveOriginalVoucher(String idOrVoucherNo) {
         OriginalVoucher ov = originalVoucherMapper.selectById(idOrVoucherNo);
         if (ov != null) return ov;
-
         ov = originalVoucherMapper.selectOne(new LambdaQueryWrapper<OriginalVoucher>().eq(OriginalVoucher::getVoucherNo, idOrVoucherNo));
         if (ov != null) return ov;
-
         ArcFileContent content = arcFileContentMapper.selectOne(new LambdaQueryWrapper<ArcFileContent>()
                 .eq(ArcFileContent::getArchivalCode, idOrVoucherNo)
                 .orderByDesc(ArcFileContent::getCreatedTime)
                 .last("LIMIT 1"));
-        if (content != null && content.getItemId() != null && !content.getItemId().isBlank()) {
-            return originalVoucherMapper.selectById(content.getItemId());
-        }
+        if (content != null && content.getItemId() != null && !content.getItemId().isBlank()) return originalVoucherMapper.selectById(content.getItemId());
         return null;
     }
 
     public String findRelatedAccountingVoucherId(String originalVoucherId) {
         List<VoucherRelation> relations = voucherRelationMapper.findByOriginalVoucherId(originalVoucherId);
         if (relations == null || relations.isEmpty()) return null;
-        return relations.stream()
-                .map(VoucherRelation::getAccountingVoucherId)
-                .filter(Objects::nonNull)
-                .filter(id -> !id.isBlank())
-                .findFirst()
-                .orElse(null);
+        return relations.stream().map(VoucherRelation::getAccountingVoucherId).filter(Objects::nonNull).filter(id -> !id.isBlank()).findFirst().orElse(null);
     }
 
     public boolean isVoucher(String archiveCode) {
