@@ -11,6 +11,11 @@ import com.nexusarchive.common.Result;
 import com.nexusarchive.engine.matching.VoucherMatchingEngine;
 import com.nexusarchive.engine.matching.RuleTemplateManager;
 import com.nexusarchive.engine.matching.dto.*;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.ComplianceIssue;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.ComplianceReport;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.MissingDocItem;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.MissingDocsResult;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.OnboardingScanResult;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -244,21 +249,6 @@ public class VoucherMatchingController {
     // ========== DTO ==========
 
     /**
-     * 向导扫描结果
-     */
-    @Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class OnboardingScanResult {
-        private String companyId;
-        private int totalVouchers;
-        private int matchedVouchers;
-        private int unmatchedVouchers;
-        private java.util.Map<String, Integer> typeDistribution;
-    }
-
-    /**
      * 应用预设规则请求
      */
     @Data
@@ -289,56 +279,6 @@ public class VoucherMatchingController {
         private String sourceType;
         private String targetType;
         private java.util.Map<String, String> fieldMappings;
-    }
-
-    /**
-     * 合规报告
-     */
-    @Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class ComplianceReport {
-        private String period;
-        private int totalVouchers;
-        private int matchedVouchers;
-        private int unmatchedVouchers;
-        private double complianceRate;
-        private java.util.List<ComplianceIssue> issues;
-    }
-
-    @Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class ComplianceIssue {
-        private String type;
-        private String description;
-        private int count;
-        private String severity;
-    }
-
-    /**
-     * 缺失文档结果
-     */
-    @Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class MissingDocsResult {
-        private int missingCount;
-        private java.util.List<MissingDocItem> items;
-    }
-
-    @Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class MissingDocItem {
-        private String voucherId;
-        private String voucherType;
-        private String voucherDate;
-        private String reason;
     }
 
     /**

@@ -7,6 +7,7 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.mapper.ArchiveMapper;
+import com.nexusarchive.service.ArchiveFreezePartialSuccessException;
 import com.nexusarchive.service.ArchiveFreezeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -142,32 +143,13 @@ public class ArchiveFreezeServiceImpl implements ArchiveFreezeService {
         
         // [P1-FIX] 如有失败项，抛出部分成功异常，让调用方知晓
         if (!failedIds.isEmpty()) {
-            throw new PartialSuccessException(
+            throw new ArchiveFreezePartialSuccessException(
                     String.format("批量冻结部分失败: 成功 %d 个, 失败 %d 个, 失败ID: %s", 
                             successCount, failedIds.size(), String.join(",", failedIds)),
                     successCount, failedIds);
         }
     }
-    
-    /**
-     * 部分成功异常
-     * [P1-FIX] 用于批量操作部分成功的场景
-     */
-    public static class PartialSuccessException extends RuntimeException {
-        private final int successCount;
-        private final List<String> failedIds;
-        
-        public PartialSuccessException(String message, int successCount, List<String> failedIds) {
-            super(message);
-            this.successCount = successCount;
-            this.failedIds = failedIds;
-        }
-        
-        public int getSuccessCount() { return successCount; }
-        public List<String> getFailedIds() { return failedIds; }
-    }
 }
-
 
 
 

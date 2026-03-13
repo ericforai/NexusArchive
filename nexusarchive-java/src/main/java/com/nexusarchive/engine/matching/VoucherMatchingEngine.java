@@ -9,6 +9,9 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
 import com.nexusarchive.engine.matching.dto.*;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.ComplianceReport;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.MissingDocsResult;
+import com.nexusarchive.engine.matching.dto.LegacyMatchingWorkflowDtos.OnboardingScanResult;
 import com.nexusarchive.engine.matching.identifier.BusinessSceneIdentifier;
 import com.nexusarchive.engine.matching.loader.VoucherLoader;
 import com.nexusarchive.engine.matching.enums.*;
@@ -155,9 +158,9 @@ public class VoucherMatchingEngine {
     /**
      * 扫描企业数据（向导功能）
      */
-    public com.nexusarchive.controller.VoucherMatchingController.OnboardingScanResult scanForOnboarding(String companyId) {
+    public OnboardingScanResult scanForOnboarding(String companyId) {
         log.info("Scanning company data for onboarding: {}", companyId);
-        return com.nexusarchive.controller.VoucherMatchingController.OnboardingScanResult.builder()
+        return OnboardingScanResult.builder()
                 .companyId(companyId)
                 .totalVouchers(0)
                 .matchedVouchers(0)
@@ -185,10 +188,10 @@ public class VoucherMatchingEngine {
     /**
      * 生成合规报告
      */
-    public com.nexusarchive.controller.VoucherMatchingController.ComplianceReport generateComplianceReport(
+    public ComplianceReport generateComplianceReport(
             String startDate, String endDate, String companyId) {
         log.info("Generating compliance report: {} to {}, company: {}", startDate, endDate, companyId);
-        return com.nexusarchive.controller.VoucherMatchingController.ComplianceReport.builder()
+        return ComplianceReport.builder()
                 .period(startDate + " - " + endDate)
                 .totalVouchers(0)
                 .matchedVouchers(0)
@@ -201,10 +204,10 @@ public class VoucherMatchingEngine {
     /**
      * 查找缺失文档
      */
-    public com.nexusarchive.controller.VoucherMatchingController.MissingDocsResult findMissingDocuments(
+    public MissingDocsResult findMissingDocuments(
             String startDate, String endDate, String companyId) {
         log.info("Finding missing documents: {} to {}, company: {}", startDate, endDate, companyId);
-        return com.nexusarchive.controller.VoucherMatchingController.MissingDocsResult.builder()
+        return MissingDocsResult.builder()
                 .missingCount(0)
                 .items(new ArrayList<>())
                 .build();
