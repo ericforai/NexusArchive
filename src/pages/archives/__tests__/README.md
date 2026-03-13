@@ -14,5 +14,5 @@
 | 文件 | 功能 |
 | --- | --- |
 | `ArchiveDetailDrawer.test.tsx` | 详情抽屉渲染与交互测试 |
-| `ArchiveDetailPage.test.tsx` | 详情页面渲染与路由测试 |
+| `ArchiveDetailPage.test.tsx` | 详情页面渲染、路由与协作版本标签页测试 |
 | `OriginalVoucherListView.test.tsx` | 原始凭证列表标题与筛选测试 |
