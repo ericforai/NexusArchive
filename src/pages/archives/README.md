@@ -17,7 +17,7 @@
 | `ArchiveListPage.tsx` | 档案列表页面容器 |
 | `ArchiveListView.tsx` | 档案列表视图 |
 | `ArchiveDetailDrawer.tsx` | 档案详情抽屉（2026-01-02: 响应式 Drawer UI；2026-01-08: Spin tip 嵌套）|
-| `ArchiveDetailPage.tsx` | 档案详情全页面（2026-01-02: 展开-to-新页功能）|
+| `ArchiveDetailPage.tsx` | 档案详情全页面（2026-01-02: 展开-to-新页功能；2026-03-11: 接入文档协作与版本工作流后端）|
 | `AddRecordModal.tsx` | 新增档案弹窗 |
 | `ComplianceModal.tsx` | 合规检查弹窗 |
 | `ComplianceReportView.tsx` | 合规报告页面 |
@@ -43,6 +43,11 @@
 ## 2026-01-08 更新
 
 - ✅ Spin tip 采用嵌套写法，避免 antd 告警
+
+## 2026-03-11 更新
+
+- ✅ `ArchiveDetailPage.tsx` 新增“协作与版本”标签页
+- ✅ 详情页直接接入 `documentsApi`，支持主稿保存、分工、锁定、提醒、版本创建与回滚
 
 ## 架构约束
 
