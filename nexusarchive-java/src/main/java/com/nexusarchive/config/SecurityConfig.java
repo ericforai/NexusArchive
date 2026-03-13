@@ -160,7 +160,7 @@ public class SecurityConfig {
         }
 
         private String buildCspDirectives() {
-                String scriptSrc = "script-src 'self' https://cdn.tailwindcss.com https://aistudiocdn.com";
+                String scriptSrc = "script-src 'self' https://aistudiocdn.com";
                 if (cspAllowUnsafeInline) {
                         scriptSrc += " 'unsafe-inline'";
                 }

@@ -100,70 +100,18 @@
   <meta property="twitter:description" content="遵循DA/T 94-2022标准，提供四性检测、OFD版式转换、国密安全加密，助力企业实现财务档案全链路无纸化管理。">
   <meta property="twitter:image" content="https://www.digivoucher.cn/og-image.jpg">
 
-  <script src="/lib/tailwind-play.js"></script>
   <script>
-    window.tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              200: '#bae6fd',
-              300: '#7dd3fc',
-              400: '#38bdf8',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
-              800: '#075985',
-              900: '#0c4a6e',
-            },
-            slate: {
-              850: '#151e2e',
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          },
-        },
-      },
-    }
-  </script>
-  <link href="/fonts/inter.css" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-  </style>
-  <script>    
     (function () {
-          if (lo catio      hostname !== "www.digivoucher.cn") {
-            return;
+      if (window.location.hostname !== "www.digivoucher.cn") {
+        return;
       }
 
       var _hmt = window._hmt || [];
-      window._hmt =      hmt;
+      window._hmt = _hmt;
 
-      var hm = document.createElement("script)            hm.src = "https://hm.baidu.c    om/hm.js?500e5a0d453b070aa98fc4";
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?500e5a0d453b070aa98fc4";
+      hm.async = true;
       var s = document.getElementsByTagName("script")[0];
       if (s && s.parentNode) {
         s.parentNode.insertBefore(hm, s);
@@ -173,17 +121,11 @@
     })();
   </script>
   <!-- importmap 干扰已完全移除 -->
-  <link rel="stylesheet" href="/src/index.css">
+  <link href="/fonts/inter.css" rel="stylesheet">
 </head>
 
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-primary-100 selection:text-primary-900">
   <div id="root"></div>
-  <script>
-    // 强制刷新检查 - 应该始终执行
-    console.log('%c[HTML] INDEX.HTML v7 LOADED', 'col: #dbackground: #fef3c7; font-size: 24px; font-weight: bold; padding: 10px;');
-    console.log('%c[HTML] 凭证预览标签应该有红色 [NEW v7] 徽章', 'color: #dc2626; font-size: 16px; font-weight: bold;');
-    window.HTML_VERSION = 'v7-20260102-FINAL';
-  </script>
   <script type="module" src="/src/index.tsx"></script>
 </body>
 

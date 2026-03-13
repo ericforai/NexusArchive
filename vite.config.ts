@@ -4,8 +4,9 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, splitVendorChunkPlugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -27,6 +28,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      splitVendorChunkPlugin(),
       // 移除任何外部注入的 importmap（如 AI Studio 插件），防止 React 版本冲突
       {
         name: 'remove-external-importmap',
@@ -34,8 +36,42 @@ export default defineConfig(({ mode }) => {
           // 移除指向 aistudiocdn 的 importmap
           return html.replace(/<script type="importmap">[\s\S]*?aistudiocdn[\s\S]*?<\/script>/gi, '');
         },
-      }
+      },
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+        threshold: 10 * 1024,
+        deleteOriginFile: false,
+      }),
     ],
+    build: {
+      cssCodeSplit: true,
+      reportCompressedSize: true,
+      chunkSizeWarningLimit: 800,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) {
+              return undefined;
+            }
+
+            if (id.includes('/antd/') || id.includes('/@ant-design/')) {
+              return 'vendor-antd';
+            }
+            if (id.includes('/@xyflow/') || id.includes('/d3-force/')) {
+              return 'vendor-graph';
+            }
+            if (id.includes('/recharts/')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('/pdfjs-dist/') || id.includes('/react-pdf/')) {
+              return 'vendor-pdf';
+            }
+            return undefined;
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

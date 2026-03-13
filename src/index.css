@@ -3,6 +3,10 @@
 /* Pos: 前端全局样式入口 */
 /* 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。 */
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Global Styles */
 * {
   margin: 0;
@@ -10,13 +14,19 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  height: 100%;
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100%;
 }
 
 code {
