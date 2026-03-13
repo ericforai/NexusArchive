@@ -6,6 +6,8 @@
 import path from 'path';
 import { defineConfig, loadEnv, splitVendorChunkPlugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import autoprefixer from 'autoprefixer';
+import tailwindcss from 'tailwindcss';
 import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig(({ mode }) => {
@@ -70,6 +72,14 @@ export default defineConfig(({ mode }) => {
             return undefined;
           },
         },
+      },
+    },
+    css: {
+      postcss: {
+        plugins: [
+          tailwindcss(),
+          autoprefixer(),
+        ],
       },
     },
     resolve: {
