@@ -2,7 +2,7 @@
 
 > 本清单是模块边界与依赖关系的单一事实来源（SSOT）。
 > **版本**: 2.3.0
-> **更新日期**: 2026-03-13
+> **更新日期**: 2026-03-14
 > **自动生成**: 通过 scripts/discover-frontend-modules.js
 
 ---
@@ -11,10 +11,10 @@
 
 | 模块 ID | 名称 | 范围 | 职责一句话 | 允许依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
-| FE.PAGES | 页面容器层 | src/pages/Auth, src/pages/admin, src/pages/archives, src/pages/audit, src/pages/collection, src/pages/debug, src/pages/demo, src/pages/matching, src/pages/operations, src/pages/panorama, src/pages/portal, src/pages/pre-archive, src/pages/product-website, src/pages/quality, src/pages/scan, src/pages/security, src/pages/settings, src/pages/stats, src/pages/system, src/pages/utilization | 页面级容器组件 | 191 files | ✅ ACTIVE |
-| FE.COMPONENTS | 通用组件层 | src/components/GlobalSearch, src/components/Sidebar, src/components/TopBar, src/components/admin, src/components/archive, src/components/auth, src/components/borrowing, src/components/common, src/components/debug, src/components/dev, src/components/hooks, src/components/layout, src/components/matching, src/components/modals, src/components/operations, src/components/org, src/components/pages, src/components/panorama, src/components/pool-dashboard, src/components/pool-kanban, src/components/preview, src/components/relation-graph, src/components/scan, src/components/settings, src/components/table, src/components/voucher, src/components/watermark | 可复用 UI 组件 | 201 files | ✅ ACTIVE |
+| FE.PAGES | 页面容器层 | src/pages/Auth, src/pages/admin, src/pages/archives, src/pages/audit, src/pages/collection, src/pages/debug, src/pages/demo, src/pages/matching, src/pages/operations, src/pages/panorama, src/pages/portal, src/pages/pre-archive, src/pages/preview, src/pages/product-website, src/pages/quality, src/pages/scan, src/pages/security, src/pages/settings, src/pages/stats, src/pages/system, src/pages/utilization | 页面级容器组件 | 193 files | ✅ ACTIVE |
+| FE.COMPONENTS | 通用组件层 | src/components/GlobalSearch, src/components/Sidebar, src/components/TopBar, src/components/admin, src/components/archive, src/components/auth, src/components/borrowing, src/components/common, src/components/debug, src/components/dev, src/components/hooks, src/components/layout, src/components/matching, src/components/modals, src/components/operations, src/components/org, src/components/pages, src/components/panorama, src/components/pool-dashboard, src/components/pool-kanban, src/components/preview, src/components/relation-graph, src/components/scan, src/components/settings, src/components/table, src/components/voucher, src/components/watermark | 可复用 UI 组件 | 204 files | ✅ ACTIVE |
 | FE.STORE | 状态管理层 | src/store/__tests__ | Zustand 全局状态 | 8 files | ✅ ACTIVE |
-| FE.API | API 客户端层 | src/src/api | 后端 API 调用封装 | 49 files | ✅ ACTIVE |
+| FE.API | API 客户端层 | src/src/api | 后端 API 调用封装 | 51 files | ✅ ACTIVE |
 | FE.HOOKS | 自定义 Hooks | src/hooks/__tests__ | React 自定义 Hooks | 19 files | ✅ ACTIVE |
 | FE.UTILS | 工具函数层 | src/src/utils | 通用工具函数 | 6 files | ✅ ACTIVE |
 
@@ -28,12 +28,13 @@
 - `src/pages/audit`: 4 files
 - `src/pages/collection`: 6 files
 - `src/pages/debug`: 3 files
-- `src/pages/demo`: 2 files
+- `src/pages/demo`: 3 files
 - `src/pages/matching`: 5 files
 - `src/pages/operations`: 19 files
 - `src/pages/panorama`: 9 files
 - `src/pages/portal`: 2 files
 - `src/pages/pre-archive`: 11 files
+- `src/pages/preview`: 1 files
 - `src/pages/product-website`: 34 files
 - `src/pages/quality`: 7 files
 - `src/pages/scan`: 2 files
@@ -65,7 +66,7 @@
 - `src/components/panorama`: 1 files
 - `src/components/pool-dashboard`: 3 files
 - `src/components/pool-kanban`: 11 files
-- `src/components/preview`: 13 files
+- `src/components/preview`: 16 files
 - `src/components/relation-graph`: 7 files
 - `src/components/scan`: 3 files
 - `src/components/settings`: 45 files
