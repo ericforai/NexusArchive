@@ -6,10 +6,9 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EvidencePreview } from '../EvidencePreview';
 
-const { getByArchive, getOriginalVoucherFiles, get } = vi.hoisted(() => ({
+const { getByArchive, getOriginalVoucherFiles } = vi.hoisted(() => ({
   getByArchive: vi.fn(),
   getOriginalVoucherFiles: vi.fn(),
-  get: vi.fn(),
 }));
 
 vi.mock('@/api/attachments', () => ({
@@ -24,35 +23,22 @@ vi.mock('@/api/originalVoucher', () => ({
   },
 }));
 
-vi.mock('@/api/client', () => ({
-  client: {
-    get,
-  },
-}));
-
 vi.mock('@/store', () => ({
   useAuthStore: (selector: (state: { token: string }) => string) => selector({ token: 'token-123' }),
 }));
 
 vi.mock('@/components/preview', () => ({
-  OfdViewer: ({ fileName }: { fileName?: string }) => (
-    <div data-testid="ofd-viewer">ofd:{fileName}</div>
+  UnifiedOfdPreview: ({ fileId, fileName, sourceType }: { fileId?: string; fileName?: string; sourceType?: string | null }) => (
+    <div data-testid="unified-ofd-preview">ofd:{fileId}:{fileName}:{sourceType}</div>
   ),
 }));
 
 describe('EvidencePreview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('URL', {
-      createObjectURL: vi.fn(() => 'blob:ofd-preview'),
-      revokeObjectURL: vi.fn(),
-    });
-    get.mockResolvedValue({
-      data: new Blob(['ofd'], { type: 'application/ofd' }),
-    });
   });
 
-  it('loads archive ofd through the authenticated download flow', async () => {
+  it('routes archive ofd files to the unified preview decision layer', async () => {
     getByArchive.mockResolvedValue([
       {
         id: 'file-ofd',
@@ -70,7 +56,26 @@ describe('EvidencePreview', () => {
     render(<EvidencePreview voucherId="archive-1" sourceType="ARCHIVE" />);
 
     await screen.findByText('invoice.ofd');
-    expect(await screen.findByTestId('ofd-viewer')).toBeInTheDocument();
-    expect(get).toHaveBeenCalledWith('/api/archive/files/download/file-ofd', { responseType: 'blob' });
+    expect(await screen.findByTestId('unified-ofd-preview')).toHaveTextContent('ofd:file-ofd:invoice.ofd:ARCHIVE');
+  });
+
+  it('routes original voucher ofd files to the unified preview decision layer', async () => {
+    getByArchive.mockResolvedValue([]);
+    getOriginalVoucherFiles.mockResolvedValue([
+      {
+        id: 'orig-ofd',
+        voucherId: 'voucher-1',
+        fileName: 'original-invoice.ofd',
+        fileType: 'ofd',
+        fileSize: 1024,
+        storagePath: '/tmp/original-invoice.ofd',
+        fileRole: 'ORIGINAL',
+      },
+    ]);
+
+    render(<EvidencePreview voucherId="voucher-1" sourceType="ORIGINAL" />);
+
+    await screen.findByText('original-invoice.ofd');
+    expect(await screen.findByTestId('unified-ofd-preview')).toHaveTextContent('ofd:orig-ofd:original-invoice.ofd:ORIGINAL');
   });
 });

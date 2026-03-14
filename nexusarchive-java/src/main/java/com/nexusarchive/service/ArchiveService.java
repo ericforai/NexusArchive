@@ -36,6 +36,22 @@ import java.util.UUID;
  * Creation, Retrieval, Update, Deletion (CRUD).
  * Enforces Data Scoping and Business Rules.
  * </p>
+ *
+ * ARCHITECTURE-NOTE: 核心服务 - 职责集中设计
+ *
+ * 为什么 ArchiveService 职责较多（473行，15个公开方法）：
+ * 1. 档案（Archive）是系统的核心实体，所有模块最终都会依赖它
+ * 2. CRUD 操作本身较为简单，合并在一起可减少服务碎片化
+ * 3. 查询逻辑与权限控制（DataScopeService）紧密耦合，分离会增加复杂度
+ * 4. 档号生成、唯一性校验等逻辑需要与 CRUD 在同一事务中
+ *
+ * 如果未来需要重构，优先考虑 CQRS 模式：
+ * - ArchiveQueryService（读侧）
+ * - ArchiveCommandService（写侧）
+ * - ArchiveValidationService（校验）
+ *
+ * 当前状态：稳定运行，充分测试，暂无重构计划
+ * 相关文档：docs/architecture/module-dependency-status.md#二、核心服务职责分析
  */
 @Slf4j
 @Service

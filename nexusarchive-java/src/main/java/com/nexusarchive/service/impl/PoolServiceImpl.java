@@ -31,6 +31,20 @@ import java.util.stream.Collectors;
 
 /**
  * 电子凭证池服务实现类
+ *
+ * ARCHITECTURE-NOTE: 预归档模块边界
+ *
+ * 职责范围：
+ * - 管理 ArcFileContent 表（预归档文件）
+ * - 管理元数据索引（ArcFileMetadataIndex）
+ * - 状态机：PENDING_CHECK → NEEDS_ACTION → READY_TO_MATCH → READY_TO_ARCHIVE → SUBMITTED → COMPLETED
+ *
+ * 边界说明：
+ * - 本服务不直接操作 Archive 表
+ * - 归档申请通过 PreArchiveSubmitService 提交到 Archive
+ * - 档号生成由 ArchivalCodeGenerator 策略类负责
+ *
+ * 相关文档：docs/architecture/module-dependency-status.md
  */
 @Service
 @RequiredArgsConstructor

@@ -86,7 +86,7 @@ export function UnifiedOfdPreview({
           if (status === 404) {
             setResource({
               preferredMode: 'liteofd',
-              originalFileId: fileId,
+              originalFileId: fileId || '',
               originalDownloadUrl: fallbackDownloadUrl,
               convertedFileId: null,
               convertedMimeType: null,

@@ -17,6 +17,7 @@
 | `DestructionServiceTest.java` | Java 类 | DestructionServiceTest 类 |
 | `DigitalSignatureServiceTest.java` | Java 类 | DigitalSignatureServiceTest 类 |
 | `FourNatureCheckServiceTest.java` | Java 类 | FourNatureCheckServiceTest 类 |
+| `OfdConverterHelperTest.java` | Java 类 | 验证 `ofdrw` 辅助转换器可将仓库 PDF fixture 转为非空 OFD 文件 |
 | `OriginalVoucherServiceContractTest.java` | Java 类 | 原始凭证服务契约测试类 |
 | `PreArchiveSubmitServiceTest.java` | Java 类 | PreArchiveSubmitServiceTest 类 |
 | `erp/` | 目录入口 | ERP 服务测试子目录 |

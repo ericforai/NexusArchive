@@ -35,7 +35,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class DestructionApprovalServiceImpl implements DestructionApprovalService {
-    
+
+    // ARCHITECTURE-NOTE: 销毁审批 → Archive 状态变更边界
+    // 直接依赖 ArchiveMapper 更新 Archive.destructionStatus 的原因：
+    // 1. 需要精确控制状态机（PENDING → APPRAISING → FIRST_APPROVED → DESTRUCTION_APPROVED）
+    // 2. 双人复核流程需要对 Archive 状态进行原子性更新
+    // 3. 状态回退逻辑需要查询 Archive 当前状态
+    // 相关文档：docs/architecture/module-dependency-status.md#一、已确认的跨模块依赖
     private final DestructionMapper destructionMapper;
     private final ArchiveMapper archiveMapper;
     private final ObjectMapper objectMapper;

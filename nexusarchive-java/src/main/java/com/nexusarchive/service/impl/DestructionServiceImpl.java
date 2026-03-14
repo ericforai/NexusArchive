@@ -25,10 +25,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DestructionServiceImpl implements DestructionService {
 
+    // ARCHITECTURE-NOTE: 销毁 → Archive 边界依赖
+    // 直接依赖 ArchiveMapper 而非 ArchiveService 的原因：
+    // 1. 需要读取 Archive.destructionHold 标志判断是否可销毁
+    // 2. 需要执行 Archive 的逻辑删除（@TableLogic）
+    // 3. 需要更新 Archive.destructionStatus 状态
+    // 4. 销毁是特殊的业务操作，需要绕过常规的 CRUD 流程
+    // 相关文档：docs/architecture/module-dependency-status.md#一、已确认的跨模块依赖
     private final DestructionMapper destructionMapper;
     private final ArchiveMapper archiveMapper;
     private final ObjectMapper objectMapper;
 
+    // ARCHITECTURE-NOTE: 销毁模块直接查询 Archive 实体
+    // 越过 ArchiveService，直接操作 ArchiveMapper 的原因：
+    // 1. 需要访问 Archive.destructionHold 字段（业务规则：冻结档案不可销毁）
+    // 2. 批量查询效率考虑（selectBatchIds）
+    // 3. 销毁是特殊的生命周期操作，不应走常规更新流程
     @Override
     @Transactional
     public Destruction createDestruction(Destruction destruction) {
@@ -77,6 +89,11 @@ public class DestructionServiceImpl implements DestructionService {
         destructionMapper.updateById(destruction);
     }
 
+    // ARCHITECTURE-NOTE: 销毁执行 - 直接删除 Archive
+    // 直接使用 archiveMapper.deleteById() 的原因：
+    // 1. MyBatis-Plus @TableLogic 会自动处理逻辑删除
+    // 2. 销毁是不可逆操作，需要显式控制
+    // 3. 状态变更与物理删除需要原子性保证
     @Override
     @Transactional
     public void executeDestruction(String id) {

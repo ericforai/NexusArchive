@@ -32,4 +32,17 @@ describe('parseOfdDocument', () => {
     expect(document.pages[0].images).toHaveLength(1);
     expect(document.pages[0].images[0].src).toMatch(/^data:image\/png;base64,/);
   });
+
+  it('merges template page content for real invoice ofd files', async () => {
+    const buffer = await readFixture(
+      'nexusarchive-java/data/archives/original-vouchers/1970e13f-7653-4740-9aaf-d0e873b91b7e/5fe0368e-7f42-42da-9aa6-97009bd889dc.ofd',
+    );
+
+    const document = await parseOfdDocument(buffer);
+
+    expect(document.pages).toHaveLength(1);
+    expect(document.pages[0].height).toBe(154);
+    expect(document.pages[0].texts.some((text) => text.text.includes('电子发票（普通发票）'))).toBe(true);
+    expect(document.pages[0].texts.some((text) => text.text.includes('发票号码：'))).toBe(true);
+  });
 });

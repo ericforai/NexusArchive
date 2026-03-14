@@ -1,5 +1,5 @@
-// Input: ArrayBuffer、DOMParser、DecompressionStream
-// Output: 轻量 OFD 解析器
+// Input: ArrayBuffer、DOMParser、DecompressionStream、OFD 模板页引用
+// Output: 轻量 OFD 解析器（支持正文页与模板页文本/图片合成）
 // Pos: 通用复用组件 - OFD 解析层
 
 export interface OfdTextObject {
@@ -98,6 +98,15 @@ export async function parseOfdDocument(buffer: ArrayBuffer): Promise<ParsedOfdDo
     }
   }
 
+  const templateMap = await collectTemplatePages({
+    buffer,
+    entryMap,
+    documentDir,
+    documentXml,
+    fontMap,
+    resourceMap,
+  });
+
   const pageElements = getElementsByLocalName(documentXml, 'Page');
   const pages = await Promise.all(pageElements.map(async (pageElement) => {
     const pageId = pageElement.getAttribute('ID') || `page-${Math.random().toString(16).slice(2)}`;
@@ -108,25 +117,42 @@ export async function parseOfdDocument(buffer: ArrayBuffer): Promise<ParsedOfdDo
 
     const pageXmlPath = resolvePath(documentDir, pagePath);
     const pageXml = parseXml(await readEntryText(buffer, entryMap, pageXmlPath));
-    const texts = collectTextObjects(pageXml, fontMap);
-    const images = await collectImageObjects({
+    const pageBox = resolvePageBox(pageXml, pageElement, physicalBox, applicationBox);
+    const pageTexts = collectTextObjects(pageXml, fontMap);
+    const pageImages = await collectImageObjects({
       buffer,
       entryMap,
       pageXml,
       pagePath: pageXmlPath,
       resourceMap,
     });
+    const templateContents = getElementsByLocalName(pageXml, 'Template')
+      .map((templateElement) => templateMap.get(templateElement.getAttribute('TemplateID') || ''))
+      .filter((template): template is ParsedOfdPageContent => Boolean(template));
 
     return {
       id: pageId,
       width: pageBox.width,
       height: pageBox.height,
-      texts,
-      images,
+      texts: [
+        ...templateContents.flatMap((template) => template.texts),
+        ...pageTexts,
+      ],
+      images: [
+        ...templateContents.flatMap((template) => template.images),
+        ...pageImages,
+      ],
     } satisfies OfdPage;
   }));
 
   return { pages };
+}
+
+interface ParsedOfdPageContent {
+  texts: OfdTextObject[];
+  images: OfdImageObject[];
+  width: number;
+  height: number;
 }
 
 async function collectResources(params: {
@@ -225,6 +251,56 @@ async function collectImageObjects(params: {
       height: boundary.height,
     } satisfies OfdImageObject;
   }));
+}
+
+async function collectTemplatePages(params: {
+  buffer: ArrayBuffer;
+  entryMap: Map<string, ZipEntry>;
+  documentDir: string;
+  documentXml: XMLDocument;
+  fontMap: Map<string, string>;
+  resourceMap: Map<string, ResourceMapEntry>;
+}): Promise<Map<string, ParsedOfdPageContent>> {
+  const {
+    buffer,
+    entryMap,
+    documentDir,
+    documentXml,
+    fontMap,
+    resourceMap,
+  } = params;
+
+  const templateElements = getElementsByLocalName(documentXml, 'TemplatePage');
+  const templates = await Promise.all(templateElements.map(async (templateElement) => {
+    const templateId = templateElement.getAttribute('ID');
+    const baseLoc = templateElement.getAttribute('BaseLoc');
+
+    if (!templateId || !baseLoc) {
+      return null;
+    }
+
+    const templatePath = resolvePath(documentDir, baseLoc);
+    const templateXml = parseXml(await readEntryText(buffer, entryMap, templatePath));
+    const templateBox = resolvePageBox(templateXml, templateElement, null, null);
+
+    return [
+      templateId,
+      {
+        width: templateBox.width,
+        height: templateBox.height,
+        texts: collectTextObjects(templateXml, fontMap),
+        images: await collectImageObjects({
+          buffer,
+          entryMap,
+          pageXml: templateXml,
+          pagePath: templatePath,
+          resourceMap,
+        }),
+      } satisfies ParsedOfdPageContent,
+    ] as const;
+  }));
+
+  return new Map(templates.filter((template): template is readonly [string, ParsedOfdPageContent] => Boolean(template)));
 }
 
 function readZipEntries(buffer: ArrayBuffer): ZipEntry[] {
@@ -361,6 +437,26 @@ function getFirstElement(node: Document | Element, localName: string): Element |
 
 function getFirstText(node: Document | Element, localName: string): string | null {
   return getFirstElement(node, localName)?.textContent?.trim() || null;
+}
+
+function resolvePageBox(
+  pageXml: XMLDocument,
+  pageElement: Element,
+  fallbackPhysicalBox: { x: number; y: number; width: number; height: number } | null,
+  fallbackApplicationBox: { x: number; y: number; width: number; height: number } | null,
+): { x: number; y: number; width: number; height: number } {
+  const pageArea = getFirstElement(pageXml, 'Area');
+  const pagePhysicalBox = pageArea ? parseBox(getFirstText(pageArea, 'PhysicalBox')) : null;
+  const pageApplicationBox = pageArea ? parseBox(getFirstText(pageArea, 'ApplicationBox')) : null;
+  const boundaryValue = pageElement.getAttribute('Boundary');
+  const elementBoundary = boundaryValue ? parseBox(boundaryValue) : null;
+
+  return pageApplicationBox
+    || pagePhysicalBox
+    || fallbackApplicationBox
+    || fallbackPhysicalBox
+    || elementBoundary
+    || { x: 0, y: 0, width: 210, height: 297 };
 }
 
 function parseBox(value: string | null): { x: number; y: number; width: number; height: number } {

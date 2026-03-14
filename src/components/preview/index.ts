@@ -12,6 +12,8 @@ export { PreviewToolbar } from './PreviewToolbar';
 export type { PreviewToolbarProps } from './PreviewToolbar';
 export { OfdViewer } from './OfdViewer';
 export type { OfdViewerProps } from './OfdViewer';
+export { LiteOfdPreview } from './LiteOfdPreview';
+export { UnifiedOfdPreview } from './UnifiedOfdPreview';
 
 // Smart 预览组件（使用 previewApi）
 export { SmartFilePreview } from './SmartFilePreview';

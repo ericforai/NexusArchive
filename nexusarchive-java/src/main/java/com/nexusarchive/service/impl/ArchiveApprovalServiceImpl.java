@@ -33,6 +33,23 @@ import java.util.Set;
 /**
  * 档案审批服务实现
  */
+/**
+ * 档案审批服务实现
+ *
+ * ARCHITECTURE-NOTE: 审批 → 预归档 边界依赖
+ *
+ * 依赖关系：ArchiveApprovalService → PreArchiveSubmitService
+ * - approveArchive() 调用 preArchiveSubmitService.completeArchival()
+ * - 使用 @Lazy 注解避免循环依赖（PreArchiveSubmitService 也依赖 ArchiveApprovalService）
+ *
+ * 回调流程：
+ *   ArchiveApprovalService.approveArchive()
+ *   → PreArchiveSubmitService.completeArchival()
+ *   → 更新 Archive 状态为 archived
+ *   → 更新 ArcFileContent 状态为 COMPLETED
+ *
+ * 相关文档：docs/architecture/module-dependency-status.md#一、已确认的跨模块依赖
+ */
 @Slf4j
 @Service
 public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
@@ -40,6 +57,8 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
     private final ArchiveApprovalMapper approvalMapper;
     private final ArchiveMapper archiveMapper;
     private final com.nexusarchive.mapper.ArcFileContentMapper arcFileContentMapper;
+
+    // @Lazy 注解避免循环依赖
     private final PreArchiveSubmitService preArchiveSubmitService;
 
     public ArchiveApprovalServiceImpl(
@@ -72,6 +91,14 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         return approval;
     }
 
+    // ARCHITECTURE-NOTE: 跨模块边界 - 审批通过触发完成归档
+    // 此方法调用 PreArchiveSubmitService.completeArchival() 完成以下操作：
+    // 1. OFD 文件签名（加盖归档章）
+    // 2. 文件锁定
+    // 3. Archive 状态变更为 archived
+    // 4. ArcFileContent 状态变更为 COMPLETED
+    //
+    // 这是审批模块与预归档模块的关键协作点
     @Override
     @Transactional
     @ArchivalAudit(operationType = "APPROVE_ARCHIVE", resourceType = "ARCHIVE_APPROVAL", description = "批准归档申请")

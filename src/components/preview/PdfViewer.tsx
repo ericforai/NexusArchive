@@ -46,7 +46,7 @@ export function PdfViewer({
     onLoad?.();
   };
 
-  const handleLoadError = () => {
+  const _handleLoadError = () => {
     const errorMsg = 'PDF 加载失败';
     setPdfError(errorMsg);
     onError?.(errorMsg);

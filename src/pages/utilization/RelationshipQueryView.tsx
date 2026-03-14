@@ -305,9 +305,9 @@ const mapNodeToDrawerRow = async (nodeData: RelationNodeData): Promise<GenericRo
         }
 
         const normalizedUrl = normalizeClientRelativeUrl(candidateUrl);
-        const resolvedFileId = extractFileIdFromDownloadUrl(normalizedUrl);
+        const resolvedFileId = extractFileIdFromDownloadUrl(normalizedUrl || '');
         attachments.push({
-          id: resolvedFileId || file.id || normalizedUrl,
+          id: resolvedFileId || file.id || normalizedUrl || '',
           fileId: resolvedFileId || undefined,
           fileName: file.name,
           fileUrl: normalizedUrl,

@@ -55,6 +55,8 @@
 | NavController.java | 控制器类 | 提供前端导航菜单与动态路由配置接口 |
 | NotificationController.java | 控制器类 | 提供系统内部站内信与通知管理接口 |
 | OfdConvertController.java | 控制器类 | 提供国家标准 OFD 格式转换的控制接口 |
+| OfdPreviewController.java | 控制器类 | 返回 OFD 文件的优先预览资源决策，优先指向可用 PDF/图片产物，否则回退到原始 OFD 下载 |
+| OfdSpikeDebugController.java | 控制器类 | 提供 `liteofd/ofdrw` 技术路线验证用的 PDF->OFD 调试接口 |
 | OnboardingController.java | 控制器类 | 提供新全宗入驻与初始化向导接口 |
 | OpenAppraisalController.java | 控制器类 | 提供档案开放范围鉴定的业务控制接口 |
 | OpsController.java | 控制器类 | 提供档案底层作业（如哈希校验）的操作接口 |

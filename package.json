@@ -85,6 +85,5 @@
   },
   "overrides": {
     "zustand": "^5.0.9"
-  },
-  "postinstall": "husky"
+  }
 }

@@ -2,6 +2,9 @@
 
 本文件用于固化模块化边界与依赖约束（可机器校验）。
 
+> **最后更新**: 2026-03-14
+> **更新内容**: 补充已确认的跨模块依赖说明
+
 ## 自审材料入口
 
 - [Module Manifest](module-manifest.md)
@@ -9,6 +12,7 @@
 - [Contract Catalog](contract-catalog.md)
 - [Variability Registry](variability-registry.md)
 - [Self-Review SOP](self-review-sop.md)
+- **[Module Dependency Status](module-dependency-status.md)** - 跨模块依赖现状记录
 
 ## Boundary Map
 
@@ -23,7 +27,25 @@
 
 | 模块 | 层级 | 对外入口 | 备注 |
 | --- | --- | --- | --- |
-| Borrowing | `api/app/domain/infra` | `BorrowingFacade` + `api.dto` | 仅 app 与 dto 可被外部依赖 |
+| Borrowing | `api/app/domain/infra` | `BorrowingFacade` + `api.dto` | ✅ 已模块化，仅 app 与 dto 可被外部依赖 |
+| ArchiveCore | `api/app/domain/infra` | `ArchiveFacade` + `ArchiveApplicationService` | ✅ 已模块化 |
+| Signature | `api/app/domain/infra` | `SignatureVerificationRecordService` | ✅ 已模块化 |
+| Document | `api/app/domain/infra` | `DocumentWorkflowService` | ✅ 已模块化 |
+
+---
+
+## 已确认的跨模块依赖（有意的妥协）
+
+以下依赖违反严格的模块化原则，但经过评估后被接受为"有意的架构妥协"：
+
+| 依赖源 | 依赖目标 | 依赖方式 | 原因 | 风险等级 |
+|--------|----------|----------|------|----------|
+| `PreArchiveSubmitService` | `ArchiveMapper` | 直接注入 | ERP 同步场景需要更新而非创建 Archive；需要精确控制状态转换 | 🟡 中 |
+| `DestructionServiceImpl` | `ArchiveMapper` | 直接注入 | 需要读取 `destructionHold` 标志；执行逻辑删除 | 🟡 中 |
+| `DestructionApprovalServiceImpl` | `ArchiveMapper` | 直接注入 | 需要更新 `destructionStatus` 状态 | 🟡 中 |
+| `ArchiveApprovalServiceImpl` | `PreArchiveSubmitService` | `@Lazy` 注入 | 审批通过后触发完成归档流程 | 🟢 低 |
+
+**详细信息**: 参见 [Module Dependency Status](module-dependency-status.md)
 
 ## Contract 列表
 

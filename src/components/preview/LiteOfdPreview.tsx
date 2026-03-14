@@ -96,7 +96,7 @@ export function LiteOfdPreview({
         console.log('[LiteOfdPreview] Starting liteofd parse...');
         const liteOfd = new LiteOfd();
         
-        const parsed = await Promise.race([
+        const _parsed = await Promise.race([
           liteOfd.parse(response.data),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('LiteOFD 解析超时 (10s)')), 10000)
@@ -120,8 +120,9 @@ export function LiteOfdPreview({
       } catch (renderError) {
         console.error('[LiteOfdPreview] Render error:', renderError);
         if (cancelled) return;
-        setError(renderError instanceof Error ? renderError.message : 'liteofd 渲染失败');
-        onError?.(error || '渲染失败');
+        const errorMessage = renderError instanceof Error ? renderError.message : 'liteofd 渲染失败';
+        setError(errorMessage);
+        onError?.(errorMessage);
       } finally {
         if (!cancelled) setLoading(false);
       }

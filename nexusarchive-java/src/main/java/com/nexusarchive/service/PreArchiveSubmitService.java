@@ -46,6 +46,12 @@ import org.springframework.transaction.annotation.Propagation;
 public class PreArchiveSubmitService {
 
     private final ArcFileContentMapper arcFileContentMapper;
+    // ARCHITECTURE-NOTE: 预归档 → 正式归档 边界依赖
+    // 直接依赖 ArchiveMapper 而非 ArchiveService 的原因：
+    // 1. ERP 同步场景需要更新而非创建 Archive 记录（ID 相同）
+    // 2. 需要精确控制档号生成和状态转换逻辑
+    // 3. ArchiveService 提供 CRUD，但归档流程需要更细粒度的控制
+    // 相关文档：docs/architecture/module-dependency-status.md#一、已确认的跨模块依赖
     private final ArchiveMapper archiveMapper;
 
     private final ArchiveApprovalService archiveApprovalService;
@@ -67,6 +73,12 @@ public class PreArchiveSubmitService {
     /**
      * 提交单个文件归档申请
      * <p>
+     * ARCHITECTURE-NOTE: 预归档 → 正式归档 状态转换边界
+     *
+     * 状态转换路径：
+     *   ArcFileContent.preArchiveStatus: READY_TO_ARCHIVE → SUBMITTED → COMPLETED
+     *   Archive.status: null/DRAFT → PENDING → archived
+     *
      * 使用 REQUIRES_NEW 传播属性的原因：
      * 1. 此方法被批量操作调用（submitBatchForArchival），每次提交需要独立事务
      * 2. 单个文件的提交失败不应影响其他文件的提交
@@ -79,6 +91,7 @@ public class PreArchiveSubmitService {
      * @param applicantName 申请人姓名
      * @param reason        申请理由
      * @return 归档申请记录
+     * @see com.nexusarchive.integration.PreArchiveToArchiveBoundaryTest
      */
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -183,6 +196,14 @@ public class PreArchiveSubmitService {
     /**
      * 完成归档（审批通过后调用）
      * 锁定文件，设置归档时间
+     *
+     * ARCHITECTURE-NOTE: 审批 → 预归档 边界回调
+     * 此方法由 ArchiveApprovalServiceImpl.approveArchive() 调用
+     * 形成：ArchiveApprovalService → PreArchiveSubmitService 的依赖
+     *
+     * 通过 @Lazy 注解避免循环依赖（PreArchiveSubmitService 也依赖 ArchiveApprovalService）
+     *
+     * 状态协调：同时更新 Archive 和 ArcFileContent 的状态，保持一致性
      */
     @Transactional(rollbackFor = Exception.class)
     public void completeArchival(String archiveId) {

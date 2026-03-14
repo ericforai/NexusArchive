@@ -34,6 +34,7 @@
 - `nav.ts`: 导航菜单接口。
 - `notifications.ts`: 通知消息接口。
 - `openAppraisal.ts`: 开放鉴定接口。
+- `ofdSpike.ts`: OFD spike 调试接口（前端 `liteofd` 验证、后端 `ofdrw` 转换验证）。
 - `authTicket.ts`: 跨全宗访问授权票据接口（申请、审批、撤销）。
 - `originalVoucher.ts`: 原始凭证接口。
 - `pool.ts`: 归档池接口。
