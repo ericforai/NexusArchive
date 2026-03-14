@@ -89,6 +89,8 @@ const PreviewWatermarkTestView = lazy(() => import('../pages/debug/PreviewWaterm
 
 // 凭证预览组件 Demo
 const VoucherPreviewDemo = lazy(() => import('../pages/demo/VoucherPreviewDemo'));
+const OfdSpikePage = lazy(() => import('../pages/demo/OfdSpikePage'));
+const OfdPreviewPage = lazy(() => import('../pages/preview/OfdPreviewPage'));
 
 // [已移除] PoolKanbanPage - 看板功能已集成到 PoolPage 组件中
 
@@ -381,6 +383,8 @@ export const routes: RouteObject[] = [
             { path: 'debug/payment-file', element: withSuspense(PaymentFileTestView) },
             { path: 'debug/preview-watermark', element: withSuspense(PreviewWatermarkTestView) },
             { path: 'debug/voucher-preview', element: withSuspense(VoucherPreviewDemo) },
+            { path: 'debug/ofd-spike', element: withSuspense(OfdSpikePage) },
+            { path: 'preview/ofd/:fileId', element: withSuspense(OfdPreviewPage) },
 
             // ========== 匹配引擎 ==========
             { path: 'matching', element: <VoucherMatchingPage /> },

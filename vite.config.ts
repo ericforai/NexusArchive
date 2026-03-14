@@ -109,7 +109,8 @@ export default defineConfig(({ mode }) => {
         'antd',
         '@ant-design/icons',
         'lucide-react',
-        'axios'
+        'axios',
+        'liteofd'
       ],
       force: true
     },

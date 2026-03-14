@@ -1,5 +1,5 @@
-// Input: React、lucide-react 图标、本地模块 api/attachments、preview/SmartFilePreview
-// Output: React 组件 EvidencePreview
+// Input: React、lucide-react 图标、本地模块 api/attachments、统一 OFD 预览组件
+// Output: React 组件 EvidencePreview（含统一 OFD 预览决策）
 // Pos: src/pages/panorama/EvidencePreview.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
@@ -7,10 +7,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { FileText, Paperclip, ExternalLink, Download, AlertCircle } from 'lucide-react';
 import { attachmentsApi, AttachmentFile } from '../../api/attachments';
 import { originalVoucherApi } from '../../api/originalVoucher';
-import { client } from '../../api/client';
 import { useAuthStore } from '../../store';
 import { FileViewer } from '../../components/common';
-import { OfdViewer } from '@/components/preview';
+import { UnifiedOfdPreview } from '@/components/preview';
 
 interface EvidencePreviewProps {
     voucherId: string;
@@ -115,94 +114,6 @@ function isOfdAttachment(file: AttachmentFile): boolean {
     return fileType === 'ofd' || fileType.includes('application/ofd') || fileName.endsWith('.ofd');
 }
 
-const AuthenticatedOfdPreview: React.FC<{
-    fileUrl: string;
-    fileName: string;
-}> = ({ fileUrl, fileName }) => {
-    const [blobUrl, setBlobUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const blobUrlRef = React.useRef<string | null>(null);
-
-    useEffect(() => {
-        let cancelled = false;
-        let nextBlobUrl: string | null = null;
-
-        const load = async () => {
-            if (!fileUrl) {
-                setError('缺少 OFD 文件地址');
-                return;
-            }
-            setLoading(true);
-            setError(null);
-
-            try {
-                const response = await client.get(fileUrl, { responseType: 'blob' });
-                nextBlobUrl = URL.createObjectURL(response.data);
-                if (cancelled) {
-                    URL.revokeObjectURL(nextBlobUrl);
-                    return;
-                }
-                setBlobUrl(prev => {
-                    if (prev) {
-                        URL.revokeObjectURL(prev);
-                    }
-                    blobUrlRef.current = nextBlobUrl;
-                    return nextBlobUrl;
-                });
-            } catch (loadError: any) {
-                if (cancelled) {
-                    return;
-                }
-                setError(loadError?.message || 'OFD 文件加载失败');
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        load();
-
-        return () => {
-            cancelled = true;
-            if (nextBlobUrl) {
-                URL.revokeObjectURL(nextBlobUrl);
-            }
-        };
-    }, [fileUrl]);
-
-    useEffect(() => {
-        return () => {
-            if (blobUrlRef.current) {
-                URL.revokeObjectURL(blobUrlRef.current);
-                blobUrlRef.current = null;
-            }
-        };
-    }, []);
-
-    if (loading) {
-        return <div className="h-full flex items-center justify-center text-slate-500">正在加载 OFD...</div>;
-    }
-
-    if (error || !blobUrl) {
-        return (
-            <div className="h-full flex items-center justify-center text-slate-500">
-                {error || 'OFD 文件加载失败'}
-            </div>
-        );
-    }
-
-    return (
-        <OfdViewer
-            url={blobUrl}
-            fileName={fileName}
-            downloadUrl={blobUrl}
-            className="h-full"
-        />
-    );
-};
-
 export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, highlightField, onInteract, sourceType, simpleMode = false }) => {
     const [files, setFiles] = useState<AttachmentFile[]>([]);
     const [activeTab, setActiveTab] = useState<TabType>('invoice');
@@ -254,6 +165,8 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 (f.fileName?.includes('合同') ? 'contract' : 'other')),
                         highlightMeta: (f as any).highlightMeta || null
                     })) as any[];
+                    console.log('[EvidencePreview] Converted files:', converted);
+                    console.log('[EvidencePreview] First file id:', converted[0]?.id);
                     setFiles(converted);
                     console.log('[EvidencePreview] Loaded ORIGINAL files:', converted.length);
                 } else {
@@ -428,7 +341,10 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                             </div>
                             <div className="flex items-center gap-2">
                                 <a
-                                    href={getPreviewUrl(selectedFile)}
+                                    href={isOfdAttachment(selectedFile) 
+                                        ? `/system/preview/ofd/${selectedFile.id}?fileName=${encodeURIComponent(selectedFile.fileName)}&sourceType=${sourceType || ''}`
+                                        : `${getPreviewUrl(selectedFile)}?access_token=${token || ''}`
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="p-1.5 hover:bg-white rounded text-slate-500 hover:text-primary-600 transition-colors"
@@ -437,7 +353,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                     <ExternalLink size={16} />
                                 </a>
                                 <a
-                                    href={getPreviewUrl(selectedFile)}
+                                    href={`${getPreviewUrl(selectedFile)}?access_token=${token || ''}`}
                                     download={selectedFile.fileName}
                                     className="p-1.5 hover:bg-white rounded text-slate-500 hover:text-primary-600 transition-colors"
                                     title="下载"
@@ -458,11 +374,14 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 />
                             )}
 
-                            {/* OFD 直接走真实下载链路，避免 archive/pool 预览接口带来的权限和多附件回归 */}
+                            {/* OFD 统一走“转换产物优先 -> liteofd -> 原始下载”决策层 */}
                             {isOfdAttachment(selectedFile) ? (
-                                <AuthenticatedOfdPreview
-                                    fileUrl={getPreviewUrl(selectedFile)}
+                                <UnifiedOfdPreview
+                                    fileId={selectedFile.id}
                                     fileName={selectedFile.fileName}
+                                    sourceType={sourceType}
+                                    originalDownloadUrl={getPreviewUrl(selectedFile)}
+                                    className="h-full"
                                 />
                             ) : selectedFile.fileType?.toLowerCase() === 'pdf' ? (
                                 <iframe

@@ -32,7 +32,8 @@
     "modules:discover": "node scripts/discover-frontend-modules.js --discover",
     "modules:validate": "node scripts/discover-frontend-modules.js --validate",
     "modules:update": "node scripts/discover-frontend-modules.js --update-manifest",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "mkdir -p public/assets && cp -r node_modules/liteofd/dist/assets/* public/assets/"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
@@ -42,6 +43,7 @@
     "antd": "^6.1.1",
     "axios": "^1.13.2",
     "d3-force": "^3.0.0",
+    "liteofd": "^0.5.3",
     "lucide-react": "^0.554.0",
     "pdfjs-dist": "^4.8.69",
     "qrcode.react": "^4.2.0",
