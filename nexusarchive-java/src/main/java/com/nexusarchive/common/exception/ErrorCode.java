@@ -80,7 +80,11 @@ public enum ErrorCode {
     RECONCILIATION_TOO_FREQUENT(429, "对账请求过于频繁,请稍后再试"),
 
     // 权限相关错误
-    NO_PERMISSION_TO_VIEW_ARCHIVE(403, "无权查看该档案");
+    NO_PERMISSION_TO_VIEW_ARCHIVE(403, "无权查看该档案"),
+
+    // 状态转换相关错误
+    VERSION_CONFLICT(409, "版本冲突，请刷新后重试"),
+    INVALID_STATE_TRANSITION(400, "非法的状态转换");
 
     private final int code;
     private final String message;

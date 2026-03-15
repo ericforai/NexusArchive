@@ -24,6 +24,14 @@ public class Archive {
     private String id;
 
     /**
+     * 乐观锁版本号
+     * <p>MyBatis-Plus @Version 注解自动处理版本号递增
+     * <p>更新时如果版本不匹配将抛出 OptimisticLockingFailureException
+     */
+    @Version
+    private Integer version;
+
+    /**
      * 所属全宗ID (Ref: BasFonds)
      * Note: This column does not exist in DB yet.
      */
