@@ -197,7 +197,28 @@ export function LiteOfdPreview({
 }
 
 function normalizeClientUrl(fileUrl: string): string {
-  return fileUrl.startsWith('/api/') ? fileUrl.slice(4) : fileUrl;
+  if (!fileUrl) return fileUrl;
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+    return fileUrl;
+  }
+  
+  let url = fileUrl;
+  // 如果以 /api/ 开头，移除它及其后的斜杠，使之相对于 client 的 baseURL (/api)
+  if (url.startsWith('/api/')) {
+    return url.slice(5);
+  }
+  // 如果以 api/ 开头
+  if (url.startsWith('api/')) {
+    return url.slice(4);
+  }
+  
+  // 如果已经是以 / 开头的路径且不含 api，axios 可能会根据配置处理
+  // 为保险起见，如果它以 / 开头，我们也移除它，使之相对于 baseURL
+  if (url.startsWith('/')) {
+    return url.slice(1);
+  }
+  
+  return url;
 }
 
 export default LiteOfdPreview;
