@@ -19,8 +19,29 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
- * YonSuite 事件加解密工具类
- * 参考: https://gitee.com/yycloudopen/isv-demo/blob/master/src/main/java/com/yonyou/iuap/isv/demo/crypto/IsvEventCrypto.java
+ * YonSuite事件加解密工具类
+ *
+ * <p><b>安全设计说明</b>：</p>
+ * <ul>
+ *   <li>IV (初始化向量) 处理：按照 YonSuite 官方协议规范，IV 从 AES Key 的前 16 位派生
+ *       这是由 YonSuite 协议固定的，消息本身已包含 16 字节随机数</li>
+ *   <li>密钥管理：AES Key 从配置中心动态获取，支持定期轮换</li>
+ *   <li>传输安全：所有通信必须通过 HTTPS 传输</li>
+ * </ul>
+ *
+ * <p><b>SonarQube 规则说明</b>：</p>
+ * <ul>
+ *   <li>java:S3329 (固定 IV) - 误报：IV 派生方式由 YonSuite 协议固定，不可修改</li>
+ *   <li>代码位置：YonSuiteEventCrypto.java:58</li>
+ * </ul>
+ *
+ * <p><b>协议格式</b>：</p>
+ * <pre>
+ * random(16B) + msgLen(4B) + msg + appKey
+ * </pre>
+ *
+ * @reference https://gitee.com/yycloudopen/isv-demo/blob/master/src/main/java/com/yonyou/iuap/isv/demo/crypto/IsvEventCrypto.java
+ * @author Agent B - 合规开发工程师
  */
 @Component
 @Slf4j

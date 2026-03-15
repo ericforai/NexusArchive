@@ -17,6 +17,7 @@
 | `2026-03-15-phase2-fixes-plan.md` | 文档 | Phase 2 修复计划 |
 | `2026-03-15-phase2-completion-report.md` | 文档 | Phase 2 完成报告 |
 | `2026-03-15-phase2-p2-final-report.md` | 文档 | Phase 2 P0+P1+P2 最终完成报告 |
+| `2026-03-15-phase3-remediation-plan.md` | 文档 | Phase 3 后续修复计划（基于 SonarQube 分析结果） |
 | `2026-03-15-archive-entity-p1-enhancements.md` | 文档 | P1 档案实体增强实施总结（乐观锁、状态枚举、状态转换门面） |
 | `2025-12-27-module-boundary-pilot.md` | 文档 | 模块边界试点开发成果 |
 | `payment_pdf_enhancement_summary.md` | 文档 | payment_pdf_enhancement_summary 文档 |
