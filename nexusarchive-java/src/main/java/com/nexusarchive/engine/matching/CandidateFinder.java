@@ -85,9 +85,19 @@ public class CandidateFinder {
      * 索引粗筛
      */
     private List<Map<String, Object>> findByIndexes(
-            VoucherData voucher, String evidenceRole, 
+            VoucherData voucher, String evidenceRole,
             int dateRange, double amountTolerance, int maxCandidates) {
-        
+
+        // 防御性空值检查 (java:S1874)
+        if (voucher.getDocDate() == null) {
+            log.warn("凭证日期为空，无法查找候选: voucherId={}", voucher.getVoucherId());
+            return Collections.emptyList();
+        }
+        if (voucher.getAmount() == null) {
+            log.warn("凭证金额为空，无法查找候选: voucherId={}", voucher.getVoucherId());
+            return Collections.emptyList();
+        }
+
         LocalDate dateFrom = voucher.getDocDate().minusDays(dateRange);
         LocalDate dateTo = voucher.getDocDate().plusDays(dateRange);
         BigDecimal amountFrom = voucher.getAmount().multiply(BigDecimal.valueOf(1 - amountTolerance));

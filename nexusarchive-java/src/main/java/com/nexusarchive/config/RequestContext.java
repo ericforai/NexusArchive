@@ -171,10 +171,24 @@ public final class RequestContext {
     /**
      * 获取当前全宗代码
      *
-     * @return 全宗代码
+     * @return 全宗代码，如果未设置返回 null
      */
     public static String getFondsCode() {
         return MDC.get(FONDS_CODE_KEY);
+    }
+
+    /**
+     * 获取当前全宗代码，如果未设置抛出异常
+     *
+     * @return 全宗代码
+     * @throws IllegalStateException 如果全宗代码未设置
+     */
+    public static String getRequiredFondsCode() {
+        String fondsCode = getFondsCode();
+        if (fondsCode == null) {
+            throw new IllegalStateException("全宗代码未设置");
+        }
+        return fondsCode;
     }
 
     /**
