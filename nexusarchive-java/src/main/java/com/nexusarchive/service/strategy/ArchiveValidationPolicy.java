@@ -28,7 +28,7 @@ public class ArchiveValidationPolicy {
                     // 原始凭证細分类型
                     "SALES_ORDER", "DELIVERY_ORDER", "PURCHASE_ORDER", "RECEIPT_ORDER",
                     "PAYMENT_REQ", "EXPENSE_REPORT", "GEN_INVOICE", "VAT_INVOICE",
-                    "BANK_SLIP", "BANK_STATEMENT", "CONTRACT"
+                    "BANK_RECEIPT", "BANK_SLIP", "BANK_STATEMENT", "CONTRACT"
             ).contains(subType);
         } else if ("AC02".equals(categoryCode)) {
             // 账簿类型白名单 (Updated V71+)
