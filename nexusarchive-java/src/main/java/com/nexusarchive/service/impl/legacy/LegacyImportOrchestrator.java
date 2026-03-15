@@ -56,9 +56,51 @@ public class LegacyImportOrchestrator {
                                       String operatorId,
                                       String fondsNo) {
         LocalDateTime startTime = LocalDateTime.now();
-        String importId = "import-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8);
+        String importId = generateImportId();
 
         // 创建导入任务记录
+        LegacyImportTask task = createImportTask(importId, operatorId, fondsNo, file, startTime);
+        importTaskMapper.insert(task);
+
+        try {
+            // 1. 解析文件
+            List<ImportRow> rows = parseAndUpdateTaskCount(file, mappingConfig, task);
+
+            // 2. 验证数据并分离有效/无效行
+            ValidationResult validationResult = validateRows(rows);
+            List<ImportRow> validRows = validationResult.validRows;
+            List<ImportError> allErrors = validationResult.allErrors;
+
+            // 3. 自动创建全宗和实体
+            CreationResult creationResult = ensureFondsAndEntities(validRows, operatorId, allErrors);
+
+            // 4. 批量导入档案
+            int successCount = batchImportArchives(validRows, operatorId);
+
+            // 5. 更新任务状态并完成
+            return finalizeImport(task, rows, successCount, allErrors, creationResult,
+                    startTime, importId, operatorId);
+
+        } catch (Exception e) {
+            handleImportFailure(task, e, importId);
+            throw e;
+        }
+    }
+
+    /**
+     * 生成导入ID
+     */
+    private String generateImportId() {
+        return "import-" + System.currentTimeMillis() + "-"
+                + UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    /**
+     * 创建导入任务记录
+     */
+    private LegacyImportTask createImportTask(String importId, String operatorId,
+                                               String fondsNo, MultipartFile file,
+                                               LocalDateTime startTime) {
         LegacyImportTask task = new LegacyImportTask();
         task.setId(importId);
         task.setOperatorId(operatorId);
@@ -69,139 +111,213 @@ public class LegacyImportOrchestrator {
         task.setStatus("PROCESSING");
         task.setStartedAt(startTime);
         task.setCreatedAt(LocalDateTime.now());
-        importTaskMapper.insert(task);
+        return task;
+    }
 
-        try {
-            // 1. 解析文件
-            List<ImportRow> rows = new LegacyFileParser().parseFile(file, mappingConfig);
-            task.setTotalRows(rows.size());
-            importTaskMapper.updateById(task);
+    /**
+     * 解析文件并更新任务计数
+     */
+    private List<ImportRow> parseAndUpdateTaskCount(MultipartFile file,
+                                                     FieldMappingConfig mappingConfig,
+                                                     LegacyImportTask task) {
+        List<ImportRow> rows = new LegacyFileParser().parseFile(file, mappingConfig);
+        task.setTotalRows(rows.size());
+        importTaskMapper.updateById(task);
+        return rows;
+    }
 
-            // 2. 验证数据
-            ImportValidationService.ValidationContext context = new ImportValidationService.ValidationContext();
-            if (!rows.isEmpty()) {
-                context.setCurrentFondsNo(rows.get(0).getFondsNo());
-            }
+    /**
+     * 验证数据行，分离有效和无效行
+     */
+    private ValidationResult validateRows(List<ImportRow> rows) {
+        ImportValidationService.ValidationContext context = new ImportValidationService.ValidationContext();
+        if (!rows.isEmpty()) {
+            context.setCurrentFondsNo(rows.get(0).getFondsNo());
+        }
 
-            List<ImportRow> validRows = new ArrayList<>();
-            List<ImportError> allErrors = new ArrayList<>();
+        List<ImportRow> validRows = new ArrayList<>();
+        List<ImportError> allErrors = new ArrayList<>();
 
-            for (ImportRow row : rows) {
-                ImportValidationService.ValidationResult result =
+        for (ImportRow row : rows) {
+            ImportValidationService.ValidationResult result =
                     validationService.validateRow(row, row.getRowNumber(), context);
-                if (result.isValid()) {
-                    validRows.add(row);
-                } else {
-                    allErrors.addAll(result.getErrors());
-                }
+            if (result.isValid()) {
+                validRows.add(row);
+            } else {
+                allErrors.addAll(result.getErrors());
             }
+        }
 
-            // 3. 自动创建全宗和实体
-            Set<String> createdFondsNos = new HashSet<>();
-            Set<String> createdEntityIds = new HashSet<>();
+        return new ValidationResult(validRows, allErrors);
+    }
 
-            for (ImportRow row : validRows) {
-                try {
-                    String fondsId = fondsAutoCreationService.ensureFondsExists(
+    /**
+     * 自动创建全宗和实体
+     */
+    private CreationResult ensureFondsAndEntities(List<ImportRow> validRows,
+                                                   String operatorId,
+                                                   List<ImportError> allErrors) {
+        Set<String> createdFondsNos = new HashSet<>();
+        Set<String> createdEntityIds = new HashSet<>();
+
+        for (ImportRow row : validRows) {
+            try {
+                String fondsId = fondsAutoCreationService.ensureFondsExists(
                         row.getFondsNo(),
                         row.getFondsName(),
                         row.getEntityName(),
                         row.getEntityTaxCode(),
                         operatorId
-                    );
+                );
 
-                    if (fondsId != null) {
-                        createdFondsNos.add(row.getFondsNo());
-                    }
+                if (fondsId != null) {
+                    createdFondsNos.add(row.getFondsNo());
+                }
 
-                    if (StringUtils.hasText(row.getEntityName()) || StringUtils.hasText(row.getEntityTaxCode())) {
-                        String entityId = fondsAutoCreationService.ensureEntityExists(
+                if (StringUtils.hasText(row.getEntityName()) || StringUtils.hasText(row.getEntityTaxCode())) {
+                    String entityId = fondsAutoCreationService.ensureEntityExists(
                             row.getEntityName(),
                             row.getEntityTaxCode()
-                        );
-                        if (entityId != null) {
-                            createdEntityIds.add(entityId);
-                        }
+                    );
+                    if (entityId != null) {
+                        createdEntityIds.add(entityId);
                     }
-                } catch (Exception e) {
-                    log.error("自动创建全宗/实体失败: fondsNo={}, error={}", row.getFondsNo(), e.getMessage());
-                    allErrors.add(ImportError.builder()
+                }
+            } catch (Exception e) {
+                log.error("自动创建全宗/实体失败: fondsNo={}, error={}", row.getFondsNo(), e.getMessage());
+                allErrors.add(ImportError.builder()
                         .rowNumber(row.getRowNumber())
                         .fieldName("fonds_no")
                         .errorCode("FONDS_CREATION_FAILED")
                         .errorMessage("自动创建全宗失败: " + e.getMessage())
                         .build());
-                }
             }
+        }
 
-            // 4. 批量导入档案（分批执行，每批 1000 条）
-            int successCount = 0;
-            for (List<ImportRow> batch : Lists.partition(validRows, 1000)) {
-                successCount += dataConverter.batchImportArchives(batch, operatorId);
+        return new CreationResult(createdFondsNos, createdEntityIds);
+    }
+
+    /**
+     * 批量导入档案
+     */
+    private int batchImportArchives(List<ImportRow> validRows, String operatorId) {
+        int successCount = 0;
+        for (List<ImportRow> batch : Lists.partition(validRows, 1000)) {
+            successCount += dataConverter.batchImportArchives(batch, operatorId);
+        }
+        return successCount;
+    }
+
+    /**
+     * 完成导入：更新任务状态、记录日志、构建返回结果
+     */
+    private ImportResult finalizeImport(LegacyImportTask task, List<ImportRow> rows,
+                                       int successCount, List<ImportError> allErrors,
+                                       CreationResult creationResult,
+                                       LocalDateTime startTime, String importId,
+                                       String operatorId) {
+        LocalDateTime endTime = LocalDateTime.now();
+
+        // 更新任务状态
+        task.setSuccessRows(successCount);
+        task.setFailedRows(rows.size() - successCount);
+        task.setStatus(successCount == rows.size() ? OperationResult.SUCCESS :
+                (successCount > 0 ? "PARTIAL_SUCCESS" : "FAILED"));
+        task.setCompletedAt(endTime);
+
+        // 保存创建的全宗和实体列表
+        if (!creationResult.createdFondsNos.isEmpty()) {
+            try {
+                task.setCreatedFondsNos(objectMapper.writeValueAsString(
+                        new ArrayList<>(creationResult.createdFondsNos)));
+            } catch (Exception e) {
+                log.warn("序列化全宗列表失败", e);
             }
-
-            // 5. 更新任务状态
-            LocalDateTime endTime = LocalDateTime.now();
-            task.setSuccessRows(successCount);
-            task.setFailedRows(rows.size() - successCount);
-            task.setStatus(successCount == rows.size() ? OperationResult.SUCCESS :
-                          (successCount > 0 ? "PARTIAL_SUCCESS" : "FAILED"));
-            task.setCompletedAt(endTime);
-
-            // 保存创建的全宗和实体列表
-            if (!createdFondsNos.isEmpty()) {
-                task.setCreatedFondsNos(objectMapper.writeValueAsString(new ArrayList<>(createdFondsNos)));
+        }
+        if (!creationResult.createdEntityIds.isEmpty()) {
+            try {
+                task.setCreatedEntityIds(objectMapper.writeValueAsString(
+                        new ArrayList<>(creationResult.createdEntityIds)));
+            } catch (Exception e) {
+                log.warn("序列化实体列表失败", e);
             }
-            if (!createdEntityIds.isEmpty()) {
-                task.setCreatedEntityIds(objectMapper.writeValueAsString(new ArrayList<>(createdEntityIds)));
-            }
+        }
 
-            // 如果有错误，生成错误报告
-            if (!allErrors.isEmpty()) {
-                String errorReportPath = generateErrorReport(importId, allErrors);
-                task.setErrorReportPath(errorReportPath);
-            }
+        // 如果有错误，生成错误报告
+        if (!allErrors.isEmpty()) {
+            String errorReportPath = generateErrorReport(importId, allErrors);
+            task.setErrorReportPath(errorReportPath);
+        }
 
-            importTaskMapper.updateById(task);
+        importTaskMapper.updateById(task);
 
-            // 6. 记录审计日志
-            auditLogService.log(
+        // 记录审计日志
+        auditLogService.log(
                 operatorId,
                 LegacyImportUtils.getCurrentUserName(),
                 "LEGACY_IMPORT",
                 "IMPORT_TASK",
                 importId,
                 OperationResult.SUCCESS,
-                String.format("历史数据导入: 总数=%d, 成功=%d, 失败=%d", rows.size(), successCount, rows.size() - successCount),
+                String.format("历史数据导入: 总数=%d, 成功=%d, 失败=%d",
+                        rows.size(), successCount, rows.size() - successCount),
                 OperationResult.UNKNOWN
-            );
+        );
 
-            // 7. 构建返回结果
-            ImportResult.ImportStatus status = successCount == rows.size() ?
+        // 构建返回结果
+        ImportResult.ImportStatus status = successCount == rows.size() ?
                 ImportResult.ImportStatus.SUCCESS :
                 (successCount > 0 ? ImportResult.ImportStatus.PARTIAL_SUCCESS : ImportResult.ImportStatus.FAILED);
 
-            return ImportResult.builder()
+        return ImportResult.builder()
                 .importId(importId)
                 .totalRows(rows.size())
                 .successRows(successCount)
                 .failedRows(rows.size() - successCount)
                 .errors(allErrors)
-                .createdFondsNos(new ArrayList<>(createdFondsNos))
-                .createdEntityIds(new ArrayList<>(createdEntityIds))
+                .createdFondsNos(new ArrayList<>(creationResult.createdFondsNos))
+                .createdEntityIds(new ArrayList<>(creationResult.createdEntityIds))
                 .startTime(startTime)
                 .endTime(endTime)
                 .status(status)
                 .errorReportUrl("/api/legacy-import/tasks/" + importId + "/error-report")
                 .build();
+    }
 
-        } catch (Exception e) {
-            log.error("导入失败: importId={}, error={}", importId, e.getMessage(), e);
-            task.setStatus("FAILED");
-            task.setCompletedAt(LocalDateTime.now());
-            importTaskMapper.updateById(task);
+    /**
+     * 处理导入失败
+     */
+    private void handleImportFailure(LegacyImportTask task, Exception e, String importId) {
+        log.error("导入失败: importId={}, error={}", importId, e.getMessage(), e);
+        task.setStatus("FAILED");
+        task.setCompletedAt(LocalDateTime.now());
+        importTaskMapper.updateById(task);
+        throw new BusinessException("导入失败: " + e.getMessage());
+    }
 
-            throw new BusinessException("导入失败: " + e.getMessage());
+    /**
+     * 验证结果内部类
+     */
+    private static class ValidationResult {
+        final List<ImportRow> validRows;
+        final List<ImportError> allErrors;
+
+        ValidationResult(List<ImportRow> validRows, List<ImportError> allErrors) {
+            this.validRows = validRows;
+            this.allErrors = allErrors;
+        }
+    }
+
+    /**
+     * 创建结果内部类
+     */
+    private static class CreationResult {
+        final Set<String> createdFondsNos;
+        final Set<String> createdEntityIds;
+
+        CreationResult(Set<String> createdFondsNos, Set<String> createdEntityIds) {
+            this.createdFondsNos = createdFondsNos;
+            this.createdEntityIds = createdEntityIds;
         }
     }
 
@@ -309,13 +425,41 @@ public class LegacyImportOrchestrator {
             }
 
             // 保存到文件系统
-            String reportPath = "data/import-reports/" + importId + "_error_report.xlsx";
-            // TODO: 实现文件保存逻辑
-            workbook.close();
+            String reportPath = saveErrorReportToFile(workbook, importId);
             return reportPath;
         } catch (Exception e) {
             log.error("生成错误报告失败: importId={}, error={}", importId, e.getMessage(), e);
             return null;
+        }
+    }
+
+    /**
+     * 保存错误报告到文件系统
+     */
+    private String saveErrorReportToFile(org.apache.poi.ss.usermodel.Workbook workbook, String importId) {
+        java.nio.file.Path reportDir = java.nio.file.Paths.get("data/import-reports");
+        try {
+            // 确保目录存在
+            if (!java.nio.file.Files.exists(reportDir)) {
+                java.nio.file.Files.createDirectories(reportDir);
+            }
+
+            // 写入文件
+            java.nio.file.Path reportFile = reportDir.resolve(importId + "_error_report.xlsx");
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(reportFile.toFile())) {
+                workbook.write(fos);
+            }
+            log.info("错误报告已生成: {}", reportFile);
+            return reportFile.toString();
+        } catch (Exception e) {
+            log.error("保存错误报告失败: importId={}, error={}", importId, e.getMessage(), e);
+            return "data/import-reports/" + importId + "_error_report.xlsx";
+        } finally {
+            try {
+                workbook.close();
+            } catch (Exception e) {
+                log.warn("关闭 workbook 失败", e);
+            }
         }
     }
 }
