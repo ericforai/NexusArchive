@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userId;
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith(HttpConstants.BEARER_PREFIX)) {
             jwt = authHeader.substring(7);
         } else {
             // [ADDED] Support token in query parameter for iframe/browser direct access

@@ -52,7 +52,7 @@ public class AuthController {
         // 将当前Token加入黑名单
         String authHeader = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
                 .getRequest().getHeader(HttpConstants.AUTHORIZATION);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith(HttpConstants.BEARER_PREFIX)) {
             authService.logout(authHeader.substring(7));
         }
         return Result.success("登出成功", null);
@@ -65,7 +65,7 @@ public class AuthController {
      */
     @GetMapping("/me")
     public Result<LoginResponse.UserInfo> getCurrentUser(@RequestHeader(value = HttpConstants.AUTHORIZATION, required = false) String authorization) {
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith(HttpConstants.BEARER_PREFIX)) {
             return Result.unauthorized("未登录");
         }
         String token = authorization.substring(7);
@@ -81,7 +81,7 @@ public class AuthController {
     @PostMapping("/refresh")
     @ArchivalAudit(operationType = "REFRESH_TOKEN", resourceType = "AUTH", description = "刷新令牌")
     public Result<LoginResponse> refresh(@RequestHeader(value = HttpConstants.AUTHORIZATION, required = false) String authorization) {
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith(HttpConstants.BEARER_PREFIX)) {
             return Result.unauthorized("未登录");
         }
         String oldToken = authorization.substring(7);

@@ -11,6 +11,7 @@ import com.nexusarchive.dto.sip.report.CheckItem;
 import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.service.FourNatureCoreService;
 import com.nexusarchive.service.adapter.VirusScanAdapter;
+import com.nexusarchive.common.constants.FourNatureConstants;
 import com.nexusarchive.service.signature.SignatureAdapter;
 import com.nexusarchive.util.FileHashUtil;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
     @Override
     public CheckItem checkSingleFileAuthenticity(InputStream inputStream, String fileName, String expectedHash,
             String hashAlgo, String fileType) {
-        CheckItem item = CheckItem.pass("Authenticity Check", "Hash verification passed");
+        CheckItem item = CheckItem.pass(FourNatureConstants.CheckType.AUTHENTICITY, FourNatureConstants.SuccessMessage.HASH_VERIFIED);
         List<String> details = new ArrayList<>();
 
         // 缓存流内容以支持多次读取（哈希校验 + 签章校验）
@@ -189,7 +190,7 @@ public class FourNatureCoreServiceImpl implements FourNatureCoreService {
 
     @Override
     public CheckItem checkSingleFileUsability(InputStream inputStream, String fileName, String declaredType) {
-        CheckItem item = CheckItem.pass("Usability Check", "File format valid");
+        CheckItem item = CheckItem.pass(FourNatureConstants.CheckType.USABILITY, FourNatureConstants.SuccessMessage.FORMAT_VALID);
         List<String> details = new ArrayList<>();
 
         // 1. Tika Magic Number Check

@@ -8,5 +8,8 @@ public final class HttpConstants {
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String AUTHORIZATION = "Authorization";
 
+    // Authentication
+    public static final String BEARER_PREFIX = "Bearer ";
+
     private HttpConstants() {}
 }

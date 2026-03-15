@@ -18,6 +18,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.service.FourNatureCheckService;
 import com.nexusarchive.service.FourNatureCoreService;
 import com.nexusarchive.util.AmountValidator;
+import com.nexusarchive.common.constants.FourNatureConstants;
 import com.nexusarchive.util.FileHashUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +89,10 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
         report.setIntegrity(integrity);
         if (integrity.getStatus() == OverallStatus.FAIL) {
             report.setStatus(OverallStatus.FAIL);
+        } else if (integrity.getStatus() == OverallStatus.WARNING) {
+            if (report.getStatus() != OverallStatus.FAIL) {
+                report.setStatus(OverallStatus.WARNING);
+            }
         }
         
         // 3. 可用性检测 (Usability)
@@ -95,6 +100,10 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
         report.setUsability(usability);
         if (usability.getStatus() == OverallStatus.FAIL) {
             report.setStatus(OverallStatus.FAIL);
+        } else if (usability.getStatus() == OverallStatus.WARNING) {
+            if (report.getStatus() != OverallStatus.FAIL) {
+                report.setStatus(OverallStatus.WARNING);
+            }
         }
         
         // 4. 安全性检测 (Safety)
@@ -104,6 +113,10 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
             report.setStatus(OverallStatus.FAIL);
             log.error("SecurityEvent: Safety Check FAILED for CheckID: {}", checkId);
             return report;
+        } else if (safety.getStatus() == OverallStatus.WARNING) {
+            if (report.getStatus() != OverallStatus.FAIL) {
+                report.setStatus(OverallStatus.WARNING);
+            }
         }
         
         return report;
@@ -179,7 +192,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
     }
 
     private CheckItem checkAuthenticity(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
-        CheckItem combinedItem = CheckItem.pass("Authenticity Check", "All files verified");
+        CheckItem combinedItem = CheckItem.pass(FourNatureConstants.CheckType.AUTHENTICITY, FourNatureConstants.SuccessMessage.AUTHENTICITY_PASSED);
         List<String> details = new ArrayList<>();
         
         if (sip.getAttachments() == null) return combinedItem;
@@ -236,7 +249,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
     }
     
     private CheckItem checkUsability(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
-        CheckItem combinedItem = CheckItem.pass("Usability Check", "All files usable");
+        CheckItem combinedItem = CheckItem.pass(FourNatureConstants.CheckType.USABILITY, FourNatureConstants.SuccessMessage.USABILITY_PASSED);
         List<String> details = new ArrayList<>();
         
         if (sip.getAttachments() == null) return combinedItem;
@@ -330,7 +343,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
      * Perform authenticity health check on files
      */
     private CheckItem performAuthenticityHealthCheck(List<ArcFileContent> files) {
-        CheckItem authenticity = CheckItem.pass("Authenticity Check", "All files verified");
+        CheckItem authenticity = CheckItem.pass(FourNatureConstants.CheckType.AUTHENTICITY, FourNatureConstants.SuccessMessage.AUTHENTICITY_PASSED);
         List<String> authDetails = new ArrayList<>();
 
         for (ArcFileContent file : files) {
@@ -348,7 +361,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
     private CheckItem checkFileAuthenticity(ArcFileContent file) {
         java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
         if (!java.nio.file.Files.exists(path)) {
-            return CheckItem.fail("Authenticity Check", "File not found: " + file.getFileName());
+            return CheckItem.fail(FourNatureConstants.CheckType.AUTHENTICITY, "File not found: " + file.getFileName());
         }
 
         try (java.io.InputStream is = new java.io.BufferedInputStream(new java.io.FileInputStream(path.toFile()))) {
@@ -356,7 +369,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     is, file.getFileName(), file.getOriginalHash(), file.getHashAlgorithm(), file.getFileType()
             );
         } catch (Exception e) {
-            return CheckItem.fail("Authenticity Check", "Error checking " + file.getFileName() + ": " + e.getMessage());
+            return CheckItem.fail(FourNatureConstants.CheckType.AUTHENTICITY, "Error checking " + file.getFileName() + ": " + e.getMessage());
         }
     }
 
@@ -375,7 +388,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
      * Perform usability health check on files
      */
     private CheckItem performUsabilityHealthCheck(List<ArcFileContent> files) {
-        CheckItem usability = CheckItem.pass("Usability Check", "Files accessible");
+        CheckItem usability = CheckItem.pass(FourNatureConstants.CheckType.USABILITY, FourNatureConstants.SuccessMessage.FILES_ACCESSIBLE);
         List<String> useDetails = new ArrayList<>();
 
         for (ArcFileContent file : files) {
@@ -401,7 +414,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
         try (java.io.InputStream is = new java.io.FileInputStream(path.toFile())) {
             return fourNatureCoreService.checkSingleFileUsability(is, file.getFileName(), file.getFileType());
         } catch (Exception e) {
-            return CheckItem.fail("Usability Check", "Usability error: " + file.getFileName() + " - " + e.getMessage());
+            return CheckItem.fail(FourNatureConstants.CheckType.USABILITY, "Usability error: " + file.getFileName() + " - " + e.getMessage());
         }
     }
 

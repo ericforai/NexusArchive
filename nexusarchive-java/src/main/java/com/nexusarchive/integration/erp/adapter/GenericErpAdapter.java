@@ -67,7 +67,7 @@ public class GenericErpAdapter implements ErpAdapter {
             String url = config.getBaseUrl() + testEndpoint;
             
             String response = HttpRequest.get(url)
-                .header(HttpConstants.AUTHORIZATION, "Bearer " + config.getAppKey())
+                .header(HttpConstants.AUTHORIZATION, HttpConstants.BEARER_PREFIX + config.getAppKey())
                 .header("X-API-Key", config.getAppSecret())
                 .timeout(10000)
                 .execute()
@@ -100,7 +100,7 @@ public class GenericErpAdapter implements ErpAdapter {
             );
             
             String response = HttpRequest.get(url)
-                .header(HttpConstants.AUTHORIZATION, "Bearer " + config.getAppKey())
+                .header(HttpConstants.AUTHORIZATION, HttpConstants.BEARER_PREFIX + config.getAppKey())
                 .header("X-API-Key", config.getAppSecret())
                 .timeout(30000)
                 .execute()
@@ -126,7 +126,7 @@ public class GenericErpAdapter implements ErpAdapter {
             String url = config.getBaseUrl() + detailEndpoint.replace("{id}", voucherNo);
             
             String response = HttpRequest.get(url)
-                .header(HttpConstants.AUTHORIZATION, "Bearer " + config.getAppKey())
+                .header(HttpConstants.AUTHORIZATION, HttpConstants.BEARER_PREFIX + config.getAppKey())
                 .header("X-API-Key", config.getAppSecret())
                 .timeout(10000)
                 .execute()
