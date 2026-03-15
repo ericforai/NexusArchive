@@ -6,6 +6,7 @@
 package com.nexusarchive.service.impl;
 
 import com.nexusarchive.common.constants.OperationResult;
+import com.nexusarchive.common.constants.StatusConstants;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +59,7 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         
         // 验证状态：必须是 PENDING 或 APPRAISING 状态才能进行初审
         if (!OperationResult.PENDING.equals(destruction.getStatus()) &&
-            !"APPRAISING".equals(destruction.getStatus())) {
+            !StatusConstants.Destruction.APPRAISING.equals(destruction.getStatus())) {
             throw new IllegalStateException(
                 String.format("销毁申请状态为 %s，无法进行初审", destruction.getStatus()));
         }
@@ -79,7 +80,7 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         // 更新销毁申请
         String newStatus;
         if (approved) {
-            newStatus = "FIRST_APPROVED"; // 初审通过，等待复核
+            newStatus = StatusConstants.Destruction.FIRST_APPROVED; // 初审通过，等待复核
         } else {
             // 初审拒绝，回退到 APPRAISING 或 EXPIRED
             // 根据档案状态决定回退到哪个状态
@@ -105,10 +106,10 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         
         // 如果初审通过，更新档案状态（保持 APPRAISING，等待复核）
         if (approved) {
-            updateArchiveStatus(destruction, "APPRAISING");
+            updateArchiveStatus(destruction, StatusConstants.Destruction.APPRAISING);
         } else {
             // 初审拒绝，回退档案状态
-            updateArchiveStatus(destruction, newStatus.equals("APPRAISING") ? "APPRAISING" : "EXPIRED");
+            updateArchiveStatus(destruction, newStatus.equals(StatusConstants.Destruction.APPRAISING) ? StatusConstants.Destruction.APPRAISING : StatusConstants.Destruction.EXPIRED);
         }
         
         log.info("初审审批完成，销毁申请ID: {}, 审批人: {}, 结果: {}", 
@@ -125,7 +126,7 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         }
         
         // 验证状态：必须是 FIRST_APPROVED 状态才能进行复核
-        if (!"FIRST_APPROVED".equals(destruction.getStatus())) {
+        if (!StatusConstants.Destruction.FIRST_APPROVED.equals(destruction.getStatus())) {
             throw new IllegalStateException(
                 String.format("销毁申请状态为 %s，无法进行复核。必须先通过初审。", destruction.getStatus()));
         }
@@ -152,10 +153,10 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         // 更新销毁申请
         String newStatus;
         if (approved) {
-            newStatus = "DESTRUCTION_APPROVED"; // 复核通过，可以执行销毁
+            newStatus = StatusConstants.Destruction.DESTRUCTION_APPROVED; // 复核通过，可以执行销毁
         } else {
             // 复核拒绝，回退到 APPRAISING
-            newStatus = "APPRAISING";
+            newStatus = StatusConstants.Destruction.APPRAISING;
         }
         
         destruction.setStatus(newStatus);
@@ -180,10 +181,10 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         // 更新档案状态
         if (approved) {
             // 复核通过，更新档案状态为 DESTRUCTION_APPROVED
-            updateArchiveStatus(destruction, "DESTRUCTION_APPROVED");
+            updateArchiveStatus(destruction, StatusConstants.Destruction.DESTRUCTION_APPROVED);
         } else {
             // 复核拒绝，回退到 APPRAISING
-            updateArchiveStatus(destruction, "APPRAISING");
+            updateArchiveStatus(destruction, StatusConstants.Destruction.APPRAISING);
         }
         
         log.info("复核审批完成，销毁申请ID: {}, 审批人: {}, 结果: {}", 
@@ -235,9 +236,9 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
                 // 如果所有档案都是 APPRAISING 状态，回退到 APPRAISING
                 // 否则回退到 EXPIRED
                 boolean allAppraising = archives.stream()
-                    .allMatch(a -> "APPRAISING".equals(a.getDestructionStatus()));
+                    .allMatch(a -> StatusConstants.Destruction.APPRAISING.equals(a.getDestructionStatus()));
                 
-                return allAppraising ? "APPRAISING" : "EXPIRED";
+                return allAppraising ? StatusConstants.Destruction.APPRAISING : StatusConstants.Destruction.EXPIRED;
             }
         } catch (Exception e) {
             log.warn("确定拒绝状态失败，默认回退到 EXPIRED", e);
@@ -258,11 +259,10 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
             
             if (archiveIds != null && !archiveIds.isEmpty()) {
                 for (String archiveId : archiveIds) {
-                    LambdaUpdateWrapper<Archive> updateWrapper = 
-                        new LambdaUpdateWrapper<Archive>()
-                            .eq(Archive::getId, archiveId)
-                            .set(Archive::getDestructionStatus, newStatus);
-                    
+                    LambdaUpdateWrapper<Archive> updateWrapper = new LambdaUpdateWrapper<>();
+                    updateWrapper.eq(Archive::getId, archiveId)
+                                 .set(Archive::getDestructionStatus, newStatus);
+
                     archiveMapper.update(null, updateWrapper);
                 }
             }

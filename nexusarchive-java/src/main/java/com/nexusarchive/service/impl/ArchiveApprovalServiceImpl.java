@@ -7,7 +7,6 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.dto.approval.BatchApprovalRequest;
 import com.nexusarchive.dto.approval.BatchApprovalResponse;
@@ -61,6 +60,11 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
     // @Lazy 注解避免循环依赖
     private final PreArchiveSubmitService preArchiveSubmitService;
+
+    // 自注入以确保内部调用通过代理，解决 S2229 事务绕过问题
+    @org.springframework.context.annotation.Lazy
+    @org.springframework.beans.factory.annotation.Autowired
+    private ArchiveApprovalServiceImpl self;
 
     public ArchiveApprovalServiceImpl(
             ArchiveApprovalMapper approvalMapper,
@@ -221,8 +225,8 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             }
 
             try {
-                // 调用单个审批方法
-                approveArchive(
+                // 使用 self 代理对象调用，确保 @Transactional 生效
+                self.approveArchive(
                         id,
                         request.getApproverId(),
                         request.getApproverName(),
@@ -263,8 +267,8 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
             }
 
             try {
-                // 调用单个拒绝方法
-                rejectArchive(
+                // 使用 self 代理对象调用，确保 @Transactional 生效
+                self.rejectArchive(
                         id,
                         request.getApproverId(),
                         request.getApproverName(),

@@ -7,7 +7,6 @@ package com.nexusarchive.service.impl;
 
 import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ErpConfig;
@@ -71,6 +70,11 @@ public class ReconciliationServiceImpl implements ReconciliationService {
     private final com.nexusarchive.service.impl.reconciliation.ErpDataFetcher erpDataFetcher;
     private final com.nexusarchive.service.impl.reconciliation.ArchiveAggregator archiveAggregator;
     private final com.nexusarchive.service.impl.reconciliation.EvidenceVerifier evidenceVerifier;
+
+    // 自注入以确保内部调用通过代理，解决 S2229 事务绕过问题
+    @org.springframework.context.annotation.Lazy
+    @org.springframework.beans.factory.annotation.Autowired
+    private ReconciliationServiceImpl self;
 
     @Override
     public ReconciliationRecord performReconciliation(Long configId, String subjectCode,
@@ -257,7 +261,8 @@ public class ReconciliationServiceImpl implements ReconciliationService {
                 .snapshotData(snapshot)
                 .build();
 
-        return saveReconciliationResult(record);
+        // 使用 self 代理对象调用，确保 @Transactional(REQUIRES_NEW) 生效
+        return self.saveReconciliationResult(record);
     }
 
     /**
