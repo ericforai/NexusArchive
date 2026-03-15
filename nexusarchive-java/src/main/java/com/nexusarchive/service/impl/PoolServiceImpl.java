@@ -6,7 +6,7 @@
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.nexusarchive.annotation.ReadOnly;
 import com.nexusarchive.dto.PoolItemDto;
 import com.nexusarchive.dto.search.CandidateSearchRequest;
 import com.nexusarchive.entity.ArcFileContent;
@@ -153,18 +153,32 @@ public class PoolServiceImpl implements PoolService {
 
         List<ArcFileContent> contents = arcFileContentMapper.selectList(contentQuery);
 
-        // 3. 转换并补充数据
-        return contents.stream().map(c -> {
-            ArcFileMetadataIndex meta = metaMap.get(c.getId());
-            if (meta == null) {
-                // 如果是没走元数据索引的简单查询，补查一下 (使用 selectList 并取第一条以防重复数据导致 selectOne 报错)
-                List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
-                        new LambdaQueryWrapper<ArcFileMetadataIndex>()
-                                .eq(ArcFileMetadataIndex::getFileId, c.getId()).last("LIMIT 1"));
-                meta = metas.isEmpty() ? null : metas.get(0);
-            }
-            return convertToPoolItemDto(c, meta);
-        }).collect(Collectors.toList());
+        // 3. 批量补充缺失的元数据（避免 N+1 查询）
+        // 收集所有在 metaMap 中不存在的 fileIds
+        List<String> missingFileIds = contents.stream()
+                .filter(c -> !metaMap.containsKey(c.getId()))
+                .map(ArcFileContent::getId)
+                .collect(Collectors.toList());
+
+        if (!missingFileIds.isEmpty()) {
+            // 批量查询所有缺失的元数据（单次 IN 查询）
+            LambdaQueryWrapper<ArcFileMetadataIndex> batchQuery = new LambdaQueryWrapper<>();
+            batchQuery.in(ArcFileMetadataIndex::getFileId, missingFileIds);
+            batchQuery.last("LIMIT 1000");  // 安全限制
+
+            List<ArcFileMetadataIndex> batchMetas = arcFileMetadataIndexMapper.selectList(batchQuery);
+            // 合并到 metaMap 中
+            batchMetas.forEach(m -> {
+                if (m.getFileId() != null) {
+                    metaMap.put(m.getFileId(), m);
+                }
+            });
+        }
+
+        // 4. 转换为 DTO
+        return contents.stream()
+                .map(c -> convertToPoolItemDto(c, metaMap.get(c.getId())))
+                .collect(Collectors.toList());
     }
 
     private PoolItemDto convertToPoolItemDto(ArcFileContent fileContent, ArcFileMetadataIndex metadata) {
@@ -205,11 +219,13 @@ public class PoolServiceImpl implements PoolService {
     }
 
     @Override
+    @ReadOnly
     public ArcFileContent getFileById(String id) {
         return arcFileContentMapper.selectById(id);
     }
 
     @Override
+    @ReadOnly
     public List<PoolItemDto> listPoolItems(String category) {
         LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.and(w -> w.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
@@ -230,6 +246,7 @@ public class PoolServiceImpl implements PoolService {
 
 
     @Override
+    @ReadOnly
     public List<PoolItemDto> listByStatus(String status, String category) {
         String normalizedStatus = normalizeLegacyStatus(status);
         LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
@@ -258,6 +275,7 @@ public class PoolServiceImpl implements PoolService {
 
 
     @Override
+    @ReadOnly
     public Map<String, Long> getStatusStats(String category) {
         Map<String, Long> stats = new HashMap<>();
         String[] statuses = { "PENDING_CHECK", "NEEDS_ACTION", "READY_TO_MATCH", "READY_TO_ARCHIVE", "COMPLETED" };
@@ -339,6 +357,7 @@ public class PoolServiceImpl implements PoolService {
     }
 
     @Override
+    @ReadOnly
     public List<ArcFileContent> listPendingCheckFiles() {
         LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
@@ -351,6 +370,7 @@ public class PoolServiceImpl implements PoolService {
     }
 
     @Override
+    @ReadOnly
     public List<ArcFileContent> getLegacyAttachments(String businessDocNo) {
         LambdaQueryWrapper<ArcFileContent> query = new LambdaQueryWrapper<>();
         query.likeRight(ArcFileContent::getBusinessDocNo, businessDocNo + "_ATT_")
@@ -359,6 +379,7 @@ public class PoolServiceImpl implements PoolService {
     }
 
     @Override
+    @ReadOnly
     public ArcFileMetadataIndex getMetadataByFileId(String fileId) {
         List<ArcFileMetadataIndex> metas = arcFileMetadataIndexMapper.selectList(
                 new LambdaQueryWrapper<ArcFileMetadataIndex>().eq(ArcFileMetadataIndex::getFileId, fileId).last("LIMIT 1"));

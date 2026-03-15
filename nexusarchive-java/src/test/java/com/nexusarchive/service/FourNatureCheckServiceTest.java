@@ -17,6 +17,7 @@ import com.nexusarchive.service.impl.FourNatureCheckServiceImpl;
 import com.nexusarchive.util.FileHashUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class FourNatureCheckServiceTest {
 
@@ -71,7 +73,10 @@ class FourNatureCheckServiceTest {
                                 .build();
 
                 AccountingSipDto sip = AccountingSipDto.builder()
-                                .header(VoucherHeadDto.builder().voucherNumber("V001").build())
+                                .header(VoucherHeadDto.builder()
+                                                .voucherNumber("V001")
+                                                .attachmentCount(1)
+                                                .build())
                                 .attachments(List.of(attachment))
                                 .build();
 
@@ -79,7 +84,11 @@ class FourNatureCheckServiceTest {
                 fileStreams.put(fileName, content);
 
                 when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
-                when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+                // Mock selectMaps for batch deduplication check
+                Map<String, Object> duplicateRecord = new HashMap<>();
+                duplicateRecord.put("file_hash", hash);
+                duplicateRecord.put("original_hash", null);
+                when(arcFileContentMapper.selectMaps(any())).thenReturn(List.of(duplicateRecord));
 
                 // Act
                 FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
@@ -119,7 +128,8 @@ class FourNatureCheckServiceTest {
                 fileStreams.put(fileName, content);
 
                 when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
-                when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+                // Mock selectMaps for batch deduplication check (no duplicates)
+                when(arcFileContentMapper.selectMaps(any())).thenReturn(List.of());
 
                 // Mock Core Service to return success
                 when(fourNatureCoreService.checkSingleFileAuthenticity(any(), eq(fileName), eq(hash), any(), eq("PDF")))
@@ -183,7 +193,8 @@ class FourNatureCheckServiceTest {
                 fileStreams.put(fileName, content);
 
                 when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
-                when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+                // Mock selectMaps for batch deduplication check (no duplicates)
+                when(arcFileContentMapper.selectMaps(any())).thenReturn(List.of());
 
                 // Mock Core Service 返回包含签章校验信息的结果
                 CheckItem authResult = CheckItem.pass("Authenticity", "Hash verified (SM3); PDF签章校验通过");
@@ -233,7 +244,8 @@ class FourNatureCheckServiceTest {
                 fileStreams.put(fileName, content);
 
                 when(fileHashUtil.calculateSM3(any(ByteArrayInputStream.class))).thenReturn(hash);
-                when(arcFileContentMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+                // Mock selectMaps for batch deduplication check (no duplicates)
+                when(arcFileContentMapper.selectMaps(any())).thenReturn(List.of());
 
                 // Mock Core Service 返回 WARNING（模拟签章服务不可用的场景）
                 CheckItem authResult = CheckItem.pass("Authenticity", "Hash verified (SM3); 签章服务不可用，跳过校验");

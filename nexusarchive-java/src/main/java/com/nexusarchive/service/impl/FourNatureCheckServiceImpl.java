@@ -6,6 +6,7 @@
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.dto.sip.AttachmentDto;
 import com.nexusarchive.dto.sip.VoucherHeadDto;
@@ -25,9 +26,14 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 四性检测服务实现
@@ -105,22 +111,24 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
     
     /**
      * 去重检测
-     * 
+     *
      * 【合规增强】增加 original_hash 校验
      * 依据：DA/T 92-2022 要求真实性检测覆盖原始哈希
+     * 【性能优化】批量查询避免 N+1 问题：收集所有哈希后单次 IN 查询
      */
     private CheckItem checkDeduplication(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
         CheckItem item = CheckItem.pass("De-duplication Check", "No duplicates found");
-        
+
         if (sip.getAttachments() == null) return item;
-        
+
+        // Step 1: 收集所有文件哈希值（文件名 -> 哈希映射）
+        Map<String, String> fileHashes = new HashMap<>();
         for (AttachmentDto attachment : sip.getAttachments()) {
             String fileName = attachment.getFileName();
             byte[] content = fileStreams.get(fileName);
             if (content == null) continue;
-            
+
             try (ByteArrayInputStream bais = new ByteArrayInputStream(content)) {
-                // Determine Algo
                 String algo = attachment.getHashAlgorithm();
                 if (algo == null || algo.isEmpty()) algo = "SM3";
 
@@ -130,22 +138,43 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                 } else {
                     hash = fileHashUtil.calculateSHA256(bais);
                 }
-                
-                Long count = arcFileContentMapper.selectCount(
-                    new LambdaQueryWrapper<ArcFileContent>()
-                        .eq(ArcFileContent::getFileHash, hash)
-                        .or()
-                        .eq(ArcFileContent::getOriginalHash, hash)
-                );
-                
-                if (count > 0) {
-                    item.addError(String.format("Duplicate file detected: %s (Hash: %s already exists)", fileName, hash));
-                }
+                fileHashes.put(fileName, hash);
             } catch (Exception e) {
                 // Ignore hash error here, handled in Authenticity
             }
         }
-        
+
+        if (fileHashes.isEmpty()) return item;
+
+        // Step 2: 批量查询所有可能重复的哈希（单次 IN 查询）
+        Set<String> uniqueHashes = Set.copyOf(fileHashes.values());
+
+        // ALLOW-QUERYWRAPPER: 动态字段场景需要使用字符串方式构建 IN 查询
+        QueryWrapper<ArcFileContent> qw = new QueryWrapper<>();
+        qw.select("file_hash", "original_hash");  // 只查询哈希字段，减少数据传输
+        qw.and(w -> w.in("file_hash", uniqueHashes).or().in("original_hash", uniqueHashes));
+
+        // 使用 selectMaps 只获取哈希值，避免加载完整实体
+        List<java.util.Map<String, Object>> hashMaps = arcFileContentMapper.selectMaps(qw);
+
+        // 提取所有已存在的哈希值
+        Set<String> existingHashes = hashMaps.stream()
+            .flatMap(m -> Stream.of(
+                (String) m.get("file_hash"),
+                (String) m.get("original_hash")
+            ))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        // Step 3: 标记重复的文件
+        for (Map.Entry<String, String> entry : fileHashes.entrySet()) {
+            String fileName = entry.getKey();
+            String hash = entry.getValue();
+            if (existingHashes.contains(hash)) {
+                item.addError(String.format("Duplicate file detected: %s (Hash: %s already exists)", fileName, hash));
+            }
+        }
+
         return item;
     }
 
