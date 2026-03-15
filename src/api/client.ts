@@ -17,6 +17,13 @@ export const client = axios.create({
 // Request interceptor to add token and fonds code
 client.interceptors.request.use(
     (config) => {
+        // Fix double /api prefix if it exists
+        if (config.url?.startsWith('/api/api/')) {
+            config.url = config.url.replace('/api/api/', '/api/');
+        } else if (config.url?.startsWith('api/api/')) {
+            config.url = config.url.replace('api/api/', 'api/');
+        }
+
         try {
             // 通过延迟绑定的接口获取状态，避免循环依赖
             const { token, fondsCode } = getHttpClientState();

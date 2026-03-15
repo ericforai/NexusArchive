@@ -116,8 +116,9 @@ export const attachmentsApi = {
 
     /**
      * 构建文件下载 URL
+     * 注意：返回相对 API 根路径的路径，不带 /api 前缀
      */
     getDownloadUrl: (fileId: string): string => {
-        return `/api/archive/files/download/${fileId}`;
+        return `archive/files/download/${fileId}`;
     }
 };

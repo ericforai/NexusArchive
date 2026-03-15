@@ -203,6 +203,12 @@ function normalizeClientUrl(fileUrl: string): string {
   }
   
   let url = fileUrl;
+
+  // 针对服务器端出现的重复前缀进行硬修复
+  if (url.includes('/api/api/')) {
+    url = url.replace('/api/api/', '/api/');
+  }
+
   // 如果以 /api/ 开头，移除它及其后的斜杠，使之相对于 client 的 baseURL (/api)
   if (url.startsWith('/api/')) {
     return url.slice(5);

@@ -234,13 +234,15 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
     }, [activeTab, files]);
 
     // 构建文件预览 URL
-    const getPreviewUrl = (file: AttachmentFile): string => {
+    const getPreviewUrl = (file: AttachmentFile, forDirectBrowserUsage = false): string => {
         if (!file.id) return '';
 
-        // 根据来源选择不同的下载接口
-        return sourceType === 'ARCHIVE'
-            ? `/api/archive/files/download/${file.id}`
-            : `/api/original-vouchers/files/download/${file.id}`;
+        // Axios 内部使用的路径不带 /api
+        const relativePath = sourceType === 'ARCHIVE'
+            ? `archive/files/download/${file.id}`
+            : `original-vouchers/files/download/${file.id}`;
+        
+        return forDirectBrowserUsage ? `/api/${relativePath}` : relativePath;
     };
 
     // 当前页签对应的文件
@@ -343,7 +345,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                 <a
                                     href={isOfdAttachment(selectedFile) 
                                         ? `/system/preview/ofd/${selectedFile.id}?fileName=${encodeURIComponent(selectedFile.fileName)}&sourceType=${sourceType || ''}`
-                                        : `${getPreviewUrl(selectedFile)}?access_token=${token || ''}`
+                                        : `${getPreviewUrl(selectedFile, true)}?access_token=${token || ''}`
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -353,7 +355,7 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                     <ExternalLink size={16} />
                                 </a>
                                 <a
-                                    href={`${getPreviewUrl(selectedFile)}?access_token=${token || ''}`}
+                                    href={`${getPreviewUrl(selectedFile, true)}?access_token=${token || ''}`}
                                     download={selectedFile.fileName}
                                     className="p-1.5 hover:bg-white rounded text-slate-500 hover:text-primary-600 transition-colors"
                                     title="下载"
@@ -380,18 +382,18 @@ export const EvidencePreview: React.FC<EvidencePreviewProps> = ({ voucherId, hig
                                     fileId={selectedFile.id}
                                     fileName={selectedFile.fileName}
                                     sourceType={sourceType}
-                                    originalDownloadUrl={getPreviewUrl(selectedFile)}
+                                    originalDownloadUrl={getPreviewUrl(selectedFile, true)}
                                     className="h-full"
                                 />
                             ) : selectedFile.fileType?.toLowerCase() === 'pdf' ? (
                                 <iframe
-                                    src={`${getPreviewUrl(selectedFile)}?access_token=${token || ''}`}
+                                    src={`${getPreviewUrl(selectedFile, true)}?access_token=${token || ''}`}
                                     className="w-full h-full border-0 bg-white"
                                     title="PDF Preview"
                                 />
                             ) : (
                                 <FileViewer
-                                    fileUrl={getPreviewUrl(selectedFile)}
+                                    fileUrl={getPreviewUrl(selectedFile, true)}
                                     fileType={selectedFile.fileType?.toLowerCase()}
                                     fileName={selectedFile.fileName}
                                     className="h-full"

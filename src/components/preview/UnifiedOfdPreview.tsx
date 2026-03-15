@@ -112,7 +112,7 @@ export function UnifiedOfdPreview({
     };
   }, [fallbackDownloadUrl, fileId, fileName]);
 
-  const effectiveDownloadUrl = resource?.originalDownloadUrl || fallbackDownloadUrl;
+  const effectiveDownloadUrl = normalizeUrl(resource?.originalDownloadUrl || fallbackDownloadUrl);
   const effectiveFileName = resource?.fileName || fileName || 'document.ofd';
 
   if (loading) {
@@ -124,6 +124,7 @@ export function UnifiedOfdPreview({
   }
 
   if (resource?.preferredMode === 'converted' && resource.convertedPreviewUrl && resource.convertedMimeType) {
+    const previewUrl = normalizeUrl(resource.convertedPreviewUrl);
     if (resource.convertedMimeType.startsWith('image/')) {
       return (
         <div className={`flex h-full flex-col bg-slate-100 ${className}`}>
@@ -139,7 +140,7 @@ export function UnifiedOfdPreview({
           </div>
           <div className="flex flex-1 items-center justify-center overflow-auto p-4">
             <img
-              src={resource.convertedPreviewUrl}
+              src={previewUrl}
               alt={effectiveFileName}
               className="max-h-full max-w-full rounded-lg bg-white shadow-sm"
             />
@@ -161,7 +162,7 @@ export function UnifiedOfdPreview({
           </a>
         </div>
         <iframe
-          src={resource.convertedPreviewUrl}
+          src={previewUrl}
           className="h-full w-full border-0 bg-white"
           title="OFD Converted Preview"
         />
@@ -205,6 +206,17 @@ function extractStatusCode(error: unknown): number | null {
   }
   const maybeResponse = error as { response?: { status?: number } };
   return typeof maybeResponse.response?.status === 'number' ? maybeResponse.response.status : null;
+}
+
+/**
+ * 确保 URL 不会因为 axios 的 baseURL 导致重复前缀
+ */
+function normalizeUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith('/api/api/')) {
+    return url.replace('/api/api/', '/api/');
+  }
+  return url;
 }
 
 export default UnifiedOfdPreview;
