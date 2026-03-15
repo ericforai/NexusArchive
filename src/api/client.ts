@@ -17,11 +17,21 @@ export const client = axios.create({
 // Request interceptor to add token and fonds code
 client.interceptors.request.use(
     (config) => {
-        // Fix double /api prefix if it exists
-        if (config.url?.startsWith('/api/api/')) {
-            config.url = config.url.replace('/api/api/', '/api/');
-        } else if (config.url?.startsWith('api/api/')) {
-            config.url = config.url.replace('api/api/', 'api/');
+        // [OFD-FIX-FINAL-V4] 彻底防御重复前缀
+        if (config.url) {
+            let cleanUrl = config.url;
+            while (cleanUrl.startsWith('/api/') || cleanUrl.startsWith('api/') || cleanUrl.startsWith('/api')) {
+                if (cleanUrl.startsWith('/api/')) cleanUrl = cleanUrl.slice(5);
+                else if (cleanUrl.startsWith('api/')) cleanUrl = cleanUrl.slice(4);
+                else if (cleanUrl.startsWith('/api')) cleanUrl = cleanUrl.slice(4);
+                else break;
+            }
+            // 确保它不以 / 开头，因为 baseURL 是 /api，Axios 会自动补全为 /api/
+            if (cleanUrl.startsWith('/')) {
+                cleanUrl = cleanUrl.slice(1);
+            }
+            config.url = cleanUrl;
+            console.log(`[OFD-FIX-FINAL-V4] Requesting: ${config.url}`);
         }
 
         try {
