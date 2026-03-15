@@ -43,19 +43,24 @@ cd ..
 
 # Frontend Build
 echo -e "${YELLOW}[Build] Building Frontend (Vite)...${NC}"
+rm -rf dist # 零号病人修复：强制清理旧构建产物
 npm install
 npm run build
 
 # Package
 echo -e "${YELLOW}[Build] Packaging artifacts...${NC}"
 PROJECT_ROOT=$(pwd)
-tar -czf nexusarchive-release.tar.gz \
-    -C "$PROJECT_ROOT/nexusarchive-java/target" nexusarchive-backend-2.0.0.jar \
-    -C "$PROJECT_ROOT/dist" . \
-    -C "$PROJECT_ROOT" deploy/nexusarchive.service deploy/nginx.conf deploy/setup_ssl.sh deploy/setup_demo_aip.sh \
-    -C "$PROJECT_ROOT/nexusarchive-java/src/main/resources/db/demo" demo_archive_features.sql \
-    -C "$PROJECT_ROOT/nexusarchive-java/src/main/resources/db" demo_aip_data.sql \
-    -C "$PROJECT_ROOT/nexusarchive-java/src/main/resources/db/migration" V3__smart_parser_tables.sql V4__fix_archive_and_audit_columns.sql V5__ingest_request_status.sql V6__add_business_modules.sql V7__add_archive_approval.sql V8__add_open_appraisal.sql V9__ensure_metadata_tables.sql V10__compliance_schema_update.sql V11__add_missing_archive_columns.sql
+# 创建临时打包目录以确保路径清晰
+mkdir -p .deploy_tmp/frontend
+cp -r dist/* .deploy_tmp/frontend/
+cp nexusarchive-java/target/nexusarchive-backend-2.0.0.jar .deploy_tmp/app.jar
+cp -r deploy/nexusarchive.service deploy/nginx.conf deploy/setup_ssl.sh deploy/setup_demo_aip.sh .deploy_tmp/
+cp nexusarchive-java/src/main/resources/db/demo/demo_archive_features.sql .deploy_tmp/
+cp nexusarchive-java/src/main/resources/db/demo_aip_data.sql .deploy_tmp/
+cp nexusarchive-java/src/main/resources/db/migration/*.sql .deploy_tmp/
+
+tar -czf nexusarchive-release.tar.gz -C .deploy_tmp .
+rm -rf .deploy_tmp
 
 # 2. Upload artifacts
 echo -e "${GREEN}[Deploy] Uploading artifacts to ${SERVER_HOST}...${NC}"
@@ -67,25 +72,17 @@ ssh ${SERVER_USER}@${SERVER_HOST} << EOF
     set -e
     cd ${REMOTE_DIR}
     
-    # Environment Check
-    if ! command -v java &> /dev/null; then
-        echo "Java not found! Please install JDK 17+."
-        exit 1
-    fi
-
     echo "[Remote] Backing up old version..."
-    if [ -d "frontend" ]; then mv frontend frontend_backup_\$(date +%s); fi
-    if [ -f "app.jar" ]; then mv app.jar app.jar_backup_\$(date +%s); fi
+    if [ -d "frontend" ]; then 
+        mv frontend "frontend_backup_\$(date +%s)"
+    fi
+    if [ -f "app.jar" ]; then 
+        mv app.jar "app.jar_backup_\$(date +%s)"
+    fi
     
     echo "[Remote] Unpacking new version..."
-    # Extract jar and config
-    # Extract jar and config
-    tar -xzf nexusarchive-release.tar.gz nexusarchive-backend-2.0.0.jar deploy/nexusarchive.service deploy/nginx.conf deploy/setup_ssl.sh deploy/setup_demo_aip.sh demo_archive_features.sql demo_aip_data.sql V3__smart_parser_tables.sql V4__fix_archive_and_audit_columns.sql V5__ingest_request_status.sql V6__add_business_modules.sql V7__add_archive_approval.sql V8__add_open_appraisal.sql V9__ensure_metadata_tables.sql V10__compliance_schema_update.sql V11__add_missing_archive_columns.sql
-    mv nexusarchive-backend-2.0.0.jar app.jar
-    
-    # Extract frontend
     mkdir -p frontend
-    tar -xzf nexusarchive-release.tar.gz -C frontend --exclude='nexusarchive-backend-2.0.0.jar' --exclude='deploy/*' --exclude='*.sql'
+    tar -xzf nexusarchive-release.tar.gz
     
     echo "[Remote] Cleaning up..."
     rm nexusarchive-release.tar.gz
