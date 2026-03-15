@@ -221,17 +221,22 @@ function normalizeTagUrl(url: string): string {
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   
   let result = url;
-  // 移除重复的前缀
-  if (result.startsWith('/api/api/')) {
-    result = result.replace('/api/api/', '/api/');
+
+  // 1. 先彻底清理所有重复的 /api/ /api api/ api 等
+  while (result.startsWith('/api/') || result.startsWith('api/') || result.startsWith('/api')) {
+    if (result.startsWith('/api/')) result = result.slice(5);
+    else if (result.startsWith('api/')) result = result.slice(4);
+    else if (result.startsWith('/api')) result = result.slice(4);
+    else break;
   }
   
-  // 确保以 /api/ 开头
-  if (!result.startsWith('/api/')) {
-    result = result.startsWith('/') ? `/api${result}` : `/api/${result}`;
+  // 2. 确保它以 / 开头（如果是相对路径）
+  if (!result.startsWith('/')) {
+    result = '/' + result;
   }
-  
-  return result;
+
+  // 3. 最终补偿单一的 /api 前缀
+  return `/api${result}`;
 }
 
 export default UnifiedOfdPreview;

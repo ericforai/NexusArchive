@@ -204,24 +204,19 @@ function normalizeClientUrl(fileUrl: string): string {
   
   let url = fileUrl;
 
-  // 针对服务器端出现的重复前缀进行硬修复
+  // 1. 硬修复重复的 /api/api
   if (url.includes('/api/api/')) {
     url = url.replace('/api/api/', '/api/');
   }
 
-  // 如果以 /api/ 开头，移除它及其后的斜杠，使之相对于 client 的 baseURL (/api)
+  // 2. 移除所有可能的 /api/ 或 api/ 前缀
+  // 因为 axios client 已经配置了 baseURL: '/api'
   if (url.startsWith('/api/')) {
-    return url.slice(5);
-  }
-  // 如果以 api/ 开头
-  if (url.startsWith('api/')) {
-    return url.slice(4);
-  }
-  
-  // 如果已经是以 / 开头的路径且不含 api，axios 可能会根据配置处理
-  // 为保险起见，如果它以 / 开头，我们也移除它，使之相对于 baseURL
-  if (url.startsWith('/')) {
-    return url.slice(1);
+    url = url.slice(5);
+  } else if (url.startsWith('api/')) {
+    url = url.slice(4);
+  } else if (url.startsWith('/')) {
+    url = url.slice(1);
   }
   
   return url;
