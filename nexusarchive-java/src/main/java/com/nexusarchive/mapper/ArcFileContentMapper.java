@@ -18,9 +18,9 @@ public interface ArcFileContentMapper extends BaseMapper<ArcFileContent> {
     @Select("SELECT COALESCE(SUM(file_size), 0) FROM arc_file_content")
     Long sumFileSize();
 
-    @Select("SELECT ovf.id, ovf.file_name, ovf.storage_path, ovf.file_size, ovf.file_type, aa.attachment_type as voucher_type " +
+    @Select("SELECT afc.id, afc.file_name, afc.storage_path, afc.file_size, afc.file_type, aa.attachment_type as voucher_type, afc.fonds_code " +
             "FROM acc_archive_attachment aa " +
-            "JOIN arc_original_voucher_file ovf ON aa.file_id = ovf.id " +
-            "WHERE aa.archive_id = #{archiveId} AND ovf.deleted = 0")
+            "JOIN arc_file_content afc ON aa.file_id = afc.id " +
+            "WHERE aa.archive_id = #{archiveId}")
     List<ArcFileContent> selectAttachmentsByArchiveId(@Param("archiveId") String archiveId);
 }

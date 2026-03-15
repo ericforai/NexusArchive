@@ -42,6 +42,19 @@ public class ArchiveFileContentService {
                 .last("LIMIT 1")
         );
 
+        if (content != null) {
+            // 数据范围过滤：检查全宗权限
+            String currentFonds = FondsContext.getCurrentFondsNo();
+            if (currentFonds != null && !currentFonds.isEmpty()) {
+                String fondsCode = content.getFondsCode();
+                if (fondsCode != null && !currentFonds.equals(fondsCode)) {
+                    log.warn("全宗权限不匹配: itemId={}, fondsCode={}, currentFonds={}",
+                        itemId, fondsCode, currentFonds);
+                    return null;
+                }
+            }
+        }
+
         // 审计日志
         auditLogService.log(
             operatorId != null ? operatorId : "SYSTEM",
