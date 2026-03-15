@@ -63,11 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   const currentFondsCode = currentFonds?.fondsCode;
 
   const loadData = useCallback(async () => {
-    if (!hasHydrated) {
-      console.log('[Dashboard] Skipping loadData - hasHydrated:', hasHydrated);
-      return;
-    }
-    console.log('[Dashboard] Loading data, hasHydrated:', hasHydrated);
+    if (!hasHydrated) return;
     setLoading(true);
     setError(null);
     try {
@@ -76,7 +72,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         statsApi.getTrend(),
         notificationsApi.list()
       ]);
-      console.log('[Dashboard] API responses:', { statsRes, trendRes, notifRes });
 
       const errors: string[] = [];
 
@@ -105,9 +100,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         setError(errors.join(' / '));
       }
     } catch (e: any) {
-      console.error('[Dashboard] loadData error:', e);
-      console.error('[Dashboard] error response:', e?.response);
-      console.error('[Dashboard] error data:', e?.response?.data);
       setError(e?.response?.data?.message || '加载仪表盘数据失败');
     } finally {
       setLoading(false);

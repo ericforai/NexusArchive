@@ -278,9 +278,9 @@ public class ArchiveResponse {
 
         // 计算到期日期
         if (entity.getRetentionStartDate() != null && entity.getRetentionPeriod() != null) {
-            if ("10Y".equals(entity.getRetentionPeriod())) {
+            if (com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10.equals(entity.getRetentionPeriod())) {
                 response.setExpiredDate(entity.getRetentionStartDate().plusYears(10));
-            } else if ("30Y".equals(entity.getRetentionPeriod())) {
+            } else if (com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30.equals(entity.getRetentionPeriod())) {
                 response.setExpiredDate(entity.getRetentionStartDate().plusYears(30));
             }
         }

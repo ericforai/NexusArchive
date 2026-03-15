@@ -47,7 +47,7 @@ public class AutoAssociationService implements IAutoAssociationService {
         log.info("Starting nightly auto-association job...");
         // 获取所有未归档/草稿状态的凭证
         List<Archive> vouchers = archiveMapper.selectList(new LambdaQueryWrapper<Archive>()
-                .eq(Archive::getCategoryCode, "AC01")
+                .eq(Archive::getCategoryCode, com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER)
                 .ne(Archive::getStatus, "ASSOCIATED")); // 假设 ASSOCIATED 是一个终态或中间态
 
         for (Archive voucher : vouchers) {
@@ -62,13 +62,13 @@ public class AutoAssociationService implements IAutoAssociationService {
     @Transactional
     public void triggerAssociation(String voucherId) {
         Archive voucher = archiveMapper.selectById(voucherId);
-        if (voucher == null || !"AC01".equals(voucher.getCategoryCode())) {
+        if (voucher == null || !com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER.equals(voucher.getCategoryCode())) {
             return;
         }
 
         // 获取同全宗、同年度的候选文件 (AC04 - 其他/发票)
         List<Archive> candidates = archiveMapper.selectList(new LambdaQueryWrapper<Archive>()
-                .eq(Archive::getCategoryCode, "AC04")
+                .eq(Archive::getCategoryCode, com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS)
                 .eq(Archive::getFondsNo, voucher.getFondsNo())
                 .eq(Archive::getFiscalYear, voucher.getFiscalYear()));
 

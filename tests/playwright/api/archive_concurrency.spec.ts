@@ -3,17 +3,20 @@
 // Pos: Playwright 测试
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import { test, expect } from '@playwright/test';
+import { test, expect, APIRequestContext } from '@playwright/test';
 import { createAuthContext, AuthContext } from '../utils/auth';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('归档并发与存储保护', () => {
-  let authCtx: AuthContext['context'] | null = null;
+  let authCtx: APIRequestContext | null = null;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ playwright }) => {
     const auth = await createAuthContext(BASE_URL);
     authCtx = auth?.context ?? null;
+  });
+
+  test.beforeEach(({}, testInfo) => {
     test.skip(!authCtx, '登录失败，跳过归档用例');
   });
 

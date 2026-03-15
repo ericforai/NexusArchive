@@ -18,6 +18,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.service.FourNatureCheckService;
 import com.nexusarchive.service.FourNatureCoreService;
 import com.nexusarchive.util.AmountValidator;
+import com.nexusarchive.common.constants.ArchiveConstants;
 import com.nexusarchive.common.constants.FourNatureConstants;
 import com.nexusarchive.util.FileHashUtil;
 import lombok.RequiredArgsConstructor;
@@ -130,7 +131,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
      * 【性能优化】批量查询避免 N+1 问题：收集所有哈希后单次 IN 查询
      */
     private CheckItem checkDeduplication(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
-        CheckItem item = CheckItem.pass("De-duplication Check", "No duplicates found");
+        CheckItem item = CheckItem.pass(FourNatureConstants.CheckType.DEDUPLICATION, FourNatureConstants.SuccessMessage.DEDUPLICATION_PASSED);
 
         if (sip.getAttachments() == null) return item;
 
@@ -143,7 +144,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
 
             try (ByteArrayInputStream bais = new ByteArrayInputStream(content)) {
                 String algo = attachment.getHashAlgorithm();
-                if (algo == null || algo.isEmpty()) algo = "SM3";
+                if (algo == null || algo.isEmpty()) algo = com.nexusarchive.common.constants.ArchiveConstants.Retention.PERMANENT.equals("PERMANENT") ? "SM3" : "SHA256"; // Fallback to SM3
 
                 String hash;
                 if ("SM3".equalsIgnoreCase(algo)) {
@@ -164,8 +165,8 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
 
         // ALLOW-QUERYWRAPPER: 动态字段场景需要使用字符串方式构建 IN 查询
         QueryWrapper<ArcFileContent> qw = new QueryWrapper<>();
-        qw.select("file_hash", "original_hash");  // 只查询哈希字段，减少数据传输
-        qw.and(w -> w.in("file_hash", uniqueHashes).or().in("original_hash", uniqueHashes));
+        qw.select(ArchiveConstants.Fields.FILE_HASH, ArchiveConstants.Fields.ORIGINAL_HASH);  // 只查询哈希字段，减少数据传输
+        qw.and(w -> w.in(ArchiveConstants.Fields.FILE_HASH, uniqueHashes).or().in(ArchiveConstants.Fields.ORIGINAL_HASH, uniqueHashes));
 
         // 使用 selectMaps 只获取哈希值，避免加载完整实体
         List<java.util.Map<String, Object>> hashMaps = arcFileContentMapper.selectMaps(qw);
@@ -173,8 +174,8 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
         // 提取所有已存在的哈希值
         Set<String> existingHashes = hashMaps.stream()
             .flatMap(m -> Stream.of(
-                (String) m.get("file_hash"),
-                (String) m.get("original_hash")
+                (String) m.get(ArchiveConstants.Fields.FILE_HASH),
+                (String) m.get(ArchiveConstants.Fields.ORIGINAL_HASH)
             ))
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
@@ -184,7 +185,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
             String fileName = entry.getKey();
             String hash = entry.getValue();
             if (existingHashes.contains(hash)) {
-                item.addError(String.format("Duplicate file detected: %s (Hash: %s already exists)", fileName, hash));
+                item.addError(String.format(FourNatureConstants.Prompt.DUPLICATE_FILE, fileName, hash));
             }
         }
 
@@ -200,7 +201,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
         for (AttachmentDto attachment : sip.getAttachments()) {
             byte[] content = fileStreams.get(attachment.getFileName());
             if (content == null) {
-                combinedItem.addError("Missing content: " + attachment.getFileName());
+                combinedItem.addError(FourNatureConstants.Prompt.MISSING_CONTENT + attachment.getFileName());
                 continue;
             }
             
@@ -224,12 +225,12 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
     
     // ... Integrity uses SIP structure, stays largely same but cleaned up ...
     private CheckItem checkIntegrity(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
-        CheckItem item = CheckItem.pass("Integrity Check", "Metadata and structure valid");
+        CheckItem item = CheckItem.pass(FourNatureConstants.CheckType.INTEGRITY, FourNatureConstants.SuccessMessage.INTEGRITY_PASSED);
         VoucherHeadDto header = sip.getHeader();
         
-        if (header.getFondsCode() == null) item.addError("Missing Fonds Code");
-        if (header.getVoucherNumber() == null) item.addError("Missing Voucher Number");
-        if (header.getAccountPeriod() == null) item.addError("Missing Account Period");
+        if (header.getFondsCode() == null) item.addError(FourNatureConstants.Prompt.MISSING_FONDS_CODE);
+        if (header.getVoucherNumber() == null) item.addError(FourNatureConstants.Prompt.MISSING_VOUCHER_NUMBER);
+        if (header.getAccountPeriod() == null) item.addError(FourNatureConstants.Prompt.MISSING_ACCOUNT_PERIOD);
         
         if (header.getTotalAmount() != null) {
             AmountValidator.ValidationResult result = amountValidator.validateAmount(header.getTotalAmount());
@@ -275,7 +276,8 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
     }
     
     private CheckItem checkSafety(AccountingSipDto sip, Map<String, byte[]> fileStreams) {
-        CheckItem combinedItem = CheckItem.pass("Safety Check", "No threats");
+        CheckItem combinedItem = CheckItem.pass(FourNatureConstants.CheckType.SAFETY, FourNatureConstants.SuccessMessage.SAFETY_PASSED);
+        List<String> details = new ArrayList<>();
         
         if (sip.getAttachments() == null) return combinedItem;
 
@@ -289,13 +291,22 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     attachment.getFileName()
                 );
                 
-                if (singleResult.getStatus() == OverallStatus.FAIL || singleResult.getStatus() == OverallStatus.WARNING) {
-                    combinedItem.setStatus(singleResult.getStatus());
-                    combinedItem.addError(singleResult.getMessage());
+                if (singleResult.getStatus() == OverallStatus.FAIL) {
+                    combinedItem.setStatus(OverallStatus.FAIL);
+                    combinedItem.getErrors().add(attachment.getFileName() + ": " + singleResult.getMessage());
+                } else if (singleResult.getStatus() == OverallStatus.WARNING) {
+                    if (combinedItem.getStatus() != OverallStatus.FAIL) {
+                        combinedItem.setStatus(OverallStatus.WARNING);
+                    }
+                    details.add(attachment.getFileName() + ": " + singleResult.getMessage());
                 }
             } catch (Exception e) {
                 log.warn("四性检测-安全性检查失败: {}", e.getMessage());
             }
+        }
+        
+        if (!details.isEmpty()) {
+            combinedItem.setMessage(String.join("; ", details));
         }
         
         return combinedItem;
@@ -377,7 +388,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
      * Perform integrity health check on archive metadata
      */
     private CheckItem performIntegrityHealthCheck(com.nexusarchive.entity.Archive archive, List<ArcFileContent> files) {
-        CheckItem integrity = CheckItem.pass("Integrity Check", "Metadata complete");
+        CheckItem integrity = CheckItem.pass(FourNatureConstants.CheckType.INTEGRITY, "Metadata complete");
         if (archive.getUniqueBizId() == null) integrity.addError("Missing Unique Biz ID");
         if (archive.getAmount() == null) integrity.addError("Missing Amount");
         if (files.isEmpty()) integrity.addError("No files associated");
@@ -422,7 +433,7 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
      * Perform safety health check on files
      */
     private CheckItem performSafetyHealthCheck(List<ArcFileContent> files) {
-        CheckItem safety = CheckItem.pass("Safety Check", "Safe");
+        CheckItem safety = CheckItem.pass(FourNatureConstants.CheckType.SAFETY, "Safe");
 
         for (ArcFileContent file : files) {
             CheckItem single = checkFileSafety(file);

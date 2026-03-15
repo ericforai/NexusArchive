@@ -27,10 +27,11 @@ public class ComplianceCheckHelper {
     public void checkRetention(Archive a, ComplianceResult r) {
         String p = a.getRetentionPeriod();
         String c = a.getCategoryCode();
-        if ("AC01".equals(c) || "AC02".equals(c)) {
-            if (!"30".equals(p)) r.addViolation("会计凭证/账簿保存期限应至少30年");
-        } else if ("AC03".equals(c)) {
-            if (!"永久".equals(p)) r.addViolation("财务报告应永久保存");
+        if (com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER.equals(c) || 
+            com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK.equals(c)) {
+            if (!com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30.equals(p)) r.addViolation("会计凭证/账簿保存期限应至少30年");
+        } else if (com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT.equals(c)) {
+            if (!com.nexusarchive.common.constants.ArchiveConstants.Retention.PERMANENT.equals(p)) r.addViolation("财务报告应永久保存");
         }
     }
 
@@ -63,6 +64,11 @@ public class ComplianceCheckHelper {
     }
 
     public boolean isValidCategory(String c) {
-        return List.of("AC01", "AC02", "AC03", "AC04", "AC05").contains(c);
+        return List.of(
+            com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER,
+            com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK,
+            com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT,
+            com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS
+        ).contains(c);
     }
 }

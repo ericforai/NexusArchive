@@ -73,8 +73,8 @@ public class CollectionBatchHelper {
             .fileSize(bf.getFileSizeBytes()).fileHash(bf.getFileHash())
             .hashAlgorithm(bf.getHashAlgorithm()).storagePath(storagePath)
             .fiscalYear(b.getFiscalYear()).voucherType(b.getArchivalCategory())
-            .fondsCode(b.getFondsCode()).sourceSystem("WEB上传")
-            .preArchiveStatus("PENDING_CHECK").batchId(null).createdTime(LocalDateTime.now())
+            .fondsCode(b.getFondsCode()).sourceSystem(com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD)
+            .preArchiveStatus(com.nexusarchive.common.constants.StatusConstants.PreArchive.PENDING_CHECK).batchId(null).createdTime(LocalDateTime.now())
             .build();
     }
 
@@ -99,7 +99,7 @@ public class CollectionBatchHelper {
             .batchNo(batchNo).batchName(req.getBatchName())
             .fondsId(fondsId).fondsCode(currentFonds)
             .fiscalYear(req.getFiscalYear()).fiscalPeriod(req.getFiscalPeriod())
-            .archivalCategory(req.getArchivalCategory()).sourceChannel("WEB上传")
+            .archivalCategory(req.getArchivalCategory()).sourceChannel(com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD)
             .status(CollectionBatch.STATUS_UPLOADING).totalFiles(req.getTotalFiles())
             .uploadedFiles(0).failedFiles(0).totalSizeBytes(0L)
             .createdBy(userId).createdTime(LocalDateTime.now())

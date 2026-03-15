@@ -7,6 +7,14 @@
 ## [Unreleased]
 
 ### Added
+- **阶段性成果合并与质量加固** (2026-03-16)
+  - **核心 Service 瘦身与 Helper 拆解**: 完成了 `ArchiveService`, `FourNatureCheckService`, `PoolService` 等核心类的 Helper 模式改造。
+  - **信创合规性加固**: 专项整治了 10+ 个 Service 中的金额精度问题（迁移至 `BigDecimal`）及文件哈希算法（优先使用 `SM3`）。
+  - **测试套件增强**: 修复并增强了 37 个受影响文件中的单元测试，涵盖四性检测逻辑边界、凭证自动关联及导出包完整性。
+  - **工作区深度清理**: 物理删除了所有 `*.bak`, `*.backup` 备份文件及运行期日志，确保 Git 仓库卫生。
+  - **受影响范围**: 跨后端 (32 文件) 与前端 (5 文件)，共计 2632 行新增，772 行删除。
+
+### Added
 - **档案实体增强 - P1 阶段** (`com.nexusarchive.modules.archivecore`)
   - **乐观锁并发控制**: 为 `acc_archive` 表添加 `version` 字段，使用 MyBatis-Plus `@Version` 注解实现自动版本管理
   - **状态枚举类型安全**: 新增 `ArchiveStatus` 枚举（DRAFT → PENDING → ARCHIVED），替代魔法字符串

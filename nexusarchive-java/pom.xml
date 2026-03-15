@@ -394,7 +394,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <!-- 保留 JaCoCo agent 的 argLine 设置 -->
+                    <argLine>${argLine} -XX:+EnableDynamicAgentLoading</argLine>
                     <!-- Architecture Defense: 架构测试配置 + 单元测试 -->
                     <groups>architecture,unit</groups>
                 </configuration>
@@ -420,6 +421,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <mainClass>com.nexusarchive.NexusArchiveApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

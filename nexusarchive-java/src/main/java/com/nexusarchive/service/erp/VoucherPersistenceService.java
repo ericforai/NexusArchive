@@ -53,9 +53,6 @@ public class VoucherPersistenceService {
     private String archiveRootPath;
 
     private static final String DEFAULT_FONDS_CODE = "DEFAULT";
-    private static final String CATEGORY_CODE_VOUCHER = "AC01";
-    private static final String RETENTION_PERIOD_30Y = "30Y";
-    private static final String STATUS_DRAFT = "draft";
     private static final String PARSER_TYPE_ERP_SYNC = "ERP_SYNC";
 
     /**
@@ -231,7 +228,7 @@ public class VoucherPersistenceService {
         archive.setSummary(contentSummary);
 
         // 分类号
-        archive.setCategoryCode(CATEGORY_CODE_VOUCHER);
+        archive.setCategoryCode(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER);
 
         // 年度
         String fiscalYear = fileContent.getFiscalYear();
@@ -248,7 +245,7 @@ public class VoucherPersistenceService {
             archive.setFiscalPeriod(dto.getAccountPeriod());
         }
 
-        archive.setRetentionPeriod(RETENTION_PERIOD_30Y);
+        archive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30);
         archive.setFondsNo(fileContent.getFondsCode() != null ? fileContent.getFondsCode() : DEFAULT_FONDS_CODE);
         archive.setOrgName(sourceSystem);
 
@@ -258,7 +255,7 @@ public class VoucherPersistenceService {
 
         archive.setDocDate(dto.getVoucherDate() != null ? dto.getVoucherDate() : LocalDate.now());
         archive.setCreator(dto.getCreator());
-        archive.setStatus(STATUS_DRAFT);
+        archive.setStatus(com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT);
         archive.setUniqueBizId(sourceSystem + "_" + dto.getVoucherId() + "_" + fileContent.getFondsCode());
 
         return archive;

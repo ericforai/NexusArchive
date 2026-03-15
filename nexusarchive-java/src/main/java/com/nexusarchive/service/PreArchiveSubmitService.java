@@ -134,8 +134,8 @@ public class PreArchiveSubmitService {
                     .set(Archive::getArchiveCode, newArchiveCode)
                     .set(Archive::getTitle, properTitle)
                     .set(Archive::getSummary, file.getFileName())
-                    .set(Archive::getStatus, "PENDING")
-                    .set(Archive::getRetentionPeriod, "30Y")
+                    .set(Archive::getStatus, com.nexusarchive.common.constants.StatusConstants.Archive.PENDING)
+                    .set(Archive::getRetentionPeriod, com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30)
                     .set(Archive::getLastModifiedTime, LocalDateTime.now());
             if (file.getFiscalYear() != null) {
                 updateWrapper.set(Archive::getFiscalYear, file.getFiscalYear());
@@ -215,14 +215,14 @@ public class PreArchiveSubmitService {
             throw new RuntimeException("档案不存在: " + archiveId);
         }
 
-        if ("archived".equalsIgnoreCase(archive.getStatus())) {
+        if (com.nexusarchive.common.constants.StatusConstants.Archive.ARCHIVED.equalsIgnoreCase(archive.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "归档已完成或状态不允许重复完成");
         }
 
         // 防重锁：仅允许非 archived 状态转 archived（统一小写）
         LambdaUpdateWrapper<Archive> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Archive::getId, archiveId)
-                .set(Archive::getStatus, "archived");
+                .set(Archive::getStatus, com.nexusarchive.common.constants.StatusConstants.Archive.ARCHIVED);
         int updated = archiveMapper.update(null, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "归档已完成或状态不允许重复完成");
@@ -286,10 +286,10 @@ public class PreArchiveSubmitService {
         archive.setStatus(OperationResult.PENDING); // 待审批
 
         // 设置分类（默认为会计凭证）
-        archive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : "AC01");
+        archive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER);
 
         // 设置保管期限（默认30年）
-        archive.setRetentionPeriod("30Y");
+        archive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30);
 
         // 设置全宗号
         archive.setFondsNo(file.getFondsCode() != null ? file.getFondsCode() : "DEFAULT");
@@ -324,8 +324,8 @@ public class PreArchiveSubmitService {
         Archive tempArchive = new Archive();
         tempArchive.setFondsNo(file.getFondsCode() != null ? file.getFondsCode() : "DEFAULT");
         tempArchive.setFiscalYear(file.getFiscalYear() != null ? file.getFiscalYear() : String.valueOf(LocalDate.now().getYear()));
-        tempArchive.setRetentionPeriod("30Y"); // 默认30年保管期限
-        tempArchive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : "AC01");
+        tempArchive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30); // 默认30年保管期限
+        tempArchive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER);
 
         return archivalCodeGeneratorStrategy.generateNextCode(tempArchive);
     }

@@ -77,15 +77,15 @@ public class PoolServiceImpl implements PoolService {
         // 记账凭证 (ERP同步)
         map.put("VOUCHER", List.of("VOUCHER"));
         // 原始凭证 (通常在单据池)
-        map.put("AC01", List.of("AC01", "ATTACHMENT"));
+        map.put(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER, List.of(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER, "ATTACHMENT"));
         // 会计账簿
-        map.put("AC02", List.of("AC02"));
+        map.put(com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK, List.of(com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK));
         // 财务报告
-        map.put("AC03", List.of("AC03", "REPORT"));
+        map.put(com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT, List.of(com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT, "REPORT"));
         // 其他资料 (包含未分类的 NULL 值) -> 注意: NULL 需要特殊处理
-        map.put("AC04", List.of("AC04", "OTHER"));
+        map.put(com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS, List.of(com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS, "OTHER"));
         // 兼容前端传 OTHER 的情况
-        map.put("OTHER", List.of("AC04", "OTHER"));
+        map.put("OTHER", List.of(com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS, "OTHER"));
         CATEGORY_TYPE_MAP = Map.copyOf(map);
     }
 
@@ -131,7 +131,7 @@ public class PoolServiceImpl implements PoolService {
         LambdaQueryWrapper<ArcFileContent> contentQuery = new LambdaQueryWrapper<>();
         
         // 排除已归档
-        contentQuery.ne(ArcFileContent::getPreArchiveStatus, "COMPLETED");
+        contentQuery.ne(ArcFileContent::getPreArchiveStatus, com.nexusarchive.common.constants.StatusConstants.PreArchive.COMPLETED);
         
         // 如果有元数据过滤，则限制 ID 范围
         if (!metaMap.isEmpty()) {
@@ -191,7 +191,7 @@ public class PoolServiceImpl implements PoolService {
 
         String source = fileContent.getSourceSystem();
         if (source == null || source.isEmpty()) {
-            source = "Web上传";
+            source = com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD;
         }
 
         return PoolItemDto.builder()
@@ -204,7 +204,7 @@ public class PoolServiceImpl implements PoolService {
                 .voucherType(fileContent.getVoucherType())
                 .amount(amountStr)
                 .date(fileContent.getCreatedTime() != null ? fileContent.getCreatedTime().format(FORMATTER) : "-")
-                .status(fileContent.getPreArchiveStatus() != null ? fileContent.getPreArchiveStatus() : "PENDING_CHECK")
+                .status(fileContent.getPreArchiveStatus() != null ? fileContent.getPreArchiveStatus() : com.nexusarchive.common.constants.StatusConstants.PreArchive.PENDING_CHECK)
                 .sourceSystem(fileContent.getSourceSystem())
                 .fileName(fileContent.getFileName())
                 .summary(fileContent.getSummary())
@@ -312,7 +312,7 @@ public class PoolServiceImpl implements PoolService {
         if (category != null && !category.isBlank() && !"null".equals(category)) {
             List<String> types = new ArrayList<>(CATEGORY_TYPE_MAP.getOrDefault(category, List.of(category)));
             // VOUCHER、AC04、OTHER、AC03 门类包含 null 值（兼容未设置门类的旧数据）
-            boolean includeNull = "VOUCHER".equals(category) || "AC04".equals(category) || "OTHER".equals(category) || "AC03".equals(category);
+            boolean includeNull = "VOUCHER".equals(category) || com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS.equals(category) || "OTHER".equals(category) || com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT.equals(category);
 
             queryWrapper.and(w -> {
                 if (includeNull) {
@@ -349,7 +349,7 @@ public class PoolServiceImpl implements PoolService {
         fileContent.setPreArchiveStatus(status);
 
         // 记录状态变更时间
-        if ("COMPLETED".equals(status)) {
+        if (com.nexusarchive.common.constants.StatusConstants.PreArchive.COMPLETED.equals(status)) {
             fileContent.setArchivedTime(LocalDateTime.now());
         }
 
@@ -362,7 +362,7 @@ public class PoolServiceImpl implements PoolService {
         LambdaQueryWrapper<ArcFileContent> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.likeRight(ArcFileContent::getArchivalCode, "TEMP-POOL-")
                 .and(w -> w.isNull(ArcFileContent::getPreArchiveStatus)
-                        .or().eq(ArcFileContent::getPreArchiveStatus, "PENDING_CHECK")
+                        .or().eq(ArcFileContent::getPreArchiveStatus, com.nexusarchive.common.constants.StatusConstants.PreArchive.PENDING_CHECK)
                         .or().eq(ArcFileContent::getPreArchiveStatus, "draft")
                         .or().eq(ArcFileContent::getPreArchiveStatus, "DRAFT"));
 

@@ -48,7 +48,7 @@ public class VolumeAssembler {
         // 1. 查询该期间内未组卷的凭证
         LambdaQueryWrapper<Archive> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Archive::getFiscalPeriod, fiscalPeriod)
-               .eq(Archive::getCategoryCode, "AC01") // 会计凭证
+               .eq(Archive::getCategoryCode, com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER) // 会计凭证
                .isNull(Archive::getVolumeId)
                .eq(Archive::getDeleted, 0);
 
@@ -66,7 +66,7 @@ public class VolumeAssembler {
         String month = fiscalPeriod.substring(5, 7);
 
         // 3. 生成案卷号 (格式: 全宗号-分类号-年月序号)
-        String volumeCode = VolumeUtils.generateVolumeCode(fondsNo, "AC01", fiscalPeriod);
+        String volumeCode = VolumeUtils.generateVolumeCode(fondsNo, com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER, fiscalPeriod);
 
         // 4. 生成案卷标题 (格式: 责任者+年度+月度+业务单据名称)
         String title = String.format("%s%s年%s月会计凭证",
@@ -83,10 +83,10 @@ public class VolumeAssembler {
         volume.setFondsNo(fondsNo);
         volume.setFiscalYear(fiscalYear);
         volume.setFiscalPeriod(fiscalPeriod);
-        volume.setCategoryCode("AC01");
+        volume.setCategoryCode(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER);
         volume.setFileCount(archives.size());
         volume.setRetentionPeriod(retentionPeriod);
-        volume.setStatus("draft");
+        volume.setStatus(com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT);
         volume.setCreatedTime(LocalDateTime.now());
         volume.setLastModifiedTime(LocalDateTime.now());
 

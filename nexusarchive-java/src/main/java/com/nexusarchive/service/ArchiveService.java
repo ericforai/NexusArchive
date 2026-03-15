@@ -100,7 +100,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
             // If querying an Accounting Category (AC01-AC04) and no status is specified,
             // FORCE strictly 'archived' status. Drafts/Pending items must NOT appear in the Repository.
             if ((status == null || status.isEmpty()) && isAccountingCategory(categoryCode)) {
-                wrapper.apply("LOWER(status) = {0}", "archived");
+                wrapper.apply("LOWER(status) = {0}", com.nexusarchive.common.constants.StatusConstants.Archive.ARCHIVED.toLowerCase());
             }
         }
 
@@ -118,14 +118,14 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
                 throw new BusinessException(400, "Invalid subType parameter: " + subType);
             }
 
-            if ("AC02".equals(categoryCode)) {
+            if (com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK.equals(categoryCode)) {
                 // 使用 PostgreSQL JSONB 包含操作符，参数化查询
                 wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
                         String.format("{\"bookType\":\"%s\"}", escapeJson(subType)));
-            } else if ("AC03".equals(categoryCode)) {
+            } else if (com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT.equals(categoryCode)) {
                 wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
                         String.format("{\"reportType\":\"%s\"}", escapeJson(subType)));
-            } else if ("AC04".equals(categoryCode)) {
+            } else if (com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS.equals(categoryCode)) {
                 wrapper.apply("custom_metadata::jsonb @> {0}::jsonb",
                         String.format("{\"otherType\":\"%s\"}", escapeJson(subType)));
             } else {
@@ -225,7 +225,7 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
 
         archive.setCreatedBy(userId);
         if (archive.getStatus() == null) {
-            archive.setStatus("draft");
+            archive.setStatus(com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT);
         }
 
         archive.setCreatedTime(LocalDateTime.now());
@@ -456,7 +456,10 @@ public class ArchiveService implements ArchiveReadService, ArchiveWriteService {
      * Helper to check if category is one of the standard Accounting Archive categories
      */
     private boolean isAccountingCategory(String code) {
-        return "AC01".equals(code) || "AC02".equals(code) || "AC03".equals(code) || "AC04".equals(code);
+        return com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER.equals(code) || 
+               com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK.equals(code) || 
+               com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT.equals(code) || 
+               com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS.equals(code);
     }
 
     private void applyCaseInsensitiveStatusFilter(LambdaQueryWrapper<Archive> wrapper, String status) {

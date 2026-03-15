@@ -57,7 +57,7 @@ const ComplianceReport: React.FC = () => {
     }, [loadReport]);
 
     // 日期变更时重新加载
-    const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
+    const handleDateChange = (dates: any, dateStrings: [string, string]) => {
         setDateRange(dates);
     };
 

@@ -69,9 +69,9 @@ public class YonVoucherMapper {
 
         // 基础信息
         archive.setTitle("会计凭证-" + header.getDisplayname());
-        archive.setCategoryCode("AC01"); // 会计凭证
-        archive.setStatus("draft"); // 同步后为草稿状态
-        archive.setSecurityLevel("internal");
+        archive.setCategoryCode(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER); // 会计凭证
+        archive.setStatus(com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT); // 同步后为草稿状态
+        archive.setSecurityLevel(com.nexusarchive.common.constants.ArchiveConstants.SecurityLevel.INTERNAL.toLowerCase());
 
         // 期间信息
         if (header.getPeriod() != null && header.getPeriod().length() >= 4) {
@@ -117,7 +117,7 @@ public class YonVoucherMapper {
         archive.setStatus(mapVoucherStatus(header.getVoucherstatus()));
 
         // 保管期限 (默认10年)
-        archive.setRetentionPeriod("10Y");
+        archive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10);
 
         // 序列化凭证分录到自定义元数据
         if (record.getBody() != null) {
@@ -143,8 +143,8 @@ public class YonVoucherMapper {
 
         // 基础信息
         archive.setTitle("会计凭证-" + detail.getDisplayName());
-        archive.setCategoryCode("AC01");
-        archive.setSecurityLevel("internal");
+        archive.setCategoryCode(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER);
+        archive.setSecurityLevel(com.nexusarchive.common.constants.ArchiveConstants.SecurityLevel.INTERNAL.toLowerCase());
 
         // 期间信息
         if (detail.getPeriodUnion() != null && detail.getPeriodUnion().length() >= 4) {
@@ -182,7 +182,7 @@ public class YonVoucherMapper {
         archive.setStatus(mapVoucherStatus(detail.getVoucherStatus()));
 
         // 保管期限
-        archive.setRetentionPeriod("10Y");
+        archive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10);
 
         // 序列化凭证分录到自定义元数据
         if (detail.getBodies() != null) {
@@ -202,21 +202,21 @@ public class YonVoucherMapper {
      */
     private String mapVoucherStatus(String yonStatus) {
         if (yonStatus == null) {
-            return "draft";
+            return com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT;
         }
         switch (yonStatus) {
             case "00":
             case "01":
             case "02":
-                return "draft";
+                return com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT;
             case "03":
-                return "pending"; // 已审核 -> 待归档
+                return com.nexusarchive.common.constants.StatusConstants.Archive.PENDING; // 已审核 -> 待归档
             case "04":
-                return "archived"; // 已记账 -> 可归档
+                return com.nexusarchive.common.constants.StatusConstants.Archive.ARCHIVED; // 已记账 -> 可归档
             case "05":
-                return "deleted"; // 作废
+                return com.nexusarchive.common.constants.StatusConstants.Archive.CANCELLED; // 作废
             default:
-                return "draft";
+                return com.nexusarchive.common.constants.StatusConstants.Archive.DRAFT;
         }
     }
 
@@ -275,7 +275,7 @@ public class YonVoucherMapper {
                 .businessDocNo(businessDocNo)
                 .erpVoucherNo(displayName) // 用户可读的凭证号
                 .fiscalYear(period.length() >= 4 ? period.substring(0, 4) : null)
-                .voucherType("AC01")
+                .voucherType(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER)
                 .creator(detail.getMakerObj() != null ? detail.getMakerObj().getName() : null)
                 .fondsCode(fondsCode)
                 .createdTime(LocalDateTime.now())
@@ -353,7 +353,7 @@ public class YonVoucherMapper {
                 .businessDocNo(businessDocNo)
                 .erpVoucherNo(displayName) // 用户可读的凭证号
                 .fiscalYear(period.length() >= 4 ? period.substring(0, 4) : null)
-                .voucherType("AC01")
+                .voucherType(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER)
                 .creator(header.getMaker() != null ? header.getMaker().getName() : null)
                 .fondsCode(fondsCode)
                 .createdTime(LocalDateTime.now())

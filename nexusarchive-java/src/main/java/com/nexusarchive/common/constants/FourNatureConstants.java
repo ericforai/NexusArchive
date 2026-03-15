@@ -23,6 +23,9 @@ public final class FourNatureConstants {
      * 检测类型名称
      */
     public static final class CheckType {
+        /** 去重检测 */
+        public static final String DEDUPLICATION = "De-duplication Check";
+
         /** 真实性检测 */
         public static final String AUTHENTICITY = "Authenticity Check";
 
@@ -46,8 +49,14 @@ public final class FourNatureConstants {
         /** 真实性检测通过 - 所有文件已验证 */
         public static final String AUTHENTICITY_PASSED = "All files verified";
 
+        /** 完整性检测通过 */
+        public static final String INTEGRITY_PASSED = "Metadata and structure valid";
+
         /** 可用性检测通过 - 所有文件可用 */
         public static final String USABILITY_PASSED = "All files usable";
+
+        /** 安全性检测通过 */
+        public static final String SAFETY_PASSED = "No threats";
 
         /** 文件可访问 */
         public static final String FILES_ACCESSIBLE = "Files accessible";
@@ -57,8 +66,22 @@ public final class FourNatureConstants {
 
         /** 哈希验证通过 */
         public static final String HASH_VERIFIED = "Hash verification passed";
+        
+        /** 去重通过 */
+        public static final String DEDUPLICATION_PASSED = "No duplicates found";
 
         private SuccessMessage() {
         }
+    }
+    
+    /**
+     * 常用提示语
+     */
+    public static final class Prompt {
+        public static final String MISSING_FONDS_CODE = "Missing Fonds Code";
+        public static final String MISSING_VOUCHER_NUMBER = "Missing Voucher Number";
+        public static final String MISSING_ACCOUNT_PERIOD = "Missing Account Period";
+        public static final String MISSING_CONTENT = "Missing content: ";
+        public static final String DUPLICATE_FILE = "Duplicate file detected: %s (Hash: %s already exists)";
     }
 }

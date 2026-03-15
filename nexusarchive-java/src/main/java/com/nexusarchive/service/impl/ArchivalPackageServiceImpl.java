@@ -71,8 +71,8 @@ public class ArchivalPackageServiceImpl implements ArchivalPackageService {
         Path targetDir = Paths.get(archiveRootPath,
                 header.getFondsCode(),
                 header.getAccountPeriod().substring(0, 4), // Year
-                "10Y", // Retention (Mock, should come from logic)
-                "AC01", // Category (Mock)
+                com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10, // Retention (Mock, should come from logic)
+                com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER, // Category (Mock)
                 archivalCode
         );
         
@@ -130,7 +130,7 @@ public class ArchivalPackageServiceImpl implements ArchivalPackageService {
                 objects.add(EepXmlStructure.DigitalObject.builder()
                         .filename(attachment.getFileName())
                         .format(attachment.getFileType())
-                        .hashAlgorithm(attachment.getHashAlgorithm() != null ? attachment.getHashAlgorithm() : "SM3")
+                        .hashAlgorithm(attachment.getHashAlgorithm() != null ? attachment.getHashAlgorithm() : com.nexusarchive.common.constants.ArchiveConstants.Algorithms.SM3)
                         .hashValue(attachment.getFileHash())
                         .sizeBytes(attachment.getFileSize())
                         .build());
@@ -200,9 +200,11 @@ public class ArchivalPackageServiceImpl implements ArchivalPackageService {
     // 辅助方法：生成档号 (应与 IngestService 保持一致或抽取为公共组件)
     private String generateArchivalCode(VoucherHeadDto header) {
         // 简单模拟
-        return String.format("%s-%s-10Y-FIN-AC01-%s", 
+        return String.format("%s-%s-%s-FIN-%s-%s", 
                 header.getFondsCode(), 
                 header.getAccountPeriod().substring(0, 4),
+                com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10,
+                com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER,
                 header.getVoucherNumber());
     }
 }

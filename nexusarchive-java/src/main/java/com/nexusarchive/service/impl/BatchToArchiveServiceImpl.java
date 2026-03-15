@@ -49,12 +49,12 @@ public class BatchToArchiveServiceImpl implements BatchToArchiveService {
     /**
      * 固定分类代码：AC04 - 其他会计资料（原始凭证附件）
      */
-    private static final String CATEGORY_ATTACHMENT = "AC04";
+    private static final String CATEGORY_ATTACHMENT = com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS;
 
     /**
      * 默认保管期限：30年
      */
-    private static final String DEFAULT_RETENTION = "30Y";
+    private static final String DEFAULT_RETENTION = com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30;
 
     /**
      * 从批次信息创建档案记录
@@ -89,15 +89,12 @@ public class BatchToArchiveServiceImpl implements BatchToArchiveService {
         archive.setFiscalYear(batch.getFiscalYear());
         archive.setFiscalPeriod(batch.getFiscalPeriod());
         archive.setTitle(fileContent.getFileName()); // 初始使用文件名，用户可修改
-        archive.setRetentionPeriod("30Y"); // 默认保管期限 (对齐 entity 校验)
+        archive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30); // 默认保管期限 (对齐 entity 校验)
         archive.setOrgName("立档单位"); // TODO: 从全宗信息获取
         archive.setStatus(PreArchiveStatus.NEEDS_ACTION.getCode());
 
         // 存储文件内容关联
         archive.setFixityValue(fileContent.getFileHash());
-        archive.setFixityAlgo(fileContent.getHashAlgorithm() != null
-            ? fileContent.getHashAlgorithm()
-            : "SHA-256");
 
         archiveMapper.insert(archive);
 
@@ -115,10 +112,10 @@ public class BatchToArchiveServiceImpl implements BatchToArchiveService {
     private String mapToCategoryCode(String archivalCategory) {
         if (archivalCategory == null) return CATEGORY_ATTACHMENT;
         return switch (archivalCategory.toUpperCase()) {
-            case "VOUCHER" -> "AC01";
-            case "LEDGER" -> "AC02";
-            case "REPORT" -> "AC03";
-            default -> "AC04";
+            case "VOUCHER" -> com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER;
+            case "LEDGER" -> com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK;
+            case "REPORT" -> com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT;
+            default -> com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS;
         };
     }
 

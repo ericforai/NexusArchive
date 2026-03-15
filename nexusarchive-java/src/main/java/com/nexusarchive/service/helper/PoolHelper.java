@@ -39,7 +39,7 @@ public class PoolHelper {
     private final JdbcTemplate jdbcTemplate;
     private final VoucherPdfGeneratorService pdfGeneratorService;
     private final PathSecurityUtils pathSecurityUtils;
-    private static final String[] SYSTEMS = {"Web上传", "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"};
+    private static final String[] SYSTEMS = {com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD, "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"};
 
     public PoolItemDetailDto mapToDetail(ArcFileContent f) {
         PoolItemDetailDto d = new PoolItemDetailDto();

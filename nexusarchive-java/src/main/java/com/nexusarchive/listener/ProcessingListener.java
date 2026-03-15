@@ -117,14 +117,14 @@ public class ProcessingListener {
             String archivalCode = archivedFiles.isEmpty() ? generateArchivalCode(header) : archivedFiles.get(0).getArchivalCode();
             archive.setArchiveCode(archivalCode);
             
-            archive.setCategoryCode("AC01"); // 会计凭证
+            archive.setCategoryCode(com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER); // 会计凭证
             archive.setTitle("会计凭证-" + header.getVoucherNumber());
             archive.setFiscalYear(header.getAccountPeriod().substring(0, 4));
             archive.setFiscalPeriod(header.getAccountPeriod());
-            archive.setRetentionPeriod("10Y"); // Mock
+            archive.setRetentionPeriod(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10); // Mock
             archive.setCreator(header.getIssuer());
-            archive.setStatus("MATCH_PENDING");
-            archive.setSecurityLevel("INTERNAL");
+            archive.setStatus(com.nexusarchive.common.constants.StatusConstants.Archive.MATCH_PENDING);
+            archive.setSecurityLevel(com.nexusarchive.common.constants.ArchiveConstants.SecurityLevel.INTERNAL);
             
             // Set uniqueBizId for idempotency
             // Format: SourceSystem_VoucherNumber
@@ -167,9 +167,11 @@ public class ProcessingListener {
     }
 
     private String generateArchivalCode(VoucherHeadDto header) {
-        return String.format("%s-%s-10Y-FIN-AC01-%s", 
+        return String.format("%s-%s-%s-FIN-%s-%s", 
                 header.getFondsCode(), 
                 header.getAccountPeriod().substring(0, 4),
+                com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10,
+                com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER,
                 header.getVoucherNumber());
     }
 }

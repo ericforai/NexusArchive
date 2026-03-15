@@ -43,9 +43,9 @@ public class ArchivalCodeGenerator {
      * 保管期限代码
      */
     public enum RetentionPeriod {
-        TEN_YEARS("10Y", "10年"),
-        THIRTY_YEARS("30Y", "30年"),
-        PERMANENT("PERM", "永久");
+        TEN_YEARS(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y10, "10年"),
+        THIRTY_YEARS(com.nexusarchive.common.constants.ArchiveConstants.Retention.Y30, "30年"),
+        PERMANENT(com.nexusarchive.common.constants.ArchiveConstants.Retention.PERMANENT, "永久");
 
         private final String code;
         private final String label;
@@ -97,7 +97,7 @@ public class ArchivalCodeGenerator {
             retention = RetentionPeriod.THIRTY_YEARS.getCode();
         }
         if (categoryCode == null || categoryCode.isEmpty()) {
-            categoryCode = "AC01";
+            categoryCode = com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER;
         }
 
         // 修复：使用数据库序列而非内存计数器，避免服务器重启后档号重复

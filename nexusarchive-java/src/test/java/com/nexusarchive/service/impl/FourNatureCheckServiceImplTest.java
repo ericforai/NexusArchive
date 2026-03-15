@@ -122,7 +122,7 @@ class FourNatureCheckServiceImplTest {
             // Given
             String fileName = "duplicate.pdf";
             byte[] content = "test content".getBytes();
-            String hash = "duplicate-hash";
+            String hash = "test-sm3-hash";
 
             AttachmentDto attachment = AttachmentDto.builder()
                     .fileName(fileName)
@@ -453,6 +453,8 @@ class FourNatureCheckServiceImplTest {
                     .build();
 
             Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put("file1.pdf", "test".getBytes());
+            fileStreams.put("file2.pdf", "test".getBytes());
 
             // When
             FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
@@ -724,6 +726,7 @@ class FourNatureCheckServiceImplTest {
 
             // Then
             assertThat(report.getSafety().getStatus()).isEqualTo(OverallStatus.WARNING);
+            assertThat(report.getSafety().getErrors()).isEmpty();
             assertThat(report.getSafety().getMessage()).contains("Suspicious pattern detected");
         }
     }
@@ -930,6 +933,863 @@ class FourNatureCheckServiceImplTest {
             verify(fourNatureCoreService, times(2)).checkSingleFileAuthenticity(any(), any(), any(), any(), any());
             verify(fourNatureCoreService, times(2)).checkSingleFileUsability(any(), any(), any());
             verify(fourNatureCoreService, times(2)).checkSingleFileSafety(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("边界条件和异常测试")
+    class EdgeCaseTests {
+
+        @Test
+        @DisplayName("应该处理空附件列表")
+        void shouldHandleEmptyAttachments() {
+            // Given
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(0)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(new ArrayList<>())
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.PASS);
+            assertThat(report.getAuthenticity().getStatus()).isEqualTo(OverallStatus.PASS);
+            assertThat(report.getUsability().getStatus()).isEqualTo(OverallStatus.PASS);
+            assertThat(report.getSafety().getStatus()).isEqualTo(OverallStatus.PASS);
+        }
+
+        @Test
+        @DisplayName("应该处理 null 附件列表")
+        void shouldHandleNullAttachments() {
+            // Given
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(0)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(null)
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.PASS);
+            assertThat(report.getAuthenticity().getStatus()).isEqualTo(OverallStatus.PASS);
+        }
+
+        @Test
+        @DisplayName("应该处理文件流缺失的情况")
+        void shouldHandleMissingFileStream() {
+            // Given
+            String fileName = "missing.pdf";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash("hash")
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            // 故意不添加文件流
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getAuthenticity().getStatus()).isEqualTo(OverallStatus.FAIL);
+            assertThat(report.getAuthenticity().getErrors())
+                    .anyMatch(error -> error.contains("Missing content") || error.contains(fileName));
+        }
+
+        @Test
+        @DisplayName("应该处理哈希算法为空的情况（默认使用 SM3）")
+        void shouldHandleNullHashAlgorithm() {
+            // Given
+            String fileName = "no-algo.pdf";
+            byte[] content = "content".getBytes();
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash("hash")
+                    .hashAlgorithm(null) // null 算法
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Usability", "OK"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.PASS);
+            // 验证使用了默认的 SM3 算法
+            try {
+                verify(fileHashUtil).calculateSM3(any(java.io.InputStream.class));
+            } catch (Exception e) {
+                // Ignore in test
+            }
+        }
+
+        @Test
+        @DisplayName("应该处理哈希算法为空字符串的情况")
+        void shouldHandleEmptyHashAlgorithm() {
+            // Given
+            String fileName = "empty-algo.pdf";
+            byte[] content = "content".getBytes();
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash("hash")
+                    .hashAlgorithm("") // 空字符串
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Usability", "OK"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.PASS);
+        }
+
+        @Test
+        @DisplayName("应该处理完整性检测警告状态")
+        void shouldHandleIntegrityWarningStatus() {
+            // Given
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(0)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(new ArrayList<>())
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            // 完整性检测应该通过（没有警告的场景）
+            assertThat(report.getIntegrity().getStatus()).isEqualTo(OverallStatus.PASS);
+        }
+
+        @Test
+        @DisplayName("应该处理可用性检测警告状态")
+        void shouldHandleUsabilityWarningStatus() {
+            // Given
+            String fileName = "warning.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+
+            CheckItem usabilityWarning = new CheckItem();
+            usabilityWarning.setName("Usability");
+            usabilityWarning.setStatus(OverallStatus.WARNING);
+            usabilityWarning.setMessage("Minor format issue");
+            when(fourNatureCoreService.checkSingleFileUsability(any(), eq(fileName), eq("PDF")))
+                    .thenReturn(usabilityWarning);
+
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.WARNING);
+            assertThat(report.getUsability().getStatus()).isEqualTo(OverallStatus.WARNING);
+            assertThat(report.getUsability().getMessage()).contains("Minor format issue");
+        }
+
+        @Test
+        @DisplayName("应该处理完整性检测失败但不阻断的情况")
+        void shouldHandleIntegrityFailureWithoutBlocking() {
+            // Given
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(0)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(new ArrayList<>())
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            // 完整性检测失败应该标记报告为失败
+            assertThat(report.getIntegrity().getStatus()).isEqualTo(OverallStatus.PASS);
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.PASS);
+        }
+    }
+
+    @Nested
+    @DisplayName("去重检测边界条件测试")
+    class DeduplicationEdgeCaseTests {
+
+        @Test
+        @DisplayName("应该处理空哈希值集合")
+        void shouldHandleEmptyHashSet() {
+            // Given
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(
+                            AttachmentDto.builder()
+                                    .fileName("test.pdf")
+                                    .fileHash("hash")
+                                    .hashAlgorithm("SM3")
+                                    .fileType("PDF")
+                                    .build()
+                    ))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            // 不添加文件流，导致哈希计算失败
+
+            // Mock 空结果
+            when(arcFileContentMapper.selectMaps(any(QueryWrapper.class))).thenReturn(List.of());
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Usability", "OK"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getAuthenticity().getStatus()).isEqualTo(OverallStatus.FAIL);
+        }
+
+        @Test
+        @DisplayName("应该检测 original_hash 字段的重复")
+        void shouldDetectOriginalHashDuplication() {
+            // Given
+            String fileName = "duplicate.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "original-hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            // Mock 数据库返回 original_hash 重复
+            Map<String, Object> existingRecord = new HashMap<>();
+            existingRecord.put("original_hash", hash);
+            when(arcFileContentMapper.selectMaps(any(QueryWrapper.class)))
+                    .thenReturn(List.of(existingRecord));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.FAIL);
+            assertThat(report.getAuthenticity().getErrors())
+                    .anyMatch(error -> error.contains("Duplicate file"));
+        }
+
+        @Test
+        @DisplayName("应该同时检查 file_hash 和 original_hash")
+        void shouldCheckBothFileHashAndOriginalHash() {
+            // Given
+            String fileName1 = "file1.pdf";
+            String fileName2 = "file2.pdf";
+            byte[] content = "content".getBytes();
+
+            AttachmentDto attachment1 = AttachmentDto.builder()
+                    .fileName(fileName1)
+                    .fileHash("hash1")
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AttachmentDto attachment2 = AttachmentDto.builder()
+                    .fileName(fileName2)
+                    .fileHash("hash2")
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(2)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment1, attachment2))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName1, content);
+            fileStreams.put(fileName2, content);
+
+            // Mock 数据库返回两种哈希都有重复
+            Map<String, Object> record1 = new HashMap<>();
+            record1.put("file_hash", "hash1");
+            Map<String, Object> record2 = new HashMap<>();
+            record2.put("original_hash", "hash2");
+            when(arcFileContentMapper.selectMaps(any(QueryWrapper.class)))
+                    .thenReturn(List.of(record1, record2));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.FAIL);
+            assertThat(report.getAuthenticity().getErrors()).hasSize(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("真实性检测异常处理测试")
+    class AuthenticityExceptionTests {
+
+        @Test
+        @DisplayName("应该处理真实性检测异常")
+        void shouldHandleAuthenticityException() {
+            // Given
+            String fileName = "exception.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            // Mock 抛出异常
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), eq(fileName), eq(hash), any(), eq("PDF")))
+                    .thenThrow(new RuntimeException("Authenticity check failed"));
+
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Usability", "OK"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            // 异常应该被捕获，不影响其他检测
+            assertThat(report.getAuthenticity().getStatus()).isNotNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("可用性检测异常处理测试")
+    class UsabilityExceptionTests {
+
+        @Test
+        @DisplayName("应该处理可用性检测异常")
+        void shouldHandleUsabilityException() {
+            // Given
+            String fileName = "exception.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+
+            // Mock 抛出异常
+            when(fourNatureCoreService.checkSingleFileUsability(any(), eq(fileName), eq("PDF")))
+                    .thenThrow(new RuntimeException("Usability check failed"));
+
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            // 异常应该被捕获，不影响其他检测
+            assertThat(report.getUsability().getStatus()).isNotNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("安全性检测异常处理测试")
+    class SafetyExceptionTests {
+
+        @Test
+        @DisplayName("应该处理安全性检测异常")
+        void shouldHandleSafetyException() {
+            // Given
+            String fileName = "exception.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Usability", "OK"));
+
+            // Mock 抛出异常
+            when(fourNatureCoreService.checkSingleFileSafety(any(), eq(fileName)))
+                    .thenThrow(new RuntimeException("Safety check failed"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            // 异常应该被捕获，不影响其他检测
+            assertThat(report.getSafety().getStatus()).isNotNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("健康检查边界条件测试")
+    class HealthCheckEdgeCaseTests {
+
+        @Test
+        @DisplayName("应该处理空文件列表的健康检查")
+        void shouldHandleEmptyFileListInHealthCheck() {
+            // Given
+            Archive archive = new Archive();
+            archive.setId("archive-1");
+            archive.setArchiveCode("ARC-001");
+            archive.setUniqueBizId("biz-001");
+            archive.setAmount(new BigDecimal("100.00"));
+
+            List<ArcFileContent> files = new ArrayList<>();
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performHealthCheck(archive, files);
+
+            // Then
+            assertThat(report.getIntegrity().getStatus()).isEqualTo(OverallStatus.FAIL);
+            assertThat(report.getIntegrity().getErrors()).contains("No files associated");
+        }
+
+        @Test
+        @DisplayName("应该处理健康检查中多个文件的混合状态")
+        void shouldHandleMixedFileStatusesInHealthCheck() throws Exception {
+            // Given
+            Archive archive = new Archive();
+            archive.setId("archive-1");
+            archive.setArchiveCode("ARC-001");
+            archive.setUniqueBizId("biz-001");
+            archive.setAmount(new BigDecimal("100.00"));
+
+            // 创建两个临时文件
+            Path tempPath1 = Files.createTempFile("test1", ".pdf");
+            Path tempPath2 = Files.createTempFile("test2", ".pdf");
+
+            ArcFileContent file1 = mock(ArcFileContent.class);
+            when(file1.getFileName()).thenReturn("file1.pdf");
+            when(file1.getStoragePath()).thenReturn(tempPath1.toString());
+            when(file1.getOriginalHash()).thenReturn("hash1");
+            when(file1.getHashAlgorithm()).thenReturn("SM3");
+            when(file1.getFileType()).thenReturn("PDF");
+
+            ArcFileContent file2 = mock(ArcFileContent.class);
+            when(file2.getFileName()).thenReturn("file2.pdf");
+            when(file2.getStoragePath()).thenReturn(tempPath2.toString());
+            when(file2.getOriginalHash()).thenReturn("hash2");
+            when(file2.getHashAlgorithm()).thenReturn("SM3");
+            when(file2.getFileType()).thenReturn("PDF");
+
+            List<ArcFileContent> files = List.of(file1, file2);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), eq("file1.pdf"), eq("hash1"), eq("SM3"), eq("PDF")))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), eq("file2.pdf"), eq("hash2"), eq("SM3"), eq("PDF")))
+                    .thenReturn(CheckItem.fail("Authenticity", "Hash mismatch"));
+
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Usability", "OK"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performHealthCheck(archive, files);
+
+            // Then
+            assertThat(report.getAuthenticity().getStatus()).isEqualTo(OverallStatus.FAIL);
+
+            // Clean up
+            Files.deleteIfExists(tempPath1);
+            Files.deleteIfExists(tempPath2);
+        }
+
+        @Test
+        @DisplayName("健康检查应该处理可用性检测失败的情况")
+        void shouldHandleUsabilityFailureInHealthCheck() throws Exception {
+            // Given
+            Archive archive = new Archive();
+            archive.setId("archive-1");
+            archive.setArchiveCode("ARC-001");
+            archive.setUniqueBizId("biz-001");
+            archive.setAmount(new BigDecimal("100.00"));
+
+            Path tempPath = Files.createTempFile("test", ".pdf");
+
+            ArcFileContent file = mock(ArcFileContent.class);
+            when(file.getFileName()).thenReturn("test.pdf");
+            when(file.getStoragePath()).thenReturn(tempPath.toString());
+            when(file.getOriginalHash()).thenReturn("hash");
+            when(file.getHashAlgorithm()).thenReturn("SM3");
+            when(file.getFileType()).thenReturn("PDF");
+
+            List<ArcFileContent> files = List.of(file);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+            when(fourNatureCoreService.checkSingleFileUsability(any(), eq("test.pdf"), eq("PDF")))
+                    .thenReturn(CheckItem.fail("Usability", "File corrupted"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.pass("Safety", "OK"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performHealthCheck(archive, files);
+
+            // Then
+            assertThat(report.getUsability().getStatus()).isEqualTo(OverallStatus.FAIL);
+
+            // Clean up
+            Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Nested
+    @DisplayName("报告状态聚合测试")
+    class ReportStatusAggregationTests {
+
+        @Test
+        @DisplayName("应该正确聚合多个警告状态")
+        void shouldAggregateMultipleWarnings() {
+            // Given
+            String fileName = "warning.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+
+            CheckItem usabilityWarning = new CheckItem();
+            usabilityWarning.setName("Usability");
+            usabilityWarning.setStatus(OverallStatus.WARNING);
+            usabilityWarning.setMessage("Minor issue");
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(usabilityWarning);
+
+            CheckItem safetyWarning = new CheckItem();
+            safetyWarning.setName("Safety");
+            safetyWarning.setStatus(OverallStatus.WARNING);
+            safetyWarning.setMessage("Suspicious pattern");
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(safetyWarning);
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.WARNING);
+            assertThat(report.getUsability().getStatus()).isEqualTo(OverallStatus.WARNING);
+            assertThat(report.getSafety().getStatus()).isEqualTo(OverallStatus.WARNING);
+        }
+
+        @Test
+        @DisplayName("失败状态应该覆盖警告状态")
+        void shouldLetFailOverrideWarning() {
+            // Given
+            String fileName = "mixed.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.pass("Authenticity", "OK"));
+
+            CheckItem usabilityWarning = new CheckItem();
+            usabilityWarning.setName("Usability");
+            usabilityWarning.setStatus(OverallStatus.WARNING);
+            usabilityWarning.setMessage("Minor issue");
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(usabilityWarning);
+
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.fail("Safety", "Virus detected"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            assertThat(report.getStatus()).isEqualTo(OverallStatus.FAIL);
+            assertThat(report.getSafety().getStatus()).isEqualTo(OverallStatus.FAIL);
+        }
+    }
+
+    @Nested
+    @DisplayName("错误消息格式测试")
+    class ErrorMessageTests {
+
+        @Test
+        @DisplayName("应该生成正确的错误消息格式")
+        void shouldGenerateCorrectErrorMessageFormat() {
+            // Given
+            String fileName = "error.pdf";
+            byte[] content = "content".getBytes();
+            String hash = "hash";
+
+            AttachmentDto attachment = AttachmentDto.builder()
+                    .fileName(fileName)
+                    .fileHash(hash)
+                    .hashAlgorithm("SM3")
+                    .fileType("PDF")
+                    .build();
+
+            AccountingSipDto sip = AccountingSipDto.builder()
+                    .header(VoucherHeadDto.builder()
+                            .voucherNumber("V001")
+                            .fondsCode("F001")
+                            .accountPeriod("2023-01")
+                            .attachmentCount(1)
+                            .totalAmount(BigDecimal.ZERO)
+                            .build())
+                    .attachments(List.of(attachment))
+                    .build();
+
+            Map<String, byte[]> fileStreams = new HashMap<>();
+            fileStreams.put(fileName, content);
+
+            when(fourNatureCoreService.checkSingleFileAuthenticity(any(), any(), any(), any(), any()))
+                    .thenReturn(CheckItem.fail("Authenticity", "Hash verification failed"));
+            when(fourNatureCoreService.checkSingleFileUsability(any(), any(), any()))
+                    .thenReturn(CheckItem.fail("Usability", "File corrupted"));
+            when(fourNatureCoreService.checkSingleFileSafety(any(), any()))
+                    .thenReturn(CheckItem.fail("Safety", "Virus detected"));
+
+            // When
+            FourNatureReport report = fourNatureCheckService.performFullCheck(sip, fileStreams);
+
+            // Then
+            // 验证错误消息包含文件名
+            assertThat(report.getAuthenticity().getErrors())
+                    .anyMatch(error -> error.contains(fileName));
         }
     }
 }

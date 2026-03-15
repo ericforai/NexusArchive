@@ -32,6 +32,11 @@ public class ArchiveStateTransitionService implements ArchiveStateTransitionFaca
     private final ArchiveReadService archiveReadService;
     private final ArchiveWriteService archiveWriteService;
 
+    // 自注入以确保内部调用通过代理，解决 S2229 事务绕过问题
+    @org.springframework.context.annotation.Lazy
+    @org.springframework.beans.factory.annotation.Autowired
+    private ArchiveStateTransitionService self;
+
     @Override
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void transitionStatus(String archiveId, ArchiveStatusChangeRequest request, String userId) {
@@ -100,8 +105,8 @@ public class ArchiveStateTransitionService implements ArchiveStateTransitionFaca
             try {
                 ArchiveStatusChangeRequest request = new ArchiveStatusChangeRequest();
                 request.setTargetStatus(targetStatus);
-                // 每个操作在独立事务中执行（REQUIRES_NEW）
-                transitionStatus(archiveId, request, userId);
+                // 使用 self 代理对象调用，确保 @Transactional(REQUIRES_NEW) 生效
+                self.transitionStatus(archiveId, request, userId);
                 successCount++;
             } catch (BusinessException e) {
                 failureCount++;

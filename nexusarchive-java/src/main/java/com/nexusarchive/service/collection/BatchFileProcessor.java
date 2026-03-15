@@ -61,7 +61,7 @@ public class BatchFileProcessor {
     public FileProcessResult processUpload(CollectionBatch batch, MultipartFile file) {
         if (file.isEmpty()) {
             return new FileProcessResult(null, file.getOriginalFilename(),
-                    "FAILED", "上传文件为空");
+                    CollectionBatchFile.STATUS_FAILED, "上传文件为空");
         }
 
         // 1. 计算文件哈希 (幂等性控制)
@@ -71,7 +71,7 @@ public class BatchFileProcessor {
         } catch (Exception e) {
             log.error("计算文件哈希失败", e);
             return new FileProcessResult(null, file.getOriginalFilename(),
-                    "FAILED", "文件处理失败: " + e.getMessage());
+                    CollectionBatchFile.STATUS_FAILED, "文件处理失败: " + e.getMessage());
         }
 
         // 2. 检查重复文件
@@ -81,7 +81,7 @@ public class BatchFileProcessor {
         if (duplicate != null) {
             log.warn("检测到重复文件: hash={}", fileHash);
             return new FileProcessResult(null, file.getOriginalFilename(),
-                    "DUPLICATE", "文件已存在 (相同哈希值)");
+                    CollectionBatchFile.STATUS_DUPLICATE, "文件已存在 (相同哈希值)");
         }
 
         // 3. 确定文件类型
@@ -142,7 +142,7 @@ public class BatchFileProcessor {
 
         log.info("文件上传成功: fileId={}, batchFileId={}", fileId, batchFile.getId());
         return new FileProcessResult(fileId, file.getOriginalFilename(),
-                "UPLOADED", null);
+                CollectionBatchFile.STATUS_UPLOADED, null);
     }
 
     /**
@@ -184,8 +184,8 @@ public class BatchFileProcessor {
                 .fiscalYear(batch.getFiscalYear())
                 .voucherType(batch.getArchivalCategory())
                 .fondsCode(batch.getFondsCode())
-                .sourceSystem("WEB上传")
-                .preArchiveStatus("PENDING_CHECK")
+                .sourceSystem(com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD)
+                .preArchiveStatus(com.nexusarchive.common.constants.StatusConstants.PreArchive.PENDING_CHECK)
                 .batchId(batch.getId())
                 .createdTime(LocalDateTime.now())
                 .build();

@@ -35,7 +35,7 @@ public class PoolDemoDataService {
     private final PoolService poolService;
 
     private static final String[] SOURCE_SYSTEMS = {
-            "Web上传", "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"
+            com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD, "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"
     };
 
     /**

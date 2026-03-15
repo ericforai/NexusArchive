@@ -35,7 +35,7 @@ export const OnlineReceptionView: React.FC = () => {
     // UI 交互状态
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
-    const [newChannel, setNewChannel] = useState({ name: '', system: 'SAP ERP', description: '' });
+    const [newChannel, setNewChannel] = useState({ name: '', erpType: 'SAP ERP', description: '' });
 
     // 同步弹窗状态
     const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
@@ -378,8 +378,8 @@ export const OnlineReceptionView: React.FC = () => {
                                 className="w-full border p-2 rounded"
                             />
                             <select
-                                value={newChannel.system}
-                                onChange={e => setNewChannel({ ...newChannel, system: e.target.value })}
+                                value={newChannel.erpType}
+                                onChange={e => setNewChannel({ ...newChannel, erpType: e.target.value })}
                                 className="w-full border p-2 rounded"
                             >
                                 <option>SAP ERP</option>

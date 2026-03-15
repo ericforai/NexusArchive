@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -110,8 +111,7 @@ class DestructionApprovalServiceImplTest {
             );
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
 
-            Archive archive = createTestArchive("archive-1", null);
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(archive));
+
 
             // When
             destructionApprovalService.firstApproval(
@@ -125,9 +125,8 @@ class DestructionApprovalServiceImplTest {
             assertThat(destruction.getApprovalComment()).isEqualTo(comment);
             assertThat(destruction.getApprovalSnapshot()).isNotNull();
 
-            // 验证档案状态更新
-            ArgumentCaptor<Archive> archiveCaptor = ArgumentCaptor.forClass(Archive.class);
-            verify(archiveMapper).updateById(any(Archive.class)); // 通过 wrapper 更新
+            // 验证档案状态更新 - 修正为 eq(null) 和 UpdateWrapper
+            verify(archiveMapper, times(1)).update(eq(null), any(com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper.class));
 
             verify(destructionMapper).updateById(destruction);
         }
@@ -217,7 +216,7 @@ class DestructionApprovalServiceImplTest {
                     "[\"archive-1\"]"
             );
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(createTestArchive("archive-1", null)));
+
 
             // When
             destructionApprovalService.firstApproval(
@@ -247,7 +246,7 @@ class DestructionApprovalServiceImplTest {
                     "[\"archive-1\"]"
             );
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(createTestArchive("archive-1", null)));
+
 
             // When
             destructionApprovalService.firstApproval(
@@ -289,8 +288,7 @@ class DestructionApprovalServiceImplTest {
 
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
 
-            Archive archive = createTestArchive("archive-1", "APPRAISING");
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(archive));
+
 
             // When
             destructionApprovalService.secondApproval(
@@ -332,7 +330,7 @@ class DestructionApprovalServiceImplTest {
             }
 
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(createTestArchive("archive-1", "APPRAISING")));
+
 
             // When
             destructionApprovalService.secondApproval(
@@ -437,7 +435,7 @@ class DestructionApprovalServiceImplTest {
             }
 
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(createTestArchive("archive-1", "APPRAISING")));
+
 
             // When
             destructionApprovalService.secondApproval(
@@ -445,7 +443,7 @@ class DestructionApprovalServiceImplTest {
             );
 
             // Then
-            verify(archiveMapper).updateById(any(Archive.class)); // 验证档案状态被更新
+            verify(archiveMapper, times(1)).update(eq(null), any(com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper.class)); // 验证档案状态被更新
         }
     }
 
@@ -561,9 +559,7 @@ class DestructionApprovalServiceImplTest {
             );
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
 
-            Archive archive1 = createTestArchive("archive-1", null);
-            Archive archive2 = createTestArchive("archive-2", null);
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(archive1, archive2));
+
 
             // When
             destructionApprovalService.firstApproval(
@@ -571,7 +567,7 @@ class DestructionApprovalServiceImplTest {
             );
 
             // Then
-            verify(archiveMapper).updateById(any(Archive.class));
+            verify(archiveMapper, times(2)).update(eq(null), any(com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper.class));
         }
 
         @Test
@@ -598,8 +594,7 @@ class DestructionApprovalServiceImplTest {
 
             when(destructionMapper.selectById(destructionId)).thenReturn(destruction);
 
-            Archive archive = createTestArchive("archive-1", "APPRAISING");
-            when(archiveMapper.selectBatchIds(any())).thenReturn(List.of(archive));
+
 
             // When
             destructionApprovalService.secondApproval(
@@ -607,7 +602,7 @@ class DestructionApprovalServiceImplTest {
             );
 
             // Then
-            verify(archiveMapper).updateById(any(Archive.class));
+            verify(archiveMapper, times(1)).update(eq(null), any(com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper.class));
         }
 
         @Test

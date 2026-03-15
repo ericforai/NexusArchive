@@ -118,11 +118,11 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
             helper.prepareTempFiles(sipDto, tempPath, fileStreams);
 
             ingestRequestStatusMapper.insert(IngestRequestStatus.builder().requestId(requestId)
-                    .fondsNo(sipDto.getHeader().getFondsCode()).status("RECEIVED").message("已接收").build());
+                    .fondsNo(sipDto.getHeader().getFondsCode()).status(com.nexusarchive.common.constants.StatusConstants.Archive.RECEIVED).message("已接收").build());
 
             eventPublisher.publishEvent(new VoucherReceivedEvent(this, sipDto, tempPath, fileStreams));
 
-            return IngestResponse.builder().requestId(requestId).status("RECEIVED")
+            return IngestResponse.builder().requestId(requestId).status(com.nexusarchive.common.constants.StatusConstants.Archive.RECEIVED)
                     .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                     .message("请求已接收").build();
         } catch (Exception e) {
@@ -150,11 +150,11 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
                     .fileName(originalFilename).fileType(ext.isEmpty() ? "UNKNOWN" : ext.substring(1).toUpperCase())
                     .fileSize(file.getSize()).fileHash(fileHash).hashAlgorithm("SHA-256").storagePath(targetPath.toString())
                     .createdTime(LocalDateTime.now()).preArchiveStatus(com.nexusarchive.entity.enums.PreArchiveStatus.PENDING_CHECK.getCode())
-                    .sourceSystem("Web上传").build());
+                    .sourceSystem(com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD).build());
 
             return com.nexusarchive.dto.FileUploadResponse.builder().code("POOL-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + fileId.substring(0, 8).toUpperCase())
                     .fileName(originalFilename).fileSize(file.getSize()).fileType(ext.isEmpty() ? "未知" : ext.substring(1).toUpperCase())
-                    .storagePath(targetPath.toString()).uploadTime(LocalDateTime.now()).source("Web上传").status("已识别")
+                    .storagePath(targetPath.toString()).uploadTime(LocalDateTime.now()).source(com.nexusarchive.common.constants.ArchiveConstants.SourceChannel.WEB_UPLOAD).status("已识别")
                     .fileHash(fileHash).hashAlgorithm("SHA-256").build();
         } catch (Exception e) {
             throw new BusinessException(500, "File upload failed: " + e.getMessage());

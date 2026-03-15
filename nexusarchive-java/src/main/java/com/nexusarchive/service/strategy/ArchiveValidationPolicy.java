@@ -21,7 +21,7 @@ public class ArchiveValidationPolicy {
             return true;
         }
 
-        if ("AC01".equals(categoryCode)) {
+        if (com.nexusarchive.common.constants.ArchiveConstants.Categories.VOUCHER.equals(categoryCode)) {
             // 会计凭证子类型白名单
             return Set.of(
                     "ACCOUNTING_VOUCHER", "ORIGINAL_VOUCHER",
@@ -30,17 +30,17 @@ public class ArchiveValidationPolicy {
                     "PAYMENT_REQ", "EXPENSE_REPORT", "GEN_INVOICE", "VAT_INVOICE",
                     "BANK_RECEIPT", "BANK_SLIP", "BANK_STATEMENT", "CONTRACT"
             ).contains(subType);
-        } else if ("AC02".equals(categoryCode)) {
+        } else if (com.nexusarchive.common.constants.ArchiveConstants.Categories.BOOK.equals(categoryCode)) {
             // 账簿类型白名单 (Updated V71+)
             return Set.of("GENERAL_LEDGER", "SUBSIDIARY_LEDGER", "JOURNAL",
                     "CASH_BOOK", "BANK_BOOK",
                     // Added from frontend paths
                     "CASH_JOURNAL", "BANK_JOURNAL", "FIXED_ASSETS_CARD", "OTHER_BOOKS"
             ).contains(subType);
-        } else if ("AC03".equals(categoryCode)) {
+        } else if (com.nexusarchive.common.constants.ArchiveConstants.Categories.REPORT.equals(categoryCode)) {
             // 报表周期白名单
             return Set.of("MONTHLY", "QUARTERLY", "ANNUAL", "SEMI_ANNUAL", "SPECIAL").contains(subType);
-        } else if ("AC04".equals(categoryCode)) {
+        } else if (com.nexusarchive.common.constants.ArchiveConstants.Categories.OTHERS.equals(categoryCode)) {
             // 其他类型白名单
             return Set.of("CONTRACT", "INVOICE", "RECEIPT", "OTHER",
                     // Added from frontend paths

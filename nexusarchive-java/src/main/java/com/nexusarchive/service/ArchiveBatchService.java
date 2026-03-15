@@ -120,10 +120,10 @@ public class ArchiveBatchService {
             String combined = (prevHash != null ? prevHash : "") + currentHash;
             
             // 根据算法选择
-            String algoName = "SHA-256"; // 默认
-            if ("SM3".equalsIgnoreCase(algorithm)) {
+            String algoName = com.nexusarchive.common.constants.ArchiveConstants.Algorithms.SHA256; // 默认
+            if (com.nexusarchive.common.constants.ArchiveConstants.Algorithms.SM3.equalsIgnoreCase(algorithm)) {
                 // 如果需要 SM3,使用 BouncyCastle
-                algoName = "SM3";
+                algoName = com.nexusarchive.common.constants.ArchiveConstants.Algorithms.SM3;
             }
             
             MessageDigest md = MessageDigest.getInstance(algoName);
