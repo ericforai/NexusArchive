@@ -92,16 +92,23 @@ jobs:
              WORK_DIR='${GATE_OUT}' \
              bash /tmp/prod_attachment_gate.sh"
 
+      - name: Check remote disk space
+        run: |
+            ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
+            "df -h /opt && echo '--- Disk space check passed ---'"
+
       - name: Rsync dist and jar (incremental)
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/prod_key -p "${{ secrets.PROD_PORT }}" "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}" \
             "mkdir -p /opt/nexusarchive/dist /opt/nexusarchive/nexusarchive-java/target"
 
-          rsync -az --delete -e "ssh -i ~/.ssh/prod_key -p ${{ secrets.PROD_PORT }}" \
+          echo "[1/2] Syncing frontend (dist/)"
+          rsync -av --progress --timeout=300 --delete -e "ssh -i ~/.ssh/prod_key -p ${{ secrets.PROD_PORT }}" \
             dist/ "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/nexusarchive/dist/"
 
-          rsync -az -e "ssh -i ~/.ssh/prod_key -p ${{ secrets.PROD_PORT }}" \
+          echo "[2/2] Syncing backend (jar)"
+          rsync -av --progress --timeout=300 -e "ssh -i ~/.ssh/prod_key -p ${{ secrets.PROD_PORT }}" \
             nexusarchive-java/target/nexusarchive-backend-*.jar \
             "${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/nexusarchive/nexusarchive-java/target/"
 
