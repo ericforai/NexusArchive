@@ -3,9 +3,9 @@
 // Pos: src/pages/utilization/WarehouseView.tsx
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Warehouse, Thermometer, Droplets, Lock, Unlock, Wind, AlertCircle, Battery, Signal, ChevronRight, Loader2, Factory, Home } from 'lucide-react';
+import { Warehouse, Thermometer, Droplets, Lock, Unlock, Wind, AlertCircle, Battery, Signal, ChevronRight, Loader2, Home } from 'lucide-react';
 import { warehouseApi, Shelf, WarehouseEnvironment } from '../../api/warehouse';
 
 type ViewMode = 'racks' | 'environment' | null;
@@ -415,7 +415,7 @@ export const WarehouseView: React.FC = () => {
     return null;
   }, []);
 
-  const loadShelves = useCallback(async () => {
+  const _loadShelves = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {

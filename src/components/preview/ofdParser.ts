@@ -69,7 +69,7 @@ export async function parseOfdDocument(buffer: ArrayBuffer): Promise<ParsedOfdDo
   const pageArea = commonData ? getFirstElement(commonData, 'PageArea') : null;
   const physicalBox = pageArea ? parseBox(getFirstText(pageArea, 'PhysicalBox')) : null;
   const applicationBox = pageArea ? parseBox(getFirstText(pageArea, 'ApplicationBox')) : null;
-  const pageBox = applicationBox || physicalBox || { x: 0, y: 0, width: 210, height: 297 };
+  const _pageBox = applicationBox || physicalBox || { x: 0, y: 0, width: 210, height: 297 };
 
   const fontMap = new Map<string, string>();
   const resourceMap = new Map<string, ResourceMapEntry>();

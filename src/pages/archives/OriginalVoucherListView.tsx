@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    Search, Filter, Plus, Trash2,
-    Archive, RefreshCw, MoreHorizontal
+    Search, Filter, Plus, _Trash2,
+    Archive, RefreshCw, _MoreHorizontal
 } from 'lucide-react';
 import {
     getOriginalVouchers,
@@ -20,7 +20,7 @@ import {
 } from '../../api/originalVoucher';
 import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
 import { VoucherPreviewDrawer } from '../../components/pages';
-import { toast } from '../../utils/notificationService';
+import { _toast } from '../../utils/notificationService';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../../routes/paths';
 import { useFondsStore } from '../../store/useFondsStore';
 
@@ -224,7 +224,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     });
 
     // 删除 mutation
-    const deleteMutation = useMutation({
+    const _deleteMutation = useMutation({
         mutationFn: deleteOriginalVoucher,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['originalVouchers'] });
@@ -233,7 +233,7 @@ export const OriginalVoucherListView: React.FC<OriginalVoucherListViewProps> = (
     });
 
     // 提交归档 mutation
-    const submitMutation = useMutation({
+    const _submitMutation = useMutation({
         mutationFn: submitForArchive,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['originalVouchers'] });

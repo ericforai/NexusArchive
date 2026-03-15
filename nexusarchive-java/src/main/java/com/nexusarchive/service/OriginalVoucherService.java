@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,6 +51,7 @@ public class OriginalVoucherService {
     private final OriginalVoucherTypeMapper typeMapper;
     private final FileStorageService fileStorageService;
     private final com.nexusarchive.service.parser.PdfInvoiceParser pdfInvoiceParser;
+    private final com.nexusarchive.service.parser.OfdInvoiceParser ofdInvoiceParser;
     private final DataScopeService dataScopeService;
     private final OriginalVoucherHelper helper;
 
@@ -238,21 +240,25 @@ public class OriginalVoucherService {
 
             fileMapper.insert(vf);
 
-            if ("PDF".equals(type) && ("PRIMARY".equals(vf.getFileRole()) || "ORIGINAL".equals(vf.getFileRole()))) {
+            if (("PDF".equals(type) || "OFD".equals(type)) && ("PRIMARY".equals(vf.getFileRole()) || "ORIGINAL".equals(vf.getFileRole()))) {
                 try {
-                    java.util.Map<String, Object> res = pdfInvoiceParser.parse(fileStorageService.resolvePath(path).toFile());
+                    File physicalFile = fileStorageService.resolvePath(path).toFile();
+                    java.util.Map<String, Object> res = "PDF".equals(type) 
+                        ? pdfInvoiceParser.parse(physicalFile)
+                        : ofdInvoiceParser.parse(physicalFile);
+                        
                     OriginalVoucher v = getById(voucherId);
                     boolean upd = false;
-                    if (res.containsKey("total_amount_value") && (v.getAmount() == null || v.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0)) {
+                    if (res != null && res.containsKey("total_amount_value") && (v.getAmount() == null || v.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0)) {
                         v.setAmount(new java.math.BigDecimal((String) res.get("total_amount_value")));
                         upd = true;
                     }
-                    if (res.containsKey("invoice_date_value")) {
+                    if (res != null && res.containsKey("invoice_date_value")) {
                         v.setBusinessDate(java.time.LocalDate.parse((String) res.get("invoice_date_value")));
                         upd = true;
                     }
                     if (upd) voucherMapper.updateById(v);
-                } catch (Exception e) { log.error("Parsing failed", e); }
+                } catch (Exception e) { log.error("Parsing failed for {}: {}", type, e.getMessage()); }
             }
             return vf;
         } catch (java.io.IOException e) { throw new BusinessException("文件上传失败: " + e.getMessage()); }

@@ -306,7 +306,7 @@ export const SimpleGraphView: React.FC<SimpleGraphViewProps> = ({ onNodeClick })
             const relationLabel = RELATION_TYPE_LABELS[relationType] || edge.data?.description || relationType;
 
             // 计算连线角度（用于标签旋转）
-            const angle = Math.atan2(targetY - sourceY, targetX - sourceX) * (180 / Math.PI);
+            const _angle = Math.atan2(targetY - sourceY, targetX - sourceX) * (180 / Math.PI);
             const labelX = (sourceX + targetX) / 2;
             const labelY = (sourceY + targetY) / 2;
 

@@ -17,7 +17,7 @@ import { safeStorage } from '../utils/storage';
 import { Toaster } from 'react-hot-toast';
 import { useFondsStore } from '../store/useFondsStore';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import { useLocation, useMatches } from 'react-router-dom';
+import { useMatches } from 'react-router-dom';
 
 // 加载占位符
 const LoadingSpinner = () => (
