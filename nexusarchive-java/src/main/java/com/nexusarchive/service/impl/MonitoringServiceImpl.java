@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.monitoring.IntegrationMonitoringDTO;
 import com.nexusarchive.entity.Archive;
@@ -35,7 +36,7 @@ public class MonitoringServiceImpl implements MonitoringService {
         // 1. 统计同步历史
         long totalSync = syncHistoryMapper.selectCount(null);
         long successSync = syncHistoryMapper.selectCount(new LambdaQueryWrapper<SyncHistory>()
-                .eq(SyncHistory::getStatus, "SUCCESS"));
+                .eq(SyncHistory::getStatus, OperationResult.SUCCESS));
         double successRate = totalSync == 0 ? 0 : (double) successSync / totalSync;
 
         // 2. 统计档案库状态
@@ -62,7 +63,7 @@ public class MonitoringServiceImpl implements MonitoringService {
                 .collect(Collectors.groupingBy(
                         h -> h.getSyncStartTime().toLocalDate().toString(),
                         Collectors.groupingBy(
-                                h -> "SUCCESS".equals(h.getStatus()) ? "SUCCESS" : "FAIL",
+                                h -> OperationResult.SUCCESS.equals(h.getStatus()) ? OperationResult.SUCCESS : OperationResult.FAIL,
                                 Collectors.counting())));
 
         // 补全最近7天的数据 (即使无数据也显示0)
@@ -72,14 +73,14 @@ public class MonitoringServiceImpl implements MonitoringService {
 
             trend.add(IntegrationMonitoringDTO.DataPoint.builder()
                     .date(dateStr)
-                    .value(dayStats.getOrDefault("SUCCESS", 0L))
-                    .type("SUCCESS")
+                    .value(dayStats.getOrDefault(OperationResult.SUCCESS, 0L))
+                    .type(OperationResult.SUCCESS)
                     .build());
 
             trend.add(IntegrationMonitoringDTO.DataPoint.builder()
                     .date(dateStr)
-                    .value(dayStats.getOrDefault("FAIL", 0L))
-                    .type("FAIL")
+                    .value(dayStats.getOrDefault(OperationResult.FAIL, 0L))
+                    .type(OperationResult.FAIL)
                     .build());
         }
 

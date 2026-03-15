@@ -7,6 +7,7 @@ package com.nexusarchive.util;
 
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
+import com.nexusarchive.common.constants.HttpConstants;
 
 /**
  * 文件内容类型工具类
@@ -30,8 +31,8 @@ public class ContentTypeUtil {
         // 优先使用文件类型
         if (StringUtils.hasText(fileType)) {
             return switch (fileType.toLowerCase()) {
-                case "ofd" -> "application/ofd";
-                case "pdf" -> "application/pdf";
+                case "ofd" -> HttpConstants.APPLICATION_OFD;
+                case "pdf" -> HttpConstants.APPLICATION_PDF;
                 case "jpg", "jpeg" -> "image/jpeg";
                 case "png" -> "image/png";
                 case "xml" -> "application/xml";
@@ -43,8 +44,8 @@ public class ContentTypeUtil {
         // 从文件名扩展名推断
         if (fileName != null) {
             String lowerName = fileName.toLowerCase();
-            if (lowerName.endsWith(".ofd")) return "application/ofd";
-            if (lowerName.endsWith(".pdf")) return "application/pdf";
+            if (lowerName.endsWith(".ofd")) return HttpConstants.APPLICATION_OFD;
+            if (lowerName.endsWith(".pdf")) return HttpConstants.APPLICATION_PDF;
             if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
             if (lowerName.endsWith(".png")) return "image/png";
             if (lowerName.endsWith(".tif") || lowerName.endsWith(".tiff")) return "image/tiff";

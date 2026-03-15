@@ -6,6 +6,7 @@
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.dto.notification.NotificationDto;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.IngestRequestStatus;
@@ -31,7 +32,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final ArchiveMapper archiveMapper;
     private final DataScopeService dataScopeService;
 
-    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern(DateFormat.DATETIME);
 
     @Override
     public List<NotificationDto> listLatest() {

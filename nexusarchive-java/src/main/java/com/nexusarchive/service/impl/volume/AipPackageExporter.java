@@ -72,8 +72,8 @@ public class AipPackageExporter {
 
         List<Archive> files = VolumeQuery.getVolumeFiles(archiveMapper, volumeId);
 
-        // 创建临时目录
-        Path tempDir = Files.createTempDirectory("aip_" + volume.getVolumeCode() + "_");
+        // 创建临时目录 - 使用时间戳避免路径遍历风险
+        Path tempDir = Files.createTempDirectory("aip_" + System.currentTimeMillis() + "_");
 
         try {
             // 1. 创建目录结构
@@ -111,7 +111,7 @@ public class AipPackageExporter {
 
             // 6. 打包为 ZIP
             String zipFileName = volume.getVolumeCode() + "_AIP.zip";
-            File zipFile = File.createTempFile(volume.getVolumeCode() + "_", ".zip");
+            File zipFile = File.createTempFile("aip_export_" + System.currentTimeMillis() + "_", ".zip");
 
             try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile), java.nio.charset.StandardCharsets.UTF_8)) {
                 VolumeUtils.zipDirectory(tempDir, "", zos);

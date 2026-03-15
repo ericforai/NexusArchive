@@ -159,6 +159,35 @@ app:
   debug:
     enabled: ${APP_DEBUG_ENABLED:false}  # 调试接口开关 (默认禁用, 生产环境必须保持禁用)
 
+# 读写分离配置
+rw-split:
+  enabled: ${RW_SPLIT_ENABLED:false}  # 读写分离开关，默认禁用（向后兼容）
+  # 注意：启用时会自动排除 Spring Boot 默认的 DataSource 自动配置
+  master:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54321}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 1000
+      validation-timeout: 1000
+      initialization-fail-timeout: 0
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  slaves:
+    - url: jdbc:postgresql://${DB_SLAVE_HOST:${DB_HOST:localhost}}:${DB_SLAVE_PORT:54322}/${DB_NAME:nexusarchive}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      username: ${DB_USER:postgres}
+      password: ${DB_PASSWORD:postgres}
+      hikari:
+        minimum-idle: 5
+        maximum-pool-size: 30
+        connection-timeout: 1000
+        validation-timeout: 1000
+        initialization-fail-timeout: 0
+        idle-timeout: 600000
+        max-lifetime: 1800000
+
 # 异步任务线程池配置
 async:
   # core-pool-size: ${ASYNC_CORE_POOL_SIZE:}  # 核心线程数（默认：CPU核心数）

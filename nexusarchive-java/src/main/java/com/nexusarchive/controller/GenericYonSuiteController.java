@@ -7,6 +7,7 @@ package com.nexusarchive.controller;
 
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.yonsuite.dto.VoucherAttachmentResponse;
@@ -123,7 +124,7 @@ public class GenericYonSuiteController {
         LocalDate today = LocalDate.now();
         LocalDate sevenDaysAgo = today.minusDays(7);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateFormat.DATE);
         String startDate = sevenDaysAgo.format(formatter);
         String endDate = today.format(formatter);
 

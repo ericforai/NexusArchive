@@ -138,6 +138,7 @@ BASE_URL=http://localhost:15175 PW_USER=zhangsan PW_PASS=admin123 npm run test:s
 | **四性检测** | 真实性、完整性、可用性、安全性自动检测 |
 | **审计防篡改** | SM3 哈希链保证日志不可篡改 |
 | **AIP 导出** | 符合 GB/T 39674 标准的归档信息包 |
+| **读写分离** | 数据库主从分离，读操作路由到从库，提升性能 |
 | **信创适配** | 支持SM2/SM3/SM4 国密 |
 | **用友集成** | YonSuite 凭证自动同步与分录映射 |
 | **凭证关联** | 支持按金额、日期、发票号进行多维度精准手动关联 |
@@ -169,7 +170,7 @@ BASE_URL=http://localhost:15175 PW_USER=zhangsan PW_PASS=admin123 npm run test:s
 |------|------|
 | **入门** | [启动指南](docs/deployment/启动指南.md) · [用户手册](docs/guides/用户使用手册.md) · [新人接手指南](docs/guides/新人接手指南.md) |
 | **部署** | [部署指南](docs/guides/系统部署手册.md) · [故障排除](docs/guides/系统部署手册.md#5-故障排除) |
-| **功能** | [功能模块](docs/guides/功能模块.md) · [权限管理](docs/guides/权限管理.md) |
+| **功能** | [功能模块](docs/guides/功能模块.md) · [权限管理](docs/guides/权限管理.md) · [读写分离](docs/features/read-write-splitting.md) |
 | **产品** | [PRD v1.0](docs/product/prd-v1.0.md) · [产品架构](docs/product/architecture.md) |
 | **安全** | [安全指南](docs/guides/安全指南.md) · [审计日志](docs/guides/安全指南.md#审计日志防篡改) |
 | **集成** | [用友集成](docs/guides/用友集成.md) · [AI 适配器生成](docs/guides/ai-adapter-generation.md) · [API 速查](docs/api/接口速查.md) |

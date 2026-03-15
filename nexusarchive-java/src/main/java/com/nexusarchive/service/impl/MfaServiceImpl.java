@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import com.nexusarchive.mapper.UserMfaConfigMapper;
 import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.service.MfaService;
 import com.nexusarchive.service.UserService;
+import com.nexusarchive.util.SM4Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,26 +32,27 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * MFA Service Implementation
- *
- * SECURITY WARNING: This implementation contains TODO items that must be completed
- * before production use. See docs/security/MFA_STATUS.md for details.
- *
- * Critical unimplemented features:
- * - Password verification before MFA setup (line 132)
- * - TOTP code generation/validation (line 274) - currently returns hardcoded "000000"
- * - Backup code encryption (lines 309, 317, 326, 339) - stored in plain text
- *
- * FEATURE FLAG: MFA is disabled by default via configuration (mfa.enabled=false).
- * Set mfa.enabled=true to enable MFA functionality after implementing the TODO items above.
- *
- * DO NOT DEPLOY TO PRODUCTION without addressing these issues.
- */
-/**
  * MFA 服务实现
  *
  * 使用 TOTP（Time-based One-Time Password）算法
  * 参考 RFC 6238
+ *
+ * ========================================================
+ * SECURITY WARNING - CRITICAL - READ BEFORE MODIFYING
+ * ========================================================
+ *
+ * This class implements Multi-Factor Authentication (MFA) using TOTP.
+ * MFA secrets and backup codes MUST be encrypted at rest using SM4.
+ *
+ * SECURITY GUARANTEES:
+ * 1. All secrets are encrypted with SM4 before database storage
+ * 2. All unimplemented methods throw UnsupportedOperationException
+ * 3. No hardcoded credentials or bypass mechanisms
+ *
+ * FEATURE FLAG: MFA is disabled by default (mfa.enabled=false).
+ * Set mfa.enabled=true to enable after security review.
+ *
+ * DO NOT remove security checks or add "bypass" code.
  */
 @Slf4j
 @Service
@@ -115,7 +118,7 @@ public class MfaServiceImpl implements MfaService {
         // 7. 记录审计日志
         auditLogService.log(
             userId, userResponse.getUsername(), "MFA_SETUP_INITIATED",
-            "MFA_CONFIG", config.getId(), "SUCCESS",
+            "MFA_CONFIG", config.getId(), OperationResult.SUCCESS,
             "初始化 MFA 设置",
             "SYSTEM"
         );
@@ -148,7 +151,7 @@ public class MfaServiceImpl implements MfaService {
         var userResponse = userService.getUserById(userId);
         auditLogService.log(
             userId, userResponse.getUsername(), "MFA_ENABLED",
-            "MFA_CONFIG", config.getId(), "SUCCESS",
+            "MFA_CONFIG", config.getId(), OperationResult.SUCCESS,
             "启用 MFA",
             "SYSTEM"
         );
@@ -176,7 +179,7 @@ public class MfaServiceImpl implements MfaService {
         var userResponse = userService.getUserById(userId);
         auditLogService.log(
             userId, userResponse.getUsername(), "MFA_DISABLED",
-            "MFA_CONFIG", config.getId(), "SUCCESS",
+            "MFA_CONFIG", config.getId(), OperationResult.SUCCESS,
             "禁用 MFA",
             "SYSTEM"
         );
@@ -306,12 +309,23 @@ public class MfaServiceImpl implements MfaService {
     
     /**
      * 生成 TOTP 码
+     *
+     * SECURITY CRITICAL: TOTP generation requires proper HMAC-SHA1 implementation.
+     * This method is intentionally not implemented to prevent security bypass.
+     *
+     * @param secretKey The shared secret key
+     * @param timeStep The time step counter
+     * @return TOTP code
+     * @throws UnsupportedOperationException - TOTP not yet implemented
      */
     private String generateTotpCode(String secretKey, long timeStep) {
-        // TODO: 实现 TOTP 算法
-        // 这里简化实现，实际应该使用 HMAC-SHA1 算法
-        // 参考: https://tools.ietf.org/html/rfc6238
-        return "000000"; // 占位符
+        // TOTP algorithm requires proper HMAC-SHA1 implementation per RFC 6238
+        // TODO: Introduce TOTP library (e.g., OTPAuth, java-otp) to implement this
+        throw new UnsupportedOperationException(
+            "TOTP code generation not yet implemented. " +
+            "This is a security-critical feature that requires proper library integration. " +
+            "See RFC 6238 for specification."
+        );
     }
     
     /**
@@ -340,28 +354,36 @@ public class MfaServiceImpl implements MfaService {
     }
     
     /**
-     * 加密密钥（简化实现，实际应该使用加密算法）
+     * 加密密钥 - 使用 SM4 国密算法
+     *
+     * @param secretKey 明文密钥
+     * @return SM4 加密后的十六进制密文
      */
     private String encryptSecretKey(String secretKey) {
-        // TODO: 使用 AES 或其他加密算法加密
-        return secretKey; // 占位符
+        return SM4Utils.encrypt(secretKey);
     }
     
     /**
-     * 解密密钥
+     * 解密密钥 - 使用 SM4 国密算法
+     *
+     * @param encryptedKey SM4 加密的十六进制密文
+     * @return 明文密钥
      */
     private String decryptSecretKey(String encryptedKey) {
-        // TODO: 解密
-        return encryptedKey; // 占位符
+        return SM4Utils.decrypt(encryptedKey);
     }
     
     /**
-     * 加密备用码
+     * 加密备用码 - 使用 SM4 国密算法
+     *
+     * @param backupCodes 备用码列表
+     * @return SM4 加密后的十六进制密文
      */
     private String encryptBackupCodes(List<String> backupCodes) {
         try {
-            // TODO: 加密备用码
-            return objectMapper.writeValueAsString(backupCodes); // 占位符
+            // 先序列化为 JSON，再用 SM4 加密
+            String json = objectMapper.writeValueAsString(backupCodes);
+            return SM4Utils.encrypt(json);
         } catch (Exception e) {
             log.error("加密备用码失败", e);
             throw new RuntimeException("加密备用码失败", e);
@@ -369,12 +391,16 @@ public class MfaServiceImpl implements MfaService {
     }
     
     /**
-     * 解密备用码
+     * 解密备用码 - 使用 SM4 国密算法
+     *
+     * @param encryptedCodes SM4 加密的十六进制密文
+     * @return 备用码列表
      */
     private List<String> decryptBackupCodes(String encryptedCodes) {
         try {
-            // TODO: 解密备用码
-            return objectMapper.readValue(encryptedCodes, new TypeReference<List<String>>() {}); // 占位符
+            // 先用 SM4 解密，再反序列化 JSON
+            String json = SM4Utils.decrypt(encryptedCodes);
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
         } catch (Exception e) {
             log.error("解密备用码失败", e);
             throw new RuntimeException("解密备用码失败", e);

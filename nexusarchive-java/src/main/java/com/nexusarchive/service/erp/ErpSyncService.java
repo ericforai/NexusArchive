@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.erp;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.entity.ErpScenario;
@@ -321,12 +322,12 @@ public class ErpSyncService {
                                      int totalFetched, int savedCount,
                                      SyncDateRangeExtractor.DateRange dateRange) {
         scenario.setLastSyncTime(LocalDateTime.now());
-        scenario.setLastSyncStatus("SUCCESS");
+        scenario.setLastSyncStatus(OperationResult.SUCCESS);
         String msg = String.format("同步成功: 获取 %d 条，其中新增 %d 条 (%s至%s)",
                 totalFetched, savedCount, dateRange.startDate(), dateRange.endDate());
         scenario.setLastSyncMsg(msg);
 
-        history.setStatus("SUCCESS");
+        history.setStatus(OperationResult.SUCCESS);
         history.setSyncEndTime(LocalDateTime.now());
         history.setTotalCount(totalFetched);
         history.setSuccessCount(savedCount);
@@ -338,10 +339,10 @@ public class ErpSyncService {
      */
     private void updateFailureStatus(ErpScenario scenario, SyncHistory history, Exception e) {
         scenario.setLastSyncTime(LocalDateTime.now());
-        scenario.setLastSyncStatus("FAIL");
+        scenario.setLastSyncStatus(OperationResult.FAIL);
         scenario.setLastSyncMsg("同步异常: " + e.getMessage());
 
-        history.setStatus("FAIL");
+        history.setStatus(OperationResult.FAIL);
         history.setSyncEndTime(LocalDateTime.now());
         history.setErrorMessage(e.getMessage());
     }
@@ -352,7 +353,7 @@ public class ErpSyncService {
     private void recordAuditLog(ErpScenario scenario, SyncHistory history, Long scenarioId, String operatorId, String clientIp) {
         String auditDetails = String.format("ERP采集同步: 场景=%s, 结果=%s, 获取=%d, 成功=%d, 失败=%d",
                 scenario.getName(), history.getStatus(), history.getTotalCount(), history.getSuccessCount(), history.getFailCount());
-        if ("FAIL".equals(history.getStatus())) {
+        if (OperationResult.FAIL.equals(history.getStatus())) {
             auditDetails += ", 错误=" + history.getErrorMessage();
         }
 

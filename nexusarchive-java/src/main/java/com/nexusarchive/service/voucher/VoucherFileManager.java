@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import com.nexusarchive.common.constants.HttpConstants;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -179,8 +180,8 @@ public class VoucherFileManager {
     private String determineContentType(String fileType, String fileName) {
         if (StringUtils.hasText(fileType)) {
             switch (fileType.toLowerCase()) {
-                case "ofd": return "application/ofd";
-                case "pdf": return "application/pdf";
+                case "ofd": return HttpConstants.APPLICATION_OFD;
+                case "pdf": return HttpConstants.APPLICATION_PDF;
                 case "jpg":
                 case "jpeg": return "image/jpeg";
                 case "png": return "image/png";
@@ -189,8 +190,8 @@ public class VoucherFileManager {
         }
         if (fileName != null) {
             String lowerName = fileName.toLowerCase();
-            if (lowerName.endsWith(".ofd")) return "application/ofd";
-            if (lowerName.endsWith(".pdf")) return "application/pdf";
+            if (lowerName.endsWith(".ofd")) return HttpConstants.APPLICATION_OFD;
+            if (lowerName.endsWith(".pdf")) return HttpConstants.APPLICATION_PDF;
             if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
             if (lowerName.endsWith(".png")) return "image/png";
         }

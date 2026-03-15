@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,7 +89,7 @@ public class VoucherPdfGeneratorService {
 
             // 6. 更新 arc_file_content 记录
             fileContent.setFileName(pdfFileName);
-            fileContent.setFileType("application/pdf");
+            fileContent.setFileType(HttpConstants.APPLICATION_PDF);
             fileContent.setFileSize(fileSize);
             fileContent.setFileHash(fileHash);
             fileContent.setHashAlgorithm("SM3");

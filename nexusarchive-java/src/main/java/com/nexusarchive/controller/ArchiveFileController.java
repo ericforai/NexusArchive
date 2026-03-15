@@ -31,6 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -335,9 +336,9 @@ public class ArchiveFileController {
         if (fileType != null) {
             switch (fileType.toLowerCase()) {
                 case "ofd":
-                    return "application/ofd";
+                    return HttpConstants.APPLICATION_OFD;
                 case "pdf":
-                    return "application/pdf";
+                    return HttpConstants.APPLICATION_PDF;
                 case "jpg":
                 case "jpeg":
                     return "image/jpeg";
@@ -349,8 +350,8 @@ public class ArchiveFileController {
         }
         
         if (fileName != null) {
-            if (fileName.endsWith(".ofd")) return "application/ofd";
-            if (fileName.endsWith(".pdf")) return "application/pdf";
+            if (fileName.endsWith(".ofd")) return HttpConstants.APPLICATION_OFD;
+            if (fileName.endsWith(".pdf")) return HttpConstants.APPLICATION_PDF;
         }
         
         return "application/octet-stream";

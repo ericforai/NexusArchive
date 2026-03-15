@@ -10,6 +10,8 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.DateFormat;
+import com.nexusarchive.common.constants.HttpConstants;
 import com.nexusarchive.integration.erp.dto.ErpConfig;
 import com.nexusarchive.integration.erp.dto.kingdee.KingdeeAuthResponse;
 import com.nexusarchive.integration.erp.dto.kingdee.KingdeeVoucherDetailResponse;
@@ -52,7 +54,7 @@ public class KingdeeVoucherClient {
     private static final String QUERY_PATH = "/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.ExecuteBillQuery.common.kdsvc";
     private static final String VIEW_PATH = "/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.View.common.kdsvc";
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATE);
     private static final DateTimeFormatter PERIOD_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
     private final ObjectMapper objectMapper;
@@ -81,7 +83,7 @@ public class KingdeeVoucherClient {
             log.debug("金蝶认证请求: url={}, acctID={}", url, config.getTenantId());
 
             String response = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(params.toString())
                     .timeout(30000)
                     .execute()
@@ -125,7 +127,7 @@ public class KingdeeVoucherClient {
             log.debug("请求体: {}", request.toString());
 
             String response = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(request.toString())
                     .timeout(60000)
                     .execute()
@@ -179,7 +181,7 @@ public class KingdeeVoucherClient {
             log.debug("请求体: {}", request.toString());
 
             String response = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(request.toString())
                     .timeout(30000)
                     .execute()

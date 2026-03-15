@@ -89,8 +89,6 @@ public class LocalAuditBuffer {
         } catch (IOException e) {
             // 本地写入也失败，这是最后一道防线，必须尝试其他方式
             log.error("[CRITICAL] 审计日志本地缓冲写入失败! 日志可能丢失: {}", auditLog, e);
-            // 尝试写入标准错误输出作为最后保障
-            System.err.println("[AUDIT_CRITICAL] " + auditLog);
         }
     }
 

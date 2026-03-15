@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -286,7 +287,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         if (totalMissingMetadata > 0 || totalMetadataParseErrors > 0 || totalMissingDocDate > 0 || totalOutOfRange > 0) {
             discrepancy = true;
         }
-        return discrepancy ? "DISCREPANCY" : "SUCCESS";
+        return discrepancy ? "DISCREPANCY" : OperationResult.SUCCESS;
     }
 
     /**

@@ -7,6 +7,7 @@ package com.nexusarchive.integration.yonsuite.client;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.HttpConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +63,7 @@ public class YonSuiteHttpExecutor {
             log.debug("POST {} with body: {}", url, body);
 
             HttpResponse httpResponse = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(body)
                     .timeout(30_000)
                     .execute();
@@ -82,7 +83,7 @@ public class YonSuiteHttpExecutor {
             log.debug("POST {} with body: {}", url, requestBody);
 
             HttpResponse httpResponse = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(requestBody.toString())
                     .timeout(30_000)
                     .execute();
@@ -102,7 +103,7 @@ public class YonSuiteHttpExecutor {
             log.debug("GET {}", url);
 
             HttpResponse httpResponse = HttpRequest.get(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .timeout(30_000)
                     .execute();
 
@@ -122,7 +123,7 @@ public class YonSuiteHttpExecutor {
             log.debug("POST {} with body: {}", url, body);
 
             HttpResponse httpResponse = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(body)
                     .timeout(30_000)
                     .execute();
@@ -144,7 +145,7 @@ public class YonSuiteHttpExecutor {
             log.debug("POST {} with body: {}", url, requestBody);
 
             HttpResponse httpResponse = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(requestBody.toString())
                     .timeout(30_000)
                     .execute();

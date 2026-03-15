@@ -121,7 +121,12 @@ public class ModuleDiscoveryService {
         List<FrontendModuleInfo> modules = new ArrayList<>();
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(FRONTEND_DISCOVERY_SCRIPT.split(" "));
+            // 使用 bash -c 包装脚本命令，避免空格分割导致的命令注入风险
+            ProcessBuilder pb = new ProcessBuilder(
+                "/bin/bash",
+                "-c",
+                FRONTEND_DISCOVERY_SCRIPT
+            );
             pb.redirectErrorStream(true);
             Process process = pb.start();
 

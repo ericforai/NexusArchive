@@ -15,15 +15,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * SM4 国密加密工具类
- * 
+ *
  * 基于 Hutool (BouncyCastle wrapper) 实现 SM4-ECB 加密
  * 符合信创环境国密标准
- * 
+ *
  * 密钥管理优化：
- * - 优先从环境变量 SM4_KEY 读取密钥
- * - 密钥格式：32 位 16 进制字符串（128-bit）
- * - 生产环境警告：使用默认密钥会输出警告日志
- * 
+ * - 由 SM4Config 在应用启动时初始化
+ * - 使用 Spring Environment 正确检测生产环境
+ * - 生产环境强制要求配置 SM4_KEY
+ *
  * @author Agent B - 合规开发工程师
  */
 public class SM4Utils {
@@ -31,44 +31,35 @@ public class SM4Utils {
     private static final Logger log = LoggerFactory.getLogger(SM4Utils.class);
 
     // 实际使用的密钥
-    private static final String ACTIVE_KEY;
+    private static String ACTIVE_KEY;
 
     // SM4 加密实例
-    private static final SymmetricCrypto sm4;
+    private static SymmetricCrypto sm4;
 
-    static {
-        // 从环境变量读取密钥
-        String envKey = System.getenv("SM4_KEY");
+    // 是否已初始化
+    private static boolean initialized = false;
 
-        String resolvedKey = null;
-        if (envKey != null && !envKey.isEmpty()) {
-            if (isValidKey(envKey)) {
-                resolvedKey = envKey;
-                log.info("SM4 加密: 使用环境变量配置的密钥");
-            } else {
-                log.error("SM4 加密: 环境变量 SM4_KEY 格式无效（需要 32 位 16 进制字符串）");
-            }
-        }
+    /**
+     * 由 SM4Config 调用，初始化 SM4 加密实例
+     * 此方法在 Spring Environment 准备好后被调用
+     *
+     * @param key 加密密钥
+     * @param crypto SM4 加密实例
+     */
+    public static void initialize(String key, SymmetricCrypto crypto) {
+        ACTIVE_KEY = key;
+        sm4 = crypto;
+        initialized = true;
+        log.debug("SM4Utils 初始化完成");
+    }
 
-        if (resolvedKey == null) {
-            // 尝试从系统属性读取
-            String propKey = System.getProperty("sm4.key");
-            if (propKey != null && !propKey.isEmpty() && isValidKey(propKey)) {
-                resolvedKey = propKey;
-                log.info("SM4 加密: 使用系统属性配置的密钥");
-            }
-        }
-
-        // ✅ P0 修复: 如果密钥未配置,使用默认密钥并记录警告
-        if (resolvedKey == null) {
-            // 使用硬编码默认密钥（仅用于测试/开发环境），生产环境请务必配置 SM4_KEY
-            resolvedKey = "0123456789abcdef0123456789abcdef";
-            log.warn("SM4_KEY 未配置，使用默认密钥进行加解密。请在生产环境配置有效的 SM4_KEY。");
-        }
-
-        ACTIVE_KEY = resolvedKey;
-        sm4 = SmUtil.sm4(HexUtil.decodeHex(ACTIVE_KEY));
-        log.info("SM4 加密初始化成功,密钥哈希: {}", getKeyHash());
+    /**
+     * 检查是否已初始化
+     *
+     * @return 是否已初始化
+     */
+    public static boolean isInitialized() {
+        return initialized;
     }
 
     /**
@@ -130,28 +121,14 @@ public class SM4Utils {
     }
 
     private static void ensureReady() {
-        if (sm4 == null) {
-            throw new IllegalStateException("SM4_KEY 未配置或格式非法，无法执行加解密操作");
+        if (!initialized || sm4 == null) {
+            throw new IllegalStateException("SM4 未初始化，请确保 SM4Config 已正确配置");
         }
-    }
-
-    /**
-     * 验证密钥格式
-     * 
-     * @param key 待验证的密钥
-     * @return 是否为有效的 32 位 16 进制字符串
-     */
-    private static boolean isValidKey(String key) {
-        if (key == null || key.length() != 32) {
-            return false;
-        }
-        // 验证是否为有效的 16 进制字符串
-        return key.matches("^[0-9a-fA-F]{32}$");
     }
 
     /**
      * 检查是否使用默认密钥
-     * 
+     *
      * @return 是否使用默认密钥
      */
     public static boolean isKeyMissing() {

@@ -6,6 +6,8 @@
 package com.nexusarchive.service.erp;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nexusarchive.common.constants.DateFormat;
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.dto.IntegrationChannelDTO;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.entity.ErpScenario;
@@ -101,7 +103,7 @@ public class ErpChannelService {
      */
     private String formatLastSyncTime(java.time.LocalDateTime lastSyncTime) {
         if (lastSyncTime != null) {
-            return lastSyncTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            return lastSyncTime.format(DateTimeFormatter.ofPattern(DateFormat.DATETIME));
         }
         return null;
     }
@@ -193,9 +195,9 @@ public class ErpChannelService {
      * 转换同步状态到通道状态
      */
     private String convertStatusToChannelStatus(String lastSyncStatus) {
-        if ("SUCCESS".equals(lastSyncStatus)) {
+        if (OperationResult.SUCCESS.equals(lastSyncStatus)) {
             return "normal";
-        } else if ("FAIL".equals(lastSyncStatus)) {
+        } else if (OperationResult.FAIL.equals(lastSyncStatus)) {
             return "error";
         }
         return "normal"; // NONE 或 null 也显示正常

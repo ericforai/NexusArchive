@@ -5,6 +5,7 @@
 package com.nexusarchive.integration.yonsuite.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.entity.SalesOrder;
 import com.nexusarchive.entity.SalesOrderDetail;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderDetailResponse;
@@ -30,8 +31,8 @@ import java.util.List;
 @Slf4j
 public class SalesOrderDataMapper {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter DATE_FORMATTER_SHORT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATETIME);
+    private static final DateTimeFormatter DATE_FORMATTER_SHORT = DateTimeFormatter.ofPattern(DateFormat.DATE);
 
     private final ObjectMapper objectMapper;
 

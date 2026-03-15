@@ -1,5 +1,6 @@
 package com.nexusarchive.domain.borrow;
 
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.entity.BorrowRequest;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
@@ -32,7 +33,7 @@ public class BorrowRequestVO extends BorrowRequest {
         BeanUtils.copyProperties(entity, vo);
         vo.setArchiveTitle(titles);
         
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern(DateFormat.DATE);
         if (entity.getExpectedStartDate() != null) vo.setBorrowDate(entity.getExpectedStartDate().format(fmt));
         if (entity.getExpectedEndDate() != null) vo.setExpectedReturnDate(entity.getExpectedEndDate().format(fmt));
         if (entity.getActualEndDate() != null) vo.setActualReturnDate(entity.getActualEndDate().format(fmt));

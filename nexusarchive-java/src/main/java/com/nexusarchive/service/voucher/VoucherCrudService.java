@@ -4,6 +4,7 @@
 
 package com.nexusarchive.service.voucher;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.OriginalVoucherType;
@@ -187,7 +188,7 @@ public class VoucherCrudService {
             throw new BusinessException("只有草稿状态的凭证可以提交归档");
         }
 
-        voucher.setArchiveStatus("PENDING");
+        voucher.setArchiveStatus(OperationResult.PENDING);
         voucher.setLastModifiedBy(userId);
         voucher.setLastModifiedTime(LocalDateTime.now());
         voucherMapper.updateById(voucher);
@@ -204,7 +205,7 @@ public class VoucherCrudService {
         if (voucher == null) {
             throw new BusinessException("原始凭证不存在: " + id);
         }
-        if (!"PENDING".equals(voucher.getArchiveStatus())) {
+        if (!OperationResult.PENDING.equals(voucher.getArchiveStatus())) {
             throw new BusinessException("只有待归档状态的凭证可以确认归档");
         }
 

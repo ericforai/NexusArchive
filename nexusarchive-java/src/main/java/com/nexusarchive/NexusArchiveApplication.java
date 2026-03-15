@@ -5,6 +5,7 @@
 
 package com.nexusarchive;
 
+import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,6 +26,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * @author NexusArchive Team
  * @version 2.0.0
  */
+@Slf4j
 @SpringBootApplication(exclude = {
     org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration.class,
     org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration.class
@@ -40,10 +42,10 @@ public class NexusArchiveApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(NexusArchiveApplication.class, args);
-        System.out.println("\n========================================");
-        System.out.println("NexusArchive 启动成功!");
-        System.out.println("API文档: http://localhost:8080/api/doc.html");
-        System.out.println("========================================\n");
+        log.info("========================================");
+        log.info("NexusArchive 启动成功!");
+        log.info("API文档: http://localhost:8080/api/doc.html");
+        log.info("========================================");
     }
 
 }

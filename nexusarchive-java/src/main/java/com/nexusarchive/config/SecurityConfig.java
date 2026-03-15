@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.nexusarchive.common.constants.HttpConstants;
+
 /**
  * Spring Security配置 (安全重构版本)
  */
@@ -150,7 +152,7 @@ public class SecurityConfig {
 
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                 configuration.setAllowedHeaders(
-                                Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+                                Arrays.asList(HttpConstants.AUTHORIZATION, HttpConstants.CONTENT_TYPE, "X-Requested-With", "Accept"));
                 configuration.setAllowCredentials(true);
                 configuration.setMaxAge(3600L);
 

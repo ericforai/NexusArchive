@@ -6,6 +6,7 @@
 package com.nexusarchive.service.pdf;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.entity.ArcFileContent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -96,7 +97,7 @@ public class PaymentPdfGenerator {
                               boolean useChinese) throws IOException {
         String code = data.path("code").asText(fileContent.getBusinessDocNo());
         String billDate = data.path("billDate").asText(
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateFormat.DATE)));
         String orgName = data.path("financeOrgName").asText("-");
         String supplier = data.path("supplierName").asText("-");
         String currency = data.path("oriCurrencyName").asText("CNY");
@@ -327,7 +328,7 @@ public class PaymentPdfGenerator {
                               int margin, PDFont regularFont, boolean useChinese) throws IOException {
         String creator = data.path("creatorUserName").asText(
                 fileContent.getCreator() != null ? fileContent.getCreator() : "");
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateFormat.DATETIME));
 
         contentStream.setFont(regularFont, 8);
         contentStream.beginText();

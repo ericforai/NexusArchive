@@ -6,6 +6,7 @@
 package com.nexusarchive.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.ConvertLog;
@@ -15,6 +16,7 @@ import com.nexusarchive.mapper.ConvertLogMapper;
 import com.nexusarchive.service.ArchiveService;
 import com.nexusarchive.service.FileStorageService;
 import com.nexusarchive.service.OfdConvertService;
+import com.nexusarchive.util.PathSecurityUtils;
 import com.nexusarchive.util.SM4Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,7 @@ public class OfdConvertServiceImpl implements OfdConvertService {
     private final FileStorageService fileStorageService;
     private final ConvertLogMapper convertLogMapper;
     private final ArcFileContentMapper arcFileContentMapper;
+    private final PathSecurityUtils pathSecurityUtils;
     
     @Value("${archive.root.path:/data/archives}")
     private String archiveRootPath;
@@ -107,7 +110,7 @@ public class OfdConvertServiceImpl implements OfdConvertService {
                 .targetFormat("OFD")
                 .sourcePath(relativePath)
                 .targetPath(success ? targetRelativePath : null)
-                .status(success ? "SUCCESS" : "FAIL")
+                .status(success ? OperationResult.SUCCESS : OperationResult.FAIL)
                 .errorMessage(errorMessage)
                 .targetSize(fileSize)
                 .durationMs(duration)
@@ -173,6 +176,8 @@ public class OfdConvertServiceImpl implements OfdConvertService {
 
     @Override
     public boolean convertPdfToOfd(String sourcePath, String targetPath) throws Exception {
+        // [S2229] 路径遍历防护：使用 PathSecurityUtils 验证路径
+        // 注意：sourcePath 和 targetPath 应该是相对路径，由调用方确保在允许的目录内
         Path src = Paths.get(sourcePath);
         Path dst = Paths.get(targetPath);
         

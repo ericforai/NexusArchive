@@ -1,0 +1,60 @@
+# Input: SonarQube analysis for NexusArchive
+# Output: GitHub Actions workflow
+# Pos: .github/workflows/
+
+# ⚠️ 注意：SonarCloud 免费版有代码行数限制
+# 本 workflow 目前已禁用，请使用本地 SonarQube (见 docker-compose.sonarqube.yml)
+
+name: SonarQube Code Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    # 暂时禁用：SonarCloud 免费额度已用完
+    if: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Build with Maven
+        run: mvn -B verify -DskipTests -Dspotbugs.skip=true
+
+      - name: Analyze with SonarQube (SonarCloud)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B sonar:sonar \
+            -Dsonar.projectKey=nexusarchive \
+            -Dsonar.organization=nexusarchive \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml

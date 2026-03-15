@@ -25,6 +25,15 @@ export default defineConfig(({ mode }) => {
           target: apiTarget,
           changeOrigin: true,
           secure: false,
+          // 确保转发路径的严谨性，如果请求中包含重复的 /api/api，
+          // 通过 rewrite 模拟 Nginx 行为，让错误在本地就能暴露出来。
+          configure: (proxy, _options) => {
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              if (req.url?.startsWith('/api/api')) {
+                console.warn(`[ViteProxy] Detected redundant /api prefix in request: ${req.url}`);
+              }
+            });
+          }
         }
       }
     },

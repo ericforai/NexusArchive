@@ -5,6 +5,7 @@
 
 package com.nexusarchive.integration.erp.adapter.client;
 
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.integration.erp.dto.VoucherDTO;
 import com.nexusarchive.integration.yonsuite.client.YonSuiteClient;
 import com.nexusarchive.integration.yonsuite.dto.YonCollectionBillRequest;
@@ -31,8 +32,8 @@ import java.util.*;
 public class YonSuiteCollectionClient {
 
     private final YonSuiteClient yonSuiteClient;
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATETIME);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATE);
 
     /**
      * 同步收款单文件

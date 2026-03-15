@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -89,7 +90,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         // 4. 记录审计日志
         auditLogService.log(
             "SYSTEM", "SYSTEM", "USER_ONBOARD",
-            "USER", userResponse.getId(), "SUCCESS",
+            "USER", userResponse.getId(), OperationResult.SUCCESS,
             String.format("入职处理: employeeId=%s, username=%s", request.getEmployeeId(), userResponse.getUsername()),
             "SYSTEM"
         );
@@ -151,7 +152,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         // 5. 记录审计日志
         auditLogService.log(
             "SYSTEM", "SYSTEM", "USER_OFFBOARD",
-            "USER", userId, "SUCCESS",
+            "USER", userId, OperationResult.SUCCESS,
             String.format("离职处理: employeeId=%s, reason=%s", request.getEmployeeId(), request.getReason()),
             "SYSTEM"
         );
@@ -209,8 +210,8 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         // 5. 记录审计日志
         auditLogService.log(
             "SYSTEM", "SYSTEM", "USER_TRANSFER",
-            "USER", userId, "SUCCESS",
-            String.format("调岗处理: employeeId=%s, toOrganizationId=%s", 
+            "USER", userId, OperationResult.SUCCESS,
+            String.format("调岗处理: employeeId=%s, toOrganizationId=%s",
                 request.getEmployeeId(), request.getToOrganizationId()),
             "SYSTEM"
         );

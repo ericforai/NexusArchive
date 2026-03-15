@@ -10,6 +10,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.nexusarchive.common.constants.HttpConstants;
 import com.nexusarchive.integration.erp.dto.ErpConfig;
 import com.nexusarchive.integration.yonsuite.dto.YonPaymentApplyListResponse;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +77,7 @@ public class YonPaymentQueryHelper {
                     + URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
 
             HttpResponse firstPageResponse = HttpRequest.post(urlWithToken)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(firstPageBody.toString())
                     .timeout(10000)
                     .execute();
@@ -170,7 +171,7 @@ public class YonPaymentQueryHelper {
                     + URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
 
             HttpResponse firstPageResponse = HttpRequest.post(urlWithToken)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(firstPageBody.toString())
                     .timeout(10000)
                     .execute();
@@ -248,7 +249,7 @@ public class YonPaymentQueryHelper {
                 + URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
 
         HttpResponse response = HttpRequest.post(urlWithToken)
-                .header("Content-Type", "application/json")
+                .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                 .body(body.toString())
                 .timeout(10000)
                 .execute();
@@ -287,7 +288,7 @@ public class YonPaymentQueryHelper {
                 + URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
 
         HttpResponse response = HttpRequest.post(urlWithToken)
-                .header("Content-Type", "application/json")
+                .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                 .body(body.toString())
                 .timeout(10000)
                 .execute();

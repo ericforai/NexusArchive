@@ -5,6 +5,8 @@
 
 package com.nexusarchive.integration.yonsuite.mapper;
 
+import com.nexusarchive.common.constants.DateFormat;
+import com.nexusarchive.common.constants.HttpConstants;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.enums.PreArchiveStatus;
@@ -26,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class YonVoucherMapper {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATE);
 
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final ErpConfigService erpConfigService;
@@ -263,7 +265,7 @@ public class YonVoucherMapper {
         return ArcFileContent.builder()
                 .archivalCode(archivalCode)
                 .fileName("会计凭证-" + displayName + ".json")
-                .fileType("application/json")
+                .fileType(HttpConstants.APPLICATION_JSON)
                 .fileSize(fileSize)
                 .fileHash(fileHash)
                 .hashAlgorithm("SM3")
@@ -341,7 +343,7 @@ public class YonVoucherMapper {
         return ArcFileContent.builder()
                 .archivalCode(archivalCode)
                 .fileName("会计凭证-" + displayName + ".json")
-                .fileType("application/json")
+                .fileType(HttpConstants.APPLICATION_JSON)
                 .fileSize(fileSize)
                 .fileHash(fileHash)
                 .hashAlgorithm("SM3")

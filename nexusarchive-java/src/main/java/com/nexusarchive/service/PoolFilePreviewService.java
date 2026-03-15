@@ -13,6 +13,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
@@ -128,9 +129,9 @@ public class PoolFilePreviewService {
     private String determineContentType(String fileName) {
         String fileNameLower = fileName.toLowerCase();
         if (fileNameLower.endsWith(".pdf")) {
-            return "application/pdf";
+            return HttpConstants.APPLICATION_PDF;
         } else if (fileNameLower.endsWith(".ofd")) {
-            return "application/ofd";
+            return HttpConstants.APPLICATION_OFD;
         } else if (fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".jpeg")) {
             return "image/jpeg";
         } else if (fileNameLower.endsWith(".png")) {

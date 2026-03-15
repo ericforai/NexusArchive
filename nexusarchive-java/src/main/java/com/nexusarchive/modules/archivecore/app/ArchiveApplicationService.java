@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.modules.archivecore.api.dto.ArchiveCreateRequest;
+import com.nexusarchive.modules.archivecore.api.dto.ArchiveStatusChangeRequest;
 import com.nexusarchive.modules.archivecore.api.dto.ArchiveUpdateRequest;
 import com.nexusarchive.service.ArchiveReadService;
 import com.nexusarchive.service.ArchiveWriteService;
@@ -25,6 +26,7 @@ public class ArchiveApplicationService implements ArchiveFacade {
     private final ArchiveReadService archiveReadService;
     private final ArchiveWriteService archiveWriteService;
     private final ArchiveFileQueryService archiveFileQueryService;
+    private final ArchiveStateTransitionFacade stateTransitionFacade;
 
     @Override
     public Page<Archive> getArchives(int page, int limit, String search, String status, String categoryCode,
@@ -60,6 +62,11 @@ public class ArchiveApplicationService implements ArchiveFacade {
     @Override
     public void deleteArchive(String id) {
         archiveWriteService.deleteArchive(id);
+    }
+
+    @Override
+    public void changeStatus(String archiveId, ArchiveStatusChangeRequest request, String userId) {
+        stateTransitionFacade.transitionStatus(archiveId, request, userId);
     }
 
     private Archive toArchive(ArchiveCreateRequest request) {

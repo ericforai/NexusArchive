@@ -7,6 +7,7 @@ package com.nexusarchive.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.common.exception.ErrorCode;
 import com.nexusarchive.service.helper.OriginalVoucherHelper;
@@ -287,7 +288,7 @@ public class OriginalVoucherService {
         OriginalVoucher v = getById(id);
         if (!"DRAFT".equals(v.getArchiveStatus())) throw new BusinessException("只有草稿状态的凭证可以提交归档");
         validateForArchive(v);
-        v.setArchiveStatus("PENDING");
+        v.setArchiveStatus(OperationResult.PENDING);
         v.setLastModifiedBy(userId);
         v.setLastModifiedTime(LocalDateTime.now());
         voucherMapper.updateById(v);
@@ -296,7 +297,7 @@ public class OriginalVoucherService {
     @Transactional
     public void confirmArchive(String id, String userId) {
         OriginalVoucher v = getById(id);
-        if (!"PENDING".equals(v.getArchiveStatus())) throw new BusinessException("只有待归档状态的凭证可以确认归档");
+        if (!OperationResult.PENDING.equals(v.getArchiveStatus())) throw new BusinessException("只有待归档状态的凭证可以确认归档");
         v.setArchiveStatus("ARCHIVED");
         v.setArchivedTime(LocalDateTime.now());
         v.setLastModifiedBy(userId);
@@ -319,7 +320,7 @@ public class OriginalVoucherService {
 
         Long total = voucherMapper.selectCount(w);
         Long archived = voucherMapper.selectCount(w.clone().eq(OriginalVoucher::getArchiveStatus, "ARCHIVED"));
-        Long pending = voucherMapper.selectCount(w.clone().eq(OriginalVoucher::getArchiveStatus, "PENDING"));
+        Long pending = voucherMapper.selectCount(w.clone().eq(OriginalVoucher::getArchiveStatus, OperationResult.PENDING));
         return new OriginalVoucherStats(total, archived, pending, total - archived - pending);
     }
 

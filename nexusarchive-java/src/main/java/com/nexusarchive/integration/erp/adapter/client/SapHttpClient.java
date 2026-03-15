@@ -13,6 +13,7 @@ import com.nexusarchive.integration.erp.dto.ErpConfig;
 import com.nexusarchive.integration.erp.dto.sap.SapErrorResponse;
 import com.nexusarchive.integration.erp.dto.sap.SapJournalEntryDto;
 import com.nexusarchive.integration.erp.exception.ErpException;
+import com.nexusarchive.common.constants.HttpConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -133,7 +134,7 @@ public class SapHttpClient {
         String url = buildQueryUrl(config, startDate, endDate);
 
         HttpResponse response = HttpRequest.get(url)
-            .header("Accept", "application/json")
+            .header("Accept", HttpConstants.APPLICATION_JSON)
             .header("x-csrf-token", "Fetch") // SAP CSRF 保护
             .basicAuth(config.getAppKey(), config.getAppSecret())
             .timeout(30000)
@@ -169,7 +170,7 @@ public class SapHttpClient {
         String url = buildDetailUrl(config, journalEntry, fiscalYear);
 
         HttpResponse response = HttpRequest.get(url)
-            .header("Accept", "application/json")
+            .header("Accept", HttpConstants.APPLICATION_JSON)
             .basicAuth(config.getAppKey(), config.getAppSecret())
             .timeout(30000)
             .execute();

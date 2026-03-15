@@ -7,6 +7,7 @@ package com.nexusarchive.service.parser.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.dto.parser.ParsedInvoice;
 import com.nexusarchive.service.parser.InvoiceParser;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class XmlInvoiceParser implements InvoiceParser {
 
     private final XmlMapper xmlMapper = new XmlMapper();
     private static final DateTimeFormatter DATE_FMT_1 = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final DateTimeFormatter DATE_FMT_2 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FMT_2 = DateTimeFormatter.ofPattern(DateFormat.DATE);
 
     @Override
     public boolean supports(String fileType) {
@@ -90,7 +91,9 @@ public class XmlInvoiceParser implements InvoiceParser {
         else if (k.contains("totalamount") || k.equals("jshj") || k.equals("hjje")) { // jshj=价税合计, hjje=合计金额
             try {
                 builder.totalAmount(new BigDecimal(value));
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("解析金额字段失败 [key={}, value={}]: {}", key, value, e.getMessage());
+            }
         }
         // Seller Name
         else if (k.contains("sellername") || k.equals("xhfmc") || k.equals("nsrmc")) {
@@ -104,7 +107,9 @@ public class XmlInvoiceParser implements InvoiceParser {
                 } else if (value.contains("-")) {
                     builder.issueDate(LocalDate.parse(value.substring(0, 10), DATE_FMT_2));
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("解析日期字段失败 [key={}, value={}]: {}", key, value, e.getMessage());
+            }
         }
     }
 }

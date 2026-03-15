@@ -19,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.nexusarchive.common.constants.HttpConstants;
 
 /**
  * 系统监控控制器
@@ -58,7 +59,7 @@ public class MonitoringController {
                     responseCode = "200",
                     description = "获取成功",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = HttpConstants.APPLICATION_JSON,
                             schema = @Schema(implementation = IntegrationMonitoringDTO.class)
                     )
             ),

@@ -13,6 +13,7 @@ import com.nexusarchive.integration.yonsuite.dto.YonPaymentApplyFileRequest;
 import com.nexusarchive.integration.yonsuite.dto.YonPaymentApplyFileResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.nexusarchive.common.constants.HttpConstants;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
@@ -86,7 +87,7 @@ public class YonPaymentApplyFileService {
 
             // 发送请求
             HttpResponse response = HttpRequest.post(urlWithToken)
-                .header("Content-Type", "application/json")
+                .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                 .body(requestBody)
                 .timeout(10000)
                 .execute();

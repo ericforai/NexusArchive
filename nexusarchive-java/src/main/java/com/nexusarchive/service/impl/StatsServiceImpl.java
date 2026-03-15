@@ -15,6 +15,7 @@ import com.nexusarchive.entity.IngestRequestStatus;
 import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.mapper.IngestRequestStatusMapper;
+import com.nexusarchive.annotation.ReadOnly;
 import com.nexusarchive.service.DataScopeService;
 import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import com.nexusarchive.service.StatsService;
@@ -51,6 +52,7 @@ public class StatsServiceImpl implements StatsService {
     private String archiveRootPath;
 
     @Override
+    @ReadOnly
     @Cacheable(value = "stats", key = "'dashboard:' + #root.target.getClass().getSimpleName() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
     public DashboardStatsDto getDashboardStats() {
         DataScopeContext scope = dataScopeService.resolve();
@@ -89,6 +91,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    @ReadOnly
     public StorageStatsDto getStorageStats() {
         Long usedBytes = arcFileContentMapper.sumFileSize();
         long safeUsedBytes = usedBytes != null ? usedBytes : 0L;
@@ -102,6 +105,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    @ReadOnly
     @Cacheable(value = "stats", key = "'trend:' + T(java.time.LocalDate).now() + ':' + T(com.nexusarchive.security.FondsContext).getCurrentFondsNo()")
     public List<ArchivalTrendDto> getArchivalTrend() {
         // 近 30 天归档趋势，直接使用参数化 SQL，避免 LambdaQueryWrapper + apply/last 生成不稳定 SQL。
@@ -189,6 +193,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    @ReadOnly
     public TaskStatusStatsDto getTaskStatusStats() {
         // Use JdbcTemplate to completely avoid QueryWrapper issues in both ArchUnit and unit tests
         String sql = "SELECT status, COUNT(*) as cnt FROM sys_ingest_request_status GROUP BY status";

@@ -5,6 +5,7 @@
 
 package com.nexusarchive.integration.erp.controller;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.dto.sip.IngestResponse;
 import com.nexusarchive.entity.Archive;
@@ -44,7 +45,7 @@ public class ErpIngestController {
         List<IngestResult> results = new ArrayList<>();
 
         if (request.getVouchers() == null || request.getVouchers().isEmpty()) {
-            response.setStatus("FAIL");
+            response.setStatus(OperationResult.FAIL);
             response.setGlobalError("No vouchers provided");
             return ResponseEntity.badRequest().body(response);
         }
@@ -53,7 +54,7 @@ public class ErpIngestController {
             IngestResult result = new IngestResult();
             // Ensure header exists
             if (voucherSip.getHeader() == null) {
-                result.setStatus("FAIL");
+                result.setStatus(OperationResult.FAIL);
                 result.setMessage("Missing voucher header");
                 results.add(result);
                 continue;
@@ -68,7 +69,7 @@ public class ErpIngestController {
 
                 if (existing != null) {
                     if ("ARCHIVED".equalsIgnoreCase(existing.getStatus())) {
-                        result.setStatus("FAIL");
+                        result.setStatus(OperationResult.FAIL);
                         result.setMessage("Voucher is already archived and cannot be modified.");
                         result.setArchivalCode(existing.getArchiveCode());
                         results.add(result);
@@ -89,8 +90,8 @@ public class ErpIngestController {
                 }
 
                 IngestResponse ingestResp = ingestService.ingestSip(voucherSip);
-                
-                result.setStatus("SUCCESS");
+
+                result.setStatus(OperationResult.SUCCESS);
                 result.setMessage(ingestResp.getMessage());
                 // Note: Archival Code is generated asynchronously, so it might be null here.
                 // We could predict it if needed, but for now we stick to the async response.
@@ -107,24 +108,24 @@ public class ErpIngestController {
                 
             } catch (Exception e) {
                 log.error("Error processing voucher: {}", voucherSip.getHeader().getVoucherNumber(), e);
-                result.setStatus("FAIL");
+                result.setStatus(OperationResult.FAIL);
                 result.setMessage(e.getMessage());
             }
             results.add(result);
         }
 
         response.setResults(results);
-        
+
         // Determine global status
-        boolean hasFailures = results.stream().anyMatch(r -> "FAIL".equals(r.getStatus()));
-        boolean hasSuccess = results.stream().anyMatch(r -> "SUCCESS".equals(r.getStatus()));
-        
+        boolean hasFailures = results.stream().anyMatch(r -> OperationResult.FAIL.equals(r.getStatus()));
+        boolean hasSuccess = results.stream().anyMatch(r -> OperationResult.SUCCESS.equals(r.getStatus()));
+
         if (hasFailures && hasSuccess) {
             response.setStatus("PARTIAL_SUCCESS");
         } else if (hasFailures) {
-            response.setStatus("FAIL");
+            response.setStatus(OperationResult.FAIL);
         } else {
-            response.setStatus("SUCCESS");
+            response.setStatus(OperationResult.SUCCESS);
         }
         
         return ResponseEntity.ok(response);

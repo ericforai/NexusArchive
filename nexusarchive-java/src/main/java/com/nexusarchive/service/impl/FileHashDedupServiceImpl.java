@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.dto.request.FileHashDedupScopeRequest;
 import com.nexusarchive.entity.FileHashDedupScope;
@@ -67,7 +68,7 @@ public class FileHashDedupServiceImpl implements FileHashDedupService {
         // 2. 记录审计日志
         auditLogService.log(
             "SYSTEM", "SYSTEM", "FILE_HASH_DEDUP_SCOPE_UPDATED",
-            "FILE_HASH_DEDUP_SCOPE", scope.getId(), "SUCCESS",
+            "FILE_HASH_DEDUP_SCOPE", scope.getId(), OperationResult.SUCCESS,
             String.format("更新去重范围配置: fondsNo=%s, scopeType=%s", request.getFondsNo(), request.getScopeType()),
             "SYSTEM"
         );

@@ -8,6 +8,7 @@ package com.nexusarchive.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.result.BatchOperationResult;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.entity.ArcFileContent;
@@ -145,7 +146,7 @@ public class PreArchiveSubmitService {
             archive.setArchiveCode(newArchiveCode);
             archive.setTitle(properTitle);
             archive.setSummary(file.getFileName());
-            archive.setStatus("PENDING");
+            archive.setStatus(OperationResult.PENDING);
             log.info("档案记录已更新: newCode={}, title={}", newArchiveCode, properTitle);
         } else {
             // 不存在，创建新记录
@@ -282,7 +283,7 @@ public class PreArchiveSubmitService {
         // 设置基本信息
         archive.setTitle(extractTitle(file));
         archive.setSummary(file.getFileName());
-        archive.setStatus("PENDING"); // 待审批
+        archive.setStatus(OperationResult.PENDING); // 待审批
 
         // 设置分类（默认为会计凭证）
         archive.setCategoryCode(file.getVoucherType() != null ? file.getVoucherType() : "AC01");

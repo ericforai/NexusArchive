@@ -14,6 +14,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.awt.Color;
@@ -134,7 +135,7 @@ public class PdfWatermarkRenderer {
     private void setWatermarkResponseHeaders(HttpServletResponse response, String traceId,
                                              String watermarkText, String watermarkSubtext,
                                              int pageNumber, int totalPages) {
-        response.setContentType("application/pdf");
+        response.setContentType(HttpConstants.APPLICATION_PDF);
         response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
         response.setHeader("X-Trace-Id", traceId);
         response.setHeader("X-Watermark-Text", watermarkText);

@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.ofd;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.ConvertLog;
@@ -127,7 +128,7 @@ public class OfdConvertService {
             log.error("PDF 转 OFD 失败: {}", pdfPath, e);
             
             // 记录失败日志
-            saveConvertLog(archiveId, pdfPath, null, "FAIL", 
+            saveConvertLog(archiveId, pdfPath, null, OperationResult.FAIL,
                 e.getMessage(), duration, pdfFile.getFileSize(), null);
             
             return ConvertResult.fail(e.getMessage());

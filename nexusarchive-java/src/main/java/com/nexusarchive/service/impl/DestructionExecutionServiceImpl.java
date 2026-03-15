@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -151,7 +152,7 @@ public class DestructionExecutionServiceImpl implements DestructionExecutionServ
         destructionAudit.setAction("DESTRUCTION_EXECUTE");
         destructionAudit.setResourceType("DESTRUCTION");
         destructionAudit.setResourceId(destructionId);
-        destructionAudit.setOperationResult("SUCCESS");
+        destructionAudit.setOperationResult(OperationResult.SUCCESS);
         destructionAudit.setDetails(String.format(
                 "执行销毁，档案数量: %d, 模式: %s, TraceID: %s", destroyedCount, actualMode, traceId));
         destructionAudit.setTraceId(traceId);
@@ -245,7 +246,7 @@ public class DestructionExecutionServiceImpl implements DestructionExecutionServ
                     fileAudit.setAction("FILE_DELETE");
                     fileAudit.setResourceType("FILE");
                     fileAudit.setResourceId(pending.fileId());
-                    fileAudit.setOperationResult("SUCCESS");
+                    fileAudit.setOperationResult(OperationResult.SUCCESS);
                     fileAudit.setDetails(String.format(
                             "删除文件: %s, 大小: %d, 模式: %s, TraceID: %s",
                             pending.storagePath(), fileInfo.getSize(), mode, pending.traceId()));

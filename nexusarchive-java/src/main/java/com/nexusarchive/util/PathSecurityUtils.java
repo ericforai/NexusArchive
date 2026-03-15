@@ -87,6 +87,38 @@ public class PathSecurityUtils {
     }
 
     /**
+     * 验证扫描工作区路径
+     * 扫描文件存储在临时目录下，复用 tempPath 作为根目录
+     *
+     * @param relativePath 相对路径（可能是绝对路径，会进行验证）
+     * @return 规范化后的安全路径
+     * @throws SecurityException 如果路径不安全
+     */
+    public Path validateScanPath(String relativePath) {
+        if (relativePath == null || relativePath.isEmpty()) {
+            throw new SecurityException("扫描文件路径不能为空");
+        }
+
+        // 如果是绝对路径，需要验证其在临时目录内
+        Path inputPath = Paths.get(relativePath);
+        Path tempRoot = Paths.get(tempPath).toAbsolutePath().normalize();
+
+        if (inputPath.isAbsolute()) {
+            // 绝对路径：检查是否在临时目录内
+            Path normalized = inputPath.toAbsolutePath().normalize();
+            if (!normalized.startsWith(tempRoot)) {
+                log.warn("🚫 检测到扫描文件路径遍历攻击: {} 尝试访问临时目录外",
+                    sanitizeForLog(relativePath));
+                throw new SecurityException("扫描文件路径必须在临时目录内");
+            }
+            return normalized;
+        } else {
+            // 相对路径：使用临时目录作为根目录验证
+            return validateAndNormalize(relativePath, tempPath);
+        }
+    }
+
+    /**
      * 检查路径是否包含危险字符
      */
     private boolean containsDangerousChars(String path) {

@@ -4,6 +4,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.dto.BatchUploadRequest;
 import com.nexusarchive.dto.BatchUploadResponse;
 import com.nexusarchive.dto.batch.BatchArchiveRequest;
@@ -92,12 +93,12 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
         var fonds = fondsMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.nexusarchive.entity.BasFonds>()
                 .eq(com.nexusarchive.entity.BasFonds::getFondsCode, currentFonds));
-        String fondsId = fonds != null ? fonds.getId() : "UNKNOWN";
+        String fondsId = fonds != null ? fonds.getId() : OperationResult.UNKNOWN;
 
         CollectionBatch batch = helper.createInitialBatch(request, batchNo, fondsId, currentFonds, userId);
         batchMapper.insert(batch);
 
-        auditLogService.log(userId, userId, "CREATE_BATCH", "COLLECTION_BATCH", String.valueOf(batch.getId()), "SUCCESS", "创建上传批次: " + batchNo, null);
+        auditLogService.log(userId, userId, "CREATE_BATCH", "COLLECTION_BATCH", String.valueOf(batch.getId()), OperationResult.SUCCESS, "创建上传批次: " + batchNo, null);
 
         return BatchUploadResponse.builder()
             .batchId(batch.getId()).batchNo(batchNo).status(batch.getStatus())
@@ -118,7 +119,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         try {
             fileHash = fileHashUtil.calculateSHA256(file.getInputStream());
         } catch (Exception e) {
-            return new FileUploadResult(null, file.getOriginalFilename(), "FAILED", "哈希计算失败");
+            return new FileUploadResult(null, file.getOriginalFilename(), OperationResult.FAIL, "哈希计算失败");
         }
 
         if (fileValidator.checkDuplicate(fileHash, batch.getFondsCode(), batch.getFiscalYear()) != null) {
@@ -127,7 +128,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
 
         if (batchFileMapper.exists(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CollectionBatchFile>()
                 .eq(CollectionBatchFile::getBatchId, batchId).eq(CollectionBatchFile::getOriginalFilename, file.getOriginalFilename()))) {
-            return new FileUploadResult(null, file.getOriginalFilename(), "FAILED", "同名文件已存在");
+            return new FileUploadResult(null, file.getOriginalFilename(), OperationResult.FAIL, "同名文件已存在");
         }
 
         int order = batchFileMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<CollectionBatchFile>()
@@ -150,7 +151,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
             batchFile.setErrorMessage(e.getMessage());
             batchFileMapper.updateById(batchFile);
             batchMapper.updateStatistics(batchId);
-            return new FileUploadResult(null, file.getOriginalFilename(), "FAILED", "保存失败");
+            return new FileUploadResult(null, file.getOriginalFilename(), OperationResult.FAIL, "保存失败");
         }
 
         String path = storageService.buildStoragePathString(batch.getFondsCode(), batch.getFiscalYear(), batch.getBatchNo(), fileId, fileValidator.getExtension(batchFile.getOriginalFilename()));
@@ -183,7 +184,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
                 .eq(CollectionBatchFile::getBatchId, batchId).isNotNull(CollectionBatchFile::getFileId));
 
         BatchCheckStatistics checkResult = helper.executeBatchCheck(files, batch);
-        auditLogService.log(userId, userId, "COMPLETE_BATCH", "COLLECTION_BATCH", String.valueOf(batchId), "SUCCESS", "完成批次上传", null);
+        auditLogService.log(userId, userId, "COMPLETE_BATCH", "COLLECTION_BATCH", String.valueOf(batchId), OperationResult.SUCCESS, "完成批次上传", null);
 
         return new BatchCompleteResult(batch.getId(), batch.getBatchNo(), batch.getStatus(), batch.getTotalFiles(),
             batch.getUploadedFiles(), batch.getFailedFiles(), checkResult.getCheckedCount(), checkResult.getPassedCount(), checkResult.getFailedFiles());
@@ -200,7 +201,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         batch.setErrorMessage("用户取消");
         batch.setCompletedTime(LocalDateTime.now());
         batchMapper.updateById(batch);
-        auditLogService.log(userId, userId, "CANCEL_BATCH", "COLLECTION_BATCH", String.valueOf(batchId), "SUCCESS", "取消批次", null);
+        auditLogService.log(userId, userId, "CANCEL_BATCH", "COLLECTION_BATCH", String.valueOf(batchId), OperationResult.SUCCESS, "取消批次", null);
     }
 
     @Override
@@ -259,7 +260,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
                 response.incrementSuccess();
             } catch (Exception e) {
                 CollectionBatch b = batchMapper.selectById(id);
-                response.addError(id, b != null ? b.getBatchNo() : "UNKNOWN", e.getMessage());
+                response.addError(id, b != null ? b.getBatchNo() : OperationResult.UNKNOWN, e.getMessage());
             }
         }
         return response;
@@ -272,7 +273,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         b.setStatus(CollectionBatch.STATUS_ARCHIVED);
         b.setCompletedTime(LocalDateTime.now());
         batchMapper.updateById(b);
-        auditLogService.log(opId != null ? opId : "system", opName, "APPROVE_BATCH", "COLLECTION_BATCH", String.valueOf(id), "SUCCESS", "批准归档", null);
+        auditLogService.log(opId != null ? opId : "system", opName, "APPROVE_BATCH", "COLLECTION_BATCH", String.valueOf(id), OperationResult.SUCCESS, "批准归档", null);
     }
 
     private void rejectBatch(Long id, String opId, String opName, String comment) {
@@ -282,7 +283,7 @@ public class CollectionBatchServiceImpl implements CollectionBatchService {
         b.setErrorMessage(comment);
         b.setCompletedTime(LocalDateTime.now());
         batchMapper.updateById(b);
-        auditLogService.log(opId != null ? opId : "system", opName, "REJECT_BATCH", "COLLECTION_BATCH", String.valueOf(id), "SUCCESS", "拒绝归档", null);
+        auditLogService.log(opId != null ? opId : "system", opName, "REJECT_BATCH", "COLLECTION_BATCH", String.valueOf(id), OperationResult.SUCCESS, "拒绝归档", null);
     }
 
     @Override

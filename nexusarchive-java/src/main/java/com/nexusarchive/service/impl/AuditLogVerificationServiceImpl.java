@@ -101,21 +101,47 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
 
     private ChainVerificationResult evaluateChain(List<SysAuditLog> logs, Set<String> requestedLogIds) {
         if (logs == null || logs.isEmpty()) {
-            if (requestedLogIds == null || requestedLogIds.isEmpty()) {
-                return emptyResult();
-            }
-
-            List<VerificationResult> missingResults = new ArrayList<>();
-            for (String requestedLogId : requestedLogIds) {
-                missingResults.add(VerificationResult.invalid(
-                        requestedLogId,
-                        VerificationResult.ISSUE_TYPE_MISSING_LOG,
-                        "审计日志不存在: " + requestedLogId
-                ));
-            }
-            return buildResult(requestedLogIds.size(), missingResults);
+            return handleEmptyLogs(requestedLogIds);
         }
 
+        ChainEvaluationResult evaluation = evaluateLogChain(logs);
+        checkMissingLogIds(requestedLogIds, evaluation.foundLogIds(), evaluation.invalidResults());
+
+        int totalLogs = calculateTotalLogs(requestedLogIds, logs.size());
+        return buildResult(totalLogs, new ArrayList<>(evaluation.invalidResults().values()));
+    }
+
+    /**
+     * Handle the case when no logs are found
+     */
+    private ChainVerificationResult handleEmptyLogs(Set<String> requestedLogIds) {
+        if (requestedLogIds == null || requestedLogIds.isEmpty()) {
+            return emptyResult();
+        }
+
+        List<VerificationResult> missingResults = createMissingLogResults(requestedLogIds);
+        return buildResult(requestedLogIds.size(), missingResults);
+    }
+
+    /**
+     * Create missing log results for all requested IDs
+     */
+    private List<VerificationResult> createMissingLogResults(Set<String> requestedLogIds) {
+        List<VerificationResult> missingResults = new ArrayList<>();
+        for (String requestedLogId : requestedLogIds) {
+            missingResults.add(VerificationResult.invalid(
+                    requestedLogId,
+                    VerificationResult.ISSUE_TYPE_MISSING_LOG,
+                    "审计日志不存在: " + requestedLogId
+            ));
+        }
+        return missingResults;
+    }
+
+    /**
+     * Evaluate the log chain for hash and chain integrity
+     */
+    private ChainEvaluationResult evaluateLogChain(List<SysAuditLog> logs) {
         Map<String, VerificationResult> invalidResults = new LinkedHashMap<>();
         Set<String> foundLogIds = new LinkedHashSet<>();
         SysAuditLog previous = null;
@@ -130,33 +156,72 @@ public class AuditLogVerificationServiceImpl implements AuditLogVerificationServ
                 continue;
             }
 
-            if (previous != null && !Objects.equals(previous.getLogHash(), log.getPrevLogHash())) {
-                invalidResults.put(log.getId(), VerificationResult.invalid(
-                        log.getId(),
-                        VerificationResult.ISSUE_TYPE_BROKEN_CHAIN,
-                        "与前一条日志的哈希关联不匹配",
-                        previous.getLogHash(),
-                        log.getPrevLogHash()
-                ));
+            VerificationResult chainResult = verifyChainLink(previous, log);
+            if (chainResult != null) {
+                invalidResults.put(log.getId(), chainResult);
             }
 
             previous = log;
         }
 
-        if (requestedLogIds != null && !requestedLogIds.isEmpty()) {
-            for (String requestedLogId : requestedLogIds) {
-                if (!foundLogIds.contains(requestedLogId)) {
-                    invalidResults.put(requestedLogId, VerificationResult.invalid(
-                            requestedLogId,
-                            VerificationResult.ISSUE_TYPE_MISSING_LOG,
-                            "审计日志不存在: " + requestedLogId
-                    ));
-                }
-            }
+        return new ChainEvaluationResult(invalidResults, foundLogIds);
+    }
+
+    /**
+     * Verify the link between consecutive logs in the chain
+     * Returns null if valid, error result otherwise
+     */
+    private VerificationResult verifyChainLink(SysAuditLog previous, SysAuditLog current) {
+        if (previous == null) {
+            return null; // First log, no previous to compare
         }
 
-        int totalLogs = requestedLogIds != null && !requestedLogIds.isEmpty() ? requestedLogIds.size() : logs.size();
-        return buildResult(totalLogs, new ArrayList<>(invalidResults.values()));
+        if (!Objects.equals(previous.getLogHash(), current.getPrevLogHash())) {
+            return VerificationResult.invalid(
+                    current.getId(),
+                    VerificationResult.ISSUE_TYPE_BROKEN_CHAIN,
+                    "与前一条日志的哈希关联不匹配",
+                    previous.getLogHash(),
+                    current.getPrevLogHash()
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * Check for missing log IDs that were requested but not found
+     */
+    private void checkMissingLogIds(Set<String> requestedLogIds, Set<String> foundLogIds,
+                                   Map<String, VerificationResult> invalidResults) {
+        if (requestedLogIds == null || requestedLogIds.isEmpty()) {
+            return;
+        }
+
+        for (String requestedLogId : requestedLogIds) {
+            if (!foundLogIds.contains(requestedLogId)) {
+                invalidResults.put(requestedLogId, VerificationResult.invalid(
+                        requestedLogId,
+                        VerificationResult.ISSUE_TYPE_MISSING_LOG,
+                        "审计日志不存在: " + requestedLogId
+                ));
+            }
+        }
+    }
+
+    /**
+     * Calculate total logs count based on requested IDs or actual log list
+     */
+    private int calculateTotalLogs(Set<String> requestedLogIds, int actualLogCount) {
+        return (requestedLogIds != null && !requestedLogIds.isEmpty()) ? requestedLogIds.size() : actualLogCount;
+    }
+
+    /**
+     * Internal result of chain evaluation
+     */
+    private record ChainEvaluationResult(
+            Map<String, VerificationResult> invalidResults,
+            Set<String> foundLogIds) {
     }
 
     private ChainVerificationResult buildResult(int totalLogs, List<VerificationResult> invalidResults) {

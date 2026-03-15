@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.dto.workflow.WorkflowTaskDto;
 import com.nexusarchive.modules.borrowing.api.dto.BorrowingApprovalRequest;
 import com.nexusarchive.modules.borrowing.app.BorrowingFacade;
@@ -43,7 +44,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                 .id(UUID.randomUUID().toString())
                 .name("Approval Task for " + processKey)
                 .assignee("admin") // Assign to admin by default
-                .status("PENDING")
+                .status(OperationResult.PENDING)
                 .createdTime(LocalDateTime.now().toString())
                 .businessKey(businessKey)
                 .businessType(processKey)

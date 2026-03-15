@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.mapper.ArcFileContentMapper;
@@ -62,7 +63,7 @@ public class ArchiveFileContentService {
             "ARCHIVE_FILE_VIEWED",
             "ARCHIVE_FILE",
             content != null ? content.getId() : itemId,
-            "SUCCESS",
+            OperationResult.SUCCESS,
             "查询档案文件内容: itemId=" + itemId,
             null
         );
@@ -105,7 +106,7 @@ public class ArchiveFileContentService {
             "ARCHIVE_FILE_VIEWED",
             "ARCHIVE_FILE",
             fileId,
-            "SUCCESS",
+            OperationResult.SUCCESS,
             "查询档案文件内容: fileId=" + fileId,
             null
         );
@@ -133,7 +134,7 @@ public class ArchiveFileContentService {
             "ARCHIVE_FILES_LISTED",
             "ARCHIVE_FILE",
             itemId,
-            "SUCCESS",
+            OperationResult.SUCCESS,
             "查询档案关联文件: itemId=" + itemId + ", count=" + files.size(),
             null
         );

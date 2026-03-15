@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.erp;
 
+import com.nexusarchive.common.constants.OperationResult;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -103,16 +104,16 @@ public class AsyncErpSyncService {
 
             // 获取场景最新状态
             ErpScenario scenario = erpScenarioMapper.selectById(scenarioId);
-            String finalStatus = "SUCCESS".equals(scenario.getLastSyncStatus()) ? "SUCCESS" : "FAIL";
+            String finalStatus = OperationResult.SUCCESS.equals(scenario.getLastSyncStatus()) ? OperationResult.SUCCESS : OperationResult.FAIL;
 
             // 更新最终状态
-            double finalProgress = "SUCCESS".equals(finalStatus) ? 1.0 : 0.0;
+            double finalProgress = OperationResult.SUCCESS.equals(finalStatus) ? 1.0 : 0.0;
             updateTaskStatus(taskId, finalStatus,
-                "FAIL".equals(finalStatus) ? scenario.getLastSyncMsg() : null,
+                OperationResult.FAIL.equals(finalStatus) ? scenario.getLastSyncMsg() : null,
                 finalProgress);
 
             // 如果成功，同步统计数据
-            if ("SUCCESS".equals(finalStatus)) {
+            if (OperationResult.SUCCESS.equals(finalStatus)) {
                 SyncTask task = syncTaskMapper.selectOne(
                     new LambdaQueryWrapper<SyncTask>().eq(SyncTask::getTaskId, taskId));
                 if (task != null) {
@@ -123,7 +124,7 @@ public class AsyncErpSyncService {
 
         } catch (Exception e) {
             log.error("异步同步任务失败: taskId={}", taskId, e);
-            updateTaskStatus(taskId, "FAIL", e.getMessage(), 0.0);
+            updateTaskStatus(taskId, OperationResult.FAIL, e.getMessage(), 0.0);
         }
     }
 
@@ -233,7 +234,7 @@ public class AsyncErpSyncService {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(daysToKeep);
         int deleted = syncTaskMapper.delete(
             new LambdaQueryWrapper<SyncTask>()
-                .in(SyncTask::getStatus, List.of("SUCCESS", "FAIL"))
+                .in(SyncTask::getStatus, List.of(OperationResult.SUCCESS, OperationResult.FAIL))
                 .lt(SyncTask::getEndTime, cutoff));
 
         // 同时清理缓存
@@ -261,7 +262,7 @@ public class AsyncErpSyncService {
             .updatedTime(LocalDateTime.now())
             .build();
 
-        if ("SUCCESS".equals(status) || "FAIL".equals(status)) {
+        if (OperationResult.SUCCESS.equals(status) || OperationResult.FAIL.equals(status)) {
             update.setEndTime(LocalDateTime.now());
         }
 

@@ -6,6 +6,7 @@
 package com.nexusarchive.service.pdf;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.entity.ArcFileContent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -141,7 +142,7 @@ public class CollectionPdfGenerator {
      */
     private float renderHeader(PDPageContentStream contentStream, CollectionBillData data, int margin,
                                 float yPosition, PDFont regularFont, boolean useChinese) throws IOException {
-        String billDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String billDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateFormat.DATE));
 
         contentStream.setFont(regularFont, 10);
 
@@ -277,7 +278,7 @@ public class CollectionPdfGenerator {
         contentStream.beginText();
         contentStream.setFont(regularFont, 8);
         contentStream.newLineAtOffset(margin, 30);
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateFormat.DATETIME));
         contentStream.showText(PdfUtils.safeText("由NexusArchive系统自动生成 - " + timestamp, useChinese));
         contentStream.endText();
     }

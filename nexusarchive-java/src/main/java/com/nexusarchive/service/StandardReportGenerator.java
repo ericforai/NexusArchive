@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.dto.sip.report.CheckItem;
 import com.nexusarchive.dto.sip.report.FourNatureReport;
 import com.nexusarchive.dto.sip.report.OverallStatus;
@@ -33,8 +34,8 @@ public class StandardReportGenerator {
     
     private static final String NAMESPACE_URI = "http://www.saac.gov.cn/national/standard";
     private static final String STANDARD_VERSION = "DA/T 94-2022";
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATETIME);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATE);
     
     /**
      * 生成符合国家标准的四性检测报告

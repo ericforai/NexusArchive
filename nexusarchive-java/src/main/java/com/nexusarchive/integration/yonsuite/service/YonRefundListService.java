@@ -15,6 +15,7 @@ import com.nexusarchive.integration.erp.dto.ErpConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -97,7 +98,7 @@ public class YonRefundListService {
                         + java.net.URLEncoder.encode(accessToken, java.nio.charset.StandardCharsets.UTF_8);
 
                 HttpResponse response = HttpRequest.post(urlWithToken)
-                        .header("Content-Type", "application/json")
+                        .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                         .body(body.toString())
                         .timeout(10000)
                         .execute();
@@ -220,7 +221,7 @@ public class YonRefundListService {
                         + java.net.URLEncoder.encode(accessToken, java.nio.charset.StandardCharsets.UTF_8);
 
                 HttpResponse response = HttpRequest.post(urlWithToken)
-                        .header("Content-Type", "application/json")
+                        .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                         .body(body.toString())
                         .timeout(10000)
                         .execute();

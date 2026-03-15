@@ -5,7 +5,10 @@
 
 package com.nexusarchive.service;
 
+import cn.hutool.core.util.HexUtil;
 import cn.hutool.json.JSONObject;
+import cn.hutool.crypto.SmUtil;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.mapper.ErpConfigMapper;
@@ -44,6 +47,11 @@ class ErpConfigServiceTest {
 
     @BeforeEach
     void setUp() {
+        // 初始化 SM4Utils（因为测试环境不触发 ApplicationReadyEvent）
+        String testKey = "0123456789abcdef0123456789abcdef";
+        SymmetricCrypto sm4 = SmUtil.sm4(HexUtil.decodeHex(testKey));
+        com.nexusarchive.util.SM4Utils.initialize(testKey, sm4);
+
         testConfig = new ErpConfig();
         testConfig.setId(1L);
         testConfig.setName("测试ERP配置");

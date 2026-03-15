@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +57,7 @@ public class DestructionApprovalServiceImpl implements DestructionApprovalServic
         }
         
         // 验证状态：必须是 PENDING 或 APPRAISING 状态才能进行初审
-        if (!"PENDING".equals(destruction.getStatus()) && 
+        if (!OperationResult.PENDING.equals(destruction.getStatus()) &&
             !"APPRAISING".equals(destruction.getStatus())) {
             throw new IllegalStateException(
                 String.format("销毁申请状态为 %s，无法进行初审", destruction.getStatus()));

@@ -6,6 +6,7 @@
 package com.nexusarchive.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.entity.AbnormalVoucher;
@@ -81,7 +82,7 @@ public class AbnormalVoucherServiceImpl implements AbnormalVoucherService {
             // [FIX] 保留原始原因 + 追加重试信息
             abnormal.setFailReason(String.format("[重试#%d] %s | 原因: %s", 
                     retryCount + 1, 
-                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern(DateFormat.DATETIME)),
                     originalReason));
             abnormalVoucherMapper.updateById(abnormal);
             
@@ -101,7 +102,7 @@ public class AbnormalVoucherServiceImpl implements AbnormalVoucherService {
             // [FIX] 保留原始原因 + 追加重试失败信息
             abnormal.setFailReason(String.format("[重试#%d失败] %s | 错误: %s | 原因: %s",
                     retryCount + 1,
-                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern(DateFormat.DATETIME)),
                     e.getMessage(),
                     originalReason));
             abnormal.setUpdateTime(LocalDateTime.now());

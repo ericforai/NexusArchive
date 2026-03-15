@@ -200,7 +200,9 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     attachment.getFileType()
                 );
                 mergeResult(combinedItem, singleResult, details, attachment.getFileName());
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                log.warn("四性检测-真实性检查失败: {}", e.getMessage());
+            }
         }
         
         if (!details.isEmpty()) combinedItem.setMessage(String.join("; ", details));
@@ -250,7 +252,9 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     attachment.getFileType()
                 );
                 mergeResult(combinedItem, singleResult, details, attachment.getFileName());
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                log.warn("四性检测-可用性检查失败: {}", e.getMessage());
+            }
         }
         
         if (!details.isEmpty()) combinedItem.setMessage(String.join("; ", details));
@@ -276,7 +280,9 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                     combinedItem.setStatus(singleResult.getStatus());
                     combinedItem.addError(singleResult.getMessage());
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                log.warn("四性检测-安全性检查失败: {}", e.getMessage());
+            }
         }
         
         return combinedItem;
@@ -295,84 +301,152 @@ public class FourNatureCheckServiceImpl implements FourNatureCheckService {
                 .build();
 
         // 1. Authenticity
-        CheckItem authenticity = CheckItem.pass("Authenticity Check", "All files verified");
-        List<String> authDetails = new ArrayList<>();
-        
-        for (ArcFileContent file : files) {
-            java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
-            if (!java.nio.file.Files.exists(path)) {
-                authenticity.addError("File not found: " + file.getFileName());
-                continue;
-            }
-
-            // [FIXED] 使用流式读取，避免 readAllBytes() 导致的 OOM
-            try (java.io.InputStream is = new java.io.BufferedInputStream(new java.io.FileInputStream(path.toFile()))) {
-                // 标记流开头，以便多次读取（如果可能，取决于底层实现，BufferedInputStream 默认不缓存 100MB）
-                // 实际上对于大文件，我们应当按需重新开启流
-                
-                // 真实性检测 (包含哈希校验)
-                CheckItem single = fourNatureCoreService.checkSingleFileAuthenticity(
-                    is, file.getFileName(), file.getOriginalHash(), file.getHashAlgorithm(), file.getFileType()
-                );
-                mergeResult(authenticity, single, authDetails, file.getFileName());
-            } catch (Exception e) {
-                authenticity.addError("Error checking " + file.getFileName() + ": " + e.getMessage());
-            }
-        }
-        if (!authDetails.isEmpty()) authenticity.setMessage(String.join("; ", authDetails));
+        CheckItem authenticity = performAuthenticityHealthCheck(files);
         report.setAuthenticity(authenticity);
         if (authenticity.getStatus() == OverallStatus.FAIL) report.setStatus(OverallStatus.FAIL);
 
         // 2. Integrity (Archive level metadata)
+        CheckItem integrity = performIntegrityHealthCheck(archive, files);
+        report.setIntegrity(integrity);
+
+        // 3. Usability
+        CheckItem usability = performUsabilityHealthCheck(files);
+        report.setUsability(usability);
+
+        // 4. Safety
+        CheckItem safety = performSafetyHealthCheck(files);
+        report.setSafety(safety);
+        if (safety.getStatus() == OverallStatus.FAIL) report.setStatus(OverallStatus.FAIL);
+
+        // Check for warnings if still passing
+        if (report.getStatus() == OverallStatus.PASS && hasAnyWarning(authenticity, integrity, usability, safety)) {
+            report.setStatus(OverallStatus.WARNING);
+        }
+
+        return report;
+    }
+
+    /**
+     * Perform authenticity health check on files
+     */
+    private CheckItem performAuthenticityHealthCheck(List<ArcFileContent> files) {
+        CheckItem authenticity = CheckItem.pass("Authenticity Check", "All files verified");
+        List<String> authDetails = new ArrayList<>();
+
+        for (ArcFileContent file : files) {
+            CheckItem single = checkFileAuthenticity(file);
+            mergeResult(authenticity, single, authDetails, file.getFileName());
+        }
+
+        if (!authDetails.isEmpty()) authenticity.setMessage(String.join("; ", authDetails));
+        return authenticity;
+    }
+
+    /**
+     * Check authenticity of a single file
+     */
+    private CheckItem checkFileAuthenticity(ArcFileContent file) {
+        java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
+        if (!java.nio.file.Files.exists(path)) {
+            return CheckItem.fail("Authenticity Check", "File not found: " + file.getFileName());
+        }
+
+        try (java.io.InputStream is = new java.io.BufferedInputStream(new java.io.FileInputStream(path.toFile()))) {
+            return fourNatureCoreService.checkSingleFileAuthenticity(
+                    is, file.getFileName(), file.getOriginalHash(), file.getHashAlgorithm(), file.getFileType()
+            );
+        } catch (Exception e) {
+            return CheckItem.fail("Authenticity Check", "Error checking " + file.getFileName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Perform integrity health check on archive metadata
+     */
+    private CheckItem performIntegrityHealthCheck(com.nexusarchive.entity.Archive archive, List<ArcFileContent> files) {
         CheckItem integrity = CheckItem.pass("Integrity Check", "Metadata complete");
         if (archive.getUniqueBizId() == null) integrity.addError("Missing Unique Biz ID");
         if (archive.getAmount() == null) integrity.addError("Missing Amount");
         if (files.isEmpty()) integrity.addError("No files associated");
-        report.setIntegrity(integrity);
-        
-        // 3. Usability
+        return integrity;
+    }
+
+    /**
+     * Perform usability health check on files
+     */
+    private CheckItem performUsabilityHealthCheck(List<ArcFileContent> files) {
         CheckItem usability = CheckItem.pass("Usability Check", "Files accessible");
         List<String> useDetails = new ArrayList<>();
+
         for (ArcFileContent file : files) {
-             java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
-             if (java.nio.file.Files.exists(path)) {
-                 try (java.io.InputStream is = new java.io.FileInputStream(path.toFile())) {
-                     CheckItem single = fourNatureCoreService.checkSingleFileUsability(is, file.getFileName(), file.getFileType());
-                     mergeResult(usability, single, useDetails, file.getFileName());
-                 } catch (Exception e) {
-                     usability.addError("Usability error " + file.getFileName());
-                 }
-             }
+            CheckItem single = checkFileUsability(file);
+            if (single != null) {
+                mergeResult(usability, single, useDetails, file.getFileName());
+            }
         }
+
         if (!useDetails.isEmpty()) usability.setMessage(String.join("; ", useDetails));
-        report.setUsability(usability);
+        return usability;
+    }
 
-        // 4. Safety
+    /**
+     * Check usability of a single file
+     */
+    private CheckItem checkFileUsability(ArcFileContent file) {
+        java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
+        if (!java.nio.file.Files.exists(path)) {
+            return null;
+        }
+
+        try (java.io.InputStream is = new java.io.FileInputStream(path.toFile())) {
+            return fourNatureCoreService.checkSingleFileUsability(is, file.getFileName(), file.getFileType());
+        } catch (Exception e) {
+            return CheckItem.fail("Usability Check", "Usability error: " + file.getFileName() + " - " + e.getMessage());
+        }
+    }
+
+    /**
+     * Perform safety health check on files
+     */
+    private CheckItem performSafetyHealthCheck(List<ArcFileContent> files) {
         CheckItem safety = CheckItem.pass("Safety Check", "Safe");
+
         for (ArcFileContent file : files) {
-             java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
-             if (java.nio.file.Files.exists(path)) {
-                 try (java.io.InputStream is = new java.io.FileInputStream(path.toFile())) {
-                    CheckItem single = fourNatureCoreService.checkSingleFileSafety(is, file.getFileName());
-                    if (single.getStatus() != OverallStatus.PASS) {
-                        safety.setStatus(single.getStatus());
-                        safety.addError(single.getMessage());
-                    }
-                 } catch (Exception e) {}
-             }
-        }
-        report.setSafety(safety);
-        if (safety.getStatus() == OverallStatus.FAIL) report.setStatus(OverallStatus.FAIL);
-
-        if (report.getStatus() == OverallStatus.PASS) {
-             // Check for warnings
-             if (authenticity.getStatus() == OverallStatus.WARNING || integrity.getStatus() == OverallStatus.WARNING 
-                 || usability.getStatus() == OverallStatus.WARNING || safety.getStatus() == OverallStatus.WARNING) {
-                 report.setStatus(OverallStatus.WARNING);
-             }
+            CheckItem single = checkFileSafety(file);
+            if (single != null && single.getStatus() != OverallStatus.PASS) {
+                safety.setStatus(single.getStatus());
+                safety.addError(single.getMessage());
+            }
         }
 
-        return report;
+        return safety;
+    }
+
+    /**
+     * Check safety of a single file
+     */
+    private CheckItem checkFileSafety(ArcFileContent file) {
+        java.nio.file.Path path = java.nio.file.Paths.get(file.getStoragePath());
+        if (!java.nio.file.Files.exists(path)) {
+            return null;
+        }
+
+        try (java.io.InputStream is = new java.io.FileInputStream(path.toFile())) {
+            return fourNatureCoreService.checkSingleFileSafety(is, file.getFileName());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Check if any of the check items has a warning status
+     */
+    private boolean hasAnyWarning(CheckItem authenticity, CheckItem integrity,
+                                  CheckItem usability, CheckItem safety) {
+        return authenticity.getStatus() == OverallStatus.WARNING
+                || integrity.getStatus() == OverallStatus.WARNING
+                || usability.getStatus() == OverallStatus.WARNING
+                || safety.getStatus() == OverallStatus.WARNING;
     }
     
     private void mergeResult(CheckItem target, CheckItem source, List<String> detailsCollector, String fileName) {

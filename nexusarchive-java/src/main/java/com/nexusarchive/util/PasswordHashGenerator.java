@@ -7,11 +7,13 @@ package com.nexusarchive.util;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 密码哈希生成工具
  * 用于生成admin用户的初始密码
  */
+@Slf4j
 public class PasswordHashGenerator {
     
     public static void main(String[] args) {
@@ -23,10 +25,8 @@ public class PasswordHashGenerator {
         
         String password = "admin123";
         String hash = argon2.hash(3, 65536, 4, password.toCharArray());
-        
-        System.out.println("Password: " + password);
-        System.out.println("Hash: " + hash);
-        System.out.println("\nSQL Update:");
-        System.out.println("UPDATE sys_user SET password_hash = '" + hash + "' WHERE username = 'admin';");
+
+        log.info("Generated hash for password: {}", hash);
+        log.info("SQL Update: UPDATE sys_user SET password_hash = '{}' WHERE username = 'admin';", hash);
     }
 }

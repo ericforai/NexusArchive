@@ -49,6 +49,12 @@ public class CompilationService {
         Path basePath = determineBasePath();
         Path pomPath = basePath.resolve("pom.xml");
 
+        // 安全验证：确保路径在允许的项目目录内
+        if (!validatePathWithinProject(basePath, pomPath)) {
+            log.error("路径安全验证失败: basePath={}, pomPath={}", basePath, pomPath);
+            return ErpAdapterAutoDeployService.CompilationResult.failure("路径安全验证失败：路径必须在项目目录内");
+        }
+
         if (!Files.exists(pomPath)) {
             return ErpAdapterAutoDeployService.CompilationResult.failure("找不到 pom.xml: " + pomPath);
         }
@@ -124,8 +130,42 @@ public class CompilationService {
      */
     private Path determineBasePath() {
         if (projectBaseDir != null) {
-            return Paths.get(projectBaseDir);
+            return Paths.get(projectBaseDir).toAbsolutePath();
         }
         return Paths.get("").toAbsolutePath();
+    }
+
+    /**
+     * 验证路径是否在允许的项目目录内（防止路径遍历攻击）
+     *
+     * @param basePath 基础路径
+     * @param targetPath 目标路径
+     * @return 是否通过验证
+     */
+    private boolean validatePathWithinProject(Path basePath, Path targetPath) {
+        try {
+            Path absoluteBasePath = basePath.toAbsolutePath().normalize();
+            Path absoluteTargetPath = targetPath.toAbsolutePath().normalize();
+
+            // 获取当前工作目录作为项目根目录
+            Path projectRoot = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+
+            // 验证基础路径必须在项目根目录内
+            if (!absoluteBasePath.startsWith(projectRoot)) {
+                log.warn("基础路径不在项目根目录内: basePath={}, projectRoot={}", absoluteBasePath, projectRoot);
+                return false;
+            }
+
+            // 验证目标路径必须在项目根目录内
+            if (!absoluteTargetPath.startsWith(projectRoot)) {
+                log.warn("目标路径不在项目根目录内: targetPath={}, projectRoot={}", absoluteTargetPath, projectRoot);
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("路径验证异常", e);
+            return false;
+        }
     }
 }

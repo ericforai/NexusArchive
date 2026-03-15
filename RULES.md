@@ -127,3 +127,29 @@ issue 完成后必须同时完成以下动作：
 - `Linear` 管任务，不管代码真相
 - `Symphony` 管隔离开发，不做长期存档
 - `main` 才是唯一可交付状态
+
+---
+
+## 生产环境运维与部署安全 (2026-03-15 新增)
+
+### 1. 环境指纹校验 (Environment Fingerprinting)
+- 每次发布生产环境后，必须通过浏览器验证物理文件：`http://domain/fingerprint.txt`。
+- 指纹内容必须包含构建时间戳或序列号（如 `V4_FINAL_FORCE`）。
+- **目的**：杜绝 Nginx 路由配置错误导致加载 404 或陈旧的“僵尸代码”。
+
+### 2. 静态资源路径深度防御 (Path-Agnostic Assets)
+- 针对使用 Web Worker 或动态加载字体的第三方库（如 `liteofd`, `pdf.js`），Nginx 配置必须包含**全路径正则捕获**逻辑：
+  ```nginx
+  location ~* .*/(assets|fonts|public)/(.+)$ {
+      alias /usr/share/nginx/html/$1/$2;
+  }
+  ```
+- **目的**：防止 SPA 嵌套路由（Deep Routing）导致的资源相对路径请求失败。
+
+### 3. 文件名大小写冗余映射 (Filename Resilience)
+- 服务器端的字体资产（.ttf, .otf）必须通过脚本建立全小写软链接映射。
+- **目的**：兼容不同第三方库在大小写敏感系统（Linux）下对文件名的不一致引用。
+
+### 4. MIME 类型严谨性声明
+- 必须确保 `include mime.types;` 在 SSL server 块中生效。
+- 显式为 `.js` 定义 `application/javascript`，为字体定义 `font/ttf`，防止现代浏览器因 MIME 检查失败而拦截模块加载。

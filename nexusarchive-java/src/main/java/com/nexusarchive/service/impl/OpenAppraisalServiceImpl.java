@@ -5,8 +5,8 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.entity.OpenAppraisal;
@@ -43,7 +43,7 @@ public class OpenAppraisalServiceImpl implements OpenAppraisalService {
         appraisal.setArchiveTitle(archive.getTitle());
         appraisal.setRetentionPeriod(archive.getRetentionPeriod());
         appraisal.setCurrentSecurityLevel(archive.getSecurityLevel() != null ? archive.getSecurityLevel() : "internal");
-        appraisal.setStatus("PENDING");
+        appraisal.setStatus(OperationResult.PENDING);
 
         // 设置时间戳
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -63,7 +63,7 @@ public class OpenAppraisalServiceImpl implements OpenAppraisalService {
             throw new RuntimeException("Appraisal record not found");
         }
 
-        if (!"PENDING".equals(appraisal.getStatus())) {
+        if (!OperationResult.PENDING.equals(appraisal.getStatus())) {
             throw new RuntimeException("Only pending appraisals can be submitted");
         }
 

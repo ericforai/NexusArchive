@@ -6,6 +6,7 @@
 package com.nexusarchive.integration.yonsuite.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.integration.yonsuite.dto.SalesOutDetailResponse;
 import com.nexusarchive.integration.yonsuite.dto.SalesOutListResponse;
@@ -26,7 +27,7 @@ import java.time.format.DateTimeFormatter;
 public class SalesOutMapper {
 
     private static final String SOURCE_SYSTEM = "YonSuite";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATE);
     private final ObjectMapper objectMapper;
 
     /**

@@ -17,6 +17,7 @@ import com.nexusarchive.mapper.ArcFileContentMapper;
 import com.nexusarchive.mapper.ArchiveMapper;
 import com.nexusarchive.service.ArchiveExportService;
 import com.nexusarchive.service.DataScopeService;
+import com.nexusarchive.util.PathSecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +49,7 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
     private final ArcFileContentMapper arcFileContentMapper;
     private final ArchiveMapper archiveMapper;
     private final DataScopeService dataScopeService;
+    private final PathSecurityUtils pathSecurityUtils;
     
     private final XmlMapper xmlMapper = new XmlMapper();
     
@@ -86,8 +88,8 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
             throw new BusinessException("档案没有关联文件: " + archivalCode);
         }
 
-        // 4. 创建临时工作目录
-        Path tempDir = Files.createTempDirectory("AIP_WORK_" + archivalCode + "_");
+        // 4. 创建临时工作目录 - 使用时间戳避免路径遍历风险
+        Path tempDir = Files.createTempDirectory("AIP_WORK_" + System.currentTimeMillis() + "_");
         log.info("创建临时工作目录: {}", tempDir);
 
         try {
@@ -101,7 +103,9 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
 
             // 6. 处理文件并分类
             for (ArcFileContent fileContent : files) {
-                Path sourcePath = Paths.get(fileContent.getStoragePath());
+                // [S2229] 路径遍历防护：使用 PathSecurityUtils 验证路径
+                // storagePath 来自数据库，需要验证其在允许的目录内
+                Path sourcePath = pathSecurityUtils.validateArchivePath(fileContent.getStoragePath());
                 if (!Files.exists(sourcePath)) {
                     throw new BusinessException("文件丢失: " + sourcePath);
                 }
@@ -158,9 +162,10 @@ public class ArchiveExportServiceImpl implements ArchiveExportService {
                     .build();
             xmlMapper.writeValue(dataDir.resolve("accounting.xml").toFile(), accountingXml);
             
-            // 8. 打包为 ZIP
-            File zipFile = File.createTempFile(archivalCode + "_", ".zip");
-            try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            // 8. 打包为 ZIP - 使用时间戳避免路径遍历风险
+            File zipFile = File.createTempFile("aip_export_" + System.currentTimeMillis() + "_", ".zip");
+            try (FileOutputStream fos = new FileOutputStream(zipFile);
+                 ZipOutputStream zos = new ZipOutputStream(fos)) {
                 zipDirectory(tempDir, "", zos);
             }
             

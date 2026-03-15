@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -102,7 +103,7 @@ public class YonAuthService {
         try {
             // 构建HTTP请求 - 直接连接，不自动检测代理
             cn.hutool.http.HttpRequest request = HttpRequest.get(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .timeout(15_000);
             
             // 仅当明确配置了代理环境变量时才使用代理

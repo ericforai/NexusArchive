@@ -12,6 +12,7 @@ import com.nexusarchive.integration.yonsuite.dto.SalesOrderListRequest;
 import com.nexusarchive.integration.yonsuite.dto.SalesOrderListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.nexusarchive.common.constants.HttpConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -86,7 +87,7 @@ public class YonSuiteSalesOrderClient {
 
         try {
             HttpResponse httpResponse = HttpRequest.get(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .timeout(30_000)
                     .execute();
 

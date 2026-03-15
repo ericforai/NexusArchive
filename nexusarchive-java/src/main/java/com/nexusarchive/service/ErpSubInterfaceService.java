@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.entity.ErpSubInterface;
@@ -82,7 +83,7 @@ public class ErpSubInterfaceService {
             "ERP_SUBINTERFACE_UPDATED",
             "ERP_SUBINTERFACE",
             String.valueOf(subInterface.getId()),
-            "SUCCESS",
+            OperationResult.SUCCESS,
             "更新子接口: " + subInterface.getInterfaceName(),
             clientIp
         );
@@ -116,7 +117,7 @@ public class ErpSubInterfaceService {
             "ERP_SUBINTERFACE_TOGGLED",
             "ERP_SUBINTERFACE",
             String.valueOf(id),
-            "SUCCESS",
+            OperationResult.SUCCESS,
             "切换子接口状态: " + sub.getInterfaceName() + " [" + oldStatus + " -> " + sub.getIsActive() + "]",
             clientIp
         );

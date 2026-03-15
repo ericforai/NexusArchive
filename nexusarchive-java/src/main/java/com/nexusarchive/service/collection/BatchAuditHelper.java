@@ -4,6 +4,7 @@
 
 package com.nexusarchive.service.collection;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class BatchAuditHelper {
                 "CREATE_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "创建上传批次: " + batchNo,
                 null
         );
@@ -45,7 +46,7 @@ public class BatchAuditHelper {
                 "COMPLETE_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "完成批次上传: " + batchNo,
                 null
         );
@@ -61,7 +62,7 @@ public class BatchAuditHelper {
                 "CANCEL_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "取消批次: " + batchNo,
                 null
         );
@@ -78,7 +79,7 @@ public class BatchAuditHelper {
                 "APPROVE_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "批准批次归档: " + batchNo + (comment != null ? ", 备注: " + comment : ""),
                 null
         );
@@ -95,7 +96,7 @@ public class BatchAuditHelper {
                 "REJECT_BATCH",
                 "COLLECTION_BATCH",
                 String.valueOf(batchId),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "拒绝批次归档: " + batchNo + (comment != null ? ", 原因: " + comment : ""),
                 null
         );

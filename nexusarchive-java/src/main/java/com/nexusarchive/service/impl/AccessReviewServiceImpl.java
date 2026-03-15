@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +57,7 @@ public class AccessReviewServiceImpl implements AccessReviewService {
         review.setReviewDate(request.getReviewDate() != null ? 
             request.getReviewDate() : LocalDate.now());
         review.setReviewerId(request.getReviewerId());
-        review.setStatus("PENDING");
+        review.setStatus(OperationResult.PENDING);
         review.setCreatedAt(LocalDateTime.now());
         review.setUpdatedAt(LocalDateTime.now());
         review.setDeleted(0);
@@ -82,7 +83,7 @@ public class AccessReviewServiceImpl implements AccessReviewService {
         // 3. 记录审计日志
         auditLogService.log(
             request.getReviewerId(), "SYSTEM", "ACCESS_REVIEW_CREATED",
-            "ACCESS_REVIEW", review.getId(), "SUCCESS",
+            "ACCESS_REVIEW", review.getId(), OperationResult.SUCCESS,
             String.format("创建复核任务: userId=%s, type=%s", request.getUserId(), request.getReviewType()),
             "SYSTEM"
         );
@@ -103,7 +104,7 @@ public class AccessReviewServiceImpl implements AccessReviewService {
             throw new IllegalArgumentException("复核记录不存在: " + reviewId);
         }
         
-        if (!"PENDING".equals(review.getStatus())) {
+        if (!OperationResult.PENDING.equals(review.getStatus())) {
             throw new IllegalStateException("复核记录已处理: " + reviewId);
         }
         
@@ -124,8 +125,8 @@ public class AccessReviewServiceImpl implements AccessReviewService {
         // 4. 记录审计日志
         auditLogService.log(
             reviewerId, "SYSTEM", "ACCESS_REVIEW_EXECUTED",
-            "ACCESS_REVIEW", reviewId, approved ? "SUCCESS" : "REJECTED",
-            String.format("执行复核: userId=%s, approved=%s, action=%s", 
+            "ACCESS_REVIEW", reviewId, approved ? OperationResult.SUCCESS : "REJECTED",
+            String.format("执行复核: userId=%s, approved=%s, action=%s",
                 review.getUserId(), approved, actionTaken),
             "SYSTEM"
         );

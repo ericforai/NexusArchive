@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl.batch;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.dto.sip.report.CheckItem;
 import com.nexusarchive.dto.sip.report.OverallStatus;
 import com.nexusarchive.entity.ArchiveBatchItem;
@@ -69,7 +70,7 @@ public class FourNatureChecker {
         for (ArchiveBatchItem item : items) {
             Map<String, Object> itemResult = validateItem(item);
 
-            if ("FAIL".equals(itemResult.get("status"))) {
+            if (OperationResult.FAIL.equals(itemResult.get("status"))) {
                 errors.add(itemResult);
                 item.setStatus(ArchiveBatchItem.STATUS_FAILED);
             } else if ("WARNING".equals(itemResult.get("status"))) {
@@ -123,7 +124,7 @@ public class FourNatureChecker {
             ArcFileContent voucher = voucherMapper.selectById(item.getRefId());
             if (voucher == null) {
                 issues.add("凭证不存在");
-                result.put("status", "FAIL");
+                result.put("status", OperationResult.FAIL);
             } else {
                 // 检查是否有必要字段
                 if (voucher.getErpVoucherNo() == null || voucher.getErpVoucherNo().isEmpty()) {
@@ -176,7 +177,7 @@ public class FourNatureChecker {
         // 计算总体结果
         boolean allPassed = checks.stream()
                 .allMatch(c -> "PASS".equals(c.get("result")));
-        report.put("overallResult", allPassed ? "PASS" : "FAIL");
+        report.put("overallResult", allPassed ? "PASS" : OperationResult.FAIL);
 
         return report;
     }
@@ -236,7 +237,7 @@ public class FourNatureChecker {
         result.put("passedCount", passedCount);
 
         if (!errors.isEmpty()) {
-            result.put("result", "FAIL");
+            result.put("result", OperationResult.FAIL);
             result.put("errors", errors);
         } else {
             result.put("result", "PASS");
@@ -288,7 +289,7 @@ public class FourNatureChecker {
         result.put("validItems", validCount);
 
         if (!errors.isEmpty()) {
-            result.put("result", "FAIL");
+            result.put("result", OperationResult.FAIL);
             result.put("errors", errors);
         } else {
             result.put("result", "PASS");
@@ -328,7 +329,7 @@ public class FourNatureChecker {
         }
 
         if (!errors.isEmpty()) {
-            result.put("result", "FAIL");
+            result.put("result", OperationResult.FAIL);
             result.put("errors", errors);
         } else {
             result.put("result", "PASS");
@@ -368,7 +369,7 @@ public class FourNatureChecker {
         }
 
         if (!errors.isEmpty()) {
-            result.put("result", "FAIL");
+            result.put("result", OperationResult.FAIL);
             result.put("errors", errors);
         } else {
             result.put("result", "PASS");

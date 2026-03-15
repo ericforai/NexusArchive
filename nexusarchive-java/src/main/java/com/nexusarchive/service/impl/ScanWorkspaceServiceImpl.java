@@ -4,6 +4,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.entity.ScanWorkspace;
 import com.nexusarchive.mapper.ScanWorkspaceMapper;
@@ -11,6 +12,7 @@ import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.service.ScanSessionService;
 import com.nexusarchive.service.ScanWorkspaceService;
 import com.nexusarchive.util.FileHashUtil;
+import com.nexusarchive.util.PathSecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +60,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
     private final FileHashUtil fileHashUtil;
     private final AuditLogService auditLogService;
     private final ScanSessionService scanSessionService;
+    private final PathSecurityUtils pathSecurityUtils;
 
     @Value("${app.scan.upload-path:/tmp/nexusarchive/scan}")
     private String uploadPath;
@@ -148,7 +151,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
                     "UPLOAD_FILE",
                     "SCAN_WORKSPACE",
                     String.valueOf(workspace.getId()),
-                    "SUCCESS",
+                    OperationResult.SUCCESS,
                     "上传文件到工作区: " + originalFilename,
                     null
             );
@@ -195,7 +198,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
                 "TRIGGER_OCR",
                 "SCAN_WORKSPACE",
                 String.valueOf(id),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "触发 OCR 识别: engine=" + engine,
                 null
         );
@@ -241,7 +244,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
                 "UPDATE_WORKSPACE",
                 "SCAN_WORKSPACE",
                 String.valueOf(workspace.getId()),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "更新工作区记录",
                 null
         );
@@ -289,7 +292,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
                 "SUBMIT_TO_ARCHIVE",
                 "SCAN_WORKSPACE",
                 String.valueOf(id),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "提交到预归档池: archiveId=" + archiveId,
                 null
         );
@@ -319,13 +322,18 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
             throw new IllegalStateException("已提交的记录不能删除");
         }
 
-        // 4. 删除物理文件
+        // 4. 删除物理文件 - 使用 PathSecurityUtils 验证路径，防止路径遍历攻击
         try {
-            Path filePath = Paths.get(workspace.getFilePath());
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-                log.info("删除物理文件: path={}", filePath);
+            // 验证路径安全性，确保文件在允许的上传目录内
+            Path safePath = pathSecurityUtils.validateScanPath(workspace.getFilePath());
+            if (Files.exists(safePath)) {
+                Files.delete(safePath);
+                log.info("删除物理文件: path={}", safePath);
             }
+        } catch (SecurityException e) {
+            // 路径验证失败，可能存在路径遍历攻击
+            log.error("路径验证失败，拒绝删除: filePath={}, error={}", workspace.getFilePath(), e.getMessage());
+            throw new SecurityException("非法的文件路径，拒绝删除操作");
         } catch (IOException e) {
             log.warn("删除物理文件失败: path={}", workspace.getFilePath(), e);
             // 继续执行，不阻断数据库记录删除
@@ -341,7 +349,7 @@ public class ScanWorkspaceServiceImpl implements ScanWorkspaceService {
                 "DELETE_WORKSPACE",
                 "SCAN_WORKSPACE",
                 String.valueOf(id),
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "删除工作区记录: " + workspace.getFileName(),
                 null
         );

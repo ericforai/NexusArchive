@@ -12,6 +12,7 @@ import com.nexusarchive.entity.ArcFileMetadataIndex;
 import com.nexusarchive.controller.PoolController.PoolItemDetailDto;
 import com.nexusarchive.service.PoolService;
 import com.nexusarchive.service.VoucherPdfGeneratorService;
+import com.nexusarchive.util.PathSecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,6 +38,7 @@ public class PoolHelper {
     private final PoolService poolService;
     private final JdbcTemplate jdbcTemplate;
     private final VoucherPdfGeneratorService pdfGeneratorService;
+    private final PathSecurityUtils pathSecurityUtils;
     private static final String[] SYSTEMS = {"Web上传", "用友", "金蝶", "泛微OA", "易快报", "汇联易", "SAP"};
 
     public PoolItemDetailDto mapToDetail(ArcFileContent f) {
@@ -72,7 +73,8 @@ public class PoolHelper {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         for (int i = 0; i < 10; i++) {
             String fid = UUID.randomUUID().toString();
-            Path path = Paths.get("/tmp/nexusarchive/uploads", fid + ".pdf");
+            // Security: Use validateTempPath to prevent directory traversal
+            Path path = pathSecurityUtils.validateTempPath("uploads/" + fid + ".pdf");
             Files.createDirectories(path.getParent());
             try (var is = res.getInputStream()) { Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING); }
             ArcFileContent c = ArcFileContent.builder().id(fid).archivalCode("TEMP-POOL-" + date + "-" + fid.substring(0, 8).toUpperCase())
@@ -87,7 +89,8 @@ public class PoolHelper {
     }
 
     public Resource loadPreview(String id, String path, String name, String data) throws Exception {
-        Path p = Paths.get(path);
+        // Security: Validate path to prevent directory traversal attacks
+        Path p = pathSecurityUtils.validateArchivePath(path);
         Resource r = new UrlResource(p.toUri());
         if (!r.exists() && name.toLowerCase().endsWith(".pdf")) {
             pdfGeneratorService.generatePdfForPreArchive(id, (data != null && !data.isEmpty()) ? data : "{}");

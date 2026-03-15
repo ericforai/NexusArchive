@@ -110,7 +110,8 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
     public IngestResponse ingestSip(AccountingSipDto sipDto) {
         String requestId = sipDto.getRequestId();
         helper.validateBusinessRules(sipDto);
-        String tempPath = java.nio.file.Paths.get(tempRootPath, requestId).toString();
+        // [S2229] 路径遍历防护：使用 PathSecurityUtils 验证路径
+        String tempPath = pathSecurityUtils.validateTempPath(requestId).toString();
 
         try {
             Map<String, byte[]> fileStreams = new HashMap<>();
@@ -137,7 +138,8 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
             String originalFilename = file.getOriginalFilename();
             String fileId = java.util.UUID.randomUUID().toString();
             String ext = originalFilename != null && originalFilename.contains(".") ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
-            java.nio.file.Path targetPath = java.nio.file.Paths.get(tempRootPath, "uploads", fileId + ext);
+            // [S2229] 路径遍历防护：使用 PathSecurityUtils 验证路径
+            java.nio.file.Path targetPath = pathSecurityUtils.validateTempPath("uploads/" + fileId + ext);
             java.nio.file.Files.createDirectories(targetPath.getParent());
             byte[] fileBytes = file.getBytes();
             String fileHash = bytesToHex(java.security.MessageDigest.getInstance("SHA-256").digest(fileBytes));
@@ -195,9 +197,12 @@ public class IngestServiceImpl implements IngestService, org.springframework.bea
 
                 String code = helper.generateArchivalCode(f);
                 String targetName = "voucher_" + code + "." + f.getFileType().toLowerCase();
-                java.nio.file.Path targetPath = java.nio.file.Paths.get(tempRootPath + "/uploads", targetName);
+                // [S2229] 路径遍历防护：使用 PathSecurityUtils 验证目标路径和源路径
+                java.nio.file.Path targetPath = pathSecurityUtils.validateTempPath("uploads/" + targetName);
                 java.nio.file.Files.createDirectories(targetPath.getParent());
-                java.nio.file.Files.copy(java.nio.file.Paths.get(f.getStoragePath()), targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                // 源路径来自数据库记录，使用 validateTempPath 确保其在允许的目录内
+                java.nio.file.Path sourcePath = pathSecurityUtils.validateTempPath(f.getStoragePath());
+                java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
                 archivalPackageService.archivePackage(helper.buildSimpleSip(code, id, targetName, f), tempRootPath + "/uploads");
 

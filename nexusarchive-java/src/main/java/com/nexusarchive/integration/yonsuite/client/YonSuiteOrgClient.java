@@ -9,6 +9,8 @@ import cn.hutool.http.HttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.DateFormat;
+import com.nexusarchive.common.constants.HttpConstants;
 import com.nexusarchive.integration.yonsuite.dto.YonOrgTreeSyncResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class YonSuiteOrgClient {
 
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATETIME);
     private static final String DEFAULT_SYNC_TIME = "1970-01-01 00:00:00";
 
     @Value("${yonsuite.base-url:https://dbox.yonyoucloud.com/iuap-api-gateway}")
@@ -64,7 +66,7 @@ public class YonSuiteOrgClient {
 
         try {
             log.info("请求 YonSuite 树版本 API: url={}, body={}", url, body);
-            String resp = HttpRequest.post(url).header("Content-Type", "application/json")
+            String resp = HttpRequest.post(url).header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(body).timeout(30_000).execute().body();
             log.info("YonSuite 树版本 API 原始响应: {}", resp);
 
@@ -103,7 +105,7 @@ public class YonSuiteOrgClient {
 
             try {
                 log.info("请求 YonSuite 组织成员 API (page={}): body={}", page, body);
-                String resp = HttpRequest.post(url).header("Content-Type", "application/json")
+                String resp = HttpRequest.post(url).header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                         .body(body).timeout(30_000).execute().body();
                 log.debug("YonSuite 组织成员 API 响应 (page={}): {}", page, resp);
 

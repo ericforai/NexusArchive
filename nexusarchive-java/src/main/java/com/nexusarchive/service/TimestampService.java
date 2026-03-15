@@ -38,6 +38,8 @@ import org.bouncycastle.util.Store;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.Security;
 
+import com.nexusarchive.common.constants.HttpConstants;
+
 /**
  * 时间戳服务
  * 
@@ -185,16 +187,26 @@ public class TimestampService {
             URL url = new URL(tsaUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/timestamp-query");
+            conn.setRequestProperty(HttpConstants.CONTENT_TYPE, "application/timestamp-query");
             conn.setConnectTimeout(timeout);
             conn.setReadTimeout(timeout);
             conn.setDoOutput(true);
 
-            // 基本认证
+            // 基本认证 - TSA 服务遵循 RFC 3161 标准
+            // 安全要求: 必须使用 HTTPS + 凭据定期轮换
+            // sonarjava:S2647
             if (tsaUsername != null && tsaPassword != null) {
+                // 验证 TSA URL 使用 HTTPS (生产环境)
+                if (tsaUrl != null && !tsaUrl.startsWith("https://")) {
+                    log.warn("⚠️ 安全警告: TSA 服务未使用 HTTPS，凭据可能被窃取。URL: {}", maskUrl(tsaUrl));
+                }
+
                 String auth = tsaUsername + ":" + tsaPassword;
                 String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-                conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
+                conn.setRequestProperty(HttpConstants.AUTHORIZATION, "Basic " + encodedAuth);
+
+                // 审计日志 (不记录敏感信息)
+                log.info("TSA 认证: 用户={}, URL={}", tsaUsername, maskUrl(tsaUrl));
             }
 
             conn.getOutputStream().write(requestData);
@@ -349,6 +361,22 @@ public class TimestampService {
             result.valid = false;
             result.message = message;
             return result;
+        }
+    }
+
+    /**
+     * 掩码 URL，隐藏敏感信息（用于日志记录）
+     *
+     * @param url 原始 URL
+     * @return 掩码后的 URL（仅保留协议和主机名）
+     */
+    private String maskUrl(String url) {
+        if (url == null) return "null";
+        try {
+            URL u = new URL(url);
+            return u.getProtocol() + "://" + u.getHost() + "/...";
+        } catch (Exception e) {
+            return "...";
         }
     }
 }

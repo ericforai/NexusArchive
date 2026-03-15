@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexusarchive.entity.ArcFileContent;
 import com.nexusarchive.entity.Archive;
 import com.nexusarchive.modules.archivecore.api.dto.ArchiveCreateRequest;
+import com.nexusarchive.modules.archivecore.api.dto.ArchiveStatusChangeRequest;
 import com.nexusarchive.modules.archivecore.api.dto.ArchiveUpdateRequest;
 
 import java.util.List;
@@ -28,4 +29,13 @@ public interface ArchiveFacade {
     void updateArchive(String id, ArchiveUpdateRequest request);
 
     void deleteArchive(String id);
+
+    /**
+     * 转换档案状态
+     *
+     * @param archiveId 档案ID
+     * @param request 状态变更请求
+     * @param userId 操作人ID
+     */
+    void changeStatus(String archiveId, ArchiveStatusChangeRequest request, String userId);
 }

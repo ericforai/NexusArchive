@@ -11,12 +11,13 @@ import com.nexusarchive.entity.ArcFileMetadataIndex;
 import com.nexusarchive.mapper.ArcFileMetadataIndexMapper;
 import com.nexusarchive.service.SmartParserService;
 import com.nexusarchive.service.parser.InvoiceParser;
+import com.nexusarchive.util.PathSecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class SmartParserServiceImpl implements SmartParserService {
 
     private final List<InvoiceParser> parsers;
     private final ArcFileMetadataIndexMapper metadataIndexMapper;
+    private final PathSecurityUtils pathSecurityUtils;
 
     @Async
     @Override
@@ -45,17 +47,25 @@ public class SmartParserServiceImpl implements SmartParserService {
     }
 
     private void processFile(ArcFileContent fileContent) {
-        File file = new File(fileContent.getStoragePath());
-        if (!file.exists()) {
-            log.warn("File not found for parsing: {}", file.getAbsolutePath());
+        // Security: Validate path to prevent directory traversal attacks
+        Path securePath;
+        try {
+            securePath = pathSecurityUtils.validateArchivePath(fileContent.getStoragePath());
+        } catch (SecurityException e) {
+            log.error("Security violation while validating file path: {}", e.getMessage());
+            return;
+        }
+
+        if (!securePath.toFile().exists()) {
+            log.warn("File not found for parsing: {}", securePath.toAbsolutePath());
             return;
         }
 
         for (InvoiceParser parser : parsers) {
             if (parser.supports(fileContent.getFileType())) {
                 log.info("Parsing file {} using {}", fileContent.getFileName(), parser.getClass().getSimpleName());
-                
-                ParsedInvoice result = parser.parse(file);
+
+                ParsedInvoice result = parser.parse(securePath.toFile());
                 
                 if (result.isSuccess()) {
                     saveMetadata(fileContent, result, parser.getClass().getSimpleName());

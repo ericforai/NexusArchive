@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.entity.ErpConfig;
 import com.nexusarchive.integration.erp.adapter.ErpAdapterFactory;
 import com.nexusarchive.mapper.ErpConfigMapper;
@@ -65,7 +66,7 @@ public class ErpDiagnosisService {
         CompletableFuture<Map<String, Object>> sslFuture = (baseUrl != null && baseUrl.startsWith("https"))
                 ? CompletableFuture.supplyAsync(() -> checkSslValidity(baseUrl), reconciliationExecutor)
                 : CompletableFuture
-                        .completedFuture(Map.of("name", "SSL 证书检查", "status", "SUCCESS", "message", "跳过 (非 HTTPS)"));
+                        .completedFuture(Map.of("name", "SSL 证书检查", "status", OperationResult.SUCCESS, "message", "跳过 (非 HTTPS)"));
 
         CompletableFuture<Map<String, Object>> authFuture = CompletableFuture.supplyAsync(
                 () -> checkAuthValidity(config), reconciliationExecutor);
@@ -83,16 +84,16 @@ public class ErpDiagnosisService {
         } catch (Exception e) {
             log.warn("部分诊断步骤超时或失败: {}", e.getMessage());
             // 降级：手动获取已完成的部分，未完成的标为错误
-            steps.add(urlFuture.getNow(Map.of("name", "URL 检查", "status", "FAIL", "message", "检查超时")));
-            steps.add(networkFuture.getNow(Map.of("name", "网络检查", "status", "FAIL", "message", "检查超时")));
-            steps.add(sslFuture.getNow(Map.of("name", "SSL 检查", "status", "FAIL", "message", "检查超时")));
-            steps.add(authFuture.getNow(Map.of("name", "鉴权检查", "status", "FAIL", "message", "检查超时")));
+            steps.add(urlFuture.getNow(Map.of("name", "URL 检查", "status", OperationResult.FAIL, "message", "检查超时")));
+            steps.add(networkFuture.getNow(Map.of("name", "网络检查", "status", OperationResult.FAIL, "message", "检查超时")));
+            steps.add(sslFuture.getNow(Map.of("name", "SSL 检查", "status", OperationResult.FAIL, "message", "检查超时")));
+            steps.add(authFuture.getNow(Map.of("name", "鉴权检查", "status", OperationResult.FAIL, "message", "检查超时")));
         }
 
         result.put("steps", steps);
 
-        boolean allSuccess = steps.stream().allMatch(s -> "SUCCESS".equals(s.get("status")));
-        result.put("status", allSuccess ? "SUCCESS" : "WARNING");
+        boolean allSuccess = steps.stream().allMatch(s -> OperationResult.SUCCESS.equals(s.get("status")));
+        result.put("status", allSuccess ? OperationResult.SUCCESS : "WARNING");
 
         return result;
     }
@@ -105,10 +106,10 @@ public class ErpDiagnosisService {
                 throw new Exception("URL 不能为空");
             }
             new URL(baseUrl);
-            step.put("status", "SUCCESS");
+            step.put("status", OperationResult.SUCCESS);
             step.put("message", "URL 格式正确: " + baseUrl);
         } catch (Exception e) {
-            step.put("status", "FAIL");
+            step.put("status", OperationResult.FAIL);
             step.put("message", "URL 格式非法: " + e.getMessage());
         }
         return step;
@@ -121,14 +122,14 @@ public class ErpDiagnosisService {
             URL url = new URL(baseUrl);
             String host = url.getHost();
             InetAddress address = InetAddress.getByName(host);
-            step.put("status", "SUCCESS");
+            step.put("status", OperationResult.SUCCESS);
             step.put("message", "DNS 解析成功: " + address.getHostAddress());
 
             // 尝试建立连接 (简单探测)
             int port = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
             step.put("detail", "正在尝试连接 " + host + ":" + port);
         } catch (Exception e) {
-            step.put("status", "FAIL");
+            step.put("status", OperationResult.FAIL);
             step.put("message", "网络连接失败: " + e.getMessage());
         }
         return step;
@@ -139,10 +140,10 @@ public class ErpDiagnosisService {
         step.put("name", "SSL 证书检查");
         try {
             HttpResponse response = HttpRequest.get(baseUrl).timeout(5000).execute();
-            step.put("status", "SUCCESS");
+            step.put("status", OperationResult.SUCCESS);
             step.put("message", "SSL 握手成功");
         } catch (Exception e) {
-            step.put("status", "FAIL");
+            step.put("status", OperationResult.FAIL);
             step.put("message", "SSL 验证失败或超时: " + e.getMessage());
         }
         return step;
@@ -155,10 +156,10 @@ public class ErpDiagnosisService {
             var adapter = erpAdapterFactory.getAdapter(config.getErpType());
             // TODO: 在适配器接口中增加一个 checkAuth 的接口
             // 暂时使用模拟逻辑或调用已有的简单方法
-            step.put("status", "SUCCESS");
+            step.put("status", OperationResult.SUCCESS);
             step.put("message", "鉴权参数已就绪 (SM4级加固)");
         } catch (Exception e) {
-            step.put("status", "FAIL");
+            step.put("status", OperationResult.FAIL);
             step.put("message", "适配器初始化失败: " + e.getMessage());
         }
         return step;

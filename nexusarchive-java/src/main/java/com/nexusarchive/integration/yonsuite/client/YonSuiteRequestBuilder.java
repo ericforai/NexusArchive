@@ -8,6 +8,7 @@ package com.nexusarchive.integration.yonsuite.client;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexusarchive.common.constants.HttpConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class YonSuiteRequestBuilder {
             String jsonBody = (requestBody instanceof String) ? (String) requestBody : objectMapper.writeValueAsString(requestBody);
             log.debug("YonSuite POST URL: {}, Body: {}", fullUrl, jsonBody);
 
-            try (HttpResponse resp = HttpRequest.post(fullUrl).header("Content-Type", "application/json").body(jsonBody).timeout(30_000).execute()) {
+            try (HttpResponse resp = HttpRequest.post(fullUrl).header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON).body(jsonBody).timeout(30_000).execute()) {
                 String body = resp.body();
                 return body != null && !body.isEmpty() ? objectMapper.readValue(body, responseType) : null;
             }
@@ -41,7 +42,7 @@ public class YonSuiteRequestBuilder {
     public <T> T get(String url, String token, String id, Class<T> responseType) {
         String fullUrl = url + "?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8) + "&id=" + URLEncoder.encode(id, StandardCharsets.UTF_8);
         log.debug("YonSuite GET URL: {}", fullUrl);
-        try (HttpResponse resp = HttpRequest.get(fullUrl).header("Content-Type", "application/json").timeout(30_000).execute()) {
+        try (HttpResponse resp = HttpRequest.get(fullUrl).header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON).timeout(30_000).execute()) {
             String body = resp.body();
             return body != null && !body.isEmpty() ? objectMapper.readValue(body, responseType) : null;
         } catch (Exception e) {

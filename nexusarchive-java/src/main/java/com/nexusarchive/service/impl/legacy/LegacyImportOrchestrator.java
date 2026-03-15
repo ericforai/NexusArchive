@@ -7,6 +7,7 @@ package com.nexusarchive.service.impl.legacy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.exception.BusinessException;
 import com.nexusarchive.dto.request.FieldMappingConfig;
 import com.nexusarchive.dto.request.ImportError;
@@ -143,7 +144,7 @@ public class LegacyImportOrchestrator {
             LocalDateTime endTime = LocalDateTime.now();
             task.setSuccessRows(successCount);
             task.setFailedRows(rows.size() - successCount);
-            task.setStatus(successCount == rows.size() ? "SUCCESS" :
+            task.setStatus(successCount == rows.size() ? OperationResult.SUCCESS :
                           (successCount > 0 ? "PARTIAL_SUCCESS" : "FAILED"));
             task.setCompletedAt(endTime);
 
@@ -170,9 +171,9 @@ public class LegacyImportOrchestrator {
                 "LEGACY_IMPORT",
                 "IMPORT_TASK",
                 importId,
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 String.format("历史数据导入: 总数=%d, 成功=%d, 失败=%d", rows.size(), successCount, rows.size() - successCount),
-                "UNKNOWN"
+                OperationResult.UNKNOWN
             );
 
             // 7. 构建返回结果

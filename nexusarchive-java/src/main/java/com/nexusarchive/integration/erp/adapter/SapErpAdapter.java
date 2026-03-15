@@ -5,6 +5,7 @@
 
 package com.nexusarchive.integration.erp.adapter;
 
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.entity.ErpScenario;
 import com.nexusarchive.integration.erp.adapter.client.SapHttpClient;
@@ -67,7 +68,7 @@ public class SapErpAdapter implements ErpAdapter {
     private final SapHttpClient sapClient;
     private final ErpMapper erpMapper;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateFormat.DATE);
 
     @Override
     public String getIdentifier() {

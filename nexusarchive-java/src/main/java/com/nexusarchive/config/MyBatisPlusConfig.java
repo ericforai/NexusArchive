@@ -7,6 +7,7 @@ package com.nexusarchive.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,18 +19,26 @@ import org.springframework.context.annotation.Configuration;
 public class MyBatisPlusConfig {
     
     /**
-     * 分页插件
+     * MyBatis-Plus 插件配置
+     * <p>插件顺序很重要：
+     * <ul>
+     *   <li>乐观锁插件 - 必须在分页插件之前</li>
+     *   <li>分页插件 - 最后添加</li>
+     * </ul>
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        
+
+        // 乐观锁插件 (必须在分页插件之前)
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+
         // 分页插件
         PaginationInnerInterceptor paginationInterceptor = new PaginationInnerInterceptor(DbType.POSTGRE_SQL);
         paginationInterceptor.setMaxLimit(1000L); // 最大分页限制
-        
+
         interceptor.addInnerInterceptor(paginationInterceptor);
-        
+
         return interceptor;
     }
 }

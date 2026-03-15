@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexusarchive.dto.ApprovalChain;
 import com.nexusarchive.dto.AuthScope;
@@ -77,7 +78,7 @@ public class AuthTicketServiceImpl implements AuthTicketService {
         ticket.setTargetFonds(targetFonds);
         ticket.setScope(scopeJson);
         ticket.setExpiresAt(expiresAt);
-        ticket.setStatus("PENDING");
+        ticket.setStatus(OperationResult.PENDING);
         ticket.setReason(reason);
         ticket.setCreatedAt(now);
         ticket.setLastModifiedTime(now);

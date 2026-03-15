@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -378,7 +379,7 @@ public class FondsHistoryServiceImpl implements FondsHistoryService {
                 "FONDS_RENAME",
                 "FONDS_HISTORY",
                 oldFondsNo,
-                "SUCCESS",
+                OperationResult.SUCCESS,
                 "关键业务链路审计：全宗重命名",
                 "LOW",
                 beforeSnapshot,

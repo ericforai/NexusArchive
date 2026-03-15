@@ -9,6 +9,7 @@ import com.nexusarchive.entity.OriginalVoucher;
 import com.nexusarchive.entity.OriginalVoucherType;
 import com.nexusarchive.mapper.OriginalVoucherMapper;
 import com.nexusarchive.mapper.OriginalVoucherTypeMapper;
+import com.nexusarchive.common.constants.HttpConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -67,8 +68,8 @@ public class OriginalVoucherHelper {
     public String determineContentType(String fileType, String fileName) {
         if (StringUtils.hasText(fileType)) {
             switch (fileType.toLowerCase()) {
-                case "ofd": return "application/ofd";
-                case "pdf": return "application/pdf";
+                case "ofd": return HttpConstants.APPLICATION_OFD;
+                case "pdf": return HttpConstants.APPLICATION_PDF;
                 case "jpg":
                 case "jpeg": return "image/jpeg";
                 case "png": return "image/png";
@@ -77,8 +78,8 @@ public class OriginalVoucherHelper {
         }
         if (fileName != null) {
             String lowerName = fileName.toLowerCase();
-            if (lowerName.endsWith(".ofd")) return "application/ofd";
-            if (lowerName.endsWith(".pdf")) return "application/pdf";
+            if (lowerName.endsWith(".ofd")) return HttpConstants.APPLICATION_OFD;
+            if (lowerName.endsWith(".pdf")) return HttpConstants.APPLICATION_PDF;
             if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
             if (lowerName.endsWith(".png")) return "image/png";
         }

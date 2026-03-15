@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class GlobalSearchController {
                     responseCode = "200",
                     description = "搜索成功",
                     content = @Content(
-                            mediaType = "application/json",
+                            mediaType = HttpConstants.APPLICATION_JSON,
                             array = @ArraySchema(schema = @Schema(implementation = GlobalSearchDTO.class))
                     )
             ),

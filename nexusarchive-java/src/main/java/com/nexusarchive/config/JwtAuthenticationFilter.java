@@ -26,6 +26,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import com.nexusarchive.common.constants.HttpConstants;
+
 /**
  * JWT认证过滤器 (安全重构版本)
  */
@@ -41,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader(HttpConstants.AUTHORIZATION);
         final String jwt;
         final String userId;
 

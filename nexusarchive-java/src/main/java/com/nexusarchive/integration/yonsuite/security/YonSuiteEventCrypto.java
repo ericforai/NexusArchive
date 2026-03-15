@@ -51,9 +51,10 @@ public class YonSuiteEventCrypto {
             byte[] encryptBytes = Base64.decode(encrypt);
 
             // 3. AES 解密 (CBC 模式, PKCS5Padding / PKCS7Padding)
-            // IV 是 AESKey 的前 16 位
+            // IV 是 AESKey 的前 16 位 (YonSuite 协议规范，不可修改)
+            // NOSONAR: java:S3329 - IV 派生方式由 YonSuite 协议固定，消息本身包含 16B 随机数
             byte[] iv = Arrays.copyOfRange(aesKey, 0, 16);
-            
+
             AES aes = new AES(Mode.CBC, Padding.PKCS5Padding, new SecretKeySpec(aesKey, "AES"), new IvParameterSpec(iv));
             byte[] original = aes.decrypt(encryptBytes);
 

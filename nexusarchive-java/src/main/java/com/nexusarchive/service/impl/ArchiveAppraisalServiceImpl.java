@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -83,7 +84,7 @@ public class ArchiveAppraisalServiceImpl implements ArchiveAppraisalService {
         appraisalList.setAppraisalDate(appraisalDate);
         appraisalList.setArchiveIds(objectMapper.valueToTree(archiveIds).toString());
         appraisalList.setArchiveSnapshot(archiveSnapshot);
-        appraisalList.setStatus("PENDING");
+        appraisalList.setStatus(OperationResult.PENDING);
         appraisalList.setCreatedTime(LocalDateTime.now());
         appraisalList.setLastModifiedTime(LocalDateTime.now());
         
@@ -112,7 +113,7 @@ public class ArchiveAppraisalServiceImpl implements ArchiveAppraisalService {
             throw new IllegalArgumentException("鉴定清单不存在: " + appraisalListId);
         }
         
-        if (!"PENDING".equals(appraisalList.getStatus())) {
+        if (!OperationResult.PENDING.equals(appraisalList.getStatus())) {
             throw new IllegalStateException("鉴定清单状态不是 PENDING，无法提交结论");
         }
         

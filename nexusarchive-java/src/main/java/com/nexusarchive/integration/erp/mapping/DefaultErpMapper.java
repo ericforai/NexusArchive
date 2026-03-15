@@ -4,6 +4,7 @@
 
 package com.nexusarchive.integration.erp.mapping;
 
+import com.nexusarchive.common.constants.DateFormat;
 import com.nexusarchive.dto.sip.AccountingSipDto;
 import com.nexusarchive.dto.sip.AttachmentDto;
 import com.nexusarchive.dto.sip.VoucherEntryDto;
@@ -432,10 +433,10 @@ public class DefaultErpMapper implements ErpMapper {
                 String dateStr = (String) value;
                 // 尝试常见日期格式
                 String[] patterns = {
-                        "yyyy-MM-dd",
+                        DateFormat.DATE,
                         "yyyy/MM/dd",
                         "yyyyMMdd",
-                        "yyyy-MM-dd HH:mm:ss",
+                        DateFormat.DATETIME,
                         "yyyy/MM/dd HH:mm:ss"
                 };
 

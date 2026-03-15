@@ -7,6 +7,23 @@
 ## [Unreleased]
 
 ### Added
+- **档案实体增强 - P1 阶段** (`com.nexusarchive.modules.archivecore`)
+  - **乐观锁并发控制**: 为 `acc_archive` 表添加 `version` 字段，使用 MyBatis-Plus `@Version` 注解实现自动版本管理
+  - **状态枚举类型安全**: 新增 `ArchiveStatus` 枚举（DRAFT → PENDING → ARCHIVED），替代魔法字符串
+  - **状态转换门面**: 新增 `ArchiveStateTransitionFacade` 统一管理状态转换逻辑，支持类型安全的状态机
+  - **错误码扩展**: 新增 `VERSION_CONFLICT` 和 `INVALID_STATE_TRANSITION` 错误码
+  - **数据库索引优化**: 为 `status` 和 `status + fonds_no` 添加复合索引，提升查询性能
+  - **完整测试覆盖**: 新增 `ArchiveStateTransitionServiceTest` 和 `ArchiveStatusTest`，覆盖所有状态转换场景
+  - 实施文档：[P1 档案实体增强实施总结](docs/implementation/2026-03-15-archive-entity-p1-enhancements.md)
+
+### Fixed
+- **数据库读写分离** (`com.nexusarchive.config.datasource`)
+  - 基于 Spring `AbstractRoutingDataSource` 实现主从动态路由
+  - 新增 `@ReadOnly` 注解标记只读方法，自动路由到从库
+  - 支持 `@Transactional` 注解语义路由（`readOnly=true` → 从库，`readOnly=false` → 主库）
+  - 使用 ThreadLocal 保证线程安全，防止内存泄漏
+  - 功能开关：`rw-split.enabled`（默认禁用，向后兼容）
+  - 配置文档：[读写分离配置指南](docs/features/read-write-splitting.md)
 - **系统架构治理辅助层** (`com.nexusarchive.service.helper`)
   - 引入 Helper 模式拆解大型类，显著提升代码可读性与可维护性
   - 新增 9 个领域辅助组件：`PoolHelper`, `IngestHelper`, `CollectionBatchHelper`, `AuditLogHelper`, `ComplianceCheckHelper`, `RelationGraphHelper`, `OriginalVoucherHelper`, `PreviewHelper`, `FourNatureAsyncHelper`

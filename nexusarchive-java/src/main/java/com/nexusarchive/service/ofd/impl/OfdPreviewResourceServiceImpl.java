@@ -9,6 +9,7 @@ import com.nexusarchive.mapper.OriginalVoucherFileMapper;
 import com.nexusarchive.service.FileStorageService;
 import com.nexusarchive.service.ofd.OfdPreviewResourceService;
 import com.nexusarchive.service.preview.PreviewFilePathResolver;
+import com.nexusarchive.common.constants.HttpConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -192,7 +193,7 @@ public class OfdPreviewResourceServiceImpl implements OfdPreviewResourceService 
         String normalizedType = normalize(fileType);
         String ext = StringUtils.hasText(normalizedType) ? normalizedType : getExtension(fileName);
         return switch (ext) {
-            case "pdf" -> "application/pdf";
+            case "pdf" -> HttpConstants.APPLICATION_PDF;
             case "png" -> "image/png";
             case "jpg", "jpeg" -> "image/jpeg";
             default -> "application/octet-stream";

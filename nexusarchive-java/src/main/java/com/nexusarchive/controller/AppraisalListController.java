@@ -18,6 +18,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.nexusarchive.common.constants.HttpConstants;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -152,7 +153,7 @@ public class AppraisalListController {
         String filename = "appraisal_list_" + id;
         String contentType = exportFormat == ArchiveAppraisalService.ExportFormat.EXCEL
                 ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                : "application/pdf";
+                : HttpConstants.APPLICATION_PDF;
         String extension = exportFormat == ArchiveAppraisalService.ExportFormat.EXCEL
                 ? ".xlsx"
                 : ".pdf";

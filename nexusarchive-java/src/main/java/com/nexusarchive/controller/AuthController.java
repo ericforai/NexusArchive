@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.nexusarchive.common.constants.HttpConstants;
 
 /**
  * 认证控制器
@@ -50,7 +51,7 @@ public class AuthController {
     public Result<Void> logout() {
         // 将当前Token加入黑名单
         String authHeader = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-                .getRequest().getHeader("Authorization");
+                .getRequest().getHeader(HttpConstants.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             authService.logout(authHeader.substring(7));
         }
@@ -63,7 +64,7 @@ public class AuthController {
      * GET /auth/me
      */
     @GetMapping("/me")
-    public Result<LoginResponse.UserInfo> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authorization) {
+    public Result<LoginResponse.UserInfo> getCurrentUser(@RequestHeader(value = HttpConstants.AUTHORIZATION, required = false) String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return Result.unauthorized("未登录");
         }
@@ -79,7 +80,7 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     @ArchivalAudit(operationType = "REFRESH_TOKEN", resourceType = "AUTH", description = "刷新令牌")
-    public Result<LoginResponse> refresh(@RequestHeader(value = "Authorization", required = false) String authorization) {
+    public Result<LoginResponse> refresh(@RequestHeader(value = HttpConstants.AUTHORIZATION, required = false) String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return Result.unauthorized("未登录");
         }

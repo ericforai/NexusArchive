@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.helper;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.entity.SysAuditLog;
 import com.nexusarchive.service.AuditLogService;
 import com.nexusarchive.service.preview.PreviewFilePathResolver.ResolvedPreviewFile;
@@ -18,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import com.nexusarchive.common.constants.HttpConstants;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -67,7 +69,7 @@ public class PreviewHelper {
         if (StringUtils.hasText(type)) {
             return switch (type.toLowerCase()) {
                 case "pdf" -> MediaType.APPLICATION_PDF;
-                case "ofd" -> MediaType.parseMediaType("application/ofd");
+                case "ofd" -> MediaType.parseMediaType(HttpConstants.APPLICATION_OFD);
                 case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
                 case "png" -> MediaType.IMAGE_PNG;
                 case "xml" -> MediaType.APPLICATION_XML;
@@ -77,7 +79,7 @@ public class PreviewHelper {
         if (name != null) {
             String n = name.toLowerCase();
             if (n.endsWith(".pdf")) return MediaType.APPLICATION_PDF;
-            if (n.endsWith(".ofd")) return MediaType.parseMediaType("application/ofd");
+            if (n.endsWith(".ofd")) return MediaType.parseMediaType(HttpConstants.APPLICATION_OFD);
             if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return MediaType.IMAGE_JPEG;
             if (n.endsWith(".png")) return MediaType.IMAGE_PNG;
         }
@@ -89,7 +91,7 @@ public class PreviewHelper {
         String uid = auth != null ? auth.getName() : "Unknown";
         SysAuditLog log = new SysAuditLog();
         log.setUserId(uid); log.setUsername(uid); log.setAction("ARCHIVE_PREVIEW");
-        log.setResourceType("ARCHIVE"); log.setResourceId(rid); log.setOperationResult("SUCCESS");
+        log.setResourceType("ARCHIVE"); log.setResourceId(rid); log.setOperationResult(OperationResult.SUCCESS);
         log.setDetails("Mode: " + mode + ", Trace: " + tid); log.setTraceId(tid);
         auditLogService.log(log);
     }

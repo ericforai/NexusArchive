@@ -50,6 +50,12 @@ public class TestExecutionService {
         Path basePath = determineBasePath();
         Path pomPath = basePath.resolve("pom.xml");
 
+        // 安全验证：确保路径在允许的项目目录内
+        if (!validatePathWithinProject(basePath, pomPath)) {
+            log.error("路径安全验证失败: basePath={}, pomPath={}", basePath, pomPath);
+            return ErpAdapterAutoDeployService.TestResult.failure("路径安全验证失败：路径必须在项目目录内");
+        }
+
         if (!Files.exists(pomPath)) {
             return ErpAdapterAutoDeployService.TestResult.failure("找不到 pom.xml: " + pomPath);
         }
@@ -57,6 +63,12 @@ public class TestExecutionService {
         try {
             // 构建测试类名称
             String testClassName = code.getPackageName() + "." + code.getClassName() + "Test";
+
+            // 安全验证：测试类名必须符合 Java 命名规范（防止命令注入）
+            if (!isValidJavaClassName(testClassName)) {
+                log.error("测试类名包含非法字符: {}", testClassName);
+                return ErpAdapterAutoDeployService.TestResult.failure("测试类名包含非法字符");
+            }
 
             // 执行 Maven 测试
             ProcessBuilder pb = new ProcessBuilder(
@@ -153,8 +165,59 @@ public class TestExecutionService {
      */
     private Path determineBasePath() {
         if (projectBaseDir != null) {
-            return Paths.get(projectBaseDir);
+            return Paths.get(projectBaseDir).toAbsolutePath();
         }
         return Paths.get("").toAbsolutePath();
+    }
+
+    /**
+     * 验证路径是否在允许的项目目录内（防止路径遍历攻击）
+     *
+     * @param basePath 基础路径
+     * @param targetPath 目标路径
+     * @return 是否通过验证
+     */
+    private boolean validatePathWithinProject(Path basePath, Path targetPath) {
+        try {
+            Path absoluteBasePath = basePath.toAbsolutePath().normalize();
+            Path absoluteTargetPath = targetPath.toAbsolutePath().normalize();
+
+            // 获取当前工作目录作为项目根目录
+            Path projectRoot = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+
+            // 验证基础路径必须在项目根目录内
+            if (!absoluteBasePath.startsWith(projectRoot)) {
+                log.warn("基础路径不在项目根目录内: basePath={}, projectRoot={}", absoluteBasePath, projectRoot);
+                return false;
+            }
+
+            // 验证目标路径必须在项目根目录内
+            if (!absoluteTargetPath.startsWith(projectRoot)) {
+                log.warn("目标路径不在项目根目录内: targetPath={}, projectRoot={}", absoluteTargetPath, projectRoot);
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("路径验证异常", e);
+            return false;
+        }
+    }
+
+    /**
+     * 验证 Java 类名是否符合命名规范（防止命令注入）
+     * 只允许字母、数字、下划线、点和美元符号
+     *
+     * @param className 类名
+     * @return 是否有效
+     */
+    private boolean isValidJavaClassName(String className) {
+        if (className == null || className.isEmpty()) {
+            return false;
+        }
+        // Java 类名规范：只允许字母、数字、下划线、点和美元符号
+        // 且不能以数字开头，不能包含路径遍历字符
+        Pattern pattern = Pattern.compile("^[a-zA-Z_$][a-zA-Z0-9_$]*(\\.[a-zA-Z_$][a-zA-Z0-9_$]*)*$");
+        return pattern.matcher(className).matches();
     }
 }

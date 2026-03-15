@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -59,7 +60,7 @@ public class DestructionServiceImpl implements DestructionService {
             throw new RuntimeException("Failed to validate destruction eligibility: " + e.getMessage(), e);
         }
 
-        destruction.setStatus("PENDING");
+        destruction.setStatus(OperationResult.PENDING);
         destructionMapper.insert(destruction);
         return destruction;
     }
@@ -130,7 +131,7 @@ public class DestructionServiceImpl implements DestructionService {
         if (destruction == null) {
             throw new RuntimeException("Destruction record not found");
         }
-        if (!"PENDING".equals(destruction.getStatus())) {
+        if (!OperationResult.PENDING.equals(destruction.getStatus())) {
             throw new RuntimeException("Only pending destruction requests can be rejected");
         }
 

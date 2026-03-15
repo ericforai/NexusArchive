@@ -12,6 +12,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
+import com.nexusarchive.common.constants.HttpConstants;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -66,7 +67,7 @@ public class GenericErpAdapter implements ErpAdapter {
             String url = config.getBaseUrl() + testEndpoint;
             
             String response = HttpRequest.get(url)
-                .header("Authorization", "Bearer " + config.getAppKey())
+                .header(HttpConstants.AUTHORIZATION, "Bearer " + config.getAppKey())
                 .header("X-API-Key", config.getAppSecret())
                 .timeout(10000)
                 .execute()
@@ -99,7 +100,7 @@ public class GenericErpAdapter implements ErpAdapter {
             );
             
             String response = HttpRequest.get(url)
-                .header("Authorization", "Bearer " + config.getAppKey())
+                .header(HttpConstants.AUTHORIZATION, "Bearer " + config.getAppKey())
                 .header("X-API-Key", config.getAppSecret())
                 .timeout(30000)
                 .execute()
@@ -125,7 +126,7 @@ public class GenericErpAdapter implements ErpAdapter {
             String url = config.getBaseUrl() + detailEndpoint.replace("{id}", voucherNo);
             
             String response = HttpRequest.get(url)
-                .header("Authorization", "Bearer " + config.getAppKey())
+                .header(HttpConstants.AUTHORIZATION, "Bearer " + config.getAppKey())
                 .header("X-API-Key", config.getAppSecret())
                 .timeout(10000)
                 .execute()

@@ -5,6 +5,7 @@
 
 package com.nexusarchive.service.impl;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -85,7 +86,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
         // 设置冗余字段
         approval.setArchiveCode(archive.getArchiveCode());
         approval.setArchiveTitle(archive.getTitle());
-        approval.setStatus("PENDING");
+        approval.setStatus(OperationResult.PENDING);
 
         approvalMapper.insert(approval);
         return approval;
@@ -118,7 +119,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
         com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ArchiveApproval> wrapper =
                 new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        wrapper.eq(ArchiveApproval::getId, id).eq(ArchiveApproval::getStatus, "PENDING");
+        wrapper.eq(ArchiveApproval::getId, id).eq(ArchiveApproval::getStatus, OperationResult.PENDING);
         int updated = approvalMapper.update(approval, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Approval already processed");
@@ -151,7 +152,7 @@ public class ArchiveApprovalServiceImpl implements ArchiveApprovalService {
 
         com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ArchiveApproval> wrapper =
                 new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        wrapper.eq(ArchiveApproval::getId, id).eq(ArchiveApproval::getStatus, "PENDING");
+        wrapper.eq(ArchiveApproval::getId, id).eq(ArchiveApproval::getStatus, OperationResult.PENDING);
         int updated = approvalMapper.update(approval, wrapper);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Approval already processed");

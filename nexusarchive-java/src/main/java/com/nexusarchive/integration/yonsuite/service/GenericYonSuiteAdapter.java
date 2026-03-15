@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -214,7 +215,7 @@ public class GenericYonSuiteAdapter {
             log.debug("调用凭证附件查询 API: url={}, request={}", url, requestBody);
 
             HttpResponse response = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(requestBody)
                     .timeout(30_000)
                     .execute();
@@ -261,7 +262,7 @@ public class GenericYonSuiteAdapter {
             log.debug("调用销售出库单列表 API: url={}, request={}", url, requestBody);
 
             HttpResponse response = HttpRequest.post(url)
-                    .header("Content-Type", "application/json")
+                    .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                     .body(requestBody)
                     .timeout(30_000)
                     .execute();

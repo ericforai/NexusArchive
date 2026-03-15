@@ -25,6 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.nexusarchive.common.constants.HttpConstants;
 
 /**
  * 历史数据导入控制器
@@ -130,7 +131,7 @@ public class LegacyImportController {
         try {
             byte[] report = legacyImportService.downloadErrorReport(importId);
             return org.springframework.http.ResponseEntity.ok()
-                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .header(HttpConstants.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .header("Content-Disposition", "attachment; filename=error_report_" + importId + ".xlsx")
                 .body(report);
         } catch (Exception e) {

@@ -116,156 +116,304 @@ public class PdfBoxPdfSignatureVerificationService implements PdfSignatureVerifi
     }
 
     private SignatureInspection inspect(PDSignature signature, byte[] pdfBytes, boolean requiresWholeDocumentCoverage) {
-        LocalDateTime signTime = toLocalDateTime(signature.getSignDate());
-        String fallbackSignerName = signature.getName();
-        String fallbackAlgorithm = signature.getSubFilter();
+        SignatureContext context = extractSignatureContext(signature);
 
+        // Early validation checks (guard clauses)
+        SignatureInspection byteRangeValidation = validateByteRange(signature, context, requiresWholeDocumentCoverage, pdfBytes);
+        if (byteRangeValidation != null) {
+            return byteRangeValidation;
+        }
+
+        SignatureContent content = extractSignatureContent(signature, pdfBytes, context);
+        if (content.errorResult != null) {
+            return content.errorResult;
+        }
+
+        return verifySignatureContent(content, context);
+    }
+
+    /**
+     * Extract basic signature context for error messages
+     */
+    private SignatureContext extractSignatureContext(PDSignature signature) {
+        return new SignatureContext(
+                toLocalDateTime(signature.getSignDate()),
+                signature.getName(),
+                signature.getSubFilter()
+        );
+    }
+
+    /**
+     * Validate byte range - returns error result or null if valid
+     */
+    private SignatureInspection validateByteRange(PDSignature signature, SignatureContext context,
+                                                  boolean requiresWholeDocumentCoverage, byte[] pdfBytes) {
         int[] byteRange = signature.getByteRange();
         if (byteRange == null || byteRange.length < 4) {
             return SignatureInspection.unknown(
                     "PDF 签名缺少有效的 ByteRange",
-                    fallbackSignerName,
+                    context.fallbackSignerName(),
                     null,
                     null,
-                    fallbackAlgorithm,
-                    signTime);
+                    context.fallbackAlgorithm(),
+                    context.signTime());
         }
 
         if (requiresWholeDocumentCoverage && !coversWholeDocument(byteRange, pdfBytes.length)) {
             return SignatureInspection.invalid(
                     "PDF 签名未覆盖整个文档",
-                    fallbackSignerName,
+                    context.fallbackSignerName(),
                     null,
                     null,
-                    fallbackAlgorithm,
-                    signTime);
+                    context.fallbackAlgorithm(),
+                    context.signTime());
         }
 
+        return null; // Valid
+    }
+
+    /**
+     * Extract signature contents from PDF
+     */
+    private SignatureContent extractSignatureContent(PDSignature signature, byte[] pdfBytes, SignatureContext context) {
         byte[] signatureContents;
         byte[] signedContent;
+
         try {
             signatureContents = signature.getContents(pdfBytes);
             signedContent = signature.getSignedContent(pdfBytes);
         } catch (IOException e) {
-            return SignatureInspection.unknown(
+            SignatureContent result = new SignatureContent();
+            result.errorResult = SignatureInspection.unknown(
                     "读取 PDF 签名内容失败: " + safeMessage(e),
-                    fallbackSignerName,
+                    context.fallbackSignerName(),
                     null,
                     null,
-                    fallbackAlgorithm,
-                    signTime);
+                    context.fallbackAlgorithm(),
+                    context.signTime());
+            return result;
         }
 
         if (signatureContents == null || signatureContents.length == 0
                 || signedContent == null || signedContent.length == 0) {
-            return SignatureInspection.unknown(
+            SignatureContent result = new SignatureContent();
+            result.errorResult = SignatureInspection.unknown(
                     "PDF 包含签名字段，但缺少可验证内容",
-                    fallbackSignerName,
+                    context.fallbackSignerName(),
                     null,
                     null,
-                    fallbackAlgorithm,
-                    signTime);
+                    context.fallbackAlgorithm(),
+                    context.signTime());
+            return result;
         }
 
+        SignatureContent result = new SignatureContent();
+        result.signatureContents = signatureContents;
+        result.signedContent = signedContent;
+        return result;
+    }
+
+    /**
+     * Verify the signature content using CMS
+     */
+    private SignatureInspection verifySignatureContent(SignatureContent content, SignatureContext context) {
         try {
             CMSSignedData cmsSignedData = new CMSSignedData(
-                    new CMSProcessableByteArray(signedContent),
-                    signatureContents);
+                    new CMSProcessableByteArray(content.signedContent),
+                    content.signatureContents);
+
             SignerInformationStore signerStore = cmsSignedData.getSignerInfos();
             Collection<SignerInformation> signers = signerStore.getSigners();
+
             if (signers.isEmpty()) {
                 return SignatureInspection.unknown(
                         "PDF 签名中未发现签名者信息",
-                        fallbackSignerName,
+                        context.fallbackSignerName(),
                         null,
                         null,
-                        fallbackAlgorithm,
-                        signTime);
+                        context.fallbackAlgorithm(),
+                        context.signTime());
             }
 
-            Store<X509CertificateHolder> certificateStore = cmsSignedData.getCertificates();
-            JcaX509CertificateConverter converter = new JcaX509CertificateConverter().setProvider(PROVIDER);
-
-            SignatureInspection firstValid = null;
-            for (SignerInformation signer : signers) {
-                Collection<X509CertificateHolder> matches = certificateStore.getMatches(signer.getSID());
-                if (matches.isEmpty()) {
-                    return SignatureInspection.unknown(
-                            "PDF 签名缺少匹配的签名证书",
-                            fallbackSignerName,
-                            null,
-                            null,
-                            fallbackAlgorithm,
-                            signTime);
-                }
-
-                X509Certificate certificate = converter.getCertificate(matches.iterator().next());
-                Date certificateValidationTime = signTime != null
-                        ? toDate(signTime)
-                        : new Date();
-                try {
-                    certificate.checkValidity(certificateValidationTime);
-                } catch (CertificateExpiredException e) {
-                    return SignatureInspection.invalid(
-                            "签名证书已过期",
-                            extractSignerName(certificate, fallbackSignerName),
-                            certificate.getSubjectX500Principal().getName(),
-                            certificate.getSerialNumber().toString(16),
-                            certificate.getSigAlgName(),
-                            signTime);
-                } catch (CertificateNotYetValidException e) {
-                    return SignatureInspection.invalid(
-                            "签名证书尚未生效",
-                            extractSignerName(certificate, fallbackSignerName),
-                            certificate.getSubjectX500Principal().getName(),
-                            certificate.getSerialNumber().toString(16),
-                            certificate.getSigAlgName(),
-                            signTime);
-                }
-
-                boolean verified = signer.verify(
-                        new JcaSimpleSignerInfoVerifierBuilder()
-                                .setProvider(PROVIDER)
-                                .build(certificate));
-                if (!verified) {
-                    return SignatureInspection.invalid(
-                            "PDF 签名校验失败",
-                            extractSignerName(certificate, fallbackSignerName),
-                            certificate.getSubjectX500Principal().getName(),
-                            certificate.getSerialNumber().toString(16),
-                            certificate.getSigAlgName(),
-                            signTime);
-                }
-
-                if (firstValid == null) {
-                    firstValid = SignatureInspection.valid(
-                            "PDF 签名验证通过",
-                            extractSignerName(certificate, fallbackSignerName),
-                            certificate.getSubjectX500Principal().getName(),
-                            certificate.getSerialNumber().toString(16),
-                            certificate.getSigAlgName(),
-                            signTime);
-                }
-            }
-
-            return firstValid != null
-                    ? firstValid
-                    : SignatureInspection.unknown(
-                    "PDF 包含签名，但无法完成验证",
-                    fallbackSignerName,
-                    null,
-                    null,
-                    fallbackAlgorithm,
-                    signTime);
-        } catch (CMSException | OperatorCreationException | CertificateException e) {
+            return verifyAllSigners(cmsSignedData, signers, context);
+        } catch (CMSException e) {
             return SignatureInspection.unknown(
                     "PDF 签名解析失败: " + safeMessage(e),
-                    fallbackSignerName,
+                    context.fallbackSignerName(),
                     null,
                     null,
-                    fallbackAlgorithm,
-                    signTime);
+                    context.fallbackAlgorithm(),
+                    context.signTime());
         }
+    }
+
+    /**
+     * Verify all signers in the signature
+     */
+    private SignatureInspection verifyAllSigners(CMSSignedData cmsSignedData,
+                                                Collection<SignerInformation> signers,
+                                                SignatureContext context) {
+        Store<X509CertificateHolder> certificateStore = cmsSignedData.getCertificates();
+        JcaX509CertificateConverter converter = new JcaX509CertificateConverter().setProvider(PROVIDER);
+
+        SignatureInspection firstValid = null;
+
+        for (SignerInformation signer : signers) {
+            SignatureInspection result = verifySingleSigner(signer, certificateStore, converter, context);
+            if (result.status() == PdfSignatureVerificationStatus.INVALID
+                    || result.status() == PdfSignatureVerificationStatus.UNKNOWN) {
+                return result;
+            }
+            if (firstValid == null && result.status() == PdfSignatureVerificationStatus.VALID) {
+                firstValid = result;
+            }
+        }
+
+        return firstValid != null
+                ? firstValid
+                : SignatureInspection.unknown(
+                "PDF 包含签名，但无法完成验证",
+                context.fallbackSignerName(),
+                null,
+                null,
+                context.fallbackAlgorithm(),
+                context.signTime());
+    }
+
+    /**
+     * Verify a single signer
+     */
+    private SignatureInspection verifySingleSigner(SignerInformation signer,
+                                                   Store<X509CertificateHolder> certificateStore,
+                                                   JcaX509CertificateConverter converter,
+                                                   SignatureContext context) {
+        Collection<X509CertificateHolder> matches = certificateStore.getMatches(signer.getSID());
+        if (matches.isEmpty()) {
+            return SignatureInspection.unknown(
+                    "PDF 签名缺少匹配的签名证书",
+                    context.fallbackSignerName(),
+                    null,
+                    null,
+                    context.fallbackAlgorithm(),
+                    context.signTime());
+        }
+
+        X509Certificate certificate;
+        try {
+            certificate = converter.getCertificate(matches.iterator().next());
+        } catch (CertificateException e) {
+            return SignatureInspection.unknown(
+                    "证书解析失败: " + safeMessage(e),
+                    context.fallbackSignerName(),
+                    null,
+                    null,
+                    context.fallbackAlgorithm(),
+                    context.signTime());
+        }
+
+        return verifyCertificate(certificate, signer, context);
+    }
+
+    /**
+     * Verify certificate validity and signature
+     */
+    private SignatureInspection verifyCertificate(X509Certificate certificate,
+                                                  SignerInformation signer,
+                                                  SignatureContext context) {
+        SignatureInspection validityResult = checkCertificateValidity(certificate, context);
+        if (validityResult != null) {
+            return validityResult;
+        }
+
+        return verifyCryptographicSignature(certificate, signer, context);
+    }
+
+    /**
+     * Check certificate validity period - returns error result or null if valid
+     */
+    private SignatureInspection checkCertificateValidity(X509Certificate certificate, SignatureContext context) {
+        Date certificateValidationTime = context.signTime() != null
+                ? toDate(context.signTime())
+                : new Date();
+
+        try {
+            certificate.checkValidity(certificateValidationTime);
+            return null; // Valid
+        } catch (CertificateExpiredException e) {
+            return SignatureInspection.invalid(
+                    "签名证书已过期",
+                    extractSignerName(certificate, context.fallbackSignerName()),
+                    certificate.getSubjectX500Principal().getName(),
+                    certificate.getSerialNumber().toString(16),
+                    certificate.getSigAlgName(),
+                    context.signTime());
+        } catch (CertificateNotYetValidException e) {
+            return SignatureInspection.invalid(
+                    "签名证书尚未生效",
+                    extractSignerName(certificate, context.fallbackSignerName()),
+                    certificate.getSubjectX500Principal().getName(),
+                    certificate.getSerialNumber().toString(16),
+                    certificate.getSigAlgName(),
+                    context.signTime());
+        }
+    }
+
+    /**
+     * Verify the cryptographic signature
+     */
+    private SignatureInspection verifyCryptographicSignature(X509Certificate certificate,
+                                                             SignerInformation signer,
+                                                             SignatureContext context) {
+        try {
+            boolean verified = signer.verify(
+                    new JcaSimpleSignerInfoVerifierBuilder()
+                            .setProvider(PROVIDER)
+                            .build(certificate));
+
+            if (!verified) {
+                return SignatureInspection.invalid(
+                        "PDF 签名校验失败",
+                        extractSignerName(certificate, context.fallbackSignerName()),
+                        certificate.getSubjectX500Principal().getName(),
+                        certificate.getSerialNumber().toString(16),
+                        certificate.getSigAlgName(),
+                        context.signTime());
+            }
+
+            return SignatureInspection.valid(
+                    "PDF 签名验证通过",
+                    extractSignerName(certificate, context.fallbackSignerName()),
+                    certificate.getSubjectX500Principal().getName(),
+                    certificate.getSerialNumber().toString(16),
+                    certificate.getSigAlgName(),
+                    context.signTime());
+        } catch (CMSException | OperatorCreationException e) {
+            return SignatureInspection.unknown(
+                    "PDF 签名验证失败: " + safeMessage(e),
+                    context.fallbackSignerName(),
+                    null,
+                    null,
+                    context.fallbackAlgorithm(),
+                    context.signTime());
+        }
+    }
+
+    /**
+     * Context holder for signature metadata
+     */
+    private record SignatureContext(
+            LocalDateTime signTime,
+            String fallbackSignerName,
+            String fallbackAlgorithm) {
+    }
+
+    /**
+     * Holder for extracted signature content
+     */
+    private static class SignatureContent {
+        byte[] signatureContents;
+        byte[] signedContent;
+        SignatureInspection errorResult;
     }
 
     private int coveredLength(int[] byteRange) {

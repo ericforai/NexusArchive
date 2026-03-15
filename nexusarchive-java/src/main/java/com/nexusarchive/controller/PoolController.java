@@ -5,6 +5,7 @@
 
 package com.nexusarchive.controller;
 
+import com.nexusarchive.common.constants.OperationResult;
 import com.nexusarchive.common.result.BatchOperationResult;
 import com.nexusarchive.common.result.Result;
 import com.nexusarchive.dto.PoolItemDto;
@@ -40,9 +41,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -111,7 +115,7 @@ public class PoolController {
         String before = String.format("fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s", file.getFiscalYear(), file.getVoucherType(), file.getCreator(), file.getFondsCode());
         helper.updateFields(dto);
         String after = String.format("fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s", dto.getFiscalYear(), dto.getVoucherType(), dto.getCreator(), dto.getFondsCode());
-        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "METADATA_UPDATE", "ARC_FILE_CONTENT", dto.getId(), "SUCCESS", "补录: " + dto.getModifyReason() + " | " + before + " -> " + after, request.getRemoteAddr());
+        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "METADATA_UPDATE", "ARC_FILE_CONTENT", dto.getId(), OperationResult.SUCCESS, "补录: " + dto.getModifyReason() + " | " + before + " -> " + after, request.getRemoteAddr());
         FourNatureReport r = preArchiveCheckService.checkSingleFile(dto.getId());
         return Result.success("更新成功，结果: " + r.getStatus());
     }
@@ -213,8 +217,12 @@ public class PoolController {
             Resource r = helper.loadPreview(id, path, name, data);
             if (!r.exists()) return ResponseEntity.notFound().build();
             String n = name.toLowerCase();
-            String type = n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".ofd") ? "application/ofd" : (n.endsWith(".jpg") || n.endsWith(".jpeg")) ? "image/jpeg" : n.endsWith(".png") ? "image/png" : n.endsWith(".xml") ? "text/xml" : "application/octet-stream";
-            return ResponseEntity.ok().contentType(MediaType.parseMediaType(type)).header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + name + "\"").body(r);
+            String type = n.endsWith(".pdf") ? HttpConstants.APPLICATION_PDF : n.endsWith(".ofd") ? HttpConstants.APPLICATION_OFD : (n.endsWith(".jpg") || n.endsWith(".jpeg")) ? "image/jpeg" : n.endsWith(".png") ? "image/png" : n.endsWith(".xml") ? "text/xml" : "application/octet-stream";
+            // 安全处理文件名：过滤危险字符并使用 RFC 5987 编码支持非 ASCII 字符
+            String safeName = name.replaceAll("[^a-zA-Z0-9._\\-\\s]", "_");
+            String encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8);
+            String contentDisposition = String.format("inline; filename=\"%s\"; filename*=UTF-8''%s", safeName, encodedName);
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(type)).header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, contentDisposition).body(r);
         } catch (Exception e) { return ResponseEntity.status(500).build(); }
     }
 
@@ -233,7 +241,7 @@ public class PoolController {
 
         String before = String.format("id=%s, fileName=%s, status=%s", file.getId(), file.getFileName(), file.getPreArchiveStatus());
         poolService.deletePoolItem(id);
-        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "DELETE_POOL_ITEM", "ARC_FILE_CONTENT", id, "SUCCESS", "删除预归档记录 | " + before, request.getRemoteAddr());
+        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "DELETE_POOL_ITEM", "ARC_FILE_CONTENT", id, OperationResult.SUCCESS, "删除预归档记录 | " + before, request.getRemoteAddr());
 
         return Result.success("删除成功");
     }

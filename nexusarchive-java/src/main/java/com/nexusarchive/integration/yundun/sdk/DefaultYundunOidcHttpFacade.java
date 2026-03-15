@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.stereotype.Component;
+import com.nexusarchive.common.constants.HttpConstants;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,14 +38,14 @@ public class DefaultYundunOidcHttpFacade implements YundunOidcHttpFacade {
 
     @Override
     public String requestUserInfo(String userInfoUrl, String authorizationHeaderValue) {
-        return doGet(userInfoUrl, List.of(new BasicNameValuePair("Authorization", authorizationHeaderValue)));
+        return doGet(userInfoUrl, List.of(new BasicNameValuePair(HttpConstants.AUTHORIZATION, authorizationHeaderValue)));
     }
 
     private String doPostForm(String url, List<NameValuePair> params) {
         HttpURLConnection connection = null;
         try {
             connection = openConnection(url, "POST");
-            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+            connection.setRequestProperty(HttpConstants.CONTENT_TYPE, "application/x-www-form-urlencoded;charset=UTF-8");
             connection.setDoOutput(true);
             byte[] body = encodeForm(params).getBytes(StandardCharsets.UTF_8);
             try (OutputStream outputStream = connection.getOutputStream()) {
