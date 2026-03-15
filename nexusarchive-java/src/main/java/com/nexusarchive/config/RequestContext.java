@@ -42,6 +42,11 @@ public final class RequestContext {
     public static final String USER_ID_KEY = "userId";
 
     /**
+     * MDC 键名：用户名
+     */
+    public static final String USERNAME_KEY = "username";
+
+    /**
      * MDC 键名：全宗代码
      */
     public static final String FONDS_CODE_KEY = "fondsCode";
@@ -101,6 +106,20 @@ public final class RequestContext {
     }
 
     /**
+     * 获取当前用户 ID，如果未登录抛出异常
+     *
+     * @return 用户 ID
+     * @throws IllegalStateException 如果用户未认证
+     */
+    public static String getRequiredUserId() {
+        String userId = getUserId();
+        if (userId == null) {
+            throw new IllegalStateException("用户未认证");
+        }
+        return userId;
+    }
+
+    /**
      * 设置当前用户 ID
      *
      * @param userId 用户 ID
@@ -110,6 +129,42 @@ public final class RequestContext {
             MDC.put(USER_ID_KEY, userId);
         } else {
             MDC.remove(USER_ID_KEY);
+        }
+    }
+
+    /**
+     * 获取当前用户名
+     *
+     * @return 用户名，如果未登录返回 null
+     */
+    public static String getUsername() {
+        return MDC.get(USERNAME_KEY);
+    }
+
+    /**
+     * 获取当前用户名，如果未设置抛出异常
+     *
+     * @return 用户名
+     * @throws IllegalStateException 如果用户名未设置
+     */
+    public static String getRequiredUsername() {
+        String username = getUsername();
+        if (username == null) {
+            throw new IllegalStateException("用户名未设置");
+        }
+        return username;
+    }
+
+    /**
+     * 设置当前用户名
+     *
+     * @param username 用户名
+     */
+    public static void setUsername(String username) {
+        if (username != null) {
+            MDC.put(USERNAME_KEY, username);
+        } else {
+            MDC.remove(USERNAME_KEY);
         }
     }
 
@@ -216,6 +271,7 @@ public final class RequestContext {
     public static void clear() {
         MDC.remove(REQUEST_ID_KEY);
         MDC.remove(USER_ID_KEY);
+        MDC.remove(USERNAME_KEY);
         MDC.remove(FONDS_CODE_KEY);
     }
 

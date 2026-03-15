@@ -43,8 +43,15 @@ public class LoginAttemptService {
             if (value == null) {
                 return false;
             }
-            int attempts = Integer.parseInt(value);
-            return attempts >= MAX_ATTEMPTS;
+            try {
+                int attempts = Integer.parseInt(value);
+                return attempts >= MAX_ATTEMPTS;
+            } catch (NumberFormatException e) {
+                log.warn("Redis 中的登录尝试次数格式无效: username={}, value={}", username, value);
+                // 清除无效数据并返回未锁定
+                redisTemplate.delete(key);
+                return false;
+            }
         } catch (Exception e) {
             log.warn("⚠️ Redis 不可用，使用内存降级: {}", e.getMessage());
             return isLockedFallback(username);
@@ -86,7 +93,14 @@ public class LoginAttemptService {
             if (value == null) {
                 return MAX_ATTEMPTS;
             }
-            return Math.max(0, MAX_ATTEMPTS - Integer.parseInt(value));
+            try {
+                return Math.max(0, MAX_ATTEMPTS - Integer.parseInt(value));
+            } catch (NumberFormatException e) {
+                log.warn("Redis 中的登录尝试次数格式无效: username={}, value={}", username, value);
+                // 清除无效数据并返回默认值
+                redisTemplate.delete(key);
+                return MAX_ATTEMPTS;
+            }
         } catch (Exception e) {
             log.warn("⚠️ Redis 不可用，使用内存降级: {}", e.getMessage());
             return getRemainingAttemptsFallback(username);

@@ -115,7 +115,9 @@ public class PoolController {
         String before = String.format("fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s", file.getFiscalYear(), file.getVoucherType(), file.getCreator(), file.getFondsCode());
         helper.updateFields(dto);
         String after = String.format("fiscalYear=%s, voucherType=%s, creator=%s, fondsCode=%s", dto.getFiscalYear(), dto.getVoucherType(), dto.getCreator(), dto.getFondsCode());
-        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "METADATA_UPDATE", "ARC_FILE_CONTENT", dto.getId(), OperationResult.SUCCESS, "补录: " + dto.getModifyReason() + " | " + before + " -> " + after, request.getRemoteAddr());
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
+        String username = com.nexusarchive.config.RequestContext.getRequiredUsername();
+        auditLogService.log(userId, username, "METADATA_UPDATE", "ARC_FILE_CONTENT", dto.getId(), OperationResult.SUCCESS, "补录: " + dto.getModifyReason() + " | " + before + " -> " + after, request.getRemoteAddr());
         FourNatureReport r = preArchiveCheckService.checkSingleFile(dto.getId());
         return Result.success("更新成功，结果: " + r.getStatus());
     }
@@ -241,7 +243,9 @@ public class PoolController {
 
         String before = String.format("id=%s, fileName=%s, status=%s", file.getId(), file.getFileName(), file.getPreArchiveStatus());
         poolService.deletePoolItem(id);
-        auditLogService.log((String) request.getAttribute("userId"), (String) request.getAttribute("username"), "DELETE_POOL_ITEM", "ARC_FILE_CONTENT", id, OperationResult.SUCCESS, "删除预归档记录 | " + before, request.getRemoteAddr());
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
+        String username = com.nexusarchive.config.RequestContext.getRequiredUsername();
+        auditLogService.log(userId, username, "DELETE_POOL_ITEM", "ARC_FILE_CONTENT", id, OperationResult.SUCCESS, "删除预归档记录 | " + before, request.getRemoteAddr());
 
         return Result.success("删除成功");
     }

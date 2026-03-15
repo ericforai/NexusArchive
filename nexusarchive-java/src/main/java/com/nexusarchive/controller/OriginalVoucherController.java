@@ -108,7 +108,7 @@ public class OriginalVoucherController {
     public Result<OriginalVoucher> create(
             @Valid @RequestBody OriginalVoucher voucher,
             HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         return Result.success(voucherService.create(voucher, userId));
     }
 
@@ -122,7 +122,7 @@ public class OriginalVoucherController {
             @PathVariable String id,
             @Valid @RequestBody UpdateVoucherRequest request,
             HttpServletRequest httpRequest) {
-        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         return Result.success(voucherService.update(id, request.voucher(), request.reason(), userId));
     }
 
@@ -133,7 +133,7 @@ public class OriginalVoucherController {
     @ArchivalAudit(operationType = "DELETE", resourceType = "ORIGINAL_VOUCHER", description = "删除原始凭证")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> delete(@PathVariable String id, HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         voucherService.delete(id, userId);
         return Result.success();
     }
@@ -149,7 +149,7 @@ public class OriginalVoucherController {
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @RequestParam(value = "fileRole", defaultValue = "PRIMARY") String fileRole,
             HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         return Result.success(voucherService.addFile(id, file, fileRole, userId));
     }
 
@@ -164,7 +164,7 @@ public class OriginalVoucherController {
             @PathVariable String id,
             @Valid @RequestBody CreateRelationRequest req,
             HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         return Result.success(voucherService.createRelation(id, req.accountingVoucherId(), req.description(), userId));
     }
 
@@ -184,7 +184,7 @@ public class OriginalVoucherController {
     @ArchivalAudit(operationType = "SUBMIT_ARCHIVE", resourceType = "ORIGINAL_VOUCHER", description = "提交归档")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> submitForArchive(@PathVariable String id, HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         voucherService.submitForArchive(id, userId);
         return Result.success();
     }
@@ -194,7 +194,7 @@ public class OriginalVoucherController {
     @ArchivalAudit(operationType = "CONFIRM_ARCHIVE", resourceType = "ORIGINAL_VOUCHER", description = "确认归档")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<Void> confirmArchive(@PathVariable String id, HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         voucherService.confirmArchive(id, userId);
         return Result.success();
     }

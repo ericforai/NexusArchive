@@ -32,7 +32,7 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
 
     // Form State
     const [voucherType, setVoucherType] = useState(initialType || '');
-    const [amount, setAmount] = useState('');
+    const [voucherNo, setVoucherNo] = useState('');
     const [summary, setSummary] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [error, setError] = useState('');
@@ -44,6 +44,29 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
         enabled: isOpen
     });
 
+    // Determine field label based on type
+    const getVoucherNoLabel = () => {
+        if (!voucherType) return '凭证号';
+        const selectedTypeObj = voucherTypes.find(t => t.typeCode === voucherType);
+        const categoryCode = selectedTypeObj?.categoryCode;
+
+        switch (categoryCode) {
+            case 'INV_PAPER':
+            case 'INV_VAT_E':
+            case 'INV_DIGITAL':
+            case 'INVOICE':
+                return '发票号';
+            case 'CONTRACT':
+            case 'AGREEMENT':
+                return '合同号';
+            case 'BANK_RECEIPT':
+            case 'BANK_STATEMENT':
+                return '回单号/流水号';
+            default:
+                return '凭证号';
+        }
+    };
+
     const createMutation = useMutation({
         mutationFn: async () => {
             // 1. Create Voucher
@@ -53,10 +76,9 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
 
             const newVoucher = await createOriginalVoucher({
                 voucherType,
-                amount: amount ? parseFloat(amount) : undefined,
+                voucherNo,
                 summary,
                 // Use prop category if present, otherwise use derived category, finally fallback to OTHER
-                // Note: If both exist but mismatch, backend will catch it, but usually UI filters types if category is fixed.
                 voucherCategory: category || derivedCategory || 'OTHER',
                 currency: 'CNY',
                 fondsCode: currentFonds?.fondsCode ?? '001',
@@ -85,6 +107,10 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
             setError('请选择凭证类型');
             return;
         }
+        if (!voucherNo) {
+            setError(`请输入${getVoucherNoLabel()}`);
+            return;
+        }
         createMutation.mutate();
     };
 
@@ -103,7 +129,7 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
                 <div className="p-6 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center bg-slate-50/50 dark:bg-gray-800/50 rounded-t-2xl">
                     <div>
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white">新建原始凭证</h3>
-                        <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">手动录入凭证元数据并上传扫描件</p>
+                        <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">录入单据关键信息并上传附件</p>
                     </div>
                     <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" /></button>
                 </div>
@@ -123,7 +149,10 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
                         <select
                             className="w-full border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                             value={voucherType}
-                            onChange={(e) => setVoucherType(e.target.value)}
+                            onChange={(e) => {
+                                setVoucherType(e.target.value);
+                                setError('');
+                            }}
                         >
                             <option value="">请选择类型</option>
                             {voucherTypes.map(type => (
@@ -132,16 +161,17 @@ export const CreateOriginalVoucherDialog: React.FC<CreateOriginalVoucherDialogPr
                         </select>
                     </div>
 
-                    {/* Amount */}
+                    {/* Voucher No (Dynamic Label) */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">金额 (元)</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">
+                            {getVoucherNoLabel()} <span className="text-red-500">*</span>
+                        </label>
                         <input
-                            type="number"
-                            step="0.01"
+                            type="text"
                             className="w-full border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                            placeholder="0.00"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder={`请输入${getVoucherNoLabel()}`}
+                            value={voucherNo}
+                            onChange={(e) => setVoucherNo(e.target.value)}
                         />
                     </div>
 

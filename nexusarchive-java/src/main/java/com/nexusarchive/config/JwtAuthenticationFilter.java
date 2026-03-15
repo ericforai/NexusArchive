@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 3. 提取用户ID，并确保当前没有已认证的用户
             userId = jwtUtil.extractUserId(jwt);
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                
+
                 // 4. 从数据库加载用户信息
                 UserDetails userDetails = userDetailsService.loadUserById(userId);
 
@@ -89,6 +89,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // 将用户ID放入Request属性中，方便后续Controller或Service层获取
                 request.setAttribute("userId", userId);
+
+                // 将用户信息放入 MDC (RequestContext)，供日志记录使用
+                RequestContext.setUserId(userId);
+                RequestContext.setUsername(userDetails.getUsername());
             }
 
         } catch (SignatureException e) {

@@ -97,7 +97,7 @@ public class ArchiveController {
     @ArchivalAudit(operationType = "CREATE", resourceType = "ARCHIVE", description = "创建新档案")
     @PreAuthorize("hasAnyAuthority('archive:manage','nav:all') or hasRole('SYSTEM_ADMIN')")
     public Result<ArchiveResponse> create(@Valid @RequestBody Archive archive, HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userId");
+        String userId = com.nexusarchive.config.RequestContext.getRequiredUserId();
         Archive created = archiveService.createArchive(archive, userId);
         return Result.success(dtoMapper.toArchiveResponse(created));
     }

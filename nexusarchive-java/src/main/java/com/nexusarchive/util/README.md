@@ -8,7 +8,9 @@
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
 | `AmountValidator.java` | Java 类 | AmountValidator 类 |
+| `ContentTypeUtil.java` | Java 类 | ContentTypeUtil 类 |
 | `FileHashUtil.java` | Java 类 | FileHashUtil 类 |
+| `HttpHeaderUtils.java` | Java 类 | HTTP 响应头工具类（RFC 5987 文件名编码） |
 | `JwtUtil.java` | Java 类 | JwtUtil 类 |
 | `PasswordHashGenerator.java` | Java 类 | PasswordHashGenerator 类 |
 | `PasswordPolicyValidator.java` | Java 类 | PasswordPolicyValidator 类 |

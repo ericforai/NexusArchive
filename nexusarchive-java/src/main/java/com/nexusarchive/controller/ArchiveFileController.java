@@ -32,6 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.nexusarchive.common.constants.HttpConstants;
+import com.nexusarchive.util.HttpHeaderUtils;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -79,15 +80,8 @@ public class ArchiveFileController {
         String contentType = determineContentType(content.getFileType(), content.getFileName());
         
         // [FIXED] 使用 RFC 5987 编码处理中文文件名
-        String encodedFileName;
-        try {
-            encodedFileName = java.net.URLEncoder.encode(content.getFileName(), "UTF-8").replace("+", "%20");
-        } catch (java.io.UnsupportedEncodingException e) {
-            encodedFileName = content.getFileName().replaceAll("[^a-zA-Z0-9._-]", "_");
-        }
-
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
+                .header(HttpHeaders.CONTENT_DISPOSITION, HttpHeaderUtils.inlineContentDisposition(content.getFileName()))
                 .contentType(MediaType.parseMediaType(contentType));
         Long contentLength = resolveContentLength(resource, content);
         if (contentLength != null) {
@@ -129,15 +123,8 @@ public class ArchiveFileController {
         String contentType = determineContentType(content.getFileType(), content.getFileName());
 
         // [FIXED] 使用 RFC 5987 编码处理中文文件名
-        String encodedFileName;
-        try {
-            encodedFileName = java.net.URLEncoder.encode(content.getFileName(), "UTF-8").replace("+", "%20");
-        } catch (java.io.UnsupportedEncodingException e) {
-            encodedFileName = content.getFileName().replaceAll("[^a-zA-Z0-9._-]", "_");
-        }
-
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFileName)
+                .header(HttpHeaders.CONTENT_DISPOSITION, HttpHeaderUtils.inlineContentDisposition(content.getFileName()))
                 .contentType(MediaType.parseMediaType(contentType));
         Long contentLength = resolveContentLength(resource, content);
         if (contentLength != null) {

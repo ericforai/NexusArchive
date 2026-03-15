@@ -34,9 +34,28 @@ public class PreviewHelper {
     private final AuditLogService auditLogService;
 
     public void transferRange(Resource res, String range, long len, HttpServletResponse resp) throws IOException {
-        String[] parts = range.substring(6).split("-");
-        long start = Long.parseLong(parts[0]);
-        long end = parts.length > 1 && !parts[1].isEmpty() ? Long.parseLong(parts[1]) : len - 1;
+        if (range == null || !range.startsWith("bytes=")) {
+            throw new IllegalArgumentException("无效的 Range 头格式");
+        }
+
+        String[] parts;
+        long start, end;
+
+        try {
+            parts = range.substring(6).split("-");
+            if (parts.length == 0 || parts[0].isEmpty()) {
+                throw new IllegalArgumentException("Range 起始位置不能为空");
+            }
+            start = Long.parseLong(parts[0]);
+
+            if (parts.length > 1 && !parts[1].isEmpty()) {
+                end = Long.parseLong(parts[1]);
+            } else {
+                end = len - 1;
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("无效的 Range 格式: " + range, e);
+        }
         long clen = end - start + 1;
         resp.setStatus(HttpStatus.PARTIAL_CONTENT.value());
         resp.setHeader(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + len);

@@ -17,6 +17,7 @@ import com.nexusarchive.service.DataScopeService.DataScopeContext;
 import com.nexusarchive.service.NotificationService;
 import com.nexusarchive.security.FondsContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
@@ -36,49 +38,65 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationDto> listLatest() {
-        List<NotificationDto> items = new ArrayList<>();
-        String currentFondsNo = FondsContext.getCurrentFondsNo();
+        try {
+            log.info("[NotificationService] listLatest() called");
+            List<NotificationDto> items = new ArrayList<>();
+            String currentFondsNo = FondsContext.getCurrentFondsNo();
+            log.info("[NotificationService] currentFondsNo: {}", currentFondsNo);
 
-        // 1) 最新处理任务（待处理/处理中/失败）- 添加全宗过滤
-        LambdaQueryWrapper<IngestRequestStatus> taskWrapper = new LambdaQueryWrapper<>();
-        if (currentFondsNo != null && !currentFondsNo.isEmpty()) {
-            taskWrapper.eq(IngestRequestStatus::getFondsNo, currentFondsNo);
-        }
-        taskWrapper.orderByDesc(IngestRequestStatus::getUpdatedTime)
-                .last("LIMIT 5");
-        List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(taskWrapper);
-        for (IngestRequestStatus task : tasks) {
-            String type = "info";
-            if ("FAILED".equalsIgnoreCase(task.getStatus())) {
-                type = "warning";
-            } else if ("COMPLETED".equalsIgnoreCase(task.getStatus())) {
-                type = "success";
+            // 1) 最新处理任务（待处理/处理中/失败）- 添加全宗过滤
+            log.info("[NotificationService] Querying IngestRequestStatus...");
+            LambdaQueryWrapper<IngestRequestStatus> taskWrapper = new LambdaQueryWrapper<>();
+            if (currentFondsNo != null && !currentFondsNo.isEmpty()) {
+                taskWrapper.eq(IngestRequestStatus::getFondsNo, currentFondsNo);
             }
-            items.add(NotificationDto.builder()
-                    .id(task.getRequestId())
-                    .title("接收任务 " + task.getRequestId() + " 状态: " + task.getStatus())
-                    .time(formatDateTime(task.getUpdatedTime(), task.getCreatedTime()))
-                    .type(type)
-                    .build());
-        }
+            taskWrapper.orderByDesc(IngestRequestStatus::getUpdatedTime)
+                    .last("LIMIT 5");
+            List<IngestRequestStatus> tasks = ingestRequestStatusMapper.selectList(taskWrapper);
+            log.info("[NotificationService] Found {} tasks", tasks.size());
 
-        // 2) 最新归档记录 - 使用 DataScopeService 进行全宗过滤
-        DataScopeContext scope = dataScopeService.resolve();
-        LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
-        dataScopeService.applyArchiveScope(archiveWrapper, scope);
-        archiveWrapper.orderByDesc(Archive::getCreatedTime)
-                .last("LIMIT 3");
-        List<Archive> archives = archiveMapper.selectList(archiveWrapper);
-        for (Archive archive : archives) {
-            items.add(NotificationDto.builder()
-                    .id(archive.getId() != null ? archive.getId().toString() : UUID.randomUUID().toString())
-                    .title("新归档: " + archive.getArchiveCode() + " - " + archive.getTitle())
-                    .time(formatDateTime(archive.getLastModifiedTime(), archive.getCreatedTime()))
-                    .type("success")
-                    .build());
-        }
+            for (IngestRequestStatus task : tasks) {
+                String type = "info";
+                if ("FAILED".equalsIgnoreCase(task.getStatus())) {
+                    type = "warning";
+                } else if ("COMPLETED".equalsIgnoreCase(task.getStatus())) {
+                    type = "success";
+                }
+                items.add(NotificationDto.builder()
+                        .id(task.getRequestId())
+                        .title("接收任务 " + task.getRequestId() + " 状态: " + task.getStatus())
+                        .time(formatDateTime(task.getUpdatedTime(), task.getCreatedTime()))
+                        .type(type)
+                        .build());
+            }
 
-        return items;
+            // 2) 最新归档记录 - 使用 DataScopeService 进行全宗过滤
+            log.info("[NotificationService] Resolving data scope...");
+            DataScopeContext scope = dataScopeService.resolve();
+            log.info("[NotificationService] Scope: {}", scope);
+
+            log.info("[NotificationService] Querying Archive...");
+            LambdaQueryWrapper<Archive> archiveWrapper = new LambdaQueryWrapper<>();
+            dataScopeService.applyArchiveScope(archiveWrapper, scope);
+            archiveWrapper.orderByDesc(Archive::getCreatedTime)
+                    .last("LIMIT 3");
+            List<Archive> archives = archiveMapper.selectList(archiveWrapper);
+            log.info("[NotificationService] Found {} archives", archives.size());
+
+            for (Archive archive : archives) {
+                items.add(NotificationDto.builder()
+                        .id(archive.getId() != null ? archive.getId().toString() : UUID.randomUUID().toString())
+                        .title("新归档: " + archive.getArchiveCode() + " - " + archive.getTitle())
+                        .time(formatDateTime(archive.getLastModifiedTime(), archive.getCreatedTime()))
+                        .type("success")
+                        .build());
+            }
+
+            return items;
+        } catch (Exception e) {
+            log.error("[NotificationService] Error in listLatest()", e);
+            throw e;
+        }
     }
 
     private String formatDateTime(java.time.LocalDateTime primary, java.time.LocalDateTime fallback) {

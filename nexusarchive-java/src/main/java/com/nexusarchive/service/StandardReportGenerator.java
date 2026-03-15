@@ -103,11 +103,11 @@ public class StandardReportGenerator {
     public void saveComplianceReportToFile(FourNatureReport report, String filePath) {
         try {
             String xmlContent = generateComplianceReport(report);
-            
-            java.io.FileWriter writer = new java.io.FileWriter(filePath);
-            writer.write(xmlContent);
-            writer.close();
-            
+
+            try (java.io.FileWriter writer = new java.io.FileWriter(filePath)) {
+                writer.write(xmlContent);
+            }
+
             log.info("合规报告已保存到: {}", filePath);
         } catch (Exception e) {
             log.error("保存合规报告失败", e);

@@ -183,17 +183,27 @@ public class ModuleDiscoveryService {
                         .subModules(new ArrayList<>(currentSubModules))
                         .build());
                 }
-                String[] parts = line.split(":");
+                String[] parts = line.split(":", 2);
+                if (parts.length == 0 || parts[0].trim().isEmpty()) {
+                    log.warn("跳过格式错误的模块行: {}", line);
+                    continue;
+                }
                 currentModuleId = parts[0].trim();
                 currentModuleName = parts.length > 1 ? parts[1].trim() : currentModuleId;
                 currentPath = null;
                 currentFileCount = 0;
                 currentSubModules.clear();
             } else if (line.contains("范围:") || line.contains("Scope:")) {
-                currentPath = line.split(":")[1].trim();
+                String[] pathParts = line.split(":", 2);
+                if (pathParts.length > 1) {
+                    currentPath = pathParts[1].trim();
+                }
             } else if (line.contains("文件:") || line.contains("Files:")) {
+                String[] fileParts = line.split(":", 2);
                 try {
-                    currentFileCount = Integer.parseInt(line.split(":")[1].trim());
+                    if (fileParts.length > 1) {
+                        currentFileCount = Integer.parseInt(fileParts[1].trim());
+                    }
                 } catch (NumberFormatException e) {
                     currentFileCount = 0;
                 }
