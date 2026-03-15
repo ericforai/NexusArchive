@@ -22,8 +22,8 @@ import {
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { ArchiveListController, ArchiveRouteMode, useArchiveActions, _useArchiveListController, _PoolStatusFilter, useSmartMatching } from '../../features/archives';
-import { STATUS_CONFIG, _SimplifiedPreArchiveStatus, resolveStatus } from '@/config/pool-columns.config';
+import { ArchiveListController, ArchiveRouteMode, useArchiveActions, useSmartMatching } from '../../features/archives';
+import { STATUS_CONFIG, resolveStatus } from '@/config/pool-columns.config';
 import ArchiveDetailDrawer from './ArchiveDetailDrawer';
 import FinancialReportDetailDrawer from './FinancialReportDetailDrawer';
 import MatchPreviewModal from './MatchPreviewModal';
@@ -80,7 +80,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
         total: data.pageInfo.total,
       });
     }
-  }, [data.isLoading, data.rows.length, page.currentPage, data.pageInfo.page]);
+  }, [data.isLoading, data.rows.length, page.currentPage, data.pageInfo.page, data.pageInfo.total]);
 
   // Local UI state (purely presentational)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -139,7 +139,7 @@ const ArchiveListView: React.FC<ArchiveListViewProps> = ({ controller, actions: 
       setViewRow(null);
       setActivePreviewId(null);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isViewModalOpen]);
 
   // Link Modal State
   // Helper for rendering cells

@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    Search, Filter, Plus, _Trash2,
-    Archive, RefreshCw, _MoreHorizontal
+    Search, Filter, Plus,
+    Archive, RefreshCw
 } from 'lucide-react';
 import {
     getOriginalVouchers,
@@ -20,7 +20,6 @@ import {
 } from '../../api/originalVoucher';
 import { CreateOriginalVoucherDialog } from './CreateOriginalVoucherDialog';
 import { VoucherPreviewDrawer } from '../../components/pages';
-import { _toast } from '../../utils/notificationService';
 import { ROUTE_PATHS, SUBITEM_TO_PATH } from '../../routes/paths';
 import { useFondsStore } from '../../store/useFondsStore';
 
