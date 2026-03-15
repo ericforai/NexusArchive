@@ -90,7 +90,7 @@ public class OfdPreviewResourceServiceImpl implements OfdPreviewResourceService 
             .map(candidate -> new ResolvedConvertedArtifact(
                 candidate.getId(),
                 toMimeType(candidate.getFileType(), candidate.getFileName()),
-                "/api/preview?resourceType=file&fileId=" + candidate.getId() + "&mode=stream"
+                "/preview?resourceType=file&fileId=" + candidate.getId() + "&mode=stream"
             ))
             .or(() -> scanSiblingFiles(source, "archive"));
     }
@@ -184,8 +184,8 @@ public class OfdPreviewResourceServiceImpl implements OfdPreviewResourceService 
 
     private String buildDownloadUrl(String sourceKind, String fileId) {
         return "archive".equals(sourceKind)
-            ? "/api/archive/files/download/" + fileId
-            : "/api/original-vouchers/files/download/" + fileId;
+            ? "/archive/files/download/" + fileId
+            : "/original-vouchers/files/download/" + fileId;
     }
 
     private String toMimeType(String fileType, String fileName) {

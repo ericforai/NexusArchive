@@ -38,8 +38,8 @@ export function UnifiedOfdPreview({
       return '';
     }
     return sourceType === 'ARCHIVE'
-      ? `/api/archive/files/download/${fileId}`
-      : `/api/original-vouchers/files/download/${fileId}`;
+      ? `/archive/files/download/${fileId}`
+      : `/original-vouchers/files/download/${fileId}`;
   }, [fileId, originalDownloadUrl, sourceType]);
 
   console.log('[UnifiedOfdPreview] fallbackDownloadUrl:', fallbackDownloadUrl);
@@ -112,7 +112,7 @@ export function UnifiedOfdPreview({
     };
   }, [fallbackDownloadUrl, fileId, fileName]);
 
-  const effectiveDownloadUrl = normalizeUrl(resource?.originalDownloadUrl || fallbackDownloadUrl);
+  const effectiveDownloadUrl = normalizeTagUrl(resource?.originalDownloadUrl || fallbackDownloadUrl);
   const effectiveFileName = resource?.fileName || fileName || 'document.ofd';
 
   if (loading) {
@@ -124,7 +124,7 @@ export function UnifiedOfdPreview({
   }
 
   if (resource?.preferredMode === 'converted' && resource.convertedPreviewUrl && resource.convertedMimeType) {
-    const previewUrl = normalizeUrl(resource.convertedPreviewUrl);
+    const previewUrl = normalizeTagUrl(resource.convertedPreviewUrl);
     if (resource.convertedMimeType.startsWith('image/')) {
       return (
         <div className={`flex h-full flex-col bg-slate-100 ${className}`}>
@@ -190,9 +190,13 @@ export function UnifiedOfdPreview({
     );
   }
 
+  // 对于 LiteOfdPreview，它内部使用 axios，所以传递原始相对路径，让 axios 自动拼接 /api
+  const rawUrl = resource?.originalDownloadUrl || fallbackDownloadUrl || '';
+  const axiosCompatibleUrl = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl;
+
   return (
     <LiteOfdPreview
-      fileUrl={effectiveDownloadUrl}
+      fileUrl={axiosCompatibleUrl}
       fileName={effectiveFileName}
       downloadUrl={effectiveDownloadUrl}
       className={className}
@@ -209,14 +213,25 @@ function extractStatusCode(error: unknown): number | null {
 }
 
 /**
- * 确保 URL 不会因为 axios 的 baseURL 导致重复前缀
+ * 确保原生标签（a, img, iframe）使用的 URL 包含 /api 前缀
+ * 因为这些标签不经过 axios 的拦截器处理
  */
-function normalizeUrl(url: string): string {
+function normalizeTagUrl(url: string): string {
   if (!url) return url;
-  if (url.startsWith('/api/api/')) {
-    return url.replace('/api/api/', '/api/');
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  
+  let result = url;
+  // 移除重复的前缀
+  if (result.startsWith('/api/api/')) {
+    result = result.replace('/api/api/', '/api/');
   }
-  return url;
+  
+  // 确保以 /api/ 开头
+  if (!result.startsWith('/api/')) {
+    result = result.startsWith('/') ? `/api${result}` : `/api/${result}`;
+  }
+  
+  return result;
 }
 
 export default UnifiedOfdPreview;
