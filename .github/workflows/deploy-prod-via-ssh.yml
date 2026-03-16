@@ -151,8 +151,12 @@ jobs:
             if ! grep -q '^JWT_PRIVATE_KEY_LOCATION=' /etc/nexusarchive/nexusarchive.env; then
               echo 'JWT_PRIVATE_KEY_LOCATION=file:/opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem' >> /etc/nexusarchive/nexusarchive.env
             fi
+            if ! grep -q '^SM4_KEY=' /etc/nexusarchive/nexusarchive.env; then
+              echo "SM4_KEY=$(openssl rand -hex 16)" >> /etc/nexusarchive/nexusarchive.env
+              echo "Generated new SM4_KEY for production"
+            fi
 
-            grep -E '^JWT_(PUBLIC|PRIVATE)_KEY_LOCATION=' /etc/nexusarchive/nexusarchive.env || true
+            grep -E '^(JWT_|SM4_KEY)' /etc/nexusarchive/nexusarchive.env || true
             ls -l /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem /opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem
 
             echo "[5/6] Restart service"

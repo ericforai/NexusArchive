@@ -109,6 +109,8 @@ services:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       # ACME Challenge 临时目录
       - nginx-acme:/var/www/certbot:rw
+    extra_hosts:
+      - "nexus-backend:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:80/"]
       interval: 30s
