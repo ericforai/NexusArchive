@@ -153,6 +153,11 @@ jobs:
             systemctl restart nexusarchive
             systemctl status nexusarchive --no-pager -l
 
+            echo "[5.1/6] Check Flyway migration status"
+            docker exec -e "PGPASSWORD=pPSB3+HqgkqxM3WL" nexus-db \
+              psql -h 127.0.0.1 -U postgres -d nexusarchive \
+              -c "select version, description, success from flyway_schema_history order by installed_rank desc limit 5;"
+
             echo "[6/6] Wait for health"
             ok=0
             for i in $(seq 1 24); do
