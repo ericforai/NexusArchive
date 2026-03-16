@@ -4,7 +4,7 @@
 // 一旦我被更新，务必更新我的开头注释，以及所属的文件夹的 md。
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, CheckCircle, XCircle, Eye, Trash2, Filter, Server, Clock } from 'lucide-react';
+import { RefreshCw, Eye, Trash2, Server } from 'lucide-react';
 import { FourNatureReportView } from './FourNatureReportView';
 import { statsApi, ErpStats } from '../../api/stats';
 import { integrationApi, erpApi, IntegrationChannel } from '../../api/erp';
@@ -26,7 +26,6 @@ export const OnlineReceptionView: React.FC = () => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     // 核心状态：当前全宗与水合状态
     const { currentFonds, _hasHydrated: hasHydrated } = useFondsStore();
@@ -52,18 +51,6 @@ export const OnlineReceptionView: React.FC = () => {
     const [isPolling, setIsPolling] = useState(false);
     const [syncProgress, setSyncProgress] = useState({ status: '', progress: 0, message: '' });
 
-    // 切换选中状态
-    const toggleSelection = (id: number) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
-            }
-            return newSet;
-        });
-    };
 
     // 1. 加载数据逻辑
     const loadData = useCallback(async () => {
