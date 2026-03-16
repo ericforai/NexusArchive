@@ -74,9 +74,14 @@ public class YonSuiteWebhookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid timestamp");
         }
 
-        if (!nonceStore.registerIfNew(nonce, ts)) {
+        WebhookNonceStore.RegisterResult nonceResult = nonceStore.registerIfNew(nonce, ts);
+        if (nonceResult == WebhookNonceStore.RegisterResult.DUPLICATE) {
             log.warn("Duplicate nonce detected: {}", nonce);
             return ResponseEntity.status(HttpStatus.CONFLICT).body("replay detected");
+        }
+        if (nonceResult == WebhookNonceStore.RegisterResult.UNAVAILABLE) {
+            log.error("Webhook nonce store unavailable, rejecting request for safety");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("nonce store unavailable");
         }
 
         log.debug("Webhook body: {}", body);
