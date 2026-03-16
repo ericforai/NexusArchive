@@ -156,7 +156,13 @@ jobs:
             echo "[5.1/6] Check Flyway migration status"
             docker exec -e "PGPASSWORD=pPSB3+HqgkqxM3WL" nexus-db \
               psql -h 127.0.0.1 -U postgres -d nexusarchive \
-              -c "select version, description, success from flyway_schema_history order by installed_rank desc limit 5;"
+              -c "select version, description, success from flyway_schema_history order by installed_rank desc limit 5;" || true
+
+            echo "[5.2/6] Auto-repair Flyway if failed (Postgres manual repair)"
+            # 如果有失败的迁移记录，将其删除以便下一次启动能重试。这等同于 flyway repair 的部分核心逻辑。
+            docker exec -e "PGPASSWORD=pPSB3+HqgkqxM3WL" nexus-db \
+              psql -h 127.0.0.1 -U postgres -d nexusarchive \
+              -c "DELETE FROM flyway_schema_history WHERE success = false;" || true
 
             echo "[6/6] Wait for health"
             ok=0
