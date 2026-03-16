@@ -139,6 +139,12 @@ jobs:
               openssl rsa -in /opt/nexusarchive/nexusarchive-java/keystore/jwt_private.pem -pubout -out /opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem >/dev/null 2>&1
             fi
 
+            echo "[4.1/5] Debug Server Configs"
+            systemctl cat nexusarchive || true
+            if [ -f /usr/local/bin/nexusarchive-start.sh ]; then
+              cat /usr/local/bin/nexusarchive-start.sh
+            fi
+
             if ! grep -q '^JWT_PUBLIC_KEY_LOCATION=' /etc/nexusarchive/nexusarchive.env; then
               echo 'JWT_PUBLIC_KEY_LOCATION=file:/opt/nexusarchive/nexusarchive-java/keystore/jwt_public.pem' >> /etc/nexusarchive/nexusarchive.env
             fi
