@@ -6,12 +6,15 @@
 package com.nexusarchive.integration;
 
 import com.nexusarchive.integration.yonsuite.security.WebhookNonceStore;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
@@ -24,7 +27,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,6 +59,19 @@ public class SecurityHardeningIntegrationTest {
 
     @MockBean
     private com.nexusarchive.service.AbnormalVoucherService abnormalVoucherService;
+
+    @MockBean
+    private StringRedisTemplate redisTemplate;
+
+    @SuppressWarnings("unchecked")
+    private final ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+
+    @BeforeEach
+    void setUpRedis() {
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        lenient().when(valueOperations.setIfAbsent(any(), eq("1"), any()))
+                .thenReturn(true);
+    }
 
     @AfterEach
     void cleanup() {
@@ -139,8 +159,30 @@ public class SecurityHardeningIntegrationTest {
                         .header("X-Nonce", nonce)
                         .header("X-Signature", sig)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .content(body))
                 .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @WithMockUser
+    void webhook_nonce_store_unavailable_should_503() throws Exception {
+        String nonce = UUID.randomUUID().toString();
+        String body = "{\"data\":{\"id\":\"1\"}}";
+        String ts = String.valueOf(Instant.now().getEpochSecond());
+        String sig = sign(ts, nonce, body, "test-secret");
+
+        when(valueOperations.setIfAbsent(any(), eq("1"), any()))
+                .thenThrow(new RuntimeException("redis down"));
+
+        mockMvc.perform(post("/integration/yonsuite/webhook")
+                        .with(req -> { req.setRemoteAddr("127.0.0.1"); return req; })
+                        .header("X-Timestamp", ts)
+                        .header("X-Nonce", nonce)
+                        .header("X-Signature", sig)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().string("nonce store unavailable"));
     }
 
     private String sign(String ts, String nonce, String body, String secret) throws Exception {

@@ -7,6 +7,6 @@
 | 文件 | 地位 | 功能 |
 | --- | --- | --- |
 | `README.md` | 说明文档 | 本目录说明 |
-| `WebhookNonceStore.java` | Java 类 | WebhookNonceStore 类 |
+| `WebhookNonceStore.java` | Java 类 | 基于 Redis TTL 的 Webhook nonce 防重放存储 |
 | `YonSuiteEventCrypto.java` | Java 类 | YonSuiteEventCrypto 类 |
 | `YonSuiteSignatureValidator.java` | Java 类 | YonSuiteSignatureValidator 类 |
