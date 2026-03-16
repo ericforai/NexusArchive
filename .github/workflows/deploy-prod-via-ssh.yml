@@ -164,7 +164,21 @@ jobs:
               psql -h 127.0.0.1 -U postgres -d nexusarchive \
               -c "select version, description, success from flyway_schema_history order by installed_rank desc limit 5;" || true
 
-            echo "[5.2/6] Auto-repair Flyway if failed (Postgres manual repair)"
+            echo "[5.2/6] Super Diagnostic (Deep Dive)"
+            echo "--- Containers ---"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
+            echo "--- Ports ---"
+            ss -tlnp | grep -E "19090|5432|6379|80|443" || true
+            echo "--- Hosts ---"
+            cat /etc/hosts || true
+            echo "--- Nginx Resolution ---"
+            getent hosts nexus-backend || true
+            echo "--- Service Env ---"
+            cat /etc/nexusarchive/nexusarchive.env | grep -v "PASSWORD" || true
+            echo "--- Journal Logs (Tail) ---"
+            journalctl -u nexusarchive -n 50 --no-pager || true
+
+            echo "[5.3/6] Auto-repair Flyway if failed (Postgres manual repair)"
             # 如果有失败的迁移记录，将其删除以便下一次启动能重试。这等同于 flyway repair 的部分核心逻辑。
             docker exec -e "PGPASSWORD=pPSB3+HqgkqxM3WL" nexus-db \
               psql -h 127.0.0.1 -U postgres -d nexusarchive \
